@@ -721,7 +721,7 @@ async function subCr(){
       background:'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
       date_heure:dateFormatee,lieu:lieu,
       prix_total:parseInt(prix),places_max:parseInt(places)||5,
-      professeur_id:user.id,emoji:'📚'
+      professeur_id:user.id,emoji:'📚', prof_initiales:user.ini, prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)', prof_nom:user.pr+(user.nm?' '+user.nm:'')
     })});
     var data=await res.json();
     if(data.error){toast('Erreur','Impossible de publier le cours');return;}
