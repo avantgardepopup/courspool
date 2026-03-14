@@ -283,7 +283,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
     <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <div class="topbar-right">
-      <button class="btnadd" onclick="openCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
+      <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
     </div>
   </header>
@@ -567,14 +567,43 @@ async function loadData() {
 
 function switchLT(t){g('ltC').classList.toggle('on',t==='C');g('ltI').classList.toggle('on',t==='I');g('lfC').classList.toggle('on',t==='C');g('lfI').classList.toggle('on',t==='I');}
 function pickR(r){g('rEl').classList.toggle('on',r==='El');g('rPf').classList.toggle('on',r==='Pf');}
-function doLogin(){var em=g('lEm').value.trim(),pw=g('lPw').value;if(!em||!pw){shake('lfC');return;}var pts=em.split('@')[0].split('.');go(cap(pts[0]),pts[1]?cap(pts[1]):'',em);}
-function doReg(){var pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;if(!pr||!em||!pw){shake('lfI');return;}go(pr,nm,em);}
-function doGuest(){go('Invité','','invite@courspool.fr');}
+
+async function doLogin(){
+  var em=g('lEm').value.trim(),pw=g('lPw').value;
+  if(!em||!pw){shake('lfC');return;}
+  g('lEm').disabled=true;g('lPw').disabled=true;
+  try {
+    var res=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw})});
+    var data=await res.json();
+    if(data.error){toast('Erreur connexion',data.error);shake('lfC');return;}
+    var p=data.profile||{};
+    go(p.prenom||em.split('@')[0],p.nom||'',em,p.role||'eleve',data.user.id);
+  } catch(e){toast('Erreur','Impossible de se connecter');}
+  finally{g('lEm').disabled=false;g('lPw').disabled=false;}
+}
+
+async function doReg(){
+  var pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;
+  var role=g('rPf').classList.contains('on')?'professeur':'eleve';
+  if(!pr||!em||!pw){shake('lfI');return;}
+  if(pw.length<6){toast('Erreur','Mot de passe trop court (6 caracteres min)');return;}
+  try {
+    var res=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw,prenom:pr,nom:nm,role:role})});
+    var data=await res.json();
+    if(data.error){toast('Erreur inscription',data.error);shake('lfI');return;}
+    go(pr,nm,em,role,data.user.id);
+  } catch(e){toast('Erreur','Impossible de creer le compte');}
+}
+
+function doGuest(){go('Invite','','invite@courspool.fr','eleve',null);}
 function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
-function go(pr,nm,em){
-  user={pr:pr,nm:nm,em:em,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
+
+function go(pr,nm,em,role,uid){
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
+  // Montrer ou cacher "Proposer un cours" selon le role
+  g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
   loadData().then(function(){ buildCards(); });
   toast('Bienvenue '+pr+' !','Vous etes connecte a CoursPool');
 }
@@ -656,9 +685,52 @@ function closePr(){closeM('bdPr');}
 function contPr(){closeM('bdPr');toast('Message envoye','Le professeur vous repondra bientot');}
 function togFP(){var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');if(fol.has(id)){fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';toast('Desabonne','Vous ne suivez plus '+p.nm);}else{fol.add(id);fb.classList.add('on');ft.textContent='Suivi';toast('Vous suivez '+p.nm,'Notifie des son prochain cours');}}
 
-function openCr(){openM('bdCr');}
+function openCr(){
+  if(!user||user.role!=='professeur'){toast('Acces refuse','Seuls les professeurs peuvent proposer des cours');return;}
+  // Set min date to today France
+  var today=new Date().toLocaleDateString('fr-CA',{timeZone:'Europe/Paris'});
+  document.querySelectorAll('.fi3[type="date"]').forEach(function(i){i.min=today;});
+  openM('bdCr');
+}
 function closeCr(){closeM('bdCr');}
-function subCr(){closeM('bdCr');toast('Cours publie !','Les eleves peuvent maintenant reserver');}
+async function subCr(){
+  var titre=document.querySelector('#bdCr .fi3[type="text"]').value.trim();
+  var date=document.querySelector('#bdCr .fi3[type="date"]').value;
+  var heure=document.querySelector('#bdCr .fi3[type="time"]').value;
+  var lieu=document.querySelectorAll('#bdCr .fi3[type="text"]')[1]?document.querySelectorAll('#bdCr .fi3[type="text"]')[1].value.trim():'';
+  var duree=document.querySelector('#bdCr .fi3[type="number"]').value;
+  var places=g('cPl').value;
+  var prix=g('cPr').value;
+  var sujet=document.querySelector('#bdCr .so.on')?document.querySelector('#bdCr .so.on').textContent.trim():'Autre';
+
+  if(!titre||!date||!heure||!lieu||!prix){toast('Champs manquants','Remplissez tous les champs');return;}
+
+  // Validation date future
+  var dateChoisie=new Date(date+'T'+heure);
+  if(dateChoisie<=new Date()){toast('Date invalide','Choisissez une date future');return;}
+
+  // Format date en français
+  var dateFormatee=dateChoisie.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
+
+  var subjectColors={'Maths':'#16A34A','Physique':'#BE185D','Info':'#2563EB','Langues':'#059669','Eco':'#D97706','Autre':'#7C3AED'};
+  var sc=subjectColors[sujet.replace(/[^a-zA-Z]/g,'')]||'#7C3AED';
+
+  try {
+    var res=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      titre:titre,sujet:sujet,couleur_sujet:sc,
+      background:'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
+      date_heure:dateFormatee,lieu:lieu,
+      prix_total:parseInt(prix),places_max:parseInt(places)||5,
+      professeur_id:user.id,emoji:'📚'
+    })});
+    var data=await res.json();
+    if(data.error){toast('Erreur','Impossible de publier le cours');return;}
+    closeM('bdCr');
+    await loadData();
+    buildCards();
+    toast('Cours publie !','Les eleves peuvent maintenant reserver');
+  } catch(e){toast('Erreur','Impossible de publier le cours');}
+}
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Avec '+pl+' eleve'+(pl>1?'s':'')+' : '+Math.ceil(p/pl)+'EUR/eleve':'';}
 function pickS(el){document.querySelectorAll('.so').forEach(function(s){s.classList.remove('on')});el.classList.add('on');}
 
