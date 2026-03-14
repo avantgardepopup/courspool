@@ -556,7 +556,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
 <script>
-const API = 'devoted-achievement-production-fdfa.up.railway.app';
+[14/03/2026 22:58:27] M 🤍: const API =
+[14/03/2026 23:01:54] N: devoted-achievement-production-fdfa.up.railway.app
+[14/03/2026 23:07:39] M 🤍: const API = 'https://devoted-achievement-production-fdfa.up.railway.app';
 let C = [];
 let P = {};
 
@@ -577,8 +579,7 @@ async function loadData() {
       sp: c.places_max,
       fl: c.places_prises,
       pr: c.professeur_id,
-      em: c.emoji,
-      prof: c.professeurs
+      em: c.emoji
     }));
     cours.forEach(c => {
       if (c.professeurs) {
@@ -601,6 +602,8 @@ async function loadData() {
     console.log('Erreur chargement données', e);
   }
 }
+
+const C=[
   {id:'stat',    t:'statistiques maths thomas sam',                subj:'Statistiques',sc:'var(--or)',  bg:'linear-gradient(135deg,#FFF0E8,#FFD6C0)',title:"Tests d'hypothèses & IC",                   dt:'Sam. 15 mars · 16h–17h',   lc:'Bibl. Sainte-Geneviève · 1.2 km',tot:50,sp:5,fl:3,pr:'thomas',em:'📊'},
   {id:'python',  t:'informatique python data amira dim',           subj:'Informatique',sc:'#4F46E5',    bg:'linear-gradient(135deg,#EEF2FF,#C7D2FE)',title:'Python data science — Pandas & Numpy',       dt:'Dim. 16 mars · 14h–16h',   lc:'Station F · 3.7 km',            tot:80,sp:5,fl:1,pr:'amira', em:'💻'},
   {id:'english', t:'anglais langues toefl sophie lun soir',        subj:'Anglais',     sc:'#059669',    bg:'linear-gradient(135deg,#ECFDF5,#A7F3D0)',title:'Préparation TOEFL — Écrit & Oral',           dt:'Lun. 17 mars · 18h–19h30', lc:'Café Procope · 0.8 km',         tot:45,sp:3,fl:2,pr:'sophie',em:'🌍'},
@@ -632,23 +635,7 @@ let curId=null,curProf=null,folPr=null,actF='tous',user=null;
 // LOGIN
 function switchLT(t){g('ltC').classList.toggle('on',t==='C');g('ltI').classList.toggle('on',t==='I');g('lfC').classList.toggle('on',t==='C');g('lfI').classList.toggle('on',t==='I');}
 function pickR(r){g('rEl').classList.toggle('on',r==='El');g('rPf').classList.toggle('on',r==='Pf');}
-async function doLogin(){
-  const em=g('lEm').value.trim();
-  const pw=g('lPw').value;
-  if(!em||!pw){shake('lfC');return;}
-  
-  const res = await fetch(API + '/auth/login', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({email: em, password: pw})
-  });
-  
-  const data = await res.json();
-  if(data.error){shake('lfC');toast('Erreur','Email ou mot de passe incorrect');return;}
-  
-  const pts = em.split('@')[0].split('.');
-  go(cap(pts[0]), pts[1]?cap(pts[1]):'', em);
-}
+function doLogin(){const em=g('lEm').value.trim(),pw=g('lPw').value;if(!em||!pw){shake('lfC');return;}const pts=em.split('@')[0].split('.');go(cap(pts[0]),pts[1]?cap(pts[1]):'',em);}
 function doReg(){const pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;if(!pr||!em||!pw){shake('lfI');return;}go(pr,nm,em);}
 function doGuest(){go('Invité','','invité@courspool.fr');}
 function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
@@ -656,7 +643,7 @@ function go(pr,nm,em){
   user={pr,nm,em,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
-  loadData().then(() => buildCards());
+  buildCards();
   toast('Bienvenue '+pr+' !','Vous êtes connecté à CoursPool');
 }
 function shake(id){const e=g(id);e.style.animation='shake .3s';setTimeout(()=>e.style.animation='',400);}
