@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoursPool</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --or:#FF6B2B;--orp:#FFF2EC;--ord:#E04E10;
+  --ink:#111;--mid:#555;--lite:#999;
+  --bg:#F6F4F1;--wh:#fff;--bdr:#E8E3DC;
+  --green:#22C069;--amber:#F59E0B;--r:16px;
+  --sh:0 6px 28px rgba(0,0,0,.11);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);}
+
+/* LOGIN */
+#login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
+.lhero{background:linear-gradient(135deg,var(--or),var(--ord));padding:36px 32px 28px;color:#fff;position:relative;overflow:hidden;}
+.lhero::after{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.08);}
+.lhero::before{content:'';position:absolute;left:-20px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);}
+.llogo{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;z-index:1;}
+.lhero h1{font-size:24px;font-weight:800;margin-bottom:4px;position:relative;z-index:1;}
+.lhero p{font-size:13.5px;opacity:.8;position:relative;z-index:1;}
+.lbody{padding:28px 32px 32px;}
+.ltabs{display:flex;background:var(--bg);border-radius:10px;padding:3px;gap:3px;margin-bottom:24px;}
+.ltab{flex:1;padding:9px;text-align:center;font-size:13.5px;font-weight:600;border-radius:8px;cursor:pointer;transition:all .18s;color:var(--mid);}
+.ltab.on{background:var(--wh);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.lf{display:none;}.lf.on{display:block;}
+.lfield{margin-bottom:14px;}
+.lfield label{font-size:12.5px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px;}
+.lfield input{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;}
+.lfield input:focus{border-color:var(--or);}
+.lfield input::placeholder{color:var(--lite);}
+.lbtn{width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:6px;transition:background .18s;}
+.lbtn:hover{background:var(--ord);}
+.lsep{text-align:center;font-size:12px;color:var(--lite);margin:16px 0;position:relative;}
+.lsep::before,.lsep::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:var(--bdr);}
+.lsep::before{left:0;}.lsep::after{right:0;}
+.lguest{width:100%;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;padding:12px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:all .18s;}
+.lguest:hover{border-color:var(--or);color:var(--or);}
+.lnote{font-size:12px;color:var(--lite);text-align:center;margin-top:16px;line-height:1.6;}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ropt{border:1.5px solid var(--bdr);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--mid);transition:all .18s;}
+.ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
+
+/* APP */
+#app{display:none;}
+
+/* TOPBAR */
+.topbar{background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 28px;height:60px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;}
+.tlogo{width:32px;height:32px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ttitle{font-size:15px;font-weight:700;}
+.sw{flex:1;max-width:380px;position:relative;}
+.sw input{width:100%;background:var(--bg);border:1.5px solid transparent;border-radius:50px;padding:9px 16px 9px 40px;font-family:inherit;font-size:13.5px;outline:none;transition:border .18s;}
+.sw input:focus{border-color:var(--or);background:var(--wh);}
+.sw input::placeholder{color:var(--lite);}
+.si{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--lite);}
+.si svg{width:15px;height:15px;display:block;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btnadd{background:var(--or);color:#fff;border:none;border-radius:50px;padding:9px 18px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .18s;white-space:nowrap;}
+.btnadd:hover{background:var(--ord);}
+.btnadd svg{width:15px;height:15px;}
+/* AVATAR BUTTON in topbar */
+.tav-btn{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;cursor:pointer;border:2px solid transparent;transition:all .18s;flex-shrink:0;}
+.tav-btn:hover{border-color:var(--or);transform:scale(1.05);}
+
+/* PAGES */
+.pg{display:none;min-height:calc(100vh - 60px);}.pg.on{display:block;}
+
+/* EXPLORE */
+.cnt{padding:24px 28px;max-width:1200px;}
+.locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:13px 18px;display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.locbar>svg{width:18px;height:18px;color:var(--or);flex-shrink:0;}
+.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;}
+.locbar input::placeholder{color:var(--lite);}
+.rsel{display:flex;gap:6px;}
+.ro{padding:5px 12px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
+.ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
+.pills{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+.pill{padding:7px 16px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
+.pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.pill:not(.on):hover{border-color:var(--or);color:var(--or);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.nocard{display:none;text-align:center;padding:60px 20px;color:var(--mid);}
+.nocard svg{width:48px;height:48px;color:var(--bdr);margin:0 auto 14px;display:block;}
+
+/* CARDS */
+.card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
+.card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
+.card.hide{display:none;}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.ctop{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+.chip{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:50px;background:rgba(255,255,255,.85);}
+.pbub{width:48px;height:48px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.15);cursor:pointer;transition:transform .18s;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;position:relative;}
+.pbub:hover{transform:scale(1.1);}
+.ph{position:absolute;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;border-radius:50%;}
+.pbub:hover .ph{opacity:1;}
+.ph svg{width:14px;height:14px;color:#fff;}
+.cbody{padding:14px 16px 16px;}
+.ctitle{font-size:15px;font-weight:700;line-height:1.35;margin-bottom:10px;}
+.cmeta{display:flex;gap:12px;margin-bottom:10px;}
+.mi{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--mid);}
+.mi svg{width:13px;height:13px;color:var(--lite);}
+.ltag{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--mid);margin-bottom:12px;}
+.ltag svg{width:12px;height:12px;color:var(--lite);}
+.cf{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.pm{font-size:20px;font-weight:800;color:var(--or);}
+.pm span{font-size:12px;font-weight:400;color:var(--lite);}
+.ps{font-size:11px;color:var(--lite);}
+.sw2{flex:1;}
+.st{font-size:11px;color:var(--lite);margin-bottom:4px;display:flex;justify-content:space-between;}
+.bar{height:4px;background:var(--bg);border-radius:99px;overflow:hidden;}
+.bf{height:100%;border-radius:99px;}
+.btnr{background:var(--orp);color:var(--or);border:none;border-radius:10px;padding:9px 15px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.btnr:hover{background:var(--or);color:#fff;}
+.btnfull{background:#EBEBEB;color:var(--lite);border:none;border-radius:10px;padding:9px 15px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;}
+.btnfull:hover{background:#ddd;}
+.btnres{background:var(--green);color:#fff;border:none;border-radius:10px;padding:9px 15px;font-family:inherit;font-weight:700;font-size:13px;cursor:default;white-space:nowrap;}
+.btnfol{background:var(--orp);color:var(--or);border:none;border-radius:10px;padding:9px 12px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .18s;}
+.btnfol:hover{background:var(--or);color:#fff;}
+
+/* ACCOUNT PAGE */
+.acc-page{padding:0;}
+.acc-hero{background:linear-gradient(135deg,var(--or),var(--ord));padding:36px 32px;color:#fff;position:relative;overflow:hidden;}
+.acc-hero::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);}
+.acc-hero::before{content:'';position:absolute;right:80px;bottom:-60px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.05);}
+.acc-back{position:absolute;top:20px;left:24px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:background .18s;z-index:1;}
+.acc-back:hover{background:rgba(255,255,255,.3);}
+.acc-back svg{width:14px;height:14px;}
+.acc-av{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);border:4px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin-bottom:14px;position:relative;z-index:1;}
+.acc-name{font-size:22px;font-weight:800;position:relative;z-index:1;}
+.acc-email{font-size:13px;opacity:.8;margin-top:3px;position:relative;z-index:1;}
+.acc-chips{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;position:relative;z-index:1;}
+.acc-chip{background:rgba(255,255,255,.2);border-radius:50px;padding:6px 14px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+.acc-chip svg{width:13px;height:13px;}
+
+.acc-tabs{background:var(--wh);border-bottom:1px solid var(--bdr);display:flex;position:sticky;top:60px;z-index:40;}
+.atab{flex:1;max-width:160px;padding:16px 12px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--lite);border-bottom:2.5px solid transparent;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.atab svg{width:15px;height:15px;}
+.atab.on{color:var(--or);border-bottom-color:var(--or);}
+.atab:hover:not(.on){color:var(--mid);}
+
+.acc-body{padding:28px 32px;max-width:800px;}
+.asec{display:none;}.asec.on{display:block;}
+.sec-title{font-size:13px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:16px;}
+
+/* Reservation rows */
+.rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;}
+.rrow:hover{box-shadow:var(--sh);border-color:#D5CEC6;transform:translateY(-1px);}
+.rdot{width:46px;height:46px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.ri{flex:1;}
+.rt{font-size:14px;font-weight:700;margin-bottom:3px;}
+.rm{font-size:12px;color:var(--mid);}
+.rbadge{padding:5px 12px;border-radius:50px;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0;}
+.bup{background:var(--orp);color:var(--or);}
+.bdone{background:var(--bg);color:var(--lite);border:1px solid var(--bdr);}
+.bempty{text-align:center;padding:48px 20px;color:var(--lite);}
+.bempty svg{width:44px;height:44px;color:var(--bdr);margin:0 auto 14px;display:block;}
+.bempty p{font-size:14px;line-height:1.7;}
+.bempty a{color:var(--or);font-weight:600;cursor:pointer;text-decoration:none;}
+
+/* Followed prof rows */
+.frow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:15px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.fav{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;}
+.fi{flex:1;}
+.fn{font-size:14px;font-weight:700;}
+.fr{font-size:12px;color:var(--mid);margin-top:2px;}
+
+/* Profile form */
+.prof-card{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:22px;margin-bottom:20px;}
+.prof-card h3{font-size:14px;font-weight:700;margin-bottom:16px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{margin-bottom:14px;}
+.flbl{font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px;}
+.fi2{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;background:var(--wh);}
+.fi2:focus{border-color:var(--or);}
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bdr);}
+.notif-row:last-child{border-bottom:none;}
+.ntog{width:40px;height:24px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.ntog::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.ntog.on{background:var(--green);}
+.ntog.on::after{transform:translateX(16px);}
+.logout-btn{width:100%;background:transparent;color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .18s;margin-top:8px;}
+.logout-btn:hover{border-color:#EF4444;color:#EF4444;}
+.logout-btn svg{width:16px;height:16px;}
+
+/* MODALS */
+.bd{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.bd.on{display:flex;animation:bi .18s ease;}
+@keyframes bi{from{opacity:0}to{opacity:1}}
+.modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;animation:mi .25s ease;}
+.modal.sm{max-width:380px;}
+@keyframes mi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.mhd{padding:20px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.mbd{padding:18px 20px 22px;}
+.mcl{width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid);transition:all .18s;}
+.mcl:hover{background:var(--orp);color:var(--or);}
+.pb{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:12px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;transition:all .18s;border:none;}
+.pb.pri{background:var(--or);color:#fff;}.pb.pri:hover{background:var(--ord);}
+.pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
+.pb.blk{background:var(--ink);color:#fff;}.pb.blk:hover{background:#333;}
+.pb.fol{background:var(--orp);color:var(--or);border:1.5px solid var(--orp);}
+.pb.fol.on{background:var(--green);color:#fff;border-color:var(--green);}
+.pb svg{width:16px;height:16px;}
+.rban{background:var(--or);border-radius:12px;padding:18px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden;}
+.rban::after{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1);}
+.bdn{background:var(--bg);border-radius:12px;padding:14px;margin-bottom:14px;}
+.br{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13.5px;}
+.br:not(:last-child){border-bottom:1px solid var(--bdr);}
+.br .l{color:var(--mid);}.br .v{font-weight:600;}
+.br.tot .l{font-weight:700;color:var(--ink);}.br.tot .v{color:var(--or);font-size:17px;font-weight:800;}
+.ibox{background:var(--orp);border-radius:10px;padding:12px 14px;display:flex;gap:10px;margin-bottom:18px;font-size:13px;line-height:1.55;color:var(--mid);}
+.ibox>svg{width:16px;height:16px;color:var(--or);flex-shrink:0;margin-top:2px;}
+.arow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.phdr{padding:28px 20px 0;text-align:center;}
+.mpav{width:72px;height:72px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;}
+.pnm{font-size:18px;font-weight:800;margin-bottom:2px;}
+.prl{font-size:13px;color:var(--mid);margin-bottom:10px;}
+.pbdg{display:inline-flex;align-items:center;gap:5px;background:var(--orp);color:var(--or);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:600;}
+.pstbl{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bdr);border-radius:12px;overflow:hidden;margin:16px 20px;}
+.pstc{background:var(--wh);padding:12px;text-align:center;}
+.pstv{font-size:19px;font-weight:800;}
+.pstl{font-size:11px;color:var(--lite);margin-top:1px;}
+.pbio{font-size:13.5px;color:var(--mid);line-height:1.65;padding:4px 20px 14px;}
+.ptags{display:flex;flex-wrap:wrap;gap:8px;padding:0 20px 20px;}
+.tag{background:var(--bg);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--mid);}
+.pacts{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 22px;}
+.pcl2{padding:0 20px 22px;border-top:1px solid var(--bdr);}
+.pclh{font-size:12px;font-weight:600;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin:16px 0 10px;}
+.pcrow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);}
+.pcrow:last-child{border-bottom:none;}
+.fpico{width:52px;height:52px;border-radius:50%;background:var(--orp);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.fpico svg{width:24px;height:24px;color:var(--or);}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.so{border:1.5px solid var(--bdr);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all .18s;font-size:13px;font-weight:500;color:var(--mid);}
+.so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
+.fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;background:var(--wh);}
+.fi3:focus{border-color:var(--or);}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;border-radius:12px;padding:13px 18px;display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);pointer-events:none;transition:all .28s;}
+.toast.on{opacity:1;transform:translateY(0);}
+.tico{width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tico svg{width:14px;height:14px;color:#fff;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media(max-width:640px){.cnt,.acc-body{padding:16px}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 6px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lbox">
+    <div class="lhero">
+      <div class="llogo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <h1>CoursPool</h1>
+      <p>Apprenez ensemble, partagez les frais</p>
+    </div>
+    <div class="lbody">
+      <div class="ltabs">
+        <div class="ltab on" id="ltC" onclick="switchLT('C')">Se connecter</div>
+        <div class="ltab" id="ltI" onclick="switchLT('I')">S'inscrire</div>
+      </div>
+      <div class="lf on" id="lfC">
+        <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com"></div>
+        <div class="lfield"><label>Mot de passe</label><input id="lPw" type="password" placeholder="••••••••"></div>
+        <button class="lbtn" onclick="doLogin()">Se connecter</button>
+        <div class="lsep">ou</div>
+        <button class="lguest" onclick="doGuest()">Continuer sans compte</button>
+      </div>
+      <div class="lf" id="lfI">
+        <div class="rg">
+          <div class="lfield"><label>Prénom</label><input id="rPr" type="text" placeholder="Marc"></div>
+          <div class="lfield"><label>Nom</label><input id="rNm" type="text" placeholder="Rousseau"></div>
+        </div>
+        <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com"></div>
+        <div class="lfield"><label>Mot de passe</label><input id="rPw" type="password" placeholder="••••••••"></div>
+        <div class="lfield"><label>Je suis</label>
+          <div class="rg" style="margin-top:4px">
+            <div class="ropt" id="rEl" onclick="pickR('El')">🎓 Élève</div>
+            <div class="ropt" id="rPf" onclick="pickR('Pf')">👨‍🏫 Professeur</div>
+          </div>
+        </div>
+        <button class="lbtn" onclick="doReg()">Créer mon compte</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+    <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
+    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="topbar-right">
+      <button class="btnadd" onclick="openCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Proposer un cours</button>
+      <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
+    </div>
+  </header>
+
+  <!-- EXPLORE -->
+  <div class="pg on" id="pgExp">
+    <div class="cnt">
+      <div class="locbar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input type="text" value="Paris 75005" placeholder="Votre ville…">
+        <div class="rsel">
+          <div class="ro" onclick="setR(this)">1 km</div>
+          <div class="ro on" onclick="setR(this)">5 km</div>
+          <div class="ro" onclick="setR(this)">10 km</div>
+          <div class="ro" onclick="setR(this)">Partout</div>
+        </div>
+      </div>
+      <div class="pills">
+        <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
+        <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
+        <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
+        <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
+        <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
+        <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
+        <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
+        <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div id="loadMoreWrap" style="text-align:center;margin-top:24px;display:none">
+        <button id="loadMoreBtn" onclick="loadMore()" style="background:var(--wh);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:11px 28px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          Charger plus de cours
+        </button>
+        <div style="font-size:12px;color:var(--lite);margin-top:8px" id="loadMoreCount"></div>
+      </div>
+      <div class="nocard" id="nocard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours trouvé</div>
+        <div style="font-size:14px">Essayez un autre filtre</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT PAGE -->
+  <div class="pg" id="pgAcc">
+    <div class="acc-page">
+      <div class="acc-hero">
+        <button class="acc-back" onclick="goExplore()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Retour
+        </button>
+        <div style="padding-top:24px">
+          <div class="acc-av" id="accAv">?</div>
+          <div class="acc-name" id="accName">—</div>
+          <div class="acc-email" id="accEmail">—</div>
+          <div class="acc-chips">
+            <div class="acc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="accChipR">0 cours réservé</span></div>
+            <div class="acc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg><span id="accChipF">0 prof suivi</span></div>
+            <div class="acc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>3 cours terminés</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-tabs">
+        <div class="atab on" id="aTabR" onclick="switchATab('R',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Mes réservations</div>
+        <div class="atab" id="aTabF" onclick="switchATab('F',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>Profs suivis</div>
+        <div class="atab" id="aTabH" onclick="switchATab('H',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</div>
+        <div class="atab" id="aTabP" onclick="switchATab('P',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Mon profil</div>
+      </div>
+
+      <div class="acc-body">
+
+        <!-- RÉSERVATIONS -->
+        <div class="asec on" id="asecR">
+          <div class="sec-title">Cours à venir</div>
+          <div id="listR"></div>
+        </div>
+
+        <!-- SUIVIS -->
+        <div class="asec" id="asecF">
+          <div class="sec-title">Professeurs suivis</div>
+          <div id="listF"></div>
+        </div>
+
+        <!-- HISTORIQUE -->
+        <div class="asec" id="asecH">
+          <div class="sec-title">Cours terminés</div>
+          <div class="rrow"><div class="rdot" style="background:#F0FDF4">📐</div><div class="ri"><div class="rt">Dérivées & Intégrales — Bases</div><div class="rm">Thomas Klein · 8 mars 2025 · ENS Paris</div></div><span class="rbadge bdone">Terminé</span></div>
+          <div class="rrow"><div class="rdot" style="background:#EEF2FF">💻</div><div class="ri"><div class="rt">Intro Python — Variables & Boucles</div><div class="rm">Amira Morel · 2 mars 2025 · Station F</div></div><span class="rbadge bdone">Terminé</span></div>
+          <div class="rrow"><div class="rdot" style="background:#ECFDF5">🌍</div><div class="ri"><div class="rt">TOEFL Writing Practice</div><div class="rm">Sophie Chen · 22 fév. 2025 · Café Procope</div></div><span class="rbadge bdone">Terminé</span></div>
+        </div>
+
+        <!-- PROFIL -->
+        <div class="asec" id="asecP">
+          <div class="prof-card">
+            <h3>Informations personnelles</h3>
+            <div class="fgrid">
+              <div class="fg"><label class="flbl">Prénom</label><input id="pfPr" class="fi2" type="text"></div>
+              <div class="fg"><label class="flbl">Nom</label><input id="pfNm" class="fi2" type="text"></div>
+            </div>
+            <div class="fg"><label class="flbl">Email</label><input id="pfEm" class="fi2" type="email"></div>
+            <div class="fg"><label class="flbl">Ville</label><input class="fi2" type="text" value="Paris 75005"></div>
+            <div class="fg"><label class="flbl">Je suis</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+                <div class="so on" onclick="this.parentElement.querySelectorAll('.so').forEach(s=>s.classList.remove('on'));this.classList.add('on')">🎓 Élève</div>
+                <div class="so" onclick="this.parentElement.querySelectorAll('.so').forEach(s=>s.classList.remove('on'));this.classList.add('on')">👨‍🏫 Professeur</div>
+              </div>
+            </div>
+            <button class="pb pri" style="width:100%" onclick="saveProf()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Sauvegarder les modifications</button>
+          </div>
+
+          <div class="prof-card">
+            <h3>Notifications</h3>
+            <div class="notif-row"><div><div style="font-size:14px;font-weight:600">Nouveaux cours</div><div style="font-size:12px;color:var(--lite)">Quand un prof suivi publie un cours</div></div><div class="ntog on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="notif-row"><div><div style="font-size:14px;font-weight:600">Rappel de cours</div><div style="font-size:12px;color:var(--lite)">1 heure avant le début du cours</div></div><div class="ntog on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="notif-row"><div><div style="font-size:14px;font-weight:600">Promotions & offres</div><div style="font-size:12px;color:var(--lite)">Réductions et offres spéciales</div></div><div class="ntog" onclick="this.classList.toggle('on')"></div></div>
+          </div>
+
+          <button class="logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Se déconnecter</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- MODAL RÉSERVATION -->
+<div class="bd" id="bdR" onclick="if(event.target===this)closeR()">
+  <div class="modal">
+    <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Réservation</div><div style="font-size:17px;font-weight:800" id="rTit"></div></div><button class="mcl" onclick="closeR()">✕</button></div>
+    <div class="mbd">
+      <div class="rban"><div style="font-size:12px;opacity:.8;margin-bottom:3px;position:relative;z-index:1" id="rSbj"></div><div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div><div style="font-size:12px;opacity:.75;margin-top:8px;position:relative;z-index:1" id="rLc"></div></div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">Détail du prix</div>
+      <div class="bdn">
+        <div class="br"><span class="l">Prix total</span><span class="v" id="rTot"></span></div>
+        <div class="br"><span class="l">Participants (vous inclus)</span><span class="v" id="rCnt"></span></div>
+        <div class="br"><span class="l" style="color:var(--or)">Acompte maintenant</span><span class="v" style="color:var(--or)" id="rDp"></span></div>
+        <div class="br tot"><span class="l">Votre part finale</span><span class="v" id="rFin"></span></div>
+      </div>
+      <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
+      <div class="arow">
+        <button class="pb pri" onclick="confR('acompte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Acompte <strong id="rDpB"></strong></button>
+        <button class="pb blk" onclick="confR('total')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Total <strong id="rFinB"></strong></button>
+      </div>
+      <button class="pb sec" style="width:100%" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AUTRE PERSONNE -->
+<div class="bd" id="bdO" onclick="if(event.target===this)closeO()">
+  <div class="modal sm">
+    <div style="padding:28px 24px 24px;text-align:center">
+      <div class="fpico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:6px">Vous avez déjà une place</div>
+      <div style="font-size:13px;color:var(--mid);margin-bottom:6px" id="oTit"></div>
+      <div style="font-size:13px;color:var(--lite);margin-bottom:16px">Prix actuel : <strong style="color:var(--or)" id="oPrc"></strong></div>
+      <div style="font-size:13.5px;color:var(--mid);background:var(--bg);border-radius:10px;padding:13px;margin-bottom:20px;line-height:1.6">Voulez-vous réserver une place pour <strong>une autre personne</strong> ?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="pb sec" onclick="closeO()">Annuler</button><button class="pb pri" onclick="confO()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Oui, réserver</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUIVRE -->
+<div class="bd" id="bdF" onclick="if(event.target===this)closeF()">
+  <div class="modal sm">
+    <div style="padding:28px 24px 24px;text-align:center">
+      <div class="fpico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:4px">Suivre <span id="fNm"></span></div>
+      <div style="font-size:12px;color:var(--lite);margin-bottom:14px" id="fCr"></div>
+      <div style="font-size:13.5px;color:var(--mid);background:var(--bg);border-radius:10px;padding:13px;margin-bottom:20px;line-height:1.6">Ce cours est complet. Suivez ce professeur pour être notifié en priorité de ses prochains cours !</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="pb sec" onclick="closeF()">Plus tard</button><button class="pb pri" onclick="confF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Suivre</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PROFIL PROF -->
+<div class="bd" id="bdPr" onclick="if(event.target===this)closePr()">
+  <div class="modal">
+    <div style="display:flex;justify-content:flex-end;padding:16px 16px 0"><button class="mcl" onclick="closePr()">✕</button></div>
+    <div class="phdr"><div class="mpav" id="mpav"></div><div class="pnm" id="mpnm"></div><div class="prl" id="mprl"></div><span class="pbdg"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span id="mpbd"></span></span></div>
+    <div class="pstbl"><div class="pstc"><div class="pstv" id="mpC"></div><div class="pstl">Cours donnés</div></div><div class="pstc"><div class="pstv" id="mpN"></div><div class="pstl">Note moyenne</div></div><div class="pstc"><div class="pstv" id="mpE"></div><div class="pstl">Élèves</div></div></div>
+    <p class="pbio" id="mpBio"></p>
+    <div class="ptags" id="mpTags"></div>
+    <div class="pacts">
+      <button class="pb pri" onclick="contPr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter</button>
+      <button class="pb fol" id="bFP" onclick="togFP()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg><span id="bFPt">Suivre</span></button>
+    </div>
+    <div class="pcl2"><div class="pclh">Prochains cours</div><div id="mpCrs"></div></div>
+  </div>
+</div>
+
+<!-- MODAL CRÉER -->
+<div class="bd" id="bdCr" onclick="if(event.target===this)closeCr()">
+  <div class="modal">
+    <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Nouveau cours</div><div style="font-size:17px;font-weight:800">Proposer un cours</div></div><button class="mcl" onclick="closeCr()">✕</button></div>
+    <div class="mbd">
+      <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Matière</label><div class="sg"><div class="so" onclick="pickS(this)">📐 Maths</div><div class="so" onclick="pickS(this)">⚗️ Physique</div><div class="so" onclick="pickS(this)">💻 Info</div><div class="so" onclick="pickS(this)">🌍 Langues</div><div class="so" onclick="pickS(this)">📊 Éco</div><div class="so" onclick="pickS(this)">✨ Autre</div></div></div>
+      <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" type="text" placeholder="Ex : Dérivées et primitives…"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px"><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label><input class="fi3" type="date"></div><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label><input class="fi3" type="time"></div></div>
+      <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label><input class="fi3" type="text" placeholder="Bibliothèque, café, adresse…"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px"><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Durée (min)</label><input class="fi3" type="number" value="60"></div><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Places max</label><input class="fi3" id="cPl" type="number" value="5" oninput="calcH()"></div></div>
+      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Prix total (€)</label><input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()"><div id="cH" style="font-size:12px;color:var(--lite);margin-top:6px"></div></div>
+      <button class="pb pri" style="width:100%" onclick="subCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier le cours</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FICHE COURS -->
+<div class="bd" id="bdInfo" onclick="if(event.target===this)closeInfo()">
+  <div class="modal">
+    <div style="display:flex;justify-content:flex-end;padding:16px 16px 0"><button class="mcl" onclick="closeInfo()">✕</button></div>
+    <div id="infoBanner" style="margin:0 20px 18px;border-radius:14px;padding:20px;color:#fff;position:relative;overflow:hidden">
+      <div style="font-size:12px;opacity:.8;margin-bottom:4px;position:relative;z-index:1" id="infoSubj"></div>
+      <div style="font-size:17px;font-weight:800;margin-bottom:10px;position:relative;z-index:1" id="infoTitle"></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;position:relative;z-index:1">
+        <div style="font-size:13px;opacity:.9;display:flex;align-items:center;gap:5px" id="infoDate"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span></span></div>
+        <div style="font-size:13px;opacity:.9;display:flex;align-items:center;gap:5px" id="infoLoc"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span></span></div>
+      </div>
+      <div style="position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)"></div>
+    </div>
+    <div style="padding:0 20px 6px">
+      <!-- Prof -->
+      <div id="infoProfRow" style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:13px;margin-bottom:18px;cursor:pointer" onclick="closeInfo();setTimeout(()=>openPr(window._infoProfId),100)">
+        <div id="infoProfAv" style="width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0"></div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700" id="infoProfNm"></div>
+          <div style="font-size:12px;color:var(--mid)" id="infoProfRl"></div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <!-- Prix -->
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">Détail du prix</div>
+      <div class="bdn" style="margin-bottom:16px">
+        <div class="br"><span class="l">Prix total du cours</span><span class="v" id="infoTot"></span></div>
+        <div class="br"><span class="l">Places réservées</span><span class="v" id="infoFilled"></span></div>
+        <div class="br tot"><span class="l">Prix par élève (actuel)</span><span class="v" id="infoPP"></span></div>
+      </div>
+      <!-- Spots bar -->
+      <div style="margin-bottom:18px">
+        <div style="font-size:12px;color:var(--lite);display:flex;justify-content:space-between;margin-bottom:6px"><span>Places disponibles</span><span id="infoSpots"></span></div>
+        <div class="bar" style="height:6px"><div class="bf" id="infoBar"></div></div>
+      </div>
+      <!-- Status badge + action -->
+      <div id="infoStatus" style="background:var(--orp);border-radius:12px;padding:13px;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><div style="font-size:14px;font-weight:700;color:var(--or)" id="infoStatusTitle"></div><div style="font-size:12px;color:var(--mid)" id="infoStatusSub"></div></div>
+      </div>
+    </div>
+    <div style="padding:0 20px 22px;display:flex;gap:10px" id="infoActions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
+
+<script>
+const C=[
+  {id:'stat',    t:'statistiques maths thomas sam',                subj:'Statistiques',sc:'var(--or)',  bg:'linear-gradient(135deg,#FFF0E8,#FFD6C0)',title:"Tests d'hypothèses & IC",                   dt:'Sam. 15 mars · 16h–17h',   lc:'Bibl. Sainte-Geneviève · 1.2 km',tot:50,sp:5,fl:3,pr:'thomas',em:'📊'},
+  {id:'python',  t:'informatique python data amira dim',           subj:'Informatique',sc:'#4F46E5',    bg:'linear-gradient(135deg,#EEF2FF,#C7D2FE)',title:'Python data science — Pandas & Numpy',       dt:'Dim. 16 mars · 14h–16h',   lc:'Station F · 3.7 km',            tot:80,sp:5,fl:1,pr:'amira', em:'💻'},
+  {id:'english', t:'anglais langues toefl sophie lun soir',        subj:'Anglais',     sc:'#059669',    bg:'linear-gradient(135deg,#ECFDF5,#A7F3D0)',title:'Préparation TOEFL — Écrit & Oral',           dt:'Lun. 17 mars · 18h–19h30', lc:'Café Procope · 0.8 km',         tot:45,sp:3,fl:2,pr:'sophie',em:'🌍'},
+  {id:'eco',     t:'economie macroeconomie jean mer',              subj:'Économie',    sc:'#D97706',    bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)',title:'Macroéconomie — IS-LM',                      dt:'Mer. 19 mars · 17h–18h',   lc:'Sciences Po Paris · 2.1 km',    tot:40,sp:5,fl:0,pr:'jean',  em:'📈'},
+  {id:'physique',t:'physique quantique rafael jeu',                subj:'Physique',    sc:'#BE185D',    bg:'linear-gradient(135deg,#FDF2F8,#F9A8D4)',title:'Mécanique quantique — Schrödinger',          dt:'Jeu. 20 mars · 10h–11h30', lc:'ENS Paris · 1.9 km',            tot:60,sp:5,fl:2,pr:'rafael',em:'⚗️'},
+  {id:'alg',     t:'maths algebre lineaire leila sam weekend',     subj:'Maths',       sc:'#16A34A',    bg:'linear-gradient(135deg,#F0FDF4,#BBF7D0)',title:'Algèbre linéaire — Matrices & Espaces',      dt:'Sam. 15 mars · 16h–17h30', lc:'ENS Paris · 1.9 km',            tot:60,sp:5,fl:4,pr:'leila', em:'📐'},
+  {id:'react',   t:'informatique javascript react kenji dim weekend',subj:'Informatique',sc:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)',title:'React & JavaScript — Hooks',                dt:'Dim. 16 mars · 10h–12h',   lc:'WeWork Opéra · 2.4 km',         tot:70,sp:5,fl:2,pr:'kenji', em:'⚡'},
+  {id:'esp',     t:'espagnol langues conversation sara lun soir',  subj:'Espagnol',    sc:'#EA580C',    bg:'linear-gradient(135deg,#FFF7ED,#FED7AA)',title:'Espagnol conversationnel — B2',              dt:'Lun. 17 mars · 19h–20h',   lc:'Institut Cervantes · 1.1 km',   tot:30,sp:3,fl:1,pr:'sara',  em:'🇪🇸'},
+  {id:'analyse', t:'maths analyse fourier leila mar',              subj:'Maths',       sc:'#7C3AED',    bg:'linear-gradient(135deg,#F5F3FF,#DDD6FE)',title:'Analyse — Séries de Fourier',               dt:'Mar. 18 mars · 14h–15h30', lc:'BnF · 3.2 km',                  tot:55,sp:5,fl:2,pr:'leila', em:'∫'},
+  {id:'elec',    t:'physique electromagnetisme maxwell rafael jeu', subj:'Physique',    sc:'#B45309',    bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',title:'Électromagnétisme — Maxwell',               dt:'Jeu. 20 mars · 15h–16h30', lc:'ENS Paris · 1.9 km',            tot:50,sp:5,fl:3,pr:'rafael',em:'🔌'},
+  {id:'sql',     t:'informatique sql bases kenji mer soir',        subj:'Informatique',sc:'#065F46',    bg:'linear-gradient(135deg,#F0FDF4,#D1FAE5)',title:'SQL & Bases de données avancées',           dt:'Mer. 19 mars · 18h–19h30', lc:'Station F · 3.7 km',            tot:60,sp:5,fl:0,pr:'kenji', em:'🗄️'},
+  {id:'finance', t:'economie finance marches jean ven soir',       subj:'Économie',    sc:'#BE123C',    bg:'linear-gradient(135deg,#FFF1F2,#FECDD3)',title:'Finance de marché — Actions & Risque',      dt:'Ven. 21 mars · 18h30–20h', lc:'Sciences Po · 2.1 km',          tot:75,sp:5,fl:2,pr:'jean',  em:'💰'},
+  {id:'bizeng',  t:'anglais business langues sophie lun soir',     subj:'Anglais',     sc:'#0F766E',    bg:'linear-gradient(135deg,#F0FDFA,#99F6E4)',title:'Business English — Négociations',           dt:'Lun. 17 mars · 20h–21h',   lc:'Café de Flore · 0.5 km',        tot:40,sp:3,fl:1,pr:'sophie',em:'🤝'},
+];
+const P={
+  thomas:{i:'TK',col:'linear-gradient(135deg,#FF8C55,#E04E10)',nm:'Thomas Klein',    rl:'Professeur certifié · Maths & Stats',bd:'Certifié',    c:34,n:'4.9',e:128,bio:"Ancien élève ENS Lyon, 5 ans d'expérience. Pédagogie axée sur la compréhension profonde.",   tags:['Statistiques','Algèbre','Probabilités'],crs:["Tests d'hypothèses · Sam. 16h","Régression · Sam. 18h"]},
+  amira: {i:'AM',col:'linear-gradient(135deg,#818CF8,#4F46E5)',nm:'Amira Morel',     rl:'Étudiante M2 IA · CentraleSupélec',   bd:'M2 IA',       c:18,n:'4.8',e:72, bio:"En master IA. Cours pratiques sur données réelles.",                                          tags:['Python','Machine Learning','Pandas'],   crs:['Python Pandas · Dim. 14h','Intro ML · Mer. 19h']},
+  sophie:{i:'SC',col:'linear-gradient(135deg,#34D399,#059669)',nm:'Sophie Chen',     rl:'Native speaker · Certif. TEFL',       bd:'Native',      c:51,n:'5.0',e:203,bio:"Née à Londres. Cours intensifs TOEFL, IELTS et entretiens professionnels.",                    tags:['TOEFL','IELTS','Business English'],    crs:['TOEFL Oral · Lun. 18h','Conversation B2 · Jeu. 20h']},
+  jean:  {i:'JD',col:'linear-gradient(135deg,#FCD34D,#D97706)',nm:'Jean Dubois',     rl:'Doctorant en économie · Paris 1',     bd:'Doctorant',   c:22,n:'4.7',e:88, bio:"Doctorant en économie internationale. Macro accessible avec des exemples concrets.",         tags:['Macroéconomie','IS-LM','Finance'],     crs:['IS-LM · Mer. 17h','Finance · Ven. 18h30']},
+  rafael:{i:'RL',col:'linear-gradient(135deg,#F472B6,#BE185D)',nm:'Rafael Lopez',    rl:'Agrégé de physique',                  bd:'Agrégé',      c:41,n:'4.9',e:156,bio:"Agrégé de physique, prépare aux concours grandes écoles depuis 8 ans.",                       tags:['Physique quantique','Optique','Prépas'],crs:['Schrödinger · Jeu. 10h','Maxwell · Jeu. 15h']},
+  leila: {i:'LM',col:'linear-gradient(135deg,#4ADE80,#16A34A)',nm:'Leila Mansour',   rl:'Agrégée de mathématiques',            bd:'Agrégée',     c:29,n:'4.8',e:110,bio:"Agrégée de maths. Aide les étudiants à visualiser les concepts abstraits.",                  tags:['Algèbre','Analyse','Prépas'],          crs:['Matrices · Sam. 16h','Fourier · Mar. 14h']},
+  kenji: {i:'KT',col:'linear-gradient(135deg,#60A5FA,#2563EB)',nm:'Kenji Tanaka',    rl:'Ingénieur full-stack · 5 ans exp.',   bd:'Pro certifié',c:26,n:'4.9',e:94, bio:"Ingénieur dans une startup parisienne. Code propre, architecture solide.",                   tags:['React','JavaScript','SQL'],            crs:['React Hooks · Dim. 10h','SQL avancé · Mer. 18h']},
+  sara:  {i:'SG',col:'linear-gradient(135deg,#FB923C,#EA580C)',nm:'Sara González',   rl:'Native speaker · Madrid',             bd:'Native',      c:19,n:'4.9',e:67, bio:"Originaire de Madrid. Cours de conversation espagnole décontractés.",                         tags:['Conversation','DELE','Espagnol B2'],  crs:['Conversation B2 · Lun. 19h','Grammaire · Jeu. 18h']},
+};
+
+const res={},fol=new Set();
+let curId=null,curProf=null,folPr=null,actF='tous',user=null;
+
+// LOGIN
+function switchLT(t){g('ltC').classList.toggle('on',t==='C');g('ltI').classList.toggle('on',t==='I');g('lfC').classList.toggle('on',t==='C');g('lfI').classList.toggle('on',t==='I');}
+function pickR(r){g('rEl').classList.toggle('on',r==='El');g('rPf').classList.toggle('on',r==='Pf');}
+function doLogin(){const em=g('lEm').value.trim(),pw=g('lPw').value;if(!em||!pw){shake('lfC');return;}const pts=em.split('@')[0].split('.');go(cap(pts[0]),pts[1]?cap(pts[1]):'',em);}
+function doReg(){const pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;if(!pr||!em||!pw){shake('lfI');return;}go(pr,nm,em);}
+function doGuest(){go('Invité','','invité@courspool.fr');}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
+function go(pr,nm,em){
+  user={pr,nm,em,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
+  g('login').style.display='none';g('app').style.display='block';
+  g('tav').textContent=user.ini;
+  buildCards();
+  toast('Bienvenue '+pr+' !','Vous êtes connecté à CoursPool');
+}
+function shake(id){const e=g(id);e.style.animation='shake .3s';setTimeout(()=>e.style.animation='',400);}
+
+// PAGES
+function goExplore(){g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');}
+function goAccount(){
+  if(!user)return;
+  g('pgExp').classList.remove('on');g('pgAcc').classList.add('on');
+  g('accAv').textContent=user.ini;
+  g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
+  g('accEmail').textContent=user.em;
+  g('pfPr').value=user.pr||'';g('pfNm').value=user.nm||'';g('pfEm').value=user.em||'';
+  buildAccLists();
+}
+function switchATab(s,el){
+  ['R','F','H','P'].forEach(x=>{g('asec'+x).classList.remove('on');g('aTab'+x).classList.remove('on');});
+  g('asec'+s).classList.add('on');el.classList.add('on');
+}
+function buildAccLists(){
+  const rIds=Object.keys(res),fIds=Array.from(fol);
+  g('accChipR').textContent=rIds.length+' cours réservé'+(rIds.length>1?'s':'');
+  g('accChipF').textContent=fIds.length+' prof'+(fIds.length>1?'s':'')+' suivi'+(fIds.length>1?'s':'');
+  // reservations
+  const lr=g('listR');
+  if(!rIds.length){lr.innerHTML='<div class="bempty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>Aucun cours réservé pour l\'instant.<br><a onclick="goExplore()">Explorer les cours disponibles →</a></p></div>';}
+  else{lr.innerHTML=rIds.map(id=>{const c=C.find(x=>x.id===id);if(!c)return'';const p=P[c.pr];return`<div class="rrow" onclick="goExplore();setTimeout(()=>openInfo('${id}'),200)"><div class="rdot" style="background:${c.bg.split(',')[1]?.trim()||'#f5f5f5'}">${c.em}</div><div class="ri"><div class="rt">${c.title}</div><div class="rm">${p.nm} · ${c.dt} · ${c.lc}</div></div><span class="rbadge bup">À venir</span></div>`;}).join('');}
+  // followed
+  const lf=g('listF');
+  if(!fIds.length){lf.innerHTML='<div class="bempty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Vous ne suivez encore aucun professeur.</p></div>';}
+  else{lf.innerHTML=fIds.map(id=>{const p=P[id];if(!p)return'';const nb=C.filter(c=>c.pr===id&&!res[c.id]&&c.fl<c.sp).length;return`<div class="frow"><div class="fav" style="background:${p.col}">${p.i}</div><div class="fi"><div class="fn">${p.nm}</div><div class="fr">${p.rl}${nb>0?' · <span style="color:var(--or);font-weight:600">'+nb+' cours dispo</span>':''}</div></div><div style="display:flex;gap:8px"><button class="pb sec" style="padding:8px 12px;font-size:12px" onclick="openPr('${id}')">Voir</button><button class="pb sec" style="padding:8px 12px;font-size:12px;color:var(--lite)" onclick="fol.delete('${id}');buildAccLists()">✕</button></div></div>`;}).join('');}
+}
+function saveProf(){if(!user)return;user.pr=g('pfPr').value||user.pr;user.nm=g('pfNm').value||'';user.em=g('pfEm').value||user.em;user.ini=(user.pr[0]+(user.nm?user.nm[0]:'')).toUpperCase();g('tav').textContent=user.ini;g('accAv').textContent=user.ini;g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');g('accEmail').textContent=user.em;toast('Profil sauvegardé','Vos informations ont été mises à jour');}
+function doLogout(){g('app').style.display='none';g('login').style.display='flex';Object.keys(res).forEach(k=>delete res[k]);fol.clear();user=null;g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');toast('Déconnecté','À bientôt sur CoursPool !');}
+
+// CARDS
+function buildCards(){
+  const grid=g('grid');grid.innerHTML='';
+  C.forEach((c,i)=>{
+    const p=P[c.pr],full=c.fl>=c.sp,isR=!!res[c.id];
+    const pct=Math.round(c.fl/c.sp*100),pp=Math.ceil(c.tot/Math.max(c.fl,1));
+    const bc=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
+    let btn;
+    if(isR)btn=`<button class="btnres">Réservé ✓</button>`;
+    else if(full)btn=`<div style="display:flex;gap:6px"><button class="btnfol" onclick="event.stopPropagation();openF('${c.pr}','${c.title}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Suivre</button><button class="btnfull" onclick="event.stopPropagation();openF('${c.pr}','${c.title}')">Complet</button></div>`;
+    else btn=`<button class="btnr" onclick="event.stopPropagation();openR('${c.id}')">Réserver</button>`;
+    const d=document.createElement('div');
+    d.className='card';d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
+    d.onclick=()=>{if(res[c.id]){openO(c.id);return;}if(c.fl>=c.sp){openF(c.pr,c.title);return;}openR(c.id);};
+    d.innerHTML=`<div class="ctop" style="background:${c.bg}"><span class="chip" style="color:${c.sc}">${c.subj}</span><div class="pbub" style="background:${p.col}" onclick="event.stopPropagation();openPr('${c.pr}')">${p.i}<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div></div></div><div class="cbody"><div class="ctitle">${c.title}</div><div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${c.dt.split(' · ')[1]||''}</div><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${c.dt.split(' · ')[0]}</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${c.lc}</div><div class="cf"><div><div class="ps">Total ${c.tot}€</div><div class="pm">${pp}€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>${c.fl}/${c.sp}</span></div><div class="bar"><div class="bf" style="width:${pct}%;background:${bc}"></div></div></div>${btn}</div></div>`;
+    grid.appendChild(d);
+  });
+  applyFilter();
+}
+
+// FILTER
+const FM={tous:()=>true,maths:t=>/maths|algebre|statist|analyse|fourier/.test(t),physique:t=>/physique|electro|maxwell|quantique/.test(t),informatique:t=>/informatique|python|data|react|javascript|sql/.test(t),langues:t=>/anglais|espagnol|langues|toefl/.test(t),economie:t=>/economie|macro|finance/.test(t),soir:t=>/18h|19h|20h|soir/.test(t),weekend:t=>/sam|dim|weekend/.test(t)};
+function doFilter(){const q=g('srch').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');let v=0;document.querySelectorAll('.card').forEach(card=>{const t=(card.dataset.t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')+' '+(card.querySelector('.ctitle')?.textContent||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const show=(FM[actF]||FM.tous)(t)&&(!q||t.includes(q));card.classList.toggle('hide',!show);if(show)v++;});g('nocard').style.display=v===0?'block':'none';}
+function setPill(el){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));el.classList.add('on');actF=el.dataset.f;doFilter();}
+
+// RESERVATION
+function openR(id){const c=C.find(x=>x.id===id);if(!c)return;if(res[id]){openO(id);return;}if(c.fl>=c.sp){openF(c.pr,c.title);return;}curId=id;const n=c.fl+1,pp=Math.ceil(c.tot/n),dp=Math.max(3,Math.ceil(pp*.3));g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;g('rTot').textContent=c.tot+'€';g('rCnt').textContent=n+' personnes';g('rDp').textContent=dp+'€';g('rFin').textContent=pp+'€ / élève';g('rDpB').textContent=dp+'€';g('rFinB').textContent=pp+'€';g('rInf').innerHTML=`Acompte de <strong>${dp}€</strong> maintenant. Solde ajusté 1h avant le cours.`;openM('bdR');}
+function closeR(){closeM('bdR');}
+function confR(mode){const id=curId;if(!id)return;const c=C.find(x=>x.id===id);if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();const pp=Math.ceil(c.tot/c.fl),dp=Math.max(3,Math.ceil(pp*.3));toast('Place réservée !',mode==='acompte'?`Acompte ${dp}€ · ${c.sp-c.fl} place(s) restante(s)`:`${pp}€ payés · Inscrit ✓`);}
+function contR(){closeM('bdR');toast('Message envoyé','Le professeur vous répondra bientôt');}
+
+// AUTRE PERSONNE
+function openO(id){curId=id;const c=C.find(x=>x.id===id);g('oTit').textContent=c.title;g('oPrc').textContent=Math.ceil(c.tot/Math.max(c.fl,1))+'€ / élève';openM('bdO');}
+function closeO(){closeM('bdO');}
+function confO(){const id=curId;closeM('bdO');const c=C.find(x=>x.id===id);if(c.fl>=c.sp){openF(c.pr,c.title);return;}const n=c.fl+1,pp=Math.ceil(c.tot/n),dp=Math.max(3,Math.ceil(pp*.3));curId=id;g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;g('rTot').textContent=c.tot+'€';g('rCnt').textContent=n+' personnes';g('rDp').textContent=dp+'€';g('rFin').textContent=pp+'€ / élève';g('rDpB').textContent=dp+'€';g('rFinB').textContent=pp+'€';g('rInf').innerHTML=`Réservation pour une <strong>autre personne</strong>. Acompte <strong>${dp}€</strong>.`;openM('bdR');}
+
+// FOLLOW
+function openF(pid,title){folPr=pid;const p=P[pid]||{};g('fNm').textContent=p.nm||'ce professeur';g('fCr').textContent=title||'';openM('bdF');}
+function closeF(){closeM('bdF');folPr=null;}
+function confF(){if(folPr)fol.add(folPr);const p=P[folPr]||{};closeM('bdF');toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours 🔔');folPr=null;}
+
+// PROFIL PROF
+function openPr(pid){curProf=pid;const p=P[pid];if(!p)return;const av=g('mpav');av.style.background=p.col;av.textContent=p.i;g('mpnm').textContent=p.nm;g('mprl').textContent=p.rl;g('mpbd').textContent=p.bd;g('mpC').textContent=p.c;g('mpN').textContent=p.n+' ★';g('mpE').textContent=p.e;g('mpBio').textContent=p.bio;g('mpTags').innerHTML=p.tags.map(t=>`<span class="tag">${t}</span>`).join('');g('mpCrs').innerHTML=p.crs.map(cr=>`<div class="pcrow"><div style="font-size:13.5px;font-weight:500">${cr}</div><button class="btnr" style="font-size:12px;padding:6px 12px" onclick="closePr();toast('Cours sélectionné','Complétez votre réservation')">Réserver</button></div>`).join('');const fb=g('bFP'),ft=g('bFPt');fb.classList.toggle('on',fol.has(pid));ft.textContent=fol.has(pid)?'Suivi ✓':'Suivre';openM('bdPr');}
+function closePr(){closeM('bdPr');}
+function contPr(){closeM('bdPr');toast('Message envoyé','Le professeur vous répondra bientôt');}
+function togFP(){const id=curProf,p=P[id],fb=g('bFP'),ft=g('bFPt');if(fol.has(id)){fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';toast('Désabonné','Vous ne suivez plus '+p.nm);}else{fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');}}
+
+// CREATE
+function openCr(){openM('bdCr');}
+function closeCr(){closeM('bdCr');}
+function subCr(){closeM('bdCr');toast('Cours publié !','Les élèves peuvent maintenant réserver');}
+function calcH(){const p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').innerHTML=p>0?`Avec ${pl} élève${pl>1?'s':''} → <strong style="color:var(--or)">${Math.ceil(p/pl)}€/élève</strong>`:''}
+function pickS(el){document.querySelectorAll('.so').forEach(s=>s.classList.remove('on'));el.classList.add('on');}
+
+// COURSE INFO MODAL
+function openInfo(id){
+  const c=C.find(x=>x.id===id);if(!c)return;
+  const p=P[c.pr];
+  window._infoProfId=c.pr;
+  // banner
+  const banner=g('infoBanner');
+  banner.style.background=`linear-gradient(135deg,var(--or),var(--ord))`;
+  g('infoSubj').textContent=c.subj;
+  g('infoTitle').textContent=c.title;
+  g('infoDate').querySelector('span').textContent=c.dt;
+  g('infoLoc').querySelector('span').textContent=c.lc;
+  // prof
+  const av=g('infoProfAv');av.style.background=p.col;av.textContent=p.i;
+  g('infoProfNm').textContent=p.nm;g('infoProfRl').textContent=p.rl;
+  // price
+  const pp=Math.ceil(c.tot/Math.max(c.fl,1));
+  g('infoTot').textContent=c.tot+'€';
+  g('infoFilled').textContent=c.fl+'/'+c.sp+' places';
+  g('infoPP').textContent=pp+'€ / élève';
+  const pct=Math.round(c.fl/c.sp*100);
+  g('infoSpots').textContent=c.fl+'/'+c.sp;
+  const bar=g('infoBar');
+  bar.style.width=pct+'%';
+  bar.style.background=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
+  // status + actions
+  const isR=!!res[id],isFull=c.fl>=c.sp;
+  const status=g('infoStatus'),stTitle=g('infoStatusTitle'),stSub=g('infoStatusSub'),actions=g('infoActions');
+  if(isR){
+    status.style.background='#F0FDF4';status.querySelector('svg').style.stroke='var(--green)';
+    stTitle.style.color='var(--green)';stTitle.textContent='Vous êtes inscrit à ce cours';
+    stSub.textContent='Votre place est confirmée — à venir !';
+    actions.innerHTML=`<button class="pb sec" style="flex:1" onclick="closeInfo();contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le prof</button><button class="pb pri" style="flex:1" onclick="closeInfo();openO('${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>+ Autre personne</button>`;
+  } else if(isFull){
+    status.style.background='var(--bg)';status.querySelector('svg').style.stroke='var(--lite)';
+    stTitle.style.color='var(--ink)';stTitle.textContent='Ce cours est complet';
+    stSub.textContent='Suivez le prof pour être notifié des prochains cours';
+    actions.innerHTML=`<button class="pb pri" style="width:100%" onclick="closeInfo();openF('${c.pr}','${c.title}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Suivre ce professeur</button>`;
+  } else {
+    status.style.background='var(--orp)';status.querySelector('svg').style.stroke='var(--or)';
+    stTitle.style.color='var(--or)';stTitle.textContent=`${c.sp-c.fl} place${c.sp-c.fl>1?'s':''} disponible${c.sp-c.fl>1?'s':''}`;
+    stSub.textContent='Réservez votre place dès maintenant';
+    actions.innerHTML=`<button class="pb sec" style="flex:1" onclick="closeInfo();contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter</button><button class="pb pri" style="flex:1" onclick="closeInfo();openR('${id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Réserver</button>`;
+  }
+  openM('bdInfo');
+}
+function closeInfo(){closeM('bdInfo');}
+
+// UTILS
+function g(id){return document.getElementById(id);}
+function openM(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
+function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
+function setR(el){document.querySelectorAll('.ro').forEach(r=>r.classList.remove('on'));el.classList.add('on');}
+function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;const e=g('toast');e.classList.add('on');setTimeout(()=>e.classList.remove('on'),3200);}
+</script>
+</body>
+</html>
