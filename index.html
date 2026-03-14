@@ -643,7 +643,7 @@ function go(pr,nm,em){
   user={pr,nm,em,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
-  buildCards();
+  loadData().then(() => buildCards());
   toast('Bienvenue '+pr+' !','Vous êtes connecté à CoursPool');
 }
 function shake(id){const e=g(id);e.style.animation='shake .3s';setTimeout(()=>e.style.animation='',400);}
@@ -707,7 +707,7 @@ function setPill(el){document.querySelectorAll('.pill').forEach(p=>p.classList.r
 // RESERVATION
 function openR(id){const c=C.find(x=>x.id===id);if(!c)return;if(res[id]){openO(id);return;}if(c.fl>=c.sp){openF(c.pr,c.title);return;}curId=id;const n=c.fl+1,pp=Math.ceil(c.tot/n),dp=Math.max(3,Math.ceil(pp*.3));g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;g('rTot').textContent=c.tot+'€';g('rCnt').textContent=n+' personnes';g('rDp').textContent=dp+'€';g('rFin').textContent=pp+'€ / élève';g('rDpB').textContent=dp+'€';g('rFinB').textContent=pp+'€';g('rInf').innerHTML=`Acompte de <strong>${dp}€</strong> maintenant. Solde ajusté 1h avant le cours.`;openM('bdR');}
 function closeR(){closeM('bdR');}
-function confR(mode){const id=curId;if(!id)return;const c=C.find(x=>x.id===id);if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();const pp=Math.ceil(c.tot/c.fl),dp=Math.max(3,Math.ceil(pp*.3));toast('Place réservée !',mode==='acompte'?`Acompte ${dp}€ · ${c.sp-c.fl} place(s) restante(s)`:`${pp}€ payés · Inscrit ✓`);}
+function confR(mode){const id=curId;if(!id)return;const c=C.find(x=>x.id===id);if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}c.fl+=1;res[id]=true;curId=null;closeM('bdR');loadData().then(() => buildCards());const pp=Math.ceil(c.tot/c.fl),dp=Math.max(3,Math.ceil(pp*.3));toast('Place réservée !',mode==='acompte'?`Acompte ${dp}€ · ${c.sp-c.fl} place(s) restante(s)`:`${pp}€ payés · Inscrit ✓`);}
 function contR(){closeM('bdR');toast('Message envoyé','Le professeur vous répondra bientôt');}
 
 // AUTRE PERSONNE
