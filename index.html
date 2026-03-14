@@ -632,7 +632,23 @@ let curId=null,curProf=null,folPr=null,actF='tous',user=null;
 // LOGIN
 function switchLT(t){g('ltC').classList.toggle('on',t==='C');g('ltI').classList.toggle('on',t==='I');g('lfC').classList.toggle('on',t==='C');g('lfI').classList.toggle('on',t==='I');}
 function pickR(r){g('rEl').classList.toggle('on',r==='El');g('rPf').classList.toggle('on',r==='Pf');}
-function doLogin(){const em=g('lEm').value.trim(),pw=g('lPw').value;if(!em||!pw){shake('lfC');return;}const pts=em.split('@')[0].split('.');go(cap(pts[0]),pts[1]?cap(pts[1]):'',em);}
+async function doLogin(){
+  const em=g('lEm').value.trim();
+  const pw=g('lPw').value;
+  if(!em||!pw){shake('lfC');return;}
+  
+  const res = await fetch(API + '/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email: em, password: pw})
+  });
+  
+  const data = await res.json();
+  if(data.error){shake('lfC');toast('Erreur','Email ou mot de passe incorrect');return;}
+  
+  const pts = em.split('@')[0].split('.');
+  go(cap(pts[0]), pts[1]?cap(pts[1]):'', em);
+}
 function doReg(){const pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;if(!pr||!em||!pw){shake('lfI');return;}go(pr,nm,em);}
 function doGuest(){go('Invité','','invité@courspool.fr');}
 function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
