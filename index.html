@@ -640,7 +640,7 @@ function go(pr,nm,em){
   user={pr,nm,em,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
-  buildCards();
+  loadData().then(() => buildCards());
   toast('Bienvenue '+pr+' !','Vous êtes connecté à CoursPool');
 }
 function shake(id){const e=g(id);e.style.animation='shake .3s';setTimeout(()=>e.style.animation='',400);}
