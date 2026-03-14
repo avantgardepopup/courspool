@@ -76,6 +76,34 @@ app.get('/professeurs/:id', async (req, res) => {
   if (error) return res.status(500).json({ error });
   res.json(data);
 });
+// AUTH — inscription
+app.post('/auth/register', async (req, res) => {
+  const { email, password, prenom, nom, role } = req.body;
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    user_metadata: { prenom, nom, role }
+  });
+  if (error) return res.status(400).json({ error: error.message });
+  await supabase.from('profiles').insert([{
+    id: data.user.id,
+    prenom,
+    nom,
+    email,
+    role
+  }]);
+  res.json({ user: data.user });
+});
 
+// AUTH — connexion
+app.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ user: data.user, session: data.session });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('CoursPool API sur le port ' + PORT));
