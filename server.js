@@ -11,12 +11,10 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY
 );
 
-// Test
 app.get('/', (req, res) => {
   res.json({ message: 'CoursPool API fonctionne !' });
 });
 
-// COURS — récupérer tous les cours
 app.get('/cours', async (req, res) => {
   const { data, error } = await supabase
     .from('cours')
@@ -25,7 +23,6 @@ app.get('/cours', async (req, res) => {
   res.json(data);
 });
 
-// COURS — créer un cours
 app.post('/cours', async (req, res) => {
   const { data, error } = await supabase
     .from('cours')
@@ -34,10 +31,8 @@ app.post('/cours', async (req, res) => {
   res.json(data);
 });
 
-// RESERVATIONS — créer une réservation
 app.post('/reservations', async (req, res) => {
   const { cours_id, user_id, montant_paye, type_paiement } = req.body;
-  // Incrémenter les places prises
   await supabase.rpc('increment_places', { cours_id });
   const { data, error } = await supabase
     .from('reservations')
@@ -46,7 +41,6 @@ app.post('/reservations', async (req, res) => {
   res.json(data);
 });
 
-// RESERVATIONS — récupérer les réservations d'un user
 app.get('/reservations/:user_id', async (req, res) => {
   const { data, error } = await supabase
     .from('reservations')
@@ -56,7 +50,6 @@ app.get('/reservations/:user_id', async (req, res) => {
   res.json(data);
 });
 
-// FOLLOWS — suivre un prof
 app.post('/follows', async (req, res) => {
   const { data, error } = await supabase
     .from('follows')
@@ -65,7 +58,6 @@ app.post('/follows', async (req, res) => {
   res.json(data);
 });
 
-// FOLLOWS — récupérer les profs suivis
 app.get('/follows/:user_id', async (req, res) => {
   const { data, error } = await supabase
     .from('follows')
@@ -75,8 +67,15 @@ app.get('/follows/:user_id', async (req, res) => {
   res.json(data);
 });
 
-// PROFESSEURS — récupérer un prof
 app.get('/professeurs/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('professeurs')
-    .select('*
+    .select('*')
+    .eq('id', req.params.id)
+    .single();
+  if (error) return res.status(500).json({ error });
+  res.json(data);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log('CoursPool API sur le port ' + PORT));
