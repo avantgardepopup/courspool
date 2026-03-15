@@ -1036,19 +1036,18 @@ function confO(){
   var id=curId;closeM('bdO');
   var c=C.find(function(x){return x.id===id});
   if(!c||c.fl>=c.sp){if(c)openF(c.pr,c.title);return;}
-  // Ouvrir la modal réservation pour la 2ème personne
-  curId=id;
-  var pp=Math.ceil(c.tot/c.sp);
-  g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;
-  g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;
-  g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
-  g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
-  g('rInf').textContent='Réservation pour une autre personne · '+pp+'€';
-  var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector('#bdR .pb.pri');
-  if(btnDel)btnDel.style.display='none';
-  if(btnEleves)btnEleves.style.display='none';
-  if(btnConf)btnConf.style.display='flex';
-  openM('bdR');
+  // Réserver directement pour un ami sans passer par la modal
+  if(!user||!user.id)return;
+  fetch(API+'/reservations/ami',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    user_id:user.id,cours_id:id,
+    montant_paye:Math.ceil(c.tot/c.sp),
+    type_paiement:'total',
+    pour_ami:true
+  })}).then(function(r){return r.ok?r.json():r.json().then(function(d){throw new Error(d.error||'Erreur');});})
+  .then(function(){
+    c.fl+=1;buildCards();
+    toast('Place réservée pour votre ami !',Math.ceil(c.tot/c.sp)+'€ · Confirmé ✓');
+  }).catch(function(e){toast('Erreur',e.message||'Impossible de réserver');});
 }
 
 function shareCoursLink(){
