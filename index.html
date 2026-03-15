@@ -667,7 +667,15 @@ async function doLogin(){
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
     applyUser();
-    loadData().then(function(){buildCards();});
+    // Charger les réservations existantes
+    if(uid){
+      fetch(API+'/reservations/'+uid).then(function(r){return r.json();}).then(function(data){
+        if(Array.isArray(data)){data.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+        loadData().then(function(){buildCards();});
+      }).catch(function(){loadData().then(function(){buildCards();});});
+    } else {
+      loadData().then(function(){buildCards();});
+    }
     toast('Bienvenue '+pr+' !','Connecté à CoursPool');
   }catch(e){toast('Erreur','Impossible de se connecter');}
   finally{g('lEm').disabled=false;g('lPw').disabled=false;}
@@ -719,7 +727,18 @@ function applyUser(){
 (function(){
   try{
     var saved=localStorage.getItem('cp_user');
-    if(saved){user=JSON.parse(saved);applyUser();loadData().then(function(){buildCards();});}
+    if(saved){
+      user=JSON.parse(saved);
+      applyUser();
+      if(user.id){
+        fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+          if(Array.isArray(data)){data.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+          loadData().then(function(){buildCards();});
+        }).catch(function(){loadData().then(function(){buildCards();});});
+      } else {
+        loadData().then(function(){buildCards();});
+      }
+    }
   }catch(e){}
 })();
 
@@ -829,6 +848,11 @@ function doLogout(){
 function previewPhoto(input){
   if(input.files&&input.files[0]){
     var file=input.files[0];
+    // Vérifier la taille max 2MB
+    if(file.size>2*1024*1024){
+      toast('Photo trop lourde','Maximum 2MB. Compressez votre image.');
+      input.value='';return;
+    }
     var reader=new FileReader();
     reader.onload=function(e){
       var src=e.target.result;
@@ -957,14 +981,26 @@ function openEleves(id){
   }
   openM('bdEleves');
 }
-function confR(){
+async function confR(){
   var id=curId;
   if(!id){toast('Erreur','Veuillez réessayer');return;}
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();
-  toast('Place réservée !',Math.ceil(c.tot/c.sp)+'€ · Inscription confirmée ✓');
+  if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
+  try{
+    var r=await fetch(API+'/reservations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      user_id:user.id,
+      cours_id:id,
+      montant_paye:Math.ceil(c.tot/c.sp),
+      type_paiement:'total'
+    })});
+    var data=await r.json();
+    if(data.error){toast('Erreur',data.error.message||'Impossible de réserver');return;}
+    c.fl+=1;res[id]=true;curId=null;
+    closeM('bdR');buildCards();
+    toast('Place réservée !',Math.ceil(c.tot/c.sp)+'€ · Inscription confirmée ✓');
+  }catch(e){toast('Erreur réseau','Impossible de réserver');}
 }
 function contR(){
   var c=C.find(function(x){return x.id===curId});
@@ -1137,17 +1173,23 @@ function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.
 var msgDestinataire=null,msgDestId=null,msgPollTimer=null;
 
 function openMsg(profNm,destId,avatar){
-  if(!user){toast('Connexion requise','Connectez-vous pour envoyer des messages');return;}
+  if(!user||!user.id){toast('Connexion requise','Connectez-vous pour envoyer des messages');return;}
+  if(!destId){toast('Erreur','Destinataire introuvable');return;}
+  if(destId===user.id){toast('Action impossible','Vous ne pouvez pas vous écrire à vous-même');return;}
   msgDestinataire=profNm;msgDestId=destId;
   g('msgTitle').textContent=profNm||'Contact';
   var av=g('msgAvatar');
-  if(avatar){av.style.background='none';av.innerHTML='<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';av.textContent=(profNm&&profNm[0])||'?';}
+  if(avatar&&avatar!=='null'&&avatar!==''){
+    av.style.background='none';
+    av.innerHTML='<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  } else {
+    av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';
+    av.textContent=(profNm&&profNm[0])||'?';
+  }
   g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   g('msgInput').value='';
   openM('bdMsg');
   loadMessages();
-  // Polling toutes les 3 secondes
   clearInterval(msgPollTimer);
   msgPollTimer=setInterval(loadMessages,3000);
 }
