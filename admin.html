@@ -677,10 +677,20 @@ async function verifyProf(id,action){
   if(ok){
     var p=allProfs.find(function(x){return x.id===id;});
     if(p){p.verified=data.verified;p.statut_compte=data.statut_compte;}
+
+    // Envoyer email au prof
+    if(action==='verify'||action==='reject'){
+      fetch('https://devoted-achievement-production-fdfa.up.railway.app/email/verification',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prof_id:id,status:action==='verify'?'approved':'rejected'})
+      }).catch(function(){});
+    }
+
     closeModal();
     renderDashboard();
     renderProfs();
-    var msgs={verify:'✅ Professeur vérifié ! Il peut maintenant publier des cours.',reject:'❌ Compte rejeté. Le prof ne peut pas publier de cours.',block:'🚫 Compte bloqué.'};
+    var msgs={verify:'✅ Professeur vérifié ! Email envoyé.',reject:'❌ Compte rejeté. Email envoyé.',block:'🚫 Compte bloqué.'};
     toast(msgs[action]||'Mise à jour effectuée');
   } else {
     toast('Erreur lors de la mise à jour');
