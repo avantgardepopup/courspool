@@ -602,7 +602,7 @@ function doGuest(){go('Invite','','invite@courspool.fr','eleve',null);}
 function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
 
 function go(pr,nm,em,role,uid){
-  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr.length?pr[0]:'')+(nm&&nm.length?nm[0]:'')).toUpperCase()||'U'};
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
   // Montrer ou cacher "Proposer un cours" selon le role
@@ -724,7 +724,7 @@ async function subCr(){
       background:'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
       date_heure:dateFormatee,lieu:lieu,
       prix_total:parseInt(prix),places_max:parseInt(places)||5,
-      professeur_id:user.id,emoji:'📚', prof_initiales:(user.pr?user.pr[0].toUpperCase():'?')+(user.nm?user.nm[0].toUpperCase():''), prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)', prof_nom:user.pr+(user.nm?' '+user.nm:'')
+      professeur_id:user.id,emoji:'📚', prof_initiales:user.ini||'?' prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)', prof_nom:user.pr+(user.nm?' '+user.nm:'')
     })});
     var data=await res.json();
     if(data.error){toast('Erreur','Impossible de publier le cours');return;}
