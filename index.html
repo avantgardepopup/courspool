@@ -934,7 +934,26 @@ function goExplore(){
   var b=g('bniExp');if(b){['bniExp','bniMsg','bniAcc'].forEach(function(id){var btn=g(id);if(btn)btn.classList.remove('on');});b.classList.add('on');}
 }
 
-// Restore session
+// Vérifier retour Stripe après paiement
+(async function checkStripeReturn(){
+  var params=new URLSearchParams(window.location.search);
+  var sessionId=params.get('session_id');
+  var coursId=params.get('cours_id');
+  var userId=params.get('user_id');
+  if(!sessionId||!coursId||!userId)return;
+  // Nettoyer l'URL
+  window.history.replaceState({},'',window.location.pathname);
+  try{
+    var r=await fetch(API+'/stripe/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,cours_id:coursId,user_id:userId})});
+    var data=await r.json();
+    if(data.success){
+      res[coursId]=true;
+      try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}
+      await loadData();buildCards();
+      toast('🎉 Paiement confirmé !','Votre place est réservée !');
+    }
+  }catch(e){}
+})();
 (function(){
   try{
     var saved=localStorage.getItem('cp_user');
@@ -1228,23 +1247,22 @@ async function confR(){
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
   var btn=document.querySelector('#bdR .pb.pri');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Réservation…';}
+  if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
-    var r=await fetch(API+'/reservations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      user_id:user.id,cours_id:id,
-      montant_paye:Math.ceil(c.tot/c.sp),type_paiement:'total'
+    var pp=Math.ceil(c.tot/c.sp);
+    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      cours_id:id,
+      user_id:user.id,
+      montant:pp,
+      cours_titre:c.title,
+      success_url:window.location.href.split('?')[0],
+      cancel_url:window.location.href.split('?')[0]
     })});
-    if(!r.ok){
-      var errData=await r.json().catch(function(){return{};});
-      toast('Erreur',errData.error||'Impossible de réserver');return;
-    }
-    res[id]=true;
-    // Sauvegarder les réservations dans localStorage
-    try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}
-    curId=null;closeM('bdR');
-    await loadData();buildCards();
-    toast('Place réservée !',Math.ceil(c.tot/c.sp)+'€ · Inscription confirmée ✓');
-  }catch(e){toast('Erreur réseau','Impossible de réserver');}
+    var data=await r.json();
+    if(data.error){toast('Erreur',data.error);return;}
+    // Rediriger vers Stripe
+    window.location.href=data.url;
+  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong>';}}
 }
 function contR(){
