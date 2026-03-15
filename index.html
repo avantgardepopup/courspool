@@ -394,6 +394,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div class="rrow"><div class="rdot" style="background:#ECFDF5">🌍</div><div class="ri"><div class="rt">TOEFL Writing Practice</div><div class="rm">Sophie Chen · 22 fév. 2025 · Café Procope</div></div><span class="rbadge bdone">Terminé</span></div>
         </div>
         <div class="asec" id="asecP">
+          <!-- Photo de profil -->
+          <div class="prof-card">
+            <h3>Photo de profil</h3>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+              <div id="pfAvPreview" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden">?</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600;margin-bottom:6px">Choisir une photo</div>
+                <div style="font-size:12px;color:var(--lite);margin-bottom:10px">JPG, PNG · Max 2MB</div>
+                <label style="background:var(--orp);color:var(--or);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block">
+                  📷 Choisir une photo
+                  <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+                </label>
+              </div>
+            </div>
+          </div>
+          <!-- Infos personnelles -->
           <div class="prof-card">
             <h3>Informations personnelles</h3>
             <div class="fgrid">
@@ -401,12 +417,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               <div class="fg"><label class="flbl">Nom</label><input id="pfNm" class="fi2" type="text"></div>
             </div>
             <div class="fg"><label class="flbl">Email</label><input id="pfEm" class="fi2" type="email"></div>
-            <div class="fg"><label class="flbl">Ville</label><input class="fi2" type="text" value="Paris 75005"></div>
+            <div class="fg"><label class="flbl">Ville</label><input id="pfVille" class="fi2" type="text" placeholder="Paris, Lyon…"></div>
+            <div class="fg"><label class="flbl">Bio</label><textarea id="pfBio" class="fi2" rows="3" placeholder="Parlez-vous en quelques mots…" style="resize:vertical"></textarea></div>
             <div class="fg"><label class="flbl">Je suis</label>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
-                <div class="so on" onclick="this.parentElement.querySelectorAll('.so').forEach(s=>s.classList.remove('on'));this.classList.add('on')">🎓 Élève</div>
-                <div class="so" onclick="this.parentElement.querySelectorAll('.so').forEach(s=>s.classList.remove('on'));this.classList.add('on')">👨‍🏫 Professeur</div>
+                <div class="so" id="pfRolEl" onclick="setPfRole('eleve')">🎓 Élève</div>
+                <div class="so" id="pfRolPf" onclick="setPfRole('professeur')">👨‍🏫 Professeur</div>
               </div>
+            </div>
+            <div id="pfProfExtra" style="display:none">
+              <div class="fg"><label class="flbl">Statut</label>
+                <select id="pfStatut" class="fi2">
+                  <option value="">Choisir...</option>
+                  <option value="etudiant">Étudiant</option>
+                  <option value="prof_ecole">Professeur d'école</option>
+                  <option value="prof_college">Professeur de collège/lycée</option>
+                  <option value="prof_universite">Professeur d'université</option>
+                  <option value="particulier">Particulier</option>
+                  <option value="professionnel">Professionnel</option>
+                </select>
+              </div>
+              <div class="fg"><label class="flbl">Matières enseignées</label><input id="pfMatieres" class="fi2" type="text" placeholder="Maths, Physique, Anglais…"></div>
             </div>
             <button class="pb pri" style="width:100%" onclick="saveProf()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Sauvegarder les modifications</button>
           </div>
@@ -689,7 +720,15 @@ function goAccount(){
   g('accAv').textContent=user.ini;
   g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
   g('accEmail').textContent=user.em;
-  g('pfPr').value=user.pr||'';g('pfNm').value=user.nm||'';g('pfEm').value=user.em||'';
+  g('pfPr').value=user.pr||'';
+  g('pfNm').value=user.nm||'';
+  g('pfEm').value=user.em||'';
+  // Set avatar preview
+  var prev=g('pfAvPreview');
+  if(user.photo){prev.style.background='none';prev.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+  else{prev.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';prev.textContent=user.ini;}
+  // Set role
+  setPfRole(user.role||'eleve');
   buildAccLists();
 }
 function switchATab(s,el){
@@ -707,7 +746,21 @@ function buildAccLists(){
   if(!fIds.length){lf.innerHTML='<div class="bempty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Vous ne suivez encore aucun professeur.</p></div>';}
   else{lf.innerHTML=fIds.map(function(id){var p=P[id];if(!p)return'';return'<div class="frow"><div class="fav" style="background:'+p.col+'">'+p.i+'</div><div class="fi"><div class="fn">'+p.nm+'</div><div class="fr">'+p.rl+'</div></div></div>';}).join('');}
 }
-function saveProf(){if(!user)return;user.pr=g('pfPr').value||user.pr;user.nm=g('pfNm').value||'';user.em=g('pfEm').value||user.em;user.ini=(user.pr[0]+(user.nm?user.nm[0]:'')).toUpperCase();g('tav').textContent=user.ini;g('accAv').textContent=user.ini;g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');g('accEmail').textContent=user.em;toast('Profil sauvegarde','Vos informations ont ete mises a jour');}
+function saveProf(){
+  if(!user)return;
+  user.pr=g('pfPr').value||user.pr;
+  user.nm=g('pfNm').value||'';
+  user.em=g('pfEm').value||user.em;
+  user.role=g('pfRolPf').classList.contains('on')?'professeur':'eleve';
+  user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
+  g('tav').textContent=user.ini;
+  if(user.photo){g('tav').style.background='none';g('tav').innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+  g('accAv').textContent=user.ini;
+  g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
+  g('accEmail').textContent=user.em;
+  g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
+  toast('Profil sauvegarde','Vos informations ont ete mises a jour');
+}
 function doLogout(){g('app').style.display='none';g('login').style.display='flex';Object.keys(res).forEach(function(k){delete res[k]});fol.clear();user=null;g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');toast('Deconnecte','A bientot sur CoursPool !');}
 
 var PAGE_SIZE = 6;
@@ -788,6 +841,13 @@ function openR(id){var c=C.find(function(x){return x.id===id});if(!c)return;if(r
 function closeR(){closeM('bdR');}
 function confR(mode){var id=curId;if(!id)return;var c=C.find(function(x){return x.id===id});if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();var pp=Math.ceil(c.tot/c.fl),dp=Math.max(3,Math.ceil(pp*.3));toast('Place reservee !',mode==='acompte'?'Acompte '+dp+'EUR paye':''+pp+'EUR payes - Inscrit');}
 function contR(){closeM('bdR');var c=C.find(function(x){return x.id===curId});var nm=c?c.prof_nm:'le professeur';openMsg(nm,'');}
+
+function openMsg(profNm,email){
+  g('msgTitle').textContent=profNm||'Contact';
+  g('msgEmail').textContent=email?'Email : '+email:'La messagerie integree sera disponible tres prochainement.';
+  openM('bdMsg');
+}
+function closeMsg(){closeM('bdMsg');}
 
 function openO(id){curId=id;var c=C.find(function(x){return x.id===id});g('oTit').textContent=c.title;g('oPrc').textContent=Math.ceil(c.tot/Math.max(c.fl,1))+'EUR / eleve';openM('bdO');}
 function closeO(){closeM('bdO');}
@@ -871,7 +931,58 @@ async function subCr(){
   } catch(e){toast('Erreur','Impossible de publier le cours');}
 }
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Avec '+pl+' eleve'+(pl>1?'s':'')+' : '+Math.ceil(p/pl)+'EUR/eleve':'';}
-function pickS(el){document.querySelectorAll('.so').forEach(function(s){s.classList.remove('on')});el.classList.add('on');}
+function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on')});el.classList.add('on');}
+var lieuTimer = null;
+async function searchLieu(q) {
+  var box = g('lieuSuggestions');
+  if (!q || q.length < 3) { box.style.display = 'none'; return; }
+  clearTimeout(lieuTimer);
+  lieuTimer = setTimeout(async function() {
+    try {
+      var r = await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+', France')+'&format=json&limit=5&countrycodes=fr', {headers:{'Accept-Language':'fr'}});
+      var data = await r.json();
+      if (!data.length) { box.style.display = 'none'; return; }
+      box.innerHTML = data.map(function(d) {
+        var name = d.display_name.split(',').slice(0,3).join(', ');
+        return '<div style="padding:10px 14px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--bdr)" onmouseover="this.style.background=\'var(--orp)\'" onmouseout="this.style.background=\'\'" onclick="pickLieu(\''+name.replace(/'/g,"\\'")+'\')">📍 '+name+'</div>';
+      }).join('');
+      box.style.display = 'block';
+    } catch(e) { box.style.display = 'none'; }
+  }, 400);
+}
+function pickLieu(name) {
+  g('lieuInput').value = name;
+  g('lieuSuggestions').style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#lieuInput') && !e.target.closest('#lieuSuggestions')) {
+    var box = g('lieuSuggestions');
+    if (box) box.style.display = 'none';
+  }
+});
+
+// PHOTO PREVIEW
+function previewPhoto(input) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var prev = g('pfAvPreview');
+      prev.style.background = 'none';
+      prev.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      user.photo = e.target.result;
+      g('tav').style.background = 'none';
+      g('tav').innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ROLE TOGGLE IN PROFILE
+function setPfRole(role) {
+  g('pfRolEl').classList.toggle('on', role==='eleve');
+  g('pfRolPf').classList.toggle('on', role==='professeur');
+  g('pfProfExtra').style.display = role==='professeur' ? 'block' : 'none';
+}
 
 function openInfo(id){
   var c=C.find(function(x){return x.id===id});if(!c)return;
