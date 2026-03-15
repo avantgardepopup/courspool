@@ -90,12 +90,14 @@ const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, p
 // RESERVATIONS — créer une réservation
 app.post('/reservations', async (req, res) => {
   const { cours_id, user_id, montant_paye, type_paiement } = req.body;
+  if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   await supabase.rpc('increment_places', { cours_id });
   const { data, error } = await supabase
     .from('reservations')
-    .insert([{ cours_id, user_id, montant_paye, type_paiement }]);
-  if (error) return res.status(500).json({ error });
-  res.json(data);
+    .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
+    .select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
 });
 
 // RESERVATIONS — récupérer les réservations d'un user
