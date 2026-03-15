@@ -160,6 +160,23 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pb.pri{background:var(--or);color:#fff;}.pb.pri:hover{background:var(--ord);}
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--wh);border-top:1px solid var(--bdr);display:none;z-index:60;padding:8px 0 max(8px,env(safe-area-inset-bottom));box-shadow:0 -4px 20px rgba(0,0,0,.06);}
+.bnav.on{display:flex;}
+.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--lite);transition:color .18s;position:relative;}
+.bni.on{color:var(--or);}
+.bni svg{width:22px;height:22px;}
+.bni span{font-size:10px;font-weight:600;}
+.bni-badge{position:absolute;top:2px;right:calc(50% - 18px);background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;}
+.bni-badge.on{display:flex;}
+/* Password toggle icon */
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
+.pw-toggle:hover{color:var(--or);}
+.pw-toggle svg{width:18px;height:18px;}
+@media(max-width:768px){
+  .bnav.on{display:flex;}
+  #app .cnt,.acc-body{padding-bottom:80px;}
+}
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
 .rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
 .bdn{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px;}
@@ -221,7 +238,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="lfield"><label>Mot de passe</label>
           <div style="position:relative">
             <input id="lPw" type="password" placeholder="••••••••" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:14px;outline:none;">
-            <span onclick="togglePw('lPw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);font-size:16px">👁</span>
+            <span class="pw-toggle" onclick="togglePw('lPw',this)">
+              <svg id="lPwIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
           </div>
         </div>
         <button class="lbtn" onclick="doLogin()">Se connecter</button>
@@ -237,7 +256,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="lfield"><label>Mot de passe</label>
           <div style="position:relative">
             <input id="rPw" type="password" placeholder="Min. 6 caractères" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:14px;outline:none;">
-            <span onclick="togglePw('rPw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);font-size:16px">👁</span>
+            <span class="pw-toggle" onclick="togglePw('rPw',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
           </div>
         </div>
         <div class="lfield"><label>Je suis</label>
@@ -606,6 +627,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
+<!-- BARRE DE NAVIGATION BAS -->
+<nav class="bnav" id="bnav">
+  <div class="bni on" id="bniExp" onclick="navTo('exp')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>Explorer</span>
+  </div>
+  <div class="bni" id="bniMsg" onclick="navTo('msg')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <div class="bni-badge" id="bnavBadge"></div>
+    <span>Messages</span>
+  </div>
+  <div class="bni" id="bniAdd" onclick="openCr()" style="display:none">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;margin-top:-16px;box-shadow:0 4px 14px rgba(255,107,43,.4)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <span style="margin-top:4px">Proposer</span>
+  </div>
+  <div class="bni" id="bniAcc" onclick="navTo('acc')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profil</span>
+  </div>
+</nav>
+
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
 <script>
@@ -727,6 +771,32 @@ function applyUser(){
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
+  // Bottom nav
+  g('bnav').classList.add('on');
+  var bniAdd=g('bniAdd');
+  if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
+}
+
+function navTo(tab){
+  ['exp','msg','acc'].forEach(function(t){
+    var btn=g('bni'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(btn)btn.classList.remove('on');
+  });
+  if(tab==='exp'){
+    goExplore();
+    g('bniExp').classList.add('on');
+  } else if(tab==='msg'){
+    goAccount();
+    // Switch to messages tab
+    setTimeout(function(){
+      var tab=g('aTabM');
+      if(tab)tab.click();
+    },100);
+    g('bniMsg').classList.add('on');
+  } else if(tab==='acc'){
+    goAccount();
+    g('bniAcc').classList.add('on');
+  }
 }
 
 // Restore session
@@ -858,6 +928,7 @@ function doLogout(){
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();user=null;
   try{localStorage.removeItem('cp_user');}catch(e){}
   var tav=g('tav');tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';
+  g('bnav').classList.remove('on');
   g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');
   toast('Déconnecté','À bientôt !');
 }
@@ -1219,8 +1290,11 @@ async function subCr(){
 // TOGGLE MOT DE PASSE
 function togglePw(id,btn){
   var input=g(id);
-  if(input.type==='password'){input.type='text';btn.textContent='🙈';}
-  else{input.type='password';btn.textContent='👁';}
+  var isHidden=input.type==='password';
+  input.type=isHidden?'text':'password';
+  btn.innerHTML=isHidden?
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>':
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
 // SUPPRIMER SON COURS avec confirmation
@@ -1309,7 +1383,20 @@ async function sendMsg(){
   }catch(e){toast('Erreur','Message non envoyé');}
 }
 
-function closeMsg(){closeM('bdMsg');clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;}
+function closeMsg(){
+  closeM('bdMsg');
+  clearInterval(msgPollTimer);msgPollTimer=null;
+  // Marquer les messages comme lus
+  if(user&&msgDestId){
+    fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
+  }
+  msgDestId=null;
+  // Mettre à jour le badge
+  var badge=g('bnavBadge');
+  if(badge)badge.classList.remove('on');
+  var msgBadge=g('msgBadge');
+  if(msgBadge)msgBadge.style.display='none';
+}
 
 async function loadConversations(){
   if(!user)return;
