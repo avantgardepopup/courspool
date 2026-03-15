@@ -941,9 +941,10 @@ function renderPage(){
     var isR=!!res[c.id],isFull=c.fl>=c.sp;
     var isOwner=user&&c.pr===user.id;
     var btn;
-    if(isOwner)btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
-    else if(isR)btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
-    else if(isFull)btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet · Suivre le prof</button>';
+    if(isOwner) btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
+    else if(isR&&isFull) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11px">Inscrit · Complet</button>';
+    else if(isR) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
+    else if(isFull) btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet · Suivre le prof</button>';
     else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
     var profAv=c.prof_photo?'<img src="'+c.prof_photo+'" style="width:100%;height:100%;object-fit:cover">':c.prof_ini;
     var d=document.createElement('div');
