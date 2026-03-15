@@ -1,4 +1,3 @@
-// CoursPool API v2 - Stripe enabled
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -155,23 +154,25 @@ app.post('/stripe/checkout', async (req, res) => {
 
 // STRIPE — confirmer paiement après redirect
 app.post('/stripe/confirm', async (req, res) => {
-  const { session_id, cours_id, user_id } = req.body;
+  const { session_id, cours_id, user_id, pour_ami } = req.body;
   if (!session_id || !cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
 
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
     if (session.payment_status !== 'paid') return res.status(400).json({ error: 'Paiement non complété' });
 
-    const montant = parseFloat(session.metadata.montant || 0);
+    const montant = parseFloat(session.metadata?.montant || 0);
 
-    // Vérifier si déjà réservé
-    const { data: existing } = await supabase.from('reservations')
-      .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
-    if (existing) return res.json({ success: true, already: true });
+    // Vérifier si déjà réservé (seulement si pas pour ami)
+    if (!pour_ami) {
+      const { data: existing } = await supabase.from('reservations')
+        .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
+      if (existing) return res.json({ success: true, already: true });
+    }
 
     // Créer la réservation
     const { error } = await supabase.from('reservations')
-      .insert([{ cours_id, user_id, montant_paye: montant, type_paiement: 'stripe' }]);
+      .insert([{ cours_id, user_id, montant_paye: montant, type_paiement: pour_ami ? 'stripe_ami' : 'stripe' }]);
     if (error) return res.status(500).json({ error: error.message });
 
     // Incrémenter places_prises
