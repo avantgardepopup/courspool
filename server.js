@@ -134,10 +134,10 @@ app.get('/follows/:user_id', async (req, res) => {
 
 // MESSAGES — envoyer
 app.post('/messages', async (req, res) => {
-  const { expediteur_id, destinataire_id, cours_id, contenu } = req.body;
+  const { expediteur_id, destinataire_id, contenu } = req.body;
   if (!expediteur_id || !destinataire_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
   const { data, error } = await supabase.from('messages')
-    .insert([{ expediteur_id, destinataire_id, cours_id: cours_id||null, contenu }])
+    .insert([{ sender_id: expediteur_id, receiver_id: destinataire_id, contenu }])
     .select();
   if (error) return res.status(500).json({ error: error.message });
   res.json(data[0]);
@@ -148,7 +148,7 @@ app.get('/messages/:user1/:user2', async (req, res) => {
   const { user1, user2 } = req.params;
   const { data, error } = await supabase.from('messages')
     .select('*')
-    .or(`and(expediteur_id.eq.${user1},destinataire_id.eq.${user2}),and(expediteur_id.eq.${user2},destinataire_id.eq.${user1})`)
+    .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
     .order('created_at', { ascending: true });
   if (error) return res.status(500).json({ error });
   res.json(data);
@@ -158,7 +158,7 @@ app.get('/messages/:user1/:user2', async (req, res) => {
 app.get('/conversations/:user_id', async (req, res) => {
   const { data, error } = await supabase.from('messages')
     .select('*')
-    .or(`expediteur_id.eq.${req.params.user_id},destinataire_id.eq.${req.params.user_id}`)
+    .or(`sender_id.eq.${req.params.user_id},receiver_id.eq.${req.params.user_id}`)
     .order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error });
   res.json(data);
