@@ -246,7 +246,7 @@ app.post('/stripe/checkout', async (req, res) => {
   try {
     const baseUrl = 'https://courspool.vercel.app';
     const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
-    const cancelUrl = baseUrl;
+    const cancelUrl = baseUrl + '?cancelled=1';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
