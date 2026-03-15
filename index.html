@@ -85,6 +85,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill:not(.on):hover{border-color:var(--or);color:var(--or);}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+/* SKELETON LOADING */
+.skeleton{background:linear-gradient(90deg,var(--bdr) 25%,#ede8e2 50%,var(--bdr) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:var(--wh);border-radius:16px;overflow:hidden;border:1px solid var(--bdr);}
+.skel-top{height:90px;margin-bottom:0;}
+.skel-body{padding:14px;}
+.skel-line{height:12px;margin-bottom:8px;}
+.skel-line.w80{width:80%;}
+.skel-line.w60{width:60%;}
+.skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -847,7 +857,16 @@ var curId=null,curProf=null,folPr=null,actF='tous',user=null;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 
 // LOAD DATA
+function showSkeletons(){
+  var grid=g('grid');
+  if(!grid)return;
+  grid.innerHTML=Array(6).fill(0).map(function(){
+    return'<div class="skel-card"><div class="skeleton skel-top"></div><div class="skel-body"><div class="skeleton skel-line w80"></div><div class="skeleton skel-line w60"></div><div class="skeleton skel-line w40"></div></div></div>';
+  }).join('');
+}
+
 async function loadData(){
+  showSkeletons();
   try{
     var r=await fetch(API+'/cours');
     var cours=await r.json();
