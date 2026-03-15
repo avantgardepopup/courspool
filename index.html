@@ -967,8 +967,10 @@ function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.cl
 function openR(id){
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
-  if(res[id]){openO(id);return;}
-  if(c.fl>=c.sp){openF(c.pr,c.title);return;}
+  var isOwner=user&&c.pr===user.id;
+  // Si c'est le prof qui consulte son propre cours, ne pas bloquer
+  if(!isOwner&&res[id]){openO(id);return;}
+  if(!isOwner&&c.fl>=c.sp){openF(c.pr,c.title);return;}
   curId=id;
   var pp=Math.ceil(c.tot/c.sp);
   g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;
