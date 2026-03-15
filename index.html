@@ -864,39 +864,33 @@ function applyUser(){
 
 function navTo(tab){
   ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
-  g('pgExp').classList.remove('on');
-  g('pgAcc').classList.remove('on');
-  g('pgMsg').classList.remove('on');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
+  if(pgExp)pgExp.classList.remove('on');
+  if(pgAcc)pgAcc.classList.remove('on');
+  if(pgMsg)pgMsg.classList.remove('on');
   var nav=g('bnav');
 
   if(tab==='exp'){
-    g('pgExp').classList.add('on');
-    g('bniExp').classList.add('on');
-    // Restaurer la barre normale centrée
+    if(pgExp)pgExp.classList.add('on');
+    var bExp=g('bniExp');if(bExp)bExp.classList.add('on');
     restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
-    g('pgMsg').classList.add('on');
-    // Réduire la barre à un bouton retour en bas à gauche
-    if(nav){
-      nav.style.left='20px';
-      nav.style.transform='none';
-      nav.style.padding='8px 12px';
-    }
+    if(pgMsg)pgMsg.classList.add('on');
+    if(nav){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}
     var bniExp=g('bniExp');
     if(bniExp){
       bniExp.classList.add('on');
       bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg><span>Retour</span>';
       bniExp.onclick=function(){navTo('exp');};
     }
-    // Cacher les autres items
     ['bniMsg','bniAcc','bniAdd','bniSepAdd'].forEach(function(id){var e=g(id);if(e)e.style.display='none';});
     document.querySelectorAll('.bni-sep').forEach(function(e){e.style.display='none';});
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
-    g('pgAcc').classList.add('on');
-    g('bniAcc').classList.add('on');
+    if(pgAcc)pgAcc.classList.add('on');
+    var bAcc=g('bniAcc');if(bAcc)bAcc.classList.add('on');
     restoreNav();
     goAccount();
   }
@@ -936,14 +930,13 @@ function goExplore(){
 
 // Vérifier retour Stripe après paiement
 (async function checkStripeReturn(){
-  var params=new URLSearchParams(window.location.search);
-  var sessionId=params.get('session_id');
-  var coursId=params.get('cours_id');
-  var userId=params.get('user_id');
-  if(!sessionId||!coursId||!userId)return;
-  // Nettoyer l'URL
-  window.history.replaceState({},'',window.location.pathname);
   try{
+    var params=new URLSearchParams(window.location.search);
+    var sessionId=params.get('session_id');
+    var coursId=params.get('cours_id');
+    var userId=params.get('user_id');
+    if(!sessionId||!coursId||!userId)return;
+    window.history.replaceState({},'',window.location.pathname);
     var r=await fetch(API+'/stripe/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,cours_id:coursId,user_id:userId})});
     var data=await r.json();
     if(data.success){
@@ -952,7 +945,7 @@ function goExplore(){
       await loadData();buildCards();
       toast('🎉 Paiement confirmé !','Votre place est réservée !');
     }
-  }catch(e){}
+  }catch(e){console.log('Stripe return error:',e);}
 })();
 (function(){
   try{
