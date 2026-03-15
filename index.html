@@ -121,7 +121,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .acc-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1;}
 .acc-chip{background:rgba(255,255,255,.2);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
 .acc-tabs{background:var(--wh);border-bottom:1px solid var(--bdr);display:flex;position:sticky;top:56px;z-index:40;}
-.atab{flex:1;max-width:140px;padding:14px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--lite);border-bottom:2.5px solid transparent;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.atab{flex:1;min-width:70px;padding:12px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--lite);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:4px;white-space:nowrap;}
+.atab.on{color:var(--or);border-bottom-color:var(--or);}
 .atab svg{width:14px;height:14px;}
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
 .acc-body{padding:20px 16px;max-width:800px;padding-bottom:120px;}
@@ -465,77 +466,154 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <div class="pg" id="pgAcc">
-    <div class="acc-page">
-      <div class="acc-hero">
-        <button class="acc-back" onclick="goExplore()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>Retour</button>
-        <div style="padding-top:28px">
-          <div class="acc-av" id="accAv">?</div>
-          <div class="acc-name" id="accName">—</div>
-          <div class="acc-email" id="accEmail">—</div>
-          <div class="acc-chips">
-            <div class="acc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="accChipR">0 réservation</span></div>
-            <div class="acc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span id="accChipF">0 prof suivi</span></div>
+    <div style="background:var(--bg);min-height:100%;padding-bottom:120px">
+
+      <!-- HERO PROFIL iOS style -->
+      <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:40px 20px 28px;text-align:center;position:relative">
+        <div style="position:relative;display:inline-block;margin-bottom:12px">
+          <div id="accAv" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.5);margin:0 auto">?</div>
+          <label style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+          </label>
+        </div>
+        <div id="accName" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:3px">—</div>
+        <div id="accEmail" style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:12px">—</div>
+        <div style="display:flex;justify-content:center;gap:10px">
+          <div style="background:rgba(255,255,255,.2);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="accChipR">0 réservation</span>
+          </div>
+          <div style="background:rgba(255,255,255,.2);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span id="accChipF">0 prof suivi</span>
           </div>
         </div>
       </div>
-      <div class="acc-tabs">
-        <div class="atab on" id="aTabR" onclick="switchATab('R',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Réservations</div>
-        <div class="atab" id="aTabF" onclick="switchATab('F',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Profs suivis</div>
-        <div class="atab" id="aTabH" onclick="switchATab('H',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</div>
-        <div class="atab" id="aTabP" onclick="switchATab('P',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</div>
+
+      <!-- ONGLETS iOS style -->
+      <div style="display:flex;background:var(--wh);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none">
+        <div class="atab on" id="aTabR" onclick="switchATab('R',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Réservations
+        </div>
+        <div class="atab" id="aTabF" onclick="switchATab('F',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Suivis
+        </div>
+        <div class="atab" id="aTabH" onclick="switchATab('H',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique
+        </div>
+        <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
+        </div>
       </div>
+
       <div class="acc-body">
-        <div class="asec on" id="asecR"><div class="sec-title">Cours à venir</div><div id="listR"></div></div>
-        <div class="asec" id="asecF"><div class="sec-title">Professeurs suivis</div><div id="listF"></div></div>
+
+        <!-- RÉSERVATIONS -->
+        <div class="asec on" id="asecR">
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Cours à venir</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px" id="listR"></div>
+        </div>
+
+        <!-- PROFS SUIVIS -->
+        <div class="asec" id="asecF">
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Professeurs suivis</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px" id="listF"></div>
+        </div>
+
+        <!-- HISTORIQUE -->
+        <div class="asec" id="asecH">
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Historique</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px;padding:20px;text-align:center;color:var(--lite);font-size:13px">Bientôt disponible</div>
+        </div>
+
+        <!-- PROFIL iOS style -->
         <div class="asec" id="asecP">
-          <div class="prof-card">
-            <h3>Photo de profil</h3>
-            <div style="display:flex;align-items:center;gap:16px">
-              <div id="pfAvPreview" style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden">?</div>
-              <div>
-                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Changer ma photo</div>
-                <div style="font-size:11.5px;color:var(--lite);margin-bottom:10px">JPG, PNG · Max 2MB</div>
-                <label style="background:var(--orp);color:var(--or);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block">📷 Choisir<input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)"></label>
-              </div>
+
+          <!-- Section infos perso -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Informations personnelles</div>
+          <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
+              <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Nom</span>
+              <input id="pfNm" type="text" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Email</span>
+              <input id="pfEm" type="email" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Ville</span>
+              <input id="pfVille" type="text" placeholder="Paris…" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Rôle</span>
+              <div id="pfRoleDisplay" style="flex:1;font-size:14px;font-weight:500;text-align:right;color:var(--mid)"></div>
             </div>
           </div>
-          <div class="prof-card">
-            <h3>Informations personnelles</h3>
-            <div class="fgrid">
-              <div class="fg"><label class="flbl">Prénom</label><input id="pfPr" class="fi2" type="text"></div>
-              <div class="fg"><label class="flbl">Nom</label><input id="pfNm" class="fi2" type="text"></div>
-            </div>
-            <div class="fg"><label class="flbl">Email</label><input id="pfEm" class="fi2" type="email"></div>
-            <div class="fg"><label class="flbl">Ville</label><input id="pfVille" class="fi2" type="text" placeholder="Paris, Lyon…"></div>
-            <div class="fg"><label class="flbl">Bio</label><textarea id="pfBio" class="fi2" rows="3" placeholder="Présentez-vous…" style="resize:vertical"></textarea></div>
-            <div class="fg" id="pfRoleSection"><label class="flbl">Je suis</label>
-              <div id="pfRoleDisplay" style="background:var(--bg);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600;color:var(--mid);margin-top:4px"></div>
-              <div style="font-size:11.5px;color:var(--lite);margin-top:4px">Le rôle ne peut pas être modifié après inscription.</div>
-            </div>
-            <div id="pfProfExtra" style="display:none">
-              <div class="fg"><label class="flbl">Statut</label>
-                <select id="pfStatut" class="fi2" onchange="updateNiveauxPf(this.value)">
+
+          <!-- Bio -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Bio</div>
+          <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden;padding:13px 16px">
+            <textarea id="pfBio" rows="3" placeholder="Présentez-vous…" style="width:100%;border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;resize:none;color:var(--ink)"></textarea>
+          </div>
+
+          <!-- Section prof -->
+          <div id="pfProfExtra" style="display:none">
+            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Enseignement</div>
+            <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
+              <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Statut</span>
+                <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer">
                   <option value="">Choisir...</option>
                   <option value="etudiant">🎓 Étudiant</option>
-                  <option value="prof_ecole">🏫 Professeur d'école</option>
-                  <option value="prof_college">📚 Professeur de collège / lycée</option>
-                  <option value="prof_universite">🏛️ Professeur d'université</option>
+                  <option value="prof_ecole">🏫 Prof d'école</option>
+                  <option value="prof_college">📚 Prof collège/lycée</option>
+                  <option value="prof_universite">🏛️ Prof université</option>
                 </select>
               </div>
-              <div class="fg" id="pfNiveauField" style="display:none">
-                <label class="flbl" id="pfNiveauLabel">Niveau</label>
-                <select id="pfNiveau" class="fi2"><option value="">Choisir...</option></select>
+              <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)" id="pfNiveauField">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0" id="pfNiveauLabel">Niveau</span>
+                <select id="pfNiveau" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer"><option value="">Choisir...</option></select>
               </div>
-              <div class="fg"><label class="flbl">Matières enseignées</label><input id="pfMatieres" class="fi2" type="text" placeholder="Maths, Physique…"></div>
+              <div style="display:flex;align-items:center;padding:13px 16px">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Matières</span>
+                <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+              </div>
             </div>
-            <button class="pb pri" style="width:100%" onclick="saveProf()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Sauvegarder</button>
           </div>
-          <div class="prof-card">
-            <h3>Notifications</h3>
-            <div class="notif-row"><div><div style="font-size:13.5px;font-weight:600">Nouveaux cours</div><div style="font-size:11.5px;color:var(--lite)">Quand un prof suivi publie</div></div><div class="ntog on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="notif-row"><div><div style="font-size:13.5px;font-weight:600">Rappel de cours</div><div style="font-size:11.5px;color:var(--lite)">1 heure avant le début</div></div><div class="ntog on" onclick="this.classList.toggle('on')"></div></div>
+
+          <!-- Bouton sauvegarder -->
+          <div style="padding:16px">
+            <button onclick="saveProf()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+              Sauvegarder
+            </button>
           </div>
-          <button class="logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Se déconnecter</button>
+
+          <!-- Notifications -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:8px 16px 8px">Notifications</div>
+          <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr)">
+              <div><div style="font-size:14px;font-weight:500">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Quand un prof suivi publie</div></div>
+              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+              <div><div style="font-size:14px;font-weight:500">Rappel de cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">1h avant le début</div></div>
+              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <!-- Se déconnecter -->
+          <div style="padding:16px;margin-top:8px">
+            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">
+              Se déconnecter
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1004,12 +1082,9 @@ function goAccount(){
   g('pgExp').classList.remove('on');g('pgMsg').classList.remove('on');g('pgAcc').classList.add('on');
   var av=g('accAv');
   if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{av.style.background='rgba(255,255,255,.2)';av.textContent=user.ini;}
+  else{av.style.background='rgba(255,255,255,.25)';av.textContent=user.ini;}
   g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
   g('accEmail').textContent=user.em;
-  var prev=g('pfAvPreview');
-  if(user.photo){prev.style.background='none';prev.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{prev.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';prev.textContent=user.ini;}
   g('pfPr').value=user.pr||'';g('pfNm').value=user.nm||'';g('pfEm').value=user.em||'';
   g('pfVille').value=user.ville||'';g('pfBio').value=user.bio||'';
   // Afficher le rôle en lecture seule
@@ -1030,7 +1105,7 @@ function switchATab(s,el){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');if(tab)tab.classList.remove('on');
   });
-  g('asec'+s).classList.add('on');el.classList.add('on');
+  var sec=g('asec'+s);if(sec)sec.classList.add('on');el.classList.add('on');
 }
 
 function buildAccLists(){
