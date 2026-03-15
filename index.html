@@ -277,21 +277,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               <option value="">Choisir votre statut...</option>
               <option value="etudiant">🎓 Étudiant</option>
               <option value="prof_ecole">🏫 Professeur d'école</option>
-              <option value="prof_college">📚 Professeur de collège/lycée</option>
-              <option value="prof_universite">🎓 Professeur d'université</option>
-              <option value="particulier">👤 Particulier</option>
-              <option value="professionnel">💼 Professionnel</option>
+              <option value="prof_college">📚 Professeur de collège / lycée</option>
+              <option value="prof_universite">🏛️ Professeur d'université</option>
             </select>
           </div>
           <div class="lfield" id="niveauField" style="display:none">
-            <label>Niveau enseigné</label>
+            <label id="niveauLabel">Niveau</label>
             <select id="rNiveau" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;background:var(--wh)">
               <option value="">Choisir...</option>
             </select>
           </div>
           <div class="lfield"><label>Matière(s) principale(s)</label><input id="rMatiere" type="text" placeholder="Maths, Physique, Anglais…" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;"></div>
           <div class="lfield">
-            <label>Pièce d'identité (CNI ou Passeport)</label>
+            <label>Pièce d'identité (CNI ou Passeport) <span style="color:#EF4444">*</span></label>
             <div style="border:1.5px dashed var(--bdr);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .18s" onclick="g('rCni').click()" id="cniDrop">
               <div style="font-size:24px;margin-bottom:6px">🪪</div>
               <div style="font-size:13px;font-weight:600;color:var(--mid)" id="cniLabel">Cliquez pour uploader</div>
@@ -691,6 +689,8 @@ async function doReg(){
   if(role==='professeur'){
     var statut=g('rStatut').value||'';
     if(!statut){toast('Statut manquant','Veuillez choisir votre statut');return;}
+    var cniFile=g('rCni')&&g('rCni').files&&g('rCni').files[0];
+    if(!cniFile){toast('Pièce d\'identité manquante','Veuillez uploader votre CNI ou passeport');return;}
     extraData.statut=statut;
     extraData.niveau=g('rNiveau').value||'';
     extraData.matieres=g('rMatiere').value||'';
@@ -893,16 +893,16 @@ function openR(id){
   curId=id;
   var pp=Math.ceil(c.tot/c.sp);
   g('rTit').textContent=c.title;
-  g('rSbj').textContent=c.subj;
-  g('rDt').textContent=c.dt;
-  g('rLc').textContent=c.lc;
-  g('rTot').textContent=c.tot+'EUR';
+  g('rSbj').textContent=c.subj||'';
+  g('rDt').textContent=c.dt||'';
+  g('rLc').textContent=c.lc||'';
+  g('rTot').textContent=c.tot+'€';
   g('rCnt').textContent=c.sp+' places max';
-  g('rDp').textContent=pp+'EUR';
-  g('rFin').textContent=pp+'EUR';
-  g('rDpB').textContent=pp+'EUR';
-  g('rFinB').textContent=pp+'EUR';
-  g('rInf').textContent='Prix fixe par eleve : '+pp+'EUR. Vous payez cette somme pour rejoindre ce cours.';
+  g('rDp').textContent=pp+'€';
+  g('rFin').textContent=pp+'€';
+  g('rDpB').textContent=pp+'€';
+  g('rFinB').textContent=pp+'€';
+  g('rInf').textContent='Prix par élève : '+pp+'€. Cliquez pour confirmer votre place.';
   openM('bdR');
 }
 function closeR(){closeM('bdR');}
@@ -1015,8 +1015,20 @@ function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on')});el.classList.add('on');}
 
 // NIVEAUX DYNAMIQUES
-var NIVEAUX={etudiant:['Baccalauréat','BTS / BUT','Licence (L1-L3)','Master (M1-M2)','Doctorat'],prof_ecole:['Maternelle (TPS-GS)','CP - CE1','CE2 - CM1','CM2'],prof_college:['6ème - 5ème','4ème - 3ème','Seconde','Première','Terminale'],prof_universite:['Licence (L1-L3)','Master (M1-M2)','Doctorat'],particulier:['Débutant','Intermédiaire','Avancé','Tous niveaux'],professionnel:['Débutant','Intermédiaire','Avancé','Tous niveaux']};
-function updateNiveaux(statut){var nf=g('niveauField'),sel=g('rNiveau');if(!statut||!NIVEAUX[statut]){nf.style.display='none';return;}nf.style.display='block';sel.innerHTML='<option value="">Choisir...</option>'+NIVEAUX[statut].map(function(n){return'<option value="'+n+'">'+n+'</option>';}).join('');}
+var NIVEAUX={
+  etudiant:{label:'Votre niveau actuel',options:['Baccalauréat','BTS / BUT','Licence (L1-L3)','Master (M1-M2)','Doctorat']},
+  prof_ecole:{label:'Niveau enseigné',options:['Maternelle (TPS-GS)','CP - CE1','CE2 - CM1','CM2']},
+  prof_college:{label:'Niveau enseigné',options:['6ème - 5ème','4ème - 3ème','Seconde','Première','Terminale']},
+  prof_universite:{label:'Niveau enseigné',options:['Licence (L1-L3)','Master (M1-M2)','Doctorat']}
+};
+function updateNiveaux(statut){
+  var nf=g('niveauField'),sel=g('rNiveau'),lbl=g('niveauLabel');
+  if(!statut||!NIVEAUX[statut]){nf.style.display='none';return;}
+  var n=NIVEAUX[statut];
+  nf.style.display='block';
+  if(lbl)lbl.textContent=n.label;
+  sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
+}
 
 // CNI PREVIEW
 function previewCni(input){if(input.files&&input.files[0]){var label=g('cniLabel'),drop=g('cniDrop');label.textContent='✅ '+input.files[0].name;drop.style.borderColor='var(--green)';drop.style.background='#F0FDF4';}}
