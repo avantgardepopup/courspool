@@ -174,6 +174,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
 /* MESSAGING PAGE */
+#pgMsg{height:calc(100vh - 56px);}
 #pgMsg.on{display:flex !important;}
 .msg-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
 .msg-row:hover{background:var(--bg);}
@@ -191,16 +192,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 #msgInputBar{padding:10px 14px;border-top:1px solid var(--bdr);background:var(--wh);flex-shrink:0;}
 
 @media(max-width:768px){
-  #msgListPane{max-width:100% !important;border-right:none;width:100%;}
+  #msgListPane{max-width:100% !important;border-right:none;width:100%;display:flex;flex-direction:column;}
   #msgConvPane{
     position:fixed;top:56px;left:0;right:0;bottom:0;
     background:var(--wh);z-index:50;
     display:none;flex-direction:column;
   }
-  #pgMsg.conv-open #msgListPane{display:none;}
+  #pgMsg.conv-open #msgListPane{display:none !important;}
   #pgMsg.conv-open #msgConvPane{display:flex !important;}
   #msgBackBtn{display:flex !important;}
   #msgInputBar{padding-bottom:max(10px,env(safe-area-inset-bottom));}
+  #msgEmpty{display:none;}
 }
 .bnav{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
