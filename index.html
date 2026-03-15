@@ -413,7 +413,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
       <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
       <button class="pb pri" style="width:100%;margin-bottom:10px" onclick="confR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong></button>
-      <button class="pb sec" style="width:100%" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
+      <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
+      <button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="deleteCours(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
     </div>
   </div>
 </div>
@@ -561,7 +562,9 @@ async function doLogin(){
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);shake('lfC');return;}
     var p=data.profile||{};
-    go(p.prenom||em.split('@')[0],p.nom||'',em,p.role||'eleve',data.user.id);
+    // Récupérer la photo depuis Supabase
+    var photoUrl=p.photo_url||null;
+    go(p.prenom||em.split('@')[0],p.nom||'',em,p.role||'eleve',data.user.id,photoUrl);
   }catch(e){toast('Erreur','Impossible de se connecter');}
   finally{g('lEm').disabled=false;g('lPw').disabled=false;}
 }
@@ -592,8 +595,8 @@ async function doReg(){
 
 function doGuest(){go('Invité','','invite@courspool.fr','eleve',null);}
 
-function go(pr,nm,em,role,uid){
-  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U'};
+function go(pr,nm,em,role,uid,photoUrl){
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   applyUser();
   loadData().then(function(){buildCards();});
@@ -701,19 +704,36 @@ function doLogout(){
   toast('Déconnecté','À bientôt !');
 }
 
-// PHOTO
+// PHOTO - Upload vers Supabase Storage
 function previewPhoto(input){
   if(input.files&&input.files[0]){
+    var file=input.files[0];
     var reader=new FileReader();
     reader.onload=function(e){
       var src=e.target.result;
-      if(user){user.photo=src;try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(err){}}
-      var tav=g('tav');tav.style.background='none';tav.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      // Afficher preview immédiatement
       var prev=g('pfAvPreview');prev.style.background='none';prev.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       var accAv=g('accAv');accAv.style.background='none';accAv.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      toast('Photo mise à jour','Votre photo de profil a changé');
+      var tav=g('tav');tav.style.background='none';tav.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      // Uploader vers Supabase Storage si connecté
+      if(user&&user.id){
+        fetch(API+'/upload/photo',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({base64:src,userId:user.id,filename:file.name})
+        }).then(function(r){return r.json();}).then(function(data){
+          if(data.url){
+            user.photo=data.url;
+            try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+            // Mettre à jour les avatars avec l'URL Supabase
+            var img='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+            g('tav').innerHTML=img;g('pfAvPreview').innerHTML=img;g('accAv').innerHTML=img;
+            toast('Photo sauvegardée','Votre photo est maintenant visible partout');
+          }
+        }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
+      }
     };
-    reader.readAsDataURL(input.files[0]);
+    reader.readAsDataURL(file);
   }
 }
 
@@ -790,6 +810,13 @@ function openR(id){
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
+  // Bouton annuler si c'est le créateur
+  var btnDel=document.getElementById('btnDelCours');
+  if(user&&c.pr===user.id){
+    if(btnDel)btnDel.style.display='flex';
+  } else {
+    if(btnDel)btnDel.style.display='none';
+  }
   openM('bdR');
 }
 function closeR(){closeM('bdR');}
@@ -850,6 +877,7 @@ function closePr(){closeM('bdPr');}
 function contPr(){var p=P[curProf]||{};closePr();openMsg(p.nm||'le professeur','');}
 function togFP(){
   var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');
+  if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
   if(fol.has(id)){fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';toast('Désabonné','Vous ne suivez plus '+p.nm);}
   else{fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');}
 }
@@ -862,38 +890,62 @@ function openCr(){
 }
 function closeCr(){closeM('bdCr');}
 async function subCr(){
+  if(window._publishing){toast('En cours...','Publication déjà en cours');return;}
+  window._publishing=true;
+  var btn=document.querySelector('#bdCr .pb.pri');
+  if(btn){btn.textContent='⏳ Publication…';btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   var sujetEl=document.querySelector('#bdCr .so.on');
   var sujet=sujetEl?sujetEl.textContent.trim():'Autre';
-  if(!titre||!date||!heure||!lieu||!prix){toast('Champs manquants','Remplissez tous les champs obligatoires');return;}
+  if(!titre||!date||!heure||!lieu||!prix){
+    toast('Champs manquants','Remplissez tous les champs obligatoires');
+    window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}return;
+  }
   var dateObj=new Date(date+'T'+heure);
-  if(dateObj<=new Date()){toast('Date invalide','Choisissez une date future');return;}
+  if(dateObj<=new Date()){
+    toast('Date invalide','Choisissez une date future');
+    window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}return;
+  }
   var dateFormatee=dateObj.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
   var colors={'📐 Maths':'#16A34A','⚗️ Physique':'#BE185D','💻 Info':'#2563EB','🌍 Langues':'#059669','📊 Éco':'#D97706','✨ Autre':'#7C3AED'};
   var bgs={'📐 Maths':'linear-gradient(135deg,#F0FDF4,#BBF7D0)','⚗️ Physique':'linear-gradient(135deg,#FDF2F8,#F9A8D4)','💻 Info':'linear-gradient(135deg,#EFF6FF,#BFDBFE)','🌍 Langues':'linear-gradient(135deg,#ECFDF5,#A7F3D0)','📊 Éco':'linear-gradient(135deg,#FFFBEB,#FDE68A)','✨ Autre':'linear-gradient(135deg,#F5F3FF,#DDD6FE)'};
   var sc=colors[sujet]||'#7C3AED',bg=bgs[sujet]||bgs['✨ Autre'];
   var payload={
-    titre:titre,sujet:sujet,couleur_sujet:sc,background:bg,
-    date_heure:dateFormatee,lieu:lieu,prix_total:prix,places_max:places,
+    titre,sujet,couleur_sujet:sc,background:bg,
+    date_heure:dateFormatee,lieu,prix_total:prix,places_max:places,
     professeur_id:user.id,emoji:'📚',
     prof_initiales:user.ini||'?',
     prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
     prof_nom:user.pr+(user.nm?' '+user.nm:''),
     description:desc
   };
-  // Ajouter photo seulement si elle existe
   if(user.photo)payload.prof_photo=user.photo;
   try{
     var r=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var data=await r.json();
-    if(data.error){toast('Erreur de publication',data.error.message||'Vérifiez tous les champs');return;}
-    g('crTitre').value='';g('crDate').value='';g('crHeure').value='';g('crLieu').value='';g('cPr').value='';g('cH').textContent='';if(g('crDesc'))g('crDesc').value='';
+    if(data.error){toast('Erreur',data.error.message||'Impossible de publier');return;}
+    g('crTitre').value='';g('crDate').value='';g('crHeure').value='';
+    g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
+    if(g('crDesc'))g('crDesc').value='';
     document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});
     closeM('bdCr');await loadData();buildCards();
     toast('Cours publié !','Les élèves peuvent maintenant réserver');
-  }catch(e){toast('Erreur réseau','Vérifiez votre connexion et réessayez');}
+  }catch(e){toast('Erreur réseau','Vérifiez votre connexion');}
+  finally{window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}}
+}
+
+// SUPPRIMER SON COURS
+async function deleteCours(id){
+  if(!confirm('Annuler ce cours ? Cette action est irréversible.'))return;
+  try{
+    var r=await fetch(API+'/cours/'+id,{method:'DELETE'});
+    var data=await r.json();
+    if(data.error){toast('Erreur','Impossible d\'annuler ce cours');return;}
+    closeM('bdR');await loadData();buildCards();
+    toast('Cours annulé','Votre cours a été supprimé');
+  }catch(e){toast('Erreur réseau','Impossible d\'annuler ce cours');}
 }
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Soit '+Math.ceil(p/pl)+'€ par élève pour '+pl+' place'+(pl>1?'s':''):'';}
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
