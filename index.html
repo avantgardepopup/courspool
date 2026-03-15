@@ -714,13 +714,32 @@ function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
 
 function go(pr,nm,em,role,uid){
   user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U'};
+  // Sauvegarder la session
+  try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
-  // Profs non verifies ne peuvent pas proposer de cours
+  if(user.photo){g('tav').style.background='none';g('tav').innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
   loadData().then(function(){ buildCards(); });
   toast('Bienvenue '+pr+' !','Vous etes connecte a CoursPool');
 }
+
+// Restaurer la session au chargement
+(function restoreSession(){
+  try{
+    var saved=localStorage.getItem('cp_user');
+    if(saved){
+      user=JSON.parse(saved);
+      g('login').style.display='none';
+      g('app').style.display='block';
+      g('tav').textContent=user.ini;
+      if(user.photo){g('tav').style.background='none';g('tav').innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+      g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
+      loadData().then(function(){buildCards();});
+    }
+  }catch(e){}
+})();
+
 function shake(id){var e=g(id);e.style.animation='shake .3s';setTimeout(function(){e.style.animation=''},400);}
 
 function goExplore(){g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');}
@@ -769,9 +788,17 @@ function saveProf(){
   g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
   g('accEmail').textContent=user.em;
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
+  try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   toast('Profil sauvegarde','Vos informations ont ete mises a jour');
 }
-function doLogout(){g('app').style.display='none';g('login').style.display='flex';Object.keys(res).forEach(function(k){delete res[k]});fol.clear();user=null;g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');toast('Deconnecte','A bientot sur CoursPool !');}
+function doLogout(){
+  g('app').style.display='none';g('login').style.display='flex';
+  Object.keys(res).forEach(function(k){delete res[k]});
+  fol.clear();user=null;
+  try{localStorage.removeItem('cp_user');}catch(e){}
+  g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');
+  toast('Deconnecte','A bientot sur CoursPool !');
+}
 
 var PAGE_SIZE = 6;
 var currentPage = 1;
@@ -1014,9 +1041,14 @@ function previewPhoto(input) {
       var prev = g('pfAvPreview');
       prev.style.background = 'none';
       prev.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      user.photo = e.target.result;
-      g('tav').style.background = 'none';
-      g('tav').innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      if(user){
+        user.photo = e.target.result;
+        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(err){}
+      }
+      g('tav').style.background='none';
+      g('tav').innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      g('accAv').style.background='none';
+      g('accAv').innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
     };
     reader.readAsDataURL(input.files[0]);
   }
