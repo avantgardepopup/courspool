@@ -240,32 +240,75 @@ app.get('/reservations/:user_id', async (req, res) => {
 
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', async (req, res) => {
-  const { cours_id, user_id, montant, cours_titre, success_url, cancel_url } = req.body;
+  const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
   if (!cours_id || !user_id || !montant) return res.status(400).json({ error: 'Données manquantes' });
 
   try {
+    const baseUrl = 'https://courspool.vercel.app';
+    const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
+    const cancelUrl = baseUrl;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
           currency: 'eur',
-          product_data: {
-            name: cours_titre || 'Réservation CoursPool',
-            description: 'Place pour le cours',
-          },
-          unit_amount: Math.round(montant * 100), // en centimes
+          product_data: { name: cours_titre || 'Réservation CoursPool' },
+          unit_amount: Math.round(montant * 100),
         },
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: success_url + '?session_id={CHECKOUT_SESSION_ID}&cours_id=' + cours_id + '&user_id=' + user_id,
-      cancel_url: cancel_url,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: { cours_id, user_id, montant: montant.toString() },
     });
-    res.json({ url: session.url, session_id: session.id });
+    res.json({ url: session.url });
   } catch (e) {
     console.log('Stripe error:', e.message);
     res.status(500).json({ error: e.message });
+  }
+});
+
+// STRIPE — page de succès qui crée la réservation et redirige
+app.get('/stripe/success', async (req, res) => {
+  const { cours_id, user_id, montant, pour_ami, redirect } = req.query;
+  if (!cours_id || !user_id) return res.redirect(redirect || 'https://courspool.vercel.app');
+
+  try {
+    // Vérifier si déjà réservé (sauf pour ami)
+    if (pour_ami !== '1') {
+      const { data: existing } = await supabase.from('reservations')
+        .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
+      if (existing) {
+        return res.redirect((redirect || 'https://courspool.vercel.app') + '?paid=1&cours_id=' + cours_id);
+      }
+    }
+
+    // Créer la réservation
+    await supabase.from('reservations').insert([{
+      cours_id, user_id,
+      montant_paye: parseFloat(montant) || 0,
+      type_paiement: pour_ami === '1' ? 'stripe_ami' : 'stripe'
+    }]);
+
+    // Incrémenter places
+    const { data: coursData } = await supabase.from('cours').select('places_prises,titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
+    await supabase.from('cours').update({ places_prises: (coursData?.places_prises || 0) + 1 }).eq('id', cours_id);
+
+    // Envoyer emails
+    try {
+      const { data: eleve } = await supabase.from('profiles').select('email,prenom,nom').eq('id', user_id).single();
+      const { data: prof } = await supabase.from('profiles').select('email,prenom,nom').eq('id', coursData?.professeur_id).single();
+      if (eleve?.email) await sendEmailReservation(eleve.email, (eleve.prenom+' '+eleve.nom).trim(), coursData?.titre, coursData?.date_heure, coursData?.lieu, montant);
+      if (prof?.email) await sendEmailProfNewEleve(prof.email, (prof.prenom+' '+prof.nom).trim(), (eleve?.prenom+' '+eleve?.nom||'').trim(), coursData?.titre, montant);
+    } catch(e) {}
+
+    // Rediriger vers le site avec paramètre de succès
+    res.redirect((redirect || 'https://courspool.vercel.app') + '?paid=1&cours_id=' + cours_id + (pour_ami==='1'?'&ami=1':''));
+  } catch (e) {
+    console.log('Stripe success error:', e.message);
+    res.redirect(redirect || 'https://courspool.vercel.app');
   }
 });
 
