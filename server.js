@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const Stripe = require('stripe');
 
 const app = express();
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
 app.use(cors());
 app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({limit: '10mb', extended: true}));
@@ -118,7 +121,68 @@ app.get('/reservations/:user_id', async (req, res) => {
   res.json(data);
 });
 
-// FOLLOWS — suivre
+// STRIPE — créer une session de paiement
+app.post('/stripe/checkout', async (req, res) => {
+  const { cours_id, user_id, montant, cours_titre, success_url, cancel_url } = req.body;
+  if (!cours_id || !user_id || !montant) return res.status(400).json({ error: 'Données manquantes' });
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: cours_titre || 'Réservation CoursPool',
+            description: 'Place pour le cours',
+          },
+          unit_amount: Math.round(montant * 100), // en centimes
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: success_url + '?session_id={CHECKOUT_SESSION_ID}&cours_id=' + cours_id + '&user_id=' + user_id,
+      cancel_url: cancel_url,
+      metadata: { cours_id, user_id, montant: montant.toString() },
+    });
+    res.json({ url: session.url, session_id: session.id });
+  } catch (e) {
+    console.log('Stripe error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// STRIPE — confirmer paiement après redirect
+app.post('/stripe/confirm', async (req, res) => {
+  const { session_id, cours_id, user_id } = req.body;
+  if (!session_id || !cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (session.payment_status !== 'paid') return res.status(400).json({ error: 'Paiement non complété' });
+
+    const montant = parseFloat(session.metadata.montant || 0);
+
+    // Vérifier si déjà réservé
+    const { data: existing } = await supabase.from('reservations')
+      .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
+    if (existing) return res.json({ success: true, already: true });
+
+    // Créer la réservation
+    const { error } = await supabase.from('reservations')
+      .insert([{ cours_id, user_id, montant_paye: montant, type_paiement: 'stripe' }]);
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Incrémenter places_prises
+    const { data: coursData } = await supabase.from('cours').select('places_prises').eq('id', cours_id).single();
+    const newCount = (coursData?.places_prises || 0) + 1;
+    await supabase.from('cours').update({ places_prises: newCount }).eq('id', cours_id);
+
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 app.post('/follows', async (req, res) => {
   const { user_id, professeur_id } = req.body;
   const { data, error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
