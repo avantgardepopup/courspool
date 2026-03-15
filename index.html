@@ -348,11 +348,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="atab" id="aTabF" onclick="switchATab('F',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Profs suivis</div>
         <div class="atab" id="aTabH" onclick="switchATab('H',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</div>
         <div class="atab" id="aTabP" onclick="switchATab('P',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</div>
+        <div class="atab" id="aTabM" onclick="switchATab('M',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;margin-left:-4px"></span>Messages</div>
       </div>
       <div class="acc-body">
         <div class="asec on" id="asecR"><div class="sec-title">Cours à venir</div><div id="listR"></div></div>
         <div class="asec" id="asecF"><div class="sec-title">Professeurs suivis</div><div id="listF"></div></div>
-        <div class="asec" id="asecH"><div class="sec-title">Cours terminés</div><div class="bempty"><p>Aucun cours terminé pour l'instant.</p></div></div>
+        <div class="asec" id="asecM">
+          <div class="sec-title">Mes conversations</div>
+          <div id="listM"></div>
+        </div>
         <div class="asec" id="asecP">
           <div class="prof-card">
             <h3>Photo de profil</h3>
@@ -543,12 +547,56 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- MODAL MESSAGERIE -->
 <div class="bd" id="bdMsg" onclick="if(event.target===this)closeMsg()">
+  <div class="modal" style="max-width:500px;height:85vh;display:flex;flex-direction:column">
+    <div class="mhd" style="flex-shrink:0">
+      <div>
+        <div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Messagerie</div>
+        <div style="font-size:17px;font-weight:800;display:flex;align-items:center;gap:10px">
+          <div id="msgAvatar" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden"></div>
+          <span id="msgTitle">Contact</span>
+        </div>
+      </div>
+      <button class="mcl" onclick="closeMsg()">✕</button>
+    </div>
+    <div id="msgMessages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px"></div>
+    <div style="padding:12px 18px 16px;flex-shrink:0;border-top:1px solid var(--bdr)">
+      <div style="display:flex;gap:8px">
+        <input id="msgInput" type="text" placeholder="Votre message…" class="fi3" style="flex:1" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="pb pri" style="padding:10px 16px;flex-shrink:0" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOTATION -->
+<div class="bd" id="bdNote" onclick="if(event.target===this)closeM('bdNote')">
   <div class="modal sm">
-    <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Message</div><div style="font-size:17px;font-weight:800" id="msgTitle">Contact</div></div><button class="mcl" onclick="closeMsg()">✕</button></div>
+    <div class="mhd">
+      <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Évaluation</div><div style="font-size:17px;font-weight:800" id="noteTitre">Noter ce cours</div></div>
+      <button class="mcl" onclick="closeM('bdNote')">✕</button>
+    </div>
     <div class="mbd">
-      <div style="background:var(--orp);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px"><div style="font-size:36px;margin-bottom:8px">💬</div><div style="font-size:15px;font-weight:700;color:var(--or);margin-bottom:6px">Messagerie sécurisée</div><div style="font-size:13px;color:var(--mid);line-height:1.6">Disponible très prochainement.</div></div>
-      <div id="msgEmail" style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--mid);text-align:center"></div>
-      <button class="pb pri" style="width:100%" onclick="closeMsg()">Fermer</button>
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--mid);margin-bottom:12px">Comment s'est passé ce cours ?</div>
+        <div id="noteStars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">
+          <span onclick="setNote(1)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="1">⭐</span>
+          <span onclick="setNote(2)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="2">⭐</span>
+          <span onclick="setNote(3)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="3">⭐</span>
+          <span onclick="setNote(4)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="4">⭐</span>
+          <span onclick="setNote(5)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="5">⭐</span>
+        </div>
+        <div id="noteLabel" style="font-size:13px;color:var(--lite);height:18px"></div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Commentaire (optionnel)</label>
+        <textarea id="noteComment" class="fi2" rows="3" placeholder="Partagez votre expérience…" style="resize:none"></textarea>
+      </div>
+      <button class="pb pri" style="width:100%" onclick="submitNote()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Envoyer mon avis
+      </button>
     </div>
   </div>
 </div>
@@ -707,8 +755,12 @@ function goAccount(){
 }
 
 function switchATab(s,el){
-  ['R','F','H','P'].forEach(function(x){g('asec'+x).classList.remove('on');g('aTab'+x).classList.remove('on');});
+  ['R','F','H','P','M'].forEach(function(x){
+    var sec=g('asec'+x),tab=g('aTab'+x);
+    if(sec)sec.classList.remove('on');if(tab)tab.classList.remove('on');
+  });
   g('asec'+s).classList.add('on');el.classList.add('on');
+  if(s==='M')loadConversations();
 }
 
 function buildAccLists(){
@@ -717,10 +769,23 @@ function buildAccLists(){
   g('accChipF').textContent=fIds.length+' prof'+(fIds.length>1?'s':'')+' suivi'+(fIds.length>1?'s':'');
   var lr=g('listR');
   if(!rIds.length){lr.innerHTML='<div class="bempty"><p>Aucun cours réservé.<br><a onclick="goExplore()">Explorer →</a></p></div>';}
-  else{lr.innerHTML=rIds.map(function(id){var c=C.find(function(x){return x.id===id});if(!c)return'';return'<div class="rrow"><div class="rdot">'+c.em+'</div><div class="ri"><div class="rt">'+c.title+'</div><div class="rm">'+c.prof_nm+' · '+c.dt+'</div></div><span class="rbadge bup">À venir</span></div>';}).join('');}
+  else{
+    var now=new Date();
+    lr.innerHTML=rIds.map(function(id){
+      var c=C.find(function(x){return x.id===id});if(!c)return'';
+      // Vérifier si le cours est passé
+      var isPast=false;
+      try{
+        var parts=c.dt.split(' · ');
+        if(parts[1]){var d=new Date(parts[0]+' '+parts[1]);isPast=d<now;}
+      }catch(e){}
+      var noteBtn=isPast&&user&&user.role!=='professeur'?'<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap">⭐ Noter</button>':'';
+      return'<div class="rrow"><div class="rdot">'+c.em+'</div><div class="ri"><div class="rt">'+c.title+'</div><div class="rm">'+c.prof_nm+' · '+c.dt+'</div></div>'+(isPast?'<span class="rbadge bdone">Terminé</span>':'<span class="rbadge bup">À venir</span>')+noteBtn+'</div>';
+    }).join('');
+  }
   var lf=g('listF');
   if(!fIds.length){lf.innerHTML='<div class="bempty"><p>Vous ne suivez encore aucun professeur.</p></div>';}
-  else{lf.innerHTML=fIds.map(function(id){var p=P[id];if(!p)return'';var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':p.i;return'<div class="frow"><div class="fav" style="background:'+p.col+'">'+av+'</div><div class="fi"><div class="fn">'+p.nm+'</div><div class="fr">'+p.rl+'</div></div></div>';}).join('');}
+  else{lf.innerHTML=fIds.map(function(id){var p=P[id];if(!p)return'';var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':p.i;return'<div class="frow" onclick="openPr(\''+id+'\')" style="cursor:pointer"><div class="fav" style="background:'+p.col+'">'+av+'</div><div class="fi"><div class="fn">'+p.nm+'</div><div class="fr">'+p.rl+'</div></div></div>';}).join('');}
 }
 
 function setPfRole(role){
@@ -904,7 +969,10 @@ function confR(){
 function contR(){
   var c=C.find(function(x){return x.id===curId});
   var nm=c?c.prof_nm:'le professeur';
-  closeM('bdR');openMsg(nm,'');
+  var pid=c?c.pr:null;
+  var photo=c?c.prof_photo:null;
+  closeM('bdR');
+  if(pid)openMsg(nm,pid,photo);
 }
 
 // AUTRE PERSONNE
@@ -960,7 +1028,12 @@ function openPr(pid){
   openM('bdPr');
 }
 function closePr(){closeM('bdPr');}
-function contPr(){var p=P[curProf]||{};closePr();openMsg(p.nm||'le professeur','');}
+function contPr(){
+  var p=P[curProf]||{};
+  var pid=curProf;
+  closePr();
+  openMsg(p.nm||'le professeur',pid,p.photo||null);
+}
 function togFP(){
   var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
@@ -1061,8 +1134,128 @@ function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
 
 // MESSAGERIE
-function openMsg(profNm,email){g('msgTitle').textContent=profNm||'Contact';g('msgEmail').textContent=email?'Email : '+email:'Messagerie intégrée disponible prochainement.';openM('bdMsg');}
-function closeMsg(){closeM('bdMsg');}
+var msgDestinataire=null,msgDestId=null,msgPollTimer=null;
+
+function openMsg(profNm,destId,avatar){
+  if(!user){toast('Connexion requise','Connectez-vous pour envoyer des messages');return;}
+  msgDestinataire=profNm;msgDestId=destId;
+  g('msgTitle').textContent=profNm||'Contact';
+  var av=g('msgAvatar');
+  if(avatar){av.style.background='none';av.innerHTML='<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+  else{av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';av.textContent=(profNm&&profNm[0])||'?';}
+  g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
+  g('msgInput').value='';
+  openM('bdMsg');
+  loadMessages();
+  // Polling toutes les 3 secondes
+  clearInterval(msgPollTimer);
+  msgPollTimer=setInterval(loadMessages,3000);
+}
+
+async function loadMessages(){
+  if(!user||!msgDestId)return;
+  try{
+    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId);
+    var msgs=await r.json();
+    if(!Array.isArray(msgs))return;
+    var container=g('msgMessages');
+    container.innerHTML=msgs.length===0?'<div style="text-align:center;padding:30px;color:var(--lite);font-size:13px">Aucun message. Dites bonjour ! 👋</div>':msgs.map(function(m){
+      var isMe=m.expediteur_id===user.id;
+      var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      return'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.65;margin-top:3px;text-align:right">'+time+'</div></div></div>';
+    }).join('');
+    container.scrollTop=container.scrollHeight;
+  }catch(e){}
+}
+
+async function sendMsg(){
+  var txt=g('msgInput').value.trim();
+  if(!txt||!msgDestId||!user)return;
+  g('msgInput').value='';
+  try{
+    await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      expediteur_id:user.id,destinataire_id:msgDestId,contenu:txt
+    })});
+    loadMessages();
+  }catch(e){toast('Erreur','Message non envoyé');}
+}
+
+function closeMsg(){closeM('bdMsg');clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;}
+
+async function loadConversations(){
+  if(!user)return;
+  try{
+    var r=await fetch(API+'/conversations/'+user.id);
+    var msgs=await r.json();
+    if(!Array.isArray(msgs)||!msgs.length){
+      g('listM').innerHTML='<div class="bempty"><p>Aucune conversation pour l\'instant.</p></div>';return;
+    }
+    // Grouper par interlocuteur
+    var convs={};
+    msgs.forEach(function(m){
+      var otherId=m.expediteur_id===user.id?m.destinataire_id:m.expediteur_id;
+      if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
+    });
+    var nonLus=0;
+    g('listM').innerHTML=Object.keys(convs).map(function(otherId){
+      var m=convs[otherId];
+      var isMe=m.expediteur_id===user.id;
+      var nonLu=!isMe&&!m.lu;
+      if(nonLu)nonLus++;
+      // Trouver le nom de l'interlocuteur dans P
+      var p=P[otherId]||{nm:otherId.slice(0,8)+'…',col:'linear-gradient(135deg,#FF8C55,#E04E10)',i:'?',photo:null};
+      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':p.i;
+      return'<div class="rrow" onclick="openMsg(\''+p.nm+'\',\''+otherId+'\',\''+( p.photo||'')+'\')"><div class="fav" style="background:'+p.col+';width:44px;height:44px;flex-shrink:0">'+av+'</div><div class="ri"><div class="rt" style="'+(nonLu?'font-weight:800':'')+'">'+p.nm+'</div><div class="rm">'+(isMe?'Vous : ':'')+m.contenu.slice(0,40)+(m.contenu.length>40?'…':'')+'</div></div>'+(nonLu?'<div style="width:10px;height:10px;border-radius:50%;background:#EF4444;flex-shrink:0"></div>':'')+'</div>';
+    }).join('');
+    // Badge messages non lus
+    var badge=g('msgBadge');
+    if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}
+    else{badge.style.display='none';}
+  }catch(e){}
+}
+
+// NOTATION
+var noteVal=0,noteCours=null;
+var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 😊','Excellent ! 🌟'];
+
+function openNote(cours){
+  noteCours=cours;noteVal=0;
+  g('noteTitre').textContent=cours.title;
+  g('noteComment').value='';
+  g('noteLabel').textContent='';
+  updateStars(0);
+  openM('bdNote');
+}
+
+function setNote(n){
+  noteVal=n;
+  g('noteLabel').textContent=LABELS[n]||'';
+  updateStars(n);
+}
+
+function updateStars(n){
+  var stars=g('noteStars').querySelectorAll('span');
+  stars.forEach(function(s,i){
+    s.style.filter=i<n?'none':'grayscale(1)';
+    s.style.transform=i<n?'scale(1.15)':'scale(1)';
+  });
+}
+
+async function submitNote(){
+  if(!noteVal){toast('Note manquante','Choisissez une note entre 1 et 5');return;}
+  if(!noteCours||!user){return;}
+  var comment=g('noteComment').value.trim();
+  try{
+    var r=await fetch(API+'/notations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      eleve_id:user.id,professeur_id:noteCours.pr,cours_id:noteCours.id,note:noteVal,commentaire:comment
+    })});
+    var data=await r.json();
+    if(data.error){toast('Erreur','Impossible d\'envoyer la note');return;}
+    closeM('bdNote');
+    toast('Merci pour votre avis !','Votre note a été enregistrée ⭐');
+    noteCours=null;noteVal=0;
+  }catch(e){toast('Erreur réseau','Impossible d\'envoyer la note');}
+}
 
 // LIEU SEARCH
 var lieuTimer=null;
