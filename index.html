@@ -478,6 +478,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="sg"><div class="so" onclick="pickS(this)">📐 Maths</div><div class="so" onclick="pickS(this)">⚗️ Physique</div><div class="so" onclick="pickS(this)">💻 Info</div><div class="so" onclick="pickS(this)">🌍 Langues</div><div class="so" onclick="pickS(this)">📊 Éco</div><div class="so" onclick="pickS(this)">✨ Autre</div></div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label><input class="fi3" id="crDate" type="date"></div>
         <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label><input class="fi3" id="crHeure" type="time"></div>
@@ -537,7 +539,8 @@ async function loadData(){
         prof_ini:c.prof_initiales||'?',
         prof_col:c.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
         prof_nm:c.prof_nom||'Professeur',
-        prof_photo:c.prof_photo||null
+        prof_photo:c.prof_photo||null,
+        description:c.description||''
       };
     });
     C.forEach(function(c){
@@ -724,10 +727,15 @@ function buildCards(){
 }
 
 function applyFilter(){
-  var q=g('srch').value.toLowerCase();
+  var q=g('srch').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   filteredCards=C.filter(function(c){
-    var t=(c.t||'').toLowerCase();
-    return (FM[actF]||FM.tous)(t)&&(!q||t.includes(q)||c.title.toLowerCase().includes(q));
+    var title=(c.title||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var subj=(c.subj||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var loc=(c.lc||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var prof=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var matchFilter=(FM[actF]||FM.tous)(c.t||'');
+    var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q));
+    return matchFilter&&matchSearch;
   });
   renderPage();
 }
@@ -850,32 +858,36 @@ function closeCr(){closeM('bdCr');}
 async function subCr(){
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
+  var desc=g('crDesc')?g('crDesc').value.trim():'';
   var sujetEl=document.querySelector('#bdCr .so.on');
   var sujet=sujetEl?sujetEl.textContent.trim():'Autre';
-  if(!titre||!date||!heure||!lieu||!prix){toast('Champs manquants','Remplissez tous les champs');return;}
+  if(!titre||!date||!heure||!lieu||!prix){toast('Champs manquants','Remplissez tous les champs obligatoires');return;}
   var dateObj=new Date(date+'T'+heure);
   if(dateObj<=new Date()){toast('Date invalide','Choisissez une date future');return;}
   var dateFormatee=dateObj.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
   var colors={'📐 Maths':'#16A34A','⚗️ Physique':'#BE185D','💻 Info':'#2563EB','🌍 Langues':'#059669','📊 Éco':'#D97706','✨ Autre':'#7C3AED'};
   var bgs={'📐 Maths':'linear-gradient(135deg,#F0FDF4,#BBF7D0)','⚗️ Physique':'linear-gradient(135deg,#FDF2F8,#F9A8D4)','💻 Info':'linear-gradient(135deg,#EFF6FF,#BFDBFE)','🌍 Langues':'linear-gradient(135deg,#ECFDF5,#A7F3D0)','📊 Éco':'linear-gradient(135deg,#FFFBEB,#FDE68A)','✨ Autre':'linear-gradient(135deg,#F5F3FF,#DDD6FE)'};
   var sc=colors[sujet]||'#7C3AED',bg=bgs[sujet]||bgs['✨ Autre'];
+  var payload={
+    titre:titre,sujet:sujet,couleur_sujet:sc,background:bg,
+    date_heure:dateFormatee,lieu:lieu,prix_total:prix,places_max:places,
+    professeur_id:user.id,emoji:'📚',
+    prof_initiales:user.ini||'?',
+    prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
+    prof_nom:user.pr+(user.nm?' '+user.nm:''),
+    description:desc
+  };
+  // Ajouter photo seulement si elle existe
+  if(user.photo)payload.prof_photo=user.photo;
   try{
-    var r=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      titre:titre,sujet:sujet,couleur_sujet:sc,background:bg,
-      date_heure:dateFormatee,lieu:lieu,prix_total:prix,places_max:places,
-      professeur_id:user.id,emoji:'📚',
-      prof_initiales:user.ini||'?',
-      prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
-      prof_nom:user.pr+(user.nm?' '+user.nm:''),
-      prof_photo:user.photo||null
-    })});
+    var r=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var data=await r.json();
-    if(data.error){toast('Erreur','Impossible de publier');return;}
-    g('crTitre').value='';g('crDate').value='';g('crHeure').value='';g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
+    if(data.error){toast('Erreur de publication',data.error.message||'Vérifiez tous les champs');return;}
+    g('crTitre').value='';g('crDate').value='';g('crHeure').value='';g('crLieu').value='';g('cPr').value='';g('cH').textContent='';if(g('crDesc'))g('crDesc').value='';
     document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});
     closeM('bdCr');await loadData();buildCards();
     toast('Cours publié !','Les élèves peuvent maintenant réserver');
-  }catch(e){toast('Erreur','Impossible de publier');}
+  }catch(e){toast('Erreur réseau','Vérifiez votre connexion et réessayez');}
 }
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Soit '+Math.ceil(p/pl)+'€ par élève pour '+pl+' place'+(pl>1?'s':''):'';}
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
