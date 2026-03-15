@@ -1602,6 +1602,10 @@ async function sendMsg(){
     // Mettre à jour badge nav
     var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
     var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
+    // Appeler l'API pour marquer comme lu en base
+    if(user&&destId){
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:destId})}).catch(function(){});
+    }
 
     loadMessages();
   }catch(e){toast('Erreur','Message non envoyé');}
