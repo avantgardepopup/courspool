@@ -1480,12 +1480,48 @@ async function loadMessages(){
     var msgs=await r.json();
     if(!Array.isArray(msgs))return;
     var container=g('msgMessages');
-    container.innerHTML=msgs.length===0?'<div style="text-align:center;padding:30px;color:var(--lite);font-size:13px">Aucun message. Dites bonjour ! 👋</div>':msgs.map(function(m){
+    if(!msgs.length){
+      container.innerHTML='<div style="text-align:center;padding:30px;color:var(--lite);font-size:13px">Aucun message. Dites bonjour ! 👋</div>';
+      return;
+    }
+    var html='';
+    var lastDate='';
+    var now=new Date();
+    msgs.forEach(function(m){
+      var d=new Date(m.created_at);
+      var dateKey=d.toDateString();
+      if(dateKey!==lastDate){
+        lastDate=dateKey;
+        var label='';
+        var today=new Date();today.setHours(0,0,0,0);
+        var yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
+        var msgDay=new Date(d);msgDay.setHours(0,0,0,0);
+        var diff=Math.round((today-msgDay)/(1000*60*60*24));
+        if(diff===0)label='Aujourd\'hui';
+        else if(diff===1)label='Hier';
+        else if(diff===2)label='Avant-hier';
+        else{
+          label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+          label=label.charAt(0).toUpperCase()+label.slice(1);
+        }
+        html+='<div style="text-align:center;margin:12px 0 8px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+label+'</span></div>';
+      }
       var isMe=m.sender_id===user.id||m.expediteur_id===user.id;
-      var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      return'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.65;margin-top:3px;text-align:right">'+time+'</div></div></div>';
-    }).join('');
+      var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">'+time+'</div></div></div>';
+    });
+    container.innerHTML=html;
     container.scrollTop=container.scrollHeight;
+    // Marquer comme lu
+    if(msgDestId){
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).then(function(){
+        // Mettre à jour badge
+        var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
+        var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
+        // Mettre à jour aperçu dans la liste
+        document.querySelectorAll('.msg-unread').forEach(function(r){r.classList.remove('msg-unread');});
+      }).catch(function(){});
+    }
   }catch(e){}
 }
 
@@ -1504,18 +1540,8 @@ async function sendMsg(){
 }
 
 function closeMsg(){
-  closeM('bdMsg');
   clearInterval(msgPollTimer);msgPollTimer=null;
-  // Marquer les messages comme lus
-  if(user&&msgDestId){
-    fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
-  }
   msgDestId=null;
-  // Mettre à jour le badge
-  var badge=g('bnavBadge');
-  if(badge)badge.classList.remove('on');
-  var msgBadge=g('msgBadge');
-  if(msgBadge)msgBadge.style.display='none';
 }
 
 async function loadConversations(){
