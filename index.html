@@ -997,8 +997,12 @@ async function confR(){
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error.message||'Impossible de réserver');return;}
-    c.fl+=1;res[id]=true;curId=null;
-    closeM('bdR');buildCards();
+    res[id]=true;
+    curId=null;
+    closeM('bdR');
+    // Recharger depuis Supabase pour avoir le vrai compteur
+    await loadData();
+    buildCards();
     toast('Place réservée !',Math.ceil(c.tot/c.sp)+'€ · Inscription confirmée ✓');
   }catch(e){toast('Erreur réseau','Impossible de réserver');}
 }
