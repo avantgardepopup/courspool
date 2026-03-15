@@ -1055,7 +1055,28 @@ function goExplore(){
 }
 
 // Vérifier retour Stripe après paiement
-(async function checkStripeReturn(){
+(function(){
+  try{
+    var saved=localStorage.getItem('cp_user');
+    if(saved){
+      user=JSON.parse(saved);
+      applyUser();
+      if(user.id){
+        fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+          Object.keys(res).forEach(function(k){delete res[k];});
+          if(Array.isArray(data)){data.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+          loadData().then(function(){buildCards();checkStripeReturn();});
+        }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();});});
+      } else {
+        loadData().then(function(){buildCards();checkStripeReturn();});
+      }
+    } else {
+      loadData().then(function(){buildCards();});
+    }
+  }catch(e){}
+})();
+
+async function checkStripeReturn(){
   try{
     var params=new URLSearchParams(window.location.search);
     var sessionId=params.get('session_id');
@@ -1072,26 +1093,7 @@ function goExplore(){
       toast('🎉 Paiement confirmé !',pourAmi?'Place ajoutée avec succès !':'Votre place est réservée !');
     }
   }catch(e){console.log('Stripe return error:',e);}
-})();
-(function(){
-  try{
-    var saved=localStorage.getItem('cp_user');
-    if(saved){
-      user=JSON.parse(saved);
-      applyUser();
-      // Charger les réservations depuis l'API
-      if(user.id){
-        fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
-          Object.keys(res).forEach(function(k){delete res[k];});
-          if(Array.isArray(data)){data.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
-          loadData().then(function(){buildCards();});
-        }).catch(function(){loadData().then(function(){buildCards();});});
-      } else {
-        loadData().then(function(){buildCards();});
-      }
-    }
-  }catch(e){}
-})();
+}
 
 function shake(id){var e=g(id);e.style.animation='shake .3s';setTimeout(function(){e.style.animation=''},400);}
 
