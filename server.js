@@ -99,6 +99,16 @@ app.post('/reservations', async (req, res) => {
   res.json(data[0]);
 });
 
+// RESERVATIONS — réserver pour un ami
+app.post('/reservations/ami', async (req, res) => {
+  const { cours_id, user_id } = req.body;
+  if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
+  const { data: coursData } = await supabase.from('cours').select('places_prises').eq('id', cours_id).single();
+  const newCount = (coursData?.places_prises || 0) + 1;
+  await supabase.from('cours').update({ places_prises: newCount }).eq('id', cours_id);
+  res.json({ success: true });
+});
+
 // RESERVATIONS — récupérer par user
 app.get('/reservations/:user_id', async (req, res) => {
   const { data, error } = await supabase.from('reservations')
