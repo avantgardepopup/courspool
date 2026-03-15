@@ -266,8 +266,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="lfield"><label>Mot de passe</label><input id="rPw" type="password" placeholder="••••••••"></div>
         <div class="lfield"><label>Je suis</label>
           <div class="rg" style="margin-top:4px">
-            <div class="ropt" id="rEl" onclick="pickR('El')">🎓 Élève</div>
+            <div class="ropt on" id="rEl" onclick="pickR('El')">🎓 Élève</div>
             <div class="ropt" id="rPf" onclick="pickR('Pf')">👨‍🏫 Professeur</div>
+          </div>
+        </div>
+        <!-- Champs supplémentaires profs -->
+        <div id="profFields" style="display:none">
+          <div class="lfield"><label>Statut</label>
+            <select id="rStatut" class="lfield" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;background:var(--wh)">
+              <option value="">Choisir...</option>
+              <option value="etudiant">Étudiant</option>
+              <option value="prof_ecole">Professeur d'école</option>
+              <option value="prof_college">Professeur de collège/lycée</option>
+              <option value="prof_universite">Professeur d'université</option>
+              <option value="particulier">Particulier</option>
+              <option value="professionnel">Professionnel</option>
+            </select>
+          </div>
+          <div class="lfield"><label>Niveau enseigné</label>
+            <select id="rNiveau" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;background:var(--wh)">
+              <option value="">Choisir...</option>
+              <option value="primaire">Primaire</option>
+              <option value="college">Collège</option>
+              <option value="lycee">Lycée</option>
+              <option value="superieur">Supérieur / Université</option>
+              <option value="tous">Tous niveaux</option>
+            </select>
+          </div>
+          <div class="lfield"><label>Matière principale</label><input id="rMatiere" type="text" placeholder="Maths, Physique, Anglais…" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;"></div>
+          <div style="background:var(--orp);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:var(--mid);line-height:1.6">
+            🪪 Une vérification d'identité (carte d'identité ou passeport) sera requise avant de publier votre premier cours.
           </div>
         </div>
         <button class="lbtn" onclick="doReg()">Créer mon compte</button>
@@ -469,7 +497,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Matière</label><div class="sg"><div class="so" onclick="pickS(this)">📐 Maths</div><div class="so" onclick="pickS(this)">⚗️ Physique</div><div class="so" onclick="pickS(this)">💻 Info</div><div class="so" onclick="pickS(this)">🌍 Langues</div><div class="so" onclick="pickS(this)">📊 Éco</div><div class="so" onclick="pickS(this)">✨ Autre</div></div></div>
       <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" type="text" placeholder="Ex : Dérivées et primitives…"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px"><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label><input class="fi3" type="date"></div><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label><input class="fi3" type="time"></div></div>
-      <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label><input class="fi3" type="text" placeholder="Bibliothèque, café, adresse…"></div>
+      <div style="margin-bottom:13px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label>
+        <div style="position:relative">
+          <input class="fi3" id="lieuInput" type="text" placeholder="Rechercher un lieu en France…" oninput="searchLieu(this.value)" autocomplete="off">
+          <div id="lieuSuggestions" style="position:absolute;top:100%;left:0;right:0;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;z-index:100;display:none;max-height:200px;overflow-y:auto;box-shadow:var(--sh);margin-top:4px"></div>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px"><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Durée (min)</label><input class="fi3" type="number" value="60"></div><div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Places max</label><input class="fi3" id="cPl" type="number" value="5" oninput="calcH()"></div></div>
       <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Prix total (€)</label><input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()"><div id="cH" style="font-size:12px;color:var(--lite);margin-top:6px"></div></div>
       <button class="pb pri" style="width:100%" onclick="subCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier le cours</button>
@@ -515,6 +548,25 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
     </div>
     <div style="padding:0 20px 22px;display:flex;gap:10px" id="infoActions"></div>
+  </div>
+</div>
+
+<!-- MODAL MESSAGERIE -->
+<div class="bd" id="bdMsg" onclick="if(event.target===this)closeMsg()">
+  <div class="modal">
+    <div class="mhd">
+      <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Messagerie</div><div style="font-size:17px;font-weight:800" id="msgTitle">Contact</div></div>
+      <button class="mcl" onclick="closeMsg()">✕</button>
+    </div>
+    <div class="mbd">
+      <div style="background:var(--orp);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+        <div style="font-size:32px;margin-bottom:8px">💬</div>
+        <div style="font-size:15px;font-weight:700;color:var(--or);margin-bottom:6px">Messagerie sécurisée</div>
+        <div style="font-size:13px;color:var(--mid);line-height:1.6">La messagerie intégrée sera disponible très prochainement. En attendant, vous pouvez contacter le professeur par email.</div>
+      </div>
+      <div id="msgEmail" style="background:var(--bg);border-radius:10px;padding:13px;margin-bottom:16px;font-size:13.5px;color:var(--mid);text-align:center"></div>
+      <button class="pb pri" style="width:100%" onclick="closeMsg()">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -577,7 +629,11 @@ async function loadData() {
 }
 
 function switchLT(t){g('ltC').classList.toggle('on',t==='C');g('ltI').classList.toggle('on',t==='I');g('lfC').classList.toggle('on',t==='C');g('lfI').classList.toggle('on',t==='I');}
-function pickR(r){g('rEl').classList.toggle('on',r==='El');g('rPf').classList.toggle('on',r==='Pf');}
+function pickR(r){
+  g('rEl').classList.toggle('on',r==='El');
+  g('rPf').classList.toggle('on',r==='Pf');
+  g('profFields').style.display=r==='Pf'?'block':'none';
+}
 
 async function doLogin(){
   var em=g('lEm').value.trim(),pw=g('lPw').value;
@@ -598,8 +654,14 @@ async function doReg(){
   var role=g('rPf').classList.contains('on')?'professeur':'eleve';
   if(!pr||!em||!pw){shake('lfI');return;}
   if(pw.length<6){toast('Erreur','Mot de passe trop court (6 caracteres min)');return;}
+  var extraData={};
+  if(role==='professeur'){
+    extraData.statut=g('rStatut').value||'';
+    extraData.niveau=g('rNiveau').value||'';
+    extraData.matiere=g('rMatiere').value||'';
+  }
   try {
-    var res=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw,prenom:pr,nom:nm,role:role})});
+    var res=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw,prenom:pr,nom:nm,role:role,...extraData})});
     var data=await res.json();
     if(data.error){toast('Erreur inscription',data.error);shake('lfI');return;}
     go(pr,nm,em,role,data.user.id);
@@ -725,7 +787,7 @@ function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.cl
 function openR(id){var c=C.find(function(x){return x.id===id});if(!c)return;if(res[id]){openO(id);return;}if(c.fl>=c.sp){openF(c.pr,c.title);return;}curId=id;var n=c.fl+1,pp=Math.ceil(c.tot/n),dp=Math.max(3,Math.ceil(pp*.3));g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;g('rTot').textContent=c.tot+'EUR';g('rCnt').textContent=n+' personnes';g('rDp').textContent=dp+'EUR';g('rFin').textContent=pp+'EUR / eleve';g('rDpB').textContent=dp+'EUR';g('rFinB').textContent=pp+'EUR';g('rInf').textContent='Acompte de '+dp+'EUR maintenant. Solde ajuste 1h avant le cours.';openM('bdR');}
 function closeR(){closeM('bdR');}
 function confR(mode){var id=curId;if(!id)return;var c=C.find(function(x){return x.id===id});if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();var pp=Math.ceil(c.tot/c.fl),dp=Math.max(3,Math.ceil(pp*.3));toast('Place reservee !',mode==='acompte'?'Acompte '+dp+'EUR paye':''+pp+'EUR payes - Inscrit');}
-function contR(){closeM('bdR');toast('Message envoye','Le professeur vous repondra bientot');}
+function contR(){closeM('bdR');var c=C.find(function(x){return x.id===curId});var nm=c?c.prof_nm:'le professeur';openMsg(nm,'');}
 
 function openO(id){curId=id;var c=C.find(function(x){return x.id===id});g('oTit').textContent=c.title;g('oPrc').textContent=Math.ceil(c.tot/Math.max(c.fl,1))+'EUR / eleve';openM('bdO');}
 function closeO(){closeM('bdO');}
@@ -756,7 +818,7 @@ function openPr(pid){
   openM('bdPr');
 }
 function closePr(){closeM('bdPr');}
-function contPr(){closeM('bdPr');toast('Message envoye','Le professeur vous repondra bientot');}
+function contPr(){var p=P[curProf]||{nm:'le professeur'};closePr();openMsg(p.nm,'');}
 function togFP(){var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');if(fol.has(id)){fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';toast('Desabonne','Vous ne suivez plus '+p.nm);}else{fol.add(id);fb.classList.add('on');ft.textContent='Suivi';toast('Vous suivez '+p.nm,'Notifie des son prochain cours');}}
 
 function openCr(){
@@ -771,7 +833,7 @@ async function subCr(){
   var titre=document.querySelector('#bdCr .fi3[type="text"]').value.trim();
   var date=document.querySelector('#bdCr .fi3[type="date"]').value;
   var heure=document.querySelector('#bdCr .fi3[type="time"]').value;
-  var lieu=document.querySelectorAll('#bdCr .fi3[type="text"]')[1]?document.querySelectorAll('#bdCr .fi3[type="text"]')[1].value.trim():'';
+  var lieu=g('lieuInput')?g('lieuInput').value.trim():'';
   var duree=document.querySelector('#bdCr .fi3[type="number"]').value;
   var places=g('cPl').value;
   var prix=g('cPr').value;
@@ -853,6 +915,40 @@ function openInfo(id){
   openM('bdInfo');
 }
 function closeInfo(){closeM('bdInfo');}
+
+// NOMINATIM LIEU SEARCH
+var lieuTimer=null;
+var selectedLieu='';
+function searchLieu(q){
+  clearTimeout(lieuTimer);
+  if(q.length<3){g('lieuSuggestions').style.display='none';return;}
+  lieuTimer=setTimeout(async function(){
+    try{
+      var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+', France')+'&format=json&limit=5&countrycodes=fr');
+      var data=await r.json();
+      var s=g('lieuSuggestions');
+      if(!data.length){s.style.display='none';return;}
+      s.innerHTML=data.map(function(d){
+        var name=d.display_name.split(',').slice(0,3).join(', ');
+        return '<div onclick="selectLieu(\''+name.replace(/'/g,"\\'")+'\')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);transition:background .15s" onmouseover="this.style.background=\'var(--orp)\'" onmouseout="this.style.background=\'\'">'+name+'</div>';
+      }).join('');
+      s.style.display='block';
+    }catch(e){}
+  },400);
+}
+function selectLieu(name){
+  g('lieuInput').value=name;
+  selectedLieu=name;
+  g('lieuSuggestions').style.display='none';
+}
+
+// MESSAGERIE
+function openMsg(profNm,profEm){
+  g('msgTitle').textContent='Contacter '+profNm;
+  g('msgEmail').innerHTML='📧 La messagerie integree arrive bientot.<br><br>En attendant, contactez via <strong>courspool@gmail.com</strong> en mentionnant le nom du professeur.';
+  openM('bdMsg');
+}
+function closeMsg(){closeM('bdMsg');}
 
 function g(id){return document.getElementById(id);}
 function openM(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
