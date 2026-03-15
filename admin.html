@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoursPool Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --or:#FF6B2B;--orp:#FFF2EC;--ord:#E04E10;
+  --ink:#111;--mid:#555;--lite:#999;
+  --bg:#F6F4F1;--wh:#fff;--bdr:#E8E3DC;
+  --green:#22C069;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --sh:0 4px 20px rgba(0,0,0,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:linear-gradient(135deg,var(--or),var(--ord));display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{background:var(--wh);border-radius:24px;padding:40px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.login-logo-icon{width:42px;height:42px;background:var(--or);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.login-logo span{font-size:20px;font-weight:800;}
+.login-box h2{font-size:22px;font-weight:800;margin-bottom:6px;}
+.login-box p{font-size:13.5px;color:var(--mid);margin-bottom:24px;}
+.login-field{margin-bottom:14px;}
+.login-field label{font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px;}
+.login-field input{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;}
+.login-field input:focus{border-color:var(--or);}
+.login-btn{width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px;}
+.login-btn:hover{background:var(--ord);}
+.login-error{background:#FEF2F2;color:var(--red);border-radius:10px;padding:10px 13px;font-size:13px;margin-top:12px;display:none;}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--wh);border-right:1px solid var(--bdr);display:flex;flex-direction:column;z-index:40;}
+.sidebar-logo{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bdr);}
+.sidebar-logo-icon{width:36px;height:36px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.sidebar-logo span{font-size:16px;font-weight:800;}
+.sidebar-logo small{font-size:10px;font-weight:600;background:var(--orp);color:var(--or);padding:2px 7px;border-radius:50px;margin-left:4px;}
+.nav{padding:12px 10px;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--mid);transition:all .15s;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg);color:var(--ink);}
+.nav-item.on{background:var(--orp);color:var(--or);font-weight:600;}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:50px;padding:1px 7px;font-size:10px;font-weight:700;}
+.sidebar-footer{padding:16px;border-top:1px solid var(--bdr);}
+.logout-btn{width:100%;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;padding:9px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+.main{margin-left:240px;min-height:100vh;}
+.topbar{background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;}
+.topbar-title{font-size:16px;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.admin-badge{background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:700;}
+.content{padding:24px;}
+
+/* PAGES */
+.page{display:none;}
+.page.on{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--wh);border-radius:16px;padding:20px;border:1px solid var(--bdr);display:flex;align-items:center;gap:16px;}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-icon svg{width:22px;height:22px;}
+.stat-val{font-size:26px;font-weight:800;line-height:1;}
+.stat-lbl{font-size:12px;color:var(--mid);margin-top:3px;}
+.stat-trend{font-size:11px;font-weight:600;margin-top:4px;}
+.stat-trend.up{color:var(--green);}
+.stat-trend.down{color:var(--red);}
+
+/* TABLES */
+.section-title{font-size:18px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.card{background:var(--wh);border-radius:16px;border:1px solid var(--bdr);overflow:hidden;margin-bottom:20px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.card-header h3{font-size:14px;font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+th{padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--bdr);background:var(--bg);}
+td{padding:13px 16px;font-size:13.5px;border-bottom:1px solid var(--bdr);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#FAFAF9;}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.user-cell{display:flex;align-items:center;gap:10px;}
+.user-info .name{font-size:13.5px;font-weight:600;}
+.user-info .email{font-size:11.5px;color:var(--lite);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:50px;font-size:11.5px;font-weight:600;}
+.badge.green{background:#F0FDF4;color:#16A34A;}
+.badge.red{background:#FEF2F2;color:var(--red);}
+.badge.orange{background:var(--orp);color:var(--or);}
+.badge.blue{background:#EFF6FF;color:var(--blue);}
+.badge.purple{background:#F5F3FF;color:var(--purple);}
+.badge.gray{background:var(--bg);color:var(--mid);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;border:none;transition:all .15s;}
+.btn-green{background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0;}
+.btn-green:hover{background:#16A34A;color:#fff;}
+.btn-red{background:#FEF2F2;color:var(--red);border:1px solid #FECACA;}
+.btn-red:hover{background:var(--red);color:#fff;}
+.btn-blue{background:#EFF6FF;color:var(--blue);border:1px solid #BFDBFE;}
+.btn-blue:hover{background:var(--blue);color:#fff;}
+.btn-orange{background:var(--orp);color:var(--or);border:1px solid #FED7AA;}
+.btn-orange:hover{background:var(--or);color:#fff;}
+.btn svg{width:13px;height:13px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.on{display:flex;}
+.modal{background:var(--wh);border-radius:20px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:18px;font-weight:800;}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--mid);}
+.modal-body{padding:20px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.info-item label{font-size:11px;font-weight:600;color:var(--lite);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.info-item span{font-size:14px;font-weight:500;}
+.cni-img{width:100%;border-radius:12px;border:1px solid var(--bdr);margin-bottom:16px;}
+.modal-actions{display:flex;gap:10px;}
+.modal-actions .btn{flex:1;justify-content:center;padding:11px;}
+
+/* CHARTS */
+.chart-container{padding:20px;}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:120px;}
+.bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar{width:100%;background:var(--orp);border-radius:6px 6px 0 0;transition:height .3s;min-height:4px;}
+.bar.active{background:var(--or);}
+.bar-label{font-size:10px;color:var(--lite);font-weight:600;}
+.bar-val{font-size:10px;font-weight:700;color:var(--or);}
+
+/* REVENUE CARD */
+.revenue-big{font-size:36px;font-weight:800;color:var(--ink);}
+.revenue-sub{font-size:13px;color:var(--mid);margin-top:4px;}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:6px 14px;border-radius:50px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .15s;}
+.filter-btn.on{border-color:var(--or);color:var(--or);background:var(--orp);}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;margin-bottom:16px;}
+.search-bar input{border:none;background:transparent;font-family:inherit;font-size:13.5px;outline:none;flex:1;}
+.search-bar svg{width:16px;height:16px;color:var(--lite);}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px;color:var(--lite);}
+.empty svg{width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr);}
+.empty p{font-size:14px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 18px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transform:translateY(8px);transition:all .28s;pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.on{opacity:1;transform:translateY(0);}
+.toast-icon{width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;}
+
+@media(max-width:900px){
+  .sidebar{width:200px;}
+  .main{margin-left:200px;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .info-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <span>CoursPool</span>
+    </div>
+    <h2>Dashboard Admin</h2>
+    <p>Accès réservé aux administrateurs</p>
+    <div class="login-field"><label>Mot de passe</label><input id="adminPw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
+    <button class="login-btn" onclick="doAdminLogin()">Accéder au dashboard</button>
+    <div class="login-error" id="loginError">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <span>CoursPool</span><small>Admin</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Vue d'ensemble</div>
+      <div class="nav-item on" onclick="goPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-section">Utilisateurs</div>
+      <div class="nav-item" onclick="goPage('profs',this)" id="navProfs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Professeurs
+        <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" onclick="goPage('eleves',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Élèves
+      </div>
+      <div class="nav-section">Contenu</div>
+      <div class="nav-item" onclick="goPage('cours',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Cours
+      </div>
+      <div class="nav-item" onclick="goPage('reservations',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Réservations
+      </div>
+      <div class="nav-section">Finance</div>
+      <div class="nav-item" onclick="goPage('paiements',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Paiements
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Se déconnecter
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <span class="admin-badge">⚡ Admin</span>
+        <a href="https://courspool.vercel.app" target="_blank" style="font-size:13px;color:var(--or);font-weight:600;text-decoration:none">→ Voir le site</a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page on" id="pageDashboard">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="stat-icon" style="background:#FFF2EC"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="stat-val" id="statEleves">—</div><div class="stat-lbl">Élèves inscrits</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></div><div><div class="stat-val" id="statProfs">—</div><div class="stat-lbl">Professeurs vérifiés</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div><div><div class="stat-val" id="statCours">—</div><div class="stat-lbl">Cours publiés</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="stat-val" id="statRes">—</div><div class="stat-lbl">Réservations totales</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#FFFBEB"><svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div><div class="stat-val" id="statRevenu">—</div><div class="stat-lbl">Revenus (commissions)</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#FEF2F2"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="stat-val" id="statPending">—</div><div class="stat-lbl">Profs en attente</div></div></div>
+        </div>
+
+        <!-- Activité récente -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card">
+            <div class="card-header"><h3>📋 Dernières réservations</h3></div>
+            <div id="recentRes" style="padding:12px">
+              <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/></svg><p>Chargement…</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>👨‍🏫 Profs en attente de vérification</h3><span class="badge orange" id="pendingCount">0</span></div>
+            <div id="pendingProfs" style="padding:12px">
+              <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg><p>Aucun en attente</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFESSEURS -->
+      <div class="page" id="pageProfs">
+        <div class="section-title">Professeurs <span id="profsCount" style="font-size:14px;color:var(--lite);font-weight:500"></span></div>
+        <div class="filters">
+          <button class="filter-btn on" onclick="filterProfs('all',this)">Tous</button>
+          <button class="filter-btn" onclick="filterProfs('pending',this)">En attente ⏳</button>
+          <button class="filter-btn" onclick="filterProfs('verified',this)">Vérifiés ✅</button>
+          <button class="filter-btn" onclick="filterProfs('rejected',this)">Rejetés ❌</button>
+        </div>
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Rechercher un professeur…" oninput="searchProfs(this.value)" id="profsSearch">
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Professeur</th><th>Statut</th><th>Niveau</th><th>Matières</th><th>Inscrit le</th><th>Actions</th></tr></thead>
+            <tbody id="profsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ÉLÈVES -->
+      <div class="page" id="pageEleves">
+        <div class="section-title">Élèves <span id="elevesCount" style="font-size:14px;color:var(--lite);font-weight:500"></span></div>
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Rechercher un élève…" oninput="searchEleves(this.value)">
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Élève</th><th>Email</th><th>Réservations</th><th>Inscrit le</th></tr></thead>
+            <tbody id="elevesTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- COURS -->
+      <div class="page" id="pageCours">
+        <div class="section-title">Cours publiés <span id="coursCount" style="font-size:14px;color:var(--lite);font-weight:500"></span></div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Cours</th><th>Professeur</th><th>Date</th><th>Places</th><th>Prix</th><th>Actions</th></tr></thead>
+            <tbody id="coursTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RÉSERVATIONS -->
+      <div class="page" id="pageReservations">
+        <div class="section-title">Réservations <span id="resCount" style="font-size:14px;color:var(--lite);font-weight:500"></span></div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Élève ID</th><th>Cours ID</th><th>Montant</th><th>Type</th><th>Date</th></tr></thead>
+            <tbody id="resTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAIEMENTS -->
+      <div class="page" id="pagePaiements">
+        <div class="section-title">Finances & Paiements</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="stat-val" id="statTotalPaid">—</div><div class="stat-lbl">Total transactions</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="stat-val" id="statCommission">—</div><div class="stat-lbl">Commissions (15%)</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div><div class="stat-val" id="statNbPaiements">—</div><div class="stat-lbl">Nombre de paiements</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div><div class="stat-val" id="statPrixMoyen">—</div><div class="stat-lbl">Prix moyen / place</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>💳 Détail des transactions</h3></div>
+          <table>
+            <thead><tr><th>ID</th><th>Élève</th><th>Cours</th><th>Montant payé</th><th>Commission (15%)</th><th>Prof reçoit</th><th>Date</th></tr></thead>
+            <tbody id="paiementsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL PROF -->
+<div class="modal-overlay" id="modalProf">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Profil du professeur</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding:16px;background:var(--bg);border-radius:14px">
+        <div id="modalAvatar" style="width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden"></div>
+        <div><div style="font-size:17px;font-weight:800" id="modalName"></div><div style="font-size:13px;color:var(--mid)" id="modalEmail"></div><div style="margin-top:6px" id="modalStatus"></div></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-item"><label>Statut</label><span id="modalStatut">—</span></div>
+        <div class="info-item"><label>Niveau</label><span id="modalNiveau">—</span></div>
+        <div class="info-item"><label>Matières</label><span id="modalMatieres">—</span></div>
+        <div class="info-item"><label>Inscrit le</label><span id="modalDate">—</span></div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:8px">Pièce d'identité</label>
+        <div id="modalCni" style="background:var(--bg);border-radius:12px;padding:20px;text-align:center;color:var(--lite);font-size:13px">
+          📄 Aucune CNI uploadée
+        </div>
+      </div>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div><span id="toastMsg"></span></div>
+
+<script>
+var API='https://devoted-achievement-production-fdfa.up.railway.app';
+var SUPABASE_URL='https://bpyqjfylukbdarjwapsm.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweXFqZnlsdWtiZGFyandhcHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTcwOTUsImV4cCI6MjA4OTA5MzA5NX0.ZO3ezBLSy3R2bv1AjN0ik7o4h4J3gcBiLBqUBQ537gg';
+var ADMIN_PW='ABDALLAH8788z.';
+var allProfs=[],allEleves=[],allCours=[],allRes=[];
+var profFilter='all';
+
+// AUTH
+function doAdminLogin(){
+  var pw=document.getElementById('adminPw').value;
+  if(pw===ADMIN_PW){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadAll();
+  } else {
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('adminPw').value='';
+  }
+}
+document.getElementById('adminPw').addEventListener('keydown',function(e){if(e.key==='Enter')doAdminLogin();});
+
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('adminPw').value='';
+}
+
+// NAVIGATION
+function goPage(page,el){
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
+  if(el)el.classList.add('on');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('page'+page.charAt(0).toUpperCase()+page.slice(1)).classList.add('on');
+  var titles={dashboard:'Dashboard',profs:'Professeurs',eleves:'Élèves',cours:'Cours',reservations:'Réservations',paiements:'Paiements'};
+  document.getElementById('pageTitle').textContent=titles[page]||page;
+}
+
+// LOAD ALL DATA
+async function loadAll(){
+  try{
+    var [profsRes,coursRes,resRes]=await Promise.all([
+      fetch(API+'/auth/profiles?role=professeur').catch(function(){return{ok:false};}),
+      fetch(API+'/cours'),
+      fetch(API+'/reservations/all').catch(function(){return{ok:false};})
+    ]);
+
+    // Charger depuis Supabase directement via fetch
+    var profData=await supabaseQuery('profiles?select=*&order=created_at.desc');
+    var coursData=await fetch(API+'/cours').then(function(r){return r.json();}).catch(function(){return[];});
+    var resData=await supabaseQuery('reservations?select=*&order=created_at.desc');
+
+    allProfs=Array.isArray(profData)?profData:[];
+    allCours=Array.isArray(coursData)?coursData:[];
+    allRes=Array.isArray(resData)?resData:[];
+    allEleves=allProfs.filter(function(p){return p.role==='eleve';});
+    allProfs=allProfs.filter(function(p){return p.role==='professeur';});
+
+    renderDashboard();
+    renderProfs();
+    renderEleves();
+    renderCours();
+    renderReservations();
+    renderPaiements();
+  }catch(e){console.log('Erreur chargement',e);}
+}
+
+async function supabaseQuery(path){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json'
+      }
+    });
+    return await r.json();
+  }catch(e){return[];}
+}
+
+async function supabaseUpdate(table,id,data){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id,{
+      method:'PATCH',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(data)
+    });
+    return r.ok;
+  }catch(e){return false;}
+}
+
+// DASHBOARD
+function renderDashboard(){
+  var verified=allProfs.filter(function(p){return p.verified;}).length;
+  var pending=allProfs.filter(function(p){return !p.verified;}).length;
+  var totalPaid=allRes.reduce(function(a,r){return a+(r.montant_paye||0);},0);
+  var commission=Math.round(totalPaid*0.15);
+
+  document.getElementById('statEleves').textContent=allEleves.length;
+  document.getElementById('statProfs').textContent=verified;
+  document.getElementById('statCours').textContent=allCours.length;
+  document.getElementById('statRes').textContent=allRes.length;
+  document.getElementById('statRevenu').textContent=commission+'€';
+  document.getElementById('statPending').textContent=pending;
+
+  if(pending>0){
+    document.getElementById('pendingBadge').style.display='';
+    document.getElementById('pendingBadge').textContent=pending;
+    document.getElementById('pendingCount').textContent=pending;
+  }
+
+  // Réservations récentes
+  var rr=document.getElementById('recentRes');
+  if(!allRes.length){rr.innerHTML='<div class="empty"><p>Aucune réservation</p></div>';return;}
+  rr.innerHTML=allRes.slice(0,5).map(function(r){
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><div style="font-size:12.5px;color:var(--mid)">'+r.cours_id.slice(0,8)+'…</div><div style="font-size:13px;font-weight:600">'+r.montant_paye+'€</div><span class="badge green">Payé</span></div>';
+  }).join('');
+
+  // Profs en attente
+  var pp=document.getElementById('pendingProfs');
+  var pendingList=allProfs.filter(function(p){return !p.verified;});
+  if(!pendingList.length){pp.innerHTML='<div class="empty"><p>Aucun en attente ✅</p></div>';return;}
+  pp.innerHTML=pendingList.slice(0,4).map(function(p){
+    var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bdr)"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+ini+'</div><div><div style="font-size:13px;font-weight:600">'+(p.prenom||'')+(p.nom?' '+p.nom:'')+'</div><div style="font-size:11px;color:var(--lite)">'+(p.statut||'')+'</div></div></div><button class="btn btn-orange" onclick="openProfModal(\''+p.id+'\')">Vérifier</button></div>';
+  }).join('');
+}
+
+// PROFESSEURS
+function renderProfs(filter,search){
+  filter=filter||profFilter;
+  search=search||document.getElementById('profsSearch').value||'';
+  var list=allProfs.filter(function(p){
+    if(filter==='pending')return !p.verified;
+    if(filter==='verified')return p.verified;
+    return true;
+  }).filter(function(p){
+    if(!search)return true;
+    var n=((p.prenom||'')+' '+(p.nom||'')+' '+(p.email||'')).toLowerCase();
+    return n.includes(search.toLowerCase());
+  });
+  document.getElementById('profsCount').textContent='('+list.length+')';
+  var tbody=document.getElementById('profsTable');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>Aucun professeur trouvé</p></div></td></tr>';return;}
+  tbody.innerHTML=list.map(function(p){
+    var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
+    var statusBadge=p.verified?'<span class="badge green">✅ Vérifié</span>':'<span class="badge orange">⏳ En attente</span>';
+    var date=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'—';
+    return'<tr><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+'</td><td><span class="badge blue">'+(p.statut||'—')+'</span></td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Voir</button></td></tr>';
+  }).join('');
+}
+
+function filterProfs(f,el){
+  profFilter=f;
+  document.querySelectorAll('#pageProfs .filter-btn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  renderProfs(f);
+}
+
+function searchProfs(q){renderProfs(profFilter,q);}
+
+// ÉLÈVES
+function renderEleves(search){
+  var list=allEleves.filter(function(e){
+    if(!search)return true;
+    var n=((e.prenom||'')+' '+(e.nom||'')+' '+(e.email||'')).toLowerCase();
+    return n.includes((search||'').toLowerCase());
+  });
+  document.getElementById('elevesCount').textContent='('+list.length+')';
+  var tbody=document.getElementById('elevesTable');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="4"><div class="empty"><p>Aucun élève trouvé</p></div></td></tr>';return;}
+  tbody.innerHTML=list.map(function(e){
+    var ini=((e.prenom&&e.prenom[0]||'')+(e.nom&&e.nom[0]||'')).toUpperCase()||'?';
+    var nbRes=allRes.filter(function(r){return r.user_id===e.id;}).length;
+    var date=e.created_at?new Date(e.created_at).toLocaleDateString('fr-FR'):'—';
+    return'<tr><td><div class="user-cell"><div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+' réservation'+(nbRes>1?'s':'')+'</span></td><td>'+date+'</td></tr>';
+  }).join('');
+}
+
+function searchEleves(q){renderEleves(q);}
+
+// COURS
+function renderCours(){
+  document.getElementById('coursCount').textContent='('+allCours.length+')';
+  var tbody=document.getElementById('coursTable');
+  if(!allCours.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>Aucun cours publié</p></div></td></tr>';return;}
+  tbody.innerHTML=allCours.map(function(c){
+    var nbRes=allRes.filter(function(r){return r.cours_id===c.id;}).length;
+    return'<tr><td><div style="font-weight:600">'+(c.titre||'—')+'</div><div style="font-size:11.5px;color:var(--mid)">'+(c.sujet||'')+'</div></td><td>'+(c.prof_nom||'—')+'</td><td style="font-size:12px">'+(c.date_heure||'—')+'</td><td><span class="badge '+(c.places_prises>=c.places_max?'red':'green')+'">'+(c.places_prises||0)+'/'+(c.places_max||5)+'</span></td><td><strong>'+(c.prix_total||0)+'€</strong></td><td><button class="btn btn-red" onclick="deleteCours(\''+c.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Suppr.</button></td></tr>';
+  }).join('');
+}
+
+// RÉSERVATIONS
+function renderReservations(){
+  document.getElementById('resCount').textContent='('+allRes.length+')';
+  var tbody=document.getElementById('resTable');
+  if(!allRes.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty"><p>Aucune réservation</p></div></td></tr>';return;}
+  tbody.innerHTML=allRes.map(function(r){
+    var date=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR'):'—';
+    return'<tr><td style="font-size:12px;color:var(--mid)">'+r.user_id.slice(0,12)+'…</td><td style="font-size:12px;color:var(--mid)">'+r.cours_id.slice(0,12)+'…</td><td><strong style="color:var(--green)">'+(r.montant_paye||0)+'€</strong></td><td><span class="badge green">'+(r.type_paiement||'total')+'</span></td><td>'+date+'</td></tr>';
+  }).join('');
+}
+
+// PAIEMENTS
+function renderPaiements(){
+  var total=allRes.reduce(function(a,r){return a+(r.montant_paye||0);},0);
+  var commission=Math.round(total*0.15*100)/100;
+  var moy=allRes.length?Math.round(total/allRes.length*100)/100:0;
+  document.getElementById('statTotalPaid').textContent=total+'€';
+  document.getElementById('statCommission').textContent=commission+'€';
+  document.getElementById('statNbPaiements').textContent=allRes.length;
+  document.getElementById('statPrixMoyen').textContent=moy+'€';
+  var tbody=document.getElementById('paiementsTable');
+  if(!allRes.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty"><p>Aucune transaction</p></div></td></tr>';return;}
+  tbody.innerHTML=allRes.map(function(r){
+    var commission=Math.round((r.montant_paye||0)*0.15*100)/100;
+    var profRecoit=Math.round(((r.montant_paye||0)-commission)*100)/100;
+    var date=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR'):'—';
+    return'<tr><td style="font-size:11px;color:var(--lite)">'+r.id.slice(0,8)+'…</td><td style="font-size:12px">'+r.user_id.slice(0,8)+'…</td><td style="font-size:12px">'+r.cours_id.slice(0,8)+'…</td><td><strong>'+(r.montant_paye||0)+'€</strong></td><td style="color:var(--or);font-weight:600">'+commission+'€</td><td style="color:var(--green);font-weight:600">'+profRecoit+'€</td><td>'+date+'</td></tr>';
+  }).join('');
+}
+
+// MODAL PROF
+function openProfModal(id){
+  var p=allProfs.find(function(x){return x.id===id;});
+  if(!p)return;
+  var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
+  var av=document.getElementById('modalAvatar');
+  if(p.photo_url){av.style.background='none';av.innerHTML='<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover">';}
+  else{av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';av.textContent=ini;}
+  document.getElementById('modalName').textContent=(p.prenom||'')+' '+(p.nom||'');
+  document.getElementById('modalEmail').textContent=p.email||'';
+  document.getElementById('modalStatus').innerHTML=p.verified?'<span class="badge green">✅ Compte vérifié</span>':'<span class="badge orange">⏳ En attente de vérification</span>';
+  document.getElementById('modalStatut').textContent=p.statut||'—';
+  document.getElementById('modalNiveau').textContent=p.niveau||'—';
+  document.getElementById('modalMatieres').textContent=p.matieres||'—';
+  document.getElementById('modalDate').textContent=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'—';
+  // CNI
+  if(p.cni_url){
+    document.getElementById('modalCni').innerHTML='<img src="'+p.cni_url+'" class="cni-img" alt="CNI"><div style="font-size:12px;color:var(--lite)">Cliquez pour agrandir</div>';
+    document.getElementById('modalCni').style.cursor='pointer';
+    document.getElementById('modalCni').onclick=function(){window.open(p.cni_url,'_blank');};
+  } else {
+    document.getElementById('modalCni').innerHTML='<div style="padding:20px;text-align:center"><div style="font-size:32px;margin-bottom:8px">📄</div><div style="font-size:13px;color:var(--lite)">Aucune pièce d\'identité uploadée</div></div>';
+  }
+  // Actions
+  var actions=document.getElementById('modalActions');
+  if(!p.verified){
+    actions.innerHTML='<button class="btn btn-green" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>Valider le compte</button><button class="btn btn-red" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rejeter</button>';
+  } else {
+    actions.innerHTML='<button class="btn btn-red" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',false)">Révoquer la vérification</button>';
+  }
+  document.getElementById('modalProf').classList.add('on');
+}
+
+function closeModal(){document.getElementById('modalProf').classList.remove('on');}
+
+async function verifyProf(id,verified){
+  var ok=await supabaseUpdate('profiles',id,{verified:verified});
+  if(ok){
+    var p=allProfs.find(function(x){return x.id===id;});
+    if(p)p.verified=verified;
+    closeModal();
+    renderDashboard();
+    renderProfs();
+    toast(verified?'✅ Professeur vérifié !':'❌ Compte rejeté');
+  } else {
+    toast('Erreur lors de la mise à jour');
+  }
+}
+
+async function deleteCours(id){
+  if(!confirm('Supprimer ce cours ?'))return;
+  try{
+    await fetch(API+'/cours/'+id,{method:'DELETE'});
+    allCours=allCours.filter(function(c){return c.id!==id;});
+    renderCours();renderDashboard();
+    toast('Cours supprimé');
+  }catch(e){toast('Erreur lors de la suppression');}
+}
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('on');
+  setTimeout(function(){t.classList.remove('on');},3000);
+}
+</script>
+</body>
+</html>
