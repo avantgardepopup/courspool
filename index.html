@@ -634,7 +634,8 @@ async function loadData() {
         em: c.emoji || '📚',
         prof_ini: c.prof_initiales || '?',
         prof_col: c.prof_couleur || 'linear-gradient(135deg,#FF8C55,#E04E10)',
-        prof_nm: c.prof_nom || 'Professeur'
+        prof_nm: c.prof_nom || 'Professeur',
+        prof_photo: c.prof_photo || null
       };
     });
     // Build P map from cours data
@@ -794,8 +795,15 @@ function saveProf(){
 function doLogout(){
   g('app').style.display='none';g('login').style.display='flex';
   Object.keys(res).forEach(function(k){delete res[k]});
-  fol.clear();user=null;
+  fol.clear();
+  // Garder la photo en memoire separement
+  var photo = user ? user.photo : null;
+  user=null;
   try{localStorage.removeItem('cp_user');}catch(e){}
+  // Reset tav
+  var tav=g('tav');
+  tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';
+  tav.innerHTML='?';
   g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');
   toast('Deconnecte','A bientot sur CoursPool !');
 }
@@ -842,6 +850,9 @@ function renderPage(){
     var profIni = c.prof_ini || '?';
     var profCol = c.prof_col || 'linear-gradient(135deg,#FF8C55,#E04E10)';
     var profNm = c.prof_nm || 'Professeur';
+    var profAvHTML = c.prof_photo
+      ? '<img src="'+c.prof_photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : profIni;
     var full=c.fl>=c.sp,isR=!!res[c.id];
     var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
     var pp=Math.ceil(c.tot/c.sp);
@@ -853,7 +864,7 @@ function renderPage(){
     var d=document.createElement('div');
     d.className='card';d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
     d.onclick=function(){if(full&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
-    d.innerHTML='<div class="ctop" style="background:'+(c.bg||'#f5f5f5')+'"><span class="chip" style="color:'+(c.sc||'#333')+'">'+(c.subj||'')+'</span><div class="pbub" style="background:'+profCol+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profIni+'</div></div><div class="cbody"><div class="ctitle">'+(c.title||'')+'</div><div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+(c.dt||'')+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+(c.lc||'')+'</div><div class="cf"><div><div class="ps">Total '+(c.tot||0)+'EUR</div><div class="pm">'+pp+'EUR <span>/ eleve</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+(c.bg||'#f5f5f5')+'"><span class="chip" style="color:'+(c.sc||'#333')+'">'+(c.subj||'')+'</span><div class="pbub" style="background:'+profCol+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAvHTML+'</div></div><div class="cbody"><div class="ctitle">'+(c.title||'')+'</div><div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+(c.dt||'')+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+(c.lc||'')+'</div><div class="cf"><div><div class="ps">Total '+(c.tot||0)+'EUR</div><div class="pm">'+pp+'EUR <span>/ eleve</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   // Show/hide load more
@@ -897,10 +908,15 @@ function openR(id){
 function closeR(){closeM('bdR');}
 function confR(){
   var id=curId;
-  if(!id)return;
+  if(!id){toast('Erreur','Veuillez reessayer');closeM('bdR');return;}
   var c=C.find(function(x){return x.id===id});
+  if(!c){toast('Erreur','Cours introuvable');closeM('bdR');return;}
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();
+  c.fl+=1;
+  res[id]=true;
+  curId=null;
+  closeM('bdR');
+  buildCards();
   var pp=Math.ceil(c.tot/c.sp);
   toast('Place reservee !',pp+'EUR - Inscription confirmee');
 }
@@ -984,7 +1000,8 @@ async function subCr(){
       professeur_id:user.id,emoji:'📚',
       prof_initiales:user.ini||'?',
       prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
-      prof_nom:user.pr+(user.nm?' '+user.nm:'')
+      prof_nom:user.pr+(user.nm?' '+user.nm:''),
+      prof_photo:user.photo||null
     })});
     var data=await res.json();
     if(data.error){toast('Erreur','Impossible de publier le cours');return;}
