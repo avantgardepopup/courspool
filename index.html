@@ -218,7 +218,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
       <div class="lf on" id="lfC">
         <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com"></div>
-        <div class="lfield"><label>Mot de passe</label><input id="lPw" type="password" placeholder="••••••••"></div>
+        <div class="lfield"><label>Mot de passe</label>
+          <div style="position:relative">
+            <input id="lPw" type="password" placeholder="••••••••" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:14px;outline:none;">
+            <span onclick="togglePw('lPw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);font-size:16px">👁</span>
+          </div>
+        </div>
         <button class="lbtn" onclick="doLogin()">Se connecter</button>
         <div class="lsep">ou</div>
         <button class="lguest" onclick="doGuest()">Continuer sans compte</button>
@@ -229,7 +234,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div class="lfield"><label>Nom</label><input id="rNm" type="text" placeholder="Rousseau"></div>
         </div>
         <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com"></div>
-        <div class="lfield"><label>Mot de passe</label><input id="rPw" type="password" placeholder="Min. 6 caractères"></div>
+        <div class="lfield"><label>Mot de passe</label>
+          <div style="position:relative">
+            <input id="rPw" type="password" placeholder="Min. 6 caractères" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:14px;outline:none;">
+            <span onclick="togglePw('rPw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);font-size:16px">👁</span>
+          </div>
+        </div>
         <div class="lfield"><label>Je suis</label>
           <div class="rg" style="margin-top:4px">
             <div class="ropt on" id="rEl" onclick="pickRole('El')">🎓 Élève</div>
@@ -414,6 +424,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
       <button class="pb pri" style="width:100%;margin-bottom:10px" onclick="confR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong></button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
+      <button id="btnVoirEleves" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openEleves(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Voir les élèves inscrits</button>
       <button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="deleteCours(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
     </div>
   </div>
@@ -494,6 +505,38 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
       <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Prix total (€)</label><input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()"><div id="cH" style="font-size:12px;color:var(--lite);margin-top:5px"></div></div>
       <button class="pb pri" style="width:100%" onclick="subCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier le cours</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMATION SUPPRESSION -->
+<div class="bd" id="bdConfirmDel" onclick="if(event.target===this)closeM('bdConfirmDel')">
+  <div class="modal sm">
+    <div style="padding:24px 20px 20px;text-align:center">
+      <div style="width:50px;height:50px;border-radius:50%;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:6px">Annuler ce cours ?</div>
+      <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px" id="confirmDelTitre"></div>
+      <div style="font-size:12px;color:var(--lite);margin-bottom:16px" id="confirmDelDate"></div>
+      <div style="font-size:13px;color:var(--mid);background:var(--bg);border-radius:10px;padding:12px;margin-bottom:18px;line-height:1.6">Cette action est <strong>irréversible</strong>. Les élèves déjà inscrits seront notifiés.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="pb sec" onclick="closeM('bdConfirmDel')">Garder le cours</button>
+        <button class="pb" style="background:#EF4444;color:#fff" onclick="confirmDeleteCours()">Oui, annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉLÈVES INSCRITS -->
+<div class="bd" id="bdEleves" onclick="if(event.target===this)closeM('bdEleves')">
+  <div class="modal">
+    <div class="mhd">
+      <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Inscrits</div><div style="font-size:17px;font-weight:800" id="elevesTitre">Élèves inscrits</div></div>
+      <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+    </div>
+    <div class="mbd">
+      <div id="elevesList"></div>
     </div>
   </div>
 </div>
@@ -823,16 +866,32 @@ function openR(id){
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
-  // Bouton annuler si c'est le créateur
-  var btnDel=document.getElementById('btnDelCours');
-  if(user&&c.pr===user.id){
-    if(btnDel)btnDel.style.display='flex';
-  } else {
-    if(btnDel)btnDel.style.display='none';
-  }
+  // Boutons propriétaire
+  var btnDel=g('btnDelCours');
+  var btnEleves=g('btnVoirEleves');
+  var isOwner=user&&c.pr===user.id;
+  if(btnDel)btnDel.style.display=isOwner?'flex':'none';
+  if(btnEleves)btnEleves.style.display=isOwner?'flex':'none';
+  // Cacher bouton réserver si propriétaire
+  var btnConf=document.querySelector('#bdR .pb.pri');
+  if(btnConf)btnConf.style.display=isOwner?'none':'flex';
   openM('bdR');
 }
 function closeR(){closeM('bdR');}
+
+function openEleves(id){
+  var c=C.find(function(x){return x.id===id;});
+  if(!c)return;
+  g('elevesTitre').textContent=c.title+' — '+c.fl+' inscrit'+(c.fl>1?'s':'');
+  var list=g('elevesList');
+  if(c.fl===0){
+    list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';
+  } else {
+    list.innerHTML='<div style="background:var(--orp);border-radius:12px;padding:14px;margin-bottom:12px;font-size:13px;color:var(--mid);line-height:1.6">📋 <strong>'+c.fl+' élève'+(c.fl>1?'s':'')+' inscrit'+(c.fl>1?'s':'')+'</strong> sur '+c.sp+' places.<br>La liste détaillée sera disponible avec la messagerie intégrée.</div>'
+      +'<div style="text-align:center;padding:20px 0"><div style="font-size:32px;margin-bottom:8px">💬</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Messagerie bientôt disponible</div><div style="font-size:13px;color:var(--lite)">Vous pourrez contacter chaque élève directement.</div></div>';
+  }
+  openM('bdEleves');
+}
 function confR(){
   var id=curId;
   if(!id){toast('Erreur','Veuillez réessayer');return;}
@@ -870,19 +929,33 @@ function confF(){if(folPr)fol.add(folPr);var p=P[folPr]||{};closeM('bdF');toast(
 
 // PROFIL PROF
 function openPr(pid){
-  curProf=pid;var p=P[pid];
-  if(!p){var c=C.find(function(x){return x.pr===pid});if(c)p={i:c.prof_ini,col:c.prof_col,nm:c.prof_nm,rl:'',bd:'',c:0,n:'—',e:0,bio:'',tags:[],crs:[],photo:c.prof_photo};}
-  if(!p)return;
+  curProf=pid;
+  // Trouver le cours le plus récent de ce prof pour avoir les bonnes infos
+  var cours=C.filter(function(x){return x.pr===pid;});
+  var dernierCours=cours[0]||null;
+  var p=P[pid];
+  // Toujours prioriser les données du cours le plus récent
+  if(dernierCours){
+    if(!p)p={};
+    p.nm=dernierCours.prof_nm||p.nm||'Professeur';
+    p.i=dernierCours.prof_ini||p.i||'?';
+    p.col=dernierCours.prof_col||p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+    p.photo=dernierCours.prof_photo||p.photo||null;
+    p.rl=p.rl||'';p.bd=p.bd||'';p.c=p.c||0;p.n=p.n||'—';p.e=p.e||0;p.bio=p.bio||'';p.tags=p.tags||[];
+  }
+  if(!p||!p.nm){toast('Profil introuvable','');return;}
   var av=g('mpav');
   if(p.photo){av.style.background='none';av.innerHTML='<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">';}
   else{av.style.background=p.col;av.textContent=p.i;}
   g('mpnm').textContent=p.nm;g('mprl').textContent=p.rl;g('mpbd').textContent=p.bd||'';
-  g('mpC').textContent=p.c||0;g('mpN').textContent=p.n||'—';g('mpE').textContent=p.e||0;
+  g('mpC').textContent=cours.length;g('mpN').textContent=p.n||'—';g('mpE').textContent=p.e||0;
   g('mpBio').textContent=p.bio||'';
   g('mpTags').innerHTML=(p.tags||[]).map(function(t){return'<span class="tag">'+t+'</span>';}).join('');
-  var prochains=C.filter(function(c){return c.pr===pid&&c.fl<c.sp;});
+  var prochains=cours.filter(function(c){return c.fl<c.sp;});
   g('mpCrs').innerHTML=prochains.length?prochains.map(function(c){return'<div class="pcrow"><div style="font-size:13px">'+c.title+' · '+c.dt+'</div><button class="btnr" style="font-size:12px;padding:6px 11px" onclick="closePr();openR(\''+c.id+'\')">Réserver</button></div>';}).join(''):'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
   var fb=g('bFP'),ft=g('bFPt');
+  var isSelf=user&&pid===user.id;
+  fb.style.display=isSelf?'none':'flex';
   fb.classList.toggle('on',fol.has(pid));ft.textContent=fol.has(pid)?'Suivi ✓':'Suivre';
   openM('bdPr');
 }
@@ -949,16 +1022,40 @@ async function subCr(){
   finally{window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}}
 }
 
-// SUPPRIMER SON COURS
+// TOGGLE MOT DE PASSE
+function togglePw(id,btn){
+  var input=g(id);
+  if(input.type==='password'){input.type='text';btn.textContent='🙈';}
+  else{input.type='password';btn.textContent='👁';}
+}
+
+// SUPPRIMER SON COURS avec confirmation
 async function deleteCours(id){
-  if(!confirm('Annuler ce cours ? Cette action est irréversible.'))return;
+  openConfirmDelete(id);
+}
+
+function openConfirmDelete(id){
+  var c=C.find(function(x){return x.id===id;});
+  if(!c)return;
+  window._deleteId=id;
+  g('confirmDelTitre').textContent=c.title;
+  g('confirmDelDate').textContent=c.dt;
+  openM('bdConfirmDel');
+}
+
+async function confirmDeleteCours(){
+  var id=window._deleteId;
+  if(!id)return;
+  closeM('bdConfirmDel');
+  closeM('bdR');
   try{
     var r=await fetch(API+'/cours/'+id,{method:'DELETE'});
     var data=await r.json();
     if(data.error){toast('Erreur','Impossible d\'annuler ce cours');return;}
-    closeM('bdR');await loadData();buildCards();
+    await loadData();buildCards();
     toast('Cours annulé','Votre cours a été supprimé');
   }catch(e){toast('Erreur réseau','Impossible d\'annuler ce cours');}
+  window._deleteId=null;
 }
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Soit '+Math.ceil(p/pl)+'€ par élève pour '+pl+' place'+(pl>1?'s':''):'';}
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
