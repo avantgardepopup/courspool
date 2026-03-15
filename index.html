@@ -1538,9 +1538,11 @@ function openMsg(profNm,destId,avatar){
   // Ouvrir la conversation
   var convPane=g('msgConvPane');
   if(convPane)convPane.style.display='flex';
-  // Mobile : ajouter classe conv-open
+  // Mobile : ajouter classe conv-open + cacher barre nav
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
+  var bnav=g('bnav');
+  if(bnav)bnav.style.display='none';
   // Avatar et nom
   var av=g('msgConvAv');
   if(avatar&&avatar!=='null'&&avatar!==''){
@@ -1572,6 +1574,9 @@ function closeMsgConv(){
   if(convPane)convPane.style.display='none';
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
+  // Réafficher la barre de nav
+  var bnav=g('bnav');
+  if(bnav&&user)bnav.style.display='flex';
   clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
 }
