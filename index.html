@@ -799,13 +799,23 @@ function buildAccLists(){
     var now=new Date();
     lr.innerHTML=rIds.map(function(id){
       var c=C.find(function(x){return x.id===id});if(!c)return'';
-      // Vérifier si le cours est passé
+      // Le cours est passé si created_at + durée est dépassé
+      // On compare simplement avec la date stockée dans c.dt
+      // Format: "dim. 15 mars · 04:30" - on considère passé si la date du cours < maintenant
       var isPast=false;
       try{
-        var parts=c.dt.split(' · ');
-        if(parts[1]){var d=new Date(parts[0]+' '+parts[1]);isPast=d<now;}
+        // Extraire l'heure
+        var heureMatch=c.dt.match(/(\d{1,2}):(\d{2})$/);
+        if(heureMatch){
+          var today=new Date();
+          var coursDate=new Date(c.created_at||now);
+          // Si cours créé il y a plus de 24h et heure passée = cours terminé
+          var diffMs=now-new Date(c.created_at||now);
+          isPast=diffMs>24*60*60*1000;
+        }
       }catch(e){}
-      var noteBtn=isPast&&user&&user.role!=='professeur'?'<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap">⭐ Noter</button>':'';
+      var noteBtn=isPast&&user&&user.role!=='professeur'?
+        '<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;margin-left:6px">⭐ Noter</button>':'';
       return'<div class="rrow"><div class="rdot">'+c.em+'</div><div class="ri"><div class="rt">'+c.title+'</div><div class="rm">'+c.prof_nm+' · '+c.dt+'</div></div>'+(isPast?'<span class="rbadge bdone">Terminé</span>':'<span class="rbadge bup">À venir</span>')+noteBtn+'</div>';
     }).join('');
   }
@@ -929,7 +939,7 @@ function renderPage(){
     var bc=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
     var isR=!!res[c.id],isFull=c.fl>=c.sp;
     var btn;
-    if(isR)btn='<button class="btnres">Réservé ✓</button>';
+    if(isR)btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')">✓ Inscrit · +1 ami</button>';
     else if(isFull)btn='<button class="btnfull">Complet</button>';
     else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
     var profAv=c.prof_photo?'<img src="'+c.prof_photo+'" style="width:100%;height:100%;object-fit:cover">':c.prof_ini;
@@ -1268,34 +1278,35 @@ function closeMsg(){closeM('bdMsg');clearInterval(msgPollTimer);msgPollTimer=nul
 
 async function loadConversations(){
   if(!user)return;
+  var lm=g('listM');
+  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   try{
     var r=await fetch(API+'/conversations/'+user.id);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length){
-      g('listM').innerHTML='<div class="bempty"><p>Aucune conversation pour l\'instant.</p></div>';return;
+      lm.innerHTML='<div class="bempty"><p>Aucune conversation pour l\'instant.</p></div>';return;
     }
     // Grouper par interlocuteur
     var convs={};
     msgs.forEach(function(m){
-      var otherId=m.expediteur_id===user.id?m.destinataire_id:m.expediteur_id;
+      var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
+      if(!otherId)return;
       if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
     });
     var nonLus=0;
-    g('listM').innerHTML=Object.keys(convs).map(function(otherId){
+    lm.innerHTML=Object.keys(convs).map(function(otherId){
       var m=convs[otherId];
-      var isMe=m.expediteur_id===user.id;
+      var isMe=m.sender_id===user.id;
       var nonLu=!isMe&&!m.lu;
       if(nonLu)nonLus++;
-      // Trouver le nom de l'interlocuteur dans P
-      var p=P[otherId]||{nm:otherId.slice(0,8)+'…',col:'linear-gradient(135deg,#FF8C55,#E04E10)',i:'?',photo:null};
+      var p=P[otherId]||{nm:'Utilisateur',col:'linear-gradient(135deg,#FF8C55,#E04E10)',i:'?',photo:null};
       var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':p.i;
-      return'<div class="rrow" onclick="openMsg(\''+p.nm+'\',\''+otherId+'\',\''+( p.photo||'')+'\')"><div class="fav" style="background:'+p.col+';width:44px;height:44px;flex-shrink:0">'+av+'</div><div class="ri"><div class="rt" style="'+(nonLu?'font-weight:800':'')+'">'+p.nm+'</div><div class="rm">'+(isMe?'Vous : ':'')+m.contenu.slice(0,40)+(m.contenu.length>40?'…':'')+'</div></div>'+(nonLu?'<div style="width:10px;height:10px;border-radius:50%;background:#EF4444;flex-shrink:0"></div>':'')+'</div>';
+      return'<div class="rrow" onclick="openMsg(\''+p.nm+'\',\''+otherId+'\',\''+(p.photo||'')+'\')"><div class="fav" style="background:'+p.col+';width:44px;height:44px;flex-shrink:0">'+av+'</div><div class="ri"><div class="rt" style="'+(nonLu?'font-weight:800':'')+'">'+p.nm+'</div><div class="rm">'+(isMe?'Vous : ':'')+m.contenu.slice(0,40)+(m.contenu.length>40?'…':'')+'</div></div>'+(nonLu?'<div style="width:10px;height:10px;border-radius:50%;background:#EF4444;flex-shrink:0"></div>':'')+'</div>';
     }).join('');
-    // Badge messages non lus
     var badge=g('msgBadge');
     if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}
     else{badge.style.display='none';}
-  }catch(e){}
+  }catch(e){lm.innerHTML='<div class="bempty"><p>Impossible de charger les messages.</p></div>';}
 }
 
 // NOTATION
