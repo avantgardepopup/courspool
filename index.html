@@ -467,16 +467,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <div class="rban"><div style="font-size:12px;opacity:.8;margin-bottom:3px;position:relative;z-index:1" id="rSbj"></div><div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div><div style="font-size:12px;opacity:.75;margin-top:8px;position:relative;z-index:1" id="rLc"></div></div>
       <div style="font-size:13px;font-weight:700;margin-bottom:10px">Détail du prix</div>
       <div class="bdn">
-        <div class="br"><span class="l">Prix total</span><span class="v" id="rTot"></span></div>
-        <div class="br"><span class="l">Participants (vous inclus)</span><span class="v" id="rCnt"></span></div>
-        <div class="br"><span class="l" style="color:var(--or)">Acompte maintenant</span><span class="v" style="color:var(--or)" id="rDp"></span></div>
-        <div class="br tot"><span class="l">Votre part finale</span><span class="v" id="rFin"></span></div>
+        <div class="br"><span class="l">Prix total du cours</span><span class="v" id="rTot"></span></div>
+        <div class="br"><span class="l">Nombre de places</span><span class="v" id="rCnt"></span></div>
+        <div class="br tot"><span class="l">Votre part</span><span class="v" id="rFin"></span></div>
       </div>
       <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
-      <div class="arow">
-        <button class="pb pri" onclick="confR('acompte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Acompte <strong id="rDpB"></strong></button>
-        <button class="pb blk" onclick="confR('total')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Total <strong id="rFinB"></strong></button>
-      </div>
+      <button class="pb pri" style="width:100%;margin-bottom:10px" onclick="confR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer ma réservation — <strong id="rFinB"></strong></button>
       <button class="pb sec" style="width:100%" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
     </div>
   </div>
@@ -821,7 +817,7 @@ function renderPage(){
     var profNm = c.prof_nm || 'Professeur';
     var full=c.fl>=c.sp,isR=!!res[c.id];
     var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
-    var pp=Math.ceil(c.tot/Math.max(c.fl,1));
+    var pp=Math.ceil(c.tot/c.sp);
     var bc=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
     var btn;
     if(isR) btn='<button class="btnres" style="background:var(--green);color:#fff">Reservé</button>';
@@ -851,9 +847,36 @@ var FM={tous:function(){return true;},maths:function(t){return /maths|algebre|st
 function doFilter(){currentPage=1;applyFilter();}
 function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();}
 
-function openR(id){var c=C.find(function(x){return x.id===id});if(!c)return;if(res[id]){openO(id);return;}if(c.fl>=c.sp){openF(c.pr,c.title);return;}curId=id;var n=c.fl+1,pp=Math.ceil(c.tot/n),dp=Math.max(3,Math.ceil(pp*.3));g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;g('rTot').textContent=c.tot+'EUR';g('rCnt').textContent=n+' personnes';g('rDp').textContent=dp+'EUR';g('rFin').textContent=pp+'EUR / eleve';g('rDpB').textContent=dp+'EUR';g('rFinB').textContent=pp+'EUR';g('rInf').textContent='Acompte de '+dp+'EUR maintenant. Solde ajuste 1h avant le cours.';openM('bdR');}
+function openR(id){
+  var c=C.find(function(x){return x.id===id});
+  if(!c)return;
+  if(res[id]){openO(id);return;}
+  if(c.fl>=c.sp){openF(c.pr,c.title);return;}
+  curId=id;
+  var pp=Math.ceil(c.tot/c.sp);
+  g('rTit').textContent=c.title;
+  g('rSbj').textContent=c.subj;
+  g('rDt').textContent=c.dt;
+  g('rLc').textContent=c.lc;
+  g('rTot').textContent=c.tot+'EUR';
+  g('rCnt').textContent=c.sp+' places max';
+  g('rDp').textContent=pp+'EUR';
+  g('rFin').textContent=pp+'EUR';
+  g('rDpB').textContent=pp+'EUR';
+  g('rFinB').textContent=pp+'EUR';
+  g('rInf').textContent='Prix fixe par eleve : '+pp+'EUR. Vous payez cette somme pour rejoindre ce cours.';
+  openM('bdR');
+}
 function closeR(){closeM('bdR');}
-function confR(mode){var id=curId;if(!id)return;var c=C.find(function(x){return x.id===id});if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();var pp=Math.ceil(c.tot/c.fl),dp=Math.max(3,Math.ceil(pp*.3));toast('Place reservee !',mode==='acompte'?'Acompte '+dp+'EUR paye':''+pp+'EUR payes - Inscrit');}
+function confR(){
+  var id=curId;
+  if(!id)return;
+  var c=C.find(function(x){return x.id===id});
+  if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
+  c.fl+=1;res[id]=true;curId=null;closeM('bdR');buildCards();
+  var pp=Math.ceil(c.tot/c.sp);
+  toast('Place reservee !',pp+'EUR - Inscription confirmee');
+}
 function contR(){closeM('bdR');var c=C.find(function(x){return x.id===curId});var nm=c?c.prof_nm:'le professeur';openMsg(nm,'');}
 
 function openMsg(profNm,email){
