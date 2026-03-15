@@ -203,6 +203,23 @@ app.get('/follows/:user_id', async (req, res) => {
   res.json(data);
 });
 
+// STRIPE — récupérer les paiements réels
+app.get('/stripe/payments', async (req, res) => {
+  try {
+    const payments = await stripe.paymentIntents.list({ limit: 100 });
+    const result = payments.data.map(p => ({
+      id: p.id,
+      amount: p.amount / 100,
+      currency: p.currency,
+      status: p.status,
+      created: new Date(p.created * 1000).toISOString(),
+    }));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // MESSAGES — envoyer
 app.post('/messages', async (req, res) => {
   const { expediteur_id, destinataire_id, contenu } = req.body;
