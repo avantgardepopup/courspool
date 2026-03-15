@@ -172,11 +172,17 @@ app.get('/conversations/:user_id', async (req, res) => {
 // MESSAGES — marquer comme lu
 app.put('/messages/lu/:user_id', async (req, res) => {
   const { expediteur_id } = req.body;
-  const { error } = await supabase.from('messages')
+  if (!expediteur_id) return res.status(400).json({ error: 'expediteur_id manquant' });
+  const { error } = await supabase
+    .from('messages')
     .update({ lu: true })
-    .eq('destinataire_id', req.params.user_id)
-    .eq('expediteur_id', expediteur_id);
-  if (error) return res.status(500).json({ error });
+    .eq('receiver_id', req.params.user_id)
+    .eq('sender_id', expediteur_id)
+    .eq('lu', false);
+  if (error) {
+    console.log('Erreur lu:', error);
+    return res.status(500).json({ error: error.message });
+  }
   res.json({ success: true });
 });
 
