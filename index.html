@@ -995,12 +995,14 @@ async function confR(){
       montant_paye:Math.ceil(c.tot/c.sp),
       type_paiement:'total'
     })});
-    var data=await r.json();
-    if(data.error){toast('Erreur',data.error.message||'Impossible de réserver');return;}
+    // Accepter 200 et 201 comme succès
+    if(!r.ok){
+      var errData=await r.json().catch(function(){return{};});
+      toast('Erreur',errData.error||'Impossible de réserver');return;
+    }
     res[id]=true;
     curId=null;
     closeM('bdR');
-    // Recharger depuis Supabase pour avoir le vrai compteur
     await loadData();
     buildCards();
     toast('Place réservée !',Math.ceil(c.tot/c.sp)+'€ · Inscription confirmée ✓');
