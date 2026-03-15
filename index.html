@@ -1084,10 +1084,11 @@ async function checkStripeReturn(){
     var userId=params.get('user_id');
     var pourAmi=params.get('ami')==='1';
     if(!sessionId||!coursId||!userId)return;
+    // Nettoyer l'URL immédiatement pour éviter les doubles appels
     window.history.replaceState({},'',window.location.pathname);
     var r=await fetch(API+'/stripe/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,cours_id:coursId,user_id:userId,pour_ami:pourAmi})});
     var data=await r.json();
-    if(data.success){
+    if(data.success||data.already){
       if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
       await loadData();buildCards();
       toast('🎉 Paiement confirmé !',pourAmi?'Place ajoutée avec succès !':'Votre place est réservée !');
@@ -1371,7 +1372,7 @@ async function confR(){
       user_id:user.id,
       montant:pp,
       cours_titre:c.title,
-      success_url:window.location.href.split('?')[0],
+      success_url:window.location.href.split('?')[0]+'?cours_id='+id+'&user_id='+user.id+'&session_id={CHECKOUT_SESSION_ID}',
       cancel_url:window.location.href.split('?')[0]
     })});
     var data=await r.json();
@@ -1434,7 +1435,7 @@ async function confAmi(id){
       user_id:user.id,
       montant:pp,
       cours_titre:c.title+' · Place supplémentaire',
-      success_url:window.location.href.split('?')[0]+'?ami=1',
+      success_url:window.location.href.split('?')[0]+'?cours_id='+id+'&user_id='+user.id+'&ami=1&session_id={CHECKOUT_SESSION_ID}',
       cancel_url:window.location.href.split('?')[0],
       pour_ami:true
     })});
