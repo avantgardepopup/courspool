@@ -160,22 +160,43 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pb.pri{background:var(--or);color:#fff;}.pb.pri:hover{background:var(--ord);}
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
-/* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--wh);border-top:1px solid var(--bdr);display:none;z-index:60;padding:8px 0 max(8px,env(safe-area-inset-bottom));box-shadow:0 -4px 20px rgba(0,0,0,.06);}
+/* MESSAGING PAGE */
+#pgMsg{height:calc(100vh - 56px);}
+#pgMsg.on{display:flex !important;}
+.msg-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
+.msg-row:hover{background:var(--bg);}
+.msg-row.active{background:var(--orp);}
+.msg-av{width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;overflow:hidden;}
+.msg-info{flex:1;min-width:0;}
+.msg-name{font-size:14px;font-weight:700;margin-bottom:2px;}
+.msg-preview{font-size:12.5px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-unread .msg-name{font-weight:800;}
+.msg-unread .msg-preview{color:var(--ink);font-weight:600;}
+@media(max-width:768px){
+  #msgListPane{max-width:100% !important;border-right:none;}
+  #msgConvPane{display:none;}
+  #pgMsg.conv-open #msgListPane{display:none;}
+  #pgMsg.conv-open #msgConvPane{display:flex !important;}
+  #msgBackBtn{display:flex !important;}
+}
+.bnav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--wh);border-radius:50px;display:none;z-index:60;padding:7px 10px;box-shadow:0 8px 32px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.06);align-items:center;gap:2px;}
 .bnav.on{display:flex;}
-.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;color:var(--lite);transition:color .18s;position:relative;}
-.bni.on{color:var(--or);}
-.bni svg{width:22px;height:22px;}
-.bni span{font-size:10px;font-weight:600;}
-.bni-badge{position:absolute;top:2px;right:calc(50% - 18px);background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;}
+.bni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:9px 16px;border-radius:40px;color:var(--lite);transition:all .2s;position:relative;}
+.bni.on{background:var(--or);color:#fff;}
+.bni:not(.on):hover{color:var(--or);}
+.bni svg{width:20px;height:20px;}
+.bni span{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.bni-badge{position:absolute;top:6px;right:10px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid var(--wh);}
 .bni-badge.on{display:flex;}
 /* Password toggle icon */
 .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
 .pw-toggle:hover{color:var(--or);}
 .pw-toggle svg{width:18px;height:18px;}
-@media(max-width:768px){
-  .bnav.on{display:flex;}
-  #app .cnt,.acc-body{padding-bottom:80px;}
+@media(max-width:640px){
+  .bnav{bottom:12px;padding:5px 8px;}
+  .bni{padding:8px 12px;}
+  #app .cnt{padding-bottom:90px;}
+  .acc-body{padding-bottom:90px;}
 }
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
 .rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
@@ -351,13 +372,42 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <!-- PAGE MESSAGES -->
-  <div class="pg" id="pgMsg">
-    <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:16px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:56px;z-index:40">
-      <div style="font-size:18px;font-weight:800">Messages</div>
-      <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;align-items:center;justify-content:center"></span>
+  <div class="pg" id="pgMsg" style="height:calc(100vh - 56px);display:none;flex-direction:row">
+
+    <!-- LISTE CONVERSATIONS -->
+    <div id="msgListPane" style="width:100%;max-width:380px;border-right:1px solid var(--bdr);display:flex;flex-direction:column;height:100%">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:18px;font-weight:800">Messages</div>
+        <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50%;min-width:20px;height:20px;padding:0 5px;font-size:11px;font-weight:700;align-items:center;justify-content:center;border-radius:50px"></span>
+      </div>
+      <div id="listM" style="flex:1;overflow-y:auto;padding:8px"></div>
     </div>
-    <div style="padding:16px;max-width:800px">
-      <div id="listM"></div>
+
+    <!-- CONVERSATION ACTIVE -->
+    <div id="msgConvPane" style="flex:1;display:flex;flex-direction:column;height:100%">
+      <!-- État vide -->
+      <div id="msgEmpty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--lite)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:56px;height:56px;margin-bottom:14px;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <div style="font-size:15px;font-weight:600;color:var(--mid);margin-bottom:6px">Vos messages</div>
+        <div style="font-size:13px">Sélectionnez une conversation</div>
+      </div>
+      <!-- Conversation ouverte -->
+      <div id="msgConvActive" style="display:none;flex-direction:column;height:100%">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px">
+          <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--mid);display:none;padding:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div id="msgConvAv" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;overflow:hidden"></div>
+          <div style="font-size:15px;font-weight:700" id="msgConvName"></div>
+        </div>
+        <div id="msgMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--bdr)">
+          <div style="display:flex;gap:8px;background:var(--bg);border-radius:50px;padding:6px 6px 6px 16px;border:1.5px solid var(--bdr)">
+            <input id="msgInput" type="text" placeholder="Écrivez un message…" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:14px;outline:none" onkeydown="if(event.key==='Enter')sendMsg()">
+            <button onclick="sendMsg()" style="background:var(--or);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -644,11 +694,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div class="bni-badge" id="bnavBadge"></div>
     <span>Messages</span>
   </div>
-  <div class="bni" id="bniAdd" onclick="openCr()" style="display:none">
-    <div style="width:44px;height:44px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;margin-top:-16px;box-shadow:0 4px 14px rgba(255,107,43,.4)">
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:0 8px">
+    <div style="width:46px;height:46px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.4);transition:transform .2s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
-    <span style="margin-top:4px">Proposer</span>
   </div>
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1347,21 +1396,52 @@ function openMsg(profNm,destId,avatar){
   if(!destId){toast('Erreur','Destinataire introuvable');return;}
   if(destId===user.id){toast('Action impossible','Vous ne pouvez pas vous écrire à vous-même');return;}
   msgDestinataire=profNm;msgDestId=destId;
-  g('msgTitle').textContent=profNm||'Contact';
-  var av=g('msgAvatar');
+
+  // Naviguer vers la page messages
+  navTo('msg');
+
+  // Ouvrir la conversation dans le panneau
+  var convPane=g('msgConvPane');
+  var convActive=g('msgConvActive');
+  var empty=g('msgEmpty');
+  if(convPane)convPane.style.display='flex';
+  if(convActive){convActive.style.display='flex';}
+  if(empty)empty.style.display='none';
+
+  // Avatar et nom
+  var av=g('msgConvAv');
   if(avatar&&avatar!=='null'&&avatar!==''){
     av.style.background='none';
-    av.innerHTML='<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    av.innerHTML='<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover">';
   } else {
     av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';
     av.textContent=(profNm&&profNm[0])||'?';
   }
+  g('msgConvName').textContent=profNm||'Contact';
   g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   g('msgInput').value='';
-  openM('bdMsg');
+
+  // Mobile : montrer la conv
+  g('pgMsg').classList.add('conv-open');
+
+  // Marquer conversation active dans la liste
+  document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
+  var activeRow=document.querySelector('[data-uid="'+destId+'"]');
+  if(activeRow)activeRow.classList.add('active');
+
   loadMessages();
   clearInterval(msgPollTimer);
   msgPollTimer=setInterval(loadMessages,3000);
+}
+
+function closeMsgConv(){
+  g('pgMsg').classList.remove('conv-open');
+  var convActive=g('msgConvActive');
+  var empty=g('msgEmpty');
+  if(convActive)convActive.style.display='none';
+  if(empty)empty.style.display='flex';
+  clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
+  document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
 }
 
 async function loadMessages(){
@@ -1412,14 +1492,14 @@ function closeMsg(){
 async function loadConversations(){
   if(!user)return;
   var lm=g('listM');
+  if(!lm)return;
   lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   try{
     var r=await fetch(API+'/conversations/'+user.id);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length){
-      lm.innerHTML='<div class="bempty"><p>Aucune conversation pour l\'instant.</p></div>';return;
+      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px">Aucune conversation</div></div>';return;
     }
-    // Grouper par interlocuteur
     var convs={};
     msgs.forEach(function(m){
       var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
@@ -1433,13 +1513,16 @@ async function loadConversations(){
       var nonLu=!isMe&&!m.lu;
       if(nonLu)nonLus++;
       var p=P[otherId]||{nm:'Utilisateur',col:'linear-gradient(135deg,#FF8C55,#E04E10)',i:'?',photo:null};
-      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':p.i;
-      return'<div class="rrow" onclick="openMsg(\''+p.nm+'\',\''+otherId+'\',\''+(p.photo||'')+'\')"><div class="fav" style="background:'+p.col+';width:44px;height:44px;flex-shrink:0">'+av+'</div><div class="ri"><div class="rt" style="'+(nonLu?'font-weight:800':'')+'">'+p.nm+'</div><div class="rm">'+(isMe?'Vous : ':'')+m.contenu.slice(0,40)+(m.contenu.length>40?'…':'')+'</div></div>'+(nonLu?'<div style="width:10px;height:10px;border-radius:50%;background:#EF4444;flex-shrink:0"></div>':'')+'</div>';
+      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':p.i;
+      var isActive=msgDestId===otherId;
+      var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      return'<div class="msg-row'+(nonLu?' msg-unread':'')+(isActive?' active':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+p.nm+'\',\''+otherId+'\',\''+(p.photo||'')+'\')"><div class="msg-av" style="background:'+p.col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center"><div class="msg-name">'+p.nm+'</div><div style="font-size:11px;color:var(--lite)">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous : ':'')+m.contenu+'</div></div>'+(nonLu?'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0"></div>':'')+'</div>';
     }).join('');
     var badge=g('msgBadge');
-    if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}
-    else{badge.style.display='none';}
-  }catch(e){lm.innerHTML='<div class="bempty"><p>Impossible de charger les messages.</p></div>';}
+    if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
+    var bnavBadge=g('bnavBadge');
+    if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
+  }catch(e){lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Impossible de charger.</div>';}
 }
 
 // NOTATION
