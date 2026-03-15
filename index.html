@@ -364,11 +364,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             <div class="fg"><label class="flbl">Email</label><input id="pfEm" class="fi2" type="email"></div>
             <div class="fg"><label class="flbl">Ville</label><input id="pfVille" class="fi2" type="text" placeholder="Paris, Lyon…"></div>
             <div class="fg"><label class="flbl">Bio</label><textarea id="pfBio" class="fi2" rows="3" placeholder="Présentez-vous…" style="resize:vertical"></textarea></div>
-            <div class="fg"><label class="flbl">Je suis</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
-                <div class="so" id="pfRolEl" onclick="setPfRole('eleve')">🎓 Élève</div>
-                <div class="so" id="pfRolPf" onclick="setPfRole('professeur')">👨‍🏫 Professeur</div>
-              </div>
+            <div class="fg" id="pfRoleSection"><label class="flbl">Je suis</label>
+              <div id="pfRoleDisplay" style="background:var(--bg);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600;color:var(--mid);margin-top:4px"></div>
+              <div style="font-size:11.5px;color:var(--lite);margin-top:4px">Le rôle ne peut pas être modifié après inscription.</div>
             </div>
             <div id="pfProfExtra" style="display:none">
               <div class="fg"><label class="flbl">Statut</label>
@@ -478,7 +476,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="sg"><div class="so" onclick="pickS(this)">📐 Maths</div><div class="so" onclick="pickS(this)">⚗️ Physique</div><div class="so" onclick="pickS(this)">💻 Info</div><div class="so" onclick="pickS(this)">🌍 Langues</div><div class="so" onclick="pickS(this)">📊 Éco</div><div class="so" onclick="pickS(this)">✨ Autre</div></div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label><input class="fi3" id="crDate" type="date"></div>
@@ -637,9 +634,16 @@ function goAccount(){
   else{prev.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';prev.textContent=user.ini;}
   g('pfPr').value=user.pr||'';g('pfNm').value=user.nm||'';g('pfEm').value=user.em||'';
   g('pfVille').value=user.ville||'';g('pfBio').value=user.bio||'';
-  setPfRole(user.role||'eleve');
-  if(user.statut){g('pfStatut').value=user.statut;updateNiveauxPf(user.statut);if(user.niveau)g('pfNiveau').value=user.niveau;}
-  if(user.matieres)g('pfMatieres').value=user.matieres;
+  // Afficher le rôle en lecture seule
+  var roleDisplay=g('pfRoleDisplay');
+  if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 Professeur':'🎓 Élève';
+  if(user.role==='professeur'){
+    g('pfProfExtra').style.display='block';
+    if(user.statut){g('pfStatut').value=user.statut;updateNiveauxPf(user.statut);if(user.niveau)g('pfNiveau').value=user.niveau;}
+    if(user.matieres)g('pfMatieres').value=user.matieres;
+  } else {
+    g('pfProfExtra').style.display='none';
+  }
   buildAccLists();
 }
 
@@ -671,11 +675,13 @@ function saveProf(){
   user.pr=g('pfPr').value||user.pr;user.nm=g('pfNm').value||'';
   user.em=g('pfEm').value||user.em;user.ville=g('pfVille').value||'';
   user.bio=g('pfBio').value||'';
-  user.role=g('pfRolPf').classList.contains('on')?'professeur':'eleve';
+  // Ne pas changer le rôle
   user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
-  if(g('pfStatut'))user.statut=g('pfStatut').value;
-  if(g('pfNiveau'))user.niveau=g('pfNiveau').value;
-  if(g('pfMatieres'))user.matieres=g('pfMatieres').value;
+  if(user.role==='professeur'){
+    if(g('pfStatut'))user.statut=g('pfStatut').value;
+    if(g('pfNiveau'))user.niveau=g('pfNiveau').value;
+    if(g('pfMatieres'))user.matieres=g('pfMatieres').value;
+  }
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   applyUser();
   g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
