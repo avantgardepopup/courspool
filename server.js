@@ -34,7 +34,11 @@ app.post('/auth/register', async (req, res) => {
     prenom,
     nom,
     email,
-    role
+    role,
+    statut: req.body.statut || null,
+    niveau: req.body.niveau || null,
+    matieres: req.body.matieres || null,
+    verified: role === 'eleve' ? true : false
   }]);
   res.json({ user: data.user });
 });
