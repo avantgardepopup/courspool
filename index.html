@@ -196,9 +196,28 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 /* Mobile */
 @media(max-width:768px){
   #msgListPane{width:100%;max-width:100%;border-right:none;}
-  #msgConvPane{position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--wh);z-index:55;display:none;flex-direction:column;}
+  #msgConvPane{
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    height:100%;
+    height:100dvh;
+    background:var(--wh);
+    z-index:55;
+    display:none;
+    flex-direction:column;
+  }
   #pgMsg.conv-open #msgConvPane{display:flex !important;}
   #msgBackBtn{display:flex !important;}
+  #msgMessages{flex:1;overflow-y:auto;min-height:0;}
+  #msgInputBar{
+    flex-shrink:0;
+    padding:10px 14px;
+    padding-bottom:max(10px,env(safe-area-inset-bottom));
+    border-top:1px solid var(--bdr);
+    background:var(--wh);
+    position:sticky;
+    bottom:0;
+  }
 }
 .bnav{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
@@ -1667,40 +1686,53 @@ function closeMsg(){
   msgDestId=null;
 }
 
+var _convLoading=false;
 async function loadConversations(){
-  if(!user)return;
+  if(!user||_convLoading)return;
+  _convLoading=true;
   var lm=g('listM');
-  if(!lm)return;
-  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
+  if(!lm){_convLoading=false;return;}
+  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">⏳ Chargement…</div>';
   try{
     var r=await fetch(API+'/conversations/'+user.id);
+    if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length){
-      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px">Aucune conversation</div></div>';return;
+      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px;font-weight:600">Aucune conversation</div><div style="font-size:12px;margin-top:6px">Contactez un professeur depuis un cours</div></div>';
+      _convLoading=false;return;
     }
+    // Grouper par interlocuteur
     var convs={};
     msgs.forEach(function(m){
       var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
-      if(!otherId)return;
+      if(!otherId||otherId===user.id)return;
       if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
     });
     var nonLus=0;
-    lm.innerHTML=Object.keys(convs).map(function(otherId){
+    var html=Object.keys(convs).map(function(otherId){
       var m=convs[otherId];
       var isMe=m.sender_id===user.id;
       var nonLu=!isMe&&!m.lu;
       if(nonLu)nonLus++;
-      var p=P[otherId]||{nm:'Utilisateur',col:'linear-gradient(135deg,#FF8C55,#E04E10)',i:'?',photo:null};
-      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':p.i;
-      var isActive=msgDestId===otherId;
+      // Chercher le profil dans P ou fallback
+      var p=P[otherId];
+      var nm=p?((p.nm||'Utilisateur')):'Utilisateur';
+      var col=p?p.col:'linear-gradient(135deg,#FF8C55,#E04E10)';
+      var photo=p?p.photo:null;
+      var ini=p?p.i:'?';
+      var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+(isActive?' active':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+p.nm+'\',\''+otherId+'\',\''+(p.photo||'')+'\')"><div class="msg-av" style="background:'+p.col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center"><div class="msg-name">'+p.nm+'</div><div style="font-size:11px;color:var(--lite)">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous : ':'')+m.contenu+'</div></div>'+(nonLu?'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0"></div>':'')+'</div>';
+      var preview=m.contenu?m.contenu.slice(0,35)+(m.contenu.length>35?'…':''):'…';
+      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\',\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center"><div class="msg-name">'+nm+'</div><div style="font-size:11px;color:var(--lite)">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous : ':'')+preview+'</div></div>'+(nonLu?'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0;margin-top:4px"></div>':'')+'</div>';
     }).join('');
+    lm.innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
     var badge=g('msgBadge');
     if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
     var bnavBadge=g('bnavBadge');
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
-  }catch(e){lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Impossible de charger.</div>';}
+  }catch(e){
+    if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+  }finally{_convLoading=false;}
 }
 
 // NOTATION
