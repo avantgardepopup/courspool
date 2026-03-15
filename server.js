@@ -91,12 +91,29 @@ const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, p
 app.post('/reservations', async (req, res) => {
   const { cours_id, user_id, montant_paye, type_paiement } = req.body;
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
-  await supabase.rpc('increment_places', { cours_id });
+  
+  // Vérifier si déjà réservé
+  const { data: existing } = await supabase
+    .from('reservations')
+    .select('id')
+    .eq('cours_id', cours_id)
+    .eq('user_id', user_id)
+    .single();
+  if (existing) return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
+
+  // Créer la réservation
   const { data, error } = await supabase
     .from('reservations')
     .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
     .select();
   if (error) return res.status(500).json({ error: error.message });
+
+  // Incrémenter places_prises directement
+  await supabase
+    .from('cours')
+    .update({ places_prises: supabase.raw('places_prises + 1') })
+    .eq('id', cours_id);
+
   res.json(data[0]);
 });
 
