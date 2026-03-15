@@ -172,12 +172,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .msg-preview{font-size:12.5px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .msg-unread .msg-name{font-weight:800;}
 .msg-unread .msg-preview{color:var(--ink);font-weight:600;}
+#msgConvActive{padding-bottom:0;}
 @media(max-width:768px){
+  #pgMsg{height:calc(100vh - 56px - 80px);}
   #msgListPane{max-width:100% !important;border-right:none;}
   #msgConvPane{display:none;}
   #pgMsg.conv-open #msgListPane{display:none;}
   #pgMsg.conv-open #msgConvPane{display:flex !important;}
   #msgBackBtn{display:flex !important;}
+  #msgConvActive > div:last-child{padding-bottom:max(12px,env(safe-area-inset-bottom));}
+}
+@media(min-width:769px){
+  #pgMsg{height:calc(100vh - 56px - 80px);}
 }
 .bnav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--wh);border-radius:50px;display:none;z-index:60;padding:7px 10px;box-shadow:0 8px 32px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.06);align-items:center;gap:2px;}
 .bnav.on{display:flex;}
