@@ -1242,7 +1242,7 @@ async function loadMessages(){
     if(!Array.isArray(msgs))return;
     var container=g('msgMessages');
     container.innerHTML=msgs.length===0?'<div style="text-align:center;padding:30px;color:var(--lite);font-size:13px">Aucun message. Dites bonjour ! 👋</div>':msgs.map(function(m){
-      var isMe=m.expediteur_id===user.id;
+      var isMe=m.sender_id===user.id||m.expediteur_id===user.id;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       return'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'14px 14px 4px 14px':'14px 14px 14px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.65;margin-top:3px;text-align:right">'+time+'</div></div></div>';
     }).join('');
@@ -1256,7 +1256,9 @@ async function sendMsg(){
   g('msgInput').value='';
   try{
     await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      expediteur_id:user.id,destinataire_id:msgDestId,contenu:txt
+      expediteur_id:user.id,
+      destinataire_id:msgDestId,
+      contenu:txt
     })});
     loadMessages();
   }catch(e){toast('Erreur','Message non envoyé');}
