@@ -1079,19 +1079,25 @@ function goExplore(){
 async function checkStripeReturn(){
   try{
     var params=new URLSearchParams(window.location.search);
-    var sessionId=params.get('session_id');
-    var coursId=params.get('cours_id');
-    var userId=params.get('user_id');
-    var pourAmi=params.get('ami')==='1';
-    if(!sessionId||!coursId||!userId)return;
-    // Nettoyer l'URL immédiatement pour éviter les doubles appels
+    if(!params.get('stripe_success'))return;
+    // Nettoyer l'URL immédiatement
     window.history.replaceState({},'',window.location.pathname);
-    var r=await fetch(API+'/stripe/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,cours_id:coursId,user_id:userId,pour_ami:pourAmi})});
+    // Récupérer les infos depuis localStorage
+    var pending=null;
+    try{var s=localStorage.getItem('cp_stripe_pending');if(s)pending=JSON.parse(s);}catch(e){}
+    if(!pending||!pending.cours_id||!pending.user_id)return;
+    localStorage.removeItem('cp_stripe_pending');
+    var r=await fetch(API+'/reservations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      cours_id:pending.cours_id,
+      user_id:pending.user_id,
+      montant_paye:pending.montant,
+      type_paiement:pending.pour_ami?'stripe_ami':'stripe'
+    })});
     var data=await r.json();
-    if(data.success||data.already){
-      if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
+    if(!data.error||data.error==='Vous avez déjà réservé ce cours'){
+      if(!pending.pour_ami){res[pending.cours_id]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
       await loadData();buildCards();
-      toast('🎉 Paiement confirmé !',pourAmi?'Place ajoutée avec succès !':'Votre place est réservée !');
+      toast('🎉 Paiement confirmé !',pending.pour_ami?'Place ajoutée avec succès !':'Votre place est réservée !');
     }
   }catch(e){console.log('Stripe return error:',e);}
 }
@@ -1367,12 +1373,14 @@ async function confR(){
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
+    // Sauvegarder les infos avant redirection Stripe
+    try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:false}));}catch(e){}
     var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       cours_id:id,
       user_id:user.id,
       montant:pp,
       cours_titre:c.title,
-      success_url:window.location.href.split('?')[0]+'?cours_id='+id+'&user_id='+user.id+'&session_id={CHECKOUT_SESSION_ID}',
+      success_url:window.location.href.split('?')[0]+'?stripe_success=1',
       cancel_url:window.location.href.split('?')[0]
     })});
     var data=await r.json();
@@ -1430,12 +1438,13 @@ async function confAmi(id){
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
+    try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:true}));}catch(e){}
     var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       cours_id:id,
       user_id:user.id,
       montant:pp,
       cours_titre:c.title+' · Place supplémentaire',
-      success_url:window.location.href.split('?')[0]+'?cours_id='+id+'&user_id='+user.id+'&ami=1&session_id={CHECKOUT_SESSION_ID}',
+      success_url:window.location.href.split('?')[0]+'?stripe_success=1',
       cancel_url:window.location.href.split('?')[0],
       pour_ami:true
     })});
