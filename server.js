@@ -186,5 +186,73 @@ app.delete('/cours/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+// MESSAGES - envoyer
+app.post('/messages', async (req, res) => {
+  const { expediteur_id, destinataire_id, cours_id, contenu } = req.body;
+  if (!expediteur_id || !destinataire_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
+  const { data, error } = await supabase.from('messages').insert([{ expediteur_id, destinataire_id, cours_id, contenu }]).select();
+  if (error) return res.status(500).json({ error });
+  res.json(data[0]);
+});
+
+// MESSAGES - récupérer conversation
+app.get('/messages/:user1/:user2', async (req, res) => {
+  const { user1, user2 } = req.params;
+  const { data, error } = await supabase.from('messages')
+    .select('*')
+    .or(`and(expediteur_id.eq.${user1},destinataire_id.eq.${user2}),and(expediteur_id.eq.${user2},destinataire_id.eq.${user1})`)
+    .order('created_at', { ascending: true });
+  if (error) return res.status(500).json({ error });
+  res.json(data);
+});
+
+// MESSAGES - toutes les conversations d'un user
+app.get('/conversations/:user_id', async (req, res) => {
+  const { data, error } = await supabase.from('messages')
+    .select('*')
+    .or(`expediteur_id.eq.${req.params.user_id},destinataire_id.eq.${req.params.user_id}`)
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error });
+  res.json(data);
+});
+
+// MESSAGES - marquer comme lu
+app.put('/messages/lu/:user_id', async (req, res) => {
+  const { expediteur_id } = req.body;
+  const { data, error } = await supabase.from('messages')
+    .update({ lu: true })
+    .eq('destinataire_id', req.params.user_id)
+    .eq('expediteur_id', expediteur_id);
+  if (error) return res.status(500).json({ error });
+  res.json({ success: true });
+});
+
+// NOTATIONS - noter un cours
+app.post('/notations', async (req, res) => {
+  const { eleve_id, professeur_id, cours_id, note, commentaire } = req.body;
+  if (!eleve_id || !professeur_id || !cours_id || !note) return res.status(400).json({ error: 'Données manquantes' });
+  const { data, error } = await supabase.from('notations')
+    .upsert([{ eleve_id, professeur_id, cours_id, note, commentaire }], { onConflict: 'eleve_id,cours_id' })
+    .select();
+  if (error) return res.status(500).json({ error });
+  // Mettre à jour la note moyenne du prof
+  const { data: notes } = await supabase.from('notations').select('note').eq('professeur_id', professeur_id);
+  if (notes && notes.length > 0) {
+    const moyenne = (notes.reduce((a, b) => a + b.note, 0) / notes.length).toFixed(1);
+    await supabase.from('profiles').update({ note_moyenne: moyenne }).eq('id', professeur_id);
+  }
+  res.json(data[0]);
+});
+
+// NOTATIONS - récupérer les notations d'un prof
+app.get('/notations/:professeur_id', async (req, res) => {
+  const { data, error } = await supabase.from('notations')
+    .select('*')
+    .eq('professeur_id', req.params.professeur_id)
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error });
+  res.json(data);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('CoursPool API sur le port ' + PORT));
