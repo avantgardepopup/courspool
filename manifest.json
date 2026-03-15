@@ -1,0 +1,27 @@
+{
+  "name": "CoursPool",
+  "short_name": "CoursPool",
+  "description": "Trouvez et réservez des cours près de chez vous",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F4F1",
+  "theme_color": "#FF6B2B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["education"],
+  "lang": "fr"
+}
