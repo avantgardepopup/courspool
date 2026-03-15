@@ -540,7 +540,10 @@ async function loadData() {
         sp: c.places_max,
         fl: c.places_prises,
         pr: c.professeur_id,
-        em: c.emoji
+em: c.emoji || '📚',
+prof_ini: c.prof_initiales || '?',
+prof_col: c.prof_couleur || 'linear-gradient(135deg,#FF8C55,#E04E10)',
+prof_nm: c.prof_nom || 'Professeur'
       };
     });
     cours.forEach(function(c) {
@@ -645,7 +648,7 @@ function buildCards(){
     return;
   }
   C.forEach(function(c,i){
-    var p=P[c.pr]||{i:'?',col:'#ccc',nm:'Prof',rl:''};
+    var p=P[c.pr]||{i:c.prof_ini||'?',col:c.prof_col||'#ccc',nm:c.prof_nm||'Prof',rl:''};
     var full=c.fl>=c.sp,isR=!!res[c.id];
     var pct=Math.round(c.fl/c.sp*100),pp=Math.ceil(c.tot/Math.max(c.fl,1));
     var bc=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
