@@ -562,9 +562,22 @@ async function doLogin(){
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);shake('lfC');return;}
     var p=data.profile||{};
-    // Récupérer la photo depuis Supabase
-    var photoUrl=p.photo_url||null;
-    go(p.prenom||em.split('@')[0],p.nom||'',em,p.role||'eleve',data.user.id,photoUrl);
+    var pr=p.prenom||em.split('@')[0];
+    var nm=p.nom||'';
+    var role=p.role||'eleve';
+    var uid=data.user.id;
+    var photo=p.photo_url||null;
+    user={pr:pr,nm:nm,em:em,role:role,id:uid,
+      ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
+      photo:photo,
+      statut:p.statut||'',
+      niveau:p.niveau||'',
+      matieres:p.matieres||''
+    };
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+    applyUser();
+    loadData().then(function(){buildCards();});
+    toast('Bienvenue '+pr+' !','Connecté à CoursPool');
   }catch(e){toast('Erreur','Impossible de se connecter');}
   finally{g('lEm').disabled=false;g('lPw').disabled=false;}
 }
