@@ -273,29 +273,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- Champs supplémentaires profs -->
         <div id="profFields" style="display:none">
           <div class="lfield"><label>Statut</label>
-            <select id="rStatut" class="lfield" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;background:var(--wh)">
-              <option value="">Choisir...</option>
-              <option value="etudiant">Étudiant</option>
-              <option value="prof_ecole">Professeur d'école</option>
-              <option value="prof_college">Professeur de collège/lycée</option>
-              <option value="prof_universite">Professeur d'université</option>
-              <option value="particulier">Particulier</option>
-              <option value="professionnel">Professionnel</option>
+            <select id="rStatut" onchange="updateNiveaux(this.value)" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;background:var(--wh)">
+              <option value="">Choisir votre statut...</option>
+              <option value="etudiant">🎓 Étudiant</option>
+              <option value="prof_ecole">🏫 Professeur d'école</option>
+              <option value="prof_college">📚 Professeur de collège/lycée</option>
+              <option value="prof_universite">🎓 Professeur d'université</option>
+              <option value="particulier">👤 Particulier</option>
+              <option value="professionnel">💼 Professionnel</option>
             </select>
           </div>
-          <div class="lfield"><label>Niveau enseigné</label>
+          <div class="lfield" id="niveauField" style="display:none">
+            <label>Niveau enseigné</label>
             <select id="rNiveau" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;background:var(--wh)">
               <option value="">Choisir...</option>
-              <option value="primaire">Primaire</option>
-              <option value="college">Collège</option>
-              <option value="lycee">Lycée</option>
-              <option value="superieur">Supérieur / Université</option>
-              <option value="tous">Tous niveaux</option>
             </select>
           </div>
-          <div class="lfield"><label>Matière principale</label><input id="rMatiere" type="text" placeholder="Maths, Physique, Anglais…" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;"></div>
+          <div class="lfield"><label>Matière(s) principale(s)</label><input id="rMatiere" type="text" placeholder="Maths, Physique, Anglais…" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px;outline:none;"></div>
+          <div class="lfield">
+            <label>Pièce d'identité (CNI ou Passeport)</label>
+            <div style="border:1.5px dashed var(--bdr);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .18s" onclick="g('rCni').click()" id="cniDrop">
+              <div style="font-size:24px;margin-bottom:6px">🪪</div>
+              <div style="font-size:13px;font-weight:600;color:var(--mid)" id="cniLabel">Cliquez pour uploader</div>
+              <div style="font-size:11px;color:var(--lite);margin-top:3px">JPG, PNG, PDF · Max 5MB</div>
+              <input type="file" id="rCni" accept="image/*,.pdf" style="display:none" onchange="previewCni(this)">
+            </div>
+          </div>
           <div style="background:var(--orp);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12.5px;color:var(--mid);line-height:1.6">
-            🪪 Une vérification d'identité (carte d'identité ou passeport) sera requise avant de publier votre premier cours.
+            ⏱️ Votre compte sera vérifié sous <strong>5 minutes à 2 heures</strong>. Vous recevrez un email de confirmation avant de pouvoir publier votre premier cours.
           </div>
         </div>
         <button class="lbtn" onclick="doReg()">Créer mon compte</button>
@@ -687,26 +692,35 @@ async function doReg(){
   if(pw.length<6){toast('Erreur','Mot de passe trop court (6 caracteres min)');return;}
   var extraData={};
   if(role==='professeur'){
-    extraData.statut=g('rStatut').value||'';
+    var statut=g('rStatut').value||'';
+    if(!statut){toast('Statut manquant','Veuillez choisir votre statut');return;}
+    extraData.statut=statut;
     extraData.niveau=g('rNiveau').value||'';
-    extraData.matiere=g('rMatiere').value||'';
+    extraData.matieres=g('rMatiere').value||'';
   }
   try {
-    var res=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw,prenom:pr,nom:nm,role:role,...extraData})});
+    var res=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({email:em,password:pw,prenom:pr,nom:nm,role:role},extraData))});
     var data=await res.json();
     if(data.error){toast('Erreur inscription',data.error);shake('lfI');return;}
-    go(pr,nm,em,role,data.user.id);
+    if(role==='professeur'){
+      var uid=data.user.id;
+      g('lfI').innerHTML='<div style="text-align:center;padding:20px 0"><div style="font-size:40px;margin-bottom:12px">⏳</div><div style="font-size:17px;font-weight:800;margin-bottom:8px">Compte créé !</div><div style="font-size:13.5px;color:var(--mid);line-height:1.6;margin-bottom:16px">Votre compte est en cours de vérification.<br><strong>5 minutes à 2 heures</strong> maximum.<br>Vous recevrez un email de confirmation.</div><button class="lguest" onclick="goProf(\''+pr+'\',\''+nm+'\',\''+em+'\',\''+uid+'\')">Accéder à l\'application →</button></div>';
+    } else {
+      go(pr,nm,em,role,data.user.id);
+    }
   } catch(e){toast('Erreur','Impossible de creer le compte');}
 }
+
+function goProf(pr,nm,em,uid){go(pr,nm,em,'professeur',uid);}
 
 function doGuest(){go('Invite','','invite@courspool.fr','eleve',null);}
 function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
 
 function go(pr,nm,em,role,uid){
-  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:(pr[0]+(nm?nm[0]:'')).toUpperCase()};
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U'};
   g('login').style.display='none';g('app').style.display='block';
   g('tav').textContent=user.ini;
-  // Montrer ou cacher "Proposer un cours" selon le role
+  // Profs non verifies ne peuvent pas proposer de cours
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
   loadData().then(function(){ buildCards(); });
   toast('Bienvenue '+pr+' !','Vous etes connecte a CoursPool');
@@ -932,6 +946,14 @@ async function subCr(){
 }
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Avec '+pl+' eleve'+(pl>1?'s':'')+' : '+Math.ceil(p/pl)+'EUR/eleve':'';}
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on')});el.classList.add('on');}
+
+// NIVEAUX DYNAMIQUES
+var NIVEAUX={etudiant:['Baccalauréat','BTS / BUT','Licence (L1-L3)','Master (M1-M2)','Doctorat'],prof_ecole:['Maternelle (TPS-GS)','CP - CE1','CE2 - CM1','CM2'],prof_college:['6ème - 5ème','4ème - 3ème','Seconde','Première','Terminale'],prof_universite:['Licence (L1-L3)','Master (M1-M2)','Doctorat'],particulier:['Débutant','Intermédiaire','Avancé','Tous niveaux'],professionnel:['Débutant','Intermédiaire','Avancé','Tous niveaux']};
+function updateNiveaux(statut){var nf=g('niveauField'),sel=g('rNiveau');if(!statut||!NIVEAUX[statut]){nf.style.display='none';return;}nf.style.display='block';sel.innerHTML='<option value="">Choisir...</option>'+NIVEAUX[statut].map(function(n){return'<option value="'+n+'">'+n+'</option>';}).join('');}
+
+// CNI PREVIEW
+function previewCni(input){if(input.files&&input.files[0]){var label=g('cniLabel'),drop=g('cniDrop');label.textContent='✅ '+input.files[0].name;drop.style.borderColor='var(--green)';drop.style.background='#F0FDF4';}}
+
 var lieuTimer = null;
 async function searchLieu(q) {
   var box = g('lieuSuggestions');
