@@ -338,7 +338,7 @@ tr:hover td{background:#FAFAF9;}
         <div class="card">
           <div class="card-header"><h3>💳 Détail des transactions</h3></div>
           <table>
-            <thead><tr><th>ID</th><th>Élève</th><th>Cours</th><th>Montant payé</th><th>Commission (15%)</th><th>Prof reçoit</th><th>Date</th></tr></thead>
+            <thead><tr><th>ID Stripe</th><th>Élève</th><th>Cours</th><th>Montant payé</th><th>Commission (15%)</th><th>Prof reçoit</th><th>Statut</th><th>Date</th></tr></thead>
             <tbody id="paiementsTable"></tbody>
           </table>
         </div>
@@ -588,8 +588,7 @@ function renderReservations(){
   }).join('');
 }
 
-// PAIEMENTS
-function renderPaiements(){
+async function renderPaiements(){
   var total=allRes.reduce(function(a,r){return a+(r.montant_paye||0);},0);
   var commission=Math.round(total*0.15*100)/100;
   var moy=allRes.length?Math.round(total/allRes.length*100)/100:0;
@@ -597,14 +596,40 @@ function renderPaiements(){
   document.getElementById('statCommission').textContent=commission+'€';
   document.getElementById('statNbPaiements').textContent=allRes.length;
   document.getElementById('statPrixMoyen').textContent=moy+'€';
+
+  // Charger les vrais paiements Stripe
   var tbody=document.getElementById('paiementsTable');
-  if(!allRes.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty"><p>Aucune transaction</p></div></td></tr>';return;}
-  tbody.innerHTML=allRes.map(function(r){
-    var commission=Math.round((r.montant_paye||0)*0.15*100)/100;
-    var profRecoit=Math.round(((r.montant_paye||0)-commission)*100)/100;
-    var date=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR'):'—';
-    return'<tr><td style="font-size:11px;color:var(--lite)">'+r.id.slice(0,8)+'…</td><td style="font-size:12px">'+r.user_id.slice(0,8)+'…</td><td style="font-size:12px">'+r.cours_id.slice(0,8)+'…</td><td><strong>'+(r.montant_paye||0)+'€</strong></td><td style="color:var(--or);font-weight:600">'+commission+'€</td><td style="color:var(--green);font-weight:600">'+profRecoit+'€</td><td>'+date+'</td></tr>';
-  }).join('');
+  tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--lite)">Chargement Stripe…</td></tr>';
+  try{
+    var r=await fetch('https://devoted-achievement-production-fdfa.up.railway.app/stripe/payments');
+    var stripePayments=await r.json();
+    if(!Array.isArray(stripePayments)||!stripePayments.length){
+      tbody.innerHTML='<tr><td colspan="7"><div class="empty"><p>Aucun paiement Stripe pour l\'instant</p></div></td></tr>';
+      return;
+    }
+    // Mettre à jour les stats avec les vrais montants
+    var stripeTotal=stripePayments.filter(function(p){return p.status==='succeeded';}).reduce(function(a,p){return a+p.amount;},0);
+    var stripeCommission=Math.round(stripeTotal*0.15*100)/100;
+    document.getElementById('statTotalPaid').textContent=stripeTotal.toFixed(2)+'€';
+    document.getElementById('statCommission').textContent=stripeCommission.toFixed(2)+'€';
+    document.getElementById('statNbPaiements').textContent=stripePayments.filter(function(p){return p.status==='succeeded';}).length;
+
+    tbody.innerHTML=stripePayments.map(function(p){
+      var commission=Math.round(p.amount*0.15*100)/100;
+      var profRecoit=Math.round((p.amount-commission)*100)/100;
+      var date=new Date(p.created).toLocaleDateString('fr-FR');
+      var statusBadge=p.status==='succeeded'?'<span class="badge green">✅ Payé</span>':p.status==='canceled'?'<span class="badge red">❌ Annulé</span>':'<span class="badge orange">⏳ En attente</span>';
+      return'<tr><td style="font-size:11px;color:var(--lite)">'+p.id.slice(0,16)+'…</td><td>—</td><td>—</td><td><strong>'+p.amount.toFixed(2)+'€</strong></td><td style="color:var(--or);font-weight:600">'+commission.toFixed(2)+'€</td><td style="color:var(--green);font-weight:600">'+profRecoit.toFixed(2)+'€</td><td>'+statusBadge+'</td><td>'+date+'</td></tr>';
+    }).join('');
+  }catch(e){
+    // Fallback sur données Supabase
+    tbody.innerHTML=allRes.map(function(r){
+      var commission=Math.round((r.montant_paye||0)*0.15*100)/100;
+      var profRecoit=Math.round(((r.montant_paye||0)-commission)*100)/100;
+      var date=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR'):'—';
+      return'<tr><td style="font-size:11px;color:var(--lite)">'+r.id.slice(0,8)+'…</td><td style="font-size:12px">'+r.user_id.slice(0,8)+'…</td><td style="font-size:12px">'+r.cours_id.slice(0,8)+'…</td><td><strong>'+(r.montant_paye||0)+'€</strong></td><td style="color:var(--or);font-weight:600">'+commission+'€</td><td style="color:var(--green);font-weight:600">'+profRecoit+'€</td><td><span class="badge green">Payé</span></td><td>'+date+'</td></tr>';
+    }).join('');
+  }
 }
 
 // MODAL PROF
