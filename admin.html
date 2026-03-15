@@ -239,6 +239,9 @@ tr:hover td{background:#FAFAF9;}
 
       <!-- DASHBOARD -->
       <div class="page on" id="pageDashboard">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+          <button class="btn btn-red" onclick="clearTestData()">🧹 Vider les données de test</button>
+        </div>
         <div class="stats-grid" id="statsGrid">
           <div class="stat-card"><div class="stat-icon" style="background:#FFF2EC"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="stat-val" id="statEleves">—</div><div class="stat-lbl">Élèves inscrits</div></div></div>
           <div class="stat-card"><div class="stat-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></div><div><div class="stat-val" id="statProfs">—</div><div class="stat-lbl">Professeurs vérifiés</div></div></div>
@@ -630,27 +633,53 @@ function openProfModal(id){
   // Actions
   var actions=document.getElementById('modalActions');
   if(!p.verified){
-    actions.innerHTML='<button class="btn btn-green" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>Valider le compte</button><button class="btn btn-red" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rejeter</button>';
+    actions.innerHTML='<button class="btn btn-green" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',\'verify\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>Valider</button><button class="btn btn-red" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',\'reject\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rejeter</button><button class="btn" style="flex:1;justify-content:center;padding:12px;background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">🚫 Bloquer</button>';
   } else {
-    actions.innerHTML='<button class="btn btn-red" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',false)">Révoquer la vérification</button>';
+    actions.innerHTML='<button class="btn btn-red" style="flex:1;justify-content:center;padding:12px" onclick="verifyProf(\''+p.id+'\',\'reject\')">Révoquer</button><button class="btn" style="flex:1;justify-content:center;padding:12px;background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">🚫 Bloquer</button>';
   }
   document.getElementById('modalProf').classList.add('on');
 }
 
 function closeModal(){document.getElementById('modalProf').classList.remove('on');}
 
-async function verifyProf(id,verified){
-  var ok=await supabaseUpdate('profiles',id,{verified:verified});
+async function verifyProf(id,action){
+  var data={};
+  if(action==='verify') data={verified:true,statut_compte:'actif'};
+  else if(action==='reject') data={verified:false,statut_compte:'rejeté'};
+  else if(action==='block') data={verified:false,statut_compte:'bloqué'};
+
+  var ok=await supabaseUpdate('profiles',id,data);
   if(ok){
     var p=allProfs.find(function(x){return x.id===id;});
-    if(p)p.verified=verified;
+    if(p){p.verified=data.verified;p.statut_compte=data.statut_compte;}
     closeModal();
     renderDashboard();
     renderProfs();
-    toast(verified?'✅ Professeur vérifié !':'❌ Compte rejeté');
+    var msgs={verify:'✅ Professeur vérifié ! Il peut maintenant publier des cours.',reject:'❌ Compte rejeté. Le prof ne peut pas publier de cours.',block:'🚫 Compte bloqué.'};
+    toast(msgs[action]||'Mise à jour effectuée');
   } else {
     toast('Erreur lors de la mise à jour');
   }
+}
+
+async function clearTestData(){
+  if(!confirm('⚠️ Supprimer TOUTES les réservations et remettre les places à 0 ?'))return;
+  try{
+    // Supprimer toutes les réservations
+    await fetch(SUPABASE_URL+'/rest/v1/reservations?id=neq.00000000-0000-0000-0000-000000000000',{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    // Remettre places_prises à 0
+    await fetch(SUPABASE_URL+'/rest/v1/cours?id=neq.00000000-0000-0000-0000-000000000000',{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({places_prises:0})
+    });
+    allRes=[];
+    renderDashboard();renderReservations();renderPaiements();
+    toast('🧹 Données de test effacées !');
+  }catch(e){toast('Erreur lors du nettoyage');}
 }
 
 async function deleteCours(id){
