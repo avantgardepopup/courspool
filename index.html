@@ -932,15 +932,15 @@ function goExplore(){
     var sessionId=params.get('session_id');
     var coursId=params.get('cours_id');
     var userId=params.get('user_id');
+    var pourAmi=params.get('ami')==='1';
     if(!sessionId||!coursId||!userId)return;
     window.history.replaceState({},'',window.location.pathname);
-    var r=await fetch(API+'/stripe/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,cours_id:coursId,user_id:userId})});
+    var r=await fetch(API+'/stripe/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,cours_id:coursId,user_id:userId,pour_ami:pourAmi})});
     var data=await r.json();
     if(data.success){
-      res[coursId]=true;
-      try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}
+      if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
       await loadData();buildCards();
-      toast('🎉 Paiement confirmé !','Votre place est réservée !');
+      toast('🎉 Paiement confirmé !',pourAmi?'Place ajoutée avec succès !':'Votre place est réservée !');
     }
   }catch(e){console.log('Stripe return error:',e);}
 })();
@@ -1297,15 +1297,24 @@ async function confAmi(id){
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
+  var btn=document.querySelector('#bdR .pb.pri');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
-    var r=await fetch(API+'/reservations/ami',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,cours_id:id,montant_paye:Math.ceil(c.tot/c.sp),type_paiement:'total'})});
-    if(!r.ok){toast('Erreur','Impossible de réserver');return;}
-    c.fl+=1;closeM('bdR');buildCards();
-    toast('Place ajoutée !',Math.ceil(c.tot/c.sp)+'€ · Confirmé ✓');
-    // Remettre le bouton confirmer original
-    var btnConf=document.querySelector('#bdR .pb.pri');
-    if(btnConf)btnConf.onclick=confR;
-  }catch(e){toast('Erreur réseau','Impossible de réserver');}
+    var pp=Math.ceil(c.tot/c.sp);
+    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      cours_id:id,
+      user_id:user.id,
+      montant:pp,
+      cours_titre:c.title+' · Place supplémentaire',
+      success_url:window.location.href.split('?')[0]+'?ami=1',
+      cancel_url:window.location.href.split('?')[0],
+      pour_ami:true
+    })});
+    var data=await r.json();
+    if(data.error){toast('Erreur',data.error);return;}
+    window.location.href=data.url;
+  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
+  finally{if(btn){btn.disabled=false;btn.onclick=function(){confAmi(id);};}}
 }
 
 function shareCoursLink(){
