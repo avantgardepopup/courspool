@@ -496,7 +496,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             <h3>Notifications</h3>
             <div class="notif-row"><div><div style="font-size:13.5px;font-weight:600">Nouveaux cours</div><div style="font-size:11.5px;color:var(--lite)">Quand un prof suivi publie</div></div><div class="ntog on" onclick="this.classList.toggle('on')"></div></div>
             <div class="notif-row"><div><div style="font-size:13.5px;font-weight:600">Rappel de cours</div><div style="font-size:11.5px;color:var(--lite)">1 heure avant le début</div></div><div class="ntog on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="notif-row"><div><div style="font-size:13.5px;font-weight:600">Offres spéciales</div><div style="font-size:11.5px;color:var(--lite)">Promotions et réductions</div></div><div class="ntog" onclick="this.classList.toggle('on')"></div></div>
           </div>
           <button class="logout-btn" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Se déconnecter</button>
         </div>
@@ -1597,6 +1596,13 @@ async function sendMsg(){
       destinataire_id:msgDestId,
       contenu:txt
     })});
+    // Marquer comme lu immédiatement dans l'UI
+    var activeRow=document.querySelector('[data-uid="'+destId+'"]');
+    if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('div[style*="border-radius:50%"]');if(dot)dot.remove();}
+    // Mettre à jour badge nav
+    var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
+    var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
+
     loadMessages();
   }catch(e){toast('Erreur','Message non envoyé');}
 }
