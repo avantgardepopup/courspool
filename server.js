@@ -120,9 +120,14 @@ app.get('/reservations/:user_id', async (req, res) => {
 
 // FOLLOWS — suivre
 app.post('/follows', async (req, res) => {
-  const { data, error } = await supabase.from('follows').insert([req.body]);
+  const { user_id, professeur_id } = req.body;
+  const { data, error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
   if (error) return res.status(500).json({ error });
-  res.json(data);
+  // Incrémenter le compteur d'élèves du prof
+  const { data: profData } = await supabase.from('profiles').select('eleves_count').eq('id', professeur_id).single();
+  const newCount = (profData?.eleves_count || 0) + 1;
+  await supabase.from('profiles').update({ eleves_count: newCount }).eq('id', professeur_id);
+  res.json({ success: true });
 });
 
 // FOLLOWS — récupérer
