@@ -1079,26 +1079,15 @@ function goExplore(){
 async function checkStripeReturn(){
   try{
     var params=new URLSearchParams(window.location.search);
-    if(!params.get('stripe_success'))return;
-    // Nettoyer l'URL immédiatement
+    var paid=params.get('paid');
+    var coursId=params.get('cours_id');
+    var pourAmi=params.get('ami')==='1';
+    if(!paid||!coursId)return;
     window.history.replaceState({},'',window.location.pathname);
-    // Récupérer les infos depuis localStorage
-    var pending=null;
-    try{var s=localStorage.getItem('cp_stripe_pending');if(s)pending=JSON.parse(s);}catch(e){}
-    if(!pending||!pending.cours_id||!pending.user_id)return;
     localStorage.removeItem('cp_stripe_pending');
-    var r=await fetch(API+'/reservations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      cours_id:pending.cours_id,
-      user_id:pending.user_id,
-      montant_paye:pending.montant,
-      type_paiement:pending.pour_ami?'stripe_ami':'stripe'
-    })});
-    var data=await r.json();
-    if(!data.error||data.error==='Vous avez déjà réservé ce cours'){
-      if(!pending.pour_ami){res[pending.cours_id]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-      await loadData();buildCards();
-      toast('🎉 Paiement confirmé !',pending.pour_ami?'Place ajoutée avec succès !':'Votre place est réservée !');
-    }
+    if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
+    await loadData();buildCards();
+    toast('🎉 Paiement confirmé !',pourAmi?'Place ajoutée avec succès !':'Votre place est réservée !');
   }catch(e){console.log('Stripe return error:',e);}
 }
 
