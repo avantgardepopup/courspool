@@ -722,7 +722,7 @@ async function loadData(){
     C=cours.map(function(c){
       return{
         id:c.id,
-        t:((c.titre||'')+' '+(c.sujet||'')+' '+(c.prof_nom||'')).toLowerCase(),
+        t:((c.titre||'')+' '+(c.sujet||'')+' '+(c.prof_nom||'')+' '+(c.lieu||'')).toLowerCase(),
         subj:c.sujet||'Autre',
         sc:c.couleur_sujet||'#7C3AED',
         bg:c.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
@@ -1047,14 +1047,16 @@ function buildCards(){
 }
 
 function applyFilter(){
-  var q=g('srch').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var raw=g('srch').value.trim();
+  var q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   filteredCards=C.filter(function(c){
     var title=(c.title||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var subj=(c.subj||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var loc=(c.lc||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var prof=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
-    var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q));
+    var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
     return matchFilter&&matchSearch;
   });
   renderPage();
@@ -1245,7 +1247,21 @@ function shareCoursLink(){
 // SUIVRE
 function openF(pid,title){folPr=pid;var p=P[pid]||{};g('fNm').textContent=p.nm||'ce prof';g('fCr').textContent=title||'';openM('bdF');}
 function closeF(){closeM('bdF');folPr=null;}
-function confF(){if(folPr)fol.add(folPr);var p=P[folPr]||{};closeM('bdF');toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours 🔔');folPr=null;}
+function confF(){
+  if(!folPr)return;
+  var pid=folPr;
+  var p=P[pid]||{};
+  fol.add(pid);
+  closeM('bdF');
+  toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours 🔔');
+  folPr=null;
+  // Sauvegarder le follow en base
+  if(user&&user.id){
+    fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
+    // Incrémenter le compteur d'élèves du prof
+    if(P[pid])P[pid].e=(P[pid].e||0)+1;
+  }
+}
 
 // PROFIL PROF
 function openPr(pid){
@@ -1289,8 +1305,21 @@ function contPr(){
 function togFP(){
   var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
-  if(fol.has(id)){fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';toast('Désabonné','Vous ne suivez plus '+p.nm);}
-  else{fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');}
+  if(fol.has(id)){
+    fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';
+    toast('Désabonné','Vous ne suivez plus '+p.nm);
+    if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
+  } else {
+    fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';
+    toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
+    if(P[id])P[id].e=(P[id].e||0)+1;
+    // Sauvegarder en base
+    if(user&&user.id){
+      fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
+    }
+  }
+  // Mettre à jour le compteur affiché
+  g('mpE').textContent=P[id]?P[id].e:0;
 }
 
 // CRÉER COURS
