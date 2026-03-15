@@ -75,13 +75,13 @@ app.get('/cours', async (req, res) => {
 
 // COURS — créer un cours
 app.post('/cours', async (req, res) => {
-  const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, professeur_id, emoji } = req.body;
+const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total || !professeur_id) {
     return res.status(400).json({ error: 'Champs manquants' });
   }
   const { data, error } = await supabase
     .from('cours')
-    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji }])
+    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description }])
     .select();
   if (error) return res.status(500).json({ error });
   res.json(data);
