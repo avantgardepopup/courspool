@@ -350,6 +350,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 
+  <!-- PAGE MESSAGES -->
+  <div class="pg" id="pgMsg">
+    <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:16px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:56px;z-index:40">
+      <div style="font-size:18px;font-weight:800">Messages</div>
+      <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;align-items:center;justify-content:center"></span>
+    </div>
+    <div style="padding:16px;max-width:800px">
+      <div id="listM"></div>
+    </div>
+  </div>
+
   <div class="pg" id="pgAcc">
     <div class="acc-page">
       <div class="acc-hero">
@@ -369,15 +380,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="atab" id="aTabF" onclick="switchATab('F',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Profs suivis</div>
         <div class="atab" id="aTabH" onclick="switchATab('H',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</div>
         <div class="atab" id="aTabP" onclick="switchATab('P',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</div>
-        <div class="atab" id="aTabM" onclick="switchATab('M',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;margin-left:-4px"></span>Messages</div>
       </div>
       <div class="acc-body">
         <div class="asec on" id="asecR"><div class="sec-title">Cours à venir</div><div id="listR"></div></div>
         <div class="asec" id="asecF"><div class="sec-title">Professeurs suivis</div><div id="listF"></div></div>
-        <div class="asec" id="asecM">
-          <div class="sec-title">Mes conversations</div>
-          <div id="listM"></div>
-        </div>
         <div class="asec" id="asecP">
           <div class="prof-card">
             <h3>Photo de profil</h3>
@@ -778,25 +784,31 @@ function applyUser(){
 }
 
 function navTo(tab){
-  ['exp','msg','acc'].forEach(function(t){
-    var btn=g('bni'+t.charAt(0).toUpperCase()+t.slice(1));
-    if(btn)btn.classList.remove('on');
-  });
+  ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  g('pgExp').classList.remove('on');
+  g('pgAcc').classList.remove('on');
+  g('pgMsg').classList.remove('on');
   if(tab==='exp'){
-    goExplore();
+    g('pgExp').classList.add('on');
     g('bniExp').classList.add('on');
   } else if(tab==='msg'){
-    goAccount();
-    // Switch to messages tab
-    setTimeout(function(){
-      var tab=g('aTabM');
-      if(tab)tab.click();
-    },100);
+    if(!user){navTo('exp');return;}
+    g('pgMsg').classList.add('on');
     g('bniMsg').classList.add('on');
+    loadConversations();
   } else if(tab==='acc'){
-    goAccount();
+    if(!user){navTo('exp');return;}
+    g('pgAcc').classList.add('on');
     g('bniAcc').classList.add('on');
+    goAccount();
   }
+}
+
+function goExplore(){
+  g('pgExp').classList.add('on');
+  g('pgAcc').classList.remove('on');
+  g('pgMsg').classList.remove('on');
+  var b=g('bniExp');if(b){['bniExp','bniMsg','bniAcc'].forEach(function(id){var btn=g(id);if(btn)btn.classList.remove('on');});b.classList.add('on');}
 }
 
 // Restore session
@@ -827,7 +839,7 @@ function goExplore(){g('pgExp').classList.add('on');g('pgAcc').classList.remove(
 
 function goAccount(){
   if(!user)return;
-  g('pgExp').classList.remove('on');g('pgAcc').classList.add('on');
+  g('pgExp').classList.remove('on');g('pgMsg').classList.remove('on');g('pgAcc').classList.add('on');
   var av=g('accAv');
   if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{av.style.background='rgba(255,255,255,.2)';av.textContent=user.ini;}
@@ -852,12 +864,11 @@ function goAccount(){
 }
 
 function switchATab(s,el){
-  ['R','F','H','P','M'].forEach(function(x){
+  ['R','F','H','P'].forEach(function(x){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');if(tab)tab.classList.remove('on');
   });
   g('asec'+s).classList.add('on');el.classList.add('on');
-  if(s==='M')loadConversations();
 }
 
 function buildAccLists(){
