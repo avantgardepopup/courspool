@@ -161,7 +161,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
 /* MESSAGING PAGE */
-#pgMsg{height:calc(100vh - 56px);}
+#pgMsg{height:calc(100vh - 56px - 90px);}
 #pgMsg.on{display:flex !important;}
 .msg-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
 .msg-row:hover{background:var(--bg);}
@@ -172,18 +172,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .msg-preview{font-size:12.5px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .msg-unread .msg-name{font-weight:800;}
 .msg-unread .msg-preview{color:var(--ink);font-weight:600;}
-#msgConvActive{padding-bottom:0;}
 @media(max-width:768px){
-  #pgMsg{height:calc(100vh - 56px - 80px);}
   #msgListPane{max-width:100% !important;border-right:none;}
   #msgConvPane{display:none;}
   #pgMsg.conv-open #msgListPane{display:none;}
   #pgMsg.conv-open #msgConvPane{display:flex !important;}
   #msgBackBtn{display:flex !important;}
-  #msgConvActive > div:last-child{padding-bottom:max(12px,env(safe-area-inset-bottom));}
-}
-@media(min-width:769px){
-  #pgMsg{height:calc(100vh - 56px - 80px);}
 }
 .bnav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--wh);border-radius:50px;display:none;z-index:60;padding:7px 10px;box-shadow:0 8px 32px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.06);align-items:center;gap:2px;}
 .bnav.on{display:flex;}
@@ -1549,6 +1543,14 @@ function closeMsg(){
   clearInterval(msgPollTimer);msgPollTimer=null;
   msgDestId=null;
 }
+
+// Cacher la barre du bas quand le clavier s'ouvre
+document.addEventListener('DOMContentLoaded',function(){
+  var inp=g('msgInput');
+  if(!inp)return;
+  inp.addEventListener('focus',function(){var nav=g('bnav');if(nav)nav.style.display='none';});
+  inp.addEventListener('blur',function(){setTimeout(function(){var nav=g('bnav');if(nav&&user)nav.style.display='flex';},100);});
+});
 
 async function loadConversations(){
   if(!user)return;
