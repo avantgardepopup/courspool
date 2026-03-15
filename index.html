@@ -939,8 +939,8 @@ function renderPage(){
     var bc=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
     var isR=!!res[c.id],isFull=c.fl>=c.sp;
     var btn;
-    if(isR)btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')">✓ Inscrit · +1 ami</button>';
-    else if(isFull)btn='<button class="btnfull">Complet</button>';
+    if(isR)btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
+    else if(isFull)btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet · Suivre le prof</button>';
     else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
     var profAv=c.prof_photo?'<img src="'+c.prof_photo+'" style="width:100%;height:100%;object-fit:cover">':c.prof_ini;
     var d=document.createElement('div');
@@ -1046,18 +1046,39 @@ function confO(){
   var id=curId;closeM('bdO');
   var c=C.find(function(x){return x.id===id});
   if(!c||c.fl>=c.sp){if(c)openF(c.pr,c.title);return;}
-  // Réserver directement pour un ami sans passer par la modal
-  if(!user||!user.id)return;
-  fetch(API+'/reservations/ami',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    user_id:user.id,cours_id:id,
-    montant_paye:Math.ceil(c.tot/c.sp),
-    type_paiement:'total',
-    pour_ami:true
-  })}).then(function(r){return r.ok?r.json():r.json().then(function(d){throw new Error(d.error||'Erreur');});})
-  .then(function(){
-    c.fl+=1;buildCards();
-    toast('Place réservée pour votre ami !',Math.ceil(c.tot/c.sp)+'€ · Confirmé ✓');
-  }).catch(function(e){toast('Erreur',e.message||'Impossible de réserver');});
+  // Afficher la modal de paiement pour une autre personne
+  curId=id;
+  var pp=Math.ceil(c.tot/c.sp);
+  g('rTit').textContent=c.title+' · Place supplémentaire';
+  g('rSbj').textContent=c.subj;
+  g('rDt').textContent=c.dt;
+  g('rLc').textContent=c.lc;
+  g('rTot').textContent=c.tot+'€';
+  g('rCnt').textContent=c.sp+' places max';
+  g('rFin').textContent=pp+'€';
+  g('rFinB').textContent=pp+'€';
+  g('rInf').textContent='Réservation d\'une place supplémentaire · '+pp+'€ par personne.';
+  var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector('#bdR .pb.pri'),btnContact=document.querySelector('#bdR .pb.sec');
+  if(btnDel)btnDel.style.display='none';
+  if(btnEleves)btnEleves.style.display='none';
+  if(btnConf){btnConf.style.display='flex';btnConf.onclick=function(){confAmi(id);};}
+  if(btnContact)btnContact.style.display='flex';
+  openM('bdR');
+}
+
+async function confAmi(id){
+  var c=C.find(function(x){return x.id===id});
+  if(!c)return;
+  if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
+  try{
+    var r=await fetch(API+'/reservations/ami',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,cours_id:id,montant_paye:Math.ceil(c.tot/c.sp),type_paiement:'total'})});
+    if(!r.ok){toast('Erreur','Impossible de réserver');return;}
+    c.fl+=1;closeM('bdR');buildCards();
+    toast('Place ajoutée !',Math.ceil(c.tot/c.sp)+'€ · Confirmé ✓');
+    // Remettre le bouton confirmer original
+    var btnConf=document.querySelector('#bdR .pb.pri');
+    if(btnConf)btnConf.onclick=confR;
+  }catch(e){toast('Erreur réseau','Impossible de réserver');}
 }
 
 function shareCoursLink(){
