@@ -181,21 +181,37 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   #msgBackBtn{display:flex !important;}
   #msgConvActive{padding-bottom:80px;}
 }
-.bnav{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--wh);border-radius:50px;display:none;z-index:60;padding:7px 10px;box-shadow:0 8px 32px rgba(0,0,0,.15),0 2px 8px rgba(0,0,0,.06);align-items:center;gap:2px;}
+.bnav{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:50px;display:none;z-index:60;
+  padding:8px 12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.8) inset,0 0 0 1px rgba(0,0,0,.06);
+  align-items:center;gap:4px;
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+}
 .bnav.on{display:flex;}
-.bni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:9px 16px;border-radius:40px;color:var(--lite);transition:all .2s;position:relative;}
-.bni.on{background:var(--or);color:#fff;}
-.bni:not(.on):hover{color:var(--or);}
-.bni svg{width:20px;height:20px;}
-.bni span{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
-.bni-badge{position:absolute;top:6px;right:10px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid var(--wh);}
+.bni{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;padding:8px 14px;border-radius:40px;
+  color:var(--lite);transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  position:relative;min-width:58px;
+}
+.bni.on{background:var(--or);color:#fff;box-shadow:0 3px 10px rgba(255,107,43,.35);}
+.bni:not(.on):hover{color:var(--or);background:rgba(255,107,43,.08);}
+.bni svg{width:20px;height:20px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.bni.on svg{transform:scale(1.1);}
+.bni span{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.bni-badge{position:absolute;top:4px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.85);}
 .bni-badge.on{display:flex;}
+.bni-sep{width:1px;height:20px;background:rgba(0,0,0,.08);margin:0 2px;}
 .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
 .pw-toggle:hover{color:var(--or);}
 .pw-toggle svg{width:18px;height:18px;}
 @media(max-width:640px){
-  .bnav{bottom:12px;padding:5px 8px;}
-  .bni{padding:8px 12px;}
+  .bnav{bottom:16px;}
+  .bni{padding:7px 12px;min-width:50px;}
   #app .cnt{padding-bottom:90px;}
   .acc-body{padding-bottom:90px;}
 }
@@ -688,16 +704,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span>Explorer</span>
   </div>
+  <div class="bni-sep"></div>
   <div class="bni" id="bniMsg" onclick="navTo('msg')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
     <span>Messages</span>
   </div>
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:0 8px">
-    <div style="width:46px;height:46px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.4);transition:transform .2s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <div class="bni-sep" id="bniSepAdd" style="display:none"></div>
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:0 6px">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.45);transition:transform .25s cubic-bezier(.34,1.56,.64,1)" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
   </div>
+  <div class="bni-sep"></div>
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <span>Profil</span>
@@ -837,54 +856,63 @@ function navTo(tab){
   g('pgAcc').classList.remove('on');
   g('pgMsg').classList.remove('on');
   var nav=g('bnav');
+
   if(tab==='exp'){
     g('pgExp').classList.add('on');
     g('bniExp').classList.add('on');
-    // Barre normale
-    if(nav){nav.style.transition='all .3s';nav.style.borderRadius='50px';nav.style.padding='7px 10px';nav.style.left='50%';nav.style.transform='translateX(-50%)';}
-    document.querySelectorAll('.bni span,.bni svg:not(:first-child)').forEach(function(e){e.style.display='';});
-    document.querySelectorAll('#bniMsg,#bniAcc,#bniAdd').forEach(function(e){if(e)e.style.display='';});
+    // Restaurer la barre normale centrée
+    restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
     g('pgMsg').classList.add('on');
-    g('bniMsg').classList.add('on');
     // Réduire la barre à un bouton retour en bas à gauche
     if(nav){
-      nav.style.transition='all .3s';
       nav.style.left='20px';
       nav.style.transform='none';
       nav.style.padding='8px 12px';
-      nav.style.borderRadius='50px';
     }
-    // Cacher tous les items sauf Explorer
-    var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
-    if(bniMsg)bniMsg.style.display='none';
-    if(bniAcc)bniAcc.style.display='none';
-    if(bniAdd)bniAdd.style.display='none';
-    // Changer Explorer en "← Retour"
     var bniExp=g('bniExp');
-    if(bniExp){bniExp.classList.add('on');bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg><span>Retour</span>';}
+    if(bniExp){
+      bniExp.classList.add('on');
+      bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg><span>Retour</span>';
+      bniExp.onclick=function(){navTo('exp');};
+    }
+    // Cacher les autres items
+    ['bniMsg','bniAcc','bniAdd','bniSepAdd'].forEach(function(id){var e=g(id);if(e)e.style.display='none';});
+    document.querySelectorAll('.bni-sep').forEach(function(e){e.style.display='none';});
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
     g('pgAcc').classList.add('on');
     g('bniAcc').classList.add('on');
-    if(nav){nav.style.transition='all .3s';nav.style.left='50%';nav.style.transform='translateX(-50%)';}
+    restoreNav();
     goAccount();
   }
 }
 
-function goExplore(){
-  // Restaurer la barre normale
-  var bniExp=g('bniExp');
-  if(bniExp){bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Explorer</span>';}
-  var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
-  if(bniMsg)bniMsg.style.display='';
-  if(bniAcc)bniAcc.style.display='';
-  if(bniAdd&&user&&user.role==='professeur')bniAdd.style.display='flex';
+function restoreNav(){
   var nav=g('bnav');
   if(nav){nav.style.left='50%';nav.style.transform='translateX(-50%)';}
-  navTo('exp');
+  // Restaurer le bouton Explorer
+  var bniExp=g('bniExp');
+  if(bniExp){
+    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Explorer</span>';
+    bniExp.onclick=function(){navTo('exp');};
+  }
+  // Réafficher tous les items
+  var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display='';
+  var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
+  if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
+  document.querySelectorAll('.bni-sep').forEach(function(e){e.style.display='';});
+}
+
+function goExplore(){
+  g('pgExp').classList.add('on');
+  g('pgAcc').classList.remove('on');
+  g('pgMsg').classList.remove('on');
+  ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  var b=g('bniExp');if(b)b.classList.add('on');
+  restoreNav();
 }
 
 function goExplore(){
