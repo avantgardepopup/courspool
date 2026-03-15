@@ -159,5 +159,32 @@ app.get('/messages/:user1/:user2', async (req, res) => {
   res.json(data);
 });
 
+// UPLOAD PHOTO PROFIL
+app.post('/upload/photo', async (req, res) => {
+  const { base64, userId, filename } = req.body;
+  if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  const buffer = Buffer.from(base64.split(',')[1], 'base64');
+  const ext = filename ? filename.split('.').pop() : 'jpg';
+  const path = userId + '/avatar.' + ext;
+  const { data, error } = await supabase.storage
+    .from('photos')
+    .upload(path, buffer, { contentType: 'image/'+ext, upsert: true });
+  if (error) return res.status(500).json({ error: error.message });
+  const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
+  // Mettre à jour le profil
+  await supabase.from('profiles').update({ photo_url: urlData.publicUrl }).eq('id', userId);
+  res.json({ url: urlData.publicUrl });
+});
+
+// SUPPRIMER UN COURS
+app.delete('/cours/:id', async (req, res) => {
+  const { data, error } = await supabase
+    .from('cours')
+    .delete()
+    .eq('id', req.params.id);
+  if (error) return res.status(500).json({ error });
+  res.json({ success: true });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('CoursPool API sur le port ' + PORT));
