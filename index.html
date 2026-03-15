@@ -173,6 +173,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .msg-unread .msg-name{font-weight:800;}
 .msg-unread .msg-preview{color:var(--ink);font-weight:600;}
 @media(max-width:768px){
+  #pgMsg{height:calc(100svh - 56px - 90px);}
   #msgListPane{max-width:100% !important;border-right:none;}
   #msgConvPane{display:none;}
   #pgMsg.conv-open #msgListPane{display:none;}
@@ -1543,14 +1544,6 @@ function closeMsg(){
   clearInterval(msgPollTimer);msgPollTimer=null;
   msgDestId=null;
 }
-
-// Cacher la barre du bas quand le clavier s'ouvre
-document.addEventListener('DOMContentLoaded',function(){
-  var inp=g('msgInput');
-  if(!inp)return;
-  inp.addEventListener('focus',function(){var nav=g('bnav');if(nav)nav.style.display='none';});
-  inp.addEventListener('blur',function(){setTimeout(function(){var nav=g('bnav');if(nav&&user)nav.style.display='flex';},100);});
-});
 
 async function loadConversations(){
   if(!user)return;
