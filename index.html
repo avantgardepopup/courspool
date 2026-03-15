@@ -161,7 +161,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
 /* MESSAGING PAGE */
-#pgMsg{height:calc(100vh - 56px - 80px);}
 #pgMsg.on{display:flex !important;}
 .msg-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
 .msg-row:hover{background:var(--bg);}
@@ -375,7 +374,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <!-- PAGE MESSAGES -->
-  <div class="pg" id="pgMsg" style="height:calc(100vh - 56px);display:none;flex-direction:row">
+  <div class="pg" id="pgMsg" style="height:calc(100vh - 56px - 70px);display:none;flex-direction:row">
 
     <!-- LISTE CONVERSATIONS -->
     <div id="msgListPane" style="width:100%;max-width:380px;border-right:1px solid var(--bdr);display:flex;flex-direction:column;height:100%">
