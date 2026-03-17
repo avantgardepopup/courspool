@@ -2,13 +2,13 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>CoursPool</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#FF6B2B">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CoursPool">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -30,7 +30,17 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{overflow-x:hidden;max-width:100vw;width:100%;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  /* Empêcher le rebond iOS */
+  overscroll-behavior:none;
+}
+/* Safe area iOS — s'assurer que rien ne touche le notch ni le home indicator */
+:root{
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
 #login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 .lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
 .lhero{background:linear-gradient(135deg,var(--or),var(--ord));padding:32px 28px 24px;color:#fff;position:relative;overflow:hidden;}
@@ -45,7 +55,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .lf{display:none;}.lf.on{display:block;}
 .lfield{margin-bottom:12px;}
 .lfield label{font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:4px;}
-.lfield input,.lfield select,.lfield textarea{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;background:var(--wh);}
+.lfield input,.lfield select,.lfield textarea{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);}
 .lfield input:focus,.lfield select:focus{border-color:var(--or);}
 .lfield input::placeholder{color:var(--lite);}
 .lbtn{width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:6px;transition:background .18s;}
@@ -64,7 +74,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ttitle{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 .sw{flex:1;min-width:0;position:relative;}
-.sw input{width:100%;background:var(--bg);border:1.5px solid transparent;border-radius:50px;padding:8px 12px 8px 34px;font-family:inherit;font-size:13px;outline:none;transition:border .18s;}
+.sw input{width:100%;background:var(--bg);border:1.5px solid transparent;border-radius:50px;padding:8px 12px 8px 34px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;}
 .sw input:focus{border-color:var(--or);background:var(--wh);}
 .sw input::placeholder{color:var(--lite);}
 .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--lite);}
@@ -80,7 +90,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mob-header{
   display:block;
   padding:14px 20px 10px;
-  padding-top:max(14px,env(safe-area-inset-top));
+  padding-top:max(20px,env(safe-area-inset-top,0px));
   background:var(--wh);
   border-bottom:1px solid var(--bdr);
   position:sticky;top:0;z-index:50;
@@ -90,7 +100,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
 .mob-actions{display:flex;align-items:center;gap:10px;}
 .mob-search{display:block;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:sticky;top:62px;z-index:49;}
-.mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:14px;outline:none;}
+.mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:16px;outline:none;}
 .mob-search .si{top:50%;left:31px;}
 
 .pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;}
@@ -164,7 +174,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
 .atab svg{width:14px;height:14px;}
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
-.acc-body{padding:20px 16px;max-width:800px;padding-bottom:120px;}
+.acc-body{padding:20px 20px;max-width:800px;padding-bottom:120px;}
 .asec{display:none;}.asec.on{display:block;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
 .rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;}
@@ -189,7 +199,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .fg{margin-bottom:12px;}
 .flbl{font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:4px;}
-.fi2{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;background:var(--wh);}
+.fi2{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);}
 .fi2:focus{border-color:var(--or);}
 .notif-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bdr);}
 .notif-row:last-child{border-bottom:none;}
@@ -312,20 +322,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     transform:none !important;
     width:100%;
     justify-content:space-around;
-    padding:8px 4px;
-    padding-bottom:max(8px,env(safe-area-inset-bottom));
+    padding:10px 4px;
+    padding-bottom:max(16px,env(safe-area-inset-bottom,0px));
     backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     border-top:1px solid rgba(0,0,0,.06);
     box-shadow:0 -1px 0 rgba(0,0,0,.05);
     gap:0;
+    background:rgba(255,255,255,0.95);
   }
   .bni{padding:6px 16px;min-width:0;flex:1;border-radius:0;}
   .bni.on{background:transparent;box-shadow:none;color:var(--or);}
   .bni svg{width:22px;height:22px;}
   .bni span{font-size:10px;}
   .bni-sep{display:none !important;}
-  #app .cnt{padding-bottom:100px;}
-  .acc-body{padding-bottom:100px;}
+  #app .cnt{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
+  .acc-body{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
 }
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
 .rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
@@ -358,7 +369,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .so{border:1.5px solid var(--bdr);border-radius:10px;padding:9px;text-align:center;cursor:pointer;transition:all .18s;font-size:12.5px;font-weight:500;color:var(--mid);}
 .so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
-.fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;transition:border .18s;background:var(--wh);}
+.fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);}
 .fi3:focus{border-color:var(--or);}
 .toast{position:fixed;bottom:24px;right:20px;left:20px;max-width:400px;margin:0 auto;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);pointer-events:none;transition:all .28s;}
 .toast.on{opacity:1;transform:translateY(0);}
@@ -636,7 +647,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com"></div>
         <div class="lfield"><label>Mot de passe</label>
           <div style="position:relative">
-            <input id="lPw" type="password" placeholder="••••••••" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:14px;outline:none;">
+            <input id="lPw" type="password" placeholder="••••••••" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:16px;outline:none;">
             <span class="pw-toggle" onclick="togglePw('lPw',this)">
               <svg id="lPwIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </span>
@@ -654,7 +665,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com"></div>
         <div class="lfield"><label>Mot de passe</label>
           <div style="position:relative">
-            <input id="rPw" type="password" placeholder="Min. 6 caractères" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:14px;outline:none;">
+            <input id="rPw" type="password" placeholder="Min. 6 caractères" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 40px 10px 12px;font-family:inherit;font-size:16px;outline:none;">
             <span class="pw-toggle" onclick="togglePw('rPw',this)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </span>
@@ -889,14 +900,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
         <!-- RÉSERVATIONS -->
         <div class="asec on" id="asecR">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Cours à venir</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px" id="listR"></div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Cours à venir</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px" id="listR"></div>
         </div>
 
         <!-- PROFS SUIVIS -->
         <div class="asec" id="asecF">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Professeurs suivis</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px" id="listF"></div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px" id="listF"></div>
         </div>
 
         <!-- PAIEMENTS PROF — Stripe -->
@@ -1006,19 +1017,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
             <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
-              <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+              <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
             <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Nom</span>
-              <input id="pfNm" type="text" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+              <input id="pfNm" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
             <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Email</span>
-              <input id="pfEm" type="email" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+              <input id="pfEm" type="email" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
             <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Ville</span>
-              <input id="pfVille" type="text" placeholder="Paris…" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+              <input id="pfVille" type="text" placeholder="Paris…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
             <div style="display:flex;align-items:center;padding:13px 16px">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Rôle</span>
@@ -1052,7 +1063,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               </div>
               <div style="display:flex;align-items:center;padding:13px 16px">
                 <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Matières</span>
-                <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+                <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
               </div>
             </div>
           </div>
@@ -1700,7 +1711,7 @@ function navTo(tab){
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
     if(pgMsg)pgMsg.classList.add('on');
-    if(nav){var isMob=window.innerWidth<=640;if(!isMob){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}}
+    if(nav){var isMob=window.innerWidth<=640;if(!isMob){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}else{nav.style.left='';nav.style.transform='';nav.style.padding='';}}
     var bniExp=g('bniExp');
     if(bniExp){
       bniExp.classList.add('on');
@@ -1724,11 +1735,11 @@ function restoreNav(){
   if(nav){
     var isMobile=window.innerWidth<=640;
     if(isMobile){
-      nav.style.left='0';nav.style.transform='none';
+      // Sur mobile : tout géré par CSS, on ne touche à rien sauf display
+      nav.style.left='';nav.style.transform='';nav.style.padding='';
     } else {
-      nav.style.left='50%';nav.style.transform='translateX(-50%)';
+      nav.style.left='50%';nav.style.transform='translateX(-50%)';nav.style.padding='8px 12px';
     }
-    nav.style.padding='8px 12px';
     if(user)nav.style.display='flex';
   }
   // Restaurer le bouton Explorer
@@ -2103,18 +2114,51 @@ function openR(id){
 }
 function closeR(){closeM('bdR');}
 
-function openEleves(id){
+async function openEleves(id){
   var c=C.find(function(x){return x.id===id;});
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' inscrit'+(c.fl>1?'s':'');
   var list=g('elevesList');
-  if(c.fl===0){
-    list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';
-  } else {
-    list.innerHTML='<div style="background:var(--orp);border-radius:12px;padding:14px;margin-bottom:12px;font-size:13px;color:var(--mid);line-height:1.6">📋 <strong>'+c.fl+' élève'+(c.fl>1?'s':'')+' inscrit'+(c.fl>1?'s':'')+'</strong> sur '+c.sp+' places.<br>La liste détaillée sera disponible avec la messagerie intégrée.</div>'
-      +'<div style="text-align:center;padding:20px 0"><div style="font-size:32px;margin-bottom:8px">💬</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">Messagerie bientôt disponible</div><div style="font-size:13px;color:var(--lite)">Vous pourrez contacter chaque élève directement.</div></div>';
-  }
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">⏳ Chargement…</div>';
   openM('bdEleves');
+  if(c.fl===0){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
+  try{
+    var r=await fetch(API+'/reservations/cours/'+id);
+    var data=await r.json();
+    if(!Array.isArray(data)||!data.length){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
+    list.innerHTML='<div style="margin-bottom:12px;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--mid)">📋 <strong>'+data.length+' élève'+(data.length>1?'s':'')+' inscrit'+(data.length>1?'s':'')+'</strong> sur '+c.sp+' places</div>'
+      +data.map(function(res){
+        var nom=((res.prenom||'')+(res.nom?' '+res.nom:'')).trim()||'Élève';
+        var email=res.email||'';
+        var montant=res.montant_paye||0;
+        var date=res.created_at?new Date(res.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
+        var ini=nom[0]||'?';
+        return'<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--bdr)">'
+          +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0">'+ini+'</div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--ink)">'+nom+'</div>'
+          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+email+(date?' · '+date:'')+'</div></div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px">'+montant+'€</div>'
+          +('<button onclick="cancelEleveReservation('+JSON.stringify(res.reservation_id)+','+JSON.stringify(res.user_id)+','+JSON.stringify(id)+','+montant+')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>')
+          +'</div></div>';
+      }).join('');
+  }catch(e){
+    list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Impossible de charger.<br><a onclick="openEleves(\''+id+'\')" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+  }
+}
+
+async function cancelEleveReservation(reservationId,userId,coursId,montant){
+  if(!confirm('Annuler et rembourser cet élève ?'))return;
+  try{
+    var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
+    var data=await r.json();
+    if(data.error){toast('Erreur',data.error);return;}
+    toast('Annulé','L\'élève a été remboursé automatiquement ✓');
+    openEleves(coursId);
+    var c=C.find(function(x){return x.id===coursId;});
+    if(c&&c.fl>0)c.fl--;
+    buildCards();
+  }catch(e){toast('Erreur réseau','Impossible d\'annuler');}
 }
 async function confR(){
   var id=curId;
@@ -2394,11 +2438,12 @@ async function confirmDeleteCours(){
   closeM('bdConfirmDel');
   closeM('bdR');
   try{
-    var r=await fetch(API+'/cours/'+id,{method:'DELETE'});
+    var r=await fetch(API+'/cours/'+id+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({professeur_id:user.id})});
     var data=await r.json();
-    if(data.error){toast('Erreur','Impossible d\'annuler ce cours');return;}
+    if(data.error){toast('Erreur',data.error);return;}
     await loadData();buildCards();
-    toast('Cours annulé','Votre cours a été supprimé');
+    var nb=data.remboursements||0;
+    toast('Cours annul\u00e9',nb>0?nb+' \u00e9l\u00e8ve'+(nb>1?'s':'')+' rembours\u00e9'+(nb>1?'s':'')+' automatiquement \u2713':'Cours supprim\u00e9');
   }catch(e){toast('Erreur réseau','Impossible d\'annuler ce cours');}
   window._deleteId=null;
 }
@@ -2458,6 +2503,7 @@ function closeMsgConv(){
     var isMob=window.innerWidth<=640;
     bnav.style.display='flex';
     if(!isMob){bnav.style.left='50%';bnav.style.transform='translateX(-50%)';}
+    else{bnav.style.left='';bnav.style.transform='';bnav.style.padding='';}
   }
   clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
