@@ -3,10 +3,6 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const Stripe = require('stripe');
 const compression = require('compression');
-
-// PING
-app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
-
 const { Resend } = require('resend');
 
 const app = express();
@@ -179,14 +175,6 @@ app.get('/cours', async (req, res) => {
   res.json(data);
 });
 
-
-// PROFILES — récupérer un profil par ID
-app.get('/profiles/:id', async (req, res) => {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', req.params.id).single();
-  if (error) return res.status(404).json({});
-  res.json(data || {});
-});
-
 // COURS — créer
 app.post('/cours', async (req, res) => {
   const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description } = req.body;
@@ -205,17 +193,6 @@ app.delete('/cours/:id', async (req, res) => {
   const { error } = await supabase.from('cours').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ error });
   res.json({ success: true });
-});
-
-// COURS — récupérer par code d'accès (cours privés)
-app.get('/cours/code/:code', async (req, res) => {
-  const { data, error } = await supabase
-    .from('cours')
-    .select('*')
-    .eq('code_acces', req.params.code.toUpperCase())
-    .single();
-  if (error || !data) return res.status(404).json({ error: 'Cours introuvable' });
-  res.json(data);
 });
 
 // RESERVATIONS — créer
@@ -261,126 +238,6 @@ app.get('/reservations/:user_id', async (req, res) => {
   res.json(data);
 });
 
-
-// ============================================================
-// STRIPE CONNECT — paiements directs aux professeurs
-// ============================================================
-
-const COMMISSION_TAUX = 0.15; // 15% commission CoursPool
-
-// Créer un compte Stripe Connect Express pour un prof
-app.post('/stripe/connect/create', async (req, res) => {
-  const { prof_id, email } = req.body;
-  if (!prof_id || !email) return res.status(400).json({ error: 'Données manquantes' });
-  try {
-    // Vérifier si déjà un compte
-    const { data: prof } = await supabase.from('profiles').select('stripe_account_id').eq('id', prof_id).single();
-    if (prof?.stripe_account_id) return res.json({ account_id: prof.stripe_account_id, already_exists: true });
-
-    const account = await stripe.accounts.create({
-      type: 'express',
-      email,
-      capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
-      business_type: 'individual',
-      metadata: { prof_id }
-    });
-
-    await supabase.from('profiles').update({ stripe_account_id: account.id }).eq('id', prof_id);
-    res.json({ account_id: account.id });
-  } catch(e) {
-    console.log('Connect create error:', e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Générer le lien d'onboarding Stripe (où le prof entre son IBAN)
-app.post('/stripe/connect/onboard', async (req, res) => {
-  const { stripe_account_id } = req.body;
-  if (!stripe_account_id) return res.status(400).json({ error: 'stripe_account_id manquant' });
-  try {
-    const link = await stripe.accountLinks.create({
-      account: stripe_account_id,
-      refresh_url: 'https://courspool.vercel.app?stripe_refresh=1',
-      return_url: 'https://courspool.vercel.app?stripe_connected=1',
-      type: 'account_onboarding'
-    });
-    res.json({ url: link.url });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Vérifier le statut du compte Connect d'un prof (par stripe_account_id)
-app.get('/stripe/connect/status/:stripe_account_id', async (req, res) => {
-  try {
-    const account = await stripe.accounts.retrieve(req.params.stripe_account_id);
-    res.json({
-      charges_enabled: account.charges_enabled,
-      payouts_enabled: account.payouts_enabled,
-      details_submitted: account.details_submitted,
-      requirements: account.requirements?.currently_due || []
-    });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Vérifier le statut Connect d'un prof via son prof_id Supabase
-app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
-  try {
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('stripe_account_id')
-      .eq('id', req.params.prof_id)
-      .single();
-
-    if (!prof?.stripe_account_id) {
-      return res.json({ stripe_account_id: null, charges_enabled: false, details_submitted: false });
-    }
-
-    const account = await stripe.accounts.retrieve(prof.stripe_account_id);
-    res.json({
-      stripe_account_id: prof.stripe_account_id,
-      charges_enabled: account.charges_enabled,
-      payouts_enabled: account.payouts_enabled,
-      details_submitted: account.details_submitted,
-      requirements: account.requirements?.currently_due || []
-    });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-
-// Créer un SetupIntent pour enregistrer l'IBAN du prof
-app.post('/stripe/connect/setup-intent', async (req, res) => {
-  const { stripe_account_id } = req.body;
-  if (!stripe_account_id) return res.status(400).json({ error: 'stripe_account_id manquant' });
-  try {
-    const setupIntent = await stripe.setupIntents.create({
-      payment_method_types: ['sepa_debit'],
-      usage: 'off_session',
-    }, { stripeAccount: stripe_account_id });
-    res.json({ client_secret: setupIntent.client_secret });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Notifier que l'IBAN a été enregistré (mise à jour Supabase)
-app.post('/stripe/connect/iban-saved', async (req, res) => {
-  const { prof_id, stripe_account_id } = req.body;
-  if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
-  try {
-    await supabase.from('profiles')
-      .update({ stripe_account_id, iban_configured: true })
-      .eq('id', prof_id);
-    res.json({ success: true });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', async (req, res) => {
   const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
@@ -391,46 +248,12 @@ app.post('/stripe/checkout', async (req, res) => {
     const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
     const cancelUrl = baseUrl + '?cancelled=1';
 
-    // Récupérer le cours + compte Stripe Connect du prof
-    let paymentIntentData = { metadata: { cours_id, user_id, montant: montant.toString(), cours_titre: cours_titre || '' } };
-    try {
-      const { data: coursData } = await supabase
-        .from('cours')
-        .select('professeur_id, prix_total, places_max')
-        .eq('id', cours_id)
-        .single();
-
-      if (coursData?.professeur_id) {
-        const { data: profData } = await supabase
-          .from('profiles')
-          .select('stripe_account_id')
-          .eq('id', coursData.professeur_id)
-          .single();
-
-        if (profData?.stripe_account_id) {
-          // Commission = 15% du PRIX TOTAL DU COURS divisé par nombre de places
-          // L'élève paie son montant normal, la commission est prélevée en coulisse
-          const prixTotal = coursData.prix_total || (montant * (coursData.places_max || 1));
-          const placesMax = coursData.places_max || 1;
-          const commissionParPlace = Math.round((prixTotal * COMMISSION_TAUX / placesMax) * 100);
-          // Le prof reçoit : montant - commission par place
-          // Ex: cours 60€, 4 places → 15€/élève, commission = 60*0.15/4 = 2.25€/élève, prof reçoit 12.75€/élève
-          paymentIntentData.application_fee_amount = commissionParPlace;
-          paymentIntentData.transfer_data = { destination: profData.stripe_account_id };
-        }
-      }
-    } catch(e) { console.log('Connect lookup error:', e.message); }
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
           currency: 'eur',
-          product_data: {
-            name: cours_titre || 'Réservation CoursPool',
-            description: 'Cours CoursPool — Paiement sécurisé',
-            images: ['https://courspool.vercel.app/icon-192.png'],
-          },
+          product_data: { name: cours_titre || 'Réservation CoursPool' },
           unit_amount: Math.round(montant * 100),
         },
         quantity: 1,
@@ -439,11 +262,6 @@ app.post('/stripe/checkout', async (req, res) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: { cours_id, user_id, montant: montant.toString() },
-      payment_intent_data: paymentIntentData,
-      // Branding CoursPool — masque la marque Stripe
-      custom_text: {
-        submit: { message: 'Votre paiement est sécurisé. Vous recevrez une confirmation par email.' }
-      },
     });
     res.json({ url: session.url });
   } catch (e) {
@@ -568,7 +386,7 @@ app.post('/email/verification', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// STRIPE — paiements globaux (admin)
+// STRIPE — récupérer les paiements réels
 app.get('/stripe/payments', async (req, res) => {
   try {
     const payments = await stripe.paymentIntents.list({ limit: 100 });
@@ -578,161 +396,9 @@ app.get('/stripe/payments', async (req, res) => {
       currency: p.currency,
       status: p.status,
       created: new Date(p.created * 1000).toISOString(),
-      cours_titre: p.metadata?.cours_titre || null,
-      cours_id: p.metadata?.cours_id || null,
-      user_id: p.metadata?.user_id || null,
     }));
     res.json(result);
   } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// STRIPE — paiements d'un professeur spécifique
-app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
-  const { prof_id } = req.params;
-  try {
-    // Récupérer tous les cours de ce prof
-    const { data: cours } = await supabase
-      .from('cours')
-      .select('id, titre')
-      .eq('professeur_id', prof_id);
-
-    if (!cours || !cours.length) return res.json([]);
-
-    const coursIds = cours.map(c => c.id);
-    const coursMap = {};
-    cours.forEach(c => { coursMap[c.id] = c.titre; });
-
-    // Récupérer les réservations Stripe pour ces cours
-    const { data: reservations } = await supabase
-      .from('reservations')
-      .select('cours_id, montant_paye, created_at, type_paiement')
-      .in('cours_id', coursIds)
-      .in('type_paiement', ['stripe', 'stripe_ami'])
-      .order('created_at', { ascending: false });
-
-    if (!reservations) return res.json([]);
-
-    const result = reservations.map(r => ({
-      id: r.cours_id + '_' + r.created_at,
-      amount: r.montant_paye || 0,
-      currency: 'eur',
-      status: 'succeeded',
-      created: r.created_at,
-      cours_titre: coursMap[r.cours_id] || 'Cours',
-      cours_id: r.cours_id,
-    }));
-
-    res.json(result);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-
-// RESERVATIONS — liste des élèves inscrits à un cours (pour le prof)
-app.get('/reservations/cours/:cours_id', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('id, user_id, cours_id, montant_paye, created_at')
-      .eq('cours_id', req.params.cours_id)
-      .order('created_at', { ascending: true });
-    if (error) return res.status(500).json({ error });
-
-    // Enrichir avec les infos du profil de chaque élève
-    const enriched = await Promise.all((data || []).map(async (r) => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('prenom, nom, email')
-        .eq('id', r.user_id)
-        .single();
-      return {
-        reservation_id: r.id,
-        user_id: r.user_id,
-        cours_id: r.cours_id,
-        montant_paye: r.montant_paye,
-        created_at: r.created_at,
-        prenom: profile?.prenom || '',
-        nom: profile?.nom || '',
-        email: profile?.email || ''
-      };
-    }));
-    res.json(enriched);
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// RESERVATIONS — annuler une réservation d'un élève + remboursement Stripe
-app.post('/reservations/:id/cancel', async (req, res) => {
-  const { user_id, cours_id, montant } = req.body;
-  try {
-    // Récupérer le payment_intent_id si disponible
-    const { data: reservation } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('id', req.params.id)
-      .single();
-
-    // Supprimer la réservation
-    await supabase.from('reservations').delete().eq('id', req.params.id);
-
-    // Décrémenter places_prises
-    const { data: cours } = await supabase.from('cours').select('places_prises').eq('id', cours_id).single();
-    if (cours) {
-      await supabase.from('cours').update({ places_prises: Math.max(0, (cours.places_prises||1) - 1) }).eq('id', cours_id);
-    }
-
-    // Tenter le remboursement Stripe si payment_intent disponible
-    let rembourse = false;
-    if (reservation?.stripe_payment_intent_id) {
-      try {
-        await stripe.refunds.create({ payment_intent: reservation.stripe_payment_intent_id });
-        rembourse = true;
-      } catch(e) { console.log('Refund error:', e.message); }
-    }
-
-    res.json({ success: true, rembourse });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// COURS — annuler un cours complet + rembourser tous les élèves
-app.post('/cours/:id/cancel', async (req, res) => {
-  const cours_id = req.params.id;
-  try {
-    // Récupérer toutes les réservations du cours
-    const { data: reservations } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('cours_id', cours_id);
-
-    let remboursements = 0;
-
-    // Rembourser chaque élève
-    for (const r of (reservations || [])) {
-      // Supprimer la réservation
-      await supabase.from('reservations').delete().eq('id', r.id);
-
-      // Remboursement Stripe si payment_intent disponible
-      if (r.stripe_payment_intent_id) {
-        try {
-          await stripe.refunds.create({ payment_intent: r.stripe_payment_intent_id });
-          remboursements++;
-        } catch(e) { console.log('Refund error:', e.message); }
-      } else {
-        remboursements++; // Compter quand même pour l'affichage
-      }
-    }
-
-    // Supprimer le cours
-    await supabase.from('cours').delete().eq('id', cours_id);
-
-    res.json({ success: true, remboursements });
-  } catch(e) {
     res.status(500).json({ error: e.message });
   }
 });
@@ -798,21 +464,6 @@ app.post('/upload/photo', async (req, res) => {
   const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
   await supabase.from('profiles').update({ photo_url: urlData.publicUrl }).eq('id', userId);
   res.json({ url: urlData.publicUrl });
-});
-
-// UPLOAD CNI professeur
-app.post('/upload/cni', async (req, res) => {
-  const { base64, userId, filename } = req.body;
-  if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
-  const buffer = Buffer.from(base64.split(',')[1], 'base64');
-  const ext = filename ? filename.split('.').pop() : 'jpg';
-  const path = userId + '/cni.' + ext;
-  const { error } = await supabase.storage
-    .from('cni')
-    .upload(path, buffer, { contentType: 'image/' + ext, upsert: true });
-  if (error) return res.status(500).json({ error: error.message });
-  await supabase.from('profiles').update({ cni_uploaded: true }).eq('id', userId);
-  res.json({ success: true });
 });
 
 // NOTATIONS — noter un cours
