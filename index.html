@@ -174,7 +174,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
 .atab svg{width:14px;height:14px;}
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
-.acc-body{padding:0 16px;max-width:800px;padding-bottom:120px;}
+.acc-body{padding:0 20px;max-width:800px;padding-bottom:120px;}
 .asec{display:none;}.asec.on{display:block;padding-top:4px;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
 .rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;}
@@ -369,7 +369,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .so{border:1.5px solid var(--bdr);border-radius:10px;padding:9px;text-align:center;cursor:pointer;transition:all .18s;font-size:12.5px;font-weight:500;color:var(--mid);}
 .so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
-.fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);}
+.fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);box-sizing:border-box;-webkit-appearance:none;appearance:none;height:46px;}
 .fi3:focus{border-color:var(--or);}
 .toast{position:fixed;bottom:24px;right:20px;left:20px;max-width:400px;margin:0 auto;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);pointer-events:none;transition:all .28s;}
 .toast.on{opacity:1;transform:translateY(0);}
@@ -377,7 +377,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .tico svg{width:13px;height:13px;color:#fff;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
-@media(max-width:640px){.cnt,.acc-body{padding:12px}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
+@media(max-width:640px){.cnt{padding:12px 16px}.acc-body{padding:0 20px !important}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
 
 /* ============================================================
    ONBOARDING — style Apple iOS
@@ -532,6 +532,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 #tutoRoot{display:none;}
 #tutoRoot.on{display:flex !important;animation:tutoFadeIn .3s ease both;}
 @keyframes tutoFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes cpSpin{to{transform:rotate(360deg)}}
+.cp-loader{display:inline-block;width:22px;height:22px;border:2.5px solid var(--orp);border-top-color:var(--or);border-radius:50%;animation:cpSpin .7s linear infinite;vertical-align:middle;margin-right:8px;flex-shrink:0;}
 @keyframes splashBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
 @keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
@@ -1010,7 +1012,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <!-- Liste des paiements -->
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Historique</div>
           <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
-            <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">⏳ Chargement…</div>
+            <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>
           </div>
           <div style="padding:14px 16px;text-align:center">
             <div style="font-size:12px;color:var(--lite);line-height:1.6">Vos paiements sont sécurisés et virés automatiquement sur votre compte bancaire.</div>
@@ -1217,15 +1219,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
-      <div style="display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-bottom:12px">
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
-          <input class="fi3" id="crDate" type="date" style="width:100%;min-width:0;box-sizing:border-box">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label>
-          <input class="fi3" id="crHeure" type="time" style="width:100%;min-width:0;box-sizing:border-box">
-        </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
+        <input class="fi3" id="crDate" type="date" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label>
+        <input class="fi3" id="crHeure" type="time" style="width:100%;box-sizing:border-box">
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label>
         <div style="position:relative">
@@ -2162,7 +2162,7 @@ async function openEleves(id){
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' inscrit'+(c.fl>1?'s':'');
   var list=g('elevesList');
-  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">⏳ Chargement…</div>';
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
   openM('bdEleves');
   if(c.fl===0){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
   try{
@@ -2713,7 +2713,7 @@ async function loadConversations(){
   _convLoading=true;
   var lm=g('listM');
   if(!lm){_convLoading=false;return;}
-  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">⏳ Chargement…</div>';
+  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
   try{
     var r=await fetch(API+'/conversations/'+user.id);
     if(!r.ok)throw new Error('HTTP '+r.status);
@@ -3229,7 +3229,7 @@ async function loadRevenues() {
   var list = g('revList');
   if (!list) return;
 
-  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">⏳ Chargement…</div>';
+  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
 
   // Récupérer les paiements depuis le serveur
   try {
