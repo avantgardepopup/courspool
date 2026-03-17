@@ -257,7 +257,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     height:100dvh;
     background:var(--wh);
     z-index:55;
-    display:none;
+    display:none !important;
     flex-direction:column;
   }
   #pgMsg.conv-open #msgConvPane{display:flex !important;}
@@ -807,7 +807,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
+    <div id="msgConvPane" style="flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:env(safe-area-inset-top)">
@@ -2402,9 +2402,7 @@ function openMsg(profNm,destId,avatar){
   navTo('msg');
 
   // Ouvrir la conversation
-  var convPane=g('msgConvPane');
-  if(convPane)convPane.style.display='flex';
-  // Mobile : ajouter classe conv-open + cacher barre nav
+  // Mobile : ajouter classe conv-open (CSS gère display:flex)
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
@@ -2436,13 +2434,15 @@ function openMsg(profNm,destId,avatar){
 }
 
 function closeMsgConv(){
-  var convPane=g('msgConvPane');
-  if(convPane)convPane.style.display='none';
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
   // Réafficher la barre de nav
   var bnav=g('bnav');
-  if(bnav&&user)bnav.style.display='flex';
+  if(bnav&&user){
+    var isMob=window.innerWidth<=640;
+    bnav.style.display='flex';
+    if(!isMob){bnav.style.left='50%';bnav.style.transform='translateX(-50%)';}
+  }
   clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
 }
