@@ -57,6 +57,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ropt{border:1.5px solid var(--bdr);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--mid);transition:all .18s;}
 .ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 #app{display:none;}
+/* === TOPBAR DESKTOP === */
 .topbar{background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;height:56px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:50;width:100%;overflow:hidden;}
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ttitle{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0;}
@@ -72,7 +73,35 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .btnadd svg{width:13px;height:13px;}
 .tav-btn{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;cursor:pointer;border:2px solid transparent;transition:all .18s;flex-shrink:0;overflow:hidden;}
 .tav-btn:hover{border-color:var(--or);}
+
+/* === MOBILE HEADER iOS large title === */
+.mob-header{
+  display:none;
+  padding:14px 20px 10px;
+  padding-top:max(14px,env(safe-area-inset-top));
+  background:var(--wh);
+  border-bottom:1px solid var(--bdr);
+  position:sticky;top:0;z-index:50;
+}
+.mob-header-inner{display:flex;align-items:flex-end;justify-content:space-between;}
+.mob-title{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;}
+.mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
+.mob-actions{display:flex;align-items:center;gap:10px;}
+.mob-search{display:none;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:sticky;top:62px;z-index:49;}
+.mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:14px;outline:none;}
+.mob-search .si{top:50%;left:31px;}
+
 .pg{display:none;min-height:calc(100vh - 56px);}.pg.on{display:block;}
+
+/* Sur mobile : pages prennent toute la hauteur sous le mob-header */
+@media(max-width:640px){
+  .topbar{display:none !important;}
+  .mob-header{display:block;}
+  .mob-search{display:block;}
+  .pg{min-height:calc(100dvh - 130px);}
+  #pgMsg{height:calc(100dvh - 130px) !important;}
+  #pgMsg.on{display:flex !important;}
+}
 .cnt{padding:20px 16px;max-width:1200px;}
 .locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .locbar>svg{width:18px;height:18px;color:var(--or);flex-shrink:0;}
@@ -185,18 +214,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
 /* MESSAGING PAGE */
-#pgMsg{height:calc(100vh - 56px);}
+#pgMsg{height:calc(100vh - 56px);height:calc(100dvh - 56px);}
 #pgMsg.on{display:flex !important;}
-.msg-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;transition:background .15s;margin-bottom:4px;}
-.msg-row:hover{background:var(--bg);}
-.msg-row.active{background:var(--orp);}
-.msg-av{width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;overflow:hidden;}
+
+/* Liste conversations iOS style */
+.msg-row{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 16px;
+  background:var(--wh);
+  border-radius:16px;
+  cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+  margin-bottom:8px;
+  box-shadow:0 1px 4px rgba(0,0,0,.05);
+}
+.msg-row:active{transform:scale(.98);}
+.msg-row.active{background:var(--orp);box-shadow:0 2px 12px rgba(255,107,43,.15);}
+.msg-av{
+  width:50px;height:50px;border-radius:50%;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:16px;color:#fff;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
 .msg-info{flex:1;min-width:0;}
-.msg-name{font-size:14px;font-weight:700;margin-bottom:2px;}
-.msg-preview{font-size:12.5px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.msg-unread .msg-name{font-weight:800;}
-.msg-unread .msg-preview{color:var(--ink);font-weight:600;}
-#msgMessages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.msg-name{font-size:14.5px;font-weight:700;margin-bottom:3px;letter-spacing:-.01em;}
+.msg-preview{font-size:12.5px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
+.msg-unread .msg-name{font-weight:800;color:var(--ink);}
+.msg-unread .msg-preview{color:var(--mid);font-weight:500;}
+#msgMessages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;}
 /* Desktop */
 @media(min-width:769px){
   #msgListPane{max-width:380px;border-right:1px solid var(--bdr);}
@@ -259,10 +304,28 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .pw-toggle:hover{color:var(--or);}
 .pw-toggle svg{width:18px;height:18px;}
 @media(max-width:640px){
-  .bnav{bottom:16px;}
-  .bni{padding:7px 12px;min-width:50px;}
-  #app .cnt{padding-bottom:90px;}
-  .acc-body{padding-bottom:90px;}
+  .bnav{
+    bottom:0;
+    border-radius:0;
+    left:0 !important;
+    right:0;
+    transform:none !important;
+    width:100%;
+    justify-content:space-around;
+    padding:8px 4px;
+    padding-bottom:max(8px,env(safe-area-inset-bottom));
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-top:1px solid rgba(0,0,0,.06);
+    box-shadow:0 -1px 0 rgba(0,0,0,.05);
+    gap:0;
+  }
+  .bni{padding:6px 16px;min-width:0;flex:1;border-radius:0;}
+  .bni.on{background:transparent;box-shadow:none;color:var(--or);}
+  .bni svg{width:22px;height:22px;}
+  .bni span{font-size:10px;}
+  .bni-sep{display:none !important;}
+  #app .cnt{padding-bottom:100px;}
+  .acc-body{padding-bottom:100px;}
 }
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
 .rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
@@ -303,7 +366,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .tico svg{width:13px;height:13px;color:#fff;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
-@media(max-width:640px){.cnt,.acc-body{padding:12px}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}}
+@media(max-width:640px){.cnt,.acc-body{padding:12px}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
 
 /* ============================================================
    ONBOARDING — style Apple iOS
@@ -631,6 +694,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- APP -->
 <div id="app">
+
+  <!-- TOPBAR DESKTOP -->
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
@@ -640,6 +705,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
     </div>
   </header>
+
+  <!-- MOBILE HEADER iOS large title -->
+  <div class="mob-header" id="mobHeader">
+    <div class="mob-header-inner">
+      <div>
+        <div class="mob-title" id="mobTitle">Accueil</div>
+        <div class="mob-sub" id="mobSub">Cours près de vous</div>
+      </div>
+      <div class="mob-actions">
+        <button id="btnProposerMob" onclick="openCr()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(255,107,43,.4)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <div class="tav-btn" id="tavMob" onclick="navTo('acc')" title="Mon compte" style="width:36px;height:36px;">?</div>
+      </div>
+    </div>
+  </div>
+  <!-- Barre de recherche mobile (visible seulement sur Explorer) -->
+  <div class="mob-search" id="mobSearch">
+    <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()">
+  </div>
 
   <div id="unverifiedBanner" style="display:none;background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:10px 20px;font-size:13px;color:#92400E;align-items:center;gap:8px">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -685,34 +771,47 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <!-- PAGE MESSAGES -->
-  <div class="pg" id="pgMsg" style="display:none;flex-direction:column;height:calc(100vh - 56px)">
+  <div class="pg" id="pgMsg" style="display:none;flex-direction:column;height:calc(100vh - 56px);height:calc(100dvh - 56px);">
+
     <!-- LISTE DES CONVERSATIONS -->
-    <div id="msgListPane" style="display:flex;flex-direction:column;height:100%;width:100%">
-      <div style="padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-        <div style="font-size:18px;font-weight:800">Messages</div>
-        <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50px;min-width:20px;height:20px;padding:0 6px;font-size:11px;font-weight:700;align-items:center;justify-content:center"></span>
+    <div id="msgListPane" style="display:flex;flex-direction:column;height:100%;width:100%;background:var(--bg)">
+      <!-- Header -->
+      <div style="padding:20px 20px 12px;flex-shrink:0;background:var(--wh);border-bottom:1px solid var(--bdr)">
+        <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Messages</div>
+        <div style="font-size:13px;color:var(--lite);margin-top:2px">Vos conversations</div>
+        <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50px;min-width:20px;height:20px;padding:0 6px;font-size:11px;font-weight:700;align-items:center;justify-content:center;position:absolute;top:20px;right:20px"></span>
       </div>
-      <div id="listM" style="flex:1;overflow-y:auto;padding:8px"></div>
+      <div id="listM" style="flex:1;overflow-y:auto;padding:12px 16px"></div>
     </div>
 
-    <!-- CONVERSATION ACTIVE (plein écran mobile, panneau desktop) -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;height:100%;position:fixed;top:56px;left:0;right:0;bottom:0;background:var(--wh);z-index:55">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--wh)">
-        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--mid);padding:4px 8px 4px 0;display:flex;align-items:center">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="24" height="24"><polyline points="15 18 9 12 15 6"/></svg>
+    <!-- CONVERSATION ACTIVE -->
+    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;height:100%;height:100dvh;background:var(--bg);z-index:200">
+
+      <!-- Header conversation -->
+      <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:env(safe-area-inset-top)">
+        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div id="msgConvAv" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;overflow:hidden"></div>
-        <div style="font-size:15px;font-weight:700" id="msgConvName"></div>
+        <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="msgConvName"></div>
+          <div style="font-size:11px;color:var(--green);font-weight:600">En ligne</div>
+        </div>
       </div>
-      <div id="msgMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px"></div>
-      <div id="msgInputBar" style="padding:10px 14px;border-top:1px solid var(--bdr);background:var(--wh);flex-shrink:0">
-        <div style="display:flex;gap:8px;background:var(--bg);border-radius:50px;padding:6px 6px 6px 16px;border:1.5px solid var(--bdr)">
-          <input id="msgInput" type="text" placeholder="Écrivez un message…" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:16px;outline:none" onkeydown="if(event.key==='Enter')sendMsg()">
-          <button onclick="sendMsg()" style="background:var(--or);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+
+      <!-- Messages -->
+      <div id="msgMessages" style="flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:4px;background:var(--bg)"></div>
+
+      <!-- Barre de saisie — fix iPhone Safari -->
+      <div id="msgInputBar" style="background:var(--wh);border-top:1px solid var(--bdr);padding:10px 14px;padding-bottom:max(10px,env(safe-area-inset-bottom));flex-shrink:0;position:sticky;bottom:0">
+        <div style="display:flex;gap:8px;align-items:flex-end;background:var(--bg);border-radius:24px;padding:8px 8px 8px 16px;border:1.5px solid var(--bdr);transition:border-color .18s" onfocusin="this.style.borderColor='var(--or)'" onfocusout="this.style.borderColor='var(--bdr)'">
+          <textarea id="msgInput" placeholder="Message…" rows="1" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;outline:none;resize:none;max-height:100px;line-height:1.45;padding:2px 0;overflow-y:auto" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button onclick="sendMsg()" style="background:var(--or);border:none;border-radius:50%;width:36px;height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 3px 10px rgba(255,107,43,.4);transition:transform .15s,background .15s" onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -1325,6 +1424,43 @@ function applyUser(){
   // Bottom nav
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
+  // Sync mobile header
+  var tavMob=g('tavMob');
+  if(tavMob){
+    if(user.photo){tavMob.style.background='none';tavMob.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+    else{tavMob.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavMob.textContent=user.ini||'?';}
+  }
+  var bp=g('btnProposerMob');
+  if(bp)bp.style.display=user.role==='professeur'?'flex':'none';
+  updateMobHeader('exp');
+}
+
+// Titres et sous-titres par page
+var MOB_TITLES={
+  exp:{title:'Accueil',sub:'Cours près de vous'},
+  msg:{title:'Messages',sub:'Vos conversations'},
+  acc:{title:'Mon profil',sub:'Paramètres & réservations'}
+};
+
+function updateMobHeader(tab){
+  var t=MOB_TITLES[tab]||{title:'CoursPool',sub:''};
+  var mt=g('mobTitle'),ms=g('mobSub');
+  if(mt)mt.textContent=t.title;
+  if(ms)ms.textContent=t.sub;
+  // Recherche visible seulement sur Explorer
+  var ms2=g('mobSearch');if(ms2)ms2.style.display=tab==='exp'?'block':'none';
+  // Bouton proposer mobile
+  var bp=g('btnProposerMob');
+  if(bp)bp.style.display=(tab==='exp'&&user&&user.role==='professeur')?'flex':'none';
+  // Avatar mobile sync
+  var tavMob=g('tavMob');
+  if(tavMob&&user){
+    if(user.photo){tavMob.style.background='none';tavMob.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+    else{tavMob.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavMob.textContent=user.ini||'?';}
+  }
+  // Cacher mob-header sur la page messages (la conv a son propre header)
+  var mh=g('mobHeader');
+  if(mh)mh.style.display=tab==='msg'?'none':'block';
 }
 
 function navTo(tab){
@@ -1340,6 +1476,7 @@ function navTo(tab){
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
+  updateMobHeader(tab);
   var nav=g('bnav');
 
   if(tab==='exp'){
@@ -1349,7 +1486,7 @@ function navTo(tab){
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
     if(pgMsg)pgMsg.classList.add('on');
-    if(nav){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}
+    if(nav){var isMob=window.innerWidth<=640;if(!isMob){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}}
     var bniExp=g('bniExp');
     if(bniExp){
       bniExp.classList.add('on');
@@ -1371,10 +1508,14 @@ function navTo(tab){
 function restoreNav(){
   var nav=g('bnav');
   if(nav){
-    nav.style.left='50%';
-    nav.style.transform='translateX(-50%)';
+    var isMobile=window.innerWidth<=640;
+    if(isMobile){
+      nav.style.left='0';nav.style.transform='none';
+    } else {
+      nav.style.left='50%';nav.style.transform='translateX(-50%)';
+    }
     nav.style.padding='8px 12px';
-    if(user)nav.style.display='flex'; // toujours visible si connecté
+    if(user)nav.style.display='flex';
   }
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
@@ -2030,7 +2171,7 @@ function openMsg(profNm,destId,avatar){
   }
   g('msgConvName').textContent=profNm||'Contact';
   g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
-  g('msgInput').value='';
+  var inp=g('msgInput');inp.value='';inp.style.height='auto';
 
   // Mobile : montrer la conv
   g('pgMsg').classList.add('conv-open');
@@ -2092,7 +2233,27 @@ async function loadMessages(){
       }
       var isMe=m.sender_id===user.id;
       var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">'+time+'</div></div></div>';
+      // Avatar interlocuteur pour les messages reçus
+      var otherP=P[msgDestId]||{};
+      var otherPhoto=otherP.photo||null;
+      var otherIni=(otherP.i)||((msgDestinataire&&msgDestinataire[0])||'?');
+      var otherCol=otherP.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
+      var avHtml='';
+      if(!isMe){
+        avHtml='<div style="width:28px;height:28px;border-radius:50%;background:'+otherCol+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;margin-top:2px;align-self:flex-end">'+(otherPhoto?'<img src="'+otherPhoto+'" style="width:100%;height:100%;object-fit:cover">':otherIni)+'</div>';
+      }
+      var bubbleBg=isMe?'linear-gradient(135deg,var(--or),var(--ord))':'var(--wh)';
+      var bubbleColor=isMe?'#fff':'var(--ink)';
+      var bubbleRadius=isMe?'20px 20px 5px 20px':'20px 20px 20px 5px';
+      var bubbleShadow=isMe?'0 2px 8px rgba(255,107,43,.3)':'0 1px 4px rgba(0,0,0,.08)';
+      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:7px;margin-bottom:2px">'
+        +(isMe?'':''+avHtml)
+        +'<div style="max-width:72%;background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
+        +'<div>'+m.contenu+'</div>'
+        +'<div style="font-size:10px;opacity:.55;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+        +'</div>'
+        +(isMe?'':'')
+        +'</div>';
     });
     container.innerHTML=html;
     container.scrollTop=container.scrollHeight;
@@ -2110,7 +2271,7 @@ async function loadMessages(){
 }
 
 async function sendMsg(){
-  var txt=g('msgInput').value.trim();
+  var txt=(g('msgInput').value||'').trim();
   if(!txt||!msgDestId||!user)return;
   if(user.role==='professeur'&&!user.verified){
     toast('Compte non vérifié','Votre compte doit être vérifié pour envoyer des messages');
@@ -2216,7 +2377,8 @@ async function loadConversations(){
       var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var preview=m.contenu?m.contenu.slice(0,35)+(m.contenu.length>35?'…':''):'…';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\',\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center"><div class="msg-name">'+nm+'</div><div style="font-size:11px;color:var(--lite)">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous : ':'')+preview+'</div></div>'+(nonLu?'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0;margin-top:4px"></div>':'')+'</div>';
+      var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
+      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
     lm.innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
     var badge=g('msgBadge');
