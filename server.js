@@ -3,6 +3,10 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const Stripe = require('stripe');
 const compression = require('compression');
+
+// PING
+app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
 const { Resend } = require('resend');
 
 const app = express();
