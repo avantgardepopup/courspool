@@ -339,6 +339,36 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
   }
 });
 
+
+// Créer un SetupIntent pour enregistrer l'IBAN du prof
+app.post('/stripe/connect/setup-intent', async (req, res) => {
+  const { stripe_account_id } = req.body;
+  if (!stripe_account_id) return res.status(400).json({ error: 'stripe_account_id manquant' });
+  try {
+    const setupIntent = await stripe.setupIntents.create({
+      payment_method_types: ['sepa_debit'],
+      usage: 'off_session',
+    }, { stripeAccount: stripe_account_id });
+    res.json({ client_secret: setupIntent.client_secret });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Notifier que l'IBAN a été enregistré (mise à jour Supabase)
+app.post('/stripe/connect/iban-saved', async (req, res) => {
+  const { prof_id, stripe_account_id } = req.body;
+  if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
+  try {
+    await supabase.from('profiles')
+      .update({ stripe_account_id, iban_configured: true })
+      .eq('id', prof_id);
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', async (req, res) => {
   const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
