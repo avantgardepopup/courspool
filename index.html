@@ -57,8 +57,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ropt{border:1.5px solid var(--bdr);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--mid);transition:all .18s;}
 .ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 #app{display:none;}
-/* === TOPBAR DESKTOP === */
-.topbar{background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;height:56px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:50;width:100%;overflow:hidden;}
+/* === TOPBAR DESKTOP — masquée, remplacée par mob-header sur tous les écrans === */
+.topbar{display:none !important;}
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ttitle{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 .sw{flex:1;min-width:0;position:relative;}
@@ -76,7 +76,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 /* === MOBILE HEADER iOS large title === */
 .mob-header{
-  display:none;
+  display:block;
   padding:14px 20px 10px;
   padding-top:max(14px,env(safe-area-inset-top));
   background:var(--wh);
@@ -87,17 +87,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mob-title{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;}
 .mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
 .mob-actions{display:flex;align-items:center;gap:10px;}
-.mob-search{display:none;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:sticky;top:62px;z-index:49;}
+.mob-search{display:block;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:sticky;top:62px;z-index:49;}
 .mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:14px;outline:none;}
 .mob-search .si{top:50%;left:31px;}
 
-.pg{display:none;min-height:calc(100vh - 56px);}.pg.on{display:block;}
+.pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
-  .topbar{display:none !important;}
-  .mob-header{display:block;}
-  .mob-search{display:block;}
   .pg{min-height:calc(100dvh - 130px);}
   #pgMsg{height:calc(100dvh - 130px) !important;}
   #pgMsg.on{display:flex !important;}
@@ -515,6 +512,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 }
 @keyframes obIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 
+
+/* ============================================================
+   TUTORIEL PREMIÈRE CONNEXION
+   ============================================================ */
+.tuto-highlight{
+  position:relative;
+  z-index:1002 !important;
+  border-radius:12px;
+  box-shadow:0 0 0 4px var(--or), 0 0 0 8px rgba(255,107,43,.2) !important;
+  transition:box-shadow .3s ease;
+  pointer-events:all !important;
+}
 </style>
 </head>
 <body>
@@ -1235,6 +1244,33 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
+<!-- TUTORIEL PREMIÈRE CONNEXION -->
+<div id="tutoOverlay" style="display:none;position:fixed;inset:0;z-index:1000;pointer-events:none;">
+  <!-- Fond flouté -->
+  <div id="tutoBg" style="position:absolute;inset:0;background:rgba(0,0,0,0);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transition:all .4s ease;pointer-events:none;"></div>
+</div>
+
+<!-- Bulle tutoriel -->
+<div id="tutoBubble" style="display:none;position:fixed;z-index:1001;max-width:300px;pointer-events:all;">
+  <div style="background:#fff;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.06);">
+    <!-- Flèche indicatrice -->
+    <div id="tutoArrow" style="position:absolute;width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:-2px -2px 4px rgba(0,0,0,.04);"></div>
+    <!-- Étape -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;gap:5px" id="tutoDots"></div>
+      <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:0">Passer</button>
+    </div>
+    <!-- Icône + contenu -->
+    <div style="font-size:32px;margin-bottom:8px" id="tutoIcon"></div>
+    <div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:6px;letter-spacing:-.01em" id="tutoTitle"></div>
+    <div style="font-size:13px;color:var(--mid);line-height:1.6" id="tutoDesc"></div>
+    <!-- Bouton suivant -->
+    <button onclick="tutoNext()" id="tutoBtn" style="margin-top:14px;width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s">
+      Suivant →
+    </button>
+  </div>
+</div>
+
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
   <div class="bni on" id="bniExp" onclick="navTo('exp')">
@@ -1508,6 +1544,8 @@ function applyUser(){
   updateMobHeader('exp');
   // Vérifier si première connexion prof pour CNI
   checkFirstProfLogin();
+  // Lancer le tutoriel si première connexion
+  setTimeout(tutoStart, 500);
 }
 
 // Titres et sous-titres par page
@@ -2703,6 +2741,218 @@ function checkCodeInSearch(val){
     return true;
   }
   return false;
+}
+
+
+// ============================================================
+// TUTORIEL PREMIÈRE CONNEXION — adapté prof/élève
+// ============================================================
+var TUTO_STEPS_ELEVE = [
+  {
+    target: 'pgExp',
+    icon: '🔍',
+    title: 'Explorer les cours',
+    desc: 'Ici tu trouveras tous les cours disponibles près de chez toi. Utilise les filtres pour trouver ta matière.',
+    pos: 'center'
+  },
+  {
+    target: 'locInput',
+    icon: '📍',
+    title: 'Filtrer par ville',
+    desc: 'Tape ta ville pour voir uniquement les cours près de chez toi.',
+    pos: 'bottom'
+  },
+  {
+    target: 'pillsBar',
+    icon: '🎯',
+    title: 'Filtres par matière',
+    desc: 'Clique sur une matière pour filtrer les cours. Tu peux aussi ajouter tes propres filtres avec le bouton "+".',
+    pos: 'bottom'
+  },
+  {
+    target: 'bniMsg',
+    icon: '💬',
+    title: 'Messagerie',
+    desc: 'Tu peux contacter directement un professeur avant de réserver pour poser tes questions.',
+    pos: 'top'
+  },
+  {
+    target: 'bniAcc',
+    icon: '👤',
+    title: 'Ton profil',
+    desc: 'Retrouve tes réservations, les profs que tu suis, et gère ton compte depuis ici.',
+    pos: 'top'
+  }
+];
+
+var TUTO_STEPS_PROF = [
+  {
+    target: 'pgExp',
+    icon: '👋',
+    title: 'Bienvenue professeur !',
+    desc: 'Voici le fil des cours. Tes propres cours apparaîtront ici une fois publiés.',
+    pos: 'center'
+  },
+  {
+    target: 'bniAdd',
+    icon: '➕',
+    title: 'Créer un cours',
+    desc: 'Ce bouton te permet de publier un nouveau cours en quelques secondes. Fixe ton prix total et CoursPool répartit le coût entre les élèves.',
+    pos: 'top'
+  },
+  {
+    target: 'bniMsg',
+    icon: '💬',
+    title: 'Messagerie',
+    desc: 'Les élèves peuvent te contacter ici avant de réserver. Réponds-leur rapidement pour rassurer.',
+    pos: 'top'
+  },
+  {
+    target: 'bniAcc',
+    icon: '📋',
+    title: 'Ton espace prof',
+    desc: 'Consulte tes réservations, vois qui s\'est inscrit à tes cours, et mets à jour ton profil visible par les élèves.',
+    pos: 'top'
+  }
+];
+
+var tutoSteps = [];
+var tutoCurrent = 0;
+var tutoHighlighted = null;
+
+function tutoStart() {
+  if (!user) return;
+  try {
+    var done = localStorage.getItem('cp_tuto_done_' + user.id);
+    if (done) return;
+  } catch(e) {}
+  tutoSteps = user.role === 'professeur' ? TUTO_STEPS_PROF : TUTO_STEPS_ELEVE;
+  tutoCurrent = 0;
+  // Démarrer après 1.2s pour laisser l'app se charger
+  setTimeout(function() { tutoShowStep(); }, 1200);
+}
+
+function tutoShowStep() {
+  var step = tutoSteps[tutoCurrent];
+  if (!step) { tutoDone(); return; }
+
+  var overlay = g('tutoOverlay');
+  var bubble = g('tutoBubble');
+  var bg = g('tutoBg');
+
+  // Activer fond flouté
+  overlay.style.display = 'block';
+  setTimeout(function() {
+    bg.style.background = 'rgba(0,0,0,.45)';
+    bg.style.backdropFilter = 'blur(3px)';
+    bg.style.webkitBackdropFilter = 'blur(3px)';
+    bg.style.pointerEvents = 'all';
+  }, 20);
+
+  // Retirer ancien highlight
+  if (tutoHighlighted) {
+    tutoHighlighted.classList.remove('tuto-highlight');
+    tutoHighlighted = null;
+  }
+
+  // Highlight la cible
+  var target = null;
+  if (step.pos !== 'center') {
+    target = g(step.target);
+    if (target) {
+      target.classList.add('tuto-highlight');
+      tutoHighlighted = target;
+    }
+  }
+
+  // Remplir la bulle
+  g('tutoIcon').textContent = step.icon;
+  g('tutoTitle').textContent = step.title;
+  g('tutoDesc').textContent = step.desc;
+
+  // Dernier step → bouton "Terminer"
+  var btn = g('tutoBtn');
+  btn.textContent = tutoCurrent === tutoSteps.length - 1 ? 'Terminer 🎉' : 'Suivant →';
+
+  // Dots
+  var dots = g('tutoDots');
+  dots.innerHTML = tutoSteps.map(function(_, i) {
+    return '<div style="width:' + (i === tutoCurrent ? '18px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === tutoCurrent ? 'var(--or)' : 'var(--bdr)') + ';transition:all .3s"></div>';
+  }).join('');
+
+  // Positionner la bulle
+  bubble.style.display = 'block';
+  tutoPosition(step, target);
+}
+
+function tutoPosition(step, target) {
+  var bubble = g('tutoBubble');
+  var arrow = g('tutoArrow');
+
+  if (step.pos === 'center' || !target) {
+    // Centré à l'écran
+    bubble.style.left = '50%';
+    bubble.style.top = '50%';
+    bubble.style.transform = 'translate(-50%,-50%)';
+    arrow.style.display = 'none';
+    return;
+  }
+
+  arrow.style.display = 'block';
+  var rect = target.getBoundingClientRect();
+  var bW = 300; // largeur bulle
+  var bH = 200; // hauteur estimée
+
+  if (step.pos === 'bottom') {
+    // Bulle sous la cible
+    var top = rect.bottom + 14;
+    var left = Math.min(Math.max(rect.left + rect.width/2 - bW/2, 12), window.innerWidth - bW - 12);
+    bubble.style.left = left + 'px';
+    bubble.style.top = top + 'px';
+    bubble.style.transform = 'none';
+    arrow.style.top = '-6px';
+    arrow.style.left = (rect.left + rect.width/2 - left - 6) + 'px';
+    arrow.style.bottom = 'auto';
+    arrow.style.boxShadow = '-2px -2px 4px rgba(0,0,0,.04)';
+  } else if (step.pos === 'top') {
+    // Bulle au-dessus de la cible
+    var top2 = rect.top - bH - 14;
+    if (top2 < 12) top2 = rect.bottom + 14; // fallback bas
+    var left2 = Math.min(Math.max(rect.left + rect.width/2 - bW/2, 12), window.innerWidth - bW - 12);
+    bubble.style.left = left2 + 'px';
+    bubble.style.top = top2 + 'px';
+    bubble.style.transform = 'none';
+    arrow.style.bottom = '-6px';
+    arrow.style.top = 'auto';
+    arrow.style.left = (rect.left + rect.width/2 - left2 - 6) + 'px';
+    arrow.style.boxShadow = '2px 2px 4px rgba(0,0,0,.04)';
+  }
+}
+
+function tutoNext() {
+  if (tutoCurrent < tutoSteps.length - 1) {
+    tutoCurrent++;
+    tutoShowStep();
+  } else {
+    tutoDone();
+  }
+}
+
+function tutoSkip() { tutoDone(); }
+
+function tutoDone() {
+  try { localStorage.setItem('cp_tuto_done_' + user.id, '1'); } catch(e) {}
+  // Nettoyer
+  if (tutoHighlighted) { tutoHighlighted.classList.remove('tuto-highlight'); tutoHighlighted = null; }
+  var overlay = g('tutoOverlay');
+  var bubble = g('tutoBubble');
+  var bg = g('tutoBg');
+  bg.style.background = 'rgba(0,0,0,0)';
+  bg.style.backdropFilter = 'blur(0px)';
+  bg.style.webkitBackdropFilter = 'blur(0px)';
+  bg.style.pointerEvents = 'none';
+  bubble.style.display = 'none';
+  setTimeout(function() { overlay.style.display = 'none'; }, 400);
 }
 
 // NOTATION
