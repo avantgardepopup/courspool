@@ -177,8 +177,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .acc-body{padding:0 20px;max-width:800px;padding-bottom:120px;}
 .asec{display:none;}.asec.on{display:block;padding-top:4px;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
-.rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;}
+.rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin:0 0 10px 0;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;width:100%;}
 .rrow:hover{box-shadow:var(--sh);border-color:#D5CEC6;}
+/* sections spacing */
+.acc-section-content{padding:0 2px;}
 .rdot{width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;}
 .ri{flex:1;}
 .rt{font-size:13.5px;font-weight:700;margin-bottom:2px;}
@@ -917,7 +919,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- RÉSERVATIONS -->
         <div class="asec on" id="asecR">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 24px 10px">Cours à venir</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="listR"></div>
+          <div id="listR"></div>
         </div>
 
         <!-- PROFS SUIVIS -->
@@ -1865,6 +1867,20 @@ async function checkStripeReturn(){
       toast('Configuration Stripe','Finalisez votre configuration pour recevoir les paiements');
       return;
     }
+    // Deep link ?cours=ID — ouvrir directement la fiche du cours
+    var directCours = params.get('cours');
+    if(directCours && !paid){
+      window.history.replaceState({},'',window.location.pathname);
+      // Attendre que les cours soient chargés
+      function tryOpenCours(){
+        var c=C.find(function(x){return x.id===directCours;});
+        if(c){openR(c.id);}
+        else{toast('Cours introuvable','Ce lien n\'est plus valide');}
+      }
+      if(C.length){tryOpenCours();}
+      else{setTimeout(tryOpenCours,1200);}
+      return;
+    }
     if(!paid||!coursId){checkPrivateCoursAccess();return;}
     localStorage.removeItem('cp_stripe_pending');
     if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
@@ -2212,7 +2228,7 @@ async function confR(){
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
   var btn=document.querySelector('#bdR .pb.pri');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Redirection…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
     // Sauvegarder les infos avant redirection Stripe
@@ -2709,8 +2725,11 @@ async function sendModalMsg(){
 
 var _convLoading=false;
 async function loadConversations(){
-  if(!user||_convLoading)return;
+  if(!user)return;
+  if(_convLoading)return;
   _convLoading=true;
+  // Timeout de sécurité : libérer après 8s max
+  var _convTimeout=setTimeout(function(){_convLoading=false;},8000);
   var lm=g('listM');
   if(!lm){_convLoading=false;return;}
   lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
@@ -2754,7 +2773,7 @@ async function loadConversations(){
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
   }catch(e){
     if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
-  }finally{_convLoading=false;}
+  }finally{clearTimeout(_convTimeout);_convLoading=false;}
 }
 
 
