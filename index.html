@@ -174,7 +174,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
 .atab svg{width:14px;height:14px;}
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
-.acc-body{padding:0;max-width:800px;padding-bottom:120px;}
+.acc-body{padding:0 16px;max-width:800px;padding-bottom:120px;}
 .asec{display:none;}.asec.on{display:block;padding-top:4px;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
 .rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;}
@@ -532,10 +532,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 #tutoRoot{display:none;}
 #tutoRoot.on{display:flex !important;animation:tutoFadeIn .3s ease both;}
 @keyframes tutoFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes splashBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
 @keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
 </head>
 <body>
+<div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
+    <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <div style="color:#fff;font-size:26px;font-weight:800;letter-spacing:-.03em">CoursPool</div>
+    <div style="width:48px;height:3px;background:rgba(255,255,255,.3);border-radius:3px;overflow:hidden;position:relative">
+      <div style="position:absolute;top:0;left:0;height:100%;background:#fff;border-radius:3px;animation:splashBar 1s ease-in-out infinite"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ONBOARDING — affiché uniquement à la première visite -->
 <div id="onboarding" class="hidden">
@@ -679,12 +691,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
         <div id="profFields" style="display:none">
           <div class="lfield"><label>Statut</label>
-            <select id="rStatut" onchange="updateNiveaux(this.value)">
+            <select id="rStatut" onchange="updateNiveaux(this.value)" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;background:var(--wh);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FF6B2B' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;">
               <option value="">Choisir votre statut...</option>
-              <option value="etudiant">🎓 Étudiant</option>
-              <option value="prof_ecole">🏫 Professeur d'école</option>
-              <option value="prof_college">📚 Professeur de collège / lycée</option>
-              <option value="prof_universite">🏛️ Professeur d'université</option>
+              <option value="etudiant">Étudiant</option>
+              <option value="prof_ecole">Professeur des écoles</option>
+              <option value="prof_college">Professeur collège / lycée</option>
+              <option value="prof_universite">Enseignant-chercheur</option>
+              <option value="auto">Auto-entrepreneur</option>
+              <option value="autre">Autre</option>
             </select>
           </div>
           <div class="lfield" id="niveauField" style="display:none">
@@ -901,13 +915,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- RÉSERVATIONS -->
         <div class="asec on" id="asecR">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 24px 10px">Cours à venir</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px 20px" id="listR"></div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="listR"></div>
         </div>
 
         <!-- PROFS SUIVIS -->
         <div class="asec" id="asecF">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Professeurs suivis</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px" id="listF"></div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Professeurs suivis</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="listF"></div>
         </div>
 
         <!-- PAIEMENTS PROF — Stripe -->
@@ -974,7 +988,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           </div>
 
           <!-- KPIs -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px 20px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 0 0">
             <div style="background:linear-gradient(135deg,var(--or),var(--ord));border-radius:16px;padding:16px;color:#fff">
               <div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Ce mois</div>
               <div id="revMois" style="font-size:26px;font-weight:800;letter-spacing:-.02em">—</div>
@@ -994,7 +1008,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           </div>
 
           <!-- Liste des paiements -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Historique</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Historique</div>
           <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">⏳ Chargement…</div>
           </div>
@@ -1005,7 +1019,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
         <!-- HISTORIQUE -->
         <div class="asec" id="asecH">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Historique</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Historique</div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px;padding:20px;text-align:center;color:var(--lite);font-size:13px">Bientôt disponible</div>
         </div>
 
@@ -1013,8 +1027,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="asec" id="asecP">
 
           <!-- Section infos perso -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Informations personnelles</div>
-          <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Informations personnelles</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
             <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
               <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
@@ -1038,15 +1052,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           </div>
 
           <!-- Bio -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Bio</div>
-          <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden;padding:13px 16px">
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Bio</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;padding:13px 16px">
             <textarea id="pfBio" rows="3" placeholder="Présentez-vous…" style="width:100%;border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;resize:none;color:var(--ink)"></textarea>
           </div>
 
           <!-- Section prof -->
           <div id="pfProfExtra" style="display:none">
-            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Enseignement</div>
-            <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
+            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Enseignement</div>
+            <div style="background:var(--wh);border-radius:16px;overflow:hidden">
               <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
                 <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Statut</span>
                 <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer">
@@ -1078,7 +1092,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
           <!-- Notifications -->
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:8px 16px 8px">Notifications</div>
-          <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr)">
               <div><div style="font-size:14px;font-weight:500">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Quand un prof suivi publie</div></div>
               <div class="ntog on" onclick="this.classList.toggle('on')"></div>
@@ -1518,7 +1532,14 @@ function obDone(){
 }
 
 // Lancer l'onboarding au chargement
-window.addEventListener('DOMContentLoaded',function(){obShow();});
+window.addEventListener('DOMContentLoaded',function(){
+  obShow();
+  // Masquer le splash après chargement
+  setTimeout(function(){
+    var sp=document.getElementById('splash');
+    if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
+  }, 800);
+});
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 var C=[],P={},res={},fol=new Set();
@@ -2275,13 +2296,18 @@ async function confAmi(id){
 function shareCoursLink(){
   var c=C.find(function(x){return x.id===curId});
   if(!c)return;
-  var url=window.location.href.split('?')[0]+(c.prive&&c.code?'?code='+c.code:'?cours='+curId);
+  // Toujours utiliser l'URL Vercel (pas capacitor://localhost)
+  var base='https://courspool.vercel.app';
+  var url=base+(c.prive&&c.code?'?code='+c.code:'?cours='+curId);
+  var titre='CoursPool — '+c.title;
+  var texte='Rejoins ce cours : '+c.title+' · '+c.dt+' à '+c.loc;
   if(navigator.share){
-    navigator.share({title:'CoursPool — '+c.title,text:'Rejoins ce cours : '+c.title+' · '+c.dt,url:url});
+    navigator.share({title:titre,text:texte,url:url}).catch(function(){});
   } else if(navigator.clipboard){
     navigator.clipboard.writeText(url).then(function(){
-      closeO();
       toast('Lien copié !','Partagez ce lien pour inviter quelqu\'un à réserver');
+    }).catch(function(){
+      prompt('Copiez ce lien :',url);
     });
   } else {
     prompt('Copiez ce lien :',url);
@@ -3139,7 +3165,7 @@ function _tutoUiPreview(type) {
       + '<div style="color:rgba(255,255,255,.7);font-size:12px;text-align:center">Le bouton + en bas de l\'écran</div>'
       + '</div>';
   }
-  if (type === 'profile_tab') {
+  if (type === 'profile_tab') { // amélioration v2
     return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%">'
       + '<div style="display:flex;gap:6px">'
       + ['Explorer','Messages','Profil'].map(function(t,i){
