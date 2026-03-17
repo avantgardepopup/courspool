@@ -254,7 +254,7 @@ app.get('/reservations/:user_id', async (req, res) => {
 // STRIPE CONNECT — paiements directs aux professeurs
 // ============================================================
 
-const COMMISSION_TAUX = 0.05; // 5% commission CoursPool
+const COMMISSION_TAUX = 0.15; // 15% commission CoursPool
 
 // Créer un compte Stripe Connect Express pour un prof
 app.post('/stripe/connect/create', async (req, res) => {
@@ -349,15 +349,31 @@ app.post('/stripe/checkout', async (req, res) => {
     const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
     const cancelUrl = baseUrl + '?cancelled=1';
 
-    // Récupérer le compte Stripe Connect du prof si disponible
+    // Récupérer le cours + compte Stripe Connect du prof
     let paymentIntentData = { metadata: { cours_id, user_id, montant: montant.toString(), cours_titre: cours_titre || '' } };
     try {
-      const { data: coursData } = await supabase.from('cours').select('professeur_id').eq('id', cours_id).single();
+      const { data: coursData } = await supabase
+        .from('cours')
+        .select('professeur_id, prix_total, places_max')
+        .eq('id', cours_id)
+        .single();
+
       if (coursData?.professeur_id) {
-        const { data: profData } = await supabase.from('profiles').select('stripe_account_id').eq('id', coursData.professeur_id).single();
+        const { data: profData } = await supabase
+          .from('profiles')
+          .select('stripe_account_id')
+          .eq('id', coursData.professeur_id)
+          .single();
+
         if (profData?.stripe_account_id) {
-          const commission = Math.round(montant * 100 * COMMISSION_TAUX);
-          paymentIntentData.application_fee_amount = commission;
+          // Commission = 15% du PRIX TOTAL DU COURS divisé par nombre de places
+          // L'élève paie son montant normal, la commission est prélevée en coulisse
+          const prixTotal = coursData.prix_total || (montant * (coursData.places_max || 1));
+          const placesMax = coursData.places_max || 1;
+          const commissionParPlace = Math.round((prixTotal * COMMISSION_TAUX / placesMax) * 100);
+          // Le prof reçoit : montant - commission par place
+          // Ex: cours 60€, 4 places → 15€/élève, commission = 60*0.15/4 = 2.25€/élève, prof reçoit 12.75€/élève
+          paymentIntentData.application_fee_amount = commissionParPlace;
           paymentIntentData.transfer_data = { destination: profData.stripe_account_id };
         }
       }
