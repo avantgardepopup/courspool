@@ -174,8 +174,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
 .atab svg{width:14px;height:14px;}
 .atab.on{color:var(--or);border-bottom-color:var(--or);}
-.acc-body{padding:20px 20px;max-width:800px;padding-bottom:120px;}
-.asec{display:none;}.asec.on{display:block;}
+.acc-body{padding:0;max-width:800px;padding-bottom:120px;}
+.asec{display:none;}.asec.on{display:block;padding-top:4px;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
 .rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;}
 .rrow:hover{box-shadow:var(--sh);border-color:#D5CEC6;}
@@ -737,7 +737,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <div id="unverifiedBanner" style="display:none;background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:10px 20px;font-size:13px;color:#92400E;align-items:center;gap:8px">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <strong>Compte en cours de vérification</strong> — Notre équipe vérifie votre identité. Vous pourrez publier des cours dès validation (sous 24h).
+    ⏳ <strong>Compte en cours de vérification</strong> — Votre pièce d'identité est en cours d'examen. Vous recevrez un email dès que votre compte est activé (sous 24h).
   </div>
 
   <!-- PAGE EXPLORER -->
@@ -1203,11 +1203,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date et heure</label>
-        <div style="display:flex;gap:10px">
-          <div style="flex:1.6"><input class="fi3" id="crDate" type="date" style="width:100%"></div>
-          <div style="flex:1"><input class="fi3" id="crHeure" type="time" style="width:100%"></div>
+      <div style="display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
+          <input class="fi3" id="crDate" type="date" style="width:100%;min-width:0;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label>
+          <input class="fi3" id="crHeure" type="time" style="width:100%;min-width:0;box-sizing:border-box">
         </div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label>
@@ -2817,13 +2820,24 @@ function renderCustomPills(){
 // ============================================================
 // CNI MODAL — première connexion prof
 // ============================================================
-function checkFirstProfLogin(){
+async function checkFirstProfLogin(){
   if(!user||user.role!=='professeur')return;
+  // Vérifier d'abord le localStorage
   try{
     var done=localStorage.getItem('cp_cni_done_'+user.id);
     if(done)return;
   }catch(e){}
-  // Afficher la modal CNI après 800ms — le tuto sera lancé après fermeture
+  // Vérifier aussi en DB (au cas où localStorage vidé)
+  try{
+    var r=await fetch(API+'/profiles/'+user.id);
+    var p=await r.json();
+    if(p&&p.cni_uploaded){
+      // Mettre en cache localement pour éviter les requêtes futures
+      try{localStorage.setItem('cp_cni_done_'+user.id,'1');}catch(e){}
+      return;
+    }
+  }catch(e){}
+  // Afficher la modal CNI après 800ms
   setTimeout(function(){openM('bdCni');},800);
 }
 
@@ -2985,7 +2999,7 @@ var TUTO_ELEVE = [
     bg: 'linear-gradient(135deg,#F0FDF4,#BBF7D0)',
     emoji: '💳',
     title: 'Réserve et paie ta part',
-    desc: 'Clique sur un cours puis "Réserver". Le paiement est sécurisé via Stripe. Tu ne paies que ta part — le reste est partagé entre tous les élèves inscrits.',
+    desc: 'Clique sur un cours puis "Réserver". Le paiement est sécurisé. Tu ne paies que ta part — le reste est partagé entre tous les élèves inscrits.',
     tip: 'Tu peux aussi réserver une place pour quelqu\'un d\'autre, ou partager le lien du cours.'
   },
   {
@@ -3007,38 +3021,43 @@ var TUTO_ELEVE = [
 var TUTO_PROF = [
   {
     bg: 'linear-gradient(135deg,var(--or),var(--ord))',
-    emoji: '🏫',
-    title: 'Bienvenue professeur !',
-    desc: 'CoursPool t\'aide à remplir tes cours et encaisse automatiquement les paiements via Stripe. Voici comment ça marche.',
-    tip: null
+    emoji: '👋',
+    title: 'Bienvenue sur CoursPool !',
+    desc: 'Tu vas pouvoir proposer tes cours à plusieurs élèves et partager les frais entre eux. CoursPool gère tout : inscriptions, paiements, messagerie.',
+    tip: null,
+    ui: null
   },
   {
     bg: 'linear-gradient(135deg,#F0FDF4,#BBF7D0)',
-    emoji: '➕',
+    emoji: null,
     title: 'Crée ton premier cours',
-    desc: 'Appuie sur le bouton "+" dans la navigation. Choisis la matière, la date, le lieu, le nombre de places et ton prix total. CoursPool divise automatiquement le coût entre les élèves.',
-    tip: 'Tu peux rendre un cours privé : un code à 6 lettres est généré. Seuls les élèves qui ont ce code peuvent s\'inscrire.'
+    desc: 'Appuie sur le bouton orange ci-dessous pour créer ton premier cours. Choisis la matière, la date, le lieu et ton prix total. CoursPool divise le coût entre tous tes élèves.',
+    tip: 'Tu peux aussi rendre un cours privé en activant l\'option en bas du formulaire. Un code d\'accès unique sera généré.',
+    ui: 'add_button'
   },
   {
     bg: 'linear-gradient(135deg,#FFF7ED,#FED7AA)',
-    emoji: '💰',
-    title: 'Suis tes revenus',
-    desc: 'Dans ton profil, onglet "Paiements" : consulte chaque paiement reçu, le total du mois, et l\'historique complet. Les paiements sont traités par Stripe et virés automatiquement.',
-    tip: 'Les paiements Stripe sont virés dans un délai de 2 à 7 jours ouvrés selon ton pays.'
+    emoji: null,
+    title: 'Tes paiements',
+    desc: 'Dès qu\'un élève réserve, le paiement est encaissé automatiquement. Dans ton espace Profil tu retrouves tout l\'historique et le total de tes revenus.',
+    tip: 'Renseigne ton IBAN dans l\'onglet Paiements pour recevoir tes virements automatiquement.',
+    ui: 'profile_tab'
   },
   {
     bg: 'linear-gradient(135deg,#EFF6FF,#BFDBFE)',
-    emoji: '💬',
-    title: 'Réponds aux élèves',
-    desc: 'Les élèves peuvent te contacter avant de réserver. Réponds rapidement via l\'onglet Messages — ça augmente la confiance et le taux de réservation.',
-    tip: null
+    emoji: null,
+    title: 'Messages avec tes élèves',
+    desc: 'Les élèves peuvent te contacter avant de réserver. Réponds vite depuis l\'onglet Messages pour maximiser tes inscriptions.',
+    tip: null,
+    ui: 'messages_tab'
   },
   {
     bg: 'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
-    emoji: '📊',
+    emoji: null,
     title: 'Ton espace professeur',
-    desc: 'Dans Profil : vois qui s\'est inscrit à chacun de tes cours, consulte les notes que les élèves t\'ont laissées, et mets à jour tes infos visibles par les élèves.',
-    tip: null
+    desc: 'Dans Profil retrouve la liste des élèves inscrits à chaque cours, les avis laissés et toutes tes informations. Tu peux aussi annuler un cours et les élèves sont remboursés automatiquement.',
+    tip: null,
+    ui: 'profile_tab'
   }
 ];
 
@@ -3061,10 +3080,14 @@ function _tutoShow() {
   root.style.display = 'flex';
   root.classList.add('on');
 
-  // Illustration
+  // Illustration — emoji ou UI réelle
   var illu = g('tutoIllu');
   illu.style.background = step.bg;
-  illu.textContent = step.emoji;
+  if (step.ui) {
+    illu.innerHTML = _tutoUiPreview(step.ui);
+  } else {
+    illu.innerHTML = '<span style="font-size:72px">' + (step.emoji || '✨') + '</span>';
+  }
 
   // Texte
   g('tutoTitle').textContent = step.title;
@@ -3098,8 +3121,49 @@ function _tutoShow() {
   // Animation carte
   var card = g('tutoCard');
   card.style.animation = 'none';
-  card.offsetHeight; // reflow
+  card.offsetHeight;
   card.style.animation = 'tutoCardIn .38s cubic-bezier(.34,1.26,.64,1)';
+}
+
+function _tutoUiPreview(type) {
+  // Aperçus UI stylisés avec cadre orange pour montrer les vraies fonctionnalités
+  var s = 'font-family:inherit;';
+  if (type === 'add_button') {
+    return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%">'
+      + '<div style="background:rgba(255,255,255,.15);border-radius:20px;padding:12px 20px;display:flex;align-items:center;gap:12px;border:2px solid rgba(255,255,255,.4)">'
+      + '<div style="width:44px;height:44px;border-radius:50%;background:#FF6B2B;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.6)">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+      + '</div>'
+      + '<div style="color:#fff;font-weight:700;font-size:15px">Créer un cours</div>'
+      + '</div>'
+      + '<div style="color:rgba(255,255,255,.7);font-size:12px;text-align:center">Le bouton + en bas de l\'écran</div>'
+      + '</div>';
+  }
+  if (type === 'profile_tab') {
+    return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%">'
+      + '<div style="display:flex;gap:6px">'
+      + ['Explorer','Messages','Profil'].map(function(t,i){
+          var active = t === 'Profil';
+          return '<div style="background:'+(active?'#FF6B2B':'rgba(255,255,255,.2)')+';border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:'+(active?'700':'500')+';display:flex;flex-direction:column;align-items:center;gap:4px;border:'+(active?'2px solid rgba(255,255,255,.5)':'2px solid transparent')+'">'
+            + (active?'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>':'')
+            + t + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div style="color:rgba(255,255,255,.8);font-size:12px">Onglet Profil</div>'
+      + '</div>';
+  }
+  if (type === 'messages_tab') {
+    return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%">'
+      + '<div style="background:rgba(255,255,255,.15);border-radius:16px;padding:14px 18px;border:2px solid rgba(255,255,255,.4);min-width:180px">'
+      + '<div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:8px">💬 Messages</div>'
+      + '<div style="background:rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;margin-bottom:6px">'
+      + '<div style="color:#fff;font-size:12px;font-weight:600">Élève</div>'
+      + '<div style="color:rgba(255,255,255,.7);font-size:11px">Bonjour, j\'ai une question...</div>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+  return '<span style="font-size:72px">✨</span>';
 }
 
 function tutoNext() {
