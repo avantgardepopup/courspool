@@ -304,9 +304,249 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
 @media(max-width:640px){.cnt,.acc-body{padding:12px}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}}
+
+/* ============================================================
+   ONBOARDING — style Apple iOS
+   ============================================================ */
+#onboarding{
+  position:fixed;inset:0;z-index:2000;
+  background:#1A0A04;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+#onboarding.hidden{display:none;}
+
+/* Slides wrapper */
+.ob-track{
+  display:flex;flex:1;
+  transition:transform .55s cubic-bezier(.65,0,.35,1);
+  will-change:transform;
+}
+.ob-slide{
+  min-width:100vw;width:100vw;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:0 32px 40px;
+  text-align:center;
+  position:relative;
+}
+
+/* Illustration zone */
+.ob-illo{
+  width:220px;height:220px;
+  border-radius:40px;
+  margin-bottom:40px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  flex-shrink:0;
+}
+.ob-illo svg{position:relative;z-index:1;}
+
+/* Slide 1 — gradient orange */
+.ob-slide:nth-child(1) .ob-illo{
+  background:linear-gradient(145deg,var(--or),var(--ord));
+  box-shadow:0 32px 80px rgba(255,107,43,.45);
+}
+/* Slide 2 — gradient bleu */
+.ob-slide:nth-child(2) .ob-illo{
+  background:linear-gradient(145deg,#FF8C55,var(--or));
+  box-shadow:0 32px 80px rgba(255,107,43,.35);
+}
+/* Slide 3 — gradient vert */
+.ob-slide:nth-child(3) .ob-illo{
+  background:linear-gradient(145deg,var(--ord),#B03A08);
+  box-shadow:0 32px 80px rgba(224,78,16,.4);
+}
+/* Slide 4 — gradient violet */
+.ob-slide:nth-child(4) .ob-illo{
+  background:linear-gradient(145deg,var(--or),#C04010);
+  box-shadow:0 32px 80px rgba(255,91,46,.45);
+}
+
+/* Floating shapes in illo */
+.ob-shape{
+  position:absolute;border-radius:50%;opacity:.18;
+  animation:obFloat 4s ease-in-out infinite;
+}
+.ob-shape:nth-child(1){width:90px;height:90px;background:#fff;top:-10px;right:-10px;animation-delay:0s;}
+.ob-shape:nth-child(2){width:50px;height:50px;background:#fff;bottom:10px;left:-5px;animation-delay:.8s;}
+@keyframes obFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.ob-tag{
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.45);margin-bottom:14px;
+}
+.ob-title{
+  font-size:28px;font-weight:800;
+  color:#fff;
+  line-height:1.2;
+  margin-bottom:14px;
+  letter-spacing:-.02em;
+}
+.ob-title span{color:var(--or);}
+.ob-desc{
+  font-size:15.5px;color:rgba(255,255,255,.6);
+  line-height:1.65;
+  max-width:320px;
+}
+
+/* Bottom controls */
+.ob-footer{
+  padding:0 28px 48px;
+  display:flex;flex-direction:column;
+  align-items:center;gap:20px;
+  flex-shrink:0;
+}
+.ob-dots{
+  display:flex;gap:6px;align-items:center;
+}
+.ob-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.25);
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
+}
+.ob-dot.on{
+  width:22px;border-radius:3px;
+  background:var(--or);
+}
+.ob-btn{
+  width:100%;max-width:320px;
+  background:var(--or);color:#fff;
+  border:none;border-radius:16px;
+  padding:17px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:800;font-size:16px;
+  cursor:pointer;
+  transition:transform .18s,box-shadow .18s;
+  letter-spacing:-.01em;
+  box-shadow:0 8px 28px rgba(255,107,43,.45);
+}
+.ob-btn:active{transform:scale(.97);}
+.ob-skip{
+  font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.35);
+  cursor:pointer;
+  border:none;background:none;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  padding:4px 8px;
+  transition:color .18s;
+}
+.ob-skip:hover{color:rgba(255,255,255,.65);}
+
+/* Swipe hint animation on first slide */
+.ob-swipe-hint{
+  position:absolute;bottom:16px;
+  font-size:11px;color:rgba(255,255,255,.25);
+  display:flex;align-items:center;gap:5px;
+  animation:obFadeHint 2s 1.5s ease both;
+  pointer-events:none;
+}
+@keyframes obFadeHint{0%{opacity:0;transform:translateY(6px)}30%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
+
+/* Slide-in animation for content */
+.ob-slide-content{
+  display:flex;flex-direction:column;align-items:center;
+  animation:obIn .6s .1s cubic-bezier(.34,1.26,.64,1) both;
+}
+@keyframes obIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
 </style>
 </head>
 <body>
+
+<!-- ONBOARDING — affiché uniquement à la première visite -->
+<div id="onboarding" class="hidden">
+
+  <!-- Slides -->
+  <div class="ob-track" id="obTrack">
+
+    <!-- Slide 1 — Bienvenue -->
+    <div class="ob-slide">
+      <div class="ob-slide-content">
+        <div class="ob-illo">
+          <div class="ob-shape"></div>
+          <div class="ob-shape"></div>
+          <svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="ob-tag">Bienvenue</div>
+        <div class="ob-title">Cours<span>Pool</span></div>
+        <div class="ob-desc">La plateforme qui réunit élèves et professeurs pour partager le coût des cours particuliers.</div>
+      </div>
+    </div>
+
+    <!-- Slide 2 — Trouver un cours -->
+    <div class="ob-slide">
+      <div class="ob-slide-content">
+        <div class="ob-illo">
+          <div class="ob-shape"></div>
+          <div class="ob-shape"></div>
+          <svg width="82" height="82" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <div class="ob-tag">Pour les élèves</div>
+        <div class="ob-title">Trouve ton cours<br>près de chez toi</div>
+        <div class="ob-desc">Maths, physique, langues… Réserve une place dans un cours collectif et paie uniquement ta part.</div>
+      </div>
+    </div>
+
+    <!-- Slide 3 — Partager les frais -->
+    <div class="ob-slide">
+      <div class="ob-slide-content">
+        <div class="ob-illo">
+          <div class="ob-shape"></div>
+          <div class="ob-shape"></div>
+          <svg width="82" height="82" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+        <div class="ob-tag">Économise</div>
+        <div class="ob-title">Un prof,<br>des frais partagés</div>
+        <div class="ob-desc">Un cours à 60€ avec 4 élèves, c'est seulement <strong style="color:var(--or)">15€ chacun</strong>. La qualité d'un cours particulier au prix d'un abonnement.</div>
+      </div>
+    </div>
+
+    <!-- Slide 4 — Pour les profs -->
+    <div class="ob-slide">
+      <div class="ob-slide-content">
+        <div class="ob-illo">
+          <div class="ob-shape"></div>
+          <div class="ob-shape"></div>
+          <svg width="82" height="82" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+            <path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <div class="ob-tag">Pour les professeurs</div>
+        <div class="ob-title">Propose tes cours,<br>remplis ta salle</div>
+        <div class="ob-desc">Crée un cours, fixe ton prix total. CoursPool remplit les places et gère les paiements pour toi.</div>
+      </div>
+    </div>
+
+  </div><!-- /ob-track -->
+
+  <!-- Footer fixe -->
+  <div class="ob-footer">
+    <div class="ob-dots" id="obDots">
+      <div class="ob-dot on"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <button class="ob-btn" id="obBtn" onclick="obNext()">Continuer</button>
+    <button class="ob-skip" id="obSkip" onclick="obSkip()">Passer</button>
+  </div>
+
+</div><!-- /onboarding -->
 
 <!-- LOGIN -->
 <div id="login">
@@ -876,6 +1116,69 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
 <script>
+// ============================================================
+// ONBOARDING — une seule fois à la première visite
+// ============================================================
+var obCurrent=0,obTotal=4,obTouchStartX=0;
+
+function obShow(){
+  try{
+    var seen=localStorage.getItem('cp_onboarding_done');
+    if(seen) return; // déjà vu, on skip
+  }catch(e){}
+  var ob=g('onboarding');
+  if(ob) ob.classList.remove('hidden');
+  obRender();
+  // Swipe support mobile
+  var track=g('obTrack');
+  if(track){
+    track.addEventListener('touchstart',function(e){obTouchStartX=e.touches[0].clientX;},{passive:true});
+    track.addEventListener('touchend',function(e){
+      var dx=e.changedTouches[0].clientX-obTouchStartX;
+      if(Math.abs(dx)>50){if(dx<0)obNext();else if(obCurrent>0){obCurrent--;obRender();}}
+    },{passive:true});
+  }
+}
+
+function obRender(){
+  var track=g('obTrack');
+  if(track) track.style.transform='translateX(-'+(obCurrent*100)+'vw)';
+  var dots=g('obDots');
+  if(dots){
+    var ds=dots.querySelectorAll('.ob-dot');
+    ds.forEach(function(d,i){d.classList.toggle('on',i===obCurrent);});
+  }
+  var btn=g('obBtn');
+  if(btn) btn.textContent=obCurrent===obTotal-1?'Commencer 🎉':'Continuer';
+  var skip=g('obSkip');
+  if(skip) skip.style.opacity=obCurrent===obTotal-1?'0':'1';
+}
+
+function obNext(){
+  if(obCurrent<obTotal-1){
+    obCurrent++;obRender();
+  } else {
+    obDone();
+  }
+}
+
+function obSkip(){
+  obDone();
+}
+
+function obDone(){
+  try{localStorage.setItem('cp_onboarding_done','1');}catch(e){}
+  var ob=g('onboarding');
+  if(ob){
+    ob.style.transition='opacity .4s ease';
+    ob.style.opacity='0';
+    setTimeout(function(){ob.classList.add('hidden');ob.style.opacity='';ob.style.transition='';},400);
+  }
+}
+
+// Lancer l'onboarding au chargement
+window.addEventListener('DOMContentLoaded',function(){obShow();});
+
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 var C=[],P={},res={},fol=new Set();
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
@@ -955,11 +1258,17 @@ async function doLogin(){
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
     applyUser();
-    // Vider les réservations précédentes et recharger
+    // Vider les réservations et follows précédents, recharger depuis la DB
     Object.keys(res).forEach(function(k){delete res[k];});
+    fol.clear();
     if(uid){
-      fetch(API+'/reservations/'+uid).then(function(r){return r.json();}).then(function(data){
-        if(Array.isArray(data)){data.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+      Promise.all([
+        fetch(API+'/reservations/'+uid).then(function(r){return r.json();}).catch(function(){return [];}),
+        fetch(API+'/follows/'+uid).then(function(r){return r.json();}).catch(function(){return [];})
+      ]).then(function(results){
+        var resData=results[0],folData=results[1];
+        if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+        if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
         loadData().then(function(){buildCards();});
       }).catch(function(){loadData().then(function(){buildCards();});});
     } else {
@@ -1098,9 +1407,15 @@ function goExplore(){
       user=JSON.parse(saved);
       applyUser();
       if(user.id){
-        fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+        Promise.all([
+          fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).catch(function(){return [];}),
+          fetch(API+'/follows/'+user.id).then(function(r){return r.json();}).catch(function(){return [];})
+        ]).then(function(results){
+          var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
-          if(Array.isArray(data)){data.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+          if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+          fol.clear();
+          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           loadData().then(function(){buildCards();checkStripeReturn();});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();});});
       } else {
