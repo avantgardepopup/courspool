@@ -2534,7 +2534,7 @@ function addFilterQuick(val){
   var pill=document.createElement('div');
   pill.className='pill';
   pill.dataset.f='custom_'+key;
-  pill.innerHTML=val+' <span onclick="event.stopPropagation();removeCustomFilter(''+key+'')" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
+  pill.innerHTML=val+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
   pill.onclick=function(){setPill(pill);};
   bar.insertBefore(pill,addBtn);
   // Ajouter le filtre dans FM
@@ -2561,7 +2561,7 @@ function renderCustomPills(){
   box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Filtres actifs</div>'
     +customFilters.map(function(f){
       return'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:50px;padding:5px 12px;font-size:13px;font-weight:500;margin:0 6px 6px 0">'+f.label
-        +'<span onclick="removeCustomFilter(''+f.key+'')" style="cursor:pointer;opacity:.6;font-size:11px">✕</span></span>';
+        +'<span onclick="removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.6;font-size:11px">✕</span></span>';
     }).join('');
 }
 
