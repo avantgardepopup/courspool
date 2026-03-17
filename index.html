@@ -1019,6 +1019,13 @@ function applyUser(){
 }
 
 function navTo(tab){
+  // Toujours fermer la conv active et s'assurer que la nav est visible
+  var convPane=g('msgConvPane');
+  if(convPane&&tab!=='msg')convPane.style.display='none';
+  var pgMsgEl=g('pgMsg');
+  if(pgMsgEl&&tab!=='msg')pgMsgEl.classList.remove('conv-open');
+  clearInterval(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
+
   ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
   if(pgExp)pgExp.classList.remove('on');
@@ -1054,7 +1061,12 @@ function navTo(tab){
 
 function restoreNav(){
   var nav=g('bnav');
-  if(nav){nav.style.left='50%';nav.style.transform='translateX(-50%)';}
+  if(nav){
+    nav.style.left='50%';
+    nav.style.transform='translateX(-50%)';
+    nav.style.padding='8px 12px';
+    if(user)nav.style.display='flex'; // toujours visible si connecté
+  }
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
   if(bniExp){
