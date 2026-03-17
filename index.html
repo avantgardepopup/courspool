@@ -514,16 +514,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 
 /* ============================================================
-   TUTORIEL PREMIÈRE CONNEXION
+   TUTORIEL — spotlight immersif
    ============================================================ */
-.tuto-highlight{
-  position:relative;
-  z-index:1002 !important;
-  border-radius:12px;
-  box-shadow:0 0 0 4px var(--or), 0 0 0 8px rgba(255,107,43,.2) !important;
-  transition:box-shadow .3s ease;
-  pointer-events:all !important;
-}
+#tutoRoot{animation:tutoFadeIn .3s ease both;}
+@keyframes tutoFadeIn{from{opacity:0}to{opacity:1}}
+#tutoCard{animation:tutoCardIn .38s cubic-bezier(.34,1.26,.64,1) both;}
+@keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
 </head>
 <body>
@@ -1244,31 +1240,59 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- TUTORIEL PREMIÈRE CONNEXION -->
-<div id="tutoOverlay" style="display:none;position:fixed;inset:0;z-index:1000;pointer-events:none;">
-  <!-- Fond flouté -->
-  <div id="tutoBg" style="position:absolute;inset:0;background:rgba(0,0,0,0);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transition:all .4s ease;pointer-events:none;"></div>
-</div>
+<!-- ============================================================
+     TUTORIEL NOUVELLE VERSION — spotlight SVG immersif
+     ============================================================ -->
+<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;">
 
-<!-- Bulle tutoriel -->
-<div id="tutoBubble" style="display:none;position:fixed;z-index:1001;max-width:300px;pointer-events:all;">
-  <div style="background:#fff;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.06);">
-    <!-- Flèche indicatrice -->
-    <div id="tutoArrow" style="position:absolute;width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:-2px -2px 4px rgba(0,0,0,.04);"></div>
-    <!-- Étape -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="display:flex;gap:5px" id="tutoDots"></div>
-      <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:0">Passer</button>
+  <!-- Overlay SVG — découpe un trou sur l'élément ciblé -->
+  <svg id="tutoSvg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" preserveAspectRatio="none">
+    <defs>
+      <mask id="tutoMask">
+        <rect width="100%" height="100%" fill="white"/>
+        <rect id="tutoHole" x="0" y="0" width="0" height="0" rx="14" fill="black"/>
+      </mask>
+    </defs>
+    <rect width="100%" height="100%" fill="rgba(0,0,0,.62)" mask="url(#tutoMask)" style="transition:opacity .35s"/>
+    <!-- Bordure lumineuse autour du trou -->
+    <rect id="tutoBorder" x="0" y="0" width="0" height="0" rx="14" fill="none" stroke="#FF6B2B" stroke-width="2.5" opacity="0" style="filter:drop-shadow(0 0 6px rgba(255,107,43,.7))"/>
+  </svg>
+
+  <!-- Carte de contenu -->
+  <div id="tutoCard" style="
+    position:absolute;
+    background:#fff;
+    border-radius:20px;
+    padding:22px 22px 18px;
+    width:min(320px, calc(100vw - 32px));
+    box-shadow:0 24px 64px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
+    transition:top .38s cubic-bezier(.65,0,.35,1), left .38s cubic-bezier(.65,0,.35,1), opacity .28s;
+  ">
+    <!-- Flèche SVG directionnelle -->
+    <svg id="tutoArrowSvg" width="20" height="12" viewBox="0 0 20 12" style="position:absolute;display:none">
+      <polygon points="10,0 20,12 0,12" fill="#fff"/>
+    </svg>
+
+    <!-- Header : dots + skip -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
+      <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:#bbb;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;transition:color .15s" onmouseenter="this.style.color='var(--or)'" onmouseleave="this.style.color='#bbb'">Passer</button>
     </div>
-    <!-- Icône + contenu -->
-    <div style="font-size:32px;margin-bottom:8px" id="tutoIcon"></div>
-    <div style="font-size:15px;font-weight:800;color:var(--ink);margin-bottom:6px;letter-spacing:-.01em" id="tutoTitle"></div>
-    <div style="font-size:13px;color:var(--mid);line-height:1.6" id="tutoDesc"></div>
-    <!-- Bouton suivant -->
-    <button onclick="tutoNext()" id="tutoBtn" style="margin-top:14px;width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s">
-      Suivant →
-    </button>
+
+    <!-- Icône -->
+    <div id="tutoEmoji" style="width:48px;height:48px;border-radius:14px;background:var(--orp);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px"></div>
+
+    <!-- Texte -->
+    <div id="tutoTitle" style="font-size:16px;font-weight:800;color:#111;margin-bottom:7px;letter-spacing:-.02em;line-height:1.25"></div>
+    <div id="tutoDesc" style="font-size:13px;color:#666;line-height:1.65;margin-bottom:16px"></div>
+
+    <!-- Boutons -->
+    <div style="display:flex;gap:8px">
+      <button id="tutoPrev" onclick="tutoPrev()" style="display:none;flex:0 0 auto;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;padding:11px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s">← Retour</button>
+      <button id="tutoBtn" onclick="tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s;box-shadow:0 4px 14px rgba(255,107,43,.35)">Suivant →</button>
+    </div>
   </div>
+
 </div>
 
 <!-- BARRE DE NAVIGATION BAS -->
@@ -2747,212 +2771,285 @@ function checkCodeInSearch(val){
 // ============================================================
 // TUTORIEL PREMIÈRE CONNEXION — adapté prof/élève
 // ============================================================
-var TUTO_STEPS_ELEVE = [
+
+
+
+// ============================================================
+// TUTORIEL PREMIÈRE CONNEXION v2 — spotlight SVG immersif
+// ============================================================
+
+var TUTO_ELEVE = [
   {
-    target: 'pgExp',
-    icon: '🔍',
-    title: 'Explorer les cours',
-    desc: 'Ici tu trouveras tous les cours disponibles près de chez toi. Utilise les filtres pour trouver ta matière.',
-    pos: 'center'
+    target: null,
+    title: 'Bienvenue sur CoursPool ! 🎉',
+    desc: 'En 4 étapes, on te montre comment trouver un cours, réserver ta place, contacter un prof et gérer ton profil.',
+    emoji: '🚀'
   },
   {
     target: 'locInput',
-    icon: '📍',
-    title: 'Filtrer par ville',
-    desc: 'Tape ta ville pour voir uniquement les cours près de chez toi.',
-    pos: 'bottom'
+    title: 'Cherche par ville',
+    desc: 'Tape ta ville ou ton code postal. CoursPool affiche uniquement les cours proches de chez toi en temps réel.',
+    emoji: '📍'
   },
   {
     target: 'pillsBar',
-    icon: '🎯',
-    title: 'Filtres par matière',
-    desc: 'Clique sur une matière pour filtrer les cours. Tu peux aussi ajouter tes propres filtres avec le bouton "+".',
-    pos: 'bottom'
+    title: 'Filtre par matière',
+    desc: 'Clique sur Maths, Langues, Info… pour filtrer. Le bouton "+" te permet même d\'ajouter tes propres matières.',
+    emoji: '🎯'
+  },
+  {
+    target: null,
+    title: 'Réserve une place 💳',
+    desc: 'Clique sur une carte de cours, puis "Réserver". Le paiement est sécurisé via Stripe. Tu ne paies que ta part — le reste est partagé entre tous les élèves.',
+    emoji: '💳'
   },
   {
     target: 'bniMsg',
-    icon: '💬',
-    title: 'Messagerie',
-    desc: 'Tu peux contacter directement un professeur avant de réserver pour poser tes questions.',
-    pos: 'top'
+    title: 'Contacte le professeur',
+    desc: 'Tu as une question avant de réserver ? Envoie un message directement au prof depuis la messagerie.',
+    emoji: '💬'
   },
   {
     target: 'bniAcc',
-    icon: '👤',
-    title: 'Ton profil',
-    desc: 'Retrouve tes réservations, les profs que tu suis, et gère ton compte depuis ici.',
-    pos: 'top'
+    title: 'Ton espace personnel',
+    desc: 'Retrouve toutes tes réservations à venir, les profs que tu suis, et l\'historique de tes cours. Tu peux aussi noter un cours une fois qu\'il est terminé.',
+    emoji: '👤'
   }
 ];
 
-var TUTO_STEPS_PROF = [
+var TUTO_PROF = [
   {
-    target: 'pgExp',
-    icon: '👋',
-    title: 'Bienvenue professeur !',
-    desc: 'Voici le fil des cours. Tes propres cours apparaîtront ici une fois publiés.',
-    pos: 'center'
+    target: null,
+    title: 'Bienvenue professeur ! 👋',
+    desc: 'CoursPool t\'aide à remplir tes cours et à recevoir des paiements automatiquement. Voici les fonctionnalités essentielles.',
+    emoji: '🏫'
   },
   {
     target: 'bniAdd',
-    icon: '➕',
-    title: 'Créer un cours',
-    desc: 'Ce bouton te permet de publier un nouveau cours en quelques secondes. Fixe ton prix total et CoursPool répartit le coût entre les élèves.',
-    pos: 'top'
+    title: 'Publie ton premier cours',
+    desc: 'Appuie sur ce bouton "+" pour créer un cours. Choisis la matière, la date, le lieu, et fixe ton prix total. CoursPool divise automatiquement le coût entre les élèves.',
+    emoji: '➕'
+  },
+  {
+    target: null,
+    title: 'Cours public ou privé 🔒',
+    desc: 'Lors de la création, tu peux rendre un cours privé. Un code à 6 lettres est généré — seuls les élèves qui ont ce code peuvent s\'inscrire. Idéal pour tes groupes existants.',
+    emoji: '🔒'
+  },
+  {
+    target: 'locInput',
+    title: 'Tes cours apparaissent ici',
+    desc: 'Tous tes cours publiés sont visibles dans ce fil. Les élèves les trouvent en filtrant par ville ou par matière.',
+    emoji: '📋'
   },
   {
     target: 'bniMsg',
-    icon: '💬',
-    title: 'Messagerie',
-    desc: 'Les élèves peuvent te contacter ici avant de réserver. Réponds-leur rapidement pour rassurer.',
-    pos: 'top'
+    title: 'Messagerie avec les élèves',
+    desc: 'Les élèves peuvent te contacter avant de réserver. Tu reçois une notification. Réponds rapidement pour rassurer et maximiser tes inscriptions.',
+    emoji: '💬'
   },
   {
     target: 'bniAcc',
-    icon: '📋',
-    title: 'Ton espace prof',
-    desc: 'Consulte tes réservations, vois qui s\'est inscrit à tes cours, et mets à jour ton profil visible par les élèves.',
-    pos: 'top'
+    title: 'Ton espace professeur',
+    desc: 'Consulte la liste de tes élèves inscrits, suis tes revenus, accède à l\'historique de tes cours et mets à jour ton profil visible par tous.',
+    emoji: '📊'
   }
 ];
 
-var tutoSteps = [];
-var tutoCurrent = 0;
-var tutoHighlighted = null;
+var _tutoSteps = [];
+var _tutoIdx = 0;
+var _tutoResizeTimer = null;
 
 function tutoStart() {
   if (!user) return;
-  try {
-    var done = localStorage.getItem('cp_tuto_done_' + user.id);
-    if (done) return;
-  } catch(e) {}
-  tutoSteps = user.role === 'professeur' ? TUTO_STEPS_PROF : TUTO_STEPS_ELEVE;
-  tutoCurrent = 0;
-  // Démarrer après 1.2s pour laisser l'app se charger
-  setTimeout(function() { tutoShowStep(); }, 1200);
+  try { if (localStorage.getItem('cp_tuto_done_' + user.id)) return; } catch(e) {}
+  _tutoSteps = user.role === 'professeur' ? TUTO_PROF : TUTO_ELEVE;
+  _tutoIdx = 0;
+  setTimeout(_tutoShow, 900);
+  // Repositionner sur resize
+  window.addEventListener('resize', function() {
+    clearTimeout(_tutoResizeTimer);
+    _tutoResizeTimer = setTimeout(function() {
+      if (g('tutoRoot').style.display !== 'none') _tutoShow();
+    }, 150);
+  });
 }
 
-function tutoShowStep() {
-  var step = tutoSteps[tutoCurrent];
+function _tutoShow() {
+  var step = _tutoSteps[_tutoIdx];
   if (!step) { tutoDone(); return; }
 
-  var overlay = g('tutoOverlay');
-  var bubble = g('tutoBubble');
-  var bg = g('tutoBg');
+  var root = g('tutoRoot');
+  root.style.display = 'block';
 
-  // Activer fond flouté
-  overlay.style.display = 'block';
-  setTimeout(function() {
-    bg.style.background = 'rgba(0,0,0,.45)';
-    bg.style.backdropFilter = 'blur(3px)';
-    bg.style.webkitBackdropFilter = 'blur(3px)';
-    bg.style.pointerEvents = 'all';
-  }, 20);
-
-  // Retirer ancien highlight
-  if (tutoHighlighted) {
-    tutoHighlighted.classList.remove('tuto-highlight');
-    tutoHighlighted = null;
-  }
-
-  // Highlight la cible
-  var target = null;
-  if (step.pos !== 'center') {
-    target = g(step.target);
-    if (target) {
-      target.classList.add('tuto-highlight');
-      tutoHighlighted = target;
-    }
-  }
-
-  // Remplir la bulle
-  g('tutoIcon').textContent = step.icon;
+  // Contenu
+  g('tutoEmoji').textContent = step.emoji;
   g('tutoTitle').textContent = step.title;
   g('tutoDesc').textContent = step.desc;
 
-  // Dernier step → bouton "Terminer"
+  // Bouton suivant / terminer
   var btn = g('tutoBtn');
-  btn.textContent = tutoCurrent === tutoSteps.length - 1 ? 'Terminer 🎉' : 'Suivant →';
+  btn.textContent = _tutoIdx === _tutoSteps.length - 1 ? 'Terminer 🎉' : 'Suivant →';
+  btn.style.background = _tutoIdx === _tutoSteps.length - 1 ? 'var(--green)' : 'var(--or)';
+  btn.style.boxShadow = _tutoIdx === _tutoSteps.length - 1 ? '0 4px 14px rgba(34,192,105,.35)' : '0 4px 14px rgba(255,107,43,.35)';
+
+  // Bouton retour
+  var prev = g('tutoPrev');
+  prev.style.display = _tutoIdx > 0 ? 'block' : 'none';
 
   // Dots
-  var dots = g('tutoDots');
-  dots.innerHTML = tutoSteps.map(function(_, i) {
-    return '<div style="width:' + (i === tutoCurrent ? '18px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === tutoCurrent ? 'var(--or)' : 'var(--bdr)') + ';transition:all .3s"></div>';
+  g('tutoDots').innerHTML = _tutoSteps.map(function(_, i) {
+    return '<div style="width:' + (i === _tutoIdx ? '20px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === _tutoIdx ? 'var(--or)' : '#ddd') + ';transition:all .3s ease"></div>';
   }).join('');
 
-  // Positionner la bulle
-  bubble.style.display = 'block';
-  tutoPosition(step, target);
+  // Spotlight
+  _tutoSpotlight(step.target);
 }
 
-function tutoPosition(step, target) {
-  var bubble = g('tutoBubble');
-  var arrow = g('tutoArrow');
+function _tutoSpotlight(targetId) {
+  var W = window.innerWidth, H = window.innerHeight;
+  var hole = g('tutoHole');
+  var border = g('tutoBorder');
+  var svg = g('tutoSvg');
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
 
-  if (step.pos === 'center' || !target) {
-    // Centré à l'écran
-    bubble.style.left = '50%';
-    bubble.style.top = '50%';
-    bubble.style.transform = 'translate(-50%,-50%)';
-    arrow.style.display = 'none';
+  var PAD = 10;
+  var rx = 14;
+
+  if (!targetId) {
+    // Pas de cible — plein écran flouté, pas de trou
+    hole.setAttribute('x', W/2); hole.setAttribute('y', H/2);
+    hole.setAttribute('width', '0'); hole.setAttribute('height', '0');
+    border.setAttribute('width', '0'); border.setAttribute('height', '0');
+    _tutoCardCenter();
     return;
   }
 
-  arrow.style.display = 'block';
-  var rect = target.getBoundingClientRect();
-  var bW = 300; // largeur bulle
-  var bH = 200; // hauteur estimée
+  var el = g(targetId);
+  if (!el) { _tutoCardCenter(); return; }
 
-  if (step.pos === 'bottom') {
-    // Bulle sous la cible
-    var top = rect.bottom + 14;
-    var left = Math.min(Math.max(rect.left + rect.width/2 - bW/2, 12), window.innerWidth - bW - 12);
-    bubble.style.left = left + 'px';
-    bubble.style.top = top + 'px';
-    bubble.style.transform = 'none';
-    arrow.style.top = '-6px';
-    arrow.style.left = (rect.left + rect.width/2 - left - 6) + 'px';
-    arrow.style.bottom = 'auto';
-    arrow.style.boxShadow = '-2px -2px 4px rgba(0,0,0,.04)';
-  } else if (step.pos === 'top') {
-    // Bulle au-dessus de la cible
-    var top2 = rect.top - bH - 14;
-    if (top2 < 12) top2 = rect.bottom + 14; // fallback bas
-    var left2 = Math.min(Math.max(rect.left + rect.width/2 - bW/2, 12), window.innerWidth - bW - 12);
-    bubble.style.left = left2 + 'px';
-    bubble.style.top = top2 + 'px';
-    bubble.style.transform = 'none';
-    arrow.style.bottom = '-6px';
-    arrow.style.top = 'auto';
-    arrow.style.left = (rect.left + rect.width/2 - left2 - 6) + 'px';
-    arrow.style.boxShadow = '2px 2px 4px rgba(0,0,0,.04)';
+  var rect = el.getBoundingClientRect();
+  // Vérifier que l'élément est visible
+  if (rect.width === 0 || rect.height === 0) { _tutoCardCenter(); return; }
+
+  var x = rect.left - PAD, y = rect.top - PAD;
+  var w = rect.width + PAD*2, h = rect.height + PAD*2;
+
+  // Animer le trou
+  _animateAttr(hole, {x: x, y: y, width: w, height: h, rx: rx});
+  _animateAttr(border, {x: x, y: y, width: w, height: h, rx: rx, opacity: 1});
+
+  // Positionner la carte
+  _tutoCardNear(rect, x, y, w, h, W, H);
+}
+
+function _animateAttr(el, attrs) {
+  Object.keys(attrs).forEach(function(k) { el.setAttribute(k, attrs[k]); });
+}
+
+function _tutoCardNear(rect, hx, hy, hw, hh, W, H) {
+  var card = g('tutoCard');
+  var arrow = g('tutoArrowSvg');
+  var cW = Math.min(320, W - 32);
+  var cH = card.offsetHeight || 220;
+  var margin = 14;
+
+  card.style.width = cW + 'px';
+
+  // Essayer d'abord en bas de l'élément
+  var spaceBelow = H - (hy + hh) - margin;
+  var spaceAbove = hy - margin;
+  var spaceRight = W - (hx + hw) - margin;
+  var spaceLeft = hx - margin;
+
+  var placed = false;
+  var cx, cy, arrowDir;
+
+  if (spaceBelow >= cH + 20) {
+    // Carte en bas
+    cy = hy + hh + margin;
+    cx = Math.min(Math.max(rect.left + rect.width/2 - cW/2, 12), W - cW - 12);
+    arrowDir = 'up';
+    placed = true;
+  } else if (spaceAbove >= cH + 20) {
+    // Carte en haut
+    cy = hy - cH - margin;
+    cx = Math.min(Math.max(rect.left + rect.width/2 - cW/2, 12), W - cW - 12);
+    arrowDir = 'down';
+    placed = true;
+  } else if (spaceRight >= cW + 20) {
+    // Carte à droite
+    cx = hx + hw + margin;
+    cy = Math.min(Math.max(rect.top + rect.height/2 - cH/2, 12), H - cH - 12);
+    arrowDir = 'left';
+    placed = true;
+  } else if (spaceLeft >= cW + 20) {
+    // Carte à gauche
+    cx = hx - cW - margin;
+    cy = Math.min(Math.max(rect.top + rect.height/2 - cH/2, 12), H - cH - 12);
+    arrowDir = 'right';
+    placed = true;
   }
+
+  if (!placed) { _tutoCardCenter(); return; }
+
+  card.style.left = cx + 'px';
+  card.style.top = cy + 'px';
+  card.style.transform = 'none';
+
+  // Flèche directionnelle
+  arrow.style.display = 'block';
+  var arrowX, arrowY, arrowRot;
+  if (arrowDir === 'up') {
+    arrowX = (rect.left + rect.width/2 - cx - 10);
+    arrowY = -12;
+    arrowRot = 0;
+  } else if (arrowDir === 'down') {
+    arrowX = (rect.left + rect.width/2 - cx - 10);
+    arrowY = cH;
+    arrowRot = 180;
+  } else if (arrowDir === 'left') {
+    arrowX = -12;
+    arrowY = (rect.top + rect.height/2 - cy - 6);
+    arrowRot = -90;
+  } else {
+    arrowX = cW;
+    arrowY = (rect.top + rect.height/2 - cy - 6);
+    arrowRot = 90;
+  }
+  arrow.style.left = arrowX + 'px';
+  arrow.style.top = arrowY + 'px';
+  arrow.style.transform = 'rotate(' + arrowRot + 'deg)';
+}
+
+function _tutoCardCenter() {
+  var card = g('tutoCard');
+  var arrow = g('tutoArrowSvg');
+  card.style.left = '50%';
+  card.style.top = '50%';
+  card.style.transform = 'translate(-50%,-50%)';
+  arrow.style.display = 'none';
 }
 
 function tutoNext() {
-  if (tutoCurrent < tutoSteps.length - 1) {
-    tutoCurrent++;
-    tutoShowStep();
-  } else {
-    tutoDone();
-  }
+  if (_tutoIdx < _tutoSteps.length - 1) { _tutoIdx++; _tutoShow(); }
+  else tutoDone();
+}
+
+function tutoPrev() {
+  if (_tutoIdx > 0) { _tutoIdx--; _tutoShow(); }
 }
 
 function tutoSkip() { tutoDone(); }
 
 function tutoDone() {
   try { localStorage.setItem('cp_tuto_done_' + user.id, '1'); } catch(e) {}
-  // Nettoyer
-  if (tutoHighlighted) { tutoHighlighted.classList.remove('tuto-highlight'); tutoHighlighted = null; }
-  var overlay = g('tutoOverlay');
-  var bubble = g('tutoBubble');
-  var bg = g('tutoBg');
-  bg.style.background = 'rgba(0,0,0,0)';
-  bg.style.backdropFilter = 'blur(0px)';
-  bg.style.webkitBackdropFilter = 'blur(0px)';
-  bg.style.pointerEvents = 'none';
-  bubble.style.display = 'none';
-  setTimeout(function() { overlay.style.display = 'none'; }, 400);
+  var root = g('tutoRoot');
+  if (root) {
+    root.style.transition = 'opacity .3s';
+    root.style.opacity = '0';
+    setTimeout(function() { root.style.display = 'none'; root.style.opacity = ''; root.style.transition = ''; }, 320);
+  }
 }
 
 // NOTATION
