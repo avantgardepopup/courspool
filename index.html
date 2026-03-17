@@ -1233,7 +1233,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
         Envoyer pour vérification
       </button>
-      <button class="pb sec" style="width:100%" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil')">
+      <button class="pb sec" style="width:100%" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil');setTimeout(tutoStart,400);">
         Plus tard
       </button>
     </div>
@@ -1508,8 +1508,8 @@ async function doLogin(){
       loadData().then(function(){buildCards();});
     }
     toast('Bienvenue '+pr+' !','Connecté à CoursPool');
-    // Lancer tuto uniquement à la vraie connexion
-    setTimeout(tutoStart, 1200);
+    // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
+    if(role!=='professeur'){setTimeout(tutoStart,1200);}
   }catch(e){toast('Erreur','Impossible de se connecter');}
   finally{g('lEm').disabled=false;g('lPw').disabled=false;}
 }
@@ -2657,7 +2657,7 @@ function checkFirstProfLogin(){
     var done=localStorage.getItem('cp_cni_done_'+user.id);
     if(done)return;
   }catch(e){}
-  // Afficher la modal CNI après 800ms
+  // Afficher la modal CNI après 800ms — le tuto sera lancé après fermeture
   setTimeout(function(){openM('bdCni');},800);
 }
 
@@ -2686,6 +2686,7 @@ async function submitCni(){
       try{localStorage.setItem('cp_cni_done_'+user.id,'1');}catch(e){}
       closeM('bdCni');
       toast('CNI envoyée !','Vérification sous 5 min à 2 heures. Email de confirmation à venir.');
+      setTimeout(tutoStart, 600);
       btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Envoyer pour vérification';
     };
     reader.readAsDataURL(file);
