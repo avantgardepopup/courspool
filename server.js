@@ -618,6 +618,113 @@ app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
   }
 });
 
+
+// RESERVATIONS — liste des élèves inscrits à un cours (pour le prof)
+app.get('/reservations/cours/:cours_id', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('reservations')
+      .select('id, user_id, cours_id, montant_paye, created_at')
+      .eq('cours_id', req.params.cours_id)
+      .order('created_at', { ascending: true });
+    if (error) return res.status(500).json({ error });
+
+    // Enrichir avec les infos du profil de chaque élève
+    const enriched = await Promise.all((data || []).map(async (r) => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('prenom, nom, email')
+        .eq('id', r.user_id)
+        .single();
+      return {
+        reservation_id: r.id,
+        user_id: r.user_id,
+        cours_id: r.cours_id,
+        montant_paye: r.montant_paye,
+        created_at: r.created_at,
+        prenom: profile?.prenom || '',
+        nom: profile?.nom || '',
+        email: profile?.email || ''
+      };
+    }));
+    res.json(enriched);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// RESERVATIONS — annuler une réservation d'un élève + remboursement Stripe
+app.post('/reservations/:id/cancel', async (req, res) => {
+  const { user_id, cours_id, montant } = req.body;
+  try {
+    // Récupérer le payment_intent_id si disponible
+    const { data: reservation } = await supabase
+      .from('reservations')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    // Supprimer la réservation
+    await supabase.from('reservations').delete().eq('id', req.params.id);
+
+    // Décrémenter places_prises
+    const { data: cours } = await supabase.from('cours').select('places_prises').eq('id', cours_id).single();
+    if (cours) {
+      await supabase.from('cours').update({ places_prises: Math.max(0, (cours.places_prises||1) - 1) }).eq('id', cours_id);
+    }
+
+    // Tenter le remboursement Stripe si payment_intent disponible
+    let rembourse = false;
+    if (reservation?.stripe_payment_intent_id) {
+      try {
+        await stripe.refunds.create({ payment_intent: reservation.stripe_payment_intent_id });
+        rembourse = true;
+      } catch(e) { console.log('Refund error:', e.message); }
+    }
+
+    res.json({ success: true, rembourse });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// COURS — annuler un cours complet + rembourser tous les élèves
+app.post('/cours/:id/cancel', async (req, res) => {
+  const cours_id = req.params.id;
+  try {
+    // Récupérer toutes les réservations du cours
+    const { data: reservations } = await supabase
+      .from('reservations')
+      .select('*')
+      .eq('cours_id', cours_id);
+
+    let remboursements = 0;
+
+    // Rembourser chaque élève
+    for (const r of (reservations || [])) {
+      // Supprimer la réservation
+      await supabase.from('reservations').delete().eq('id', r.id);
+
+      // Remboursement Stripe si payment_intent disponible
+      if (r.stripe_payment_intent_id) {
+        try {
+          await stripe.refunds.create({ payment_intent: r.stripe_payment_intent_id });
+          remboursements++;
+        } catch(e) { console.log('Refund error:', e.message); }
+      } else {
+        remboursements++; // Compter quand même pour l'affichage
+      }
+    }
+
+    // Supprimer le cours
+    await supabase.from('cours').delete().eq('id', cours_id);
+
+    res.json({ success: true, remboursements });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // MESSAGES — envoyer
 app.post('/messages', async (req, res) => {
   const { expediteur_id, destinataire_id, contenu } = req.body;
