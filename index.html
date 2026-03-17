@@ -17,6 +17,8 @@
 <meta property="og:title" content="CoursPool">
 <meta property="og:description" content="Trouvez et réservez des cours près de chez vous">
 <meta property="og:type" content="website">
+<!-- Stripe.js — tokenise l'IBAN sans jamais le transmettre à nos serveurs -->
+<script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -902,44 +904,62 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
           <!-- Bandeau Stripe Connect -->
           <div id="stripeConnectBanner" style="margin:16px 16px 0">
-            <!-- État : non connecté -->
-            <div id="stripeNotConnected" style="background:linear-gradient(135deg,#0A2540,#1a3a5c);border-radius:16px;padding:20px;color:#fff;display:none">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-                <div style="width:44px;height:44px;background:rgba(255,255,255,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">💳</div>
-                <div>
-                  <div style="font-size:15px;font-weight:700;margin-bottom:2px">Activez vos paiements</div>
-                  <div style="font-size:12px;opacity:.75">Connectez Stripe pour recevoir vos revenus directement sur votre compte bancaire</div>
+
+            <!-- État : non connecté — formulaire IBAN CoursPool -->
+            <div id="stripeNotConnected" style="display:none">
+              <div style="background:var(--wh);border-radius:16px;border:1px solid var(--bdr);padding:20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                  <div style="width:44px;height:44px;background:var(--orp);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🏦</div>
+                  <div>
+                    <div style="font-size:15px;font-weight:700;color:var(--ink)">Recevez vos paiements</div>
+                    <div style="font-size:12px;color:var(--lite);margin-top:2px">Renseignez votre IBAN pour recevoir vos revenus</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Titulaire du compte</label>
+                    <input id="ibanName" type="text" placeholder="Prénom Nom" class="fi2" style="width:100%">
+                  </div>
+                  <div>
+                    <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">IBAN</label>
+                    <div id="ibanElement" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:14px;transition:border .18s"></div>
+                  </div>
+                  <div style="background:var(--orp);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--mid);line-height:1.6;display:flex;gap:8px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    <span>Vos coordonnées bancaires sont chiffrées et sécurisées. CoursPool ne stocke jamais votre IBAN.</span>
+                  </div>
+                  <button onclick="saveIban()" id="btnSaveIban" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .18s;box-shadow:0 4px 14px rgba(255,107,43,.3)">
+                    Enregistrer mon IBAN
+                  </button>
                 </div>
               </div>
-              <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:11px 13px;font-size:12px;opacity:.8;margin-bottom:14px;line-height:1.6">
-                ✓ Virement automatique après chaque réservation<br>
-                ✓ Votre IBAN saisit directement sur Stripe (100% sécurisé)<br>
-                ✓ CoursPool prend 15% de commission, vous gardez 85%
-              </div>
-              <button onclick="setupStripeConnect()" id="btnConnectStripe" style="width:100%;background:#635bff;color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .18s">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Configurer mon compte Stripe
-              </button>
             </div>
-            <!-- État : en cours de configuration -->
-            <div id="stripePending" style="background:#FEF3C7;border-radius:16px;padding:16px;display:none;align-items:center;gap:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#92400E">Configuration en cours</div>
-                <div style="font-size:12px;color:#B45309;margin-top:2px">Finalisez la configuration Stripe pour recevoir vos paiements. <span onclick="setupStripeConnect()" style="cursor:pointer;text-decoration:underline">Continuer →</span></div>
-              </div>
-            </div>
-            <!-- État : connecté -->
-            <div id="stripeConnected" style="background:#F0FDF4;border-radius:16px;padding:16px;display:none;align-items:center;gap:12px">
-              <div style="width:40px;height:40px;background:#22C069;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700;color:#15803D">Paiements activés ✓</div>
-                <div style="font-size:12px;color:#16A34A;margin-top:1px">Vos revenus sont virés automatiquement sur votre compte bancaire</div>
-              </div>
 
+            <!-- État : en cours de vérification -->
+            <div id="stripePending" style="display:none">
+              <div style="background:#FEF3C7;border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:#92400E">Vérification en cours</div>
+                  <div style="font-size:12px;color:#B45309;margin-top:2px">Votre compte bancaire est en cours de validation. Vous serez notifié par email.</div>
+                </div>
+              </div>
             </div>
+
+            <!-- État : activé -->
+            <div id="stripeConnected" style="display:none">
+              <div style="background:#F0FDF4;border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px">
+                <div style="width:40px;height:40px;background:#22C069;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#15803D">Paiements activés ✓</div>
+                  <div style="font-size:12px;color:#16A34A;margin-top:1px">Vos revenus sont virés automatiquement sur votre compte</div>
+                </div>
+                <button onclick="showChangeIban()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px">Modifier</button>
+              </div>
+            </div>
+
           </div>
 
           <!-- KPIs -->
@@ -3108,56 +3128,95 @@ async function loadRevenues() {
 }
 
 
+
+
+
 // ============================================================
-// STRIPE CONNECT — setup et vérification statut
+// PAIEMENTS PROF — IBAN via Stripe.js (tokenisation côté client)
+// Le prof reste sur CoursPool, l'IBAN ne passe jamais par notre serveur
 // ============================================================
 
-async function loadStripeConnectStatus() {
-  if (!user || user.role !== 'professeur') return;
-  
-  var notConn = g('stripeNotConnected');
-  var pending = g('stripePending');
-  var connected = g('stripeConnected');
-  
-  // Récupérer le stripe_account_id depuis le profil
-  try {
-    var r = await fetch(API + '/stripe/connect/status-prof/' + user.id);
-    var data = await r.json();
-    
-    if (!data.stripe_account_id) {
-      // Pas de compte créé
-      if(notConn) notConn.style.display = 'block';
-      if(pending) pending.style.display = 'none';
-      if(connected) connected.style.display = 'none';
-    } else if (!data.charges_enabled || !data.details_submitted) {
-      // Compte créé mais pas finalisé
-      if(notConn) notConn.style.display = 'none';
-      if(pending) pending.style.display = 'flex';
-      if(connected) connected.style.display = 'none';
-      // Sauvegarder l'account_id pour continuer l'onboarding
-      user.stripe_account_id = data.stripe_account_id;
-    } else {
-      // Compte actif
-      if(notConn) notConn.style.display = 'none';
-      if(pending) pending.style.display = 'none';
-      if(connected) connected.style.display = 'flex';
-      user.stripe_account_id = data.stripe_account_id;
-    }
-  } catch(e) {
-    // Erreur silencieuse — afficher état non connecté
-    if(notConn) notConn.style.display = 'block';
+var _stripeInstance = null;
+var _ibanElement = null;
+var STRIPE_PK = 'pk_test_51TB9Ay4DZgsNRXZdkXRWy5w8s3Dc0ZMzEDIfkRf6S1BtBzfZYISKrdNXWob4zrKGQ760aM0EuecGs9OG3RlEXpsN00ZEUzj2Gw';
+
+function initStripeIban() {
+  if (!window.Stripe) return;
+  if (_stripeInstance) return;
+  _stripeInstance = Stripe(STRIPE_PK);
+  var elements = _stripeInstance.elements();
+  _ibanElement = elements.create('iban', {
+    supportedCountries: ['SEPA'],
+    style: {
+      base: {
+        fontSize: '14px',
+        fontFamily: '"Plus Jakarta Sans", sans-serif',
+        color: '#111',
+        '::placeholder': { color: '#aaa' }
+      },
+      invalid: { color: '#EF4444' }
+    },
+    placeholderCountry: 'FR'
+  });
+  var container = g('ibanElement');
+  if (container) {
+    _ibanElement.mount('#ibanElement');
+    // Focus styling
+    _ibanElement.on('focus', function() { container.style.borderColor = 'var(--or)'; });
+    _ibanElement.on('blur', function() { container.style.borderColor = 'var(--bdr)'; });
   }
 }
 
-async function setupStripeConnect() {
-  var btn = g('btnConnectStripe');
-  if (btn) { btn.style.opacity = '.6'; btn.textContent = '⏳ Connexion en cours…'; }
-  
+async function loadStripeConnectStatus() {
+  if (!user || user.role !== 'professeur') return;
+  var notConn = g('stripeNotConnected');
+  var pending = g('stripePending');
+  var connected = g('stripeConnected');
+
   try {
+    var r = await fetch(API + '/stripe/connect/status-prof/' + user.id);
+    var data = await r.json();
+
+    if (!data.stripe_account_id) {
+      // Pas encore configuré — afficher le formulaire IBAN
+      if (notConn) notConn.style.display = 'block';
+      if (pending) pending.style.display = 'none';
+      if (connected) connected.style.display = 'none';
+      // Initialiser Stripe.js pour le champ IBAN
+      setTimeout(initStripeIban, 100);
+    } else if (!data.charges_enabled) {
+      // IBAN soumis mais pas encore vérifié
+      if (notConn) notConn.style.display = 'none';
+      if (pending) pending.style.display = 'block';
+      if (connected) connected.style.display = 'none';
+      user.stripe_account_id = data.stripe_account_id;
+    } else {
+      // Compte actif — virements activés
+      if (notConn) notConn.style.display = 'none';
+      if (pending) pending.style.display = 'none';
+      if (connected) connected.style.display = 'block';
+      user.stripe_account_id = data.stripe_account_id;
+    }
+  } catch(e) {
+    if (notConn) notConn.style.display = 'block';
+    setTimeout(initStripeIban, 100);
+  }
+}
+
+async function saveIban() {
+  var btn = g('btnSaveIban');
+  var name = (g('ibanName') && g('ibanName').value.trim()) || (user.pr + ' ' + user.nm).trim();
+
+  if (!name) { toast('Champ manquant', 'Entrez le titulaire du compte'); return; }
+  if (!_ibanElement) { toast('Erreur', 'Chargement en cours, réessayez'); return; }
+  if (!_stripeInstance) { toast('Erreur', 'Stripe non initialisé'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+
+  try {
+    // 1. Créer le compte Connect côté serveur si pas encore fait
     var accountId = user.stripe_account_id;
-    
     if (!accountId) {
-      // Créer le compte d'abord
       var r1 = await fetch(API + '/stripe/connect/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3169,24 +3228,61 @@ async function setupStripeConnect() {
       user.stripe_account_id = accountId;
       try { localStorage.setItem('cp_user', JSON.stringify(user)); } catch(e) {}
     }
-    
-    // Générer le lien d'onboarding
-    var r2 = await fetch(API + '/stripe/connect/onboard', {
+
+    // 2. Récupérer le client_secret pour enregistrer l'IBAN
+    var r2 = await fetch(API + '/stripe/connect/setup-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stripe_account_id: accountId })
     });
     var d2 = await r2.json();
     if (d2.error) { toast('Erreur', d2.error); return; }
-    
-    // Rediriger vers Stripe
-    window.location.href = d2.url;
+
+    // 3. Confirmer avec Stripe.js — l'IBAN ne passe JAMAIS par notre serveur
+    var result = await _stripeInstance.confirmSepaDebitSetup(d2.client_secret, {
+      payment_method: {
+        sepa_debit: _ibanElement,
+        billing_details: { name: name, email: user.em }
+      }
+    });
+
+    if (result.error) {
+      toast('IBAN invalide', result.error.message);
+      return;
+    }
+
+    // 4. Notifier notre serveur que l'IBAN est enregistré
+    await fetch(API + '/stripe/connect/iban-saved', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
+    });
+
+    toast('IBAN enregistré !', 'Vos paiements seront virés automatiquement ✓');
+
+    // Mettre à jour l'UI
+    var notConn = g('stripeNotConnected');
+    var connected = g('stripeConnected');
+    if (notConn) notConn.style.display = 'none';
+    if (connected) connected.style.display = 'block';
+
   } catch(e) {
-    toast('Erreur', 'Impossible de configurer Stripe');
+    toast('Erreur', 'Impossible d\'enregistrer l\'IBAN');
   } finally {
-    if (btn) { btn.style.opacity = '1'; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Configurer mon compte Stripe'; }
+    btn.disabled = false; btn.textContent = 'Enregistrer mon IBAN';
   }
 }
+
+function showChangeIban() {
+  var notConn = g('stripeNotConnected');
+  var connected = g('stripeConnected');
+  if (notConn) notConn.style.display = 'block';
+  if (connected) connected.style.display = 'none';
+  setTimeout(initStripeIban, 100);
+}
+
+// Legacy — plus utilisé mais gardé pour compatibilité
+function setupStripeConnect() { loadStripeConnectStatus(); }
 
 // NOTATION
 var noteVal=0,noteCours=null;
