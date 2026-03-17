@@ -514,12 +514,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 
 /* ============================================================
-   TUTORIEL — spotlight immersif
+   TUTORIEL v3
    ============================================================ */
-#tutoRoot{animation:tutoFadeIn .3s ease both;}
+#tutoRoot{display:none;}
+#tutoRoot.on{display:flex !important;animation:tutoFadeIn .3s ease both;}
 @keyframes tutoFadeIn{from{opacity:0}to{opacity:1}}
-#tutoCard{animation:tutoCardIn .38s cubic-bezier(.34,1.26,.64,1) both;}
-@keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
 </head>
 <body>
@@ -877,6 +877,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
         </div>
+        <!-- Onglet Revenus — visible uniquement pour les profs -->
+        <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none;flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:none;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Revenus
+        </div>
       </div>
 
       <div class="acc-body">
@@ -891,6 +895,85 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="asec" id="asecF">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Professeurs suivis</div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px" id="listF"></div>
+        </div>
+
+        <!-- REVENUS PROF — Stripe -->
+        <div class="asec" id="asecRev">
+
+          <!-- Bandeau Stripe Connect -->
+          <div id="stripeConnectBanner" style="margin:16px 16px 0">
+            <!-- État : non connecté -->
+            <div id="stripeNotConnected" style="background:linear-gradient(135deg,#0A2540,#1a3a5c);border-radius:16px;padding:20px;color:#fff;display:none">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <div style="width:44px;height:44px;background:rgba(255,255,255,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">💳</div>
+                <div>
+                  <div style="font-size:15px;font-weight:700;margin-bottom:2px">Activez vos paiements</div>
+                  <div style="font-size:12px;opacity:.75">Connectez Stripe pour recevoir vos revenus directement sur votre compte bancaire</div>
+                </div>
+              </div>
+              <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:11px 13px;font-size:12px;opacity:.8;margin-bottom:14px;line-height:1.6">
+                ✓ Virement automatique après chaque réservation<br>
+                ✓ Votre IBAN saisit directement sur Stripe (100% sécurisé)<br>
+                ✓ CoursPool prend 5% de commission, vous gardez 95%
+              </div>
+              <button onclick="setupStripeConnect()" id="btnConnectStripe" style="width:100%;background:#635bff;color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .18s">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Configurer mon compte Stripe
+              </button>
+            </div>
+            <!-- État : en cours de configuration -->
+            <div id="stripePending" style="background:#FEF3C7;border-radius:16px;padding:16px;display:none;align-items:center;gap:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#92400E">Configuration en cours</div>
+                <div style="font-size:12px;color:#B45309;margin-top:2px">Finalisez la configuration Stripe pour recevoir vos paiements. <span onclick="setupStripeConnect()" style="cursor:pointer;text-decoration:underline">Continuer →</span></div>
+              </div>
+            </div>
+            <!-- État : connecté -->
+            <div id="stripeConnected" style="background:#F0FDF4;border-radius:16px;padding:16px;display:none;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;background:#22C069;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:#15803D">Paiements activés ✓</div>
+                <div style="font-size:12px;color:#16A34A;margin-top:1px">Vos revenus sont virés automatiquement sur votre compte bancaire</div>
+              </div>
+              <a href="https://dashboard.stripe.com" target="_blank" style="font-size:12px;color:#15803D;font-weight:600;text-decoration:none;flex-shrink:0">Dashboard ↗</a>
+            </div>
+          </div>
+
+          <!-- KPIs -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 16px 0">
+            <div style="background:linear-gradient(135deg,var(--or),var(--ord));border-radius:16px;padding:16px;color:#fff">
+              <div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Ce mois</div>
+              <div id="revMois" style="font-size:26px;font-weight:800;letter-spacing:-.02em">—</div>
+              <div id="revMoisNb" style="font-size:12px;opacity:.75;margin-top:3px">— paiements</div>
+            </div>
+            <div style="background:var(--wh);border-radius:16px;padding:16px;border:1px solid var(--bdr)">
+              <div style="font-size:11px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total</div>
+              <div id="revTotal" style="font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.02em">—</div>
+              <div id="revTotalNb" style="font-size:12px;color:var(--lite);margin-top:3px">— paiements</div>
+            </div>
+          </div>
+
+          <!-- Barre en attente de virement -->
+          <div id="revPendingBar" style="display:none;margin:12px 16px 0;background:var(--orp);border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div><div style="font-size:13px;font-weight:600;color:var(--ink)" id="revPendingAmt">— en attente</div><div style="font-size:12px;color:var(--mid)">Virement Stripe sous 2-7 jours ouvrés</div></div>
+          </div>
+
+          <!-- Liste des paiements -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Historique des paiements</div>
+          <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
+            <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">⏳ Chargement…</div>
+          </div>
+          <div style="padding:14px 16px;text-align:center">
+            <div style="font-size:12px;color:var(--lite);line-height:1.6">Les paiements sont gérés par <strong style="color:var(--ink)">Stripe</strong>.<br>Pour accéder à votre tableau de bord Stripe complet :</div>
+            <a href="https://dashboard.stripe.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--ink);color:#fff;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;text-decoration:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Tableau de bord Stripe
+            </a>
+          </div>
         </div>
 
         <!-- HISTORIQUE -->
@@ -1240,59 +1323,37 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- ============================================================
-     TUTORIEL NOUVELLE VERSION — spotlight SVG immersif
-     ============================================================ -->
-<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;">
+<!-- TUTORIEL v3 — slides plein écran centrées, fiables sur tous les devices -->
+<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
 
-  <!-- Overlay SVG — découpe un trou sur l'élément ciblé -->
-  <svg id="tutoSvg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" preserveAspectRatio="none">
-    <defs>
-      <mask id="tutoMask">
-        <rect width="100%" height="100%" fill="white"/>
-        <rect id="tutoHole" x="0" y="0" width="0" height="0" rx="14" fill="black"/>
-      </mask>
-    </defs>
-    <rect width="100%" height="100%" fill="rgba(0,0,0,.62)" mask="url(#tutoMask)" style="transition:opacity .35s"/>
-    <!-- Bordure lumineuse autour du trou -->
-    <rect id="tutoBorder" x="0" y="0" width="0" height="0" rx="14" fill="none" stroke="#FF6B2B" stroke-width="2.5" opacity="0" style="filter:drop-shadow(0 0 6px rgba(255,107,43,.7))"/>
-  </svg>
+    <!-- Illustration zone -->
+    <div id="tutoIllu" style="height:160px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;flex-shrink:0;"></div>
 
-  <!-- Carte de contenu -->
-  <div id="tutoCard" style="
-    position:absolute;
-    background:#fff;
-    border-radius:20px;
-    padding:22px 22px 18px;
-    width:min(320px, calc(100vw - 32px));
-    box-shadow:0 24px 64px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
-    transition:top .38s cubic-bezier(.65,0,.35,1), left .38s cubic-bezier(.65,0,.35,1), opacity .28s;
-  ">
-    <!-- Flèche SVG directionnelle -->
-    <svg id="tutoArrowSvg" width="20" height="12" viewBox="0 0 20 12" style="position:absolute;display:none">
-      <polygon points="10,0 20,12 0,12" fill="#fff"/>
-    </svg>
+    <div style="padding:24px 24px 20px">
+      <!-- Dots + Skip -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
+        <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:#bbb;cursor:pointer;font-family:inherit;padding:4px 10px;border-radius:8px;font-weight:500;transition:color .15s">Passer</button>
+      </div>
 
-    <!-- Header : dots + skip -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
-      <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:#bbb;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:8px;transition:color .15s" onmouseenter="this.style.color='var(--or)'" onmouseleave="this.style.color='#bbb'">Passer</button>
-    </div>
+      <!-- Contenu -->
+      <div id="tutoTitle" style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px;letter-spacing:-.02em;line-height:1.2"></div>
+      <div id="tutoDesc" style="font-size:14px;color:#555;line-height:1.7;margin-bottom:22px"></div>
 
-    <!-- Icône -->
-    <div id="tutoEmoji" style="width:48px;height:48px;border-radius:14px;background:var(--orp);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:12px"></div>
+      <!-- Tip contextuel optionnel -->
+      <div id="tutoTip" style="display:none;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--mid);line-height:1.6;margin-bottom:18px;display:flex;gap:9px;align-items:flex-start">
+        <span style="font-size:16px;flex-shrink:0">💡</span>
+        <span id="tutoTipText"></span>
+      </div>
 
-    <!-- Texte -->
-    <div id="tutoTitle" style="font-size:16px;font-weight:800;color:#111;margin-bottom:7px;letter-spacing:-.02em;line-height:1.25"></div>
-    <div id="tutoDesc" style="font-size:13px;color:#666;line-height:1.65;margin-bottom:16px"></div>
-
-    <!-- Boutons -->
-    <div style="display:flex;gap:8px">
-      <button id="tutoPrev" onclick="tutoPrev()" style="display:none;flex:0 0 auto;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;padding:11px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s">← Retour</button>
-      <button id="tutoBtn" onclick="tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s;box-shadow:0 4px 14px rgba(255,107,43,.35)">Suivant →</button>
+      <!-- Boutons -->
+      <div style="display:flex;gap:10px">
+        <button id="tutoPrev" onclick="tutoPrev()" style="display:none;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;flex-shrink:0;transition:all .15s">←</button>
+        <button id="tutoBtn" onclick="tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:background .15s;box-shadow:0 4px 16px rgba(255,107,43,.35)">Suivant →</button>
+      </div>
     </div>
   </div>
-
 </div>
 
 <!-- BARRE DE NAVIGATION BAS -->
@@ -1722,6 +1783,18 @@ async function checkStripeReturn(){
       return;
     }
 
+    // Retour depuis Stripe Connect
+    if(params.get('stripe_connected')){
+      window.history.replaceState({},'',window.location.pathname);
+      toast('Compte Stripe configuré !','Vous allez recevoir vos paiements automatiquement ✓');
+      setTimeout(function(){navTo('acc');if(user&&user.role==='professeur'){var tabRev=g('aTabRev');if(tabRev)tabRev.click();}},800);
+      return;
+    }
+    if(params.get('stripe_refresh')){
+      window.history.replaceState({},'',window.location.pathname);
+      toast('Configuration Stripe','Finalisez votre configuration pour recevoir les paiements');
+      return;
+    }
     if(!paid||!coursId){checkPrivateCoursAccess();return;}
     localStorage.removeItem('cp_stripe_pending');
     if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
@@ -1760,14 +1833,18 @@ function goAccount(){
     g('pfProfExtra').style.display='none';
   }
   buildAccLists();
+  // Onglet Revenus visible uniquement pour les profs
+  var tabRev = g('aTabRev');
+  if (tabRev) tabRev.style.display = (user && user.role==='professeur') ? 'flex' : 'none';
 }
 
 function switchATab(s,el){
-  ['R','F','H','P'].forEach(function(x){
+  ['R','F','H','P','Rev'].forEach(function(x){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');if(tab)tab.classList.remove('on');
   });
   var sec=g('asec'+s);if(sec)sec.classList.add('on');el.classList.add('on');
+  if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
 }
 
 function buildAccLists(){
@@ -2797,104 +2874,94 @@ function checkCodeInSearch(val){
 
 
 // ============================================================
-// TUTORIEL PREMIÈRE CONNEXION v2 — spotlight SVG immersif
+// TUTORIEL v3 — slides centrées, fiables sur tous les devices
 // ============================================================
 
 var TUTO_ELEVE = [
   {
-    target: null,
-    title: 'Bienvenue sur CoursPool ! 🎉',
-    desc: 'En 4 étapes, on te montre comment trouver un cours, réserver ta place, contacter un prof et gérer ton profil.',
-    emoji: '🚀'
+    bg: 'linear-gradient(135deg,var(--or),var(--ord))',
+    emoji: '👋',
+    title: 'Bienvenue sur CoursPool !',
+    desc: 'La plateforme qui divise le coût d\'un cours entre plusieurs élèves. Un prof, plusieurs places, un prix juste pour tout le monde.',
+    tip: null
   },
   {
-    target: 'locInput',
-    title: 'Cherche par ville',
-    desc: 'Tape ta ville ou ton code postal. CoursPool affiche uniquement les cours proches de chez toi en temps réel.',
-    emoji: '📍'
+    bg: 'linear-gradient(135deg,#EFF6FF,#BFDBFE)',
+    emoji: '🔍',
+    title: 'Explore les cours près de toi',
+    desc: 'Tape ta ville dans la barre de localisation. Les cours s\'affichent par matière, date et distance. Filtre par Maths, Langues, Info… ou ajoute tes propres matières avec le bouton "+".',
+    tip: 'Tu peux aussi entrer un code privé dans la barre de recherche si un prof te l\'a partagé.'
   },
   {
-    target: 'pillsBar',
-    title: 'Filtre par matière',
-    desc: 'Clique sur Maths, Langues, Info… pour filtrer. Le bouton "+" te permet même d\'ajouter tes propres matières.',
-    emoji: '🎯'
+    bg: 'linear-gradient(135deg,#F0FDF4,#BBF7D0)',
+    emoji: '💳',
+    title: 'Réserve et paie ta part',
+    desc: 'Clique sur un cours puis "Réserver". Le paiement est sécurisé via Stripe. Tu ne paies que ta part — le reste est partagé entre tous les élèves inscrits.',
+    tip: 'Tu peux aussi réserver une place pour quelqu\'un d\'autre, ou partager le lien du cours.'
   },
   {
-    target: null,
-    title: 'Réserve une place 💳',
-    desc: 'Clique sur une carte de cours, puis "Réserver". Le paiement est sécurisé via Stripe. Tu ne paies que ta part — le reste est partagé entre tous les élèves.',
-    emoji: '💳'
-  },
-  {
-    target: 'bniMsg',
+    bg: 'linear-gradient(135deg,#FFF7ED,#FED7AA)',
+    emoji: '💬',
     title: 'Contacte le professeur',
-    desc: 'Tu as une question avant de réserver ? Envoie un message directement au prof depuis la messagerie.',
-    emoji: '💬'
+    desc: 'Une question avant de réserver ? Clique sur l\'onglet Messages pour écrire directement au prof. Tu peux aussi accéder à la messagerie depuis la carte d\'un cours.',
+    tip: null
   },
   {
-    target: 'bniAcc',
+    bg: 'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
+    emoji: '👤',
     title: 'Ton espace personnel',
-    desc: 'Retrouve toutes tes réservations à venir, les profs que tu suis, et l\'historique de tes cours. Tu peux aussi noter un cours une fois qu\'il est terminé.',
-    emoji: '👤'
+    desc: 'Dans l\'onglet Profil : retrouve tes réservations à venir, les profs que tu suis (tu seras notifié de leurs prochains cours), et ton historique. Tu peux aussi noter un cours terminé.',
+    tip: null
   }
 ];
 
 var TUTO_PROF = [
   {
-    target: null,
-    title: 'Bienvenue professeur ! 👋',
-    desc: 'CoursPool t\'aide à remplir tes cours et à recevoir des paiements automatiquement. Voici les fonctionnalités essentielles.',
-    emoji: '🏫'
+    bg: 'linear-gradient(135deg,var(--or),var(--ord))',
+    emoji: '🏫',
+    title: 'Bienvenue professeur !',
+    desc: 'CoursPool t\'aide à remplir tes cours et encaisse automatiquement les paiements via Stripe. Voici comment ça marche.',
+    tip: null
   },
   {
-    target: 'bniAdd',
-    title: 'Publie ton premier cours',
-    desc: 'Appuie sur ce bouton "+" pour créer un cours. Choisis la matière, la date, le lieu, et fixe ton prix total. CoursPool divise automatiquement le coût entre les élèves.',
-    emoji: '➕'
+    bg: 'linear-gradient(135deg,#F0FDF4,#BBF7D0)',
+    emoji: '➕',
+    title: 'Crée ton premier cours',
+    desc: 'Appuie sur le bouton "+" dans la navigation. Choisis la matière, la date, le lieu, le nombre de places et ton prix total. CoursPool divise automatiquement le coût entre les élèves.',
+    tip: 'Tu peux rendre un cours privé : un code à 6 lettres est généré. Seuls les élèves qui ont ce code peuvent s\'inscrire.'
   },
   {
-    target: null,
-    title: 'Cours public ou privé 🔒',
-    desc: 'Lors de la création, tu peux rendre un cours privé. Un code à 6 lettres est généré — seuls les élèves qui ont ce code peuvent s\'inscrire. Idéal pour tes groupes existants.',
-    emoji: '🔒'
+    bg: 'linear-gradient(135deg,#FFF7ED,#FED7AA)',
+    emoji: '💰',
+    title: 'Suis tes revenus',
+    desc: 'Dans ton profil, onglet "Revenus" : consulte chaque paiement reçu, le total du mois, et l\'historique complet. Les paiements sont traités par Stripe et virés automatiquement.',
+    tip: 'Les paiements Stripe sont virés dans un délai de 2 à 7 jours ouvrés selon ton pays.'
   },
   {
-    target: 'locInput',
-    title: 'Tes cours apparaissent ici',
-    desc: 'Tous tes cours publiés sont visibles dans ce fil. Les élèves les trouvent en filtrant par ville ou par matière.',
-    emoji: '📋'
+    bg: 'linear-gradient(135deg,#EFF6FF,#BFDBFE)',
+    emoji: '💬',
+    title: 'Réponds aux élèves',
+    desc: 'Les élèves peuvent te contacter avant de réserver. Réponds rapidement via l\'onglet Messages — ça augmente la confiance et le taux de réservation.',
+    tip: null
   },
   {
-    target: 'bniMsg',
-    title: 'Messagerie avec les élèves',
-    desc: 'Les élèves peuvent te contacter avant de réserver. Tu reçois une notification. Réponds rapidement pour rassurer et maximiser tes inscriptions.',
-    emoji: '💬'
-  },
-  {
-    target: 'bniAcc',
+    bg: 'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
+    emoji: '📊',
     title: 'Ton espace professeur',
-    desc: 'Consulte la liste de tes élèves inscrits, suis tes revenus, accède à l\'historique de tes cours et mets à jour ton profil visible par tous.',
-    emoji: '📊'
+    desc: 'Dans Profil : vois qui s\'est inscrit à chacun de tes cours, consulte les notes que les élèves t\'ont laissées, et mets à jour tes infos visibles par les élèves.',
+    tip: null
   }
 ];
 
 var _tutoSteps = [];
 var _tutoIdx = 0;
-var _tutoResizeTimer = null;
 
 function tutoStart() {
   if (!user) return;
   try { if (localStorage.getItem('cp_tuto_done_' + user.id)) return; } catch(e) {}
   _tutoSteps = user.role === 'professeur' ? TUTO_PROF : TUTO_ELEVE;
   _tutoIdx = 0;
-  setTimeout(_tutoShow, 900);
-  // Repositionner sur resize
-  window.addEventListener('resize', function() {
-    clearTimeout(_tutoResizeTimer);
-    _tutoResizeTimer = setTimeout(function() {
-      if (g('tutoRoot').style.display !== 'none') _tutoShow();
-    }, 150);
-  });
+  setTimeout(_tutoShow, 600);
 }
 
 function _tutoShow() {
@@ -2902,155 +2969,48 @@ function _tutoShow() {
   if (!step) { tutoDone(); return; }
 
   var root = g('tutoRoot');
-  root.style.display = 'block';
+  root.style.display = 'flex';
+  root.classList.add('on');
 
-  // Contenu
-  g('tutoEmoji').textContent = step.emoji;
+  // Illustration
+  var illu = g('tutoIllu');
+  illu.style.background = step.bg;
+  illu.textContent = step.emoji;
+
+  // Texte
   g('tutoTitle').textContent = step.title;
   g('tutoDesc').textContent = step.desc;
 
-  // Bouton suivant / terminer
+  // Tip
+  var tipBox = g('tutoTip');
+  var tipTxt = g('tutoTipText');
+  if (step.tip) {
+    tipTxt.textContent = step.tip;
+    tipBox.style.display = 'flex';
+  } else {
+    tipBox.style.display = 'none';
+  }
+
+  // Bouton suivant/terminer
   var btn = g('tutoBtn');
-  btn.textContent = _tutoIdx === _tutoSteps.length - 1 ? 'Terminer 🎉' : 'Suivant →';
-  btn.style.background = _tutoIdx === _tutoSteps.length - 1 ? 'var(--green)' : 'var(--or)';
-  btn.style.boxShadow = _tutoIdx === _tutoSteps.length - 1 ? '0 4px 14px rgba(34,192,105,.35)' : '0 4px 14px rgba(255,107,43,.35)';
+  var isLast = _tutoIdx === _tutoSteps.length - 1;
+  btn.textContent = isLast ? 'C\'est parti ! 🎉' : 'Suivant →';
+  btn.style.background = isLast ? 'var(--green)' : 'var(--or)';
+  btn.style.boxShadow = isLast ? '0 4px 16px rgba(34,192,105,.35)' : '0 4px 16px rgba(255,107,43,.35)';
 
   // Bouton retour
-  var prev = g('tutoPrev');
-  prev.style.display = _tutoIdx > 0 ? 'block' : 'none';
+  g('tutoPrev').style.display = _tutoIdx > 0 ? 'block' : 'none';
 
   // Dots
   g('tutoDots').innerHTML = _tutoSteps.map(function(_, i) {
-    return '<div style="width:' + (i === _tutoIdx ? '20px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === _tutoIdx ? 'var(--or)' : '#ddd') + ';transition:all .3s ease"></div>';
+    return '<div style="width:' + (i === _tutoIdx ? '22px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === _tutoIdx ? 'var(--or)' : '#e0e0e0') + ';transition:all .3s ease;flex-shrink:0"></div>';
   }).join('');
 
-  // Spotlight
-  _tutoSpotlight(step.target);
-}
-
-function _tutoSpotlight(targetId) {
-  var W = window.innerWidth, H = window.innerHeight;
-  var hole = g('tutoHole');
-  var border = g('tutoBorder');
-  var svg = g('tutoSvg');
-  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-
-  var PAD = 10;
-  var rx = 14;
-
-  if (!targetId) {
-    // Pas de cible — plein écran flouté, pas de trou
-    hole.setAttribute('x', W/2); hole.setAttribute('y', H/2);
-    hole.setAttribute('width', '0'); hole.setAttribute('height', '0');
-    border.setAttribute('width', '0'); border.setAttribute('height', '0');
-    _tutoCardCenter();
-    return;
-  }
-
-  var el = g(targetId);
-  if (!el) { _tutoCardCenter(); return; }
-
-  var rect = el.getBoundingClientRect();
-  // Vérifier que l'élément est visible
-  if (rect.width === 0 || rect.height === 0) { _tutoCardCenter(); return; }
-
-  var x = rect.left - PAD, y = rect.top - PAD;
-  var w = rect.width + PAD*2, h = rect.height + PAD*2;
-
-  // Animer le trou
-  _animateAttr(hole, {x: x, y: y, width: w, height: h, rx: rx});
-  _animateAttr(border, {x: x, y: y, width: w, height: h, rx: rx, opacity: 1});
-
-  // Positionner la carte
-  _tutoCardNear(rect, x, y, w, h, W, H);
-}
-
-function _animateAttr(el, attrs) {
-  Object.keys(attrs).forEach(function(k) { el.setAttribute(k, attrs[k]); });
-}
-
-function _tutoCardNear(rect, hx, hy, hw, hh, W, H) {
+  // Animation carte
   var card = g('tutoCard');
-  var arrow = g('tutoArrowSvg');
-  var cW = Math.min(320, W - 32);
-  var cH = card.offsetHeight || 220;
-  var margin = 14;
-
-  card.style.width = cW + 'px';
-
-  // Essayer d'abord en bas de l'élément
-  var spaceBelow = H - (hy + hh) - margin;
-  var spaceAbove = hy - margin;
-  var spaceRight = W - (hx + hw) - margin;
-  var spaceLeft = hx - margin;
-
-  var placed = false;
-  var cx, cy, arrowDir;
-
-  if (spaceBelow >= cH + 20) {
-    // Carte en bas
-    cy = hy + hh + margin;
-    cx = Math.min(Math.max(rect.left + rect.width/2 - cW/2, 12), W - cW - 12);
-    arrowDir = 'up';
-    placed = true;
-  } else if (spaceAbove >= cH + 20) {
-    // Carte en haut
-    cy = hy - cH - margin;
-    cx = Math.min(Math.max(rect.left + rect.width/2 - cW/2, 12), W - cW - 12);
-    arrowDir = 'down';
-    placed = true;
-  } else if (spaceRight >= cW + 20) {
-    // Carte à droite
-    cx = hx + hw + margin;
-    cy = Math.min(Math.max(rect.top + rect.height/2 - cH/2, 12), H - cH - 12);
-    arrowDir = 'left';
-    placed = true;
-  } else if (spaceLeft >= cW + 20) {
-    // Carte à gauche
-    cx = hx - cW - margin;
-    cy = Math.min(Math.max(rect.top + rect.height/2 - cH/2, 12), H - cH - 12);
-    arrowDir = 'right';
-    placed = true;
-  }
-
-  if (!placed) { _tutoCardCenter(); return; }
-
-  card.style.left = cx + 'px';
-  card.style.top = cy + 'px';
-  card.style.transform = 'none';
-
-  // Flèche directionnelle
-  arrow.style.display = 'block';
-  var arrowX, arrowY, arrowRot;
-  if (arrowDir === 'up') {
-    arrowX = (rect.left + rect.width/2 - cx - 10);
-    arrowY = -12;
-    arrowRot = 0;
-  } else if (arrowDir === 'down') {
-    arrowX = (rect.left + rect.width/2 - cx - 10);
-    arrowY = cH;
-    arrowRot = 180;
-  } else if (arrowDir === 'left') {
-    arrowX = -12;
-    arrowY = (rect.top + rect.height/2 - cy - 6);
-    arrowRot = -90;
-  } else {
-    arrowX = cW;
-    arrowY = (rect.top + rect.height/2 - cy - 6);
-    arrowRot = 90;
-  }
-  arrow.style.left = arrowX + 'px';
-  arrow.style.top = arrowY + 'px';
-  arrow.style.transform = 'rotate(' + arrowRot + 'deg)';
-}
-
-function _tutoCardCenter() {
-  var card = g('tutoCard');
-  var arrow = g('tutoArrowSvg');
-  card.style.left = '50%';
-  card.style.top = '50%';
-  card.style.transform = 'translate(-50%,-50%)';
-  arrow.style.display = 'none';
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = 'tutoCardIn .38s cubic-bezier(.34,1.26,.64,1)';
 }
 
 function tutoNext() {
@@ -3068,9 +3028,167 @@ function tutoDone() {
   try { localStorage.setItem('cp_tuto_done_' + user.id, '1'); } catch(e) {}
   var root = g('tutoRoot');
   if (root) {
-    root.style.transition = 'opacity .3s';
     root.style.opacity = '0';
-    setTimeout(function() { root.style.display = 'none'; root.style.opacity = ''; root.style.transition = ''; }, 320);
+    root.style.transition = 'opacity .3s';
+    setTimeout(function() {
+      root.style.display = 'none';
+      root.classList.remove('on');
+      root.style.opacity = '';
+      root.style.transition = '';
+    }, 320);
+  }
+}
+
+
+// ============================================================
+// REVENUS PROF — lié à Stripe via /stripe/payments
+// ============================================================
+var _revLoaded = false;
+
+async function loadRevenues() {
+  if (!user || user.role !== 'professeur') return;
+  var list = g('revList');
+  if (!list) return;
+
+  // Récupérer les paiements Stripe depuis le serveur
+  try {
+    var r = await fetch(API + '/stripe/payments/prof/' + user.id);
+    var data = await r.json();
+    if (!Array.isArray(data)) throw new Error('Format invalide');
+
+    // Filtrer uniquement les paiements réussis
+    var paid = data.filter(function(p) { return p.status === 'succeeded'; });
+
+    // KPIs
+    var now = new Date();
+    var thisMonth = paid.filter(function(p) {
+      var d = new Date(p.created);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    var moisTotal = thisMonth.reduce(function(a, p) { return a + p.amount; }, 0);
+    var total = paid.reduce(function(a, p) { return a + p.amount; }, 0);
+
+    // Montants en attente (requires_capture ou processing)
+    var pending = data.filter(function(p) { return p.status === 'processing'; });
+    var pendingAmt = pending.reduce(function(a, p) { return a + p.amount; }, 0);
+
+    g('revMois').textContent = moisTotal.toFixed(2) + '€';
+    g('revMoisNb').textContent = thisMonth.length + ' paiement' + (thisMonth.length > 1 ? 's' : '');
+    g('revTotal').textContent = total.toFixed(2) + '€';
+    g('revTotalNb').textContent = paid.length + ' paiement' + (paid.length > 1 ? 's' : '');
+
+    var pendingBar = g('revPendingBar');
+    if (pendingAmt > 0 && pendingBar) {
+      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ en attente de virement';
+      pendingBar.style.display = 'flex';
+    } else if (pendingBar) {
+      pendingBar.style.display = 'none';
+    }
+
+    // Liste des paiements
+    if (!paid.length) {
+      list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--lite)"><div style="font-size:36px;margin-bottom:10px">💸</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px">Aucun paiement encore</div><div style="font-size:13px">Tes revenus apparaîtront ici dès la première réservation.</div></div>';
+      return;
+    }
+
+    list.innerHTML = paid.slice(0, 30).map(function(p) {
+      var d = new Date(p.created);
+      var dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+      var timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      var cours = p.cours_titre || 'Cours CoursPool';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--bdr)">'
+        + '<div style="width:40px;height:40px;border-radius:12px;background:var(--orp);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💳</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cours + '</div>'
+        + '<div style="font-size:12px;color:var(--lite);margin-top:2px">' + dateStr + ' · ' + timeStr + '</div>'
+        + '</div>'
+        + '<div style="font-size:16px;font-weight:800;color:var(--green);flex-shrink:0">+' + p.amount.toFixed(2) + '€</div>'
+        + '</div>';
+    }).join('') + (paid.length > 30 ? '<div style="text-align:center;padding:12px;font-size:12px;color:var(--lite)">' + (paid.length - 30) + ' paiements supplémentaires sur le dashboard Stripe</div>' : '');
+
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les revenus.<br><a onclick="loadRevenues()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+  }
+}
+
+
+// ============================================================
+// STRIPE CONNECT — setup et vérification statut
+// ============================================================
+
+async function loadStripeConnectStatus() {
+  if (!user || user.role !== 'professeur') return;
+  
+  var notConn = g('stripeNotConnected');
+  var pending = g('stripePending');
+  var connected = g('stripeConnected');
+  
+  // Récupérer le stripe_account_id depuis le profil
+  try {
+    var r = await fetch(API + '/stripe/connect/status-prof/' + user.id);
+    var data = await r.json();
+    
+    if (!data.stripe_account_id) {
+      // Pas de compte créé
+      if(notConn) notConn.style.display = 'block';
+      if(pending) pending.style.display = 'none';
+      if(connected) connected.style.display = 'none';
+    } else if (!data.charges_enabled || !data.details_submitted) {
+      // Compte créé mais pas finalisé
+      if(notConn) notConn.style.display = 'none';
+      if(pending) pending.style.display = 'flex';
+      if(connected) connected.style.display = 'none';
+      // Sauvegarder l'account_id pour continuer l'onboarding
+      user.stripe_account_id = data.stripe_account_id;
+    } else {
+      // Compte actif
+      if(notConn) notConn.style.display = 'none';
+      if(pending) pending.style.display = 'none';
+      if(connected) connected.style.display = 'flex';
+      user.stripe_account_id = data.stripe_account_id;
+    }
+  } catch(e) {
+    // Erreur silencieuse — afficher état non connecté
+    if(notConn) notConn.style.display = 'block';
+  }
+}
+
+async function setupStripeConnect() {
+  var btn = g('btnConnectStripe');
+  if (btn) { btn.style.opacity = '.6'; btn.textContent = '⏳ Connexion en cours…'; }
+  
+  try {
+    var accountId = user.stripe_account_id;
+    
+    if (!accountId) {
+      // Créer le compte d'abord
+      var r1 = await fetch(API + '/stripe/connect/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prof_id: user.id, email: user.em })
+      });
+      var d1 = await r1.json();
+      if (d1.error) { toast('Erreur', d1.error); return; }
+      accountId = d1.account_id;
+      user.stripe_account_id = accountId;
+      try { localStorage.setItem('cp_user', JSON.stringify(user)); } catch(e) {}
+    }
+    
+    // Générer le lien d'onboarding
+    var r2 = await fetch(API + '/stripe/connect/onboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stripe_account_id: accountId })
+    });
+    var d2 = await r2.json();
+    if (d2.error) { toast('Erreur', d2.error); return; }
+    
+    // Rediriger vers Stripe
+    window.location.href = d2.url;
+  } catch(e) {
+    toast('Erreur', 'Impossible de configurer Stripe');
+  } finally {
+    if (btn) { btn.style.opacity = '1'; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Configurer mon compte Stripe'; }
   }
 }
 
