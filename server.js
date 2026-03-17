@@ -175,6 +175,14 @@ app.get('/cours', async (req, res) => {
   res.json(data);
 });
 
+
+// PROFILES — récupérer un profil par ID
+app.get('/profiles/:id', async (req, res) => {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', req.params.id).single();
+  if (error) return res.status(404).json({});
+  res.json(data || {});
+});
+
 // COURS — créer
 app.post('/cours', async (req, res) => {
   const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description } = req.body;
