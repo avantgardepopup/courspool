@@ -384,7 +384,11 @@ app.post('/stripe/checkout', async (req, res) => {
       line_items: [{
         price_data: {
           currency: 'eur',
-          product_data: { name: cours_titre || 'Réservation CoursPool' },
+          product_data: {
+            name: cours_titre || 'Réservation CoursPool',
+            description: 'Cours CoursPool — Paiement sécurisé',
+            images: ['https://courspool.vercel.app/icon-192.png'],
+          },
           unit_amount: Math.round(montant * 100),
         },
         quantity: 1,
@@ -394,6 +398,10 @@ app.post('/stripe/checkout', async (req, res) => {
       cancel_url: cancelUrl,
       metadata: { cours_id, user_id, montant: montant.toString() },
       payment_intent_data: paymentIntentData,
+      // Branding CoursPool — masque la marque Stripe
+      custom_text: {
+        submit: { message: 'Votre paiement est sécurisé. Vous recevrez une confirmation par email.' }
+      },
     });
     res.json({ url: session.url });
   } catch (e) {
