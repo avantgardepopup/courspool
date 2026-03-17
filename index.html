@@ -125,6 +125,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .skel-line.w60{width:60%;}
 .skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
+.card-prive{border-color:#E8D9C4;background:linear-gradient(to bottom,#FFFBF5,var(--wh));}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .ctop{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
@@ -673,18 +674,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             <select id="rNiveau"><option value="">Choisir...</option></select>
           </div>
           <div class="lfield"><label>Matière(s) enseignée(s)</label><input id="rMatiere" type="text" placeholder="Maths, Physique, Anglais…"></div>
-          <div class="lfield">
-            <label>Pièce d'identité <span style="color:#EF4444">*</span></label>
-            <div id="cniDrop" onclick="g('rCni').click()" style="border:1.5px dashed var(--bdr);border-radius:10px;padding:16px;text-align:center;cursor:pointer">
-              <div style="font-size:22px;margin-bottom:6px">🪪</div>
-              <div id="cniLabel" style="font-size:13px;font-weight:600;color:var(--mid)">CNI ou Passeport</div>
-              <div style="font-size:11px;color:var(--lite);margin-top:3px">JPG, PNG, PDF · Max 5MB</div>
-              <input type="file" id="rCni" accept="image/*,.pdf" style="display:none" onchange="previewCni(this)">
-            </div>
-          </div>
-          <div style="background:var(--orp);border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:var(--mid);line-height:1.6">
-            ⏱️ Vérification sous <strong>5 min à 2 heures</strong>. Email de confirmation avant votre premier cours.
-          </div>
+
         </div>
         <button class="lbtn" onclick="doReg()">Créer mon compte</button>
       </div>
@@ -737,15 +727,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div class="cnt">
       <div class="locbar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <input type="text" value="Paris 75005" placeholder="Votre ville…">
-        <div class="rsel">
-          <div class="ro" onclick="setR(this)">1 km</div>
-          <div class="ro on" onclick="setR(this)">5 km</div>
-          <div class="ro" onclick="setR(this)">10 km</div>
-          <div class="ro" onclick="setR(this)">Partout</div>
-        </div>
+        <input type="text" id="locInput" placeholder="Ville, code postal…" oninput="filterByLoc(this.value)" autocomplete="off" style="flex:1">
+        <button onclick="locInputClear()" id="locClearBtn" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:2px;line-height:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-      <div class="pills">
+      <div class="pills" id="pillsBar">
         <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
         <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
         <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
@@ -754,6 +741,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
         <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
         <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
+        <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Filtre
+        </div>
+      </div>
+
+      <!-- Modal ajout filtre -->
+      <div id="bdFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAddFilter()">
+        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;animation:mi .25s ease">
+          <div style="font-size:17px;font-weight:800;margin-bottom:6px">Ajouter un filtre</div>
+          <div style="font-size:13px;color:var(--lite);margin-bottom:16px">Tapez une matière ou choisissez-en une</div>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <input id="filterInput" class="fi3" style="flex:1" placeholder="Ex: chimie, droit, musique…" oninput="previewCustomFilter(this.value)">
+            <button class="pb pri" style="padding:10px 16px;flex-shrink:0" onclick="addCustomFilter()">Ajouter</button>
+          </div>
+          <div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Suggestions</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="filterSuggestions">
+            <div class="pill" onclick="addFilterQuick('Histoire')">Histoire</div>
+            <div class="pill" onclick="addFilterQuick('Philosophie')">Philosophie</div>
+            <div class="pill" onclick="addFilterQuick('Chimie')">Chimie</div>
+            <div class="pill" onclick="addFilterQuick('Biologie')">Biologie</div>
+            <div class="pill" onclick="addFilterQuick('SVT')">SVT</div>
+            <div class="pill" onclick="addFilterQuick('Musique')">Musique</div>
+            <div class="pill" onclick="addFilterQuick('Arts')">Arts</div>
+            <div class="pill" onclick="addFilterQuick('Droit')">Droit</div>
+            <div class="pill" onclick="addFilterQuick('Géographie')">Géographie</div>
+            <div class="pill" onclick="addFilterQuick('Sport')">Sport</div>
+          </div>
+          <div style="margin-top:16px" id="customPillsList"></div>
+        </div>
       </div>
       <div class="grid" id="grid"></div>
       <div id="loadMoreWrap" style="text-align:center;margin-top:20px;display:none">
@@ -795,7 +812,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="msgConvName"></div>
-          <div style="font-size:11px;color:var(--green);font-weight:600">En ligne</div>
+
         </div>
       </div>
 
@@ -1070,6 +1087,30 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Places max</label><input class="fi3" id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()"></div>
       </div>
       <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Prix total (€)</label><input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()"><div id="cH" style="font-size:12px;color:var(--lite);margin-top:5px"></div></div>
+      <!-- Option cours privé -->
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Cours privé
+            </div>
+            <div style="font-size:12px;color:var(--lite);margin-top:2px">N'apparaît pas dans le fil. Accès par code ou lien uniquement.</div>
+          </div>
+          <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+            <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
+          </div>
+        </div>
+        <div id="codePriveBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
+          <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:6px">Code d'accès (généré automatiquement)</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="codePriveVal" style="flex:1;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800;letter-spacing:.15em;color:var(--ink);text-align:center"></div>
+            <button onclick="regenCode()" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s" title="Regénérer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
       <button class="pb pri" style="width:100%" onclick="subCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier le cours</button>
     </div>
   </div>
@@ -1158,6 +1199,37 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <button class="pb pri" style="width:100%" onclick="submitNote()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         Envoyer mon avis
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CNI — première connexion professeur -->
+<div class="bd" id="bdCni" style="z-index:500">
+  <div class="modal" style="max-width:400px">
+    <div class="mhd">
+      <div>
+        <div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Vérification</div>
+        <div style="font-size:17px;font-weight:800">Votre pièce d'identité</div>
+      </div>
+    </div>
+    <div class="mbd">
+      <div style="background:var(--orp);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--mid);line-height:1.6;display:flex;gap:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Pour publier des cours, nous devons vérifier votre identité. Cela prend <strong>5 min à 2 heures</strong>.</span>
+      </div>
+      <div id="cniDropModal" onclick="g('cniFileModal').click()" style="border:2px dashed var(--bdr);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .18s;margin-bottom:14px" onmouseenter="this.style.borderColor='var(--or)';this.style.background='var(--orp)'" onmouseleave="this.style.borderColor='var(--bdr)';this.style.background=''">
+        <div style="font-size:36px;margin-bottom:8px">🪪</div>
+        <div id="cniLabelModal" style="font-size:14px;font-weight:700;color:var(--ink)">CNI ou Passeport</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:4px">JPG, PNG, PDF · Max 5MB · Cliquez pour choisir</div>
+        <input type="file" id="cniFileModal" accept="image/*,.pdf" style="display:none" onchange="previewCniModal(this)">
+      </div>
+      <button class="pb pri" style="width:100%;margin-bottom:10px" id="cniSubmitBtn" onclick="submitCni()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+        Envoyer pour vérification
+      </button>
+      <button class="pb sec" style="width:100%" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil')">
+        Plus tard
       </button>
     </div>
   </div>
@@ -1312,7 +1384,9 @@ async function loadData(){
         prof_col:c.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
         prof_nm:c.prof_nom||'Professeur',
         prof_photo:c.prof_photo||null,
-        description:c.description||''
+        description:c.description||'',
+        prive:c.prive||false,
+        code:c.code_acces||''
       };
     });
     C.forEach(function(c){
@@ -1387,7 +1461,6 @@ async function doReg(){
   if(role==='professeur'){
     var statut=g('rStatut').value;
     if(!statut){toast('Statut manquant','Choisissez votre statut');return;}
-    if(!g('rCni').files||!g('rCni').files[0]){toast('CNI manquante','Uploadez votre pièce d\'identité');return;}
     extra.statut=statut;extra.niveau=g('rNiveau').value||'';extra.matieres=g('rMatiere').value||'';
   }
   try{
@@ -1433,6 +1506,8 @@ function applyUser(){
   var bp=g('btnProposerMob');
   if(bp)bp.style.display=user.role==='professeur'?'flex':'none';
   updateMobHeader('exp');
+  // Vérifier si première connexion prof pour CNI
+  checkFirstProfLogin();
 }
 
 // Titres et sous-titres par page
@@ -1557,13 +1632,13 @@ function goExplore(){
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
           fol.clear();
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-          loadData().then(function(){buildCards();checkStripeReturn();});
-        }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();});});
+          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
+        }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
-        loadData().then(function(){buildCards();checkStripeReturn();});
+        loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
       }
     } else {
-      loadData().then(function(){buildCards();});
+      loadData().then(function(){buildCards();checkPrivateCoursAccess();});
     }
   }catch(e){}
 })();
@@ -1585,7 +1660,7 @@ async function checkStripeReturn(){
       return;
     }
 
-    if(!paid||!coursId)return;
+    if(!paid||!coursId){checkPrivateCoursAccess();return;}
     localStorage.removeItem('cp_stripe_pending');
     if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
     await loadData();
@@ -1762,6 +1837,8 @@ function applyFilter(){
   var raw=g('srch').value.trim();
   var q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   filteredCards=C.filter(function(c){
+    // Cours privés cachés sauf si propriétaire ou déjà réservé
+    if(c.prive&&!(user&&c.pr===user.id)&&!res[c.id])return false;
     var title=(c.title||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var subj=(c.subj||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var loc=(c.lc||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -1769,7 +1846,9 @@ function applyFilter(){
     var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
-    return matchFilter&&matchSearch;
+    // Filtre localisation
+    var matchLoc=!actLoc||loc.includes(actLoc);
+    return matchFilter&&matchSearch&&matchLoc;
   });
   renderPage();
 }
@@ -1793,7 +1872,7 @@ function renderPage(){
     else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
     var profAv=c.prof_photo?'<img src="'+c.prof_photo+'" style="width:100%;height:100%;object-fit:cover">':c.prof_ini;
     var d=document.createElement('div');
-    d.className='card';d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
+    d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
     d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
     d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div><div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div class="ps">Total '+c.tot+'€</div><div class="pm">'+pp+'€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
@@ -1805,7 +1884,11 @@ function renderPage(){
 function loadMore(){currentPage++;renderPage();}
 
 var FM={tous:function(){return true;},maths:function(t){return /maths|algebre|statist|analyse|fourier/.test(t);},physique:function(t){return /physique|electro|maxwell|quantique/.test(t);},informatique:function(t){return /informatique|python|data|react|javascript|sql/.test(t);},langues:function(t){return /anglais|espagnol|langues|toefl/.test(t);},economie:function(t){return /economie|macro|finance/.test(t);},soir:function(t){return /18h|19h|20h|soir/.test(t);},weekend:function(t){return /sam|dim|weekend/.test(t);}};
-function doFilter(){currentPage=1;applyFilter();}
+function doFilter(){
+  var val=g('srch').value.trim();
+  if(checkCodeInSearch(val))return;
+  currentPage=1;applyFilter();
+}
 function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();}
 
 // RÉSERVATION
@@ -1950,7 +2033,7 @@ async function confAmi(id){
 function shareCoursLink(){
   var c=C.find(function(x){return x.id===curId});
   if(!c)return;
-  var url=window.location.href.split('?')[0]+'?cours='+curId;
+  var url=window.location.href.split('?')[0]+(c.prive&&c.code?'?code='+c.code:'?cours='+curId);
   if(navigator.share){
     navigator.share({title:'CoursPool — '+c.title,text:'Rejoins ce cours : '+c.title+' · '+c.dt,url:url});
   } else if(navigator.clipboard){
@@ -2078,11 +2161,13 @@ async function subCr(){
   var payload={
     titre,sujet,couleur_sujet:sc,background:bg,
     date_heure:dateFormatee,lieu,prix_total:prix,places_max:places,
-    professeur_id:user.id,emoji:'📚',
+    professeur_id:user.id,emoji:isCoursPrivé?'🔒':'📚',
     prof_initiales:user.ini||'?',
     prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
     prof_nom:user.pr+(user.nm?' '+user.nm:''),
-    description:desc
+    description:desc,
+    prive:isCoursPrivé,
+    code_acces:isCoursPrivé?codePrivé:null
   };
   if(user.photo)payload.prof_photo=user.photo;
   try{
@@ -2093,6 +2178,10 @@ async function subCr(){
     g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
     if(g('crDesc'))g('crDesc').value='';
     document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});
+    // Reset cours privé
+    isCoursPrivé=false;codePrivé='';
+    var tog=g('togglePrive');var knob=g('togglePriveKnob');var box=g('codePriveBox');
+    if(tog)tog.style.background='var(--bdr)';if(knob)knob.style.transform='translateX(0)';if(box)box.style.display='none';
     closeM('bdCr');await loadData();buildCards();
     toast('Cours publié !','Les élèves peuvent maintenant réserver');
   }catch(e){toast('Erreur réseau','Vérifiez votre connexion');}
@@ -2388,6 +2477,232 @@ async function loadConversations(){
   }catch(e){
     if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
   }finally{_convLoading=false;}
+}
+
+
+// ============================================================
+// LOCALISATION — filtre par ville
+// ============================================================
+var locFilterTimer=null;
+var actLoc='';
+
+function filterByLoc(val){
+  var btn=g('locClearBtn');
+  if(btn)btn.style.display=val.trim()?'block':'none';
+  clearTimeout(locFilterTimer);
+  locFilterTimer=setTimeout(function(){
+    actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    applyFilter();
+  },300);
+}
+
+function locInputClear(){
+  var inp=g('locInput');
+  if(inp)inp.value='';
+  var btn=g('locClearBtn');
+  if(btn)btn.style.display='none';
+  actLoc='';
+  applyFilter();
+}
+
+// ============================================================
+// FILTRES CUSTOM
+// ============================================================
+var customFilters=[];
+
+function openAddFilter(){
+  g('filterInput').value='';
+  renderCustomPills();
+  g('bdFilter').style.display='flex';
+}
+function closeAddFilter(){g('bdFilter').style.display='none';}
+
+function addCustomFilter(){
+  var val=g('filterInput').value.trim();
+  if(!val)return;
+  addFilterQuick(val);
+  g('filterInput').value='';
+}
+
+function addFilterQuick(val){
+  var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(customFilters.find(function(f){return f.key===key;}))return;
+  customFilters.push({label:val,key:key});
+  // Ajouter la pill dans la barre
+  var bar=g('pillsBar');
+  var addBtn=g('pillAdd');
+  var pill=document.createElement('div');
+  pill.className='pill';
+  pill.dataset.f='custom_'+key;
+  pill.innerHTML=val+' <span onclick="event.stopPropagation();removeCustomFilter(''+key+'')" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
+  pill.onclick=function(){setPill(pill);};
+  bar.insertBefore(pill,addBtn);
+  // Ajouter le filtre dans FM
+  FM['custom_'+key]=function(t){return t.includes(key);};
+  closeAddFilter();
+  setPill(pill);
+  renderCustomPills();
+}
+
+function removeCustomFilter(key){
+  customFilters=customFilters.filter(function(f){return f.key!==key;});
+  var pill=document.querySelector('[data-f="custom_'+key+'"]');
+  if(pill){
+    if(pill.classList.contains('on'))setPill(document.querySelector('[data-f="tous"]'));
+    pill.remove();
+  }
+  delete FM['custom_'+key];
+}
+
+function renderCustomPills(){
+  var box=g('customPillsList');
+  if(!box)return;
+  if(!customFilters.length){box.innerHTML='';return;}
+  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Filtres actifs</div>'
+    +customFilters.map(function(f){
+      return'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:50px;padding:5px 12px;font-size:13px;font-weight:500;margin:0 6px 6px 0">'+f.label
+        +'<span onclick="removeCustomFilter(''+f.key+'')" style="cursor:pointer;opacity:.6;font-size:11px">✕</span></span>';
+    }).join('');
+}
+
+// ============================================================
+// CNI MODAL — première connexion prof
+// ============================================================
+function checkFirstProfLogin(){
+  if(!user||user.role!=='professeur')return;
+  try{
+    var done=localStorage.getItem('cp_cni_done_'+user.id);
+    if(done)return;
+  }catch(e){}
+  // Afficher la modal CNI après 800ms
+  setTimeout(function(){openM('bdCni');},800);
+}
+
+function previewCniModal(input){
+  if(input.files&&input.files[0]){
+    g('cniLabelModal').textContent='✅ '+input.files[0].name;
+    g('cniDropModal').style.borderColor='var(--green)';
+    g('cniDropModal').style.background='#F0FDF4';
+  }
+}
+
+async function submitCni(){
+  var file=g('cniFileModal').files&&g('cniFileModal').files[0];
+  if(!file){toast('Fichier manquant','Choisissez votre CNI ou passeport');return;}
+  var btn=g('cniSubmitBtn');
+  btn.disabled=true;btn.textContent='⏳ Envoi…';
+  try{
+    var reader=new FileReader();
+    reader.onload=async function(e){
+      var base64=e.target.result;
+      await fetch(API+'/upload/cni',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({base64:base64,userId:user.id,filename:file.name})
+      }).catch(function(){});
+      try{localStorage.setItem('cp_cni_done_'+user.id,'1');}catch(e){}
+      closeM('bdCni');
+      toast('CNI envoyée !','Vérification sous 5 min à 2 heures. Email de confirmation à venir.');
+      btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Envoyer pour vérification';
+    };
+    reader.readAsDataURL(file);
+  }catch(e){
+    toast('Erreur','Impossible d\'envoyer le fichier');
+    btn.disabled=false;btn.innerHTML='Envoyer pour vérification';
+  }
+}
+
+// ============================================================
+// COURS PRIVÉ
+// ============================================================
+var isCoursPrivé=false;
+var codePrivé='';
+
+function genCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code='';
+  for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+function regenCode(){
+  codePrivé=genCode();
+  g('codePriveVal').textContent=codePrivé;
+}
+
+function toggleCoursPrivé(){
+  isCoursPrivé=!isCoursPrivé;
+  var tog=g('togglePrive');
+  var knob=g('togglePriveKnob');
+  var box=g('codePriveBox');
+  if(isCoursPrivé){
+    tog.style.background='var(--or)';
+    knob.style.transform='translateX(18px)';
+    box.style.display='block';
+    if(!codePrivé){codePrivé=genCode();g('codePriveVal').textContent=codePrivé;}
+  } else {
+    tog.style.background='var(--bdr)';
+    knob.style.transform='translateX(0)';
+    box.style.display='none';
+  }
+}
+
+// ============================================================
+// ACCÈS COURS PRIVÉ — barre de recherche + URL
+// ============================================================
+function checkPrivateCoursAccess(){
+  // Vérifier si URL contient ?code=XXXX
+  try{
+    var params=new URLSearchParams(window.location.search);
+    var code=params.get('code');
+    if(code){
+      window.history.replaceState({},'',window.location.pathname);
+      openPrivateCours(code.toUpperCase());
+    }
+  }catch(e){}
+}
+
+function openPrivateCours(code){
+  // Chercher le cours avec ce code dans C
+  var c=C.find(function(x){return x.code&&x.code.toUpperCase()===code.toUpperCase();});
+  if(c){
+    openR(c.id);
+    toast('Cours trouvé !',c.title);
+  } else {
+    // Essayer en fetch direct
+    fetch(API+'/cours/code/'+code).then(function(r){return r.json();}).then(function(data){
+      if(data&&data.id){
+        // Ajouter dans C temporairement
+        var nc={
+          id:data.id,t:((data.titre||'')+' '+(data.sujet||'')).toLowerCase(),
+          subj:data.sujet||'Autre',sc:data.couleur_sujet||'#7C3AED',
+          bg:data.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
+          title:data.titre||'',dt:data.date_heure||'',lc:data.lieu||'',
+          tot:data.prix_total||0,sp:data.places_max||5,fl:data.places_prises||0,
+          pr:data.professeur_id,em:data.emoji||'🔒',
+          prof_ini:data.prof_initiales||'?',prof_col:data.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
+          prof_nm:data.prof_nom||'Professeur',prof_photo:data.prof_photo||null,
+          description:data.description||'',code:data.code_acces||''
+        };
+        C.unshift(nc);
+        openR(nc.id);
+        toast('Cours privé trouvé !',nc.title);
+      } else {
+        toast('Code invalide','Aucun cours trouvé avec ce code');
+      }
+    }).catch(function(){toast('Code invalide','Aucun cours trouvé avec ce code');});
+  }
+}
+
+// Taper un code dans la recherche
+function checkCodeInSearch(val){
+  var clean=val.trim().toUpperCase();
+  // Format code: 6 caractères alphanumériques sans espace
+  if(/^[A-Z0-9]{6}$/.test(clean)){
+    openPrivateCours(clean);
+    return true;
+  }
+  return false;
 }
 
 // NOTATION
