@@ -914,7 +914,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
               <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:11px 13px;font-size:12px;opacity:.8;margin-bottom:14px;line-height:1.6">
                 ✓ Virement automatique après chaque réservation<br>
                 ✓ Votre IBAN saisit directement sur Stripe (100% sécurisé)<br>
-                ✓ CoursPool prend 5% de commission, vous gardez 95%
+                ✓ CoursPool prend 15% de commission, vous gardez 85%
               </div>
               <button onclick="setupStripeConnect()" id="btnConnectStripe" style="width:100%;background:#635bff;color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .18s">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -938,7 +938,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
                 <div style="font-size:13px;font-weight:700;color:#15803D">Paiements activés ✓</div>
                 <div style="font-size:12px;color:#16A34A;margin-top:1px">Vos revenus sont virés automatiquement sur votre compte bancaire</div>
               </div>
-              <a href="https://dashboard.stripe.com" target="_blank" style="font-size:12px;color:#15803D;font-weight:600;text-decoration:none;flex-shrink:0">Dashboard ↗</a>
+
             </div>
           </div>
 
@@ -968,11 +968,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">⏳ Chargement…</div>
           </div>
           <div style="padding:14px 16px;text-align:center">
-            <div style="font-size:12px;color:var(--lite);line-height:1.6">Les paiements sont gérés par <strong style="color:var(--ink)">Stripe</strong>.<br>Pour accéder à votre tableau de bord Stripe complet :</div>
-            <a href="https://dashboard.stripe.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:var(--ink);color:#fff;border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;text-decoration:none">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Tableau de bord Stripe
-            </a>
+            <div style="font-size:12px;color:var(--lite);line-height:1.6">Vos paiements sont sécurisés et virés automatiquement sur votre compte bancaire.</div>
           </div>
         </div>
 
