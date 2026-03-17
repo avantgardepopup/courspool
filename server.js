@@ -195,6 +195,17 @@ app.delete('/cours/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+// COURS — récupérer par code d'accès (cours privés)
+app.get('/cours/code/:code', async (req, res) => {
+  const { data, error } = await supabase
+    .from('cours')
+    .select('*')
+    .eq('code_acces', req.params.code.toUpperCase())
+    .single();
+  if (error || !data) return res.status(404).json({ error: 'Cours introuvable' });
+  res.json(data);
+});
+
 // RESERVATIONS — créer
 app.post('/reservations', async (req, res) => {
   const { cours_id, user_id, montant_paye, type_paiement } = req.body;
@@ -464,6 +475,21 @@ app.post('/upload/photo', async (req, res) => {
   const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
   await supabase.from('profiles').update({ photo_url: urlData.publicUrl }).eq('id', userId);
   res.json({ url: urlData.publicUrl });
+});
+
+// UPLOAD CNI professeur
+app.post('/upload/cni', async (req, res) => {
+  const { base64, userId, filename } = req.body;
+  if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  const buffer = Buffer.from(base64.split(',')[1], 'base64');
+  const ext = filename ? filename.split('.').pop() : 'jpg';
+  const path = userId + '/cni.' + ext;
+  const { error } = await supabase.storage
+    .from('cni')
+    .upload(path, buffer, { contentType: 'image/' + ext, upsert: true });
+  if (error) return res.status(500).json({ error: error.message });
+  await supabase.from('profiles').update({ cni_uploaded: true }).eq('id', userId);
+  res.json({ success: true });
 });
 
 // NOTATIONS — noter un cours
