@@ -781,11 +781,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       </div>
       <button class="mcl" onclick="closeMsg()">✕</button>
     </div>
-    <div id="msgMessages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px"></div>
+    <div id="modalMsgMessages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px"></div>
     <div style="padding:12px 18px 16px;flex-shrink:0;border-top:1px solid var(--bdr)">
       <div style="display:flex;gap:8px">
-        <input id="msgInput" type="text" placeholder="Votre message…" class="fi3" style="flex:1" onkeydown="if(event.key==='Enter')sendMsg()">
-        <button class="pb pri" style="padding:10px 16px;flex-shrink:0" onclick="sendMsg()">
+        <input id="modalMsgInput" type="text" placeholder="Votre message…" class="fi3" style="flex:1" onkeydown="if(event.key==='Enter')sendModalMsg()">
+        <button class="pb pri" style="padding:10px 16px;flex-shrink:0" onclick="sendModalMsg()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -1016,7 +1016,6 @@ function applyUser(){
   // Bottom nav
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
-  var bniAddM=g('bniAddM');if(bniAddM)bniAddM.style.display=user.role==='professeur'?'flex':'none';
 }
 
 function navTo(tab){
@@ -1252,7 +1251,6 @@ function previewPhoto(input){
     reader.onload=function(e){
       var src=e.target.result;
       // Afficher preview immédiatement
-      var prev=g('pfAvPreview');prev.style.background='none';prev.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       var accAv=g('accAv');accAv.style.background='none';accAv.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       var tav=g('tav');tav.style.background='none';tav.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       // Uploader vers Supabase Storage si connecté
@@ -1267,7 +1265,7 @@ function previewPhoto(input){
             try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
             // Mettre à jour les avatars avec l'URL Supabase
             var img='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-            g('tav').innerHTML=img;g('pfAvPreview').innerHTML=img;g('accAv').innerHTML=img;
+            g('tav').innerHTML=img;g('accAv').innerHTML=img;
             toast('Photo sauvegardée','Votre photo est maintenant visible partout');
           }
         }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
@@ -1409,16 +1407,14 @@ async function confR(){
       cours_id:id,
       user_id:user.id,
       montant:pp,
-      cours_titre:c.title,
-      success_url:window.location.href.split('?')[0]+'?stripe_success=1',
-      cancel_url:window.location.href.split('?')[0]
+      cours_titre:c.title
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
     // Rediriger vers Stripe
     window.location.href=data.url;
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong>';}}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
 function contR(){
   var c=C.find(function(x){return x.id===curId});
@@ -1474,8 +1470,6 @@ async function confAmi(id){
       user_id:user.id,
       montant:pp,
       cours_titre:c.title+' · Place supplémentaire',
-      success_url:window.location.href.split('?')[0]+'?stripe_success=1',
-      cancel_url:window.location.href.split('?')[0],
       pour_ami:true
     })});
     var data=await r.json();
@@ -1716,7 +1710,7 @@ function openMsg(profNm,destId,avatar){
 
   // Marquer conversation active dans la liste
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
-  var activeRow=document.querySelector('[data-uid="'+destId+'"]');
+  var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
   if(activeRow)activeRow.classList.add('active');
 
   loadMessages();
@@ -1769,7 +1763,7 @@ async function loadMessages(){
         }
         html+='<div style="text-align:center;margin:12px 0 8px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+label+'</span></div>';
       }
-      var isMe=m.sender_id===user.id||m.expediteur_id===user.id;
+      var isMe=m.sender_id===user.id;
       var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">'+time+'</div></div></div>';
     });
@@ -1803,14 +1797,14 @@ async function sendMsg(){
       contenu:txt
     })});
     // Marquer comme lu immédiatement dans l'UI
-    var activeRow=document.querySelector('[data-uid="'+destId+'"]');
+    var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
     if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('div[style*="border-radius:50%"]');if(dot)dot.remove();}
     // Mettre à jour badge nav
     var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
     var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
     // Appeler l'API pour marquer comme lu en base
-    if(user&&destId){
-      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:destId})}).catch(function(){});
+    if(user&&msgDestId){
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
     }
 
     loadMessages();
@@ -1820,6 +1814,42 @@ async function sendMsg(){
 function closeMsg(){
   clearInterval(msgPollTimer);msgPollTimer=null;
   msgDestId=null;
+  closeM('bdMsg');
+}
+
+async function sendModalMsg(){
+  var txt=g('modalMsgInput').value.trim();
+  if(!txt||!msgDestId||!user)return;
+  if(user.role==='professeur'&&!user.verified){
+    toast('Compte non vérifié','Votre compte doit être vérifié pour envoyer des messages');
+    return;
+  }
+  g('modalMsgInput').value='';
+  try{
+    await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      expediteur_id:user.id,
+      destinataire_id:msgDestId,
+      contenu:txt
+    })});
+    var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
+    var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
+    if(user&&msgDestId){
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
+    }
+    var container=g('modalMsgMessages');
+    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId);
+    var msgs=await r.json();
+    if(!Array.isArray(msgs)||!msgs.length)return;
+    var html='';
+    msgs.forEach(function(m){
+      var isMe=m.sender_id===user.id;
+      var d=new Date(m.created_at);
+      var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+m.contenu+'</div><div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">'+time+'</div></div></div>';
+    });
+    container.innerHTML=html;
+    container.scrollTop=container.scrollHeight;
+  }catch(e){toast('Erreur','Message non envoyé');}
 }
 
 var _convLoading=false;
