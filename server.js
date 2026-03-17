@@ -249,6 +249,96 @@ app.get('/reservations/:user_id', async (req, res) => {
   res.json(data);
 });
 
+
+// ============================================================
+// STRIPE CONNECT — paiements directs aux professeurs
+// ============================================================
+
+const COMMISSION_TAUX = 0.05; // 5% commission CoursPool
+
+// Créer un compte Stripe Connect Express pour un prof
+app.post('/stripe/connect/create', async (req, res) => {
+  const { prof_id, email } = req.body;
+  if (!prof_id || !email) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    // Vérifier si déjà un compte
+    const { data: prof } = await supabase.from('profiles').select('stripe_account_id').eq('id', prof_id).single();
+    if (prof?.stripe_account_id) return res.json({ account_id: prof.stripe_account_id, already_exists: true });
+
+    const account = await stripe.accounts.create({
+      type: 'express',
+      email,
+      capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
+      business_type: 'individual',
+      metadata: { prof_id }
+    });
+
+    await supabase.from('profiles').update({ stripe_account_id: account.id }).eq('id', prof_id);
+    res.json({ account_id: account.id });
+  } catch(e) {
+    console.log('Connect create error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Générer le lien d'onboarding Stripe (où le prof entre son IBAN)
+app.post('/stripe/connect/onboard', async (req, res) => {
+  const { stripe_account_id } = req.body;
+  if (!stripe_account_id) return res.status(400).json({ error: 'stripe_account_id manquant' });
+  try {
+    const link = await stripe.accountLinks.create({
+      account: stripe_account_id,
+      refresh_url: 'https://courspool.vercel.app?stripe_refresh=1',
+      return_url: 'https://courspool.vercel.app?stripe_connected=1',
+      type: 'account_onboarding'
+    });
+    res.json({ url: link.url });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Vérifier le statut du compte Connect d'un prof (par stripe_account_id)
+app.get('/stripe/connect/status/:stripe_account_id', async (req, res) => {
+  try {
+    const account = await stripe.accounts.retrieve(req.params.stripe_account_id);
+    res.json({
+      charges_enabled: account.charges_enabled,
+      payouts_enabled: account.payouts_enabled,
+      details_submitted: account.details_submitted,
+      requirements: account.requirements?.currently_due || []
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Vérifier le statut Connect d'un prof via son prof_id Supabase
+app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
+  try {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('stripe_account_id')
+      .eq('id', req.params.prof_id)
+      .single();
+
+    if (!prof?.stripe_account_id) {
+      return res.json({ stripe_account_id: null, charges_enabled: false, details_submitted: false });
+    }
+
+    const account = await stripe.accounts.retrieve(prof.stripe_account_id);
+    res.json({
+      stripe_account_id: prof.stripe_account_id,
+      charges_enabled: account.charges_enabled,
+      payouts_enabled: account.payouts_enabled,
+      details_submitted: account.details_submitted,
+      requirements: account.requirements?.currently_due || []
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', async (req, res) => {
   const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
@@ -258,6 +348,20 @@ app.post('/stripe/checkout', async (req, res) => {
     const baseUrl = 'https://courspool.vercel.app';
     const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
     const cancelUrl = baseUrl + '?cancelled=1';
+
+    // Récupérer le compte Stripe Connect du prof si disponible
+    let paymentIntentData = { metadata: { cours_id, user_id, montant: montant.toString(), cours_titre: cours_titre || '' } };
+    try {
+      const { data: coursData } = await supabase.from('cours').select('professeur_id').eq('id', cours_id).single();
+      if (coursData?.professeur_id) {
+        const { data: profData } = await supabase.from('profiles').select('stripe_account_id').eq('id', coursData.professeur_id).single();
+        if (profData?.stripe_account_id) {
+          const commission = Math.round(montant * 100 * COMMISSION_TAUX);
+          paymentIntentData.application_fee_amount = commission;
+          paymentIntentData.transfer_data = { destination: profData.stripe_account_id };
+        }
+      }
+    } catch(e) { console.log('Connect lookup error:', e.message); }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -273,6 +377,7 @@ app.post('/stripe/checkout', async (req, res) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: { cours_id, user_id, montant: montant.toString() },
+      payment_intent_data: paymentIntentData,
     });
     res.json({ url: session.url });
   } catch (e) {
@@ -397,7 +502,7 @@ app.post('/email/verification', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// STRIPE — récupérer les paiements réels
+// STRIPE — paiements globaux (admin)
 app.get('/stripe/payments', async (req, res) => {
   try {
     const payments = await stripe.paymentIntents.list({ limit: 100 });
@@ -407,7 +512,52 @@ app.get('/stripe/payments', async (req, res) => {
       currency: p.currency,
       status: p.status,
       created: new Date(p.created * 1000).toISOString(),
+      cours_titre: p.metadata?.cours_titre || null,
+      cours_id: p.metadata?.cours_id || null,
+      user_id: p.metadata?.user_id || null,
     }));
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// STRIPE — paiements d'un professeur spécifique
+app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
+  const { prof_id } = req.params;
+  try {
+    // Récupérer tous les cours de ce prof
+    const { data: cours } = await supabase
+      .from('cours')
+      .select('id, titre')
+      .eq('professeur_id', prof_id);
+
+    if (!cours || !cours.length) return res.json([]);
+
+    const coursIds = cours.map(c => c.id);
+    const coursMap = {};
+    cours.forEach(c => { coursMap[c.id] = c.titre; });
+
+    // Récupérer les réservations Stripe pour ces cours
+    const { data: reservations } = await supabase
+      .from('reservations')
+      .select('cours_id, montant_paye, created_at, type_paiement')
+      .in('cours_id', coursIds)
+      .in('type_paiement', ['stripe', 'stripe_ami'])
+      .order('created_at', { ascending: false });
+
+    if (!reservations) return res.json([]);
+
+    const result = reservations.map(r => ({
+      id: r.cours_id + '_' + r.created_at,
+      amount: r.montant_paye || 0,
+      currency: 'eur',
+      status: 'succeeded',
+      created: r.created_at,
+      cours_titre: coursMap[r.cours_id] || 'Cours',
+      cours_id: r.cours_id,
+    }));
+
     res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message });
