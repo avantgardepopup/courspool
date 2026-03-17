@@ -811,7 +811,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <!-- LISTE DES CONVERSATIONS -->
     <div id="msgListPane" style="display:flex;flex-direction:column;height:100%;width:100%;background:var(--bg)">
       <!-- Header -->
-      <div style="padding:20px 20px 12px;flex-shrink:0;background:var(--wh);border-bottom:1px solid var(--bdr)">
+      <div style="padding:max(20px,env(safe-area-inset-top,0px)) 20px 12px;flex-shrink:0;background:var(--wh);border-bottom:1px solid var(--bdr)">
         <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Messages</div>
         <div style="font-size:13px;color:var(--lite);margin-top:2px">Vos conversations</div>
         <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50px;min-width:20px;height:20px;padding:0 6px;font-size:11px;font-weight:700;align-items:center;justify-content:center;position:absolute;top:20px;right:20px"></span>
@@ -823,7 +823,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div id="msgConvPane" style="flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
 
       <!-- Header conversation -->
-      <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:env(safe-area-inset-top)">
+      <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
         <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
@@ -900,13 +900,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
         <!-- RÉSERVATIONS -->
         <div class="asec on" id="asecR">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Cours à venir</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px" id="listR"></div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 24px 10px">Cours à venir</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px 20px" id="listR"></div>
         </div>
 
         <!-- PROFS SUIVIS -->
         <div class="asec" id="asecF">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Professeurs suivis</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Professeurs suivis</div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 20px" id="listF"></div>
         </div>
 
@@ -974,7 +974,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           </div>
 
           <!-- KPIs -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 16px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px 20px 0">
             <div style="background:linear-gradient(135deg,var(--or),var(--ord));border-radius:16px;padding:16px;color:#fff">
               <div style="font-size:11px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Ce mois</div>
               <div id="revMois" style="font-size:26px;font-weight:800;letter-spacing:-.02em">—</div>
@@ -994,7 +994,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           </div>
 
           <!-- Liste des paiements -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Historique</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Historique</div>
           <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">⏳ Chargement…</div>
           </div>
@@ -1005,7 +1005,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
         <!-- HISTORIQUE -->
         <div class="asec" id="asecH">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Historique</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Historique</div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px;padding:20px;text-align:center;color:var(--lite);font-size:13px">Bientôt disponible</div>
         </div>
 
@@ -1013,7 +1013,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="asec" id="asecP">
 
           <!-- Section infos perso -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Informations personnelles</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Informations personnelles</div>
           <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
             <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
               <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
@@ -1038,14 +1038,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           </div>
 
           <!-- Bio -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Bio</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Bio</div>
           <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden;padding:13px 16px">
             <textarea id="pfBio" rows="3" placeholder="Présentez-vous…" style="width:100%;border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;resize:none;color:var(--ink)"></textarea>
           </div>
 
           <!-- Section prof -->
           <div id="pfProfExtra" style="display:none">
-            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:16px 16px 8px">Enseignement</div>
+            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Enseignement</div>
             <div style="background:var(--wh);border-radius:16px;margin:0 16px;overflow:hidden">
               <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
                 <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Statut</span>
@@ -1183,13 +1183,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Nouveau cours</div><div style="font-size:17px;font-weight:800">Proposer un cours</div></div><button class="mcl" onclick="closeCr()">✕</button></div>
     <div class="mbd">
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Matière</label>
-        <div class="sg"><div class="so" onclick="pickS(this)">📐 Maths</div><div class="so" onclick="pickS(this)">⚗️ Physique</div><div class="so" onclick="pickS(this)">💻 Info</div><div class="so" onclick="pickS(this)">🌍 Langues</div><div class="so" onclick="pickS(this)">📊 Éco</div><div class="so" onclick="pickS(this)">✨ Autre</div></div>
+        <div class="sg" id="sgMatieres">
+          <div class="so" onclick="pickS(this)">📐 Maths</div>
+          <div class="so" onclick="pickS(this)">⚗️ Physique</div>
+          <div class="so" onclick="pickS(this)">💻 Info</div>
+          <div class="so" onclick="pickS(this)">🌍 Langues</div>
+          <div class="so" onclick="pickS(this)">📊 Éco</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🧪 Chimie</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🧬 SVT</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🏛️ Histoire</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">⚖️ Droit</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🎵 Musique</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🎨 Arts</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🏃 Sport</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">💬 Philo</div>
+          <div class="so" id="btnVoirPlusMat" onclick="toggleMoreMat()" style="border-style:dashed;color:var(--lite)">+ Voir plus</div>
+          <div class="so" onclick="pickS(this)">✨ Autre</div>
+        </div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label><input class="fi3" id="crDate" type="date"></div>
-        <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label><input class="fi3" id="crHeure" type="time"></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date et heure</label>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1.6"><input class="fi3" id="crDate" type="date" style="width:100%"></div>
+          <div style="flex:1"><input class="fi3" id="crHeure" type="time" style="width:100%"></div>
+        </div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label>
         <div style="position:relative">
@@ -2448,6 +2467,14 @@ async function confirmDeleteCours(){
   window._deleteId=null;
 }
 function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Soit '+Math.ceil(p/pl)+'€ par élève pour '+pl+' place'+(pl>1?'s':''):'';}
+
+function toggleMoreMat(){
+  var extras=document.querySelectorAll('.so-extra');
+  var btn=document.getElementById('btnVoirPlusMat');
+  var hidden=extras[0]&&extras[0].style.display==='none';
+  extras.forEach(function(e){e.style.display=hidden?'flex':'none';});
+  if(btn)btn.textContent=hidden?'− Moins':'+ Voir plus';
+}
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
 
 // MESSAGERIE
@@ -3337,6 +3364,36 @@ function showChangeIban() {
 
 // Legacy — plus utilisé mais gardé pour compatibilité
 function setupStripeConnect() { loadStripeConnectStatus(); }
+
+
+function closeMatieres(){var m=document.getElementById("bdMatieres");if(m)m.remove();}
+function showMoreMatieres(){
+  var matieres=['Chimie','Biologie','SVT','Histoire','Géographie','Philosophie',
+    'Français','Littérature','Musique','Arts','Sport','Droit','Médecine','Architecture',
+    'Marketing','Comptabilité','Statistiques','Algorithmique','Design','Cinéma'];
+  var html='<div style="padding:20px"><div style="font-size:16px;font-weight:800;margin-bottom:16px">Choisir une matière</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +matieres.map(function(m){
+      return'<div onclick="pickSCustom(this)" class="so" style="justify-content:center" data-m="'+m+'">'+m+'</div>';
+    }).join('')
+    +'</div></div>';
+  var modal=document.createElement('div');
+  modal.id='bdMatieres';
+  modal.className='bd';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3000;display:flex;align-items:flex-end;';
+  modal.innerHTML='<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:70vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,20px)">'+html
+    +'<div style="padding:0 20px 20px"><button onclick="closeMatieres()" style="width:100%;padding:13px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;color:var(--mid)">Fermer</button></div></div>';
+  modal.onclick=function(e){if(e.target===modal)closeMatieres();};
+  document.body.appendChild(modal);
+}
+
+function pickSCustom(el){
+  var matiere=el.getAttribute('data-m')||el.textContent;
+  document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});
+  el.classList.add('on');
+  var modal=document.getElementById('bdMatieres');
+  if(modal)modal.remove();
+}
 
 // NOTATION
 var noteVal=0,noteCours=null;
