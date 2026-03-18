@@ -170,9 +170,20 @@ app.post('/auth/login', async (req, res) => {
 
 // COURS — récupérer tous
 app.get('/cours', async (req, res) => {
-  const { data, error } = await supabase.from('cours').select('*').order('created_at', { ascending: false });
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const offset = (page - 1) * limit;
+  const sujet = req.query.sujet || null;
+  const search = req.query.search || null;
+
+  let query = supabase.from('cours').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+
+  if (sujet && sujet !== 'tous') query = query.ilike('sujet', '%' + sujet + '%');
+  if (search) query = query.or('titre.ilike.%' + search + '%,sujet.ilike.%' + search + '%,lieu.ilike.%' + search + '%,prof_nom.ilike.%' + search + '%');
+
+  const { data, error, count } = await query;
   if (error) return res.status(500).json({ error });
-  res.json(data);
+  res.json({ cours: data, total: count, page, limit, pages: Math.ceil(count / limit) });
 });
 
 // COURS — créer
