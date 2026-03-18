@@ -546,7 +546,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center">
       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
-    <div style="color:#fff;font-size:26px;font-weight:800;letter-spacing:-.03em">CoursPool</div>
+    <div style="color:#fff;font-size:26px;font-weight:800;letter-spacing:-.03em">CoursPool</div><div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:-8px">Bêta</div>
     <div style="width:48px;height:3px;background:rgba(255,255,255,.3);border-radius:3px;overflow:hidden;position:relative">
       <div style="position:absolute;top:0;left:0;height:100%;background:#fff;border-radius:3px;animation:splashBar 1s ease-in-out infinite"></div>
     </div>
@@ -652,7 +652,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <div class="lhero">
       <div class="llogo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
       <h1>CoursPool</h1>
-      <p>Apprenez ensemble, partagez les frais</p>
+      <p>Apprenez ensemble, partagez les frais</p><div style="display:inline-block;background:rgba(255,255,255,.2);color:#fff;border-radius:50px;padding:3px 12px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:8px">Version Bêta</div>
     </div>
     <div class="lbody">
       <div class="ltabs">
@@ -3355,7 +3355,7 @@ async function loadRevenues() {
 
 var _stripeInstance = null;
 var _ibanElement = null;
-var STRIPE_PK = 'pk_test_51TB9Ay4DZgsNRXZdkXRWy5w8s3Dc0ZMzEDIfkRf6S1BtBzfZYISKrdNXWob4zrKGQ760aM0EuecGs9OG3RlEXpsN00ZEUzj2Gw';
+var STRIPE_PK = 'pk_live_51TB9Am3FNybFliKQGUpI1uSMheaSyFV0TwgRoAfmgRJtLtxAujacxrLJqM5zaOdLa0EuZNLJe7HOXKSZWmwZHyR500YZcvAF6h';
 
 function initStripeIban() {
   if (!window.Stripe) return;
