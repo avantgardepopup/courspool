@@ -577,14 +577,34 @@ app.put('/messages/lu/:user_id', async (req, res) => {
 app.post('/upload/photo', async (req, res) => {
   const { base64, userId, filename } = req.body;
   if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
-  const buffer = Buffer.from(base64.split(',')[1], 'base64');
-  const ext = filename ? filename.split('.').pop() : 'jpg';
-  const path = userId + '/avatar.' + ext;
-  const { error } = await supabase.storage.from('photos').upload(path, buffer, { contentType: 'image/'+ext, upsert: true });
-  if (error) return res.status(500).json({ error: error.message });
-  const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
-  await supabase.from('profiles').update({ photo_url: urlData.publicUrl }).eq('id', userId);
-  res.json({ url: urlData.publicUrl });
+  try {
+    const buffer = Buffer.from(base64.split(',')[1], 'base64');
+    const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
+    const validExt = ['jpg','jpeg','png','webp'].includes(ext) ? ext : 'jpg';
+    const path = userId + '/avatar.' + validExt;
+    const contentType = 'image/' + (validExt === 'jpg' ? 'jpeg' : validExt);
+    // Essayer d'uploader
+    const { error: uploadError } = await supabase.storage.from('photos').upload(path, buffer, { contentType, upsert: true });
+    if (uploadError) {
+      // Si bucket n'existe pas, sauvegarder en base64 directement dans le profil
+      console.log('Storage error:', uploadError.message);
+      await supabase.from('profiles').update({ photo_url: base64 }).eq('id', userId);
+      return res.json({ url: base64 });
+    }
+    const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path);
+    const publicUrl = urlData.publicUrl + '?t=' + Date.now();
+    await supabase.from('profiles').update({ photo_url: publicUrl }).eq('id', userId);
+    res.json({ url: publicUrl });
+  } catch(e) {
+    console.log('Upload error:', e.message);
+    // Fallback : sauvegarder base64 dans le profil
+    try {
+      await supabase.from('profiles').update({ photo_url: base64 }).eq('id', userId);
+      res.json({ url: base64 });
+    } catch(e2) {
+      res.status(500).json({ error: e.message });
+    }
+  }
 });
 
 // NOTATIONS — noter un cours
