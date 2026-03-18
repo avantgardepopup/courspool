@@ -1557,13 +1557,24 @@ function showSkeletons(){
   }).join('');
 }
 
-async function loadData(){
-  showSkeletons();
+var _allLoaded=false,_totalCours=0,_currentPage=1,_loadingMore=false;
+
+async function loadData(page){
+  page=page||1;
+  if(page===1)showSkeletons();
   try{
-    var r=await fetch(API+'/cours');
-    var cours=await r.json();
-    if(!Array.isArray(cours)){C=[];return;}
-    C=cours.map(function(c){
+    var r=await fetch(API+'/cours?page='+page+'&limit=20');
+    var json=await r.json();
+    // Support ancien format (array) et nouveau (objet paginé)
+    var cours=Array.isArray(json)?json:(json.cours||[]);
+    _totalCours=json.total||cours.length;
+    _allLoaded=cours.length<20||(_currentPage*20)>=_totalCours;
+    if(!cours.length&&page===1){
+      // Retry après 4s si vide (serveur qui se réveille)
+      setTimeout(function(){loadData(1).then(function(){buildCards();});},4000);
+      C=[];return;
+    }
+    var mapped=cours.map(function(c){
       return{
         id:c.id,
         t:((c.titre||'')+' '+(c.sujet||'')+' '+(c.prof_nom||'')+' '+(c.lieu||'')).toLowerCase(),
@@ -1582,7 +1593,8 @@ async function loadData(){
         code:c.code_acces||''
       };
     });
-    C.forEach(function(c){
+    if(page===1){C=mapped;}else{C=C.concat(mapped);}
+    mapped.forEach(function(c){
       if(c.pr&&!P[c.pr]){
         P[c.pr]={i:c.prof_ini,col:c.prof_col,nm:c.prof_nm,rl:'',bd:'',c:0,n:'—',e:0,bio:'',tags:[],crs:[],photo:c.prof_photo};
       }
@@ -2127,7 +2139,17 @@ function renderPage(){
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
 }
 
-function loadMore(){currentPage++;renderPage();}
+function loadMore(){
+  if(_allLoaded){currentPage++;renderPage();return;}
+  if(_loadingMore)return;
+  _loadingMore=true;
+  _currentPage++;
+  loadData(_currentPage).then(function(){
+    _loadingMore=false;
+    currentPage=1;
+    renderPage();
+  });
+}
 
 var FM={tous:function(){return true;},maths:function(t){return /maths|algebre|statist|analyse|fourier/.test(t);},physique:function(t){return /physique|electro|maxwell|quantique/.test(t);},informatique:function(t){return /informatique|python|data|react|javascript|sql/.test(t);},langues:function(t){return /anglais|espagnol|langues|toefl/.test(t);},economie:function(t){return /economie|macro|finance/.test(t);},soir:function(t){return /18h|19h|20h|soir/.test(t);},weekend:function(t){return /sam|dim|weekend/.test(t);}};
 function doFilter(){
