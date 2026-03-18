@@ -9,6 +9,7 @@
   ],
   "routes": [
     { "src": "/admin", "dest": "/admin.html" },
+    { "src": "/privacy", "dest": "/privacy.html" },
     { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
     { "src": "/icon.svg", "dest": "/icon.svg" },
