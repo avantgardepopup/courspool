@@ -639,7 +639,7 @@ async function renderPaiements(){
       return'<tr><td style="font-size:12px">'+(p.cours_titre||p.id.slice(0,10)+'…')+'</td><td><strong>'+p.amount.toFixed(2)+'€</strong></td><td style="color:var(--or);font-weight:600">'+comm.toFixed(2)+'€</td><td style="color:var(--green);font-weight:600">'+profRecoit.toFixed(2)+'€</td><td>'+badge+'</td><td>'+date+'</td></tr>';
     }).join('');
   }catch(e){
-    tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>Données Stripe non disponibles</p></div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>Données non disponibles</p></div></td></tr>';
   }
 }
 
