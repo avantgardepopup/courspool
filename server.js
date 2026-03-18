@@ -403,6 +403,116 @@ app.get('/stripe/payments', async (req, res) => {
   }
 });
 
+
+// RESERVATIONS — liste élèves inscrits à un cours
+app.get('/reservations/cours/:cours_id', async (req, res) => {
+  try{
+    const {data,error}=await supabase.from('reservations').select('id,user_id,cours_id,montant_paye,created_at').eq('cours_id',req.params.cours_id).order('created_at',{ascending:true});
+    if(error)return res.status(500).json({error});
+    const enriched=await Promise.all((data||[]).map(async(r)=>{
+      const {data:p}=await supabase.from('profiles').select('prenom,nom,email').eq('id',r.user_id).single();
+      return{reservation_id:r.id,user_id:r.user_id,cours_id:r.cours_id,montant_paye:r.montant_paye,created_at:r.created_at,prenom:p?.prenom||'',nom:p?.nom||'',email:p?.email||''};
+    }));
+    res.json(enriched);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// RESERVATIONS — annuler une réservation élève
+app.post('/reservations/:id/cancel', async (req, res) => {
+  const {user_id,cours_id,montant}=req.body;
+  try{
+    const {data:reservation}=await supabase.from('reservations').select('*').eq('id',req.params.id).single();
+    await supabase.from('reservations').delete().eq('id',req.params.id);
+    const {data:cours}=await supabase.from('cours').select('places_prises').eq('id',cours_id).single();
+    if(cours)await supabase.from('cours').update({places_prises:Math.max(0,(cours.places_prises||1)-1)}).eq('id',cours_id);
+    let rembourse=false;
+    if(reservation?.stripe_payment_intent_id){
+      try{await stripe.refunds.create({payment_intent:reservation.stripe_payment_intent_id});rembourse=true;}catch(e){console.log('Refund error:',e.message);}
+    }
+    res.json({success:true,rembourse});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// COURS — annuler cours complet + rembourser tous les élèves
+app.post('/cours/:id/cancel', async (req, res) => {
+  try{
+    const {data:reservations}=await supabase.from('reservations').select('*').eq('cours_id',req.params.id);
+    let remboursements=0;
+    for(const r of(reservations||[])){
+      await supabase.from('reservations').delete().eq('id',r.id);
+      if(r.stripe_payment_intent_id){
+        try{await stripe.refunds.create({payment_intent:r.stripe_payment_intent_id});remboursements++;}catch(e){console.log('Refund error:',e.message);}
+      }else{remboursements++;}
+    }
+    await supabase.from('cours').delete().eq('id',req.params.id);
+    res.json({success:true,remboursements});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// STRIPE — paiements d'un prof
+app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
+  try{
+    const {data:cours}=await supabase.from('cours').select('id,titre').eq('professeur_id',req.params.prof_id);
+    if(!cours||!cours.length)return res.json([]);
+    const coursIds=cours.map(c=>c.id);
+    const coursMap={};cours.forEach(c=>{coursMap[c.id]=c.titre;});
+    const {data:reservations}=await supabase.from('reservations').select('cours_id,montant_paye,created_at').in('cours_id',coursIds).order('created_at',{ascending:false});
+    if(!reservations)return res.json([]);
+    const result=reservations.map(r=>({id:r.cours_id+'_'+r.created_at,amount:r.montant_paye||0,currency:'eur',status:'succeeded',created:r.created_at,cours_titre:coursMap[r.cours_id]||'Cours'}));
+    res.json(result);
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// STRIPE CONNECT — créer compte
+app.post('/stripe/connect/create', async (req, res) => {
+  const {prof_id,email}=req.body;
+  if(!prof_id||!email)return res.status(400).json({error:'Données manquantes'});
+  try{
+    const {data:prof}=await supabase.from('profiles').select('stripe_account_id').eq('id',prof_id).single();
+    if(prof?.stripe_account_id)return res.json({account_id:prof.stripe_account_id,already_exists:true});
+    const account=await stripe.accounts.create({type:'express',email,capabilities:{transfers:{requested:true},card_payments:{requested:true}},business_type:'individual',metadata:{prof_id}});
+    await supabase.from('profiles').update({stripe_account_id:account.id}).eq('id',prof_id);
+    res.json({account_id:account.id});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// STRIPE CONNECT — setup intent IBAN
+app.post('/stripe/connect/setup-intent', async (req, res) => {
+  const {stripe_account_id}=req.body;
+  if(!stripe_account_id)return res.status(400).json({error:'stripe_account_id manquant'});
+  try{
+    const setupIntent=await stripe.setupIntents.create({payment_method_types:['sepa_debit'],usage:'off_session'},{stripeAccount:stripe_account_id});
+    res.json({client_secret:setupIntent.client_secret});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// STRIPE CONNECT — IBAN sauvegardé
+app.post('/stripe/connect/iban-saved', async (req, res) => {
+  const {prof_id,stripe_account_id}=req.body;
+  if(!prof_id)return res.status(400).json({error:'prof_id manquant'});
+  try{
+    await supabase.from('profiles').update({stripe_account_id,iban_configured:true}).eq('id',prof_id);
+    res.json({success:true});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// STRIPE CONNECT — statut par prof_id
+app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
+  try{
+    const {data:prof}=await supabase.from('profiles').select('stripe_account_id').eq('id',req.params.prof_id).single();
+    if(!prof?.stripe_account_id)return res.json({stripe_account_id:null,charges_enabled:false,details_submitted:false});
+    const account=await stripe.accounts.retrieve(prof.stripe_account_id);
+    res.json({stripe_account_id:prof.stripe_account_id,charges_enabled:account.charges_enabled,payouts_enabled:account.payouts_enabled,details_submitted:account.details_submitted});
+  }catch(e){res.status(500).json({error:e.message});}
+});
+
+// PROFILES — récupérer profil par ID
+app.get('/profiles/:id', async (req, res) => {
+  const {data,error}=await supabase.from('profiles').select('*').eq('id',req.params.id).single();
+  if(error)return res.status(404).json({});
+  res.json(data||{});
+});
+
 // MESSAGES — envoyer
 app.post('/messages', async (req, res) => {
   const { expediteur_id, destinataire_id, contenu } = req.body;
