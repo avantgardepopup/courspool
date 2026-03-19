@@ -14,9 +14,20 @@
 <meta name="mobile-web-app-capable" content="yes">
 <!-- SEO -->
 <meta name="description" content="Trouvez et réservez des cours près de chez vous">
-<meta property="og:title" content="CoursPool">
-<meta property="og:description" content="Trouvez et réservez des cours près de chez vous">
+<meta property="og:title" content="CoursPool — Partagez les frais d'un cours">
+<meta property="og:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves. Qualité d'un cours particulier, prix d'un cours collectif.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://courspool.vercel.app">
+<meta property="og:image" content="https://courspool.vercel.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="CoursPool">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CoursPool — Partagez les frais d'un cours">
+<meta name="twitter:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves.">
+<meta name="twitter:image" content="https://courspool.vercel.app/og-image.png">
+<meta name="description" content="CoursPool — Trouvez et réservez des cours près de chez vous. Partagez les frais entre élèves pour des cours abordables.">
 <!-- Lib paiement sécurisé -->
 <script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1671,33 +1682,23 @@ html.dk .ntog::after{background:#fff;}
 </div>
 
 <!-- MODAL NOTATION -->
-<div class="bd" id="bdNote" onclick="if(event.target===this)closeM('bdNote')">
-  <div class="modal sm">
-    <div class="mhd">
-      <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Évaluation</div><div style="font-size:17px;font-weight:800" id="noteTitre">Noter ce cours</div></div>
-      <button class="mcl" onclick="closeM('bdNote')">✕</button>
+<!-- BOTTOM SHEET NOTE -->
+<div id="bdNote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeM('bdNote')">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));animation:mi .25s ease">
+    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px" id="noteTitre">Comment s'est passé ce cours ?</div>
+    <div style="font-size:13px;color:var(--lite);margin-bottom:22px" id="noteProf"></div>
+    <!-- Étoiles interactives -->
+    <div id="noteStars" style="display:flex;justify-content:center;gap:12px;margin-bottom:10px">
+      <svg onclick="setNote(1)" data-n="1" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <svg onclick="setNote(2)" data-n="2" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <svg onclick="setNote(3)" data-n="3" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <svg onclick="setNote(4)" data-n="4" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <svg onclick="setNote(5)" data-n="5" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
     </div>
-    <div class="mbd">
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:13px;color:var(--mid);margin-bottom:12px">Comment s'est passé ce cours ?</div>
-        <div id="noteStars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">
-          <span onclick="setNote(1)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="1">⭐</span>
-          <span onclick="setNote(2)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="2">⭐</span>
-          <span onclick="setNote(3)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="3">⭐</span>
-          <span onclick="setNote(4)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="4">⭐</span>
-          <span onclick="setNote(5)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="5">⭐</span>
-        </div>
-        <div id="noteLabel" style="font-size:13px;color:var(--lite);height:18px"></div>
-      </div>
-      <div style="margin-bottom:14px">
-        <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Commentaire (optionnel)</label>
-        <textarea id="noteComment" class="fi2" rows="3" placeholder="Partagez votre expérience…" style="resize:none"></textarea>
-      </div>
-      <button class="pb pri" style="width:100%" onclick="submitNote()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Envoyer mon avis
-      </button>
-    </div>
+    <div id="noteLabel" style="font-size:13px;color:var(--or);font-weight:600;text-align:center;height:20px;margin-bottom:16px"></div>
+    <textarea id="noteComment" rows="3" placeholder="Partagez votre expérience… (optionnel)" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;resize:none;background:var(--bg);color:var(--ink);line-height:1.5;margin-bottom:16px" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+    <button onclick="submitNote()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Envoyer mon avis</button>
   </div>
 </div>
 
@@ -2069,7 +2070,7 @@ async function doLogin(){
         var resData=results[0],folData=results[1];
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
         if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-        loadData().then(function(){buildCards();});
+        loadData().then(function(){restoreFilters();buildCards();});
       }).catch(function(){loadData().then(function(){buildCards();});});
     } else {
       loadData().then(function(){buildCards();});
@@ -2606,7 +2607,13 @@ function applyFilter(){
     var prof=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
+    // Recherche dans le nom du prof + toutes les données du cours
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
+    // Si la recherche ne matche pas un cours, chercher aussi les profs par nom
+    if(!matchSearch&&q.length>1){
+      var profFull=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      matchSearch=profFull.includes(q);
+    }
     // Filtre localisation
     var matchLoc=true;
     if(geoMode&&_geoCoords&&c.lat&&c.lon){
@@ -2790,7 +2797,18 @@ function doFilter(){
   if(checkCodeInSearch(val))return;
   currentPage=1;applyFilter();
 }
-function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();}
+function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
+function restoreFilters(){
+  try{
+    var f=sessionStorage.getItem('cp_filter');
+    if(f&&f!=='tous'){
+      var el=document.querySelector('.pill[data-f="'+f+'"]');
+      if(el){el.classList.add('on');document.querySelector('.pill[data-f="tous"]').classList.remove('on');actF=f;}
+    }
+    var niv=sessionStorage.getItem('cp_niv');
+    if(niv){actNiv=niv;var lbl=g('pillNivLabel');if(lbl)lbl.textContent=niv;var pn=g('pillNiv');if(pn)pn.classList.add('on');}
+  }catch(e){}
+}
 
 // RÉSERVATION
 function openR(id){
@@ -3080,11 +3098,11 @@ async function subCr(){
   if(btn){btn.textContent='⏳ Publication…';btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
   // Validation
-  if(!titre){shakeField(g('crTitre'));toast('Titre manquant','Donnez un titre à votre cours');return;}
+  if(!titre){shakeField(g('crTitre'));toast('Titre manquant','Donnez un titre à votre cours',true);return;}
   var crSubjH=g('crSubjHidden');
-  if(!crSubjH||!crSubjH.value){var crMB=g('crMatBtn');if(crMB){crMB.style.borderColor='#EF4444';setTimeout(function(){crMB.style.borderColor='';},600);}toast('Matière manquante','Choisissez une matière');return;}
-  if(!date){shakeField(g('crDate'));toast('Date manquante','Choisissez une date');return;}
-  if(!heure){shakeField(g('crHeure'));toast('Heure manquante','Choisissez une heure');return;}
+  if(!crSubjH||!crSubjH.value){var crMB=g('crMatBtn');if(crMB){crMB.style.borderColor='#EF4444';setTimeout(function(){crMB.style.borderColor='';},600);}toast('Matière manquante','Choisissez une matière',true);return;}
+  if(!date){shakeField(g('crDate'));toast('Date manquante','Choisissez une date',true);return;}
+  if(!heure){shakeField(g('crHeure'));toast('Heure manquante','Choisissez une heure',true);return;}
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   // Matière depuis le sélecteur natif
@@ -3238,7 +3256,16 @@ function openMsg(profNm,destId,avatar){
 
   loadMessages();
   clearInterval(msgPollTimer);
-  msgPollTimer=setInterval(loadMessages,3000);
+  // Polling optimisé — augmente progressivement
+  var pollDelay=3000;
+  function schedulePoll(){
+    msgPollTimer=setTimeout(function(){
+      loadMessages();
+      if(msgDestId)schedulePoll(); // continuer seulement si conv active
+    },pollDelay);
+    pollDelay=Math.min(pollDelay+500,8000); // augmente jusqu'à 8s
+  }
+  schedulePoll();
 }
 
 function closeMsgConv(){
@@ -3891,7 +3918,7 @@ var TUTO_ELEVE = [
     bg: 'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
     emoji: '👤',
     title: 'Ton espace personnel',
-    desc: 'Dans l\'onglet Profil : retrouve tes réservations à venir, les profs que tu suis (tu seras notifié de leurs prochains cours), et ton historique. Tu peux aussi noter un cours terminé.',
+    desc: 'Dans l\'onglet Profil : retrouve tes réservations à venir, les profs que tu suis (tu seras notifié de leurs prochains cours), et ton historique. Après un cours tu peux laisser un avis ⭐ — ça aide les profs et les futurs élèves !',
     tip: null
   }
 ];
@@ -4364,6 +4391,9 @@ var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 
 
 function openNote(cours){
   noteCours=cours;noteVal=0;
+  updateStars(0);
+  var np=g('noteProf');
+  if(np&&cours)np.textContent=(P[cours.pr]&&P[cours.pr].nm)||cours.prof_nm||'';
   g('noteTitre').textContent=cours.title;
   g('noteComment').value='';
   g('noteLabel').textContent='';
@@ -4386,7 +4416,7 @@ function updateStars(n){
 }
 
 async function submitNote(){
-  if(!noteVal){toast('Note manquante','Choisissez une note entre 1 et 5');return;}
+  if(!noteVal){toast('Note manquante','Choisissez une note entre 1 et 5',true);return;}
   if(!noteCours||!user){return;}
   var comment=g('noteComment').value.trim();
   try{
@@ -4460,7 +4490,8 @@ function g(id){return document.getElementById(id);}
 function openM(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
 function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
-function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
+function toast(t,s,isError){
+  if(isError&&navigator.vibrate)navigator.vibrate([10,50,10]);g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
 
 // Niveau cours
 function pickNiveau(el){
@@ -4482,7 +4513,7 @@ function closeNivFilter(){
   if(el){el.style.display='none';}
 }
 function setNivFilter(niv, el){
-  actNiv=niv;
+  actNiv=niv;try{sessionStorage.setItem('cp_niv',niv);}catch(e){}
   // Mettre à jour les chips
   document.querySelectorAll('#nivFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   if(el)el.classList.add('on');
@@ -4509,6 +4540,13 @@ function pickNiveau(el){
 // DARK MODE TOGGLE
 // ============================================================
 var _darkMode = false;
+
+function updateMsgBadge(n){
+  var b=g('bnavBadge');
+  if(!b)return;
+  if(n>0){b.textContent=n>9?'9+':String(n);b.classList.add('on');try{sessionStorage.setItem('cp_unread',String(n));}catch(e){};}
+  else{b.classList.remove('on');try{sessionStorage.removeItem('cp_unread');}catch(e){};}
+}
 
 function initDarkMode(){
   var saved=null;
@@ -4573,7 +4611,7 @@ async function submitContact(){
   var email=g('contactEmail').value.trim();
   var msg=g('contactMsg').value.trim();
   var sujet=document.querySelector('.contact-subj.on');
-  if(!email||!msg){toast('Champs manquants','Remplissez votre email et votre message');return;}
+  if(!email||!msg){toast('Champs manquants','Remplissez votre email et votre message',true);return;}
   var btn=g('contactSubmitBtn');
   btn.disabled=true;btn.textContent='Envoi…';
   try{
@@ -4596,7 +4634,7 @@ async function submitContact(){
     } else {
       toast('Erreur',"Impossible d'envoyer, réessayez");
     }
-  }catch(e){toast('Erreur',"Impossible d'envoyer");}
+  }catch(e){toast('Erreur',"Impossible d'envoyer",true);}
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer le message';}
 }
 
