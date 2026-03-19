@@ -1035,18 +1035,31 @@ function addNotifHistory(title,body,cible,sent){
 // SUPPRIMER UN COMPTE UTILISATEUR
 // ============================================================
 async function deleteUser(id, nom){
-  if(!confirm('Supprimer définitivement le compte de '+nom+' ?\n\nCette action supprime le profil, les réservations ET l\'accès de connexion. Irréversible.'))return;
+  if(!confirm('Supprimer définitivement le compte de '+nom+' ?\n\nCette action supprime le profil et les données associées. Irréversible.'))return;
   try{
-    // Appel au backend Railway qui a les droits service role
-    var r=await fetch(API+'/users/'+id,{method:'DELETE',headers:{'Content-Type':'application/json'}});
-    var data=await r.json();
-    if(!r.ok||data.error){toast('Erreur: '+(data.error||'Impossible de supprimer'));return;}
+    var h={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
+    var base=SUPABASE_URL+'/rest/v1/';
+    // Supprimer toutes les données liées directement via Supabase
+    await fetch(base+'reservations?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'follows?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'follows?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'notations?eleve_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'notations?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'messages?expediteur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'messages?destinataire_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'cours?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'push_subscriptions?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    // Supprimer le profil
+    var rp=await fetch(base+'profiles?id=eq.'+id,{method:'DELETE',headers:h});
+    if(!rp.ok){toast('Erreur suppression profil');return;}
+    // Tenter via Railway pour supprimer le compte Auth (optionnel)
+    fetch(API+'/users/'+id,{method:'DELETE',headers:{'Content-Type':'application/json'}}).catch(()=>{});
     // Mettre à jour les listes locales
     allProfs=allProfs.filter(function(p){return p.id!==id;});
     allEleves=allEleves.filter(function(e){return e.id!==id;});
     closeModal();
     renderDashboard();renderProfs();renderEleves();
-    toast('Compte de '+nom+' supprimé définitivement ✓');
+    toast('Compte de '+nom+' supprimé ✓');
   }catch(e){toast('Erreur: '+e.message);}
 }
 
