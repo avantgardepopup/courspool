@@ -114,6 +114,8 @@ html.dk .ltag{color:var(--mid) !important;}
 html.dk .pm{color:var(--or) !important;}
 /* Modals et bottom sheets */
 html.dk .modal,html.dk .bd>div{background:var(--wh);}
+html.dk #bdR .mhd{color:var(--ink) !important;}
+html.dk #bdR .mhd div[style*="font-size:17px"]{color:var(--ink) !important;}
 html.dk #popupPaid>div,html.dk #popupFailed>div,html.dk #tutoCard{background:var(--wh);color:var(--ink);}
 /* pref-group et icônes */
 html.dk .pref-group{background:var(--wh);}
@@ -2945,9 +2947,25 @@ function saveProf(){
       method:'PATCH',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)
-    }).catch(function(){});
+    }).then(function(r){return r.json();}).then(function(data){
+      // Resync user depuis la réponse serveur pour éviter désync
+      if(data&&data.profile){
+        if(data.profile.matieres!==undefined)user.matieres=data.profile.matieres;
+        if(data.profile.statut!==undefined)user.statut=data.profile.statut;
+        if(data.profile.niveau!==undefined)user.niveau=data.profile.niveau;
+        if(data.profile.bio!==undefined)user.bio=data.profile.bio;
+        if(data.profile.ville!==undefined)user.ville=data.profile.ville;
+        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+        // Re-render les chips avec la valeur confirmée par le serveur
+        if(user.role==='professeur') initMatieresChips(user.matieres||'');
+      }
+    }).catch(function(){toast('Erreur réseau','Profil non sauvegardé sur le serveur');});
   }
-  applyUser();
+  // Mettre à jour UI sans quitter la page profil
+  var tav2=g('tav');
+  if(tav2){if(user.photo){tav2.style.background='none';tav2.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}else{tav2.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav2.textContent=user.ini;}}
+  var tavM2=g('tavMob');
+  if(tavM2){if(user.photo){tavM2.style.background='none';tavM2.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}else{tavM2.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavM2.textContent=user.ini;}}
   var an=g('accName');if(an)an.textContent=user.pr+(user.nm?' '+user.nm:'');
   var ae=g('accEmail');if(ae)ae.textContent=user.em;
   var av=g('accAv');
@@ -3365,7 +3383,20 @@ function openR(id){haptic(4);
   if(rNm)rNm.textContent=c.prof_nm||'Professeur';
   // Coloriser le header de la fiche selon la matière
   var rHeader=document.querySelector('#bdR .modal>div:first-child');
-  if(rHeader&&c.bg){rHeader.style.background=c.bg;rHeader.style.borderRadius='20px 20px 0 0';}
+  if(rHeader&&c.bg){
+    rHeader.style.background=c.bg;
+    rHeader.style.borderRadius='20px 20px 0 0';
+    // En dark mode le fond pastel clair rend le texte illisible → forcer couleur sombre
+    var isDark=document.documentElement.classList.contains('dk');
+    var rTitEl=g('rTit');
+    if(rTitEl)rTitEl.style.color=isDark?'#111':'var(--ink)';
+    var mhdEl=rHeader.querySelector('.mhd');
+    if(mhdEl){
+      mhdEl.style.color=isDark?'#111':'';
+      var subEl=mhdEl.querySelector('[style*="color:var(--lite)"]');
+      if(subEl)subEl.style.color=isDark?'#555':'';
+    }
+  }
   g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
