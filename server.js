@@ -228,17 +228,35 @@ async function sendEmailProfNewEleve(profEmail, profName, eleveName, coursTitle,
 }
 
 // ── Email 4 : Vérification compte prof ──────────────────────
-async function sendEmailProfVerification(profEmail, profName, status) {
+// status: 'approved' | 'rejected_retry' | 'rejected_final'
+async function sendEmailProfVerification(profEmail, profName, status, raison = '') {
   const isApproved = status === 'approved';
-  const headerBg = isApproved ? 'linear-gradient(135deg,#22C069,#16A34A)' : 'linear-gradient(135deg,#EF4444,#DC2626)';
-  const header = `
-    <h1 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2">
-      ${isApproved ? 'Compte activé !' : 'Vérification refusée'}
-    </h1>
-    <p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">
-      ${isApproved ? 'Vous êtes prêt à enseigner' : 'Une action est requise'}
-    </p>`;
-  const body = isApproved ? `
+  const isRetry   = status === 'rejected_retry';
+  const isFinal   = status === 'rejected_final';
+
+  const headerBg = isApproved
+    ? 'linear-gradient(135deg,#22C069,#16A34A)'
+    : isFinal
+      ? 'linear-gradient(135deg,#1F2937,#374151)'
+      : 'linear-gradient(135deg,#EF4444,#DC2626)';
+
+  const headerTitle = isApproved ? 'Compte activé !'
+    : isFinal ? 'Compte non éligible'
+    : 'Vérification refusée — Action requise';
+
+  const headerSub = isApproved ? 'Vous êtes prêt à enseigner'
+    : isFinal ? 'Votre demande a été définitivement refusée'
+    : 'Vous pouvez renvoyer votre document';
+
+  const raisonBlock = raison ? `
+    <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:12px;padding:16px;margin-bottom:20px">
+      <p style="margin:0;font-size:12px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Message de l'équipe CoursPool</p>
+      <p style="margin:0;font-size:14px;color:#78350F;line-height:1.6">${raison}</p>
+    </div>` : '';
+
+  let body;
+  if (isApproved) {
+    body = `
     <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
     <p style="margin:0 0 20px;font-size:14px;color:#555;line-height:1.7">Votre identité a été vérifiée. Vous pouvez dès maintenant publier vos cours et accueillir vos premiers élèves.</p>
     <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:16px;padding:20px;margin-bottom:24px">
@@ -246,20 +264,38 @@ async function sendEmailProfVerification(profEmail, profName, status) {
         ✓ Votre profil est maintenant visible<br>✓ Vous pouvez créer et publier des cours<br>✓ Vous pouvez recevoir des paiements
       </p>
     </div>
-    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Proposer mon premier cours →</a>` : `
+    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Proposer mon premier cours →</a>`;
+  } else if (isRetry) {
+    body = `
     <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
-    <p style="margin:0 0 20px;font-size:14px;color:#555;line-height:1.7">Votre demande de vérification n'a pas pu être acceptée. La pièce d'identité est peut-être illisible ou ne correspond pas aux informations du profil.</p>
+    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.7">Votre demande de vérification n'a pas pu être acceptée en l'état.</p>
+    ${raisonBlock}
     <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:20px;margin-bottom:24px">
-      <p style="margin:0;font-size:13px;color:#991B1B;line-height:1.8">Photo nette et bien éclairée · Document entier et non expiré · Nom et prénom correspondants</p>
+      <p style="margin:0;font-size:13px;color:#991B1B;line-height:1.8;font-weight:500">Ce qu'il faut vérifier :<br>· Photo nette, bien éclairée, sans reflet<br>· Document entier et non expiré<br>· Nom et prénom correspondant à votre profil</p>
     </div>
     <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Renvoyer ma pièce d'identité →</a>`;
+  } else {
+    body = `
+    <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
+    <p style="margin:0 0 16px;font-size:14px;color:#555;line-height:1.7">Après examen de votre dossier, nous ne sommes malheureusement pas en mesure de valider votre compte professeur sur CoursPool.</p>
+    ${raisonBlock}
+    <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:16px;padding:20px;margin-bottom:24px">
+      <p style="margin:0;font-size:13px;color:#374151;line-height:1.8">Si vous pensez qu'il s'agit d'une erreur, vous pouvez nous contacter à <a href="mailto:hello@courspool.com" style="color:#FF6B2B">hello@courspool.com</a></p>
+    </div>`;
+  }
+
+  const subject = isApproved
+    ? `Votre compte CoursPool est activé, ${profName} !`
+    : isFinal
+      ? `Votre compte CoursPool — Décision finale`
+      : `Vérification d'identité — Action requise`;
+
+  const header = `
+    <h1 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2">${headerTitle}</h1>
+    <p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">${headerSub}</p>`;
+
   try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: profEmail,
-      subject: isApproved ? `Votre compte CoursPool est activé, ${profName} !` : "Vérification d'identité — Action requise",
-      html: emailBase(headerBg, header, body)
-    });
+    await resend.emails.send({ from: FROM_EMAIL, to: profEmail, subject, html: emailBase(headerBg, header, body) });
   } catch(e) { console.log('Email verification error:', e.message); }
 }
 
@@ -352,6 +388,22 @@ app.post('/cours', async (req, res) => {
     })();
   }
   res.json(data);
+});
+
+// COURS — accès par code privé
+app.get('/cours/code/:code', async (req, res) => {
+  const { code } = req.params;
+  if (!code) return res.status(400).json({ error: 'Code manquant' });
+  try {
+    const { data, error } = await supabase
+      .from('cours')
+      .select('*')
+      .eq('code_acces', code.toUpperCase())
+      .eq('prive', true)
+      .single();
+    if (error || !data) return res.status(404).json({ error: 'Cours introuvable' });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // COURS — supprimer
@@ -646,13 +698,19 @@ app.patch('/profiles/:id', async (req, res) => {
 });
 
 app.post('/email/verification', async (req, res) => {
-  const { prof_id, status } = req.body;
+  const { prof_id, status, raison } = req.body;
   if (!prof_id || !status) return res.status(400).json({ error: 'Données manquantes' });
   try {
     const { data: prof } = await supabase.from('profiles').select('email,prenom,nom').eq('id', prof_id).single();
     if (!prof) return res.status(404).json({ error: 'Prof introuvable' });
     const profName = ((prof.prenom||'') + ' ' + (prof.nom||'')).trim();
-    await sendEmailProfVerification(prof.email, profName, status);
+    await sendEmailProfVerification(prof.email, profName, status, raison || '');
+    // Mettre à jour le statut + raison en base selon le type de refus
+    if (status === 'rejected_retry') {
+      await supabase.from('profiles').update({ statut_compte: 'rejeté', cni_uploaded: false, rejection_reason: raison||'', can_retry_cni: true }).eq('id', prof_id);
+    } else if (status === 'rejected_final') {
+      await supabase.from('profiles').update({ statut_compte: 'bloqué', rejection_reason: raison||'', can_retry_cni: false }).eq('id', prof_id);
+    }
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
