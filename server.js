@@ -805,7 +805,7 @@ app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
 
 // GROUPE — envoyer un message à plusieurs élèves d'un cours
 app.post('/messages/groupe', async (req, res) => {
-  const { cours_id, expediteur_id, contenu, cours_titre } = req.body;
+  const { cours_id, expediteur_id, expediteur_nom, contenu, cours_titre } = req.body;
   if (!cours_id || !expediteur_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
   try {
     // Récupérer tous les inscrits au cours
@@ -813,14 +813,26 @@ app.post('/messages/groupe', async (req, res) => {
       .from('reservations').select('user_id').eq('cours_id', cours_id);
     if (error) return res.status(500).json({ error: error.message });
     const eleves = [...new Set(reservations.map(r => r.user_id).filter(id => id && id !== expediteur_id))];
-    if (!eleves.length) return res.json({ success: true, sent: 0 });
+    // Inclure le prof lui-même pour qu'il voit ses propres messages dans le groupe
+    const allReceivers = eleves.length ? eleves : [];
+    if (!allReceivers.length && expediteur_id) {
+      // Pas d'élèves, mais on crée quand même un message "broadcast" pour l'historique
+    }
+    if (!allReceivers.length) return res.json({ success: true, sent: 0 });
     // Créer un message pour chaque élève avec un tag groupe
+    // Récupérer le nom de l'expéditeur si pas fourni
+    let senderNom = expediteur_nom || '';
+    if (!senderNom) {
+      const { data: senderProfile } = await supabase.from('profiles').select('prenom, nom').eq('id', expediteur_id).single();
+      if (senderProfile) senderNom = ((senderProfile.prenom || '') + ' ' + (senderProfile.nom || '')).trim();
+    }
     const msgs = eleves.map(dest => ({
       sender_id: expediteur_id,
       receiver_id: dest,
       contenu: contenu,
       groupe_cours_id: cours_id,
-      groupe_cours_titre: cours_titre || 'Cours'
+      groupe_cours_titre: cours_titre || 'Cours',
+      sender_nom: senderNom
     }));
     const { error: insertErr } = await supabase.from('messages').insert(msgs);
     if (insertErr) {
@@ -844,7 +856,17 @@ app.get('/messages/groupe/:cours_id', async (req, res) => {
       .eq('groupe_cours_id', cours_id)
       .order('created_at', { ascending: true });
     if (error) return res.status(500).json({ error: error.message });
-    res.json(data || []);
+    if (!data || !data.length) return res.json([]);
+    // Enrichir avec sender_nom depuis profiles si manquant
+    const senderIds = [...new Set(data.map(m => m.sender_id).filter(Boolean))];
+    const { data: profiles } = await supabase.from('profiles').select('id, prenom, nom').in('id', senderIds);
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = ((p.prenom || '') + ' ' + (p.nom || '')).trim(); });
+    const enriched = data.map(m => ({
+      ...m,
+      sender_nom: m.sender_nom || profileMap[m.sender_id] || 'Utilisateur'
+    }));
+    res.json(enriched);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1240,4 +1262,20 @@ app.post('/push/relance-eleves', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// ── KEEP-ALIVE anti-cold-start Railway ──
+const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
+  ? 'https://' + process.env.RAILWAY_PUBLIC_DOMAIN
+  : process.env.SELF_URL || null;
+if (SELF_URL) {
+  setInterval(async () => {
+    try {
+      const https = require('https');
+      const http = require('http');
+      const lib = SELF_URL.startsWith('https') ? https : http;
+      lib.get(SELF_URL + '/', () => {}).on('error', () => {});
+    } catch(e) {}
+  }, 10 * 60 * 1000); // toutes les 10 minutes
+  console.log('Keep-alive actif:', SELF_URL);
+}
+
 app.listen(PORT, () => console.log('CoursPool API sur le port ' + PORT));
