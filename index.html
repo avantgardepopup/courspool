@@ -813,18 +813,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
         <div id="geoControls" style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <!-- Bouton activer géoloc -->
+          <!-- Bouton activer/désactiver géoloc -->
           <button onclick="requestGeoloc()" id="locGeoBtn" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all .2s">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
             <span id="geoBtnLabel">Autour de moi</span>
           </button>
-          <!-- Sélecteur de distance (visible quand géoloc active) -->
-          <select id="geoDistSelect" onchange="onDistChange(this.value)" style="display:none;border:1.5px solid var(--or);border-radius:8px;padding:4px 6px;font-family:inherit;font-size:11px;font-weight:600;color:var(--or);background:var(--orp);outline:none;cursor:pointer">
-            <option value="5">5 km</option>
-            <option value="10" selected>10 km</option>
-            <option value="20">20 km</option>
-            <option value="50">50 km</option>
-          </select>
+          <!-- Bouton distance (visible quand géoloc active) -->
+          <button id="geoDistBtn" onclick="openDistFilter()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .2s">
+            <span id="geoDistLabel">10 km</span>
+          </button>
         </div>
       </div>
       <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
@@ -868,6 +865,24 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             <div class="niv-fchip" onclick="setNivFilter('Bac+1/2',this)">Bac +1/2 <span style="font-size:11px;color:var(--lite);font-weight:400">BTS · IUT · L1-L2</span></div>
             <div class="niv-fchip" onclick="setNivFilter('Bac+3/4',this)">Bac +3/4 <span style="font-size:11px;color:var(--lite);font-weight:400">L3 · Master 1</span></div>
             <div class="niv-fchip" onclick="setNivFilter('Bac+5',this)">Bac +5 <span style="font-size:11px;color:var(--lite);font-weight:400">Master 2 · Grandes écoles</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom sheet distance géoloc -->
+      <div id="bdDistFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeDistFilter()">
+        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
+          <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:17px;font-weight:800">Distance</div>
+            <button onclick="closeDistFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+          </div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="distFilterList">
+            <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400">Quartier</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(5,this)">5 km <span style="font-size:11px;color:var(--lite);font-weight:400">Ville proche</span></div>
+            <div class="niv-fchip on" onclick="setDistFilter(10,this)">10 km <span style="font-size:11px;color:var(--lite);font-weight:400">Zone urbaine</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(20,this)">20 km <span style="font-size:11px;color:var(--lite);font-weight:400">Agglomération</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(50,this)">50 km <span style="font-size:11px;color:var(--lite);font-weight:400">Grande région</span></div>
           </div>
         </div>
       </div>
@@ -3099,16 +3114,18 @@ var actLoc='';
 
 var _geoActive=false;
 var _geoCoords=null;
-var _geoDist=10; // km par défaut
+var _geoDist=10;
+var geoMode=false;
+var userCoords=null;
 
 function requestGeoloc(){
   // Toggle : si déjà actif → désactiver
   if(_geoActive){
     _geoActive=false;_geoCoords=null;
-    var btn=g('locGeoBtn'),lbl=g('geoBtnLabel'),sel=g('geoDistSelect');
+    var btn=g('locGeoBtn'),lbl=g('geoBtnLabel'),distBtn=g('geoDistBtn');
     if(btn){btn.style.background='var(--orp)';btn.style.color='var(--or)';}
     if(lbl)lbl.textContent='Autour de moi';
-    if(sel)sel.style.display='none';
+    if(distBtn)distBtn.style.display='none';
     var inp=g('locInput');if(inp)inp.value='';
     var cb=g('locClearBtn');if(cb)cb.style.display='none';
     actLoc='';geoMode=false;userCoords=null;
@@ -3128,8 +3145,8 @@ function requestGeoloc(){
       var inp=g('locInput');if(inp)inp.value='📍 Autour de moi';
       var cb=g('locClearBtn');if(cb)cb.style.display='block';
       if(btn){btn.style.background='var(--or)';btn.style.color='#fff';btn.style.opacity='1';}
-      if(lbl)lbl.textContent='✓ Activé';
-      var sel=g('geoDistSelect');if(sel)sel.style.display='block';
+      if(lbl)lbl.textContent='Activé';
+      var distBtn=g('geoDistBtn');if(distBtn)distBtn.style.display='block';
       applyFilter();
       toast('Position détectée 📍','');
       // Reverse geocoding en arrière-plan (non bloquant)
@@ -3152,9 +3169,23 @@ function requestGeoloc(){
   );
 }
 
-function onDistChange(km){
-  _geoDist=parseFloat(km);
+function openDistFilter(){
+  var bd=g('bdDistFilter');
+  if(bd)bd.style.display='flex';
+}
+function closeDistFilter(){
+  var bd=g('bdDistFilter');
+  if(bd)bd.style.display='none';
+}
+function setDistFilter(km,el){
+  _geoDist=km;
+  document.querySelectorAll('#distFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
+  var lbl=g('geoDistLabel');
+  if(lbl)lbl.textContent=km+' km';
+  closeDistFilter();
   applyFilter();
+  if(navigator.vibrate)navigator.vibrate(6);
 }
 
 function filterByLoc(val){
