@@ -610,6 +610,27 @@ app.post('/contact', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// DELETE user — suppression complète (profil + auth)
+app.delete('/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // 1. Supprimer les données liées
+    await supabase.from('reservations').delete().eq('user_id', id);
+    await supabase.from('follows').delete().eq('user_id', id);
+    await supabase.from('push_subscriptions').delete().eq('user_id', id).catch(()=>{});
+    await supabase.from('contacts').delete().eq('user_id', id).catch(()=>{});
+    await supabase.from('notations').delete().eq('eleve_id', id).catch(()=>{});
+    // 2. Supprimer le profil
+    await supabase.from('profiles').delete().eq('id', id);
+    // 3. Supprimer le compte Auth (nécessite service role key)
+    const { error } = await supabase.auth.admin.deleteUser(id);
+    if (error) console.log('Auth delete warning:', error.message);
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // PATCH profil — mise à jour verified / statut_compte (appelé depuis admin)
 app.patch('/profiles/:id', async (req, res) => {
   const { id } = req.params;
