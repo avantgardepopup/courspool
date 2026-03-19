@@ -2376,7 +2376,12 @@ function goExplore(){
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
       }
     } else {
-      loadData().then(function(){buildCards();checkPrivateCoursAccess();});
+      // Visiteur sans compte — lancer l'onboarding
+      loadData().then(function(){
+        buildCards();
+        checkPrivateCoursAccess();
+        setTimeout(obShow, 400);
+      });
     }
   }catch(e){}
 })();
