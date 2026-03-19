@@ -2,24 +2,10 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<script>
-// Dark mode appliqué immédiatement avant tout rendu — évite le flash
-(function(){
-  try{
-    var s=localStorage.getItem('cp_dark');
-    if(s==='1')document.documentElement.classList.add('dk');
-    else if(s===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
-      document.documentElement.classList.add('dk');
-  }catch(e){}
-})();
-</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" id="themeColorMeta" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)">
 <title>CoursPool</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF6B2B'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='800' text-anchor='middle' fill='white' font-family='system-ui'%3EC%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#FF6B2B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -28,21 +14,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <!-- SEO -->
 <meta name="description" content="Trouvez et réservez des cours près de chez vous">
-<meta property="og:title" content="CoursPool — Partagez les frais d'un cours">
-<meta property="og:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves. Qualité d'un cours particulier, prix d'un cours collectif.">
+<meta property="og:title" content="CoursPool">
+<meta property="og:description" content="Trouvez et réservez des cours près de chez vous">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://courspool.vercel.app">
-<meta property="og:image" content="https://courspool.vercel.app/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="CoursPool">
-<meta property="og:locale" content="fr_FR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="CoursPool — Partagez les frais d'un cours">
-<meta name="twitter:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves.">
-<meta name="twitter:image" content="https://courspool.vercel.app/og-image.png">
-<meta name="description" content="CoursPool — Trouvez et réservez des cours près de chez vous. Partagez les frais entre élèves pour des cours abordables.">
-<!-- Lib paiement sécurisé -->
+<!-- Stripe.js — tokenise l'IBAN sans jamais le transmettre à nos serveurs -->
 <script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -54,12 +29,10 @@
   --sh:0 6px 28px rgba(0,0,0,.11);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html{max-width:100vw;width:100%;overflow-x:clip;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);
-  max-width:100vw;width:100%;overflow-x:clip;
-  overscroll-behavior-x:none;
-  overscroll-behavior-y:auto;
-  -webkit-overflow-scrolling:touch;
+html,body{overflow-x:hidden;max-width:100vw;width:100%;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  /* Empêcher le rebond iOS */
+  overscroll-behavior:none;
 }
 /* Safe area iOS — s'assurer que rien ne touche le notch ni le home indicator */
 :root{
@@ -68,75 +41,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
 }
-/* === DARK MODE — via classe .dk sur <html> === */
-html.dk{
-  --ink:#E8E4DF;--mid:#8A837C;--lite:#4A4540;
-  --bg:#131110;--wh:#1C1917;--bdr:#2E2B28;
-  --orp:#2A1A0F;--sh:0 6px 28px rgba(0,0,0,.6);
-  color-scheme:dark;
-}
-/* Nav en dark */
-html.dk .bnav{background:#1C1917;border-top:1px solid #2E2B28;}
-html.dk .mob-header{background:#131110;border-bottom:1px solid #2E2B28;}
-html.dk .mob-search{background:#131110;border-bottom:1px solid #2E2B28;}
-html.dk .mob-search input{background:#1C1917;color:var(--ink);}
-html.dk #verifBand{background:#2A2018;border-color:#4A3820;}
-html.dk #verifBand .verifBandTitle{color:#FCD34D;}
-html.dk .mob-search{background:#1C1917;border-bottom:1px solid #2E2B28;}
-/* Inputs sans cadre outline bizarre */
-html.dk .locbar input{background:transparent !important;color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;color-scheme:light dark;}
-html.dk input,html.dk textarea,html.dk select{
-  color-scheme:dark;background:var(--bg);color:var(--ink);
-  -webkit-text-fill-color:var(--ink);
-}
-html.dk input::placeholder,html.dk textarea::placeholder{color:var(--lite);}
-/* Pref-row inputs — pas de fond bizarre */
-html.dk .pref-row input,html.dk .pref-row select,html.dk .pref-row textarea{
-  background:transparent!important;
-  outline:none!important;
-  -webkit-appearance:none;
-  border:none!important;
-  box-shadow:none!important;
-}
-/* Pills */
-html.dk .pill{background:var(--wh);border-color:var(--bdr);color:var(--mid);}
-html.dk .pill.on{background:var(--or);color:#fff;border-color:var(--or);}
-/* Bouton géoloc */
-html.dk #locGeoBtn{background:#2A1A0F;}
-/* Cards */
-html.dk .card,html.dk .rrow,html.dk .fol-row{background:var(--wh);}
-/* Cards couleurs — atténuer les dégradés trop flashy */
-html.dk .ctop{filter:saturate(.7) brightness(.75);}
-/* Modals et bottom sheets */
-html.dk .modal,html.dk .bd>div{background:var(--wh);}
-html.dk #popupPaid>div,html.dk #popupFailed>div,html.dk #tutoCard{background:var(--wh);color:var(--ink);}
-/* pref-group et icônes */
-html.dk .pref-group{background:var(--wh);}
-html.dk .pref-icon[style*="#EFF6FF"]{background:#0F1A2A!important;}
-html.dk .pref-icon[style*="#FFF7ED"]{background:#2A1800!important;}
-html.dk .pref-icon[style*="#F0FDF4"]{background:#0A2016!important;}
-html.dk .pref-icon[style*="#F5F3FF"]{background:#180F2A!important;}
-html.dk .pref-icon[style*="#FEF2F2"]{background:#2A0E0E!important;}
-html.dk .pref-icon[style*="var(--orp)"]{background:#2A1A0F!important;}
-/* États colorés */
-html.dk div[style*="background:#F0FDF4"]{background:#0A2016!important;color:#4ADE80!important;}
-html.dk div[style*="background:#FEF3C7"]{background:#2A1800!important;color:#FCD34D!important;}
-html.dk div[style*="background:#FEF2F2"]{background:#2A0E0E!important;color:#F87171!important;}
-html.dk div[style*="background:var(--orp)"]{background:#2A1A0F!important;}
-/* Hero profil — laisser le dégradé orange */
-html.dk #pgAcc .ptab{background:var(--wh);color:var(--mid);}
-html.dk #pgAcc .ptab.on{color:var(--or);border-bottom-color:var(--or);}
-/* Login */
-html.dk .lbox{box-shadow:0 20px 60px rgba(0,0,0,.7);}
-/* Locbar */
-html.dk .locbar{background:var(--wh);border-color:var(--bdr);}
-html.dk #verifBand{background:#2A1E08 !important;border-color:#4A3410 !important;}
-html.dk #verifBandTitle{color:#FCD34D !important;}
-html.dk #verifBandSub{color:#B45309 !important;}
-/* Toggle switch */
-html.dk .ntog{background:var(--bdr);}
-html.dk .ntog.on{background:var(--or);}
-html.dk .ntog::after{background:#fff;}
 #login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 .lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
 .lhero{background:linear-gradient(135deg,var(--or),var(--ord));padding:32px 28px 24px;color:#fff;position:relative;overflow:hidden;}
@@ -164,7 +68,7 @@ html.dk .ntog::after{background:#fff;}
 .rg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ropt{border:1.5px solid var(--bdr);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--mid);transition:all .18s;}
 .ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
-#app{display:none;height:100dvh;overflow-y:auto;overflow-x:hidden;position:relative;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;overscroll-behavior-y:auto;}
+#app{display:none;}
 /* === TOPBAR DESKTOP — masquée, remplacée par mob-header sur tous les écrans === */
 .topbar{display:none !important;}
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -188,18 +92,9 @@ html.dk .ntog::after{background:#fff;}
   padding:14px 20px 10px;
   padding-top:max(20px,env(safe-area-inset-top,0px));
   background:var(--wh);
-  border-bottom:1px solid transparent;
+  border-bottom:1px solid var(--bdr);
   position:sticky;top:0;z-index:50;
-  isolation:isolate;
-  flex-shrink:0;
-  transition:border-color .2s,box-shadow .2s;
 }
-.mob-header.scrolled{
-  border-bottom-color:var(--bdr);
-  box-shadow:0 1px 12px rgba(0,0,0,.06);
-}
-.mob-title{transition:font-size .25s cubic-bezier(.4,0,.2,1),opacity .2s;}
-.mob-header.scrolled .mob-title{font-size:18px !important;font-weight:700;}
 .mob-header-inner{display:flex;align-items:flex-end;justify-content:space-between;}
 .mob-title{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;}
 .mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
@@ -208,56 +103,41 @@ html.dk .ntog::after{background:#fff;}
 .mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:16px;outline:none;}
 .mob-search .si{top:50%;left:31px;}
 
-.pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;animation:pgIn .22s ease;}
-@keyframes pgIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
-@keyframes pgInLeft{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
-@keyframes pgOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-18px)}}
-@keyframes bniSpring{0%{transform:scale(1)}30%{transform:scale(1.28)}60%{transform:scale(.92)}100%{transform:scale(1)}}
-@keyframes checkDraw{from{stroke-dashoffset:40}to{stroke-dashoffset:0}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes priceFlip{0%{transform:translateY(0);opacity:1}40%{transform:translateY(-8px);opacity:0}60%{transform:translateY(8px);opacity:0}100%{transform:translateY(0);opacity:1}}
-@keyframes emptyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes mi{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-@keyframes lineGrow{0%,100%{opacity:.3}50%{opacity:1}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
   .pg{min-height:calc(100dvh - 130px);}
   #pgMsg{height:calc(100dvh - 130px) !important;}
-  #pgMsg.on{display:flex !important;;animation:pgIn .25s cubic-bezier(.4,0,.2,1) both;}
+  #pgMsg.on{display:flex !important;}
 }
 .cnt{padding:20px 16px;max-width:1200px;}
-.ptr-indicator{position:absolute;top:-50px;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;color:var(--lite);font-size:13px;font-weight:500;gap:8px;transition:opacity .2s;}
-.ptr-spinner{width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--or);border-radius:50%;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.ptr-spinner.spinning{animation:spin .7s linear infinite;}
-.locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;overflow:hidden;}
-.locbar>svg{width:16px;height:16px;color:var(--or);flex-shrink:0;}
-.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;min-width:0;background:transparent;color:var(--ink);}
+.locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;position:relative;}
+.locbar>svg{width:18px;height:18px;color:var(--or);flex-shrink:0;}
+.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;}
+.loc-geo-btn{background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;transition:all .18s;}
+.loc-geo-btn:hover{background:var(--or);color:#fff;}
+.loc-geo-btn.loading{opacity:.6;cursor:not-allowed;}
+.loc-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);z-index:200;overflow:hidden;display:none;pointer-events:auto;}
+.loc-sug-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px;transition:background .15s;}
+.loc-sug-item:last-child{border-bottom:none;}
+.loc-sug-item:hover{background:var(--orp);}
+.loc-sug-item.geo{color:var(--or);font-weight:600;}
+.loc-sug-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.loc-sug-icon.geo-icon{background:var(--orp);}
+.loc-sug-icon.place-icon{background:var(--bg);}
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
-.pills{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
-.pills::-webkit-scrollbar{display:none;}
-.pill{padding:7px 12px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);display:inline-flex;align-items:center;gap:4px;}
-.niv-fchip{padding:14px 16px;font-size:15px;font-weight:500;cursor:pointer;border:none;border-bottom:1px solid var(--bdr);background:var(--wh);color:var(--ink);transition:all .15s;display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;gap:8px;}
-.niv-fchip:last-child{border-bottom:none;}
-.niv-fchip::after{content:'';width:20px;height:20px;border-radius:50%;border:2px solid var(--bdr);flex-shrink:0;transition:all .15s;}
-.niv-fchip.on{color:var(--or);font-weight:600;}
-.niv-fchip.on::after{background:var(--or);border-color:var(--or);background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");background-size:12px;background-repeat:no-repeat;background-position:center;}
-.niv-fchip:active{background:var(--bg);}
-.pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
-.mat-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);z-index:300;overflow:hidden;display:none;max-height:240px;overflow-y:auto;}
-.mat-item{padding:11px 16px;cursor:pointer;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bdr);transition:background .12s;}
-.mat-item:last-child{border-bottom:none;}
-.mat-item:active{background:var(--bg);}
-.mat-item.selected{color:var(--or);font-weight:600;}
-.mat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.pill:not(.on):hover{border-color:var(--or);color:var(--or);}
-.crn-chip{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
+.pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.crn-chip{padding:6px 13px;border-radius:50px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
 .crn-chip.on{background:var(--or);color:#fff;border-color:var(--or);}
-.crn-chip:active{transform:scale(.95);}
+.niv-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.85);border-radius:50px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--ink);}
+.niv-fchip{padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
+.niv-fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
+.pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.pill:not(.on):hover{border-color:var(--or);color:var(--or);}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 /* SKELETON LOADING */
 .skeleton{background:linear-gradient(90deg,var(--bdr) 25%,#ede8e2 50%,var(--bdr) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
@@ -270,17 +150,14 @@ html.dk .ntog::after{background:#fff;}
 .skel-line.w60{width:60%;}
 .skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
-.card:active{transform:scale(.97);transition:transform .1s;}
-.btnr:active,.pb:active,.lbtn:active,.btnadd:active,.lguest:active{transform:scale(.96);transition:transform .08s;}
-.btnr,.pb,.lbtn,.btnadd,.lguest{-webkit-tap-highlight-color:transparent;}
-.bni:active{opacity:.6;transform:scale(.9);}
+.card:active{transform:scale(.98) !important;box-shadow:none !important;}
+.btnr:active,.pb:active,.lbtn:active{transform:scale(.96);transition:transform .1s !important;}
+.bni:active{opacity:.7;}
 .card-prive{border-color:#E8D9C4;background:linear-gradient(to bottom,#FFFBF5,var(--wh));}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-.ctop{height:80px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;}
-.chip{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:50px;background:rgba(0,0,0,.28);color:#fff !important;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.25);}
-html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
+.ctop{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+.chip{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:50px;background:rgba(255,255,255,.85);}
 .pbub{width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.15);cursor:pointer;transition:transform .18s;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;position:relative;overflow:hidden;}
 .pbub:hover{transform:scale(1.1);}
 .cbody{padding:12px 14px 14px;}
@@ -312,14 +189,12 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 .acc-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1;}
 .acc-chip{background:rgba(255,255,255,.2);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
 .acc-tabs{background:var(--wh);border-bottom:1px solid var(--bdr);display:flex;position:sticky;top:56px;z-index:40;}
-.atab{display:none;}
-.ptab{flex:1;min-width:70px;padding:12px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--lite);border:none;border-bottom:2px solid transparent;background:transparent;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;white-space:nowrap;transition:all .2s;position:relative;}
-.ptab.on{color:var(--or);border-bottom-color:var(--or);}
-.ptab:active{opacity:.7;}
-.ptab svg{transition:transform .2s;}
-.ptab.on svg{transform:scale(1.1);}
+.atab{flex:1;min-width:70px;padding:12px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--lite);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:4px;white-space:nowrap;}
+.atab.on{color:var(--or);border-bottom-color:var(--or);}
+.atab svg{width:14px;height:14px;}
+.atab.on{color:var(--or);border-bottom-color:var(--or);}
 .acc-body{padding:0 20px;max-width:800px;padding-bottom:120px;}
-.asec{display:none;}.asec.on{display:block;padding-top:4px;animation:fu .22s ease;}
+.asec{display:none;}.asec.on{display:block;padding-top:4px;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
 .rrow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin:0 0 10px 0;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;width:100%;}
 .rrow:hover{box-shadow:var(--sh);border-color:#D5CEC6;}
@@ -336,8 +211,6 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 .bempty p{font-size:13.5px;line-height:1.7;}
 .bempty a{color:var(--or);font-weight:600;cursor:pointer;}
 .frow{background:var(--wh);border-radius:14px;border:1px solid var(--bdr);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
-.fol-row{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .15s;}
-.fol-row:active{background:var(--bg);}
 .fav{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;overflow:hidden;}
 .fi{flex:1;}
 .fn{font-size:13.5px;font-weight:700;}
@@ -363,8 +236,8 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 .modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;animation:mi .25s ease;}
 .modal.sm{max-width:380px;}
 @keyframes mi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.mhd{padding:18px 18px 4px;display:flex;align-items:flex-start;justify-content:space-between;}
-.mbd{padding:20px 18px 20px;}
+.mhd{padding:18px 18px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.mbd{padding:16px 18px 20px;}
 .mcl{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid);transition:all .18s;}
 .mcl:hover{background:var(--orp);color:var(--or);}
 .pb{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:12px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;transition:all .18s;border:none;}
@@ -411,6 +284,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 @media(max-width:768px){
   #msgListPane{width:100%;max-width:100%;border-right:none;}
   #msgConvPane{
+    display:none;
     position:fixed;
     top:0;left:0;right:0;bottom:0;
     height:100%;
@@ -452,16 +326,11 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 }
 .bni.on{background:var(--or);color:#fff;box-shadow:0 3px 10px rgba(255,107,43,.35);}
 .bni:not(.on):hover{color:var(--or);background:rgba(255,107,43,.08);}
-.bni svg{width:22px;height:22px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
-.bni.on svg{transform:scale(1.05);}
-.bni .bni-ico-off{display:block;}
-.bni .bni-ico-on{display:none;}
-.bni.on .bni-ico-off{display:none;}
-.bni.on .bni-ico-on{display:block;}
+.bni svg{width:20px;height:20px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.bni.on svg{transform:scale(1.1);}
 .bni span{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
 .bni-badge{position:absolute;top:4px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.85);}
-.bni-badge.on{display:flex;animation:badgePulse 2s ease infinite;}
-@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 4px rgba(239,68,68,0)}}
+.bni-badge.on{display:flex;}
 .bni-sep{width:1px;height:20px;background:rgba(0,0,0,.08);margin:0 2px;}
 .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
 .pw-toggle:hover{color:var(--or);}
@@ -506,15 +375,6 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 .prl{font-size:12.5px;color:var(--mid);margin-bottom:8px;}
 .pbdg{display:inline-flex;align-items:center;gap:5px;background:var(--orp);color:var(--or);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:600;}
 .pstbl{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bdr);border-radius:12px;overflow:hidden;margin:14px 18px;}
-.pref-section{margin-bottom:8px;}
-.pref-header{font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 0 8px;}
-.pref-group{background:var(--wh);border-radius:16px;overflow:hidden;}
-.pref-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--bdr);min-height:52px;}
-.pref-row:last-child{border-bottom:none;}
-.pref-row:active{background:var(--bg);}
-.pref-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pref-icon svg{width:16px;height:16px;}
-.pref-label{flex:1;font-size:15px;font-weight:500;color:var(--ink);}
 .pstc{background:var(--wh);padding:11px;text-align:center;}
 .pstv{font-size:18px;font-weight:800;}
 .pstl{font-size:11px;color:var(--lite);margin-top:1px;}
@@ -533,9 +393,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 .so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 .fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);box-sizing:border-box;-webkit-appearance:none;appearance:none;height:46px;}
 .fi3:focus{border-color:var(--or);}
-.toast{position:fixed;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;max-width:420px;margin:0 auto;background:#1A1714;color:#F0EDE8;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-12px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.2);}
-@media(max-width:640px){.toast{bottom:auto;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;transform:translateY(-8px);}
-.toast.on{transform:translateY(0);}}
+.toast{position:fixed;bottom:24px;right:20px;left:20px;max-width:400px;margin:0 auto;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);pointer-events:none;transition:all .28s;}
 .toast.on{opacity:1;transform:translateY(0);}
 .tico{width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .tico svg{width:13px;height:13px;color:#fff;}
@@ -554,7 +412,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
   overflow:hidden;
   font-family:'Plus Jakarta Sans',sans-serif;
 }
-#onboarding.active{display:flex;}
+#onboarding.visible{display:flex;}
 #onboarding.hidden{display:none;}
 
 /* Slides wrapper */
@@ -696,19 +554,18 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
    TUTORIEL v3
    ============================================================ */
 #tutoRoot{display:none;}
-#tutoRoot.on{display:block !important;}
+#tutoRoot.on{display:flex !important;animation:tutoFadeIn .3s ease both;}
 @keyframes tutoFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes cpSpin{to{transform:rotate(360deg)}}
 .cp-loader{display:inline-block;width:22px;height:22px;border:2.5px solid var(--orp);border-top-color:var(--or);border-radius:50%;animation:cpSpin .7s linear infinite;vertical-align:middle;margin-right:8px;flex-shrink:0;}
 @keyframes splashBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
-@keyframes splashPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.3)}50%{transform:scale(1.06);box-shadow:0 0 0 12px rgba(255,255,255,0)}}
 @keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
 </head>
 <body>
 <div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
   <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
-    <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;animation:splashPulse 1.5s ease-in-out infinite">
+    <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center">
       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
     <div style="color:#fff;font-size:26px;font-weight:800;letter-spacing:-.03em">CoursPool</div><div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:-8px">Bêta</div>
@@ -766,8 +623,8 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
           <div class="ob-shape"></div>
           <div class="ob-shape"></div>
           <svg width="82" height="82" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="5" width="20" height="14" rx="2"/>
-            <line x1="2" y1="10" x2="22" y2="10"/>
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
           </svg>
         </div>
         <div class="ob-tag">Économise</div>
@@ -858,38 +715,24 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
             <div class="ropt" id="rPf" onclick="pickRole('Pf')">👨‍🏫 Professeur</div>
           </div>
         </div>
-        <div id="profFields" style="display:none;margin-bottom:4px">
-          <!-- Statut -->
-          <div class="lfield">
-            <label>Statut professionnel</label>
-            <div style="position:relative">
-              <select id="rStatut" onchange="updateNiveaux(this.value)" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 40px 11px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--wh);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-                <option value="">Choisir votre statut…</option>
-                <option value="etudiant">Étudiant</option>
-                <option value="prof_ecole">Professeur des écoles</option>
-                <option value="prof_college">Professeur collège / lycée</option>
-                <option value="prof_universite">Enseignant-chercheur</option>
-                <option value="auto">Auto-entrepreneur</option>
-                <option value="autre">Autre</option>
-              </select>
-              <svg style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
+        <div id="profFields" style="display:none">
+          <div class="lfield"><label>Statut</label>
+            <select id="rStatut" onchange="updateNiveaux(this.value)" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;background:var(--wh);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FF6B2B' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;">
+              <option value="">Choisir votre statut...</option>
+              <option value="etudiant">Étudiant</option>
+              <option value="prof_ecole">Professeur des écoles</option>
+              <option value="prof_college">Professeur collège / lycée</option>
+              <option value="prof_universite">Enseignant-chercheur</option>
+              <option value="auto">Auto-entrepreneur</option>
+              <option value="autre">Autre</option>
+            </select>
           </div>
-          <!-- Niveau (conditionnel) -->
           <div class="lfield" id="niveauField" style="display:none">
-            <label id="niveauLabel">Niveau enseigné</label>
-            <div style="position:relative">
-              <select id="rNiveau" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:11px 40px 11px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--wh);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-                <option value="">Choisir…</option>
-              </select>
-              <svg style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
+            <label id="niveauLabel">Niveau</label>
+            <select id="rNiveau"><option value="">Choisir...</option></select>
           </div>
-          <!-- Matières -->
-          <div class="lfield">
-            <label>Matière(s) enseignée(s)</label>
-            <input id="rMatiere" type="text" placeholder="Ex : Maths, Physique, Anglais…">
-          </div>
+          <div class="lfield"><label>Matière(s) enseignée(s)</label><input id="rMatiere" type="text" placeholder="Maths, Physique, Anglais…"></div>
+
         </div>
         <button class="lbtn" onclick="doReg()">Créer mon compte</button>
       </div>
@@ -904,7 +747,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
-    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <div class="topbar-right">
       <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
@@ -919,9 +762,6 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
         <div class="mob-sub" id="mobSub">Cours près de vous</div>
       </div>
       <div class="mob-actions">
-        <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-        </button>
         <button id="btnProposerMob" onclick="openCr()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(255,107,43,.4)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
@@ -935,136 +775,38 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
     <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()">
   </div>
 
-  <div id="unverifiedBanner" style="display:none"></div>
+  <div id="unverifiedBanner" style="display:none;background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:10px 20px;font-size:13px;color:#92400E;align-items:center;gap:8px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    ⏳ <strong>Compte en cours de vérification</strong> — Votre pièce d'identité est en cours d'examen. Vous recevrez un email dès que votre compte est activé (sous 24h).
+  </div>
 
   <!-- PAGE EXPLORER -->
   <div class="pg on" id="pgExp">
-    <div class="cnt" style="position:relative;padding-top:16px">
-      <div class="ptr-indicator" id="ptrIndicator" style="opacity:0;position:absolute;top:-40px;left:0;right:0">
-        <div class="ptr-spinner" id="ptrSpinner"></div>
-        <span id="ptrText">Tirer pour actualiser</span>
-      </div>
-      <!-- Bandeau vérification identité — discret, natif -->
-      <div id="verifBand" style="display:none;align-items:center;gap:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer" onclick="openCniSheet()">
-        <div style="width:28px;height:28px;background:#FFFBEB;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--ink)" id="verifBandTitle">Vérification en cours</div>
-          <div style="font-size:11px;color:var(--lite);margin-top:1px" id="verifBandSub">Réponse par email sous 24h</div>
-        </div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-
-      <div id="reminderBand" style="display:none;background:linear-gradient(135deg,var(--or),var(--ord));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;cursor:pointer" onclick="openReminderCours()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700" id="reminderTitle">Cours bientôt</div><div style="font-size:11px;opacity:.85" id="reminderSub"></div></div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-      <div class="locbar">
+    <div class="cnt">
+      <div class="locbar" id="locbarWrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <input type="text" id="locInput" placeholder="Ville, code postal…" oninput="filterByLoc(this.value)" autocomplete="off" style="flex:1">
+        <input type="text" id="locInput" placeholder="Ville, code postal…" oninput="onLocInput(this.value)" onfocus="onLocFocus()" autocomplete="off" style="flex:1">
         <button onclick="locInputClear()" id="locClearBtn" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:2px;line-height:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
-        <div id="geoControls" style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <!-- Bouton activer/désactiver géoloc -->
-          <!-- Géoloc : icône seule quand actif pour économiser l'espace -->
-          <button onclick="requestGeoloc()" id="locGeoBtn" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all .2s;flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-            <span id="geoBtnLabel">Autour de moi</span>
-          </button>
-          <!-- Distance : compact, max-width fixe -->
-          <button id="geoDistBtn" onclick="openDistFilter()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:8px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;min-width:0">
-            <span id="geoDistLabel">10 km</span>
-          </button>
-        </div>
+        <button class="loc-geo-btn" id="locGeoBtn" onclick="requestGeoloc()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Autour de moi
+        </button>
+        <div class="loc-suggestions" id="locSuggestions" style="pointer-events:auto"></div>
       </div>
-      <!-- Tri rapide -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:12px;color:var(--lite)" id="sortResultCount"></div>
-        <select id="sortSelect" onchange="setSortMode(this.value)" style="border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);outline:none;cursor:pointer;padding:2px 0">
-          <option value="date">Par date</option>
-          <option value="prix">Prix croissant</option>
-          <option value="recent">Récemment ajoutés</option>
-        </select>
-      </div>
-      <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px">
-        <!-- Bouton Niveau — fixe à gauche -->
-        <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          <span id="pillNivLabel">Niveau</span>
-        </div>
-        <!-- Séparateur vertical -->
-        <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0;margin-right:8px"></div>
-        <!-- Pills matières scrollables -->
-        <div class="pills" id="pillsBar" style="margin-bottom:0;flex:1">
-          <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
-          <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
-          <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
-          <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
-          <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
-          <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
-          <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
-          <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
-          <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid);flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            +
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom sheet filtre niveau -->
-      <div id="bdNivFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeNivFilter()">
-        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="font-size:17px;font-weight:800">Niveau d'études</div>
-            <button onclick="closeNivFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
-          </div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="nivFilterList">
-            <div class="niv-fchip on" onclick="setNivFilter('',this)">Tous les niveaux</div>
-            <div class="niv-fchip" onclick="setNivFilter('Primaire',this)">Primaire <span style="font-size:11px;color:var(--lite);font-weight:400">6-11 ans</span></div>
-            <div class="niv-fchip" onclick="setNivFilter('Collège',this)">Collège <span style="font-size:11px;color:var(--lite);font-weight:400">11-15 ans</span></div>
-            <div class="niv-fchip" onclick="setNivFilter('Lycée',this)">Lycée <span style="font-size:11px;color:var(--lite);font-weight:400">15-18 ans</span></div>
-            <div class="niv-fchip" onclick="setNivFilter('Bac+1/2',this)">Bac +1/2 <span style="font-size:11px;color:var(--lite);font-weight:400">BTS · IUT · L1-L2</span></div>
-            <div class="niv-fchip" onclick="setNivFilter('Bac+3/4',this)">Bac +3/4 <span style="font-size:11px;color:var(--lite);font-weight:400">L3 · Master 1</span></div>
-            <div class="niv-fchip" onclick="setNivFilter('Bac+5',this)">Bac +5 <span style="font-size:11px;color:var(--lite);font-weight:400">Master 2 · Grandes écoles</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom sheet distance géoloc -->
-      <div id="bdDistFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeDistFilter()">
-        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
-          <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="font-size:17px;font-weight:800">Distance</div>
-            <button onclick="closeDistFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
-          </div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="distFilterList">
-            <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400">Quartier</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(5,this)">5 km <span style="font-size:11px;color:var(--lite);font-weight:400">Ville proche</span></div>
-            <div class="niv-fchip on" onclick="setDistFilter(10,this)">10 km <span style="font-size:11px;color:var(--lite);font-weight:400">Zone urbaine</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(20,this)">20 km <span style="font-size:11px;color:var(--lite);font-weight:400">Agglomération</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(50,this)">50 km <span style="font-size:11px;color:var(--lite);font-weight:400">Grande région</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom sheet choix matière -->
-      <div id="bdMatFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeMatFilter()">
-        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:70vh;display:flex;flex-direction:column;animation:mi .25s ease">
-          <div style="padding:20px 20px 12px;flex-shrink:0">
-            <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between">
-              <div style="font-size:17px;font-weight:800">Matière</div>
-              <button onclick="closeMatFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
-            </div>
-          </div>
-          <div style="overflow-y:auto;padding:0 16px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px))">
-            <div style="background:var(--wh);border-radius:16px;overflow:hidden;border:1px solid var(--bdr)" id="matFilterList"></div>
-          </div>
+      <div class="pills" id="pillsBar">
+        <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
+        <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
+        <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
+        <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
+        <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
+        <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
+        <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
+        <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
+        <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Filtre
         </div>
       </div>
 
@@ -1100,13 +842,10 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
         </button>
         <div id="loadMoreCount" style="font-size:12px;color:var(--lite);margin-top:6px"></div>
       </div>
-      <div id="nocard" style="display:none;text-align:center;padding:50px 24px">
-        <div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" style="width:34px;height:34px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
-        <div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em" id="nocardTitle">Aucun cours trouvé</div>
-        <div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px" id="nocardSub">Essayez un autre filtre ou une autre ville</div>
-        <button onclick="resetFilters()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Réinitialiser les filtres</button>
+      <div id="nocard" style="display:none;text-align:center;padding:60px 20px;color:var(--mid)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:44px;height:44px;color:var(--bdr);margin:0 auto 12px;display:block"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px" id="nocardTitle">Aucun cours trouvé</div>
+        <div style="font-size:13.5px" id="nocardSub">Essayez un autre filtre</div>
       </div>
     </div>
   </div>
@@ -1159,54 +898,48 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
   <div class="pg" id="pgAcc">
     <div style="background:var(--bg);min-height:100%;padding-bottom:120px">
 
-      <!-- HERO PROFIL -->
-      <div style="background:linear-gradient(145deg,#FF7A3D,var(--ord));padding:max(44px,env(safe-area-inset-top,44px)) 20px 0;text-align:center;position:relative;overflow:hidden">
-        <!-- Cercles déco -->
-        <div style="position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
-        <div style="position:absolute;left:-30px;bottom:0;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
-
-        <div style="position:relative;z-index:1;padding-bottom:20px">
-          <!-- Avatar -->
-          <div style="position:relative;display:inline-block;margin-bottom:12px">
-            <div id="accAv" style="width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.4);margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.15)">?</div>
-            <label style="position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
-            </label>
-          </div>
-          <!-- Nom + rôle -->
-          <div id="accName" style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.02em">—</div>
-          <div id="accRolePill" style="display:inline-block;background:rgba(255,255,255,.2);border-radius:50px;padding:4px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:20px"></div>
-          <!-- Stats -->
-          <div id="accStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.2);border-radius:16px;overflow:hidden;margin:0 4px"></div>
+      <!-- HERO PROFIL iOS style -->
+      <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:40px 20px 28px;text-align:center;position:relative">
+        <div style="position:relative;display:inline-block;margin-bottom:12px">
+          <div id="accAv" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.5);margin:0 auto">?</div>
+          <label style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+          </label>
         </div>
-
+        <div id="accName" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:3px">—</div>
+        <div id="accEmail" style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:12px">—</div>
+        <div style="display:flex;justify-content:center;gap:10px">
+          <div style="background:rgba(255,255,255,.2);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="accChipR">0 réservation</span>
+          </div>
+          <div style="background:rgba(255,255,255,.2);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span id="accChipF">0 prof suivi</span>
+          </div>
+        </div>
       </div>
 
-      <!-- ONGLETS — barre blanche sticky sous le hero -->
-      <div style="display:flex;background:var(--wh);border-bottom:2px solid var(--bdr);position:sticky;top:0;z-index:40;overflow-x:auto;scrollbar-width:none">
-        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Mes cours
-        </button>
-        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          Suivis
-        </button>
-        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Historique
-        </button>
-        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-          Profil
-        </button>
-        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          Revenus
-        </button>
+      <!-- ONGLETS iOS style -->
+      <div style="display:flex;background:var(--wh);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none">
+        <div class="atab on" id="aTabR" onclick="switchATab('R',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Réservations
+        </div>
+        <div class="atab" id="aTabF" onclick="switchATab('F',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Suivis
+        </div>
+        <div class="atab" id="aTabH" onclick="switchATab('H',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique
+        </div>
+        <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
+        </div>
+        <!-- Onglet Paiements — visible uniquement pour les profs -->
+        <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none;flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:none;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Paiements
+        </div>
       </div>
-
 
       <div class="acc-body">
 
@@ -1222,10 +955,10 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="listF"></div>
         </div>
 
-        <!-- PAIEMENTS PROF -->
+        <!-- PAIEMENTS PROF — Stripe -->
         <div class="asec" id="asecRev">
 
-          <!-- Bandeau paiements -->
+          <!-- Bandeau Stripe Connect -->
           <div id="stripeConnectBanner" style="margin:16px 16px 0">
 
             <!-- État : non connecté — formulaire IBAN CoursPool -->
@@ -1313,187 +1046,97 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
           <div style="padding:14px 16px;text-align:center">
             <div style="font-size:12px;color:var(--lite);line-height:1.6">Vos paiements sont sécurisés et virés automatiquement sur votre compte bancaire.</div>
           </div>
-          <div style="margin:0 16px 20px;background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <div style="font-size:12px;color:var(--mid);line-height:1.5">Les virements sont effectués sous <strong>2 à 7 jours ouvrés</strong> après la confirmation du paiement.</div>
-          </div>
         </div>
 
         <!-- HISTORIQUE -->
         <div class="asec" id="asecH">
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Cours passés</div>
-          <div id="listH"></div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Historique</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px;padding:20px;text-align:center;color:var(--lite);font-size:13px">Bientôt disponible</div>
         </div>
 
-        <!-- PROFIL -->
-        <div class="asec" id="asecP" style="padding:0 16px 16px">
+        <!-- PROFIL iOS style -->
+        <div class="asec" id="asecP">
 
-          <!-- Infos perso -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Mon compte</div>
-          <div class="pref-group">
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-              <span class="pref-label">Prénom</span>
-              <input id="pfPr" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
+          <!-- Section infos perso -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Informations personnelles</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
+              <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-              <span class="pref-label">Nom</span>
-              <input id="pfNm" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Nom</span>
+              <input id="pfNm" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-              <span class="pref-label">Email</span>
-              <input id="pfEm" type="email" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:180px" placeholder="—">
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Email</span>
+              <input id="pfEm" type="email" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-              <span class="pref-label">Ville</span>
-              <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px">
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Ville</span>
+              <input id="pfVille" type="text" placeholder="Paris…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
             </div>
-            <div class="pref-row" style="cursor:default">
-              <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
-              <span class="pref-label">Rôle</span>
-              <div id="pfRoleDisplay" style="font-size:14px;color:var(--lite)"></div>
+            <div style="display:flex;align-items:center;padding:13px 16px">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Rôle</span>
+              <div id="pfRoleDisplay" style="flex:1;font-size:14px;font-weight:500;text-align:right;color:var(--mid)"></div>
             </div>
           </div>
 
           <!-- Bio -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">À propos</div>
-          <div class="pref-group" style="padding:14px 16px">
-            <textarea id="pfBio" rows="3" placeholder="Présentez-vous, partagez votre approche…" style="width:100%;border:none;font-family:inherit;font-size:15px;outline:none;background:transparent;resize:none;color:var(--ink);line-height:1.6"></textarea>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Bio</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;padding:13px 16px">
+            <textarea id="pfBio" rows="3" placeholder="Présentez-vous…" style="width:100%;border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;resize:none;color:var(--ink)"></textarea>
           </div>
 
-          <!-- Barre de complétion profil (prof seulement) -->
-          <div id="pfCompletionWrap" style="display:none;margin-bottom:16px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <span style="font-size:12px;font-weight:600;color:var(--mid)">Profil complété</span>
-              <span id="pfCompletionPct" style="font-size:12px;font-weight:700;color:var(--or)">0%</span>
-            </div>
-            <div style="height:4px;background:var(--bdr);border-radius:2px;overflow:hidden">
-              <div id="pfCompletionBar" style="height:100%;background:linear-gradient(90deg,var(--or),#22C069);border-radius:2px;transition:width .5s cubic-bezier(.34,1.56,.64,1);width:0%"></div>
-            </div>
-            <div id="pfCompletionTips" style="font-size:11px;color:var(--lite);margin-top:5px"></div>
-          </div>
-
-          <!-- Enseignement (prof seulement) -->
+          <!-- Section prof -->
           <div id="pfProfExtra" style="display:none">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Enseignement</div>
-            <div class="pref-group">
-
-              <!-- Statut -->
-              <div style="padding:0 16px;border-bottom:1px solid var(--bdr)" onclick="openPicker('statut')" class="pref-row">
-                <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                <span style="font-size:15px;font-weight:500;color:var(--ink);flex:0 0 auto">Statut</span>
-                <span id="pfStatutLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px">Choisir…</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-                <input type="hidden" id="pfStatut">
+            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Enseignement</div>
+            <div style="background:var(--wh);border-radius:16px;overflow:hidden">
+              <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Statut</span>
+                <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer">
+                  <option value="">Choisir...</option>
+                  <option value="etudiant">🎓 Étudiant</option>
+                  <option value="prof_ecole">🏫 Prof d'école</option>
+                  <option value="prof_college">📚 Prof collège/lycée</option>
+                  <option value="prof_universite">🏛️ Prof université</option>
+                </select>
               </div>
-
-              <!-- Niveau enseigné -->
-              <div id="pfNiveauField" style="display:none;padding:0 16px;border-bottom:1px solid var(--bdr)" onclick="openPicker('niveau')" class="pref-row">
-                <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span style="font-size:15px;font-weight:500;color:var(--ink);flex:0 0 auto" id="pfNiveauLabel">Niveau</span>
-                <span id="pfNiveauValLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px">Choisir…</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-                <input type="hidden" id="pfNiveau">
+              <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)" id="pfNiveauField">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0" id="pfNiveauLabel">Niveau</span>
+                <select id="pfNiveau" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer"><option value="">Choisir...</option></select>
               </div>
-
-              <!-- Matières — système de chips/tags -->
-              <div style="padding:14px 16px">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-                  <div class="pref-icon" style="background:#F0FDF4;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
-                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Matières enseignées</span>
-                </div>
-                <!-- Chips des matières -->
-                <div id="matieresChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
-                <!-- Suggestions rapides -->
-                <div id="matieresSugg" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-                <!-- Champ d'ajout -->
-                <div style="display:flex;gap:8px;align-items:center">
-                  <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid var(--bdr);border-radius:10px;padding:9px 12px;transition:border .18s" id="matieresInputWrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <input id="pfMatieres" type="text" placeholder="Ajouter une matière…" style="border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;color:var(--ink);flex:1;min-width:0" onfocus="document.getElementById('matieresInputWrap').style.borderColor='var(--or)'" onblur="document.getElementById('matieresInputWrap').style.borderColor='var(--bdr)'" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addMatiere();}">
-                  </div>
-                  <button onclick="addMatiere()" style="background:var(--or);color:#fff;border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(255,107,43,.3)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </button>
-                </div>
-                <!-- Input caché pour sauvegarder la valeur -->
-                <input type="hidden" id="pfMatieresVal">
+              <div style="display:flex;align-items:center;padding:13px 16px">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Matières</span>
+                <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
               </div>
-
             </div>
           </div>
 
           <!-- Bouton sauvegarder -->
-          <div style="padding:20px 0 4px">
-            <button onclick="saveProf()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.3)">
+          <div style="padding:16px">
+            <button onclick="saveProf()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
               Sauvegarder
             </button>
           </div>
 
-          <!-- Notifications push -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Notifications</div>
-          <div class="pref-group">
-            <!-- Statut push — rempli par renderNotifStatus() -->
-            <div id="notifStatus" style="padding:16px;border-bottom:1px solid var(--bdr)"></div>
-            <!-- Préférences — visibles si push actif -->
-            <div id="notifTypes" style="display:none">
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
-                <div style="flex:1"><div class="pref-label" id="notifRemLbl">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifSubLbl">Alertes en temps réel</div></div>
-                <div class="ntog on" id="ntogCours" onclick="toggleNotifPref('cours',this)"></div>
-              </div>
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
-                <div style="flex:1"><div class="pref-label">Messages importants</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifRemSub">De l'équipe CoursPool</div></div>
-                <div class="ntog on" id="ntogPromo" onclick="toggleNotifPref('promo',this)"></div>
-              </div>
+          <!-- Notifications -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:8px 16px 8px">Notifications</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr)">
+              <div><div style="font-size:14px;font-weight:500">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Quand un prof suivi publie</div></div>
+              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+              <div><div style="font-size:14px;font-weight:500">Rappel de cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">1h avant le début</div></div>
+              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
             </div>
           </div>
 
-          <!-- Apparence -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Apparence</div>
-          <div class="pref-group" style="margin-bottom:0">
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#1A1714"><svg viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Mode sombre</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="darkModeSubLabel">Suit le système</div></div>
-              <div class="ntog" id="darkModeToggle" onclick="toggleDarkMode()"></div>
-            </div>
-          </div>
-
-          <!-- Statut vérification (profs uniquement) -->
-          <div id="verifStatusBlock" style="display:none;padding:4px 0 4px"></div>
-
-          <!-- Assistance -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Assistance</div>
-          <div class="pref-group">
-            <div class="pref-row" onclick="shareApp()" style="cursor:pointer">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Inviter un ami</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Partager CoursPool</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="openContact()" style="cursor:pointer">
-              <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Nous contacter</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Une question ? On répond vite</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
-          <!-- Partager profil (profs) -->
-          <div id="shareProfBtn" style="display:none;padding:4px 0 4px">
-            <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Partager mon profil
-            </button>
-          </div>
-
-          <!-- Déconnexion -->
-          <div style="padding:20px 0 8px">
-            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <!-- Se déconnecter -->
+          <div style="padding:16px;margin-top:8px">
+            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">
               Se déconnecter
             </button>
           </div>
@@ -1521,15 +1164,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="shareCoursLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager ce cours</button>
       <button id="btnVoirEleves" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openEleves(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Voir les élèves inscrits</button>
-      <button id="btnGroupe" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openGroupeMsg(curId)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
-        Groupe du cours
-      </button>
-      <button id="btnDupCours" class="pb sec" style="width:100%;display:none;margin-bottom:10px" onclick="dupCours(curId)">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-  Dupliquer ce cours
-</button>
-<button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="confirmDeleteCoursNative(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
+      <button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="deleteCours(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
     </div>
   </div>
 </div>
@@ -1572,123 +1207,51 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 </div>
 
 <!-- MODAL PROFIL PROF -->
-<div id="bdPr" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closePr()">
-  <div style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;animation:mi .3s cubic-bezier(.32,0,.67,0)">
-
-    <!-- Handle -->
-    <div style="display:flex;justify-content:center;padding:12px 0 0">
-      <div style="width:36px;height:4px;background:var(--bdr);border-radius:2px"></div>
+<div class="bd" id="bdPr" onclick="if(event.target===this)closePr()">
+  <div class="modal">
+    <div style="display:flex;justify-content:flex-end;padding:14px 14px 0"><button class="mcl" onclick="closePr()">✕</button></div>
+    <div class="phdr"><div class="mpav" id="mpav"></div><div class="pnm" id="mpnm"></div><div class="prl" id="mprl"></div><span class="pbdg"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span id="mpbd"></span></span></div>
+    <div class="pstbl"><div class="pstc"><div class="pstv" id="mpC">0</div><div class="pstl">Cours donnés</div></div><div class="pstc"><div class="pstv" id="mpN">—</div><div class="pstl">Note moyenne</div></div><div class="pstc"><div class="pstv" id="mpE">0</div><div class="pstl">Élèves</div></div></div>
+    <p class="pbio" id="mpBio"></p>
+    <div class="ptags" id="mpTags"></div>
+    <div class="pacts">
+      <button class="pb pri" onclick="contPr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter</button>
+      <button class="pb sec" id="bFP" onclick="togFP()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg><span id="bFPt">Suivre</span></button>
     </div>
-
-    <!-- Hero header coloré -->
-    <div id="mpHero" style="margin:12px 16px 0;border-radius:20px;padding:28px 20px 20px;position:relative;overflow:hidden;background:linear-gradient(135deg,#FF8C55,#E04E10)">
-      <!-- Cercles déco -->
-      <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08);top:-60px;right:-40px"></div>
-      <div style="position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06);bottom:-30px;left:-20px"></div>
-      <!-- Bouton fermer -->
-      <button onclick="closePr()" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,.2);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
-      <!-- Avatar grand -->
-      <div id="mpav" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.4);box-shadow:0 4px 20px rgba(0,0,0,.2);margin-bottom:14px"></div>
-      <!-- Nom + statut -->
-      <div id="mpnm" style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:4px;line-height:1.2"></div>
-      <div id="mprl" style="font-size:13px;color:rgba(255,255,255,.75);font-weight:500;margin-bottom:4px"></div>
-      <div id="mpbd" style="font-size:12px;color:rgba(255,255,255,.6)"></div>
-    </div>
-
-    <!-- Stats row -->
-    <div style="display:flex;margin:16px 16px 0;gap:10px">
-      <div style="flex:1;background:var(--bg);border-radius:14px;padding:14px;text-align:center">
-        <div id="mpC" style="font-size:22px;font-weight:800;color:var(--ink)">0</div>
-        <div style="font-size:11px;color:var(--lite);font-weight:500;margin-top:2px">Cours</div>
-      </div>
-      <div style="flex:1;background:var(--bg);border-radius:14px;padding:14px;text-align:center">
-        <div id="mpN" style="font-size:22px;font-weight:800;color:var(--ink)">—</div>
-        <div style="font-size:11px;color:var(--lite);font-weight:500;margin-top:2px">Note</div>
-      </div>
-      <div style="flex:1;background:var(--bg);border-radius:14px;padding:14px;text-align:center">
-        <div id="mpE" style="font-size:22px;font-weight:800;color:var(--ink)">0</div>
-        <div style="font-size:11px;color:var(--lite);font-weight:500;margin-top:2px">Élèves</div>
-      </div>
-    </div>
-
-    <!-- Bio -->
-    <p id="mpBio" style="margin:16px 16px 0;font-size:14px;color:var(--mid);line-height:1.65"></p>
-
-    <!-- Tags matières -->
-    <div id="mpTags" style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 16px 0;padding:0"></div>
-
-    <!-- Boutons actions -->
-    <div style="display:flex;gap:10px;margin:16px 16px 0">
-      <button onclick="contPr()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.3)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Contacter
-      </button>
-      <button id="bFP" onclick="togFP()" style="flex:1;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        <span id="bFPt">Suivre</span>
-      </button>
-    </div>
-
-    <!-- Prochains cours -->
-    <div style="margin:20px 16px 0">
-      <div style="font-size:13px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Prochains cours</div>
-      <div id="mpCrs"></div>
-    </div>
-
-    <!-- Avis -->
-    <div id="mpAvisBlock" style="display:none;margin:16px 16px 0">
-      <div style="font-size:13px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Avis des élèves</div>
-      <div id="mpAvis" style="display:flex;flex-direction:column;gap:8px"></div>
-    </div>
-
-    <!-- Padding bas -->
-    <div style="height:max(24px,env(safe-area-inset-bottom,24px))"></div>
+    <div class="pcl2"><div class="pclh">Prochains cours</div><div id="mpCrs"></div></div>
   </div>
 </div>
 
 <!-- MODAL CRÉER COURS -->
-<div class="bd" id="bdCr" onclick="if(event.target===this)closeM('bdCr')" style="align-items:flex-end">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:540px;max-height:92dvh;display:flex;flex-direction:column;animation:mi .25s ease">
-
-    <!-- Header sticky -->
-    <div style="padding:20px 20px 16px;border-bottom:1px solid var(--bdr);flex-shrink:0">
-      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:20px;font-weight:800;color:var(--ink)">Nouveau cours</div>
-          <div style="font-size:13px;color:var(--lite);margin-top:1px">Remplissez les infos essentielles</div>
+<div class="bd" id="bdCr" onclick="if(event.target===this)closeCr()">
+  <div class="modal">
+    <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Nouveau cours</div><div style="font-size:17px;font-weight:800">Proposer un cours</div></div><button class="mcl" onclick="closeCr()">✕</button></div>
+    <div class="mbd">
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Matière</label>
+        <div class="sg" id="sgMatieres">
+          <div class="so" onclick="pickS(this)">📐 Maths</div>
+          <div class="so" onclick="pickS(this)">⚗️ Physique</div>
+          <div class="so" onclick="pickS(this)">💻 Info</div>
+          <div class="so" onclick="pickS(this)">🌍 Langues</div>
+          <div class="so" onclick="pickS(this)">📊 Éco</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🧪 Chimie</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🧬 SVT</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🏛️ Histoire</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">⚖️ Droit</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🎵 Musique</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🎨 Arts</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">🏃 Sport</div>
+          <div class="so so-extra" onclick="pickS(this)" style="display:none">💬 Philo</div>
+          <div class="so" id="btnVoirPlusMat" onclick="toggleMoreMat()" style="border-style:dashed;color:var(--lite)">+ Voir plus</div>
+          <div class="so" onclick="pickS(this)">✨ Autre</div>
         </div>
-        <button onclick="closeM('bdCr')" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid)">✕</button>
       </div>
-    </div>
-
-    <!-- Contenu scrollable -->
-    <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:0 20px 32px">
-
-      <!-- Section 1 : Titre + Matière -->
-      <div style="padding:16px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Titre du cours</div>
-        <input class="fi3" id="crTitre" type="text" placeholder="Ex: Algèbre linéaire pour débutants…" style="width:100%">
-      </div>
-
-      <!-- Section 1b : Matière -->
-      <div style="padding:4px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Matière</div>
-        <button onclick="openMatFilter()" id="crMatBtn" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;transition:border .18s;text-align:left">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div id="crMatDot" style="width:10px;height:10px;border-radius:50%;background:var(--bdr);flex-shrink:0"></div>
-            <span id="crMatLabel" style="color:var(--lite)">Choisir une matière…</span>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <input type="hidden" id="crSubjHidden" value="">
-      </div>
-
-      <!-- Section 2 : Niveau -->
-      <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Niveau visé</div>
-        <div style="display:flex;flex-wrap:wrap;gap:7px" id="crNiveauChips">
-          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="">Tous</div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours…" style="resize:vertical"></textarea></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Niveau visé</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="crNiveauChips">
+          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="">Tous niveaux</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire">Primaire</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège">Collège</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée">Lycée</div>
@@ -1698,134 +1261,51 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
         </div>
         <input type="hidden" id="crNiveau" value="">
       </div>
-
-      <!-- Section 3 : Quand & Où -->
-      <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Quand &amp; Où</div>
-        <div style="background:var(--bg);border-radius:14px;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-            <input class="fi3" id="crDate" type="date" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;height:auto">
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <input class="fi3" id="crHeure" type="time" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;height:auto">
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div style="flex:1;position:relative">
-              <input class="fi3" id="crLieu" type="text" placeholder="Ville ou adresse…" oninput="searchLieu(this.value)" autocomplete="off" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;width:100%;height:auto">
-              <div id="lieuSuggestions" style="position:absolute;top:calc(100% + 8px);left:-14px;right:-14px;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;z-index:100;display:none;max-height:180px;overflow-y:auto;box-shadow:var(--sh)"></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
+        <input class="fi3" id="crDate" type="date" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label>
+        <input class="fi3" id="crHeure" type="time" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label>
+        <div style="position:relative">
+          <input class="fi3" id="crLieu" type="text" placeholder="Rechercher un lieu en France…" oninput="searchLieu(this.value)" autocomplete="off">
+          <div id="lieuSuggestions" style="position:absolute;top:100%;left:0;right:0;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;z-index:100;display:none;max-height:200px;overflow-y:auto;box-shadow:var(--sh);margin-top:4px"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Durée (min)</label><input class="fi3" id="crDuree" type="number" value="60"></div>
+        <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Places max</label><input class="fi3" id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()"></div>
+      </div>
+      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Prix total (€)</label><input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()"><div id="cH" style="font-size:12px;color:var(--lite);margin-top:5px"></div></div>
+      <!-- Option cours privé -->
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Cours privé
             </div>
+            <div style="font-size:12px;color:var(--lite);margin-top:2px">N'apparaît pas dans le fil. Accès par code ou lien uniquement.</div>
+          </div>
+          <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+            <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
+          </div>
+        </div>
+        <div id="codePriveBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
+          <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:6px">Code d'accès (généré automatiquement)</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="codePriveVal" style="flex:1;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800;letter-spacing:.15em;color:var(--ink);text-align:center"></div>
+            <button onclick="regenCode()" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s" title="Regénérer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
       </div>
-
-      <!-- Section 4 : Infos pratiques -->
-      <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Infos pratiques</div>
-        <div style="background:var(--bg);border-radius:14px;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0">Durée</span>
-            <input class="fi3" id="crDuree" type="number" value="60" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;text-align:right;padding:0;height:auto">
-            <span style="font-size:14px;color:var(--lite)">min</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0">Places max</span>
-            <input class="fi3" id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;text-align:right;padding:0;height:auto">
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0">Prix total</span>
-            <input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;text-align:right;padding:0;height:auto">
-            <span style="font-size:14px;color:var(--lite)">€</span>
-          </div>
-        </div>
-        <div id="cH" style="font-size:12px;color:var(--or);font-weight:600;margin-top:6px;text-align:center;min-height:18px"></div>
-      </div>
-
-      <!-- Section 5 : Description optionnelle -->
-      <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnelle)</span></div>
-        <textarea class="fi3" id="crDesc" rows="2" placeholder="Niveau requis, programme abordé…" style="resize:none;font-size:15px"></textarea>
-      </div>
-
-      <!-- Section 6 : Cours privé -->
-      <div style="padding:12px 0 4px">
-        <div style="background:var(--bg);border-radius:14px;padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:34px;height:34px;background:var(--wh);border-radius:10px;display:flex;align-items:center;justify-content:center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-              </div>
-              <div>
-                <div style="font-size:14px;font-weight:600;color:var(--ink)">Cours privé</div>
-                <div style="font-size:12px;color:var(--lite);margin-top:1px">Accès par code uniquement</div>
-              </div>
-            </div>
-            <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
-              <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
-            </div>
-          </div>
-          <div id="codePriveBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
-            <div style="font-size:12px;color:var(--mid);margin-bottom:6px">Code d'accès</div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <div id="codePriveVal" style="flex:1;background:var(--wh);border-radius:10px;padding:10px 14px;font-size:18px;font-weight:800;letter-spacing:.2em;color:var(--ink);text-align:center"></div>
-              <button onclick="regenCode()" style="background:var(--wh);border:none;border-radius:10px;padding:10px;cursor:pointer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <button class="pb pri" style="width:100%" onclick="subCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier le cours</button>
     </div>
-
-    <div style="padding:12px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--bdr);flex-shrink:0;background:var(--wh);display:flex;gap:10px">
-      <button onclick="previewCours()" style="flex:1;padding:15px;font-size:15px;border-radius:14px;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);font-family:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Aperçu
-      </button>
-      <button class="pb pri" style="flex:2;padding:15px;font-size:16px;border-radius:14px;box-shadow:0 4px 14px rgba(255,107,43,.3)" onclick="subCr()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier
-      </button>
-    </div>
-
-  </div>
-</div>
-
-<!-- MODAL APERCU COURS -->
-<div class="bd" id="bdPreview" onclick="if(event.target===this)g('bdPreview').style.display='none'" style="display:none">
-  <div class="modal sm" style="padding:0;overflow:hidden">
-    <div style="padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:15px;font-weight:700">Aperçu</div>
-      <button onclick="g('bdPreview').style.display='none'" class="mcl">✕</button>
-    </div>
-    <div style="padding:16px 20px;overflow-y:auto;max-height:60vh">
-      <div id="previewCard" style="background:var(--wh);border-radius:16px;overflow:hidden;box-shadow:var(--sh)"></div>
-      <div style="margin-top:12px;background:var(--bg);border-radius:12px;padding:12px;font-size:12px;color:var(--lite);text-align:center">C'est ainsi que les élèves verront votre cours</div>
-    </div>
-    <div style="padding:12px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--bdr)">
-      <button class="pb pri" style="width:100%" onclick="g('bdPreview').style.display='none';subCr()">Publier maintenant</button>
-    </div>
-  </div>
-</div>
-<!-- POP-UP CONNEXION REQUISE -->
-<div id="bdLoginPrompt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:600;align-items:flex-end;justify-content:center" onclick="if(event.target===this)g('bdLoginPrompt').style.display='none'">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:28px 24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .25s ease">
-    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 24px"></div>
-    <div style="width:64px;height:64px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <div style="font-size:21px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Connectez-vous pour réserver</div>
-    <div style="font-size:14px;color:var(--lite);text-align:center;line-height:1.6;margin-bottom:28px">Créez un compte gratuit ou connectez-vous<br>pour réserver votre place en quelques secondes.</div>
-    <button onclick="g('bdLoginPrompt').style.display='none';scrollToLogin()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:10px">
-      Se connecter / Créer un compte
-    </button>
-    <button onclick="g('bdLoginPrompt').style.display='none'" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">
-      Continuer à explorer
-    </button>
   </div>
 </div>
 
@@ -1887,178 +1367,96 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 </div>
 
 <!-- MODAL NOTATION -->
-<!-- BOTTOM SHEET NOTE -->
-<div id="bdNote" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeM('bdNote')">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));animation:mi .25s ease">
-    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="font-size:18px;font-weight:800" id="noteTitre">Comment s'est passé ce cours ?</div>
-      <div id="noteCounter" style="font-size:12px;font-weight:700;color:var(--or);background:var(--orp);border-radius:50px;padding:3px 10px;display:none"></div>
+<div class="bd" id="bdNote" onclick="if(event.target===this)closeM('bdNote')">
+  <div class="modal sm">
+    <div class="mhd">
+      <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Évaluation</div><div style="font-size:17px;font-weight:800" id="noteTitre">Noter ce cours</div></div>
+      <button class="mcl" onclick="closeM('bdNote')">✕</button>
     </div>
-    <div style="font-size:13px;color:var(--lite);margin-bottom:22px" id="noteProf"></div>
-    <!-- Étoiles interactives -->
-    <div id="noteStars" style="display:flex;justify-content:center;gap:12px;margin-bottom:10px">
-      <svg onclick="setNote(1)" data-n="1" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <svg onclick="setNote(2)" data-n="2" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <svg onclick="setNote(3)" data-n="3" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <svg onclick="setNote(4)" data-n="4" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <svg onclick="setNote(5)" data-n="5" viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="1.5" stroke-linecap="round" width="40" height="40" style="cursor:pointer;transition:all .15s"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    </div>
-    <div id="noteLabel" style="font-size:13px;color:var(--or);font-weight:600;text-align:center;height:20px;margin-bottom:16px"></div>
-    <textarea id="noteComment" rows="3" placeholder="Partagez votre expérience… (optionnel)" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;resize:none;background:var(--bg);color:var(--ink);line-height:1.5;margin-bottom:16px" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
-    <button onclick="submitNote()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Envoyer mon avis</button>
-    <button onclick="skipNote()" id="noteSkipBtn" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:13px;cursor:pointer;padding:10px;margin-top:4px;display:none">Passer ce cours</button>
-  </div>
-</div>
-
-<!-- BOTTOM SHEET CNI -->
-<!-- GROUPE DE COURS -->
-<div id="bdGroupe" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeGroupe()">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .28s cubic-bezier(.32,0,.67,0)">
-    <!-- Handle -->
-    <div style="display:flex;justify-content:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:2px"></div></div>
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px">
-      <div>
-        <div style="font-size:18px;font-weight:800;color:var(--ink)" id="groupeTitle">Groupe du cours</div>
-        <div style="font-size:13px;color:var(--lite);margin-top:2px" id="groupeSubtitle">Envoyer un message à tous les inscrits</div>
+    <div class="mbd">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--mid);margin-bottom:12px">Comment s'est passé ce cours ?</div>
+        <div id="noteStars" style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">
+          <span onclick="setNote(1)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="1">⭐</span>
+          <span onclick="setNote(2)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="2">⭐</span>
+          <span onclick="setNote(3)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="3">⭐</span>
+          <span onclick="setNote(4)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="4">⭐</span>
+          <span onclick="setNote(5)" style="font-size:36px;cursor:pointer;transition:transform .15s" data-n="5">⭐</span>
+        </div>
+        <div id="noteLabel" style="font-size:13px;color:var(--lite);height:18px"></div>
       </div>
-      <button onclick="closeGroupe()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--mid);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
-    </div>
-
-    <!-- Toggle élèves peuvent écrire -->
-    <div style="margin:0 20px 16px;background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600;color:var(--ink)">Élèves peuvent répondre</div>
-        <div style="font-size:12px;color:var(--lite);margin-top:2px">Autorise les élèves à écrire dans le groupe</div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Commentaire (optionnel)</label>
+        <textarea id="noteComment" class="fi2" rows="3" placeholder="Partagez votre expérience…" style="resize:none"></textarea>
       </div>
-      <div id="groupeToggle" onclick="toggleGroupePerm()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
-        <div id="groupeToggleKnob" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
-      </div>
-    </div>
-
-    <!-- Champ message -->
-    <div style="margin:0 20px 16px">
-      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message pour le groupe</label>
-      <textarea id="groupeMsg" rows="4" placeholder="Écrivez votre message pour tous les élèves inscrits…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
-    </div>
-
-    <!-- Bouton envoyer -->
-    <div style="padding:0 20px">
-      <button id="groupeSubmitBtn" onclick="sendGroupeMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Envoyer au groupe
+      <button class="pb pri" style="width:100%" onclick="submitNote()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Envoyer mon avis
       </button>
     </div>
   </div>
 </div>
 
-<!-- PICKER NATIF — statut/niveau -->
-<div id="bdPicker" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closePicker()">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .28s cubic-bezier(.32,0,.67,0)">
-    <!-- Handle -->
-    <div style="display:flex;justify-content:center;padding:12px 0 4px">
-      <div style="width:36px;height:4px;background:var(--bdr);border-radius:2px"></div>
-    </div>
-    <!-- Titre -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 16px">
-      <span id="pickerTitle" style="font-size:17px;font-weight:700;color:var(--ink)"></span>
-      <button onclick="closePicker()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid);font-size:18px">✕</button>
-    </div>
-    <!-- Options -->
-    <div id="pickerOptions" style="max-height:60vh;overflow-y:auto;padding:0 12px 8px"></div>
-  </div>
-</div>
-
-<div id="bdCni" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)cniLater()">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .3s ease;overflow:hidden">
-
-    <!-- Handle -->
-    <div style="padding:12px 20px 0;text-align:center">
-      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto"></div>
-    </div>
-
-    <!-- Étape 1 : intro -->
-    <div id="cniStep1" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
-      <div style="width:72px;height:72px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px">🪪</div>
-      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Vérifiez votre identité</div>
-      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Pour garantir la confiance des élèves,<br>nous vérifions l'identité de chaque professeur.</div>
-      <!-- Étapes visuelles -->
-      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
-        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
-          <div style="width:36px;height:36px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre CNI ou passeport</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Recto uniquement, lisible</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
-          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès que c'est fait</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
-          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Publiez vos premiers cours</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves</div></div>
-        </div>
-      </div>
-      <button onclick="cniGoStep2()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:12px">Commencer la vérification</button>
-      <button onclick="cniLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
-    </div>
-
-    <!-- Étape 2 : upload -->
-    <div id="cniStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-        <button onclick="cniGoStep1()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
+<!-- MODAL CNI — première connexion professeur -->
+<div class="bd" id="bdCni" style="z-index:500">
+  <div class="modal" style="max-width:400px">
+    <div class="mhd">
+      <div>
+        <div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Vérification</div>
         <div style="font-size:17px;font-weight:800">Votre pièce d'identité</div>
       </div>
-
-      <!-- Zone d'upload -->
-      <div id="cniDropZone" onclick="g('cniFileInput').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:var(--bg)">
-        <div id="cniUploadIcon" style="margin-bottom:12px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 15l-5-5L5 20"/></svg>
-        </div>
-        <div id="cniUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">CNI, Passeport ou Carte de séjour</div>
-        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
-        <input type="file" id="cniFileInput" accept="image/*,.pdf" style="display:none" onchange="cniPreview(this)">
+    </div>
+    <div class="mbd">
+      <div style="background:var(--orp);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--mid);line-height:1.6;display:flex;gap:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Pour publier des cours, nous devons vérifier votre identité. Cela prend <strong>5 min à 2 heures</strong>.</span>
       </div>
-
-      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Vos documents sont chiffrés et ne seront jamais partagés.
+      <div id="cniDropModal" onclick="g('cniFileModal').click()" style="border:2px dashed var(--bdr);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .18s;margin-bottom:14px" onmouseenter="this.style.borderColor='var(--or)';this.style.background='var(--orp)'" onmouseleave="this.style.borderColor='var(--bdr)';this.style.background=''">
+        <div style="font-size:36px;margin-bottom:8px">🪪</div>
+        <div id="cniLabelModal" style="font-size:14px;font-weight:700;color:var(--ink)">CNI ou Passeport</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:4px">JPG, PNG, PDF · Max 5MB · Cliquez pour choisir</div>
+        <input type="file" id="cniFileModal" accept="image/*,.pdf" style="display:none" onchange="previewCniModal(this)">
       </div>
-
-      <button id="cniSubmitBtn" onclick="submitCni()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);display:flex;align-items:center;justify-content:center;gap:8px">
+      <button class="pb pri" style="width:100%;margin-bottom:10px" id="cniSubmitBtn" onclick="submitCni()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
         Envoyer pour vérification
       </button>
+      <button class="pb sec" style="width:100%" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil');setTimeout(tutoStart,400);">
+        Plus tard
+      </button>
     </div>
-
-    <!-- Étape 3 : confirmation -->
-    <div id="cniStep3" style="display:none;padding:32px 24px 40px;padding-bottom:max(40px,env(safe-area-inset-bottom,40px));text-align:center">
-      <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" id="cniStep3Title">Document envoyé ✓</div>
-      <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px" id="cniStep3Sub">Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
-      <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Compris, merci !</button>
-    </div>
-
   </div>
 </div>
 
-<!-- TUTORIEL — bottom sheet natif -->
-<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)">
-  <div id="tutoCard" style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;overflow:hidden;animation:mi .32s ease">
-    <div id="tutoIllu" style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden">
-      <div style="position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.1);top:-60px;right:-50px"></div>
-      <div style="position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);bottom:-40px;left:-20px"></div>
-      <div id="tutoEmoji" style="font-size:64px;line-height:1;filter:drop-shadow(0 4px 16px rgba(0,0,0,.15));margin-bottom:16px"></div>
-      <!-- Dots sur fond coloré = blancs -->
-      <div style="display:flex;justify-content:center;gap:6px" id="tutoDots"></div>
-    </div>
-    <!-- Contenu sur fond blanc -->
-    <div style="padding:24px 24px 28px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))">
-      <div id="tutoTitle" style="font-size:21px;font-weight:800;color:var(--ink);text-align:center;margin-bottom:10px;letter-spacing:-.03em;line-height:1.25"></div>
-      <div id="tutoDesc" style="font-size:14.5px;color:var(--mid);text-align:center;line-height:1.65;margin-bottom:24px"></div>
-      <button id="tutoBtn" onclick="tutoNext()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:10px">Continuer</button>
-      <button id="tutoSkipBtn" onclick="tutoSkip()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:13px;cursor:pointer;padding:6px">Passer le tutoriel</button>
+<!-- TUTORIEL v3 — slides plein écran centrées, fiables sur tous les devices -->
+<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
+
+    <!-- Illustration zone -->
+    <div id="tutoIllu" style="height:160px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;flex-shrink:0;"></div>
+
+    <div style="padding:24px 24px 20px">
+      <!-- Dots + Skip -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
+        <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:#bbb;cursor:pointer;font-family:inherit;padding:4px 10px;border-radius:8px;font-weight:500;transition:color .15s">Passer</button>
+      </div>
+
+      <!-- Contenu -->
+      <div id="tutoTitle" style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px;letter-spacing:-.02em;line-height:1.2"></div>
+      <div id="tutoDesc" style="font-size:14px;color:#555;line-height:1.7;margin-bottom:22px"></div>
+
+      <!-- Tip contextuel optionnel -->
+      <div id="tutoTip" style="display:none;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--mid);line-height:1.6;margin-bottom:18px;display:flex;gap:9px;align-items:flex-start">
+        <span style="font-size:16px;flex-shrink:0">💡</span>
+        <span id="tutoTipText"></span>
+      </div>
+
+      <!-- Boutons -->
+      <div style="display:flex;gap:10px">
+        <button id="tutoPrev" onclick="tutoPrev()" style="display:none;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;flex-shrink:0;transition:all .15s">←</button>
+        <button id="tutoBtn" onclick="tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:background .15s;box-shadow:0 4px 16px rgba(255,107,43,.35)">Suivant →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2066,77 +1464,31 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
   <div class="bni on" id="bniExp" onclick="navTo('exp')">
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" class="bni-ico-off"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor"/></svg>
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" class="bni-ico-on" style="display:none"><circle cx="11" cy="11" r="8" fill="currentColor" opacity=".15"/><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2.5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span>Explorer</span>
   </div>
+  <div class="bni-sep"></div>
   <div class="bni" id="bniMsg" onclick="navTo('msg')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" class="bni-ico-on" style="display:none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" opacity=".9"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
     <span>Messages</span>
   </div>
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:0 4px;flex:1;min-width:58px;justify-content:center">
-    <div style="width:44px;height:26px;border-radius:14px;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <div class="bni-sep" id="bniSepAdd" style="display:none"></div>
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:0 6px">
+    <div style="width:44px;height:44px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.45);transition:transform .25s cubic-bezier(.34,1.56,.64,1)" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
-    <span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--or)">Créer</span>
   </div>
+  <div class="bni-sep"></div>
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="bni-ico-on" style="display:none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" opacity=".9"/><circle cx="12" cy="7" r="4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <span>Profil</span>
   </div>
 </nav>
 
-<!-- MODAL CONTACT -->
-<div class="bd" id="bdContact" onclick="if(event.target===this)closeContact();" style="display:none;z-index:600;align-items:flex-end">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px 0;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));animation:mi .25s ease;max-height:92vh;overflow-y:auto">
-    <!-- Handle -->
-    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div>
-        <div style="font-size:18px;font-weight:800;color:var(--ink)">Nous contacter</div>
-        <div style="font-size:13px;color:var(--lite);margin-top:2px">Réponse sous 24h</div>
-      </div>
-      <button onclick="closeContact()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--mid);display:flex;align-items:center;justify-content:center">✕</button>
-    </div>
-
-    <!-- Sujet — chips sélectionnables -->
-    <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Objet</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Question générale" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Question générale</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Paiement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Paiement</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Problème technique" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Problème technique</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Vérification de compte" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Vérification de compte</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Signalement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Signalement</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Autre" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Autre</div>
-    </div>
-
-    <!-- Email -->
-    <div style="margin-bottom:12px">
-      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email</label>
-      <input id="contactEmail" type="email" placeholder="votre@email.com" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-    </div>
-
-    <!-- Message -->
-    <div style="margin-bottom:18px">
-      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message</label>
-      <textarea id="contactMsg" rows="4" placeholder="Décrivez votre question ou problème…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
-    </div>
-
-    <!-- Bouton -->
-    <button id="contactSubmitBtn" onclick="submitContact()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      Envoyer le message
-    </button>
-  </div>
-</div>
-
 <!-- POPUP CONFIRMATION PAIEMENT -->
 <div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+  <div style="background:#fff;border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
@@ -2148,7 +1500,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 
 <!-- POPUP PAIEMENT ÉCHOUÉ -->
 <div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+  <div style="background:#fff;border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
@@ -2161,6 +1513,7 @@ html.dk .chip{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.15);}
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
 <script>
+
 // ============================================================
 // ONBOARDING — une seule fois à la première visite
 // ============================================================
@@ -6150,25 +5503,6 @@ function getCniStatus(){
 var _groupeCoursId = null;
 var _groupeElevesPermis = false;
 
-function openGroupeMsg(coursId){
-  _groupeCoursId = coursId;
-  var c = C.find(function(x){return x.id===coursId;});
-  if(!c) return;
-  // Titre
-  var gt = g('groupeTitle');
-  if(gt) gt.textContent = 'Groupe · ' + c.title;
-  var gs = g('groupeSubtitle');
-  if(gs) gs.textContent = 'Message pour tous les élèves inscrits';
-  // Toggle
-  _groupeElevesPermis = c.eleves_peuvent_ecrire || false;
-  _updateGroupeToggle();
-  // Reset
-  var gm = g('groupeMsg');
-  if(gm) gm.value = '';
-  var bd = g('bdGroupe');
-  if(bd) bd.style.display = 'flex';
-  haptic(4);
-}
 
 function closeGroupe(){
   var bd = g('bdGroupe');
@@ -6204,42 +5538,6 @@ function toggleGroupePerm(){
   }
 }
 
-async function sendGroupeMsg(){
-  var msg = g('groupeMsg');
-  var contenu = msg ? msg.value.trim() : '';
-  if(!contenu){
-    msg && (msg.style.borderColor='var(--red)');
-    toast('Message vide','Écrivez un message pour le groupe',true);
-    return;
-  }
-  var btn = g('groupeSubmitBtn');
-  if(btn){btn.disabled=true;btn.textContent='Envoi…';}
-  try{
-    var c = C.find(function(x){return x.id===_groupeCoursId;});
-    var r = await fetch(API+'/messages/groupe',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        cours_id:_groupeCoursId,
-        expediteur_id:user.id,
-        contenu:contenu,
-        cours_titre:c?c.title:'Cours'
-      })
-    });
-    var data = await r.json();
-    if(data.success){
-      closeGroupe();
-      toast('Message envoyé',''+( data.sent||0)+' élève'+(data.sent>1?'s':'')+ ' notifié'+(data.sent>1?'s':''));
-      haptic([10,50,100]);
-    } else {
-      toast('Erreur','Impossible d’envoyer le message',true);
-    }
-  }catch(e){
-    toast('Erreur',e.message,true);
-  }finally{
-    if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer au groupe';}
-  }
-}
 
 // ============================================================
 // PICKER NATIF — bottom sheet liste d'options
@@ -7925,6 +7223,36 @@ if('serviceWorker' in navigator){
     }
   }catch(e){loadData();}
 })();
+
 </script>
+
+<!-- MODAL GROUPE MESSAGERIE -->
+<div id="bdGroupe" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeGroupe()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));animation:mi .25s ease">
+    <div style="width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 16px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:18px;font-weight:800;color:var(--ink)" id="groupeTitle">Groupe du cours</div>
+      <button onclick="closeGroupe()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--mid);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--lite);margin-bottom:16px" id="groupeSubtitle">Envoyer un message à tous les inscrits</div>
+    <!-- Toggle parole élèves -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:16px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">Parole aux élèves</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:2px">Autorise les élèves à écrire dans le groupe</div>
+      </div>
+      <div id="groupeToggle" onclick="toggleGroupePerm()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+        <div id="groupeToggleKnob" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+      </div>
+    </div>
+    <!-- Message -->
+    <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message pour le groupe</label>
+    <textarea id="groupeMsg" rows="4" placeholder="Écrivez votre message pour tous les élèves inscrits…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+    <button id="groupeSubmitBtn" onclick="sendGroupeMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Envoyer au groupe
+    </button>
+  </div>
+</div>
 </body>
 </html>
