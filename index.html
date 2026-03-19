@@ -2884,16 +2884,13 @@ function saveProf(){
   // Mettre à jour la photo sur les cards du prof
   if(user&&user.id&&user.photo){
     if(P[user.id])P[user.id].photo=user.photo;
-    document.querySelectorAll('.pbub').forEach(function(el){
-      var card=el.closest('[data-id]');
-      if(!card)return;
-      var cours=C.find(function(x){return x.id===card.dataset.id;});
-      if(cours&&cours.pr===user.id){
-        cours.prof_photo=user.photo;
-        el.style.background='none';
-        el.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover">';
-      }
+    // Cibler directement les pbub du prof par data-prof
+    document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
+      el.style.background='none';
+      el.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover">';
     });
+    // Mettre à jour aussi dans C[]
+    C.forEach(function(cours){if(cours.pr===user.id)cours.prof_photo=user.photo;});
   }
 }
 
@@ -2976,16 +2973,11 @@ function previewPhoto(input){
             // Mettre à jour immédiatement les pbub sur toutes les cards du prof
             if(user.id){
               if(P[user.id])P[user.id].photo=data.url;
-              document.querySelectorAll('.pbub').forEach(function(el){
-                var card=el.closest('[data-id]');
-                if(!card)return;
-                var cours=C.find(function(x){return x.id===card.dataset.id;});
-                if(cours&&cours.pr===user.id){
-                  cours.prof_photo=data.url;
-                  el.style.background='none';
-                  el.innerHTML='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover">';
-                }
+              document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
+                el.style.background='none';
+                el.innerHTML='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover">';
               });
+              C.forEach(function(cours){if(cours.pr===user.id)cours.prof_photo=data.url;});
             }
             toast('Photo mise à jour','Visible sur toutes vos cards');
           }
@@ -3077,7 +3069,7 @@ function renderPage(){
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -5845,22 +5837,36 @@ function initLargeTitle(){
   // Pull to refresh
   var _ptr={startY:0,pulling:false};
   app.addEventListener('touchstart',function(e){
-    if(app.scrollTop===0){_ptr.startY=e.touches[0].clientY;_ptr.pulling=true;}
+    // Seulement si on est tout en haut ET premier doigt
+    if(app.scrollTop===0&&e.touches.length===1){
+      _ptr.startY=e.touches[0].clientY;
+      _ptr.pulling=false; // pas encore pulling, on attend
+      _ptr.started=true;
+    } else {
+      _ptr.started=false;
+    }
   },{passive:true});
   app.addEventListener('touchmove',function(e){
-    if(!_ptr.pulling)return;
+    if(!_ptr.started)return;
     var dy=e.touches[0].clientY-_ptr.startY;
-    if(dy>0){
+    // Déclencher pulling seulement si mouvement vers le bas (positif) et scroll=0
+    if(dy>10&&app.scrollTop===0){
+      _ptr.pulling=true;
       var ind=g('ptrIndicator');
-      if(ind){var p=Math.min(dy/80,1);ind.style.transform='translateX(-50%) translateY('+(p*56-56)+'px)';}
+      if(ind){var p=Math.min(dy/100,1);ind.style.transform='translateX(-50%) translateY('+(p*56-56)+'px)';}
+    } else if(dy<=0){
+      // Scroll vers le haut — annuler
+      _ptr.pulling=false;_ptr.started=false;
+      var ind=g('ptrIndicator');
+      if(ind)ind.style.transform='translateX(-50%) translateY(-56px)';
     }
   },{passive:true});
   app.addEventListener('touchend',function(e){
-    if(!_ptr.pulling)return;
-    _ptr.pulling=false;
+    if(!_ptr.pulling){_ptr.started=false;return;}
+    _ptr.pulling=false;_ptr.started=false;
     var dy=e.changedTouches[0].clientY-_ptr.startY;
     var ind=g('ptrIndicator');
-    if(dy>80&&app.scrollTop===0){
+    if(dy>120&&app.scrollTop===0){
       haptic([10,40,10]);
       if(ind){ind.style.transform='translateX(-50%) translateY(8px)';ind.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';}
       loadData().then(function(){
