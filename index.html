@@ -1789,9 +1789,9 @@ html.dk .ntog::after{background:#fff;}
       <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
         <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em">Document envoyé ✓</div>
-      <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px">Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
-      <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Parfait, continuer !</button>
+      <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" id="cniStep3Title">Document envoyé ✓</div>
+      <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px" id="cniStep3Sub">Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
+      <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Compris, merci !</button>
     </div>
 
   </div>
@@ -3717,7 +3717,14 @@ function getCniStatus(){
 
 function openCniSheet(){
   var bd=g('bdCni');if(!bd)return;
-  cniGoStep1();
+  var status=getCniStatus();
+  if(status==='pending'){
+    cniGoStep3(true); // déjà envoyé → aller direct à la confirmation (mode retour)
+  } else if(status==='verified'){
+    bd.style.display='none';return; // rien à faire
+  } else {
+    cniGoStep1();
+  }
   bd.style.display='flex';
   document.body.style.overflow='hidden';
 }
@@ -3734,12 +3741,21 @@ function cniGoStep2(){
   if(s2)s2.style.display='block';
   if(s3)s3.style.display='none';
 }
-function cniGoStep3(){
+function cniGoStep3(isReturn){
   var s1=g('cniStep1'),s2=g('cniStep2'),s3=g('cniStep3');
   if(s1)s1.style.display='none';
   if(s2)s2.style.display='none';
   if(s3)s3.style.display='block';
-  haptic(20);
+  // Texte différent si on revient consulter l'état
+  var t=g('cniStep3Title'),sub=g('cniStep3Sub');
+  if(isReturn){
+    if(t)t.textContent='Vérification en cours ⏳';
+    if(sub)sub.innerHTML='Votre document a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+  } else {
+    if(t)t.textContent='Document envoyé ✓';
+    if(sub)sub.innerHTML='Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    haptic(20);
+  }
 }
 
 function cniLater(){
