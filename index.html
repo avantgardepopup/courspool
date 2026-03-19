@@ -14,6 +14,8 @@
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" id="themeColorMeta" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)">
 <title>CoursPool</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -185,11 +187,18 @@ html.dk .ntog::after{background:#fff;}
   padding:14px 20px 10px;
   padding-top:max(20px,env(safe-area-inset-top,0px));
   background:var(--wh);
-  border-bottom:1px solid var(--bdr);
+  border-bottom:1px solid transparent;
   position:sticky;top:0;z-index:50;
   isolation:isolate;
   flex-shrink:0;
+  transition:border-color .2s,box-shadow .2s;
 }
+.mob-header.scrolled{
+  border-bottom-color:var(--bdr);
+  box-shadow:0 1px 12px rgba(0,0,0,.06);
+}
+.mob-title{transition:font-size .25s cubic-bezier(.4,0,.2,1),opacity .2s;}
+.mob-header.scrolled .mob-title{font-size:18px !important;font-weight:700;}
 .mob-header-inner{display:flex;align-items:flex-end;justify-content:space-between;}
 .mob-title{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;}
 .mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
@@ -199,7 +208,14 @@ html.dk .ntog::after{background:#fff;}
 .mob-search .si{top:50%;left:31px;}
 
 .pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;animation:pgIn .22s ease;}
-@keyframes pgIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pgIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pgOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-18px)}}
+@keyframes bniSpring{0%{transform:scale(1)}30%{transform:scale(1.28)}60%{transform:scale(.92)}100%{transform:scale(1)}}
+@keyframes checkDraw{from{stroke-dashoffset:40}to{stroke-dashoffset:0}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes priceFlip{0%{transform:translateY(0);opacity:1}40%{transform:translateY(-8px);opacity:0}60%{transform:translateY(8px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes emptyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes mi{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes lineGrow{0%,100%{opacity:.3}50%{opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 
@@ -207,7 +223,7 @@ html.dk .ntog::after{background:#fff;}
 @media(max-width:640px){
   .pg{min-height:calc(100dvh - 130px);}
   #pgMsg{height:calc(100dvh - 130px) !important;}
-  #pgMsg.on{display:flex !important;}
+  #pgMsg.on{display:flex !important;;animation:pgIn .25s cubic-bezier(.4,0,.2,1) both;}
 }
 .cnt{padding:20px 16px;max-width:1200px;}
 .ptr-indicator{position:absolute;top:-50px;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;color:var(--lite);font-size:13px;font-weight:500;gap:8px;transition:opacity .2s;}
@@ -253,7 +269,8 @@ html.dk .ntog::after{background:#fff;}
 .skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
 .card:active{transform:scale(.97);transition:transform .1s;}
-.btnr:active,.pb:active,.lbtn:active,.btnadd:active{transform:scale(.95);transition:transform .1s;}
+.btnr:active,.pb:active,.lbtn:active,.btnadd:active,.lguest:active{transform:scale(.96);transition:transform .08s;}
+.btnr,.pb,.lbtn,.btnadd,.lguest{-webkit-tap-highlight-color:transparent;}
 .bni:active{opacity:.6;transform:scale(.9);}
 .card-prive{border-color:#E8D9C4;background:linear-gradient(to bottom,#FFFBF5,var(--wh));}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
@@ -681,13 +698,14 @@ html.dk .ntog::after{background:#fff;}
 @keyframes cpSpin{to{transform:rotate(360deg)}}
 .cp-loader{display:inline-block;width:22px;height:22px;border:2.5px solid var(--orp);border-top-color:var(--or);border-radius:50%;animation:cpSpin .7s linear infinite;vertical-align:middle;margin-right:8px;flex-shrink:0;}
 @keyframes splashBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
+@keyframes splashPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.3)}50%{transform:scale(1.06);box-shadow:0 0 0 12px rgba(255,255,255,0)}}
 @keyframes tutoCardIn{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 </style>
 </head>
 <body>
 <div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
   <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
-    <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center">
+    <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;animation:splashPulse 1.5s ease-in-out infinite">
       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
     <div style="color:#fff;font-size:26px;font-weight:800;letter-spacing:-.03em">CoursPool</div><div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:-8px">Bêta</div>
@@ -1077,7 +1095,7 @@ html.dk .ntog::after{background:#fff;}
         <div id="loadMoreCount" style="font-size:12px;color:var(--lite);margin-top:6px"></div>
       </div>
       <div id="nocard" style="display:none;text-align:center;padding:50px 24px">
-        <div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" style="width:34px;height:34px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
         <div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em" id="nocardTitle">Aucun cours trouvé</div>
@@ -2067,8 +2085,8 @@ function obDone(){
 
 // Lancer l'onboarding au chargement
 window.addEventListener('DOMContentLoaded',function(){
-  // Dark mode en premier — avant tout rendu
   initDarkMode();
+  initLargeTitle();
   // Masquer le splash après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
@@ -2288,6 +2306,13 @@ function applyUser(){
   updateVerifBand();
   // Vérification périodique que le compte est toujours actif
   startAccountCheck();
+  // Swipe to dismiss sur les principales bottom sheets
+  setTimeout(function(){
+    initSwipeDismiss(g('bdR'), function(){closeM('bdR');});
+    initSwipeDismiss(g('bdCni'), cniLater);
+    initSwipeDismiss(g('bdNote'), function(){closeM('bdNote');});
+    initSwipeDismiss(g('bdPreview'), function(){g('bdPreview').style.display='none';});
+  },500);
   // Forcer la synchro complète de la nav et du header
   navTo('exp');
 }
@@ -2381,10 +2406,20 @@ function navTo(tab){
       return;
     }
     if(pgAcc)pgAcc.classList.add('on');
-    var bAcc=g('bniAcc');if(bAcc)bAcc.classList.add('on');
+    var bAcc=g('bniAcc');if(bAcc){bAcc.classList.add('on');_springIcon(bAcc);}
     restoreNav();
     goAccount();
   }
+}
+
+function _springIcon(el){
+  if(!el)return;
+  var ico=el.querySelector('.bni-ico-on')||el.querySelector('svg')||el.querySelector('div');
+  if(!ico)return;
+  ico.style.animation='none';
+  ico.offsetHeight;
+  ico.style.animation='bniSpring .4s cubic-bezier(.34,1.56,.64,1)';
+  haptic(4);
 }
 
 function restoreNav(){
@@ -3010,7 +3045,7 @@ function doFilter(){
   if(checkCodeInSearch(val))return;
   currentPage=1;applyFilter();
 }
-function setPill(el){document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
+function setPill(el){haptic(4);document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
 function restoreFilters(){
   try{
     var f=sessionStorage.getItem('cp_filter');
@@ -3058,6 +3093,9 @@ function openR(id){haptic(4);
   curId=id;
   var pp=Math.ceil(c.tot/c.sp);
   g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;
+  // Coloriser le header de la fiche selon la matière
+  var rHeader=document.querySelector('#bdR .modal>div:first-child');
+  if(rHeader&&c.bg){rHeader.style.background=c.bg;rHeader.style.borderRadius='20px 20px 0 0';}
   g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
@@ -3312,6 +3350,7 @@ function contPr(){
   openMsg(p.nm||'le professeur',pid,p.photo||null);
 }
 function togFP(){
+  haptic(6);
   var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
   if(fol.has(id)){
@@ -3490,7 +3529,21 @@ async function confirmDeleteCours(){
   }catch(e){toast('Erreur réseau','Impossible d\'annuler ce cours');}
   window._deleteId=null;
 }
-function calcH(){var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;g('cH').textContent=p>0?'Soit '+Math.ceil(p/pl)+'€ par élève pour '+pl+' place'+(pl>1?'s':''):'';}
+function calcH(){
+  var p=parseInt(g('cPr').value)||0,pl=parseInt(g('cPl').value)||1;
+  var pp=p>0?Math.ceil(p/pl):0;
+  var ch=g('cH');
+  if(!ch)return;
+  if(p>0){
+    var txt='Soit '+pp+'€ par élève pour '+pl+' place'+(pl>1?'s':'');
+    if(ch.textContent!==txt){
+      ch.style.animation='none';ch.offsetHeight;ch.style.animation='priceFlip .35s ease';
+      ch.textContent=txt;
+    }
+  } else {
+    ch.textContent='';
+  }
+}
 
 function toggleMoreMat(){
   var extras=document.querySelectorAll('.so-extra');
@@ -4898,7 +4951,10 @@ function toggleDarkMode(){
   document.documentElement.classList.toggle('dk',_darkMode);
   try{localStorage.setItem('cp_dark',_darkMode?'1':'0');}catch(e){}
   updateDarkBtn();
-  haptic(6);
+  // Mettre à jour la couleur de la status bar
+  var tm=document.getElementById('themeColorMeta');
+  if(tm)tm.content=_darkMode?'#131110':'#ffffff';
+  haptic([10,40,10]);
 }
 
 function updateDarkBtn(){
@@ -5317,6 +5373,27 @@ function updateVerifBand(){
   }
 }
 
+// ============================================================
+// 3. LARGE TITLE — scroll detection
+// ============================================================
+function initLargeTitle(){
+  var app=g('app');
+  if(!app)return;
+  var header=g('mobHeader');
+  var lastY=0;
+  app.addEventListener('scroll',function(){
+    var y=app.scrollTop;
+    if(header){
+      if(y>40){header.classList.add('scrolled');}
+      else{header.classList.remove('scrolled');}
+    }
+    // Mettre à jour theme-color selon dark mode
+    var tm=document.getElementById('themeColorMeta');
+    if(tm)tm.content=_darkMode?'#131110':'#ffffff';
+    lastY=y;
+  },{passive:true});
+}
+
 function checkUpcomingReminder(){
   if(!user||!Object.keys(res).length)return;
   var now=new Date();
@@ -5345,6 +5422,50 @@ function fadeInImg(img){
 // ============================================================
 // 9. SWIPE ANNULER
 // ============================================================
+// ============================================================
+// 10. SWIPE TO DISMISS — bottom sheets natifs
+// ============================================================
+function initSwipeDismiss(sheetEl, onClose){
+  if(!sheetEl)return;
+  var inner=sheetEl.querySelector('[style*="border-radius:24px"],[style*="border-radius:28px"],.modal');
+  if(!inner)return;
+  var startY=0,dy=0,sw=false;
+  inner.addEventListener('touchstart',function(e){
+    if(e.touches[0].clientY<inner.getBoundingClientRect().top+30){
+      startY=e.touches[0].clientY;sw=true;dy=0;
+    }
+  },{passive:true});
+  inner.addEventListener('touchmove',function(e){
+    if(!sw)return;
+    dy=e.touches[0].clientY-startY;
+    if(dy<0){dy=0;return;}
+    inner.style.transform='translateY('+dy+'px)';
+    inner.style.transition='none';
+    sheetEl.style.background='rgba(0,0,0,'+(0.55-dy/600)+')';
+  },{passive:true});
+  inner.addEventListener('touchend',function(){
+    if(!sw)return;sw=false;
+    if(dy>100){
+      inner.style.transition='transform .3s cubic-bezier(.4,0,.2,1)';
+      inner.style.transform='translateY(100%)';
+      sheetEl.style.transition='background .3s';
+      sheetEl.style.background='rgba(0,0,0,0)';
+      setTimeout(function(){
+        inner.style.transform='';inner.style.transition='';
+        sheetEl.style.background='';sheetEl.style.transition='';
+        if(onClose)onClose();
+      },280);
+      haptic([10,20]);
+    } else {
+      inner.style.transition='transform .25s cubic-bezier(.34,1.56,.64,1)';
+      inner.style.transform='translateY(0)';
+      sheetEl.style.background='';
+      setTimeout(function(){inner.style.transition='';},260);
+    }
+    dy=0;
+  },{passive:true});
+}
+
 function initSwipeCancel(el,onConfirm){
   var sx=0,dx=0,sw=false;
   el.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sw=true;dx=0;},{passive:true});
