@@ -361,8 +361,8 @@ html.dk .ntog::after{background:#fff;}
 .modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;animation:mi .25s ease;}
 .modal.sm{max-width:380px;}
 @keyframes mi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.mhd{padding:18px 18px 0;display:flex;align-items:flex-start;justify-content:space-between;}
-.mbd{padding:16px 18px 20px;}
+.mhd{padding:18px 18px 4px;display:flex;align-items:flex-start;justify-content:space-between;}
+.mbd{padding:20px 18px 20px;}
 .mcl{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid);transition:all .18s;}
 .mcl:hover{background:var(--orp);color:var(--or);}
 .pb{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:12px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;transition:all .18s;border:none;}
@@ -2784,7 +2784,7 @@ function buildAccLists(){
   },200);
   var lf=g('listF');
   if(!fIds.length){
-    lf.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">👨‍🏫</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px">Aucun prof suivi</div><div style="font-size:13px;color:var(--lite)">Suivez un prof pour être notifié de ses prochains cours</div></div>';
+    lf.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="width:56px;height:56px;background:var(--orp);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici dès qu’un élève réserve.</div></div></div>';
   } else {
     lf.innerHTML='<div style="background:var(--wh);border-radius:16px;overflow:hidden">'+fIds.map(function(id,i){
       var p=P[id];if(!p)return'';
@@ -2835,7 +2835,21 @@ function saveProf(){
   var av=g('accAv');
   if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{av.style.background='rgba(255,255,255,.2)';av.textContent=user.ini;}
-  toast('Profil sauvegardé','Modifications enregistrées ✓');
+  toast('Profil sauvegardé','Modifications enregistrées');
+  // Mettre à jour la photo sur les cards du prof
+  if(user&&user.id&&user.photo){
+    if(P[user.id])P[user.id].photo=user.photo;
+    document.querySelectorAll('.pbub').forEach(function(el){
+      var card=el.closest('[data-id]');
+      if(!card)return;
+      var cours=C.find(function(x){return x.id===card.dataset.id;});
+      if(cours&&cours.pr===user.id){
+        cours.prof_photo=user.photo;
+        el.style.background='none';
+        el.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover">';
+      }
+    });
+  }
 }
 
 function doLogout(){
@@ -4744,7 +4758,7 @@ async function loadRevenues() {
 
     // Liste des paiements
     if (!paid.length) {
-      list.innerHTML = '<div style="text-align:center;padding:32px"><div style="font-size:40px;margin-bottom:10px">💸</div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement pour l\'instant</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Dès qu\'un élève réserve ton cours,<br>le paiement apparaîtra ici.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu’un élève réserve un cours.</div></div>';
       return;
     }
 
