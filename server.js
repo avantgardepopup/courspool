@@ -666,19 +666,30 @@ app.post('/contact', async (req, res) => {
 app.delete('/users/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    // 1. Supprimer les données liées
-    await supabase.from('reservations').delete().eq('user_id', id);
-    await supabase.from('follows').delete().eq('user_id', id);
+    // 1. Supprimer les données liées (non bloquant si table absente)
+    await supabase.from('reservations').delete().eq('user_id', id).catch(e => console.log('del reservations:', e.message));
+    await supabase.from('follows').delete().eq('user_id', id).catch(e => console.log('del follows:', e.message));
+    await supabase.from('follows').delete().eq('professeur_id', id).catch(()=>{});
     await supabase.from('push_subscriptions').delete().eq('user_id', id).catch(()=>{});
     await supabase.from('contacts').delete().eq('user_id', id).catch(()=>{});
     await supabase.from('notations').delete().eq('eleve_id', id).catch(()=>{});
+    await supabase.from('notations').delete().eq('professeur_id', id).catch(()=>{});
+    await supabase.from('messages').delete().eq('expediteur_id', id).catch(()=>{});
+    await supabase.from('messages').delete().eq('destinataire_id', id).catch(()=>{});
+    await supabase.from('cours').delete().eq('professeur_id', id).catch(()=>{});
     // 2. Supprimer le profil
-    await supabase.from('profiles').delete().eq('id', id);
-    // 3. Supprimer le compte Auth (nécessite service role key)
-    const { error } = await supabase.auth.admin.deleteUser(id);
-    if (error) console.log('Auth delete warning:', error.message);
+    const { error: profErr } = await supabase.from('profiles').delete().eq('id', id);
+    if (profErr) console.log('del profile error:', profErr.message);
+    // 3. Supprimer le compte Auth — nécessite service_role key
+    try {
+      const { error: authErr } = await supabase.auth.admin.deleteUser(id);
+      if (authErr) console.log('Auth delete (non bloquant):', authErr.message);
+    } catch(authEx) {
+      console.log('Auth delete exception:', authEx.message);
+    }
     res.json({ success: true });
   } catch(e) {
+    console.log('DELETE user error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
