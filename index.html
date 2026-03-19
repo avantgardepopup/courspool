@@ -42,6 +42,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
 }
+@media(prefers-color-scheme:dark){
+  :root{
+    --ink:#F0EDE8;--mid:#A09890;--lite:#665E58;
+    --bg:#1A1714;--wh:#252220;--bdr:#3A3530;
+    --orp:#2D1F18;--sh:0 6px 28px rgba(0,0,0,.4);
+  }
+  .lbox{box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .bnav{border-top-color:#3A3530;}
+  .mob-header{border-bottom-color:#3A3530;}
+  input,textarea,select{color-scheme:dark;}
+}
 #login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 .lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
 .lhero{background:linear-gradient(135deg,var(--or),var(--ord));padding:32px 28px 24px;color:#fff;position:relative;overflow:hidden;}
@@ -106,6 +117,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 .pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;animation:pgIn .22s ease;}
 @keyframes pgIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
@@ -344,7 +356,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .bni.on .bni-ico-on{display:block;}
 .bni span{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
 .bni-badge{position:absolute;top:4px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.85);}
-.bni-badge.on{display:flex;}
+.bni-badge.on{display:flex;animation:badgePulse 2s ease infinite;}
+@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 4px rgba(239,68,68,0)}}
 .bni-sep{width:1px;height:20px;background:rgba(0,0,0,.08);margin:0 2px;}
 .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
 .pw-toggle:hover{color:var(--or);}
@@ -1264,6 +1277,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <!-- Assistance -->
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Assistance</div>
           <div class="pref-group">
+            <div class="pref-row" onclick="shareApp()" style="cursor:pointer">
+              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
+              <div style="flex:1"><div class="pref-label">Inviter un ami</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Partager CoursPool</div></div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
             <div class="pref-row" onclick="openContact()" style="cursor:pointer">
               <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
               <div style="flex:1"><div class="pref-label">Nous contacter</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Une question ? On répond vite</div></div>
@@ -1302,7 +1320,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="shareCoursLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager ce cours</button>
       <button id="btnVoirEleves" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openEleves(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Voir les élèves inscrits</button>
-      <button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="deleteCours(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
+      <button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="confirmDeleteCoursNative(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
     </div>
   </div>
 </div>
@@ -2007,11 +2025,24 @@ var MOB_TITLES={
   acc:{title:'Mon profil',sub:'Paramètres & réservations'}
 };
 
+function getGreeting(){
+  var h=new Date().getHours();
+  if(h>=5&&h<12)return'Bonjour';
+  if(h>=12&&h<18)return'Bon après-midi';
+  if(h>=18&&h<22)return'Bonsoir';
+  return'Bonne nuit';
+}
+
 function updateMobHeader(tab){
   var t=MOB_TITLES[tab]||{title:'CoursPool',sub:''};
   var mt=g('mobTitle'),ms=g('mobSub');
-  if(mt)mt.textContent=t.title;
-  if(ms)ms.textContent=t.sub;
+  if(tab==='exp'&&user){
+    if(mt)mt.textContent=getGreeting()+' '+user.pr+' 👋';
+    if(ms)ms.textContent=t.sub;
+  } else {
+    if(mt)mt.textContent=t.title;
+    if(ms)ms.textContent=t.sub;
+  }
   // Recherche visible seulement sur Explorer
   var ms2=g('mobSearch');if(ms2)ms2.style.display=tab==='exp'?'block':'none';
   // Bouton proposer mobile
@@ -2185,7 +2216,9 @@ async function checkStripeReturn(){
       var p=document.getElementById('popupPaid');
       var msg=document.getElementById('popupPaidMsg');
       if(msg)msg.textContent=pourAmi?'La place supplémentaire a été réservée. Un email de confirmation a été envoyé.':'Votre place est réservée. Un email de confirmation vous a été envoyé.';
-      if(p)p.style.display='flex';
+      if(p){p.style.display='flex';haptic(40);}
+      var icon=p?p.querySelector('div[style*="F0FDF4"]'):null;
+      if(icon){icon.style.transform='scale(0)';icon.style.transition='transform .5s cubic-bezier(.34,1.56,.64,1)';requestAnimationFrame(function(){requestAnimationFrame(function(){icon.style.transform='scale(1)';});});}
     },400);
   }catch(e){console.log('Payment return error:',e);}
 }
@@ -2451,6 +2484,8 @@ function renderPage(){
   var grid=g('grid');grid.innerHTML='';
   var toShow=filteredCards.slice(0,currentPage*PAGE_SIZE);
   if(!toShow.length){g('nocard').style.display='block';g('nocardTitle').textContent='Aucun cours trouvé';g('nocardSub').textContent='Essayez un autre filtre';g('loadMoreWrap').style.display='none';return;}
+  // Compteur de résultats dans le sous-titre du header
+  if(user){var ms=g('mobSub');if(ms&&actF!=='tous'||actNiv||actLoc)ms.textContent=toShow.length+' cours trouvé'+(toShow.length>1?'s':'');}
   g('nocard').style.display='none';
   toShow.forEach(function(c,i){
     var pp=Math.ceil(c.tot/c.sp);
@@ -2890,12 +2925,25 @@ function openCr(){
   g('crDate').min=today;openM('bdCr');
 }
 function closeCr(){closeM('bdCr');}
+function shakeField(el){
+  if(!el)return;
+  el.style.borderColor='#EF4444';
+  el.style.animation='shake .4s ease';
+  setTimeout(function(){el.style.animation='';el.style.borderColor='';},600);
+}
+
 async function subCr(){
   if(window._publishing){toast('En cours...','Publication déjà en cours');return;}
   window._publishing=true;
   var btn=document.querySelector('#bdCr .pb.pri');
   if(btn){btn.textContent='⏳ Publication…';btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
+  // Validation
+  if(!titre){shakeField(g('crTitre'));toast('Titre manquant','Donnez un titre à votre cours');return;}
+  var crSubjH=g('crSubjHidden');
+  if(!crSubjH||!crSubjH.value){var crMB=g('crMatBtn');if(crMB){crMB.style.borderColor='#EF4444';setTimeout(function(){crMB.style.borderColor='';},600);}toast('Matière manquante','Choisissez une matière');return;}
+  if(!date){shakeField(g('crDate'));toast('Date manquante','Choisissez une date');return;}
+  if(!heure){shakeField(g('crHeure'));toast('Heure manquante','Choisissez une heure');return;}
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   // Matière depuis le sélecteur natif
@@ -2945,7 +2993,8 @@ async function subCr(){
     var tog=g('togglePrive');var knob=g('togglePriveKnob');var box=g('codePriveBox');
     if(tog)tog.style.background='var(--bdr)';if(knob)knob.style.transform='translateX(0)';if(box)box.style.display='none';
     closeM('bdCr');await loadData();buildCards();
-    toast('Cours publié !','Les élèves peuvent maintenant réserver');
+    var isFirstCours=C.filter(function(c){return c.pr===user.id;}).length<=1;
+    toast(isFirstCours?'Premier cours publié 🎉':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
   }catch(e){toast('Erreur réseau','Vérifiez votre connexion');}
   finally{window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}}
 }
@@ -2961,6 +3010,13 @@ function togglePw(id,btn){
 }
 
 // SUPPRIMER SON COURS avec confirmation
+function confirmDeleteCoursNative(id){
+  // ActionSheet natif sur iOS/Android, confirm() sinon
+  if(window.confirm('Annuler ce cours ? Tous les élèves inscrits seront notifiés.')){
+    deleteCours(id);
+  }
+}
+
 async function deleteCours(id){
   openConfirmDelete(id);
 }
@@ -4237,6 +4293,15 @@ function pickNiveau(el){
 // ============================================================
 // CONTACT
 // ============================================================
+function shareApp(){
+  var data={title:'CoursPool',text:"Découvrez CoursPool — partagez les frais d'un cours particulier entre étudiants !",url:'https://courspool.vercel.app'};
+  if(navigator.share){navigator.share(data).catch(function(){});}
+  else{
+    try{navigator.clipboard.writeText(data.url);toast('Lien copié ✓','Partagez-le avec vos amis');}
+    catch(e){toast('courspool.vercel.app','Copiez ce lien pour partager');}
+  }
+}
+
 function openContact(){
   // Pré-remplir l'email si connecté
   var bd=g('bdContact');
@@ -4364,6 +4429,20 @@ function haptic(ms){try{if(navigator.vibrate)navigator.vibrate(ms||8);}catch(e){
 // ============================================================
 // 7. SKELETON LOADING fidèle
 // ============================================================
+function showNetworkError(){
+  var grid=g('grid');if(!grid)return;
+  grid.innerHTML='<div style="text-align:center;padding:60px 24px">'
+    +'<div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" width="32" height="32"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>'
+    +'</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Connexion perdue</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Impossible de charger les cours.<br>Vérifiez votre connexion internet.</div>'
+    +'<button onclick="loadData(1).then(buildCards)" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);margin-bottom:12px;display:block;width:100%;max-width:220px;margin:0 auto 12px">Réessayer</button>'
+    +'<button onclick="openContact()" style="background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:8px">Nous contacter</button>'
+    +'</div>';
+  g('nocard').style.display='none';
+}
+
 function showSkeletonsV2(){
   var grid=g('grid');if(!grid)return;
   var skel='';
