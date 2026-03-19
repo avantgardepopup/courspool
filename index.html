@@ -1341,9 +1341,9 @@ html.dk .ntog::after{background:#fff;}
                 </select>
               </div>
               <div class="pref-row" id="pfNiveauField">
-                <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span class="pref-label" id="pfNiveauLabel" style="flex:1">Niveau enseigné</span>
-                <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;max-width:160px"><option value="">Choisir…</option></select>
+                <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <span class="pref-label" style="flex:1;min-width:0">Niveau enseigné</span>
+                <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;flex-shrink:0;max-width:130px"><option value="">Choisir…</option></select>
               </div>
               <div class="pref-row">
                 <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
@@ -1679,6 +1679,24 @@ html.dk .ntog::after{background:#fff;}
     </div>
   </div>
 </div>
+<!-- POP-UP CONNEXION REQUISE -->
+<div id="bdLoginPrompt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:600;align-items:flex-end;justify-content:center" onclick="if(event.target===this)g('bdLoginPrompt').style.display='none'">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:28px 24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .25s ease">
+    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 24px"></div>
+    <div style="width:64px;height:64px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div style="font-size:21px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Connectez-vous pour réserver</div>
+    <div style="font-size:14px;color:var(--lite);text-align:center;line-height:1.6;margin-bottom:28px">Créez un compte gratuit ou connectez-vous<br>pour réserver votre place en quelques secondes.</div>
+    <button onclick="g('bdLoginPrompt').style.display='none';scrollToLogin()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:10px">
+      Se connecter / Créer un compte
+    </button>
+    <button onclick="g('bdLoginPrompt').style.display='none'" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">
+      Continuer à explorer
+    </button>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMATION SUPPRESSION -->
 <div class="bd" id="bdConfirmDel" onclick="if(event.target===this)closeM('bdConfirmDel')">
   <div class="modal sm">
@@ -2013,6 +2031,14 @@ function obDone(){
     ob.style.opacity='0';
     setTimeout(function(){ob.classList.add('hidden');ob.classList.remove('active');ob.style.opacity='';ob.style.transition='';},400);
   }
+  // Tuto spotlight pour visiteurs sans compte
+  setTimeout(function(){
+    if(!user){
+      _tutoSteps=TUTO_ELEVE_STEPS;
+      _tutoIdx=0;
+      _tutoShow();
+    }
+  },700);
 }
 
 // Lancer l'onboarding au chargement
@@ -2903,7 +2929,25 @@ function restoreFilters(){
 }
 
 // RÉSERVATION
+function showLoginPrompt(){
+  haptic(10);
+  var bd=g('bdLoginPrompt');
+  if(bd)bd.style.display='flex';
+}
+
+function scrollToLogin(){
+  // Afficher l'écran de connexion
+  var app=g('app'),login=g('login');
+  if(app)app.style.display='none';
+  if(login){login.style.display='flex';login.style.zIndex='999';}
+}
+
 function openR(id){haptic(4);
+  // Sans compte : afficher le pop-up de connexion
+  if(!user||!user.id){
+    showLoginPrompt();
+    return;
+  }
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
   var isOwner=user&&c.pr===user.id;
