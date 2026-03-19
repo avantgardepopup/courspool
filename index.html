@@ -161,7 +161,7 @@ html.dk .ntog::after{background:#fff;}
 .rg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ropt{border:1.5px solid var(--bdr);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--mid);transition:all .18s;}
 .ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
-#app{display:none;}
+#app{display:none;height:100dvh;overflow-y:auto;overflow-x:hidden;position:relative;}
 /* === TOPBAR DESKTOP — masquée, remplacée par mob-header sur tous les écrans === */
 .topbar{display:none !important;}
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -188,6 +188,7 @@ html.dk .ntog::after{background:#fff;}
   border-bottom:1px solid var(--bdr);
   position:sticky;top:0;z-index:50;
   isolation:isolate;
+  flex-shrink:0;
 }
 .mob-header-inner{display:flex;align-items:flex-end;justify-content:space-between;}
 .mob-title{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;}
@@ -1849,40 +1850,23 @@ html.dk .ntog::after{background:#fff;}
   </div>
 </div>
 
-<!-- TUTORIEL v3 — slides plein écran centrées, fiables sur tous les devices -->
-<!-- TUTORIEL INTERACTIF SPOTLIGHT -->
-<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;pointer-events:none">
-  <!-- Overlay sombre avec trou (SVG) -->
-  <svg id="tutoSvgOverlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:all" onclick="tutoNext()">
-    <defs>
-      <mask id="tutoMask">
-        <rect width="100%" height="100%" fill="white"/>
-        <rect id="tutoHole" x="0" y="0" width="0" height="0" rx="12" fill="black"/>
-      </mask>
-    </defs>
-    <rect width="100%" height="100%" fill="rgba(0,0,0,.72)" mask="url(#tutoMask)"/>
-  </svg>
-  <!-- Contour lumineux autour de l'élément ciblé -->
-  <div id="tutoGlow" style="position:absolute;border:2.5px solid var(--or);border-radius:14px;box-shadow:0 0 0 4px rgba(255,107,43,.25);transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none"></div>
-  <!-- Bulle tooltip -->
-  <div id="tutoTooltip" style="position:absolute;background:var(--wh);border-radius:18px;padding:18px 20px;max-width:300px;width:calc(100vw - 40px);box-shadow:0 16px 48px rgba(0,0,0,.25);transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:all;z-index:1">
-    <!-- Flèche -->
-    <div id="tutoArrow" style="position:absolute;width:12px;height:12px;background:var(--wh);transform:rotate(45deg)"></div>
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
-      <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:2px 6px;border-radius:6px">Passer</button>
+<!-- TUTORIEL — bottom sheet natif -->
+<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)">
+  <div id="tutoCard" style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;overflow:hidden;animation:mi .32s ease">
+    <div id="tutoIllu" style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden">
+      <div style="position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.1);top:-60px;right:-50px"></div>
+      <div style="position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);bottom:-40px;left:-20px"></div>
+      <div id="tutoEmoji" style="font-size:64px;line-height:1;filter:drop-shadow(0 4px 16px rgba(0,0,0,.15));margin-bottom:16px"></div>
+      <!-- Dots sur fond coloré = blancs -->
+      <div style="display:flex;justify-content:center;gap:6px" id="tutoDots"></div>
     </div>
-    <!-- Emoji + titre -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <div id="tutoEmoji" style="font-size:28px;line-height:1;flex-shrink:0"></div>
-      <div id="tutoTitle" style="font-size:16px;font-weight:800;color:var(--ink);line-height:1.2;letter-spacing:-.02em"></div>
+    <div style="padding:24px 24px 0">
+      <div id="tutoTitle" style="font-size:22px;font-weight:800;color:var(--ink);text-align:center;margin-bottom:10px;letter-spacing:-.03em;line-height:1.2"></div>
+      <div id="tutoDesc" style="font-size:15px;color:var(--mid);text-align:center;line-height:1.65;margin-bottom:28px"></div>
     </div>
-    <div id="tutoDesc" style="font-size:13.5px;color:var(--mid);line-height:1.6;margin-bottom:14px"></div>
-    <!-- Boutons -->
-    <div style="display:flex;gap:8px">
-      <button id="tutoPrev" onclick="event.stopPropagation();tutoPrev()" style="display:none;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">←</button>
-      <button id="tutoBtn" onclick="event.stopPropagation();tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:10px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.35)">Suivant →</button>
+    <div style="padding:0 24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <button id="tutoBtn" onclick="tutoNext()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:17px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,43,.38);margin-bottom:10px">Suivant</button>
+      <button id="tutoSkipBtn" onclick="tutoSkip()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:6px">Passer le tutoriel</button>
     </div>
   </div>
 </div>
@@ -2192,7 +2176,29 @@ async function doReg(){
   }catch(e){toast('Erreur','Impossible de créer le compte');}
 }
 
-function doGuest(){go('Invité','','invite@courspool.fr','eleve',null);}
+function doGuest(){
+  // Mode visiteur : pas de bnav, pas de stockage localStorage
+  user={pr:'Invité',nm:'',em:'',role:'eleve',id:null,ini:'I',photo:null,guest:true};
+  var _l=g('login');
+  if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}
+  g('app').style.display='block';
+  // Bnav réduite pour les invités : pas de "Profil", juste Explorer
+  var bnav=g('bnav');
+  if(bnav)bnav.classList.add('on');
+  var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
+  if(bniMsg)bniMsg.style.display='none';
+  if(bniAcc)bniAcc.style.display='none';
+  if(bniAdd)bniAdd.style.display='none';
+  // Header invité
+  var mobT=g('mobTitle'),mobS=g('mobSub');
+  if(mobT)mobT.textContent='Explorer';
+  if(mobS)mobS.textContent='Trouvez un cours près de vous';
+  var tav=g('tav');if(tav){tav.style.background='var(--bdr)';tav.textContent='?';}
+  var tavMob=g('tavMob');if(tavMob){tavMob.style.background='var(--bdr)';tavMob.textContent='?';}
+  loadData().then(function(){buildCards();});
+  // Onboarding + tuto
+  setTimeout(obShow, 500);
+}
 
 function go(pr,nm,em,role,uid,photoUrl){
   user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null};
@@ -2358,7 +2364,16 @@ function goExplore(){
   try{
     var saved=localStorage.getItem('cp_user');
     if(saved){
-      user=JSON.parse(saved);
+      var parsedUser=JSON.parse(saved);
+      // Si c'était un guest → on ne restaure pas, on repart en mode visiteur
+      if(parsedUser.guest){
+        localStorage.removeItem('cp_user');
+        loadData().then(function(){
+          buildCards();checkPrivateCoursAccess();
+          setTimeout(obShow,400);
+        });
+      } else {
+      user=parsedUser;
       applyUser();
       if(user.id){
         Promise.all([
@@ -2375,6 +2390,7 @@ function goExplore(){
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
       }
+      } // fin du else non-guest
     } else {
       // Visiteur sans compte — lancer l'onboarding
       loadData().then(function(){
@@ -2635,6 +2651,11 @@ function doLogout(){
   try{localStorage.removeItem('cp_user');}catch(e){}
   var tav=g('tav');tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';
   g('bnav').classList.remove('on');
+  // Remettre tous les éléments de nav visibles pour la prochaine connexion
+  var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
+  if(bniMsg)bniMsg.style.display='';
+  if(bniAcc)bniAcc.style.display='';
+  if(bniAdd)bniAdd.style.display='none'; // Add reste caché par défaut (prof only)
   g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');
   toast('Déconnecté','À bientôt !');
 }
@@ -4200,20 +4221,18 @@ var _tutoSteps=[], _tutoIdx=0;
 
 // Définir les étapes avec sélecteur CSS de l'élément ciblé
 var TUTO_ELEVE_STEPS=[
-  {sel:null,emoji:"\uD83D\uDC4B",title:"Bienvenue sur CoursPool !",desc:"Tour rapide de l application. Appuyez pour continuer."},
-  {sel:".locbar",emoji:"\uD83D\uDCCD",title:"Trouvez des cours",desc:"Tapez votre ville ou utilisez Autour de moi pour voir les cours dans votre zone."},
-  {sel:"#pillsBar",emoji:"\uD83D\uDD0D",title:"Filtrez par matiere",desc:"Choisissez une matiere pour affiner. Glissez pour voir plus d options."},
-  {sel:".card",emoji:"\uD83D\uDCDA",title:"Reservez un cours",desc:"Appuyez sur un cours pour voir les details et reserver. Vous ne payez que votre part !"},
-  {sel:"#bniMsg",emoji:"\uD83D\uDCAC",title:"Messagerie directe",desc:"Posez vos questions au professeur avant de reserver depuis Messages."},
-  {sel:"#bniAcc",emoji:"\uD83D\uDC64",title:"Votre espace",desc:"Retrouvez vos reservations, profs suivis et historique dans Profil."}
+  {bg:'linear-gradient(135deg,#FF8C55,#E04E10)',emoji:'👋',title:'Bienvenue sur CoursPool !',desc:'La plateforme qui partage le coût d’un cours entre élèves. Un prof, plusieurs places, un prix juste pour tous.'},
+  {bg:'linear-gradient(135deg,#3B82F6,#1D4ED8)',emoji:'📍',title:'Trouvez des cours près de vous',desc:'Tapez votre ville ou appuyez sur Autour de moi. Filtrez par matière, niveau ou distance.'},
+  {bg:'linear-gradient(135deg,#22C069,#16A34A)',emoji:'📚',title:'Réservez votre place',desc:'Appuyez sur un cours puis Réserver. Vous ne payez que votre part — le reste est partagé entre tous les élèves.'},
+  {bg:'linear-gradient(135deg,#8B5CF6,#6D28D9)',emoji:'💬',title:'Contactez le professeur',desc:'Avant de réserver, écrivez directement au professeur depuis l’onglet Messages.'},
+  {bg:'linear-gradient(135deg,#F59E0B,#D97706)',emoji:'⭐',title:'Prêt à découvrir ?',desc:'Créez un compte gratuit pour réserver votre premier cours. C’est rapide et sécurisé !'}
 ];
-
 var TUTO_PROF_STEPS=[
-  {sel:null,emoji:"\uD83D\uDC4B",title:"Bienvenue professeur !",desc:"Vous allez proposer vos premiers cours. Tour rapide."},
-  {sel:"#bniAdd",emoji:"\u2795",title:"Creez votre premier cours",desc:"Ce bouton orange permet de creer un cours. Choisissez matiere, date, lieu et prix total."},
-  {sel:".card",emoji:"\uD83D\uDCCA",title:"Vos cours ici",desc:"Des la publication, vos cours sont visibles par tous les eleves."},
-  {sel:"#bniMsg",emoji:"\uD83D\uDCAC",title:"Restez disponible",desc:"Les eleves vous contactent avant de reserver. Repondre vite ameliore les inscriptions."},
-  {sel:"#aTabRev",emoji:"\uD83D\uDCB3",title:"Suivez vos revenus",desc:"Dans Revenus, retrouvez l historique de tous vos paiements. Bonne aventure !"}
+  {bg:'linear-gradient(135deg,#FF8C55,#E04E10)',emoji:'👋',title:'Bienvenue professeur !',desc:'Vous allez proposer vos cours à plusieurs élèves. CoursPool gère tout : inscriptions, paiements et messagerie.'},
+  {bg:'linear-gradient(135deg,#22C069,#16A34A)',emoji:'➕',title:'Créez votre premier cours',desc:'Appuyez sur le bouton orange + en bas de l’écran. Choisissez la matière, la date, le lieu et le prix total.'},
+  {bg:'linear-gradient(135deg,#3B82F6,#1D4ED8)',emoji:'📊',title:'Suivez vos inscriptions',desc:'Dès qu’un élève réserve, vous êtes notifié. Retrouvez tout dans Profil : élèves, avis et revenus.'},
+  {bg:'linear-gradient(135deg,#8B5CF6,#6D28D9)',emoji:'💬',title:'Messagerie directe',desc:'Les élèves vous contactent avant de réserver. Répondre vite maximise vos inscriptions.'},
+  {bg:'linear-gradient(135deg,#F59E0B,#D97706)',emoji:'💳',title:'Paiements sécurisés',desc:'Renseignez votre IBAN dans Revenus pour recevoir vos virements automatiquement. Bonne aventure !'}
 ];
 
 function tutoStart(){
@@ -4227,112 +4246,42 @@ function tutoStart(){
 function _tutoShow(){
   var step=_tutoSteps[_tutoIdx];
   if(!step){tutoDone();return;}
-  var root=g('tutoRoot');
-  if(!root)return;
-  root.style.display='block';
-  haptic(6);
-
-  // Trouver l'élément cible
-  var target=step.sel?document.querySelector(step.sel):null;
-  var hole=document.getElementById('tutoHole');
-  var glow=g('tutoGlow');
-  var tooltip=g('tutoTooltip');
-  var arrow=g('tutoArrow');
-
-  if(target&&hole&&glow){
-    var r=target.getBoundingClientRect();
-    var pad=8;
-    // Trou dans l'overlay
-    hole.setAttribute('x',r.left-pad);
-    hole.setAttribute('y',r.top-pad);
-    hole.setAttribute('width',r.width+pad*2);
-    hole.setAttribute('height',r.height+pad*2);
-    hole.setAttribute('rx','14');
-    // Glow
-    glow.style.left=(r.left-pad)+'px';
-    glow.style.top=(r.top-pad)+'px';
-    glow.style.width=(r.width+pad*2)+'px';
-    glow.style.height=(r.height+pad*2)+'px';
-    glow.style.display='block';
-    // Positionner la tooltip
-    _positionTooltip(r,tooltip,arrow,pad);
-  } else {
-    // Pas de cible — centrer
-    if(hole){hole.setAttribute('width','0');hole.setAttribute('height','0');}
-    if(glow)glow.style.display='none';
-    _centerTooltip(tooltip);
-    if(arrow)arrow.style.display='none';
-  }
-
-  // Contenu
-  var em=g('tutoEmoji'),tt=g('tutoTitle'),td=g('tutoDesc');
-  if(em)em.textContent=step.emoji||'✨';
-  if(tt)tt.textContent=step.title;
-  if(td)td.textContent=step.desc;
-
+  var root=g('tutoRoot');if(!root)return;
+  root.style.display='flex';
+  // Re-trigger animation
+  var card=g('tutoCard');
+  if(card){card.style.animation='none';void card.offsetHeight;card.style.animation='mi .3s ease';}
+  // Fond + emoji
+  var illu=g('tutoIllu');
+  if(illu&&step.bg)illu.style.background=step.bg;
+  var em=g('tutoEmoji');if(em)em.textContent=step.emoji||'✨';
+  // Texte
+  var tt=g('tutoTitle'),td=g('tutoDesc');
+  if(tt)tt.textContent=step.title||'';
+  if(td)td.textContent=step.desc||'';
   // Dots
   var dots=g('tutoDots');
   if(dots)dots.innerHTML=_tutoSteps.map(function(_,i){
-    return'<div style="width:'+(i===_tutoIdx?'20px':'6px')+';height:6px;border-radius:3px;background:'+(i===_tutoIdx?'var(--or)':'var(--bdr)')+';transition:all .25s"></div>';
+    var a=i===_tutoIdx;
+    return'<div style="height:6px;border-radius:3px;background:'+(a?'#fff':'rgba(255,255,255,.35)')+';width:'+(a?'24px':'6px')+';transition:all .3s cubic-bezier(.34,1.56,.64,1)"></div>';
   }).join('');
-
-  // Boutons
-  var btn=g('tutoBtn'),prev=g('tutoPrev');
+  // Bouton principal
+  var btn=g('tutoBtn');
   var isLast=_tutoIdx===_tutoSteps.length-1;
-  if(btn){btn.textContent=isLast?'Terminer 🎉':'Suivant →';btn.style.background=isLast?'var(--green)':'var(--or)';}
-  if(prev)prev.style.display=_tutoIdx>0?'block':'none';
-}
-
-function _positionTooltip(r,tooltip,arrow,pad){
-  if(!tooltip)return;
-  var vw=window.innerWidth,vh=window.innerHeight;
-  var tw=Math.min(300,vw-40),th=160;
-  var margin=16;
-  // Essayer en bas, puis en haut, puis en centre
-  var top,left,arrowTop,arrowLeft,arrowBottom;
-  if(r.bottom+th+margin+pad<vh){
-    // En dessous
-    top=r.bottom+pad+margin;
-    left=Math.max(margin,Math.min(r.left+r.width/2-tw/2,vw-tw-margin));
-    if(arrow){arrow.style.top='-6px';arrow.style.bottom='';arrow.style.left=(r.left+r.width/2-left-6)+'px';}
-  } else if(r.top-th-margin-pad>0){
-    // Au dessus
-    top=r.top-pad-margin-th;
-    left=Math.max(margin,Math.min(r.left+r.width/2-tw/2,vw-tw-margin));
-    if(arrow){arrow.style.bottom='-6px';arrow.style.top='';arrow.style.left=(r.left+r.width/2-left-6)+'px';}
-  } else {
-    _centerTooltip(tooltip);
-    if(arrow)arrow.style.display='none';
-    return;
+  var isGuestLast=(!user||user.guest)&&isLast;
+  if(btn){
+    btn.textContent=isLast?(isGuestLast?'Créer un compte':'C’est parti !'):('Continuer');
+    btn.style.background=isLast?'rgba(255,255,255,.25)':'rgba(255,255,255,.2)';
+    btn.style.border='1.5px solid rgba(255,255,255,.5)';
+    btn.style.color='#fff';
+    btn.style.boxShadow='none';
   }
-  if(arrow)arrow.style.display='block';
-  tooltip.style.top=top+'px';
-  tooltip.style.left=left+'px';
-  tooltip.style.width=tw+'px';
-  tooltip.style.transform='none';
-  tooltip.style.position='fixed';
+  // Skip
+  var skip=g('tutoSkipBtn');
+  if(skip){skip.style.opacity=isLast?'0':'1';skip.style.color='rgba(255,255,255,.6)';}
+  haptic(4);
 }
 
-function _centerTooltip(tooltip){
-  if(!tooltip)return;
-  var vw=window.innerWidth,vh=window.innerHeight;
-  var tw=Math.min(300,vw-40);
-  tooltip.style.left=((vw-tw)/2)+'px';
-  tooltip.style.top=(vh/2-100)+'px';
-  tooltip.style.width=tw+'px';
-  tooltip.style.position='fixed';
-}
-
-function tutoNext(){
-  if(_tutoIdx<_tutoSteps.length-1){_tutoIdx++;_tutoShow();}
-  else tutoDone();
-}
-
-function tutoPrev(){
-  if(_tutoIdx>0){_tutoIdx--;_tutoShow();}
-}
-
-function tutoSkip(){tutoDone();}
 
 function tutoDone(){
   try{localStorage.setItem('cp_tuto_done_'+user.id,'1');}catch(e){}
