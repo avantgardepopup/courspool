@@ -2,6 +2,17 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<script>
+// Dark mode appliqué immédiatement avant tout rendu — évite le flash
+(function(){
+  try{
+    var s=localStorage.getItem('cp_dark');
+    if(s==='1')document.documentElement.classList.add('dk');
+    else if(s===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
+      document.documentElement.classList.add('dk');
+  }catch(e){}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>CoursPool</title>
 <!-- PWA -->
@@ -70,6 +81,7 @@ html.dk #verifBand{background:#2A2018;border-color:#4A3820;}
 html.dk #verifBand .verifBandTitle{color:#FCD34D;}
 html.dk .mob-search{background:#1C1917;border-bottom:1px solid #2E2B28;}
 /* Inputs sans cadre outline bizarre */
+html.dk .locbar input{background:transparent !important;color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;color-scheme:light dark;}
 html.dk input,html.dk textarea,html.dk select{
   color-scheme:dark;background:var(--bg);color:var(--ink);
   -webkit-text-fill-color:var(--ink);
@@ -2005,6 +2017,7 @@ function obDone(){
 
 // Lancer l'onboarding au chargement
 window.addEventListener('DOMContentLoaded',function(){
+  initDarkMode();
   obShow();
   // Masquer le splash après chargement
   setTimeout(function(){
