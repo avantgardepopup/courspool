@@ -1343,8 +1343,8 @@ html.dk .ntog::after{background:#fff;}
               </div>
               <div class="pref-row" id="pfNiveauField">
                 <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span class="pref-label" style="flex:1;min-width:0">Niveau enseigné</span>
-                <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;flex-shrink:0;max-width:130px"><option value="">Choisir…</option></select>
+                <span class="pref-label" id="pfNiveauLabel" style="flex:1;min-width:0;white-space:nowrap">Niveau enseigné</span>
+                <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;flex-shrink:0;max-width:120px;text-overflow:ellipsis"><option value="">Choisir…</option></select>
               </div>
               <div class="pref-row">
                 <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
@@ -1860,13 +1860,12 @@ html.dk .ntog::after{background:#fff;}
       <!-- Dots sur fond coloré = blancs -->
       <div style="display:flex;justify-content:center;gap:6px" id="tutoDots"></div>
     </div>
-    <div style="padding:24px 24px 0">
-      <div id="tutoTitle" style="font-size:22px;font-weight:800;color:var(--ink);text-align:center;margin-bottom:10px;letter-spacing:-.03em;line-height:1.2"></div>
-      <div id="tutoDesc" style="font-size:15px;color:var(--mid);text-align:center;line-height:1.65;margin-bottom:28px"></div>
-    </div>
-    <div style="padding:0 24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
-      <button id="tutoBtn" onclick="tutoNext()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:17px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,43,.38);margin-bottom:10px">Suivant</button>
-      <button id="tutoSkipBtn" onclick="tutoSkip()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:6px">Passer le tutoriel</button>
+    <!-- Contenu sur fond blanc -->
+    <div style="padding:24px 24px 28px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))">
+      <div id="tutoTitle" style="font-size:21px;font-weight:800;color:var(--ink);text-align:center;margin-bottom:10px;letter-spacing:-.03em;line-height:1.25"></div>
+      <div id="tutoDesc" style="font-size:14.5px;color:var(--mid);text-align:center;line-height:1.65;margin-bottom:24px"></div>
+      <button id="tutoBtn" onclick="tutoNext()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:10px">Continuer</button>
+      <button id="tutoSkipBtn" onclick="tutoSkip()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:13px;cursor:pointer;padding:6px">Passer le tutoriel</button>
     </div>
   </div>
 </div>
@@ -2224,7 +2223,10 @@ function applyUser(){
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
   // Banner géré par updateVerifBand() uniquement
-  // Bottom nav
+  // Bottom nav — restaurer tous les items avant d'appliquer le rôle
+  var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc');
+  if(bniMsg2)bniMsg2.style.display='';
+  if(bniAcc2)bniAcc2.style.display='';
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
   // Sync mobile header
@@ -2368,6 +2370,15 @@ function goExplore(){
       // Si c'était un guest → on ne restaure pas, on repart en mode visiteur
       if(parsedUser.guest){
         localStorage.removeItem('cp_user');
+        // Recharger en mode visiteur propre (bnav cachée, app visible)
+        g('app').style.display='block';
+        var _l=g('login');if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}
+        var bnav=g('bnav');if(bnav)bnav.classList.add('on');
+        var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
+        if(bniMsg)bniMsg.style.display='none';
+        if(bniAcc)bniAcc.style.display='none';
+        if(bniAdd)bniAdd.style.display='none';
+        var mobT=g('mobTitle');if(mobT)mobT.textContent='Explorer';
         loadData().then(function(){
           buildCards();checkPrivateCoursAccess();
           setTimeout(obShow,400);
@@ -2646,17 +2657,22 @@ function saveProf(){
 }
 
 function doLogout(){
-  g('app').style.display='none';g('login').style.display='flex';
-  Object.keys(res).forEach(function(k){delete res[k]});fol.clear();user=null;
+  user=null;
   try{localStorage.removeItem('cp_user');}catch(e){}
-  var tav=g('tav');tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';
-  g('bnav').classList.remove('on');
-  // Remettre tous les éléments de nav visibles pour la prochaine connexion
+  Object.keys(res).forEach(function(k){delete res[k]});fol.clear();
+  // Cacher la bnav immédiatement
+  var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
+  // Restaurer les items bnav pour la prochaine connexion
   var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
   if(bniMsg)bniMsg.style.display='';
   if(bniAcc)bniAcc.style.display='';
-  if(bniAdd)bniAdd.style.display='none'; // Add reste caché par défaut (prof only)
-  g('pgExp').classList.add('on');g('pgAcc').classList.remove('on');
+  if(bniAdd)bniAdd.style.display='none';
+  // Reset avatar
+  var tav=g('tav');if(tav){tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';}
+  var tavM=g('tavMob');if(tavM){tavM.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavM.textContent='?';}
+  // Afficher login, cacher app
+  g('app').style.display='none';
+  var login=g('login');if(login){login.style.display='flex';login.style.zIndex='999';login.style.pointerEvents='';}
   toast('Déconnecté','À bientôt !');
 }
 
@@ -4248,37 +4264,33 @@ function _tutoShow(){
   if(!step){tutoDone();return;}
   var root=g('tutoRoot');if(!root)return;
   root.style.display='flex';
-  // Re-trigger animation
   var card=g('tutoCard');
   if(card){card.style.animation='none';void card.offsetHeight;card.style.animation='mi .3s ease';}
-  // Fond + emoji
+  // Fond coloré + emoji
   var illu=g('tutoIllu');
   if(illu&&step.bg)illu.style.background=step.bg;
-  var em=g('tutoEmoji');if(em)em.textContent=step.emoji||'✨';
+  var em=g('tutoEmoji');if(em)em.textContent=step.emoji||'\u2728';
   // Texte
   var tt=g('tutoTitle'),td=g('tutoDesc');
   if(tt)tt.textContent=step.title||'';
   if(td)td.textContent=step.desc||'';
-  // Dots
+  // Dots blancs sur fond coloré
   var dots=g('tutoDots');
   if(dots)dots.innerHTML=_tutoSteps.map(function(_,i){
     var a=i===_tutoIdx;
-    return'<div style="height:6px;border-radius:3px;background:'+(a?'#fff':'rgba(255,255,255,.35)')+';width:'+(a?'24px':'6px')+';transition:all .3s cubic-bezier(.34,1.56,.64,1)"></div>';
+    return'<div style="height:5px;border-radius:3px;background:'+(a?'#fff':'rgba(255,255,255,.4)')+';width:'+(a?'22px':'5px')+';transition:all .3s cubic-bezier(.34,1.56,.64,1)"></div>';
   }).join('');
-  // Bouton principal
+  // Bouton
   var btn=g('tutoBtn');
   var isLast=_tutoIdx===_tutoSteps.length-1;
   var isGuestLast=(!user||user.guest)&&isLast;
   if(btn){
-    btn.textContent=isLast?(isGuestLast?'Créer un compte':'C’est parti !'):('Continuer');
-    btn.style.background=isLast?'rgba(255,255,255,.25)':'rgba(255,255,255,.2)';
-    btn.style.border='1.5px solid rgba(255,255,255,.5)';
-    btn.style.color='#fff';
-    btn.style.boxShadow='none';
+    btn.textContent=isLast?(isGuestLast?'Cr\u00e9er un compte':'C\u2019est parti !'):('Continuer');
+    btn.style.background=isLast?'#22C069':'var(--or)';
+    btn.style.boxShadow=isLast?'0 4px 16px rgba(34,192,105,.35)':'0 4px 16px rgba(255,107,43,.35)';
   }
-  // Skip
   var skip=g('tutoSkipBtn');
-  if(skip){skip.style.opacity=isLast?'0':'1';skip.style.color='rgba(255,255,255,.6)';}
+  if(skip)skip.style.opacity=isLast?'0':'1';
   haptic(4);
 }
 
