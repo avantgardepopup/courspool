@@ -2870,7 +2870,7 @@ function buildAccLists(){
         +'<div class="ri" style="flex:1;min-width:0">'
         +'<div class="rt" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:3px">'
-        +'<div style="width:16px;height:16px;border-radius:50%;background:'+( _ph?'none':'linear-gradient(135deg,#FF8C55,var(--ord))')+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+_phHtml+'</div>'
+        +'<div style="width:16px;height:16px;border-radius:50%;background:'+( _ph?'none':'linear-gradient(135deg,#FF8C55,var(--ord))')+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0" data-prof="'+c.pr+'">'+_phHtml+'</div>'
         +'<span style="font-size:12px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.prof_nm+'</span>'
         +'</div>'
         +'<div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap">'
@@ -3033,10 +3033,10 @@ function _applyPhotoPartout(url){
   var tav=g('tav');if(tav){tav.style.background='none';tav.innerHTML=imgRound;}
   var tavM=g('tavMob');if(tavM){tavM.style.background='none';tavM.innerHTML=imgRound;}
   var accAv=g('accAv');if(accAv){accAv.style.background='none';accAv.innerHTML=imgRound;}
-  // 2. Tous les .pbub[data-prof] dans les cards Explorer (déjà dans le DOM)
-  document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
+  // 2. TOUS les éléments [data-prof] dans le DOM (cards, fol-row, rrow, etc.)
+  document.querySelectorAll('[data-prof="'+user.id+'"]').forEach(function(el){
     el.style.background='none';
-    el.innerHTML=imgSquare;
+    el.innerHTML=el.classList.contains('pbub')?imgSquare:imgSquare;
   });
   // 3. Cache P[] et C[] pour que buildCards() utilise la bonne photo
   if(!P[user.id])P[user.id]={};
