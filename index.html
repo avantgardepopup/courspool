@@ -2216,8 +2216,8 @@ async function loadData(page){
         id:c.id,
         t:((c.titre||'')+' '+(c.sujet||'')+' '+(c.prof_nom||'')+' '+(c.lieu||'')).toLowerCase(),
         subj:c.sujet||'Autre',
-        sc:c.couleur_sujet||'#7C3AED',
-        bg:c.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
+        sc:(function(){var m=findMatiere(c.sujet||'');return m?m.color:(c.couleur_sujet||'#7C3AED');}()),
+        bg:(function(){var m=findMatiere(c.sujet||'');return m?m.bg:(c.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)');}()),
         title:c.titre||'',dt:c.date_heure||'',lc:c.lieu||'',
         tot:c.prix_total||0,sp:c.places_max||5,fl:c.places_prises||0,
         pr:c.professeur_id,em:c.emoji||'📚',
@@ -3003,7 +3003,7 @@ function renderPage(){
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:0;flex-wrap:wrap"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -3442,6 +3442,38 @@ function openPr(pid){
   fb.style.display=isSelf?'none':'flex';
   fb.classList.toggle('on',fol.has(pid));ft.textContent=fol.has(pid)?'Suivi ✓':'Suivre';
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
+  // Charger les vraies données du profil (bio, matières, niveau)
+  fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
+    if(!prof||!prof.id)return;
+    // Bio
+    var bioEl=g('mpBio');
+    if(bioEl)bioEl.textContent=prof.bio||'';
+    // Matières en chips
+    var tagsEl=g('mpTags');
+    if(tagsEl&&prof.matieres){
+      var mats=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
+      tagsEl.innerHTML=mats.map(function(m){
+        var mat=findMatiere(m);
+        var col=mat?mat.color:'var(--or)';
+        var bg=mat?(mat.bg.replace('linear-gradient(135deg,','').split(',')[1]||'var(--orp)'):'var(--orp)';
+        return'<span style="background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600">'+m+'</span>';
+      }).join('');
+    }
+    // Niveau
+    if(prof.niveau&&prof.niveau!==''){
+      var niv=document.createElement('div');
+      niv.style.cssText='font-size:12px;color:rgba(255,255,255,.7);margin-top:4px';
+      niv.textContent=prof.niveau;
+      var mpbd=g('mpbd');
+      if(mpbd)mpbd.textContent=prof.niveau;
+    }
+    // Statut
+    var mprl=g('mprl');
+    if(mprl&&prof.statut){
+      var statutLabels={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
+      mprl.textContent=statutLabels[prof.statut]||prof.statut;
+    }
+  }).catch(function(){});
 }
 function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
 function contPr(){
