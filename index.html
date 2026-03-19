@@ -2174,7 +2174,9 @@ async function doReg(){
     if(data.error){toast('Erreur',data.error);shake('lfI');return;}
     if(role==='professeur'){
       var uid=data.user.id;
-      g('lfI').innerHTML='<div style="text-align:center;padding:20px 0"><div style="font-size:40px;margin-bottom:12px">⏳</div><div style="font-size:17px;font-weight:800;margin-bottom:8px">Compte créé !</div><div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:16px">Vérification en cours.<br><strong>5 min à 2 heures</strong>.<br>Email de confirmation à venir.</div><button class="lguest" onclick="go(\''+pr+'\',\''+nm+'\',\''+em+'\',\'professeur\',\''+uid+'\')">Accéder →</button></div>';
+      // Connecter directement sans message intermédiaire
+      go(pr,nm,em,role,uid);
+      setTimeout(tutoStart,1200);
     }else{go(pr,nm,em,role,data.user.id);setTimeout(tutoStart,1200);}
   }catch(e){toast('Erreur','Impossible de créer le compte');}
 }
