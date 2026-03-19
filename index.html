@@ -825,7 +825,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div style="font-size:17px;font-weight:800;margin-bottom:4px">Filtrer par niveau</div>
           <div style="font-size:13px;color:var(--lite);margin-bottom:20px">Choisissez le niveau d'études des cours</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px" id="nivFilterChips">
-            <div class="niv-fchip on" onclick="setNivFilter('',this)">Tous niveaux</div>
+            <div class="niv-fchip on" onclick="setNivFilter("",this)">Tous niveaux</div>
             <div class="niv-fchip" onclick="setNivFilter('Primaire',this)">Primaire</div>
             <div class="niv-fchip" onclick="setNivFilter('Collège',this)">Collège</div>
             <div class="niv-fchip" onclick="setNivFilter('Lycée',this)">Lycée</div>
@@ -2163,6 +2163,7 @@ function switchATab(s,el){
   var sec=g('asec'+s);if(sec)sec.classList.add('on');el.classList.add('on');
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);}
+}
 
 function buildAccLists(){
   var rIds=Object.keys(res),fIds=Array.from(fol);
@@ -2361,7 +2362,7 @@ function renderPage(){
     d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
     var nivBadge=c.niveau?'<span class="niv-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'+c.niveau+'</span>':'';
     var descPreview=c.description?'<div style="font-size:12px;color:var(--lite);margin-bottom:8px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+c.description+'</div>':'';
-    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(''+c.pr+'')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descPreview+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div class="ps">Total '+c.tot+'€</div><div class="pm">'+pp+'€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descPreview+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div class="ps">Total '+c.tot+'€</div><div class="pm">'+pp+'€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -2410,8 +2411,8 @@ function openR(id){
   var descBox=g('rDescBox');
   if(descBox){if(c.description){descBox.innerHTML='<span style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">À propos de ce cours</span>'+c.description;descBox.style.display='block';}else{descBox.style.display='none';}}
   var isOwner=user&&c.pr===user.id;
-  var btnConf=document.querySelector('#bdR .pb.pri');
-  var btnContact=document.querySelector('#bdR .pb.sec');
+  var btnConf=document.querySelector("#bdR .pb.pri");
+  var btnContact=document.querySelector("#bdR .pb.sec");
   var btnDel=g('btnDelCours');
   var btnEleves=g('btnVoirEleves');
   if(isOwner){
@@ -2484,7 +2485,7 @@ async function confR(){
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
-  var btn=document.querySelector('#bdR .pb.pri');
+  var btn=document.querySelector("#bdR .pb.pri");
   if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Redirection…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
@@ -2535,7 +2536,7 @@ function confO(){
   g('rFin').textContent=pp+'€';
   g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Réservation d\'une place supplémentaire · '+pp+'€ par personne.';
-  var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector('#bdR .pb.pri'),btnContact=document.querySelector('#bdR .pb.sec');
+  var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector("#bdR .pb.pri"),btnContact=document.querySelector("#bdR .pb.sec");
   if(btnDel)btnDel.style.display='none';
   if(btnEleves)btnEleves.style.display='none';
   if(btnConf){btnConf.style.display='flex';btnConf.onclick=function(){confAmi(id);};}
@@ -2547,7 +2548,7 @@ async function confAmi(id){
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  var btn=document.querySelector('#bdR .pb.pri');
+  var btn=document.querySelector("#bdR .pb.pri");
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
@@ -2671,13 +2672,13 @@ function closeCr(){closeM('bdCr');}
 async function subCr(){
   if(window._publishing){toast('En cours...','Publication déjà en cours');return;}
   window._publishing=true;
-  var btn=document.querySelector('#bdCr .pb.pri');
+  var btn=document.querySelector("#bdCr .pb.pri");
   if(btn){btn.textContent='⏳ Publication…';btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   var niveauInp=g('crNiveau');var niveau=niveauInp?niveauInp.value:'';
-  var sujetEl=document.querySelector('#bdCr .so.on');
+  var sujetEl=document.querySelector("#bdCr .so.on");
   var sujet=sujetEl?sujetEl.textContent.trim():'Autre';
   if(!titre||!date||!heure||!lieu||!prix){
     toast('Champs manquants','Remplissez tous les champs obligatoires');
@@ -2922,7 +2923,7 @@ async function sendMsg(){
     })});
     // Marquer comme lu immédiatement dans l'UI
     var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
-    if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('div[style*="border-radius:50%"]');if(dot)dot.remove();}
+    if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('[style*="border-radius:50%"]');if(dot)dot.remove();}
     // Mettre à jour badge nav
     var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
     var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
@@ -3273,7 +3274,7 @@ function updateVerifBanner(){
     // CNI déjà envoyée — en attente de validation
     banner.style.background='#FEF3C7';banner.style.borderColor='#FDE68A';banner.style.color='#92400E';
     if(icon)icon.innerHTML='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
-    if(text)text.innerHTML='<strong>CNI en cours d'examen</strong> — Vous serez notifié par email dès validation (sous 24h).';
+    if(text)text.innerHTML='<strong>CNI en cours d\'examen</strong> — Vous serez notifié par email dès validation (sous 24h).';
     if(btn)btn.style.display='none';
   } else {
     // CNI pas encore envoyée
@@ -3329,8 +3330,8 @@ function showVerifiedCelebration(){
     +'<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:8px">Identité vérifiée</div>'
     +'<div style="font-size:22px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:10px">Votre compte<br>est activé !</div>'
     +'<div style="font-size:14px;color:var(--mid);margin-bottom:28px;line-height:1.55">Vous pouvez maintenant publier vos cours et accueillir vos premiers élèves.</div>'
-    +'<button onclick="this.closest('div[style*=fixed]').remove();openCr();" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:10px">Publier mon premier cours</button>'
-    +'<button onclick="this.closest('div[style*=fixed]').remove();" style="width:100%;background:none;border:none;font-family:inherit;font-weight:600;font-size:14px;color:var(--lite);cursor:pointer;padding:8px">Plus tard</button>'
+    +'<button onclick="this.closest("[style*=fixed]").remove();openCr();" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:10px">Publier mon premier cours</button>'
+    +'<button onclick="this.closest("[style*=fixed]").remove();" style="width:100%;background:none;border:none;font-family:inherit;font-weight:600;font-size:14px;color:var(--lite);cursor:pointer;padding:8px">Plus tard</button>'
     +'</div>';
   document.body.appendChild(el);
   // Auto-fermeture après 8s
@@ -4019,7 +4020,7 @@ function setNivFilter(niv,el){
   if(pill){
     if(niv){
       pill.style.background='var(--ink)';pill.style.color='#fff';pill.style.borderColor='var(--ink)';
-      pill.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'+niv+'<span onclick="event.stopPropagation();setNivFilter('',document.querySelector('#nivFilterChips .niv-fchip'))" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
+      pill.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'+niv+'<span onclick="event.stopPropagation();setNivFilter("",document.querySelector("#nivFilterChips .niv-fchip"))" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
     } else {
       pill.style.background='';pill.style.color='';pill.style.borderColor='';
       pill.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Niveau';
@@ -4039,7 +4040,7 @@ function openContact(){
   g('contactMsg').value = '';
   // Reset sujets
   document.querySelectorAll('.contact-subj').forEach(function(el){el.classList.remove('on');});
-  var first = document.querySelector('.contact-subj');
+  var first = document.querySelector(".contact-subj");
   if(first){first.classList.add('on');contactSubjSelected=first.dataset.s;}
   openM('bdContact');
 }
@@ -4072,7 +4073,7 @@ async function submitContact(){
       })
     });
     var data = await r.json();
-    if(data.error){toast('Erreur','Impossible d'envoyer. Réessayez.');btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer le message';return;}
+    if(data.error){toast('Erreur',"Impossible d'envoyer. Réessayez.");btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer le message';return;}
     closeM('bdContact');
     toast('Message envoyé !','On vous répond dans les 24h 📬');
   }catch(e){
@@ -4320,7 +4321,7 @@ async function subscribePush() {
     toast('Notifications activées !', 'Vous recevrez les alertes CoursPool 🔔');
   } catch(e) {
     console.log('Push subscribe error:', e);
-    toast('Erreur', 'Impossible d'activer les notifications');
+    toast('Erreur', "Impossible d'activer les notifications");
   }
 }
 
@@ -4356,6 +4357,19 @@ function toggleNotifPref(type, el) {
 
 // Appeler renderNotifStatus quand on ouvre l'onglet Profil
 var _origSwitchATab = typeof switchATab === 'function' ? switchATab : null;
+
+// SERVICE WORKER PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      _swReg = reg;
+      return reg.pushManager.getSubscription();
+    }).then(function(sub) {
+      _pushSubscription = sub;
+      renderNotifStatus();
+    }).catch(function(err) { console.log('SW erreur:', err); });
+  });
+}
 </script>
 </body>
 </html>
