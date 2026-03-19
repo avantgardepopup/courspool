@@ -1782,6 +1782,7 @@ window.addEventListener('DOMContentLoaded',function(){
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 var C=[],P={},res={},fol=new Set();
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
+var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 
 // LOAD DATA
@@ -3115,8 +3116,6 @@ var actLoc='';
 var _geoActive=false;
 var _geoCoords=null;
 var _geoDist=10;
-var geoMode=false;
-var userCoords=null;
 
 function requestGeoloc(){
   // Toggle : si déjà actif → désactiver
