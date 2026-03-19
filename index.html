@@ -2247,6 +2247,8 @@ function applyUser(){
   // Vérifier si première connexion prof pour CNI
   checkFirstProfLogin();
   updateVerifBand();
+  // Vérification périodique que le compte est toujours actif
+  startAccountCheck();
   // Forcer la synchro complète de la nav et du header
   navTo('exp');
 }
@@ -5317,6 +5319,31 @@ function showEmptyAnimated(el,title,sub){
     +'</svg>'
     +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">'+title+'</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.6">'+sub+'</div></div>';
+}
+
+// ============================================================
+// VÉRIFICATION COMPTE ACTIF — déconnecte si supprimé
+// ============================================================
+function startAccountCheck(){
+  if(!user||!user.id||user.guest)return;
+  // Vérifier toutes les 60 secondes que le compte existe encore
+  setInterval(async function(){
+    if(!user||!user.id)return;
+    try{
+      var r=await fetch(API+'/profiles/'+user.id);
+      if(r.status===404||r.status===403){
+        // Compte supprimé ou bloqué → déconnecter
+        toast('Votre compte a été désactivé','Vous allez être déconnecté');
+        setTimeout(doLogout, 2000);
+      } else if(r.ok){
+        var p=await r.json();
+        if(!p||!p.id){
+          toast('Session expirée','Vous allez être déconnecté');
+          setTimeout(doLogout, 2000);
+        }
+      }
+    }catch(e){}
+  }, 60000); // toutes les 60s
 }
 
 // SERVICE WORKER PWA
