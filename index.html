@@ -1364,46 +1364,61 @@ html.dk .ntog::after{background:#fff;}
             <div class="pref-group">
 
               <!-- Statut -->
-              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr)">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+              <div style="padding:0 16px;border-bottom:1px solid var(--bdr)">
+                <div style="display:flex;align-items:center;gap:12px;min-height:52px">
                   <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Statut</span>
-                </div>
-                <div style="position:relative">
-                  <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 36px 10px 12px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-                    <option value="">Choisir votre statut…</option>
-                    <option value="etudiant">Étudiant</option>
-                    <option value="prof_ecole">Professeur des écoles</option>
-                    <option value="prof_college">Professeur collège / lycée</option>
-                    <option value="prof_universite">Enseignant-chercheur</option>
-                    <option value="auto">Auto-entrepreneur</option>
-                    <option value="autre">Autre</option>
-                  </select>
-                  <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink);flex:1">Statut</span>
+                  <div style="position:relative">
+                    <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="border:none;font-family:inherit;font-size:15px;outline:none;background:transparent;color:var(--or);cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:20px;font-weight:600;text-align:right">
+                      <option value="">Choisir…</option>
+                      <option value="etudiant">Étudiant</option>
+                      <option value="prof_ecole">Prof des écoles</option>
+                      <option value="prof_college">Prof collège/lycée</option>
+                      <option value="prof_universite">Enseignant-chercheur</option>
+                      <option value="auto">Auto-entrepreneur</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                    <svg style="position:absolute;right:0;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
                 </div>
               </div>
 
               <!-- Niveau enseigné -->
-              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr);display:none" id="pfNiveauField">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+              <div id="pfNiveauField" style="display:none;padding:0 16px;border-bottom:1px solid var(--bdr)">
+                <div style="display:flex;align-items:center;gap:12px;min-height:52px">
                   <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                  <span style="font-size:15px;font-weight:500;color:var(--ink)" id="pfNiveauLabel">Niveau enseigné</span>
-                </div>
-                <div style="position:relative">
-                  <select id="pfNiveau" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 36px 10px 12px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-                    <option value="">Choisir…</option>
-                  </select>
-                  <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink);flex:1" id="pfNiveauLabel">Niveau enseigné</span>
+                  <div style="position:relative">
+                    <select id="pfNiveau" style="border:none;font-family:inherit;font-size:15px;outline:none;background:transparent;color:var(--or);cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:20px;font-weight:600;text-align:right">
+                      <option value="">Choisir…</option>
+                    </select>
+                    <svg style="position:absolute;right:0;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
                 </div>
               </div>
 
-              <!-- Matières -->
+              <!-- Matières — système de chips/tags -->
               <div style="padding:14px 16px">
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
                   <div class="pref-icon" style="background:#F0FDF4;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
                   <span style="font-size:15px;font-weight:500;color:var(--ink)">Matières enseignées</span>
                 </div>
-                <input id="pfMatieres" type="text" placeholder="Ex : Maths, Physique, Anglais…" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
+                <!-- Chips des matières -->
+                <div id="matieresChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+                <!-- Suggestions rapides -->
+                <div id="matieresSugg" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+                <!-- Champ d'ajout -->
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid var(--bdr);border-radius:10px;padding:9px 12px;transition:border .18s" id="matieresInputWrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <input id="pfMatieres" type="text" placeholder="Ajouter une matière…" style="border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;color:var(--ink);flex:1;min-width:0" onfocus="document.getElementById('matieresInputWrap').style.borderColor='var(--or)'" onblur="document.getElementById('matieresInputWrap').style.borderColor='var(--bdr)'" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addMatiere();}">
+                  </div>
+                  <button onclick="addMatiere()" style="background:var(--or);color:#fff;border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(255,107,43,.3)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                </div>
+                <!-- Input caché pour sauvegarder la valeur -->
+                <input type="hidden" id="pfMatieresVal">
               </div>
 
             </div>
@@ -2581,6 +2596,8 @@ function goAccount(){
     if(pfProfExtra)pfProfExtra.style.display='block';
     var pfSt=g('pfStatut'),pfNiv=g('pfNiveau'),pfMat=g('pfMatieres');
     if(pfSt&&user.statut){pfSt.value=user.statut;updateNiveauxPf(user.statut);if(pfNiv&&user.niveau)pfNiv.value=user.niveau;}
+    // Initialiser les chips matières
+    initMatieresChips(user.matieres||'');
     if(pfMat&&user.matieres)pfMat.value=user.matieres;
   } else {
     if(pfProfExtra)pfProfExtra.style.display='none';
@@ -2727,7 +2744,10 @@ function saveProf(){
   if(user.role==='professeur'){
     if(g('pfStatut'))user.statut=g('pfStatut').value;
     if(g('pfNiveau'))user.niveau=g('pfNiveau').value;
-    if(g('pfMatieres'))user.matieres=g('pfMatieres').value;
+    // Lire les matières depuis les chips ou le champ direct
+    var matVal=g('pfMatieresVal');
+    if(matVal&&matVal.value)user.matieres=matVal.value;
+    else if(g('pfMatieres'))user.matieres=g('pfMatieres').value;
   }
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   applyUser();
@@ -4855,9 +4875,73 @@ function updateNiveaux(statut){
 function updateNiveauxPf(statut){
   var nf=g('pfNiveauField'),sel=g('pfNiveau'),lbl=g('pfNiveauLabel');
   if(!statut||!NIVEAUX[statut]){if(nf)nf.style.display='none';return;}
-  var n=NIVEAUX[statut];nf.style.display='block';
+  var n=NIVEAUX[statut];if(nf)nf.style.display='';
   if(lbl)lbl.textContent=n.label;
-  sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
+  if(sel)sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
+}
+
+// ============================================================
+// CHIPS MATIÈRES — système de tags natif
+// ============================================================
+var _matieres = [];
+var _SUGG_MATIERES = ['Maths','Physique','Anglais','Français','Histoire','SVT','Chimie','Informatique','Espagnol','Allemand','Philosophie','Économie','Musique','Art'];
+
+function initMatieresChips(valStr){
+  _matieres = valStr ? valStr.split(',').map(function(m){return m.trim();}).filter(Boolean) : [];
+  renderMatieresChips();
+  renderMatieresSugg();
+}
+
+function renderMatieresChips(){
+  var wrap=g('matieresChips');
+  if(!wrap)return;
+  wrap.innerHTML=_matieres.map(function(m,i){
+    return '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--or);color:#fff;border-radius:50px;padding:6px 10px 6px 12px;font-size:13px;font-weight:600;animation:popIn .2s cubic-bezier(.34,1.56,.64,1)">'
+      +m
+      +'<button onclick="removeMatiere('+i+')" style="background:rgba(255,255,255,.25);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      +'</button></div>';
+  }).join('');
+  // Mettre à jour la valeur cachée
+  var hid=g('pfMatieresVal');if(hid)hid.value=_matieres.join(', ');
+  renderMatieresSugg();
+}
+
+function renderMatieresSugg(){
+  var wrap=g('matieresSugg');
+  if(!wrap)return;
+  var restants=_SUGG_MATIERES.filter(function(m){return _matieres.indexOf(m)===-1;});
+  if(!restants.length){wrap.innerHTML='';return;}
+  var html='<span style="font-size:11px;color:var(--lite);align-self:center;margin-right:2px">Suggestions :</span>';
+  restants.slice(0,6).forEach(function(m){
+    html+='<button data-m="'+m+'" class="sugg-btn" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:50px;padding:5px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer">'+m+'</button>';
+  });
+  wrap.innerHTML=html;
+  wrap.querySelectorAll('.sugg-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){addMatiereDirecte(this.dataset.m);});
+  });
+}
+
+function addMatiere(){
+  var inp=g('pfMatieres');if(!inp)return;
+  var val=inp.value.trim().replace(/,$/,'');
+  if(!val)return;
+  // Gérer plusieurs matières séparées par virgule
+  val.split(',').forEach(function(m){
+    var t=m.trim();
+    if(t&&_matieres.indexOf(t)===-1){_matieres.push(t);}
+  });
+  inp.value='';
+  haptic(4);
+  renderMatieresChips();
+}
+
+function addMatiereDirecte(m){
+  if(_matieres.indexOf(m)===-1){_matieres.push(m);haptic(4);renderMatieresChips();}
+}
+
+function removeMatiere(i){
+  _matieres.splice(i,1);haptic([10,30]);renderMatieresChips();
 }
 
 // CNI
@@ -5511,13 +5595,33 @@ function startAccountCheck(){
     try{
       var r=await fetch(API+'/profiles/'+user.id);
       var p=await r.json();
-      // Déconnecter si : 404, profil vide, ou profil bloqué
-      if(!r.ok||!p||!p.id||p.statut_compte==='bloqué'){
+      if(!r.ok||!p||!p.id){
         toast('Votre compte a été désactivé','Vous allez être déconnecté');
-        setTimeout(doLogout, 2000);
+        setTimeout(doLogout,2000);return;
+      }
+      if(p.statut_compte==='bloqué'&&user.statut_compte!=='bloqué'){
+        toast('Votre compte a été bloqué','Vous allez être déconnecté');
+        setTimeout(doLogout,2000);return;
+      }
+      // Mettre à jour le statut si changé (ex: vérifié par admin)
+      if(p.statut_compte!==user.statut_compte||p.verified!==user.verified){
+        user.statut_compte=p.statut_compte;
+        user.verified=p.verified;
+        user.can_retry_cni=p.can_retry_cni;
+        user.rejection_reason=p.rejection_reason;
+        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+        // Mettre à jour la bannière de vérification
+        updateVerifBand();
+        // Notifier si compte maintenant vérifié
+        if(p.statut_compte==='verified'||p.verified){
+          toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
+          haptic([10,50,100,50,10]);
+        } else if(p.statut_compte==='rejeté'){
+          toast('Document refusé','Vérifiez votre email pour plus d\'informations');
+        }
       }
     }catch(e){}
-  }, 30000); // toutes les 30s
+  }, 30000);
 }
 
 // SERVICE WORKER PWA
