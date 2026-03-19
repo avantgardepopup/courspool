@@ -1340,6 +1340,9 @@ html.dk .ntog::after{background:#fff;}
             </div>
           </div>
 
+          <!-- Statut vérification (profs uniquement) -->
+          <div id="verifStatusBlock" style="display:none;padding:4px 0 4px"></div>
+
           <!-- Assistance -->
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Assistance</div>
           <div class="pref-group">
@@ -1697,34 +1700,77 @@ html.dk .ntog::after{background:#fff;}
   </div>
 </div>
 
-<!-- MODAL CNI — première connexion professeur -->
-<div class="bd" id="bdCni" style="z-index:500">
-  <div class="modal" style="max-width:400px">
-    <div class="mhd">
-      <div>
-        <div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Vérification</div>
+<!-- BOTTOM SHEET CNI -->
+<div id="bdCni" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)cniLater()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .3s ease;overflow:hidden">
+
+    <!-- Handle -->
+    <div style="padding:12px 20px 0;text-align:center">
+      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto"></div>
+    </div>
+
+    <!-- Étape 1 : intro -->
+    <div id="cniStep1" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <div style="width:72px;height:72px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px">🪪</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Vérifiez votre identité</div>
+      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Pour garantir la confiance des élèves,<br>nous vérifions l'identité de chaque professeur.</div>
+      <!-- Étapes visuelles -->
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre CNI ou passeport</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Recto uniquement, lisible</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès que c'est fait</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Publiez vos premiers cours</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves</div></div>
+        </div>
+      </div>
+      <button onclick="cniGoStep2()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:12px">Commencer la vérification</button>
+      <button onclick="cniLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
+    </div>
+
+    <!-- Étape 2 : upload -->
+    <div id="cniStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button onclick="cniGoStep1()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div style="font-size:17px;font-weight:800">Votre pièce d'identité</div>
       </div>
-    </div>
-    <div class="mbd">
-      <div style="background:var(--orp);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--mid);line-height:1.6;display:flex;gap:10px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>Pour publier des cours, nous devons vérifier votre identité. Cela prend <strong>5 min à 2 heures</strong>.</span>
+
+      <!-- Zone d'upload -->
+      <div id="cniDropZone" onclick="g('cniFileInput').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:var(--bg)">
+        <div id="cniUploadIcon" style="margin-bottom:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 15l-5-5L5 20"/></svg>
+        </div>
+        <div id="cniUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">CNI, Passeport ou Carte de séjour</div>
+        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
+        <input type="file" id="cniFileInput" accept="image/*,.pdf" style="display:none" onchange="cniPreview(this)">
       </div>
-      <div id="cniDropModal" onclick="g('cniFileModal').click()" style="border:2px dashed var(--bdr);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .18s;margin-bottom:14px" onmouseenter="this.style.borderColor='var(--or)';this.style.background='var(--orp)'" onmouseleave="this.style.borderColor='var(--bdr)';this.style.background=''">
-        <div style="font-size:36px;margin-bottom:8px">🪪</div>
-        <div id="cniLabelModal" style="font-size:14px;font-weight:700;color:var(--ink)">CNI ou Passeport</div>
-        <div style="font-size:12px;color:var(--lite);margin-top:4px">JPG, PNG, PDF · Max 5MB · Cliquez pour choisir</div>
-        <input type="file" id="cniFileModal" accept="image/*,.pdf" style="display:none" onchange="previewCniModal(this)">
+
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Vos documents sont chiffrés et ne seront jamais partagés.
       </div>
-      <button class="pb pri" style="width:100%;margin-bottom:10px" id="cniSubmitBtn" onclick="submitCni()">
+
+      <button id="cniSubmitBtn" onclick="submitCni()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);display:flex;align-items:center;justify-content:center;gap:8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
         Envoyer pour vérification
       </button>
-      <button class="pb sec" style="width:100%" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil');setTimeout(tutoStart,400);">
-        Plus tard
-      </button>
     </div>
+
+    <!-- Étape 3 : confirmation -->
+    <div id="cniStep3" style="display:none;padding:32px 24px 40px;padding-bottom:max(40px,env(safe-area-inset-bottom,40px));text-align:center">
+      <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em">Document envoyé ✓</div>
+      <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px">Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
+      <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Parfait, continuer !</button>
+    </div>
+
   </div>
 </div>
 
@@ -2337,6 +2383,8 @@ function goAccount(){
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
+  // Statut vérification
+  updateVerifStatusBlock();
   // Afficher les préférences notif si push actif
   var notifTypes = g('notifTypes');
   if (notifTypes) notifTypes.style.display = (_pushSubscription) ? 'block' : 'none';
@@ -2365,7 +2413,7 @@ function switchATab(s,el){
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
-  if(s==='P'){setTimeout(renderNotifStatus,100);}
+  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
 }
 
@@ -3576,63 +3624,132 @@ function renderCustomPills(){
 }
 
 // ============================================================
-// CNI MODAL — première connexion prof
 // ============================================================
-async function checkFirstProfLogin(){
-  if(!user||user.role!=='professeur')return;
-  // Vérifier d'abord le localStorage
+// VÉRIFICATION IDENTITÉ — chronologie propre
+// ============================================================
+
+function getCniStatus(){
+  if(!user)return 'none';
   try{
-    var done=localStorage.getItem('cp_cni_done_'+user.id);
-    if(done)return;
+    if(localStorage.getItem('cp_cni_verified_'+user.id))return 'verified';
+    if(localStorage.getItem('cp_cni_sent_'+user.id))return 'pending';
   }catch(e){}
-  // Vérifier aussi en DB (au cas où localStorage vidé)
-  try{
-    var r=await fetch(API+'/profiles/'+user.id);
-    var p=await r.json();
-    if(p&&p.cni_uploaded){
-      // Mettre en cache localement pour éviter les requêtes futures
-      try{localStorage.setItem('cp_cni_done_'+user.id,'1');}catch(e){}
-      return;
-    }
-  }catch(e){}
-  // Afficher la modal CNI après 800ms
-  setTimeout(function(){openM('bdCni');},800);
+  return 'none';
 }
 
-function previewCniModal(input){
-  if(input.files&&input.files[0]){
-    g('cniLabelModal').textContent='✅ '+input.files[0].name;
-    g('cniDropModal').style.borderColor='var(--green)';
-    g('cniDropModal').style.background='#F0FDF4';
-  }
+function openCniSheet(){
+  var bd=g('bdCni');if(!bd)return;
+  cniGoStep1();
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+
+function cniGoStep1(){
+  var s1=g('cniStep1'),s2=g('cniStep2'),s3=g('cniStep3');
+  if(s1)s1.style.display='block';
+  if(s2)s2.style.display='none';
+  if(s3)s3.style.display='none';
+}
+function cniGoStep2(){
+  var s1=g('cniStep1'),s2=g('cniStep2'),s3=g('cniStep3');
+  if(s1)s1.style.display='none';
+  if(s2)s2.style.display='block';
+  if(s3)s3.style.display='none';
+}
+function cniGoStep3(){
+  var s1=g('cniStep1'),s2=g('cniStep2'),s3=g('cniStep3');
+  if(s1)s1.style.display='none';
+  if(s2)s2.style.display='none';
+  if(s3)s3.style.display='block';
+  haptic(20);
+}
+
+function cniLater(){
+  var bd=g('bdCni');if(bd)bd.style.display='none';
+  document.body.style.overflow='';
+  toast('À compléter','Vous pourrez envoyer votre document depuis votre profil');
+  setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},600);
+}
+
+function cniDone(){
+  var bd=g('bdCni');if(bd)bd.style.display='none';
+  document.body.style.overflow='';
+  updateVerifStatusBlock();
+  setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},400);
+}
+
+function cniPreview(input){
+  if(!input.files||!input.files[0])return;
+  var zone=g('cniDropZone'),lbl=g('cniUploadLabel'),icon=g('cniUploadIcon');
+  if(zone){zone.style.borderColor='var(--green)';zone.style.background='#F0FDF4';}
+  if(lbl)lbl.textContent=input.files[0].name;
+  if(icon)icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><polyline points="20 6 9 17 4 12"/></svg>';
 }
 
 async function submitCni(){
-  var file=g('cniFileModal').files&&g('cniFileModal').files[0];
-  if(!file){toast('Fichier manquant','Choisissez votre CNI ou passeport');return;}
+  var finput=g('cniFileInput');
+  var file=finput&&finput.files&&finput.files[0];
+  if(!file){
+    var zone=g('cniDropZone');
+    if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
+    toast('Document manquant','Choisissez votre CNI ou passeport');return;
+  }
   var btn=g('cniSubmitBtn');
-  btn.disabled=true;btn.textContent='⏳ Envoi…';
+  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
   try{
     var reader=new FileReader();
     reader.onload=async function(e){
-      var base64=e.target.result;
-      await fetch(API+'/upload/cni',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({base64:base64,userId:user.id,filename:file.name})
-      }).catch(function(){});
-      try{localStorage.setItem('cp_cni_done_'+user.id,'1');}catch(e){}
-      closeM('bdCni');
-      toast('CNI envoyée !','Vérification sous 5 min à 2 heures. Email de confirmation à venir.');
-      setTimeout(tutoStart, 600);
-      btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Envoyer pour vérification';
+      try{await fetch(API+'/upload/cni',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
+      try{localStorage.setItem('cp_cni_sent_'+user.id,'1');}catch(ex){}
+      cniGoStep3();
+      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
     };
     reader.readAsDataURL(file);
   }catch(e){
-    toast('Erreur','Impossible d\'envoyer le fichier');
-    btn.disabled=false;btn.innerHTML='Envoyer pour vérification';
+    toast('Erreur',"Impossible d'envoyer le fichier");
+    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
   }
 }
+
+async function checkFirstProfLogin(){
+  if(!user||user.role!=='professeur')return;
+  var status=getCniStatus();
+  if(status!=='none')return;
+  try{
+    var r=await fetch(API+'/profiles/'+user.id);
+    var p=await r.json();
+    if(p&&p.verified){try{localStorage.setItem('cp_cni_verified_'+user.id,'1');}catch(e){}return;}
+    if(p&&p.cni_uploaded){try{localStorage.setItem('cp_cni_sent_'+user.id,'1');}catch(e){}return;}
+  }catch(e){}
+  setTimeout(openCniSheet, 1000);
+}
+
+function updateVerifStatusBlock(){
+  var block=g('verifStatusBlock');
+  if(!block||!user||user.role!=='professeur'){if(block)block.style.display='none';return;}
+  var status=getCniStatus();
+  if(status==='verified'){
+    block.style.display='block';
+    block.innerHTML='<div style="display:flex;align-items:center;gap:12px;background:#F0FDF4;border-radius:14px;padding:14px 16px">'
+      +'<div style="width:36px;height:36px;background:#22C069;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg></div>'
+      +'<div><div style="font-size:14px;font-weight:700;color:#15803D">Identité vérifiée</div><div style="font-size:12px;color:#16A34A;margin-top:1px">Votre compte est certifié CoursPool</div></div>'
+      +'</div>';
+  } else if(status==='pending'){
+    block.style.display='block';
+    block.innerHTML='<div style="display:flex;align-items:center;gap:12px;background:#FFFBEB;border-radius:14px;padding:14px 16px">'
+      +'<div style="width:36px;height:36px;background:#F59E0B;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#92400E">Vérification en cours</div><div style="font-size:12px;color:#B45309;margin-top:1px">Réponse par email sous 24h</div></div>'
+      +'</div>';
+  } else {
+    block.style.display='block';
+    block.innerHTML='<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:14px;padding:14px 16px;cursor:pointer" onclick="openCniSheet()">'
+      +'<div style="width:36px;height:36px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">&#129331;</div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--ink)">Vérifier votre identité</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Nécessaire pour publier des cours</div></div>'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>'
+      +'</div>';
+  }
+}
+
 
 // ============================================================
 // COURS PRIVÉ
