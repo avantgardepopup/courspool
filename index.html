@@ -878,10 +878,7 @@ html.dk .ntog::after{background:#fff;}
     <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()">
   </div>
 
-  <div id="unverifiedBanner" style="display:none;background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:10px 20px;font-size:13px;color:#92400E;align-items:center;gap:8px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    ⏳ <strong>Compte en cours de vérification</strong> — Votre pièce d'identité est en cours d'examen. Vous recevrez un email dès que votre compte est activé (sous 24h).
-  </div>
+  <div id="unverifiedBanner" style="display:none"></div>
 
   <!-- PAGE EXPLORER -->
   <div class="pg on" id="pgExp">
@@ -2154,9 +2151,7 @@ function applyUser(){
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
-  // Bannière prof non vérifié
-  var banner=g('unverifiedBanner');
-  if(banner)banner.style.display=(user.role==='professeur'&&!user.verified)?'block':'none';
+  // Banner géré par updateVerifBand() uniquement
   // Bottom nav
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
