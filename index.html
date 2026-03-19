@@ -190,11 +190,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .acc-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1;}
 .acc-chip{background:rgba(255,255,255,.2);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;}
 .acc-tabs{background:var(--wh);border-bottom:1px solid var(--bdr);display:flex;position:sticky;top:56px;z-index:40;}
-.atab{flex:1;min-width:60px;padding:12px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;color:rgba(255,255,255,.5);border-bottom:3px solid transparent;transition:all .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;position:relative;}
-.atab.on{color:#fff;border-bottom-color:#fff;}
-#aTabRev[style*="flex"]{display:flex !important;flex-direction:column !important;}
-.atab.on svg{filter:drop-shadow(0 0 4px rgba(255,255,255,.4));}
-.atab:active{opacity:.7;transform:scale(.92);}
+.atab{display:none;}
+.ptab{flex:1;min-width:70px;padding:12px 8px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--lite);border:none;border-bottom:2px solid transparent;background:transparent;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;white-space:nowrap;transition:all .2s;position:relative;}
+.ptab.on{color:var(--or);border-bottom-color:var(--or);}
+.ptab:active{opacity:.7;}
+.ptab svg{transition:transform .2s;}
+.ptab.on svg{transform:scale(1.1);}
 .acc-body{padding:0 20px;max-width:800px;padding-bottom:120px;}
 .asec{display:none;}.asec.on{display:block;padding-top:4px;animation:fu .22s ease;}
 .sec-title{font-size:12px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
@@ -972,25 +973,30 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div id="accStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.2);border-radius:16px;overflow:hidden;margin:0 4px"></div>
         </div>
 
-        <!-- Onglets intégrés dans le hero -->
-        <div style="display:flex;margin:0 -20px">
-          <div class="atab on" id="aTabR" onclick="switchATab('R',this)" style="flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Mes cours
-          </div>
-          <div class="atab" id="aTabF" onclick="switchATab('F',this)" style="flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Suivis
-          </div>
-          <div class="atab" id="aTabH" onclick="switchATab('H',this)" style="flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique
-          </div>
-          <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>Profil
-          </div>
-          <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            Revenus
-          </div>
-        </div>
+      </div>
+
+      <!-- ONGLETS — barre blanche sticky sous le hero -->
+      <div style="display:flex;background:var(--wh);border-bottom:2px solid var(--bdr);position:sticky;top:0;z-index:40;overflow-x:auto;scrollbar-width:none">
+        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Mes cours
+        </button>
+        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Suivis
+        </button>
+        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Historique
+        </button>
+        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          Profil
+        </button>
+        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Revenus
+        </button>
       </div>
 
 
@@ -2115,7 +2121,7 @@ function goAccount(){
   buildAccLists();
   // Onglet Revenus visible uniquement pour les profs
   var tabRev = g('aTabRev');
-  if (tabRev) tabRev.style.display = (user && user.role==='professeur') ? 'flex' : 'none';
+  if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Afficher les préférences notif si push actif
@@ -2170,7 +2176,14 @@ function buildAccLists(){
   var rp=g('accRolePill');
   if(rp)rp.textContent=isProf?'👨‍🏫 Professeur':'👤 Élève';
   var lr=g('listR');
-  if(!rIds.length){lr.innerHTML='<div class="bempty"><p>Aucun cours réservé.<br><a onclick="goExplore()">Explorer →</a></p></div>';}
+  if(!rIds.length){lr.innerHTML='<div style="text-align:center;padding:40px 20px">'
+    +'<div style="width:64px;height:64px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+    +'</div>'
+    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours à venir</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Réservez votre premier cours<br>et retrouvez-le ici</div>'
+    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+    +'</div>';}
   else{
     var now=new Date();
     lr.innerHTML=rIds.map(function(id){
@@ -3920,6 +3933,14 @@ function pickNiveau(el){
   document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c){c.classList.remove('on');});
   el.classList.add('on');
   var inp=g('crNiveau');if(inp)inp.value=el.dataset.n||'';
+}
+
+// ============================================================
+// CONTACT
+// ============================================================
+function openContact(){
+  var bd=g('bdContact');
+  if(bd){bd.style.display='flex';document.body.style.overflow='hidden';}
 }
 
 // ============================================================
