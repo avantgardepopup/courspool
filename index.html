@@ -1368,18 +1368,18 @@ html.dk .ntog::after{background:#fff;}
               <!-- Statut -->
               <div style="padding:0 16px;border-bottom:1px solid var(--bdr)" onclick="openPicker('statut')" class="pref-row">
                 <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                <span style="font-size:15px;font-weight:500;color:var(--ink);flex:1">Statut</span>
-                <span id="pfStatutLabel" style="font-size:15px;color:var(--or);font-weight:600;margin-right:6px">Choisir…</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+                <span style="font-size:15px;font-weight:500;color:var(--ink);flex:0 0 auto">Statut</span>
+                <span id="pfStatutLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px">Choisir…</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
                 <input type="hidden" id="pfStatut">
               </div>
 
               <!-- Niveau enseigné -->
               <div id="pfNiveauField" style="display:none;padding:0 16px;border-bottom:1px solid var(--bdr)" onclick="openPicker('niveau')" class="pref-row">
                 <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span style="font-size:15px;font-weight:500;color:var(--ink);flex:1" id="pfNiveauLabel">Niveau enseigné</span>
-                <span id="pfNiveauValLabel" style="font-size:15px;color:var(--or);font-weight:600;margin-right:6px">Choisir…</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+                <span style="font-size:15px;font-weight:500;color:var(--ink);flex:0 0 auto" id="pfNiveauLabel">Niveau</span>
+                <span id="pfNiveauValLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px">Choisir…</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
                 <input type="hidden" id="pfNiveau">
               </div>
 
@@ -4161,8 +4161,8 @@ function getCniStatus(){
 var _pickerType = null;
 var _STATUT_OPTIONS = [
   {val:'etudiant', label:'Étudiant'},
-  {val:'prof_ecole', label:'Professeur des écoles'},
-  {val:'prof_college', label:'Professeur collège / lycée'},
+  {val:'prof_ecole', label:'Prof des écoles'},
+  {val:'prof_college', label:'Collège / lycée'},
   {val:'prof_universite', label:'Enseignant-chercheur'},
   {val:'auto', label:'Auto-entrepreneur'},
   {val:'autre', label:'Autre'}
