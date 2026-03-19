@@ -66,6 +66,8 @@ html.dk .bnav{background:#1C1917;border-top:1px solid #2E2B28;}
 html.dk .mob-header{background:#131110;border-bottom:1px solid #2E2B28;}
 html.dk .mob-search{background:#131110;border-bottom:1px solid #2E2B28;}
 html.dk .mob-search input{background:#1C1917;color:var(--ink);}
+html.dk #verifBand{background:#2A2018;border-color:#4A3820;}
+html.dk #verifBand .verifBandTitle{color:#FCD34D;}
 html.dk .mob-search{background:#1C1917;border-bottom:1px solid #2E2B28;}
 /* Inputs sans cadre outline bizarre */
 html.dk input,html.dk textarea,html.dk select{
@@ -113,6 +115,9 @@ html.dk #pgAcc .ptab.on{color:var(--or);border-bottom-color:var(--or);}
 html.dk .lbox{box-shadow:0 20px 60px rgba(0,0,0,.7);}
 /* Locbar */
 html.dk .locbar{background:var(--wh);border-color:var(--bdr);}
+html.dk #verifBand{background:#2A1E08 !important;border-color:#4A3410 !important;}
+html.dk #verifBandTitle{color:#FCD34D !important;}
+html.dk #verifBandSub{color:#B45309 !important;}
 /* Toggle switch */
 html.dk .ntog{background:var(--bdr);}
 html.dk .ntog.on{background:var(--or);}
@@ -198,7 +203,7 @@ html.dk .ntog::after{background:#fff;}
 .ptr-spinner.spinning{animation:spin .7s linear infinite;}
 .locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;overflow:hidden;}
 .locbar>svg{width:16px;height:16px;color:var(--or);flex-shrink:0;}
-.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;min-width:0;}
+.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;min-width:0;background:transparent;color:var(--ink);}
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
@@ -495,7 +500,7 @@ html.dk .ntog::after{background:#fff;}
 .so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 .fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);box-sizing:border-box;-webkit-appearance:none;appearance:none;height:46px;}
 .fi3:focus{border-color:var(--or);}
-.toast{position:fixed;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;max-width:420px;margin:0 auto;background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-12px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.toast{position:fixed;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;max-width:420px;margin:0 auto;background:#1A1714;color:#F0EDE8;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-12px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.2);}
 @media(max-width:640px){.toast{bottom:auto;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;transform:translateY(-8px);}
 .toast.on{transform:translateY(0);}}
 .toast.on{opacity:1;transform:translateY(0);}
@@ -889,7 +894,7 @@ html.dk .ntog::after{background:#fff;}
         <span id="ptrText">Tirer pour actualiser</span>
       </div>
       <!-- Bandeau vérification identité — discret, natif -->
-      <div id="verifBand" style="display:none;align-items:center;gap:10px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer" onclick="openCniSheet()">
+      <div id="verifBand" style="display:none;align-items:center;gap:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer" onclick="openCniSheet()">
         <div style="width:28px;height:28px;background:#FFFBEB;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
@@ -1325,7 +1330,7 @@ html.dk .ntog::after{background:#fff;}
               </div>
               <div class="pref-row" id="pfNiveauField">
                 <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span class="pref-label" id="pfNiveauLabel">Niveau</span>
+                <span class="pref-label" id="pfNiveauLabel" style="flex:1">Niveau enseigné</span>
                 <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;max-width:160px"><option value="">Choisir…</option></select>
               </div>
               <div class="pref-row">
