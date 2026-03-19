@@ -112,29 +112,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   #pgMsg.on{display:flex !important;}
 }
 .cnt{padding:20px 16px;max-width:1200px;}
-.locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;position:relative;}
+.locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
 .locbar>svg{width:18px;height:18px;color:var(--or);flex-shrink:0;}
 .locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;}
-.loc-geo-btn{background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;transition:all .18s;}
-.loc-geo-btn:hover{background:var(--or);color:#fff;}
-.loc-geo-btn.loading{opacity:.6;cursor:not-allowed;}
-.loc-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);z-index:200;overflow:hidden;display:none;pointer-events:auto;}
-.loc-sug-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px;transition:background .15s;}
-.loc-sug-item:last-child{border-bottom:none;}
-.loc-sug-item:hover{background:var(--orp);}
-.loc-sug-item.geo{color:var(--or);font-weight:600;}
-.loc-sug-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.loc-sug-icon.geo-icon{background:var(--orp);}
-.loc-sug-icon.place-icon{background:var(--bg);}
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
 .pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
-.crn-chip{padding:6px 13px;border-radius:50px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
-.crn-chip.on{background:var(--or);color:#fff;border-color:var(--or);}
-.niv-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.85);border-radius:50px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--ink);}
-.niv-fchip{padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
-.niv-fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
 .pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill:not(.on):hover{border-color:var(--or);color:var(--or);}
@@ -150,9 +134,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .skel-line.w60{width:60%;}
 .skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
-.card:active{transform:scale(.98) !important;box-shadow:none !important;}
-.btnr:active,.pb:active,.lbtn:active{transform:scale(.96);transition:transform .1s !important;}
-.bni:active{opacity:.7;}
 .card-prive{border-color:#E8D9C4;background:linear-gradient(to bottom,#FFFBF5,var(--wh));}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -284,7 +265,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 @media(max-width:768px){
   #msgListPane{width:100%;max-width:100%;border-right:none;}
   #msgConvPane{
-    display:none;
     position:fixed;
     top:0;left:0;right:0;bottom:0;
     height:100%;
@@ -412,7 +392,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   overflow:hidden;
   font-family:'Plus Jakarta Sans',sans-serif;
 }
-#onboarding.visible{display:flex;}
+#onboarding.active{display:flex;}
 #onboarding.hidden{display:none;}
 
 /* Slides wrapper */
@@ -783,17 +763,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <!-- PAGE EXPLORER -->
   <div class="pg on" id="pgExp">
     <div class="cnt">
-      <div class="locbar" id="locbarWrap">
+      <div class="locbar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <input type="text" id="locInput" placeholder="Ville, code postal…" oninput="onLocInput(this.value)" onfocus="onLocFocus()" autocomplete="off" style="flex:1">
+        <input type="text" id="locInput" placeholder="Ville, code postal…" oninput="filterByLoc(this.value)" autocomplete="off" style="flex:1">
         <button onclick="locInputClear()" id="locClearBtn" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:2px;line-height:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
-        <button class="loc-geo-btn" id="locGeoBtn" onclick="requestGeoloc()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-          Autour de moi
-        </button>
-        <div class="loc-suggestions" id="locSuggestions" style="pointer-events:auto"></div>
       </div>
       <div class="pills" id="pillsBar">
         <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
@@ -1247,20 +1222,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours…" style="resize:vertical"></textarea></div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Niveau visé</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px" id="crNiveauChips">
-          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="">Tous niveaux</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire">Primaire</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège">Collège</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée">Lycée</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+1/2">Bac+1/2</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+3/4">Bac+3/4</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+5">Bac+5</div>
-        </div>
-        <input type="hidden" id="crNiveau" value="">
-      </div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
       <div style="margin-bottom:12px">
         <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
         <input class="fi3" id="crDate" type="date" style="width:100%;box-sizing:border-box">
@@ -1524,7 +1486,7 @@ function obShow(){
     if(seen) return; // déjà vu, on skip
   }catch(e){}
   var ob=g('onboarding');
-  if(ob){ob.classList.remove('hidden');ob.classList.add('visible');}
+  if(ob){ob.classList.remove('hidden');ob.classList.add('active');}
   obRender();
   // Swipe support mobile
   var track=g('obTrack');
@@ -1569,7 +1531,7 @@ function obDone(){
   if(ob){
     ob.style.transition='opacity .4s ease';
     ob.style.opacity='0';
-    setTimeout(function(){ob.classList.add('hidden');ob.classList.remove('visible');ob.style.opacity='';ob.style.transition='';},400);
+    setTimeout(function(){ob.classList.add('hidden');ob.classList.remove('active');ob.style.opacity='';ob.style.transition='';},400);
   }
 }
 
@@ -1579,7 +1541,7 @@ window.addEventListener('DOMContentLoaded',function(){
   // Masquer le splash après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
-    if(sp){sp.style.opacity='0';sp.style.pointerEvents='none';setTimeout(function(){sp.style.display='none';},500);}
+    if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
   }, 800);
 });
 
@@ -1629,7 +1591,6 @@ async function loadData(page){
         prof_nm:c.prof_nom||'Professeur',
         prof_photo:c.prof_photo||null,
         description:c.description||'',
-        niveau:c.niveau||'',
         prive:c.prive||false,
         code:c.code_acces||''
       };
@@ -3615,16 +3576,8 @@ async function submitNote(){
   }catch(e){toast('Erreur réseau','Impossible d\'envoyer la note');}
 }
 
-// ============================================================
-// LOCALISATION — filtre + géolocalisation
-// ============================================================
+// LIEU SEARCH
 var lieuTimer=null;
-var locFilterTimer=null;
-var actLoc='';
-var userCoords=null;
-var geoMode=false;
-var actNiv='';
-
 function searchLieu(q){
   var box=g('lieuSuggestions');
   if(!q||q.length<3){box.style.display='none';return;}
@@ -3636,112 +3589,16 @@ function searchLieu(q){
       if(!data.length){box.style.display='none';return;}
       box.innerHTML=data.map(function(d){
         var name=d.display_name.split(',').slice(0,3).join(', ');
-        return'<div style="padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr)" onclick="pickLieu(\''+name.replace(/\'\'/g,"\\\'")+'\')">📍 '+name+'</div>';
+        return'<div style="padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr)" onmouseover="this.style.background=\'var(--orp)\'" onmouseout="this.style.background=\'\'" onclick="pickLieu(\''+name.replace(/'/g,"\\'")+'\')" >📍 '+name+'</div>';
       }).join('');
       box.style.display='block';
     }catch(e){box.style.display='none';}
   },400);
 }
 function pickLieu(name){g('crLieu').value=name;g('lieuSuggestions').style.display='none';}
-
-function onLocInput(val){
-  geoMode=false;userCoords=null;
-  var btn=g('locClearBtn');
-  if(btn)btn.style.display=val.trim()?'block':'none';
-  var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
-  if(!val||val.length<3){closeLoc();clearTimeout(locFilterTimer);locFilterTimer=setTimeout(function(){actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');applyFilter();},300);return;}
-  clearTimeout(locFilterTimer);
-  locFilterTimer=setTimeout(async function(){
-    actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-    applyFilter();
-    try{
-      var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(val+', France')+'&format=json&limit=5&countrycodes=fr',{headers:{'Accept-Language':'fr'}});
-      var data=await r.json();
-      if(!data.length){closeLoc();return;}
-      var box=g('locSuggestions');
-      box.innerHTML=data.map(function(d){
-        var parts=d.display_name.split(',');
-        var name=parts.slice(0,2).join(',').trim();
-        var sub=parts.slice(2,4).join(',').trim();
-        return'<div class="loc-sug-item" onclick="pickLocSug(\'' + name + '\')">'
-          +'<div class="loc-sug-icon place-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
-          +'<div><div style="font-weight:600;font-size:13px">'+name+'</div><div style="font-size:11px;color:var(--lite)">'+sub+'</div></div>'
-          +'</div>';
-      }).join('');
-      box.style.display='block';
-    }catch(e){closeLoc();}
-  },350);
-}
-
-function onLocFocus(){
-  var val=g('locInput').value.trim();
-  if(val.length>=3)return;
-  var box=g('locSuggestions');
-  box.innerHTML='<div class="loc-sug-item geo" onclick="requestGeoloc();closeLoc()">'
-    +'<div class="loc-sug-icon geo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>'
-    +'<div><div style="font-weight:700;font-size:13px;color:var(--or)">Autour de moi</div><div style="font-size:11px;color:var(--lite)">Utiliser ma position</div></div>'
-    +'</div>'
-    +['Paris','Lyon','Marseille','Bordeaux','Toulouse','Nantes'].map(function(v){
-      return'<div class="loc-sug-item" onclick="pickLocSug(\''+v+'\')">'
-        +'<div class="loc-sug-icon place-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
-        +'<div style="font-weight:500;font-size:13px">'+v+'</div>'
-        +'</div>';
-    }).join('');
-  box.style.display='block';
-}
-
-function pickLocSug(name){
-  g('locInput').value=name;g('locClearBtn').style.display='block';closeLoc();
-  actLoc=name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');geoMode=false;applyFilter();
-}
-
-function closeLoc(){var box=g('locSuggestions');if(box)box.style.display='none';}
-
 document.addEventListener('click',function(e){
   if(!e.target.closest||(!e.target.closest('#crLieu')&&!e.target.closest('#lieuSuggestions'))){var box=g('lieuSuggestions');if(box)box.style.display='none';}
-  if(!e.target.closest||!e.target.closest('#locbarWrap'))closeLoc();
 });
-
-function requestGeoloc(){
-  var btn=g('locGeoBtn');
-  if(!navigator.geolocation){toast('Non supporté','Géolocalisation non disponible');return;}
-  if(btn){btn.classList.add('loading');btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/></svg> Localisation…';}
-  navigator.geolocation.getCurrentPosition(
-    async function(pos){
-      userCoords={lat:pos.coords.latitude,lon:pos.coords.longitude};geoMode=true;
-      try{
-        var r=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=fr');
-        var d=await r.json();
-        var ville=d.address.city||d.address.town||d.address.village||'';
-        var inp=g('locInput');if(inp)inp.value=ville?'📍 '+ville:'📍 Autour de moi';
-        g('locClearBtn').style.display='block';
-        actLoc=ville.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-      }catch(e){var inp=g('locInput');if(inp)inp.value='📍 Autour de moi';actLoc='';}
-      if(btn){btn.classList.remove('loading');btn.style.background='var(--or)';btn.style.color='#fff';btn.innerHTML='Activé';}
-      applyFilter();toast('Position détectée','Cours autour de vous 📍');
-    },
-    function(){
-      if(btn){btn.classList.remove('loading');btn.innerHTML='Autour de moi';}
-      toast('Refusé','Activez la géolocalisation dans vos réglages');
-    },
-    {enableHighAccuracy:false,timeout:8000,maximumAge:60000}
-  );
-}
-
-function haversine(lat1,lon1,lat2,lon2){
-  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-function locInputClear(){
-  var inp=g('locInput');if(inp)inp.value='';
-  g('locClearBtn').style.display='none';
-  var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
-  actLoc='';geoMode=false;userCoords=null;closeLoc();applyFilter();
-}
-
-function filterByLoc(val){onLocInput(val);}
 
 // NIVEAUX
 var NIVEAUX={
@@ -3765,13 +3622,6 @@ function updateNiveauxPf(statut){
   sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
 }
 
-// Fonctions niveau cours
-function pickNiveau(el){
-  document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  var inp=g('crNiveau');if(inp)inp.value=el.dataset.n||'';
-}
-
 // CNI
 function previewCni(input){
   if(input.files&&input.files[0]){
@@ -3790,9 +3640,7 @@ function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;var e=g('toast')
 // SERVICE WORKER PWA
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('/sw.js').then(function(reg){
-      return reg.pushManager ? reg.pushManager.getSubscription() : null;
-    }).catch(function(err){console.log('SW erreur:',err);});
+    navigator.serviceWorker.register('/sw.js').catch(function(err){console.log('SW erreur:',err);});
   });
 }
 </script>
