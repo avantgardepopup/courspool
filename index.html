@@ -42,16 +42,46 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
 }
-@media(prefers-color-scheme:dark){
+@media(prefers-color-scheme:dark),[data-theme="dark"]{
   :root{
-    --ink:#F0EDE8;--mid:#A09890;--lite:#665E58;
-    --bg:#1A1714;--wh:#252220;--bdr:#3A3530;
-    --orp:#2D1F18;--sh:0 6px 28px rgba(0,0,0,.4);
+    --ink:#F0EDE8;--mid:#A09890;--lite:#5A524C;
+    --bg:#151210;--wh:#1E1B18;--wh2:#272320;--bdr:#32302C;
+    --orp:#2A1A0F;--sh:0 6px 28px rgba(0,0,0,.5);
+    --green:#1A9950;--amber:#B8760A;
+    /* Couleurs sémantiques dark */
+    --success-bg:#0D2B1A;--success-c:#4ADE80;
+    --warn-bg:#2A1F08;--warn-c:#FCD34D;
+    --danger-bg:#2A0F0F;--danger-c:#F87171;
+    --info-bg:#0F1F2A;--info-c:#60A5FA;
   }
-  .lbox{box-shadow:0 20px 60px rgba(0,0,0,.5);}
-  .bnav{border-top-color:#3A3530;}
-  .mob-header{border-bottom-color:#3A3530;}
-  input,textarea,select{color-scheme:dark;}
+  /* Popups et modals */
+  .modal,.bd>div,.lbox{background:var(--wh)!important;}
+  /* Inputs */
+  input,textarea,select{color-scheme:dark;background:var(--bg)!important;color:var(--ink)!important;}
+  .fi2,.fi3{background:var(--bg)!important;border-color:var(--bdr)!important;color:var(--ink)!important;}
+  /* Cards */
+  .card{background:var(--wh)!important;}
+  /* Nav */
+  .bnav{border-top-color:var(--bdr);background:rgba(21,18,16,.92);}
+  .mob-header{border-bottom-color:var(--bdr);background:rgba(21,18,16,.95);}
+  /* Popups fixes */
+  #popupPaid>div,#popupFailed>div,#tutoCard{background:var(--wh)!important;color:var(--ink)!important;}
+  /* Icônes colorées pref-icon */
+  .pref-icon[style*="#EFF6FF"]{background:#0F1F2A!important;}
+  .pref-icon[style*="#FFF7ED"]{background:#2A1500!important;}
+  .pref-icon[style*="#F0FDF4"]{background:#0D2B1A!important;}
+  .pref-icon[style*="#F5F3FF"]{background:#1A0F2A!important;}
+  .pref-icon[style*="#FEF2F2"]{background:#2A0F0F!important;}
+  /* Badges état */
+  div[style*="background:#F0FDF4"]{background:var(--success-bg)!important;}
+  div[style*="background:#FEF3C7"]{background:var(--warn-bg)!important;}
+  div[style*="background:#FEF2F2"]{background:var(--danger-bg)!important;}
+  /* Onboarding */
+  .ob-slide-content{color:#fff;}
+  /* Login */
+  .lbox{box-shadow:0 20px 60px rgba(0,0,0,.7);}
+  /* Toggle */
+  .ntog::after{background:var(--wh)!important;}
 }
 #login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 .lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
@@ -1274,6 +1304,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             </div>
           </div>
 
+          <!-- Apparence -->
+          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Apparence</div>
+          <div class="pref-group" style="margin-bottom:0">
+            <div class="pref-row">
+              <div class="pref-icon" style="background:#1A1714"><svg viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+              <div style="flex:1"><div class="pref-label">Mode sombre</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="darkModeSubLabel">Suit le système</div></div>
+              <div class="ntog" id="darkModeToggle" onclick="toggleDarkMode()"></div>
+            </div>
+          </div>
+
           <!-- Assistance -->
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Assistance</div>
           <div class="pref-group">
@@ -1739,7 +1779,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- POPUP CONFIRMATION PAIEMENT -->
 <div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
@@ -1751,7 +1791,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- POPUP PAIEMENT ÉCHOUÉ -->
 <div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
@@ -2260,6 +2300,8 @@ function goAccount(){
   // Rôle pill
   var rp = g('accRolePill');
   if (rp) rp.textContent = (user.role==='professeur') ? '👨‍🏫 Professeur' : '👤 Élève';
+  // Sync bouton dark mode
+  updateDarkBtn();
 }
 
 function switchATab(s,el){
@@ -4293,6 +4335,50 @@ function pickNiveau(el){
 // ============================================================
 // CONTACT
 // ============================================================
+// ============================================================
+// DARK MODE TOGGLE
+// ============================================================
+var _darkMode = false;
+
+function initDarkMode(){
+  var saved = null;
+  try{saved=localStorage.getItem('cp_dark');}catch(e){}
+  if(saved==='1'){
+    _darkMode=true;
+    document.documentElement.setAttribute('data-theme','dark');
+  } else if(saved==='0'){
+    _darkMode=false;
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    // Suit le système
+    _darkMode=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+  }
+  updateDarkBtn();
+}
+
+function toggleDarkMode(){
+  _darkMode=!_darkMode;
+  if(_darkMode){
+    document.documentElement.setAttribute('data-theme','dark');
+    try{localStorage.setItem('cp_dark','1');}catch(e){}
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    try{localStorage.setItem('cp_dark','0');}catch(e){}
+  }
+  updateDarkBtn();
+  haptic(6);
+}
+
+function updateDarkBtn(){
+  var tog=g('darkModeToggle');
+  var lbl=g('darkModeSubLabel');
+  if(tog)tog.classList.toggle('on',_darkMode);
+  if(lbl){
+    var saved=null;try{saved=localStorage.getItem('cp_dark');}catch(e){}
+    lbl.textContent=saved===null?'Suit le système':(_darkMode?'Activé':'Désactivé');
+  }
+}
+
 function shareApp(){
   var data={title:'CoursPool',text:"Découvrez CoursPool — partagez les frais d'un cours particulier entre étudiants !",url:'https://courspool.vercel.app'};
   if(navigator.share){navigator.share(data).catch(function(){});}
