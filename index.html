@@ -1969,33 +1969,45 @@ html.dk .ntog::after{background:#fff;}
 </nav>
 
 <!-- MODAL CONTACT -->
-<div class="bd" id="bdContact" onclick="if(event.target===this){this.style.display='none';document.body.style.overflow='';}" style="display:none;z-index:600;align-items:flex-end">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
+<div class="bd" id="bdContact" onclick="if(event.target===this)closeContact();" style="display:none;z-index:600;align-items:flex-end">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px 0;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));animation:mi .25s ease;max-height:92vh;overflow-y:auto">
+    <!-- Handle -->
     <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
+    <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div>
-        <div style="font-size:18px;font-weight:800">Nous contacter</div>
-        <div style="font-size:13px;color:var(--lite);margin-top:2px">On vous répond sous 24h</div>
+        <div style="font-size:18px;font-weight:800;color:var(--ink)">Nous contacter</div>
+        <div style="font-size:13px;color:var(--lite);margin-top:2px">Réponse sous 24h</div>
       </div>
-      <button onclick="closeContact()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+      <button onclick="closeContact()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--mid);display:flex;align-items:center;justify-content:center">✕</button>
     </div>
-    <!-- Sujets rapides -->
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Question générale">Question générale</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Problème technique">Problème technique</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Paiement">Paiement</div>
-      <div class="contact-subj" onclick="pickSubj(this)" data-s="Signalement">Signalement</div>
+
+    <!-- Sujet — chips sélectionnables -->
+    <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Objet</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Question générale" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Question générale</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Paiement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Paiement</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Problème technique" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Problème technique</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Vérification de compte" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Vérification de compte</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Signalement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Signalement</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Autre" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Autre</div>
     </div>
+
+    <!-- Email -->
     <div style="margin-bottom:12px">
-      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Votre email</label>
-      <input id="contactEmail" type="email" class="fi3" placeholder="votre@email.com" style="width:100%">
+      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email</label>
+      <input id="contactEmail" type="email" placeholder="votre@email.com" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
     </div>
-    <div style="margin-bottom:16px">
-      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Message</label>
-      <textarea id="contactMsg" class="fi3" rows="4" placeholder="Décrivez votre question ou problème…" style="resize:none;width:100%;height:auto"></textarea>
+
+    <!-- Message -->
+    <div style="margin-bottom:18px">
+      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message</label>
+      <textarea id="contactMsg" rows="4" placeholder="Décrivez votre question ou problème…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
     </div>
-    <button id="contactSubmitBtn" onclick="submitContact()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+
+    <!-- Bouton -->
+    <button id="contactSubmitBtn" onclick="submitContact()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       Envoyer le message
     </button>
   </div>
@@ -5185,8 +5197,17 @@ function closeContact(){
   document.body.style.overflow='';
 }
 function pickSubj(el){
-  document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.contact-subj').forEach(function(s){
+    s.classList.remove('on');
+    s.style.background='var(--bg)';
+    s.style.borderColor='var(--bdr)';
+    s.style.color='var(--mid)';
+  });
   el.classList.add('on');
+  el.style.background='var(--orp)';
+  el.style.borderColor='var(--or)';
+  el.style.color='var(--or)';
+  haptic(4);
 }
 async function submitContact(){
   var email=g('contactEmail').value.trim();
