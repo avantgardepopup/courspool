@@ -2227,7 +2227,7 @@ function applyUser(){
   // Banner géré par updateVerifBand() uniquement
   // Bottom nav — restaurer tous les items avant d'appliquer le rôle
   var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc');
-  if(bniMsg2)bniMsg2.style.display='';
+  if(bniMsg2)bniMsg2.style.display=(!user||user.guest)?'none':'';
   if(bniAcc2)bniAcc2.style.display='';
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
@@ -2310,6 +2310,7 @@ function navTo(tab){
     restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
+    if(user.guest){scrollToLogin();return;}
     if(pgMsg)pgMsg.classList.add('on');
     if(nav){var isMob=window.innerWidth<=640;if(!isMob){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}else{nav.style.left='';nav.style.transform='';nav.style.padding='';}}
     var bniExp=g('bniExp');
