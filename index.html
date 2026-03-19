@@ -2,10 +2,22 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<script>
+// Dark mode appliqué immédiatement avant tout rendu — évite le flash
+(function(){
+  try{
+    var s=localStorage.getItem('cp_dark');
+    if(s==='1')document.documentElement.classList.add('dk');
+    else if(s===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
+      document.documentElement.classList.add('dk');
+  }catch(e){}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>CoursPool</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF6B2B'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='800' text-anchor='middle' fill='white' font-family='system-ui'%3EC%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#FF6B2B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -65,8 +77,11 @@ html.dk .bnav{background:#1C1917;border-top:1px solid #2E2B28;}
 html.dk .mob-header{background:#131110;border-bottom:1px solid #2E2B28;}
 html.dk .mob-search{background:#131110;border-bottom:1px solid #2E2B28;}
 html.dk .mob-search input{background:#1C1917;color:var(--ink);}
+html.dk #verifBand{background:#2A2018;border-color:#4A3820;}
+html.dk #verifBand .verifBandTitle{color:#FCD34D;}
 html.dk .mob-search{background:#1C1917;border-bottom:1px solid #2E2B28;}
 /* Inputs sans cadre outline bizarre */
+html.dk .locbar input{background:transparent !important;color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;color-scheme:light dark;}
 html.dk input,html.dk textarea,html.dk select{
   color-scheme:dark;background:var(--bg);color:var(--ink);
   -webkit-text-fill-color:var(--ink);
@@ -112,6 +127,9 @@ html.dk #pgAcc .ptab.on{color:var(--or);border-bottom-color:var(--or);}
 html.dk .lbox{box-shadow:0 20px 60px rgba(0,0,0,.7);}
 /* Locbar */
 html.dk .locbar{background:var(--wh);border-color:var(--bdr);}
+html.dk #verifBand{background:#2A1E08 !important;border-color:#4A3410 !important;}
+html.dk #verifBandTitle{color:#FCD34D !important;}
+html.dk #verifBandSub{color:#B45309 !important;}
 /* Toggle switch */
 html.dk .ntog{background:var(--bdr);}
 html.dk .ntog.on{background:var(--or);}
@@ -197,7 +215,7 @@ html.dk .ntog::after{background:#fff;}
 .ptr-spinner.spinning{animation:spin .7s linear infinite;}
 .locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;overflow:hidden;}
 .locbar>svg{width:16px;height:16px;color:var(--or);flex-shrink:0;}
-.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;min-width:0;}
+.locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;min-width:0;background:transparent;color:var(--ink);}
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
@@ -494,7 +512,7 @@ html.dk .ntog::after{background:#fff;}
 .so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 .fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);box-sizing:border-box;-webkit-appearance:none;appearance:none;height:46px;}
 .fi3:focus{border-color:var(--or);}
-.toast{position:fixed;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;max-width:420px;margin:0 auto;background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-12px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.toast{position:fixed;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;max-width:420px;margin:0 auto;background:#1A1714;color:#F0EDE8;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-12px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.2);}
 @media(max-width:640px){.toast{bottom:auto;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;transform:translateY(-8px);}
 .toast.on{transform:translateY(0);}}
 .toast.on{opacity:1;transform:translateY(0);}
@@ -657,7 +675,7 @@ html.dk .ntog::after{background:#fff;}
    TUTORIEL v3
    ============================================================ */
 #tutoRoot{display:none;}
-#tutoRoot.on{display:flex !important;animation:tutoFadeIn .3s ease both;}
+#tutoRoot.on{display:block !important;}
 @keyframes tutoFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes cpSpin{to{transform:rotate(360deg)}}
 .cp-loader{display:inline-block;width:22px;height:22px;border:2.5px solid var(--orp);border-top-color:var(--or);border-radius:50%;animation:cpSpin .7s linear infinite;vertical-align:middle;margin-right:8px;flex-shrink:0;}
@@ -888,7 +906,7 @@ html.dk .ntog::after{background:#fff;}
         <span id="ptrText">Tirer pour actualiser</span>
       </div>
       <!-- Bandeau vérification identité — discret, natif -->
-      <div id="verifBand" style="display:none;align-items:center;gap:10px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer" onclick="openCniSheet()">
+      <div id="verifBand" style="display:none;align-items:center;gap:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer" onclick="openCniSheet()">
         <div style="width:28px;height:28px;background:#FFFBEB;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
@@ -1324,7 +1342,7 @@ html.dk .ntog::after{background:#fff;}
               </div>
               <div class="pref-row" id="pfNiveauField">
                 <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span class="pref-label" id="pfNiveauLabel">Niveau</span>
+                <span class="pref-label" id="pfNiveauLabel" style="flex:1">Niveau enseigné</span>
                 <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;max-width:160px"><option value="">Choisir…</option></select>
               </div>
               <div class="pref-row">
@@ -1391,6 +1409,14 @@ html.dk .ntog::after{background:#fff;}
             </div>
           </div>
 
+          <!-- Partager profil (profs) -->
+          <div id="shareProfBtn" style="display:none;padding:4px 0 4px">
+            <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Partager mon profil
+            </button>
+          </div>
+
           <!-- Déconnexion -->
           <div style="padding:20px 0 8px">
             <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
@@ -1422,7 +1448,11 @@ html.dk .ntog::after{background:#fff;}
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="shareCoursLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager ce cours</button>
       <button id="btnVoirEleves" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openEleves(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Voir les élèves inscrits</button>
-      <button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="confirmDeleteCoursNative(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
+      <button id="btnDupCours" class="pb sec" style="width:100%;display:none;margin-bottom:10px" onclick="dupCours(curId)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+  Dupliquer ce cours
+</button>
+<button id="btnDelCours" class="pb" style="width:100%;display:none;background:#FEF2F2;color:#EF4444;border:1.5px solid #FECACA" onclick="confirmDeleteCoursNative(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>Annuler mon cours</button>
     </div>
   </div>
 </div>
@@ -1477,6 +1507,10 @@ html.dk .ntog::after{background:#fff;}
       <button class="pb sec" id="bFP" onclick="togFP()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg><span id="bFPt">Suivre</span></button>
     </div>
     <div class="pcl2"><div class="pclh">Prochains cours</div><div id="mpCrs"></div></div>
+    <div id="mpAvisBlock" style="display:none">
+      <div class="pclh" style="margin-top:16px">Derniers avis</div>
+      <div id="mpAvis" style="display:flex;flex-direction:column;gap:10px;margin-top:8px"></div>
+    </div>
   </div>
 </div>
 
@@ -1798,34 +1832,39 @@ html.dk .ntog::after{background:#fff;}
 </div>
 
 <!-- TUTORIEL v3 — slides plein écran centrées, fiables sur tous les devices -->
-<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;">
-  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
-
-    <!-- Illustration zone -->
-    <div id="tutoIllu" style="height:160px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;flex-shrink:0;"></div>
-
-    <div style="padding:24px 24px 20px">
-      <!-- Dots + Skip -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
-        <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:#bbb;cursor:pointer;font-family:inherit;padding:4px 10px;border-radius:8px;font-weight:500;transition:color .15s">Passer</button>
-      </div>
-
-      <!-- Contenu -->
-      <div id="tutoTitle" style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px;letter-spacing:-.02em;line-height:1.2"></div>
-      <div id="tutoDesc" style="font-size:14px;color:#555;line-height:1.7;margin-bottom:22px"></div>
-
-      <!-- Tip contextuel optionnel -->
-      <div id="tutoTip" style="display:none;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--mid);line-height:1.6;margin-bottom:18px;display:flex;gap:9px;align-items:flex-start">
-        <span style="font-size:16px;flex-shrink:0">💡</span>
-        <span id="tutoTipText"></span>
-      </div>
-
-      <!-- Boutons -->
-      <div style="display:flex;gap:10px">
-        <button id="tutoPrev" onclick="tutoPrev()" style="display:none;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;flex-shrink:0;transition:all .15s">←</button>
-        <button id="tutoBtn" onclick="tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;transition:background .15s;box-shadow:0 4px 16px rgba(255,107,43,.35)">Suivant →</button>
-      </div>
+<!-- TUTORIEL INTERACTIF SPOTLIGHT -->
+<div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;pointer-events:none">
+  <!-- Overlay sombre avec trou (SVG) -->
+  <svg id="tutoSvgOverlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:all" onclick="tutoNext()">
+    <defs>
+      <mask id="tutoMask">
+        <rect width="100%" height="100%" fill="white"/>
+        <rect id="tutoHole" x="0" y="0" width="0" height="0" rx="12" fill="black"/>
+      </mask>
+    </defs>
+    <rect width="100%" height="100%" fill="rgba(0,0,0,.72)" mask="url(#tutoMask)"/>
+  </svg>
+  <!-- Contour lumineux autour de l'élément ciblé -->
+  <div id="tutoGlow" style="position:absolute;border:2.5px solid var(--or);border-radius:14px;box-shadow:0 0 0 4px rgba(255,107,43,.25);transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none"></div>
+  <!-- Bulle tooltip -->
+  <div id="tutoTooltip" style="position:absolute;background:var(--wh);border-radius:18px;padding:18px 20px;max-width:300px;width:calc(100vw - 40px);box-shadow:0 16px 48px rgba(0,0,0,.25);transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:all;z-index:1">
+    <!-- Flèche -->
+    <div id="tutoArrow" style="position:absolute;width:12px;height:12px;background:var(--wh);transform:rotate(45deg)"></div>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;gap:5px;align-items:center" id="tutoDots"></div>
+      <button onclick="tutoSkip()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:2px 6px;border-radius:6px">Passer</button>
+    </div>
+    <!-- Emoji + titre -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div id="tutoEmoji" style="font-size:28px;line-height:1;flex-shrink:0"></div>
+      <div id="tutoTitle" style="font-size:16px;font-weight:800;color:var(--ink);line-height:1.2;letter-spacing:-.02em"></div>
+    </div>
+    <div id="tutoDesc" style="font-size:13.5px;color:var(--mid);line-height:1.6;margin-bottom:14px"></div>
+    <!-- Boutons -->
+    <div style="display:flex;gap:8px">
+      <button id="tutoPrev" onclick="event.stopPropagation();tutoPrev()" style="display:none;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">←</button>
+      <button id="tutoBtn" onclick="event.stopPropagation();tutoNext()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:10px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.35)">Suivant →</button>
     </div>
   </div>
 </div>
@@ -1978,7 +2017,8 @@ function obDone(){
 
 // Lancer l'onboarding au chargement
 window.addEventListener('DOMContentLoaded',function(){
-  obShow();
+  // Dark mode en premier — avant tout rendu
+  initDarkMode();
   // Masquer le splash après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
@@ -2345,6 +2385,11 @@ async function checkStripeReturn(){
       return;
     }
     // Deep link ?cours=ID — ouvrir directement la fiche du cours
+    var directProf = params.get('prof');
+    if(directProf){
+      window.history.replaceState({},'',window.location.pathname);
+      setTimeout(function(){openPr(directProf);},600);
+    }
     var directCours = params.get('cours');
     if(directCours && !paid){
       window.history.replaceState({},'',window.location.pathname);
@@ -2998,6 +3043,7 @@ function confO(){
   g('rFin').textContent=pp+'€';
   g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Réservation d\'une place supplémentaire · '+pp+'€ par personne.';
+  var btnDup=g('btnDupCours');if(btnDup)btnDup.style.display=(user&&c.pr===user.id)?'block':'none';
   var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector('#bdR .pb.pri'),btnContact=document.querySelector('#bdR .pb.sec');
   if(btnDel)btnDel.style.display='none';
   if(btnEleves)btnEleves.style.display='none';
@@ -3090,6 +3136,23 @@ function openPr(pid){
   g('mpTags').innerHTML=(p.tags||[]).map(function(t){return'<span class="tag">'+t+'</span>';}).join('');
   var prochains=cours.filter(function(c){return c.fl<c.sp;});
   g('mpCrs').innerHTML=prochains.length?prochains.map(function(c){return'<div class="pcrow"><div style="font-size:13px">'+c.title+' · '+c.dt+'</div><button class="btnr" style="font-size:12px;padding:6px 11px" onclick="closePr();openR(\''+c.id+'\')">Réserver</button></div>';}).join(''):'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
+  // Charger les 3 derniers avis
+  var avisBlock=g('mpAvisBlock'),avisContainer=g('mpAvis');
+  if(avisBlock)avisBlock.style.display='none';
+  fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
+    if(!notes||!notes.length){return;}
+    if(avisBlock)avisBlock.style.display='block';
+    var stars=function(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;};
+    if(avisContainer)avisContainer.innerHTML=notes.slice(0,3).map(function(a){
+      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(a.commentaire?'6':'0')+'px">'
+        +'<span style="font-size:13px;color:#F59E0B;letter-spacing:2px">'+stars(a.note)+'</span>'
+        +'<span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'')+'</span>'
+        +'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+a.commentaire+'</div>':'')
+        +'</div>';
+    }).join('');
+  }).catch(function(){});
   var fb=g('bFP'),ft=g('bFPt');
   var isSelf=user&&pid===user.id;
   fb.style.display=isSelf?'none':'flex';
@@ -3219,6 +3282,34 @@ function togglePw(id,btn){
 }
 
 // SUPPRIMER SON COURS avec confirmation
+function dupCours(id){
+  var c=C.find(function(x){return x.id===id;});
+  if(!c)return;
+  // Pré-remplir le formulaire avec les données du cours
+  closeR();
+  setTimeout(function(){
+    openCr();
+    setTimeout(function(){
+      var titre=g('crTitre'),lieu=g('crLieu'),cPl=g('cPl'),cPr=g('cPr');
+      var crSubjH=g('crSubjHidden'),crMatLbl=g('crMatLabel'),crMatDot=g('crMatDot'),crMatBtn=g('crMatBtn');
+      if(titre)titre.value=c.title;
+      if(lieu)lieu.value=c.lc;
+      if(cPl)cPl.value=c.sp;
+      if(cPr)cPr.value=c.tot;
+      // Restaurer la matiere
+      var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);});
+      if(mat&&crSubjH){
+        crSubjH.value=mat.key;
+        if(crMatLbl){crMatLbl.textContent=mat.label;crMatLbl.style.color='var(--ink)';}
+        if(crMatDot)crMatDot.style.background=mat.color;
+        if(crMatBtn)crMatBtn.style.borderColor='var(--or)';
+      }
+      if(typeof calcH==='function')calcH();
+      toast('Cours dupliqué',"Modifiez la date et l'heure puis publiez");
+    },200);
+  },300);
+}
+
 function confirmDeleteCoursNative(id){
   // ActionSheet natif sur iOS/Android, confirm() sinon
   if(window.confirm('Annuler ce cours ? Tous les élèves inscrits seront notifiés.')){
@@ -3772,7 +3863,9 @@ function cniLater(){
 function cniDone(){
   var bd=g('bdCni');if(bd)bd.style.display='none';
   document.body.style.overflow='';
+  // Mettre à jour les deux indicateurs de statut
   updateVerifStatusBlock();
+  updateVerifBand();
   setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},400);
 }
 
@@ -4051,134 +4144,153 @@ var TUTO_PROF = [
   }
 ];
 
-var _tutoSteps = [];
-var _tutoIdx = 0;
+// ============================================================
+// TUTORIEL INTERACTIF — SPOTLIGHT sur les vrais éléments
+// ============================================================
+var _tutoSteps=[], _tutoIdx=0;
 
-function tutoStart() {
-  if (!user) return;
-  try { if (localStorage.getItem('cp_tuto_done_' + user.id)) return; } catch(e) {}
-  _tutoSteps = user.role === 'professeur' ? TUTO_PROF : TUTO_ELEVE;
-  _tutoIdx = 0;
-  setTimeout(_tutoShow, 600);
+// Définir les étapes avec sélecteur CSS de l'élément ciblé
+var TUTO_ELEVE_STEPS=[
+  {sel:null,emoji:"\uD83D\uDC4B",title:"Bienvenue sur CoursPool !",desc:"Tour rapide de l application. Appuyez pour continuer."},
+  {sel:".locbar",emoji:"\uD83D\uDCCD",title:"Trouvez des cours",desc:"Tapez votre ville ou utilisez Autour de moi pour voir les cours dans votre zone."},
+  {sel:"#pillsBar",emoji:"\uD83D\uDD0D",title:"Filtrez par matiere",desc:"Choisissez une matiere pour affiner. Glissez pour voir plus d options."},
+  {sel:".card",emoji:"\uD83D\uDCDA",title:"Reservez un cours",desc:"Appuyez sur un cours pour voir les details et reserver. Vous ne payez que votre part !"},
+  {sel:"#bniMsg",emoji:"\uD83D\uDCAC",title:"Messagerie directe",desc:"Posez vos questions au professeur avant de reserver depuis Messages."},
+  {sel:"#bniAcc",emoji:"\uD83D\uDC64",title:"Votre espace",desc:"Retrouvez vos reservations, profs suivis et historique dans Profil."}
+];
+
+var TUTO_PROF_STEPS=[
+  {sel:null,emoji:"\uD83D\uDC4B",title:"Bienvenue professeur !",desc:"Vous allez proposer vos premiers cours. Tour rapide."},
+  {sel:"#bniAdd",emoji:"\u2795",title:"Creez votre premier cours",desc:"Ce bouton orange permet de creer un cours. Choisissez matiere, date, lieu et prix total."},
+  {sel:".card",emoji:"\uD83D\uDCCA",title:"Vos cours ici",desc:"Des la publication, vos cours sont visibles par tous les eleves."},
+  {sel:"#bniMsg",emoji:"\uD83D\uDCAC",title:"Restez disponible",desc:"Les eleves vous contactent avant de reserver. Repondre vite ameliore les inscriptions."},
+  {sel:"#aTabRev",emoji:"\uD83D\uDCB3",title:"Suivez vos revenus",desc:"Dans Revenus, retrouvez l historique de tous vos paiements. Bonne aventure !"}
+];
+
+function tutoStart(){
+  if(!user)return;
+  try{if(localStorage.getItem('cp_tuto_done_'+user.id))return;}catch(e){}
+  _tutoSteps=user.role==='professeur'?TUTO_PROF_STEPS:TUTO_ELEVE_STEPS;
+  _tutoIdx=0;
+  setTimeout(_tutoShow,800);
 }
 
-function _tutoShow() {
-  var step = _tutoSteps[_tutoIdx];
-  if (!step) { tutoDone(); return; }
+function _tutoShow(){
+  var step=_tutoSteps[_tutoIdx];
+  if(!step){tutoDone();return;}
+  var root=g('tutoRoot');
+  if(!root)return;
+  root.style.display='block';
+  haptic(6);
 
-  var root = g('tutoRoot');
-  root.style.display = 'flex';
-  root.classList.add('on');
+  // Trouver l'élément cible
+  var target=step.sel?document.querySelector(step.sel):null;
+  var hole=document.getElementById('tutoHole');
+  var glow=g('tutoGlow');
+  var tooltip=g('tutoTooltip');
+  var arrow=g('tutoArrow');
 
-  // Illustration — emoji ou UI réelle
-  var illu = g('tutoIllu');
-  illu.style.background = step.bg;
-  if (step.ui) {
-    illu.innerHTML = _tutoUiPreview(step.ui);
+  if(target&&hole&&glow){
+    var r=target.getBoundingClientRect();
+    var pad=8;
+    // Trou dans l'overlay
+    hole.setAttribute('x',r.left-pad);
+    hole.setAttribute('y',r.top-pad);
+    hole.setAttribute('width',r.width+pad*2);
+    hole.setAttribute('height',r.height+pad*2);
+    hole.setAttribute('rx','14');
+    // Glow
+    glow.style.left=(r.left-pad)+'px';
+    glow.style.top=(r.top-pad)+'px';
+    glow.style.width=(r.width+pad*2)+'px';
+    glow.style.height=(r.height+pad*2)+'px';
+    glow.style.display='block';
+    // Positionner la tooltip
+    _positionTooltip(r,tooltip,arrow,pad);
   } else {
-    illu.innerHTML = '<span style="font-size:72px">' + (step.emoji || '✨') + '</span>';
+    // Pas de cible — centrer
+    if(hole){hole.setAttribute('width','0');hole.setAttribute('height','0');}
+    if(glow)glow.style.display='none';
+    _centerTooltip(tooltip);
+    if(arrow)arrow.style.display='none';
   }
 
-  // Texte
-  g('tutoTitle').textContent = step.title;
-  g('tutoDesc').textContent = step.desc;
-
-  // Tip
-  var tipBox = g('tutoTip');
-  var tipTxt = g('tutoTipText');
-  if (step.tip) {
-    tipTxt.textContent = step.tip;
-    tipBox.style.display = 'flex';
-  } else {
-    tipBox.style.display = 'none';
-  }
-
-  // Bouton suivant/terminer
-  var btn = g('tutoBtn');
-  var isLast = _tutoIdx === _tutoSteps.length - 1;
-  btn.textContent = isLast ? 'C\'est parti ! 🎉' : 'Suivant →';
-  btn.style.background = isLast ? 'var(--green)' : 'var(--or)';
-  btn.style.boxShadow = isLast ? '0 4px 16px rgba(34,192,105,.35)' : '0 4px 16px rgba(255,107,43,.35)';
-
-  // Bouton retour
-  g('tutoPrev').style.display = _tutoIdx > 0 ? 'block' : 'none';
+  // Contenu
+  var em=g('tutoEmoji'),tt=g('tutoTitle'),td=g('tutoDesc');
+  if(em)em.textContent=step.emoji||'✨';
+  if(tt)tt.textContent=step.title;
+  if(td)td.textContent=step.desc;
 
   // Dots
-  g('tutoDots').innerHTML = _tutoSteps.map(function(_, i) {
-    return '<div style="width:' + (i === _tutoIdx ? '22px' : '6px') + ';height:6px;border-radius:3px;background:' + (i === _tutoIdx ? 'var(--or)' : '#e0e0e0') + ';transition:all .3s ease;flex-shrink:0"></div>';
+  var dots=g('tutoDots');
+  if(dots)dots.innerHTML=_tutoSteps.map(function(_,i){
+    return'<div style="width:'+(i===_tutoIdx?'20px':'6px')+';height:6px;border-radius:3px;background:'+(i===_tutoIdx?'var(--or)':'var(--bdr)')+';transition:all .25s"></div>';
   }).join('');
 
-  // Animation carte
-  var card = g('tutoCard');
-  card.style.animation = 'none';
-  card.offsetHeight;
-  card.style.animation = 'tutoCardIn .38s cubic-bezier(.34,1.26,.64,1)';
+  // Boutons
+  var btn=g('tutoBtn'),prev=g('tutoPrev');
+  var isLast=_tutoIdx===_tutoSteps.length-1;
+  if(btn){btn.textContent=isLast?'Terminer 🎉':'Suivant →';btn.style.background=isLast?'var(--green)':'var(--or)';}
+  if(prev)prev.style.display=_tutoIdx>0?'block':'none';
 }
 
-function _tutoUiPreview(type) {
-  // Aperçus UI stylisés avec cadre orange pour montrer les vraies fonctionnalités
-  var s = 'font-family:inherit;';
-  if (type === 'add_button') {
-    return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%">'
-      + '<div style="background:rgba(255,255,255,.15);border-radius:20px;padding:12px 20px;display:flex;align-items:center;gap:12px;border:2px solid rgba(255,255,255,.4)">'
-      + '<div style="width:44px;height:44px;border-radius:50%;background:#FF6B2B;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.6)">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-      + '</div>'
-      + '<div style="color:#fff;font-weight:700;font-size:15px">Créer un cours</div>'
-      + '</div>'
-      + '<div style="color:rgba(255,255,255,.7);font-size:12px;text-align:center">Le bouton + en bas de l\'écran</div>'
-      + '</div>';
+function _positionTooltip(r,tooltip,arrow,pad){
+  if(!tooltip)return;
+  var vw=window.innerWidth,vh=window.innerHeight;
+  var tw=Math.min(300,vw-40),th=160;
+  var margin=16;
+  // Essayer en bas, puis en haut, puis en centre
+  var top,left,arrowTop,arrowLeft,arrowBottom;
+  if(r.bottom+th+margin+pad<vh){
+    // En dessous
+    top=r.bottom+pad+margin;
+    left=Math.max(margin,Math.min(r.left+r.width/2-tw/2,vw-tw-margin));
+    if(arrow){arrow.style.top='-6px';arrow.style.bottom='';arrow.style.left=(r.left+r.width/2-left-6)+'px';}
+  } else if(r.top-th-margin-pad>0){
+    // Au dessus
+    top=r.top-pad-margin-th;
+    left=Math.max(margin,Math.min(r.left+r.width/2-tw/2,vw-tw-margin));
+    if(arrow){arrow.style.bottom='-6px';arrow.style.top='';arrow.style.left=(r.left+r.width/2-left-6)+'px';}
+  } else {
+    _centerTooltip(tooltip);
+    if(arrow)arrow.style.display='none';
+    return;
   }
-  if (type === 'profile_tab') { // amélioration v2
-    return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%">'
-      + '<div style="display:flex;gap:6px">'
-      + ['Explorer','Messages','Profil'].map(function(t,i){
-          var active = t === 'Profil';
-          return '<div style="background:'+(active?'#FF6B2B':'rgba(255,255,255,.2)')+';border-radius:12px;padding:8px 14px;color:#fff;font-size:12px;font-weight:'+(active?'700':'500')+';display:flex;flex-direction:column;align-items:center;gap:4px;border:'+(active?'2px solid rgba(255,255,255,.5)':'2px solid transparent')+'">'
-            + (active?'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>':'')
-            + t + '</div>';
-        }).join('')
-      + '</div>'
-      + '<div style="color:rgba(255,255,255,.8);font-size:12px">Onglet Profil</div>'
-      + '</div>';
-  }
-  if (type === 'messages_tab') {
-    return '<div style="'+s+'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;height:100%">'
-      + '<div style="background:rgba(255,255,255,.15);border-radius:16px;padding:14px 18px;border:2px solid rgba(255,255,255,.4);min-width:180px">'
-      + '<div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:8px">💬 Messages</div>'
-      + '<div style="background:rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;margin-bottom:6px">'
-      + '<div style="color:#fff;font-size:12px;font-weight:600">Élève</div>'
-      + '<div style="color:rgba(255,255,255,.7);font-size:11px">Bonjour, j\'ai une question...</div>'
-      + '</div>'
-      + '</div>'
-      + '</div>';
-  }
-  return '<span style="font-size:72px">✨</span>';
+  if(arrow)arrow.style.display='block';
+  tooltip.style.top=top+'px';
+  tooltip.style.left=left+'px';
+  tooltip.style.width=tw+'px';
+  tooltip.style.transform='none';
+  tooltip.style.position='fixed';
 }
 
-function tutoNext() {
-  if (_tutoIdx < _tutoSteps.length - 1) { _tutoIdx++; _tutoShow(); }
+function _centerTooltip(tooltip){
+  if(!tooltip)return;
+  var vw=window.innerWidth,vh=window.innerHeight;
+  var tw=Math.min(300,vw-40);
+  tooltip.style.left=((vw-tw)/2)+'px';
+  tooltip.style.top=(vh/2-100)+'px';
+  tooltip.style.width=tw+'px';
+  tooltip.style.position='fixed';
+}
+
+function tutoNext(){
+  if(_tutoIdx<_tutoSteps.length-1){_tutoIdx++;_tutoShow();}
   else tutoDone();
 }
 
-function tutoPrev() {
-  if (_tutoIdx > 0) { _tutoIdx--; _tutoShow(); }
+function tutoPrev(){
+  if(_tutoIdx>0){_tutoIdx--;_tutoShow();}
 }
 
-function tutoSkip() { tutoDone(); }
+function tutoSkip(){tutoDone();}
 
-function tutoDone() {
-  try { localStorage.setItem('cp_tuto_done_' + user.id, '1'); } catch(e) {}
-  var root = g('tutoRoot');
-  if (root) {
-    root.style.opacity = '0';
-    root.style.transition = 'opacity .3s';
-    setTimeout(function() {
-      root.style.display = 'none';
-      root.classList.remove('on');
-      root.style.opacity = '';
-      root.style.transition = '';
-    }, 320);
+function tutoDone(){
+  try{localStorage.setItem('cp_tuto_done_'+user.id,'1');}catch(e){}
+  var root=g('tutoRoot');
+  if(root){
+    root.style.opacity='0';root.style.transition='opacity .3s';
+    setTimeout(function(){root.style.display='none';root.style.opacity='';root.style.transition='';},300);
   }
 }
 
@@ -4645,6 +4757,7 @@ function initDarkMode(){
   }
   document.documentElement.classList.toggle('dk',_darkMode);
   updateDarkBtn();
+  var spb=g('shareProfBtn');if(spb)spb.style.display=(user&&user.role==='professeur')?'block':'none';
 }
 
 function toggleDarkMode(){
@@ -4662,6 +4775,21 @@ function updateDarkBtn(){
   if(lbl){
     var saved=null;try{saved=localStorage.getItem('cp_dark');}catch(e){}
     lbl.textContent=saved===null?'Suit le système':(_darkMode?'Activé':'Désactivé');
+  }
+}
+
+function shareProfil(){
+  if(!user)return;
+  var url=window.location.origin+'?prof='+user.id;
+  if(navigator.share){
+    navigator.share({
+      title:'Mes cours sur CoursPool',
+      text:'Retrouvez mes cours sur CoursPool — partagez les frais à plusieurs !',
+      url:url
+    }).catch(function(){});
+  } else {
+    try{navigator.clipboard.writeText(url);toast('Lien copié ✓','Partagez votre profil avec vos élèves');}
+    catch(e){toast(url,'Copiez ce lien');}
   }
 }
 
@@ -5033,21 +5161,26 @@ function previewCours(){
 var _reminderCoursId=null;
 function updateVerifBand(){
   var band=g('verifBand');
-  if(!band||!user||user.role!=='professeur'){if(band)band.style.display='none';return;}
+  if(!band)return;
+  // Pas prof = caché
+  if(!user||user.role!=='professeur'){band.style.display='none';return;}
   var status=getCniStatus();
-  if(user.verified)status='verified';
   if(status==='none'){band.style.display='none';return;}
-  if(status==='pending'){
+  if(status==='verified'){band.style.display='none';return;}
+  if(status==='pending'||status==='rejected_retry'){
     band.style.display='flex';
-    band.setAttribute('onclick','openCniSheet()');
     var t=g('verifBandTitle'),s=g('verifBandSub');
-    if(t)t.textContent='Vérification en cours';
-    if(s)s.textContent='Réponse par email sous 24h';
-    band.style.borderColor='#FDE68A';
-    band.style.background='#FFFBEB';
-    var icon=band.querySelector('svg');if(icon)icon.setAttribute('stroke','#F59E0B');
-  } else if(status==='verified'){
-    band.style.display='none'; // vérifié = pas besoin du bandeau
+    if(status==='pending'){
+      if(t)t.textContent='V\u00e9rification en cours';
+      if(s)s.textContent='R\u00e9ponse par email sous 24h';
+      band.style.background='#FFFBEB';
+      band.style.borderColor='#FDE68A';
+    } else {
+      if(t)t.textContent='Document refus\u00e9 \u2014 renvoyer';
+      if(s)s.textContent='Appuyez pour soumettre \u00e0 nouveau';
+      band.style.background='#FEF2F2';
+      band.style.borderColor='#FECACA';
+    }
   }
 }
 
