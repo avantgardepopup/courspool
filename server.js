@@ -803,6 +803,61 @@ app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
   }catch(e){res.status(500).json({error:e.message});}
 });
 
+// GROUPE — envoyer un message à plusieurs élèves d'un cours
+app.post('/messages/groupe', async (req, res) => {
+  const { cours_id, expediteur_id, contenu, cours_titre } = req.body;
+  if (!cours_id || !expediteur_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    // Récupérer tous les inscrits au cours
+    const { data: reservations, error } = await supabase
+      .from('reservations').select('user_id').eq('cours_id', cours_id);
+    if (error) return res.status(500).json({ error: error.message });
+    const eleves = [...new Set(reservations.map(r => r.user_id).filter(id => id && id !== expediteur_id))];
+    if (!eleves.length) return res.json({ success: true, sent: 0 });
+    // Créer un message pour chaque élève avec un tag groupe
+    const msgs = eleves.map(dest => ({
+      sender_id: expediteur_id,
+      receiver_id: dest,
+      contenu: contenu,
+      groupe_cours_id: cours_id,
+      groupe_cours_titre: cours_titre || 'Cours'
+    }));
+    const { error: insertErr } = await supabase.from('messages').insert(msgs);
+    if (insertErr) {
+      // Fallback sans colonnes groupe (si pas encore migrées)
+      const msgsFallback = eleves.map(dest => ({
+        sender_id: expediteur_id, receiver_id: dest, contenu: '[Groupe] ' + contenu
+      }));
+      await supabase.from('messages').insert(msgsFallback);
+    }
+    res.json({ success: true, sent: eleves.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// GROUPE — récupérer messages d'un cours
+app.get('/messages/groupe/:cours_id', async (req, res) => {
+  const { cours_id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('groupe_cours_id', cours_id)
+      .order('created_at', { ascending: true });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data || []);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// GROUPE — toggle autorisation élèves d'écrire
+app.patch('/cours/:id/groupe', async (req, res) => {
+  const { eleves_peuvent_ecrire } = req.body;
+  try {
+    await supabase.from('cours').update({ eleves_peuvent_ecrire }).eq('id', req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+
 // STRIPE CONNECT — créer compte
 app.post('/stripe/connect/create', async (req, res) => {
   const {prof_id,email}=req.body;
