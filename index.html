@@ -2833,7 +2833,7 @@ function buildAccLists(){
   },200);
   var lf=g('listF');
   if(!fIds.length){
-    lf.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="width:56px;height:56px;background:var(--orp);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici dès qu’un élève réserve.</div></div></div>';
+    lf.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="width:56px;height:56px;background:var(--orp);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun professeur suivi</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Suivez un professeur depuis sa fiche pour être notifié de ses prochains cours.</div></div></div>';
   } else {
     lf.innerHTML='<div style="background:var(--wh);border-radius:16px;overflow:hidden">'+fIds.map(function(id,i){
       var p=P[id];if(!p)return'';
@@ -5575,21 +5575,7 @@ function resetFilters(){
     pulling=false;
     var dy=e.changedTouches[0].clientY-startY;
     ind=ind||g('ptrIndicator');spin=spin||g('ptrSpinner');txt=txt||g('ptrText');
-    if(dy>threshold&&!refreshing){
-      refreshing=true;
-      if(navigator.vibrate)navigator.vibrate(8);
-      if(spin)spin.classList.add('spinning');
-      if(txt)txt.textContent='Actualisation…';
-      loadData(1).then(function(){
-        buildCards();
-        refreshing=false;
-        if(ind){ind.style.opacity='0';ind.style.top='-50px';}
-        if(spin)spin.classList.remove('spinning');
-        toast('Actualisé','');
-      });
-    } else {
-      if(ind){ind.style.opacity='0';ind.style.top='-50px';}
-    }
+    if(ind){ind.style.opacity='0';ind.style.top='-50px';}
   },{passive:true});
 })();
 
@@ -6004,10 +5990,10 @@ function startAccountCheck(){
         // Mettre à jour la bannière de vérification
         updateVerifBand();
         // Notifier si compte maintenant vérifié
-        if(p.statut_compte==='verified'||p.verified){
+        if(user.role==='professeur'&&(p.statut_compte==='verified'||p.verified)){
           toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
           haptic([10,50,100,50,10]);
-        } else if(p.statut_compte==='rejeté'){
+        } else if(user.role==='professeur'&&p.statut_compte==='rejeté'){
           toast('Document refusé','Vérifiez votre email pour plus d\'informations');
         }
       }
