@@ -2132,21 +2132,23 @@ function goAccount(){
   if(!user)return;
   g('pgExp').classList.remove('on');g('pgMsg').classList.remove('on');g('pgAcc').classList.add('on');
   var av=g('accAv');
-  if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{av.style.background='rgba(255,255,255,.25)';av.textContent=user.ini;}
-  g('accName').textContent=user.pr+(user.nm?' '+user.nm:'');
-  g('accEmail').textContent=user.em;
-  g('pfPr').value=user.pr||'';g('pfNm').value=user.nm||'';g('pfEm').value=user.em||'';
-  g('pfVille').value=user.ville||'';g('pfBio').value=user.bio||'';
-  // Afficher le rôle en lecture seule
+  if(av){if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+  else{av.style.background='rgba(255,255,255,.25)';av.textContent=user.ini;}}
+  var accName=g('accName'); if(accName)accName.textContent=user.pr+(user.nm?' '+user.nm:'');
+  var accEmail=g('accEmail'); if(accEmail)accEmail.textContent=user.em;
+  var pfPr=g('pfPr'),pfNm=g('pfNm'),pfEm=g('pfEm'),pfVille=g('pfVille'),pfBio=g('pfBio');
+  if(pfPr)pfPr.value=user.pr||'';if(pfNm)pfNm.value=user.nm||'';if(pfEm)pfEm.value=user.em||'';
+  if(pfVille)pfVille.value=user.ville||'';if(pfBio)pfBio.value=user.bio||'';
   var roleDisplay=g('pfRoleDisplay');
   if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 Professeur':'🎓 Élève';
+  var pfProfExtra=g('pfProfExtra');
   if(user.role==='professeur'){
-    g('pfProfExtra').style.display='block';
-    if(user.statut){g('pfStatut').value=user.statut;updateNiveauxPf(user.statut);if(user.niveau)g('pfNiveau').value=user.niveau;}
-    if(user.matieres)g('pfMatieres').value=user.matieres;
+    if(pfProfExtra)pfProfExtra.style.display='block';
+    var pfSt=g('pfStatut'),pfNiv=g('pfNiveau'),pfMat=g('pfMatieres');
+    if(pfSt&&user.statut){pfSt.value=user.statut;updateNiveauxPf(user.statut);if(pfNiv&&user.niveau)pfNiv.value=user.niveau;}
+    if(pfMat&&user.matieres)pfMat.value=user.matieres;
   } else {
-    g('pfProfExtra').style.display='none';
+    if(pfProfExtra)pfProfExtra.style.display='none';
   }
   buildAccLists();
   // Onglet Revenus visible uniquement pour les profs
