@@ -51,7 +51,7 @@ const supabase = createClient(
 // ============================================================
 // EMAILS — domaine vérifié Resend
 // ============================================================
-const FROM_EMAIL = 'CoursPool <hello@courspool.fr>'; // ← ton domaine vérifié Resend
+const FROM_EMAIL = 'CoursPool <hello@courspool.com>'; // ← ton domaine vérifié Resend
 
 // Template de base partagé
 function emailBase(headerBg, headerContent, bodyContent) {
@@ -568,7 +568,7 @@ app.post('/contact', async (req, res) => {
     // 2. Email de notification vers l'admin
     await resend.emails.send({
       from: FROM_EMAIL,
-      to: 'admin@courspool.fr', // ← ton email admin
+      to: 'avantgardepopup@gmail.com', // email admin
       replyTo: email,
       subject: `[Contact] ${sujet || 'Question'} — ${nom || email}`,
       html: emailBase(
@@ -878,7 +878,7 @@ let webpush;
 try {
   webpush = require('web-push');
   webpush.setVapidDetails(
-    'mailto:admin@courspool.fr',
+    'mailto:hello@courspool.com',
     process.env.VAPID_PUBLIC_KEY  || 'BDyXpxjqx8h9llIzLNcaYdMpEX_jbkqEt4fjXOV_bSgENcpW7KaPFUHEjk0uXKT--ZajXK_zAJwgplwNz3j4jA8',
     process.env.VAPID_PRIVATE_KEY || 'cbNwfClkXILrevGfrI1bPQF_AI9ExpvZ8CC3GdCkt9E'
   );
