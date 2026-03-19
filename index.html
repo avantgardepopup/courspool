@@ -277,7 +277,7 @@ html.dk .ntog::after{background:#fff;}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-.ctop{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+.ctop{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;}
 .chip{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:50px;background:rgba(255,255,255,.85);}
 .pbub{width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.15);cursor:pointer;transition:transform .18s;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;position:relative;overflow:hidden;}
 .pbub:hover{transform:scale(1.1);}
@@ -897,12 +897,13 @@ html.dk .ntog::after{background:#fff;}
 
 <!-- APP -->
 <div id="app">
+  <div id="ptrIndicator" style="position:fixed;top:max(20px,env(safe-area-inset-top,20px));left:50%;transform:translateX(-50%) translateY(-56px);background:var(--wh);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.15);z-index:100;pointer-events:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg></div>
 
   <!-- TOPBAR DESKTOP -->
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
-    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <div class="topbar-right">
       <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
@@ -2926,14 +2927,15 @@ function renderPage(){
   toShow.forEach(function(c,i){
     var pp=Math.ceil(c.tot/c.sp);
     var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
-    var bc=pct>=80?'var(--amber)':pct>=60?'var(--or)':'var(--green)';
+    var pleft=c.sp-c.fl;
+    var bc=c.fl>=c.sp?'#ccc':pleft<=1?'#EF4444':pleft<=2?'var(--or)':'#22C069';
     var isR=!!res[c.id],isFull=c.fl>=c.sp;
     var isOwner=user&&c.pr===user.id;
     var btn;
     if(isOwner) btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
     else if(isR&&isFull) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11px">Inscrit · Complet</button>';
     else if(isR) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
-    else if(isFull) btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet · Suivre le prof</button>';
+    else if(isFull) btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet</button>';
     else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
     var profAv=c.prof_photo?'<img src="'+c.prof_photo+'" style="width:100%;height:100%;object-fit:cover">':c.prof_ini;
     var d=document.createElement('div');
@@ -2946,7 +2948,7 @@ function renderPage(){
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:0;flex-wrap:wrap"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div class="ps">Total '+c.tot+'€</div><div class="pm">'+pp+'€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:0;flex-wrap:wrap"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -3122,11 +3124,9 @@ function scrollToLogin(){
 }
 
 function openR(id){haptic(4);
-  // Sans compte : afficher le pop-up de connexion
-  if(!user||!user.id){
-    showLoginPrompt();
-    return;
-  }
+  if(!user||!user.id){showLoginPrompt();return;}
+  var _rBtn=document.querySelector('[data-id="'+id+'"] .btnr');
+  if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);}
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
   var isOwner=user&&c.pr===user.id;
@@ -5581,19 +5581,68 @@ function initLargeTitle(){
   if(!app)return;
   var header=g('mobHeader');
   var lastY=0;
+  // Pull to refresh
+  var _ptr={startY:0,pulling:false};
+  app.addEventListener('touchstart',function(e){
+    if(app.scrollTop===0){_ptr.startY=e.touches[0].clientY;_ptr.pulling=true;}
+  },{passive:true});
+  app.addEventListener('touchmove',function(e){
+    if(!_ptr.pulling)return;
+    var dy=e.touches[0].clientY-_ptr.startY;
+    if(dy>0){
+      var ind=g('ptrIndicator');
+      if(ind){var p=Math.min(dy/80,1);ind.style.transform='translateX(-50%) translateY('+(p*56-56)+'px)';}
+    }
+  },{passive:true});
+  app.addEventListener('touchend',function(e){
+    if(!_ptr.pulling)return;
+    _ptr.pulling=false;
+    var dy=e.changedTouches[0].clientY-_ptr.startY;
+    var ind=g('ptrIndicator');
+    if(dy>80&&app.scrollTop===0){
+      haptic([10,40,10]);
+      if(ind){ind.style.transform='translateX(-50%) translateY(8px)';ind.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';}
+      loadData().then(function(){
+        buildCards();
+        setTimeout(function(){
+          if(ind){ind.style.transform='translateX(-50%) translateY(-56px)';ind.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>';}
+        },800);
+      });
+    } else {
+      if(ind)ind.style.transform='translateX(-50%) translateY(-56px)';
+    }
+  },{passive:true});
   app.addEventListener('scroll',function(){
     var y=app.scrollTop;
-    if(header){
-      if(y>40){header.classList.add('scrolled');}
-      else{header.classList.remove('scrolled');}
-    }
-    // Mettre à jour theme-color selon dark mode
+    if(header){if(y>40){header.classList.add('scrolled');}else{header.classList.remove('scrolled');}}
     var tm=document.getElementById('themeColorMeta');
     if(tm)tm.content=_darkMode?'#131110':'#ffffff';
-    lastY=y;
   },{passive:true});
 }
 
+function expandSearch(){
+  var srch=g('srch');if(!srch)return;
+  var wrap=srch.parentElement;
+  if(!wrap)return;
+  wrap.style.cssText='position:fixed;top:0;left:0;right:0;z-index:200;padding:max(56px,calc(env(safe-area-inset-top,0px)+56px)) 16px 12px;background:var(--wh);box-shadow:0 2px 20px rgba(0,0,0,.1);animation:pgIn .2s ease';
+  var cancel=g('srchCancel');
+  if(!cancel){
+    cancel=document.createElement('button');
+    cancel.id='srchCancel';
+    cancel.textContent='Annuler';
+    cancel.style.cssText='position:fixed;top:max(14px,calc(env(safe-area-inset-top,0px)+14px));right:16px;background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;z-index:201;padding:8px 0';
+    cancel.onclick=function(){srch.blur();collapseSearch();srch.value='';applyFilter();};
+    document.body.appendChild(cancel);
+  }
+  cancel.style.display='block';
+}
+function collapseSearch(){
+  var srch=g('srch');if(!srch)return;
+  var wrap=srch.parentElement;
+  if(wrap)wrap.style.cssText='';
+  var cancel=g('srchCancel');
+  if(cancel)cancel.style.display='none';
+}
 function checkUpcomingReminder(){
   if(!user||!Object.keys(res).length)return;
   var now=new Date();
