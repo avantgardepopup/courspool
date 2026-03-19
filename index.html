@@ -5326,24 +5326,18 @@ function showEmptyAnimated(el,title,sub){
 // ============================================================
 function startAccountCheck(){
   if(!user||!user.id||user.guest)return;
-  // Vérifier toutes les 60 secondes que le compte existe encore
   setInterval(async function(){
     if(!user||!user.id)return;
     try{
       var r=await fetch(API+'/profiles/'+user.id);
-      if(r.status===404||r.status===403){
-        // Compte supprimé ou bloqué → déconnecter
+      var p=await r.json();
+      // Déconnecter si : 404, profil vide, ou profil bloqué
+      if(!r.ok||!p||!p.id||p.statut_compte==='bloqué'){
         toast('Votre compte a été désactivé','Vous allez être déconnecté');
         setTimeout(doLogout, 2000);
-      } else if(r.ok){
-        var p=await r.json();
-        if(!p||!p.id){
-          toast('Session expirée','Vous allez être déconnecté');
-          setTimeout(doLogout, 2000);
-        }
       }
     }catch(e){}
-  }, 60000); // toutes les 60s
+  }, 30000); // toutes les 30s
 }
 
 // SERVICE WORKER PWA
