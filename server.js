@@ -99,8 +99,8 @@ async function sendEmailWelcome(userEmail, userName, role) {
     <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${userName} !</p>
     <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.7">
       ${isProf
-        ? 'Bienvenue dans la communauté CoursPool. Pour commencer à proposer des cours, vous devez d'abord vérifier votre identité en envoyant une pièce d'identité depuis l'application.'
-        : 'Bienvenue sur CoursPool ! Vous pouvez dès maintenant explorer les cours disponibles près de chez vous et réserver votre première session.'
+        ? "Bienvenue dans la communauté CoursPool. Pour commencer à proposer des cours, vérifiez d'abord votre identité depuis l'application."
+        : "Bienvenue sur CoursPool ! Explorez les cours disponibles près de chez vous et réservez votre première session."
       }
     </p>
     <div style="background:#FFF7F3;border-radius:14px;padding:20px;margin-bottom:24px">
@@ -137,7 +137,7 @@ async function sendEmailWelcome(userEmail, userName, role) {
       `}
     </div>
     <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">
-      ${isProf ? 'Ouvrir l'application →' : 'Découvrir les cours →'}
+      ${isProf ? "Ouvrir l'application →" : "Découvrir les cours →"}
     </a>`;
   try {
     await resend.emails.send({
