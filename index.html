@@ -1505,6 +1505,10 @@ html.dk .ntog::after{background:#fff;}
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="shareCoursLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager ce cours</button>
       <button id="btnVoirEleves" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openEleves(curId)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Voir les élèves inscrits</button>
+      <button id="btnGroupe" class="pb sec" style="width:100%;margin-bottom:10px;display:none" onclick="openGroupeMsg(curId)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+        Groupe du cours
+      </button>
       <button id="btnDupCours" class="pb sec" style="width:100%;display:none;margin-bottom:10px" onclick="dupCours(curId)">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
   Dupliquer ce cours
@@ -1888,6 +1892,47 @@ html.dk .ntog::after{background:#fff;}
 </div>
 
 <!-- BOTTOM SHEET CNI -->
+<!-- GROUPE DE COURS -->
+<div id="bdGroupe" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeGroupe()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .28s cubic-bezier(.32,0,.67,0)">
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:2px"></div></div>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--ink)" id="groupeTitle">Groupe du cours</div>
+        <div style="font-size:13px;color:var(--lite);margin-top:2px" id="groupeSubtitle">Envoyer un message à tous les inscrits</div>
+      </div>
+      <button onclick="closeGroupe()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--mid);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- Toggle élèves peuvent écrire -->
+    <div style="margin:0 20px 16px;background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600;color:var(--ink)">Élèves peuvent répondre</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:2px">Autorise les élèves à écrire dans le groupe</div>
+      </div>
+      <div id="groupeToggle" onclick="toggleGroupePerm()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+        <div id="groupeToggleKnob" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+      </div>
+    </div>
+
+    <!-- Champ message -->
+    <div style="margin:0 20px 16px">
+      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message pour le groupe</label>
+      <textarea id="groupeMsg" rows="4" placeholder="Écrivez votre message pour tous les élèves inscrits…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+    </div>
+
+    <!-- Bouton envoyer -->
+    <div style="padding:0 20px">
+      <button id="groupeSubmitBtn" onclick="sendGroupeMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Envoyer au groupe
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- PICKER NATIF — statut/niveau -->
 <div id="bdPicker" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closePicker()">
   <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .28s cubic-bezier(.32,0,.67,0)">
@@ -4153,6 +4198,103 @@ function getCniStatus(){
     if(localStorage.getItem('cp_cni_sent_'+user.id))return 'pending';
   }catch(e){}
   return 'none';
+}
+
+// ============================================================
+// GROUPE DE COURS
+// ============================================================
+var _groupeCoursId = null;
+var _groupeElevesPermis = false;
+
+function openGroupeMsg(coursId){
+  _groupeCoursId = coursId;
+  var c = C.find(function(x){return x.id===coursId;});
+  if(!c) return;
+  // Titre
+  var gt = g('groupeTitle');
+  if(gt) gt.textContent = 'Groupe · ' + c.title;
+  var gs = g('groupeSubtitle');
+  if(gs) gs.textContent = 'Message pour tous les élèves inscrits';
+  // Toggle
+  _groupeElevesPermis = c.eleves_peuvent_ecrire || false;
+  _updateGroupeToggle();
+  // Reset
+  var gm = g('groupeMsg');
+  if(gm) gm.value = '';
+  var bd = g('bdGroupe');
+  if(bd) bd.style.display = 'flex';
+  haptic(4);
+}
+
+function closeGroupe(){
+  var bd = g('bdGroupe');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
+}
+
+function _updateGroupeToggle(){
+  var tog = g('groupeToggle');
+  var knob = g('groupeToggleKnob');
+  if(tog) tog.style.background = _groupeElevesPermis ? 'var(--green)' : 'var(--bdr)';
+  if(knob) knob.style.transform = _groupeElevesPermis ? 'translateX(18px)' : 'translateX(0)';
+}
+
+function toggleGroupePerm(){
+  // Pop-up d'avertissement
+  var msg = _groupeElevesPermis
+    ? 'Les élèves ne pourront plus envoyer de messages dans le groupe.'
+    : 'Les élèves pourront envoyer des messages à tout le groupe. Êtes-vous sûr ?';
+  if(!confirm(msg)) return;
+  _groupeElevesPermis = !_groupeElevesPermis;
+  _updateGroupeToggle();
+  haptic(6);
+  // Sauvegarder en base
+  if(_groupeCoursId){
+    fetch(API+'/cours/'+_groupeCoursId+'/groupe',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({eleves_peuvent_ecrire:_groupeElevesPermis})
+    }).catch(function(){});
+    // Mettre à jour en local
+    var c = C.find(function(x){return x.id===_groupeCoursId;});
+    if(c) c.eleves_peuvent_ecrire = _groupeElevesPermis;
+  }
+}
+
+async function sendGroupeMsg(){
+  var msg = g('groupeMsg');
+  var contenu = msg ? msg.value.trim() : '';
+  if(!contenu){
+    msg && (msg.style.borderColor='var(--red)');
+    toast('Message vide','Écrivez un message pour le groupe',true);
+    return;
+  }
+  var btn = g('groupeSubmitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Envoi…';}
+  try{
+    var c = C.find(function(x){return x.id===_groupeCoursId;});
+    var r = await fetch(API+'/messages/groupe',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        cours_id:_groupeCoursId,
+        expediteur_id:user.id,
+        contenu:contenu,
+        cours_titre:c?c.title:'Cours'
+      })
+    });
+    var data = await r.json();
+    if(data.success){
+      closeGroupe();
+      toast('Message envoyé',''+( data.sent||0)+' élève'+(data.sent>1?'s':'')+ ' notifié'+(data.sent>1?'s':''));
+      haptic([10,50,100]);
+    } else {
+      toast('Erreur','Impossible d’envoyer le message',true);
+    }
+  }catch(e){
+    toast('Erreur',e.message,true);
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer au groupe';}
+  }
 }
 
 // ============================================================
