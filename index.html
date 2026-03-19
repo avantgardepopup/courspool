@@ -167,6 +167,7 @@ html.dk .ntog::after{background:#fff;}
 
 .pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;animation:pgIn .22s ease;}
 @keyframes pgIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:translateX(0)}}
+@keyframes lineGrow{0%,100%{opacity:.3}50%{opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
@@ -875,6 +876,11 @@ html.dk .ntog::after{background:#fff;}
         <div class="ptr-spinner" id="ptrSpinner"></div>
         <span id="ptrText">Tirer pour actualiser</span>
       </div>
+      <div id="reminderBand" style="display:none;background:linear-gradient(135deg,var(--or),var(--ord));color:#fff;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;cursor:pointer" onclick="openReminderCours()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700" id="reminderTitle">Cours bientôt</div><div style="font-size:11px;opacity:.85" id="reminderSub"></div></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
       <div class="locbar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <input type="text" id="locInput" placeholder="Ville, code postal…" oninput="filterByLoc(this.value)" autocomplete="off" style="flex:1">
@@ -1225,8 +1231,8 @@ html.dk .ntog::after{background:#fff;}
 
         <!-- HISTORIQUE -->
         <div class="asec" id="asecH">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Historique</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin:0 16px;padding:20px;text-align:center;color:var(--lite);font-size:13px">Bientôt disponible</div>
+          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Cours passés</div>
+          <div id="listH"></div>
         </div>
 
         <!-- PROFIL -->
@@ -1575,17 +1581,34 @@ html.dk .ntog::after{background:#fff;}
 
     </div>
 
-    <!-- Bouton publier sticky en bas -->
-    <div style="padding:12px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--bdr);flex-shrink:0;background:var(--wh)">
-      <button class="pb pri" style="width:100%;padding:15px;font-size:16px;border-radius:14px;box-shadow:0 4px 14px rgba(255,107,43,.3)" onclick="subCr()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Publier le cours
+    <div style="padding:12px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--bdr);flex-shrink:0;background:var(--wh);display:flex;gap:10px">
+      <button onclick="previewCours()" style="flex:1;padding:15px;font-size:15px;border-radius:14px;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);font-family:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Aperçu
+      </button>
+      <button class="pb pri" style="flex:2;padding:15px;font-size:16px;border-radius:14px;box-shadow:0 4px 14px rgba(255,107,43,.3)" onclick="subCr()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier
       </button>
     </div>
 
   </div>
 </div>
 
+<!-- MODAL APERCU COURS -->
+<div class="bd" id="bdPreview" onclick="if(event.target===this)g('bdPreview').style.display='none'" style="display:none">
+  <div class="modal sm" style="padding:0;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:700">Aperçu</div>
+      <button onclick="g('bdPreview').style.display='none'" class="mcl">✕</button>
+    </div>
+    <div style="padding:16px 20px;overflow-y:auto;max-height:60vh">
+      <div id="previewCard" style="background:var(--wh);border-radius:16px;overflow:hidden;box-shadow:var(--sh)"></div>
+      <div style="margin-top:12px;background:var(--bg);border-radius:12px;padding:12px;font-size:12px;color:var(--lite);text-align:center">C'est ainsi que les élèves verront votre cours</div>
+    </div>
+    <div style="padding:12px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--bdr)">
+      <button class="pb pri" style="width:100%" onclick="g('bdPreview').style.display='none';subCr()">Publier maintenant</button>
+    </div>
+  </div>
+</div>
 <!-- MODAL CONFIRMATION SUPPRESSION -->
 <div class="bd" id="bdConfirmDel" onclick="if(event.target===this)closeM('bdConfirmDel')">
   <div class="modal sm">
@@ -2343,6 +2366,7 @@ function switchATab(s,el){
   if(navigator.vibrate)navigator.vibrate(6);
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);}
+  if(s==='H'){buildHistorique();}
 }
 
 function buildAccLists(){
@@ -2400,6 +2424,12 @@ function buildAccLists(){
       return'<div class="rrow"><div class="rdot">'+c.em+'</div><div class="ri"><div class="rt">'+c.title+'</div><div class="rm">'+c.prof_nm+' · '+c.dt+'</div></div>'+(isPast?'<span class="rbadge bdone">Terminé</span>':'<span class="rbadge bup">À venir</span>')+noteBtn+'</div>';
     }).join('');
   }
+  // Swipe sur les cours à venir
+  setTimeout(function(){
+    if(g('listR'))g('listR').querySelectorAll('.rrow').forEach(function(el){
+      initSwipeCancel(el,function(){toast('Réservation annulée','Contactez le professeur pour confirmation');});
+    });
+  },200);
   var lf=g('listF');
   if(!fIds.length){
     lf.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:40px;margin-bottom:10px">👨‍🏫</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px">Aucun prof suivi</div><div style="font-size:13px;color:var(--lite)">Suivez un prof pour être notifié de ses prochains cours</div></div>';
@@ -2409,7 +2439,7 @@ function buildAccLists(){
       var cours=C.filter(function(c){return c.pr===id;});
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
       var prochainCours=cours.filter(function(c){return c.fl<c.sp;}).length;
-      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':
+      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
         '<span style="font-size:15px;font-weight:800;color:#fff">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
       var dispoLabel=prochainCours?' · <span style="color:var(--or);font-weight:600">'+prochainCours+' cours dispo</span>':'';
@@ -4658,6 +4688,141 @@ function urlBase64ToUint8Array(base64String){
   var outputArray=new Uint8Array(rawData.length);
   for(var i=0;i<rawData.length;++i)outputArray[i]=rawData.charCodeAt(i);
   return outputArray;
+}
+
+// ============================================================
+// 3. HISTORIQUE
+// ============================================================
+function buildHistorique(){
+  var lr=g('listH');if(!lr)return;
+  var rIds=Object.keys(res);
+  if(!rIds.length){
+    lr.innerHTML='<div style="text-align:center;padding:40px 20px">'
+      +'<div style="width:64px;height:64px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      +'</div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours pass\u00e9</div>'
+      +'<div style="font-size:14px;color:var(--lite)">Vos cours termin\u00e9s apparaissent ici</div></div>';
+    return;
+  }
+  var now=new Date();
+  var past=rIds.map(function(id){return C.find(function(x){return x.id===id;});}).filter(function(c){
+    if(!c||!c.created_at)return false;
+    return(now-new Date(c.created_at))>3*60*60*1000;
+  });
+  if(!past.length){
+    lr.innerHTML='<div style="text-align:center;padding:32px;font-size:14px;color:var(--lite)">Aucun cours pass\u00e9 pour le moment</div>';
+    return;
+  }
+  var rows=past.map(function(c,i){
+    var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);})||MATIERES[MATIERES.length-1];
+    return{id:c.id,title:c.title,dt:c.dt,color:mat.color,border:i<past.length-1?'border-bottom:1px solid var(--bdr)':''};
+  });
+  lr.innerHTML='<div style="background:var(--wh);border-radius:16px;overflow:hidden">'
+    +rows.map(function(r){
+      return'<div class="hrow" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;'+r.border+'">'
+        +'<div style="width:42px;height:42px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<div style="width:10px;height:10px;border-radius:50%;background:'+r.color+'"></div></div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.title+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+r.dt+'</div></div>'
+        +'<span style="font-size:11px;font-weight:600;background:var(--bg);color:var(--lite);border-radius:6px;padding:3px 8px">Termin\u00e9</span>'
+        +'</div>';
+    }).join('')+'</div>';
+  lr.querySelectorAll('.hrow').forEach(function(el,i){
+    el.onclick=function(){openR(rows[i].id);};
+  });
+}
+
+// ============================================================
+// 4. APERCU COURS
+// ============================================================
+function previewCours(){
+  var titre=g('crTitre').value.trim()||'Titre du cours';
+  var subjKey=(g('crSubjHidden')||{}).value||'';
+  var mat=MATIERES.find(function(m){return m.key===subjKey;})||MATIERES[MATIERES.length-1];
+  var lieu=g('crLieu').value.trim()||'Lieu \u00e0 d\u00e9finir';
+  var date=g('crDate').value,heure=g('crHeure').value;
+  var places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
+  var pp=prix>0?Math.ceil(prix/places):0;
+  var dt=date&&heure?new Date(date+'T'+heure).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' \u00b7 '+heure:'Date \u00e0 d\u00e9finir';
+  var card=g('previewCard');if(!card)return;
+  card.innerHTML='<div style="background:'+mat.bg+';padding:14px 16px 10px">'
+    +'<span style="background:rgba(255,255,255,.7);border-radius:50px;padding:3px 10px;font-size:11.5px;font-weight:600;color:'+mat.color+'">'+mat.label+'</span></div>'
+    +'<div style="padding:14px 16px"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px">'+titre+'</div>'
+    +'<div style="font-size:13px;color:var(--mid);margin-bottom:4px">&#128336; '+dt+'</div>'
+    +'<div style="font-size:13px;color:var(--mid);margin-bottom:12px">&#128205; '+lieu+'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-size:12px;color:var(--lite)">Total '+prix+'\u20ac</div>'
+    +'<div style="font-size:20px;font-weight:800;color:var(--or)">'+pp+'\u20ac<span style="font-size:12px;font-weight:500;color:var(--lite)"> / \u00e9l\u00e8ve</span></div></div>'
+    +'<div style="background:var(--or);color:#fff;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700">R\u00e9server</div>'
+    +'</div></div>';
+  g('bdPreview').style.display='flex';haptic(6);
+}
+
+// ============================================================
+// 7. RAPPEL COURS
+// ============================================================
+var _reminderCoursId=null;
+function checkUpcomingReminder(){
+  if(!user||!Object.keys(res).length)return;
+  var now=new Date();
+  var upcoming=Object.keys(res).map(function(id){return C.find(function(x){return x.id===id;});}).filter(Boolean).filter(function(c){
+    try{var d=new Date(c.created_at||now);var diff=(d.getTime()+24*3600000)-now.getTime();return diff>0&&diff<3*3600000;}catch(e){return false;}
+  });
+  var rb=g('reminderBand');
+  if(!upcoming.length){if(rb)rb.style.display='none';return;}
+  var c=upcoming[0];_reminderCoursId=c.id;
+  if(!rb)return;
+  rb.style.display='flex';
+  var rt=g('reminderTitle');if(rt)rt.textContent=c.title;
+  var rs=g('reminderSub');
+  if(rs){try{var d=new Date(c.created_at||now);var diff=Math.round(((d.getTime()+24*3600000)-now.getTime())/60000);rs.textContent='Dans '+diff+' min \u00b7 '+c.lc;}catch(e){rs.textContent=c.dt;}}
+}
+function openReminderCours(){if(_reminderCoursId)openR(_reminderCoursId);}
+
+// ============================================================
+// 8. FADE-IN images
+// ============================================================
+function fadeInImg(img){
+  img.style.opacity='0';img.style.transition='opacity .3s';
+  if(img.complete){img.style.opacity='1';}else{img.onload=function(){img.style.opacity='1';};}
+}
+
+// ============================================================
+// 9. SWIPE ANNULER
+// ============================================================
+function initSwipeCancel(el,onConfirm){
+  var sx=0,dx=0,sw=false;
+  el.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sw=true;dx=0;},{passive:true});
+  el.addEventListener('touchmove',function(e){if(!sw)return;dx=e.touches[0].clientX-sx;if(dx>0)return;el.style.transform='translateX('+Math.max(dx,-80)+'px)';el.style.transition='none';},{passive:true});
+  el.addEventListener('touchend',function(){
+    sw=false;
+    if(dx<-60){
+      el.style.transition='transform .2s';el.style.transform='translateX(-80px)';
+      if(!el.querySelector('.swipe-del')){
+        var btn=document.createElement('div');
+        btn.className='swipe-del';
+        btn.style.cssText='position:absolute;right:0;top:0;bottom:0;width:80px;background:#EF4444;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:11px;font-weight:700';
+        btn.textContent='Annuler';el.style.position='relative';el.style.overflow='hidden';el.appendChild(btn);
+        btn.onclick=function(){if(window.confirm('Annuler cette r\u00e9servation ?')){onConfirm();}else{el.style.transition='transform .2s';el.style.transform='translateX(0)';}};
+      }
+    }else{el.style.transition='transform .2s';el.style.transform='translateX(0)';}
+  },{passive:true});
+}
+
+// ============================================================
+// 10. EMPTY STATE ANIME
+// ============================================================
+function showEmptyAnimated(el,title,sub){
+  if(!el)return;
+  el.innerHTML='<div style="text-align:center;padding:50px 24px">'
+    +'<svg viewBox="0 0 72 72" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin:0 auto 20px;display:block">'
+    +'<rect x="12" y="20" width="48" height="40" rx="6" fill="var(--orp)" stroke="var(--or)" stroke-width="2"/>'
+    +'<path d="M12 30h48" stroke="var(--or)" stroke-width="2"/>'
+    +'<line x1="22" y1="42" x2="50" y2="42" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" style="animation:lineGrow 2s ease infinite"/>'
+    +'<line x1="22" y1="51" x2="40" y2="51" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" style="animation:lineGrow 2s ease .4s infinite"/>'
+    +'</svg>'
+    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">'+title+'</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6">'+sub+'</div></div>';
 }
 
 // SERVICE WORKER PWA
