@@ -1603,27 +1603,57 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" class="bni-ico-on" style="display:none"><circle cx="11" cy="11" r="8" fill="currentColor" opacity=".15"/><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2.5"/></svg>
     <span>Explorer</span>
   </div>
-  <div class="bni-sep"></div>
   <div class="bni" id="bniMsg" onclick="navTo('msg')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" class="bni-ico-on" style="display:none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" opacity=".9"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
     <span>Messages</span>
   </div>
-  <div class="bni-sep" id="bniSepAdd" style="display:none"></div>
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:0 4px">
-    <div style="width:46px;height:28px;border-radius:14px;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4);transition:transform .2s">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:0 4px;flex:1;min-width:58px;justify-content:center">
+    <div style="width:44px;height:26px;border-radius:14px;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
     <span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--or)">Créer</span>
   </div>
-  <div class="bni-sep"></div>
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="bni-ico-on" style="display:none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" opacity=".9"/><circle cx="12" cy="7" r="4"/></svg>
     <span>Profil</span>
   </div>
 </nav>
+
+<!-- MODAL CONTACT -->
+<div class="bd" id="bdContact" onclick="if(event.target===this){this.style.display='none';document.body.style.overflow='';}" style="display:none;z-index:600;align-items:flex-end">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
+    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:18px;font-weight:800">Nous contacter</div>
+        <div style="font-size:13px;color:var(--lite);margin-top:2px">On vous répond sous 24h</div>
+      </div>
+      <button onclick="closeContact()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+    </div>
+    <!-- Sujets rapides -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Question générale">Question générale</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Problème technique">Problème technique</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Paiement">Paiement</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Signalement">Signalement</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Votre email</label>
+      <input id="contactEmail" type="email" class="fi3" placeholder="votre@email.com" style="width:100%">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:5px">Message</label>
+      <textarea id="contactMsg" class="fi3" rows="4" placeholder="Décrivez votre question ou problème…" style="resize:none;width:100%;height:auto"></textarea>
+    </div>
+    <button id="contactSubmitBtn" onclick="submitContact()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Envoyer le message
+    </button>
+  </div>
+</div>
 
 <!-- POPUP CONFIRMATION PAIEMENT -->
 <div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
@@ -1964,7 +1994,7 @@ function navTo(tab){
       bniExp.onclick=function(){navTo('exp');};
     }
     ['bniMsg','bniAcc','bniAdd','bniSepAdd'].forEach(function(id){var e=g(id);if(e)e.style.display='none';});
-    document.querySelectorAll('.bni-sep').forEach(function(e){e.style.display='none';});
+  
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
@@ -1997,7 +2027,7 @@ function restoreNav(){
   var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display='';
   var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
   if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
-  document.querySelectorAll('.bni-sep').forEach(function(e){e.style.display='';});
+  // bni-sep supprimés de la nav
 }
 
 function goExplore(){
@@ -3939,8 +3969,52 @@ function pickNiveau(el){
 // CONTACT
 // ============================================================
 function openContact(){
+  // Pré-remplir l'email si connecté
   var bd=g('bdContact');
-  if(bd){bd.style.display='flex';document.body.style.overflow='hidden';}
+  if(!bd)return;
+  var emailInput=g('contactEmail');
+  if(emailInput&&user&&user.em)emailInput.value=user.em;
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeContact(){
+  var bd=g('bdContact');
+  if(bd)bd.style.display='none';
+  document.body.style.overflow='';
+}
+function pickSubj(el){
+  document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
+  el.classList.add('on');
+}
+async function submitContact(){
+  var email=g('contactEmail').value.trim();
+  var msg=g('contactMsg').value.trim();
+  var sujet=document.querySelector('.contact-subj.on');
+  if(!email||!msg){toast('Champs manquants','Remplissez votre email et votre message');return;}
+  var btn=g('contactSubmitBtn');
+  btn.disabled=true;btn.textContent='Envoi…';
+  try{
+    var r=await fetch(API+'/contact',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email:email,
+        sujet:sujet?sujet.dataset.s:'Question générale',
+        message:msg,
+        nom:user?(user.pr+' '+user.nm).trim():'',
+        role:user?user.role:'visiteur',
+        user_id:user?user.id:null
+      })
+    });
+    if(r.ok){
+      closeContact();
+      g('contactMsg').value='';
+      document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
+      toast('Message envoyé ✓','On vous répond sous 24h');
+    } else {
+      toast('Erreur',"Impossible d'envoyer, réessayez");
+    }
+  }catch(e){toast('Erreur',"Impossible d'envoyer");}
+  finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer le message';}
 }
 
 // ============================================================
