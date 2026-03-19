@@ -439,10 +439,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 #onboarding{
   position:fixed;inset:0;z-index:2000;
   background:#1A0A04;
-  display:flex;flex-direction:column;
+  display:none;
+  flex-direction:column;
   overflow:hidden;
   font-family:'Plus Jakarta Sans',sans-serif;
 }
+#onboarding.visible{display:flex;}
 #onboarding.hidden{display:none;}
 
 /* Slides wrapper */
@@ -1756,7 +1758,7 @@ function obShow(){
     if(seen) return; // déjà vu, on skip
   }catch(e){}
   var ob=g('onboarding');
-  if(ob) ob.classList.remove('hidden');
+  if(ob){ob.classList.remove('hidden');ob.classList.add('visible');}
   obRender();
   // Swipe support mobile
   var track=g('obTrack');
@@ -1801,7 +1803,7 @@ function obDone(){
   if(ob){
     ob.style.transition='opacity .4s ease';
     ob.style.opacity='0';
-    setTimeout(function(){ob.classList.add('hidden');ob.style.opacity='';ob.style.transition='';},400);
+    setTimeout(function(){ob.classList.add('hidden');ob.classList.remove('visible');ob.style.opacity='';ob.style.transition='';},400);
   }
 }
 
