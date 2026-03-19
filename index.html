@@ -44,7 +44,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
 }
-#login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+#login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;transition:opacity .2s;}
 .lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
 .lhero{background:linear-gradient(135deg,var(--or),var(--ord));padding:32px 28px 24px;color:#fff;position:relative;overflow:hidden;}
 .lhero::after{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.08);}
@@ -1810,7 +1810,7 @@ window.addEventListener('DOMContentLoaded',function(){
   // Masquer le splash après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
-    if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
+    if(sp){sp.style.opacity='0';sp.style.pointerEvents='none';setTimeout(function(){sp.style.display='none';},500);}
   }, 800);
 });
 
@@ -1967,7 +1967,7 @@ function go(pr,nm,em,role,uid,photoUrl){
 }
 
 function applyUser(){
-  g('login').style.display='none';g('app').style.display='block';
+  var loginEl=g('login');loginEl.style.display='none';loginEl.style.pointerEvents='none';loginEl.style.zIndex='-1';g('app').style.display='block';
   var tav=g('tav');
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
@@ -2341,7 +2341,7 @@ function saveProf(){
 }
 
 function doLogout(){
-  g('app').style.display='none';g('login').style.display='flex';
+  g('app').style.display='none';var loginEl=g('login');loginEl.style.display='flex';loginEl.style.pointerEvents='';loginEl.style.zIndex='999';
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();user=null;
   try{localStorage.removeItem('cp_user');}catch(e){}
   var tav=g('tav');tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';
