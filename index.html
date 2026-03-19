@@ -2016,9 +2016,13 @@ function obDone(){
   }
   // Tuto spotlight pour visiteurs sans compte
   setTimeout(function(){
-    if(!user){
+    if(!user||user.guest){
       _tutoSteps=TUTO_ELEVE_STEPS;
-      _tutoIdx=0;
+      // Reprendre au step sauvegardé si existe
+      try{
+        var saved=localStorage.getItem('cp_tuto_step_guest');
+        _tutoIdx=saved?Math.min(parseInt(saved),_tutoSteps.length-1):0;
+      }catch(e){_tutoIdx=0;}
       _tutoShow();
     }
   },700);
@@ -4269,7 +4273,11 @@ function tutoStart(){
   if(!user)return;
   try{if(localStorage.getItem('cp_tuto_done_'+user.id))return;}catch(e){}
   _tutoSteps=user.role==='professeur'?TUTO_PROF_STEPS:TUTO_ELEVE_STEPS;
-  _tutoIdx=0;
+  // Reprendre au step sauvegardé si existe
+  try{
+    var saved=localStorage.getItem('cp_tuto_step_'+user.id);
+    _tutoIdx=saved?Math.min(parseInt(saved),_tutoSteps.length-1):0;
+  }catch(e){_tutoIdx=0;}
   setTimeout(_tutoShow,800);
 }
 
@@ -4308,9 +4316,49 @@ function _tutoShow(){
   haptic(4);
 }
 
+function tutoNext(){
+  if(_tutoIdx<_tutoSteps.length-1){
+    _tutoIdx++;
+    _tutoShow();
+    // Sauvegarder la progression
+    try{
+      var key=user&&user.id?'cp_tuto_step_'+user.id:'cp_tuto_step_guest';
+      localStorage.setItem(key,String(_tutoIdx));
+    }catch(e){}
+  } else {
+    tutoDone();
+    // Si visiteur sans compte → rediriger vers inscription
+    if(!user||user.guest){
+      setTimeout(function(){
+        scrollToLogin();
+        setTimeout(function(){var t=g('ltI');if(t)t.click();},300);
+      },400);
+    }
+  }
+}
+
+function tutoPrev(){
+  if(_tutoIdx>0){_tutoIdx--;_tutoShow();}
+}
+
+function tutoSkip(){
+  // Passer = marquer comme terminé + effacer progression
+  try{
+    var doneKey=user&&user.id?'cp_tuto_done_'+user.id:'cp_tuto_done_guest';
+    var stepKey=user&&user.id?'cp_tuto_step_'+user.id:'cp_tuto_step_guest';
+    localStorage.setItem(doneKey,'1');
+    localStorage.removeItem(stepKey);
+  }catch(e){}
+  tutoDone();
+}
 
 function tutoDone(){
-  try{localStorage.setItem('cp_tuto_done_'+user.id,'1');}catch(e){}
+  try{
+    var doneKey=user&&user.id?'cp_tuto_done_'+user.id:'cp_tuto_done_guest';
+    var stepKey=user&&user.id?'cp_tuto_step_'+user.id:'cp_tuto_step_guest';
+    localStorage.setItem(doneKey,'1');
+    localStorage.removeItem(stepKey); // effacer la progression
+  }catch(e){}
   var root=g('tutoRoot');
   if(root){
     root.style.opacity='0';root.style.transition='opacity .3s';
