@@ -866,22 +866,28 @@ async function renderSupport(){
       list.innerHTML='<div style="padding:40px;text-align:center;color:var(--lite);font-size:14px">Aucun message reçu</div>';
       return;
     }
-    list.innerHTML = allContacts.map(function(c,i){
+    list.innerHTML = allContacts.map(function(c){
       var date = new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
       var roleColor = c.role==='professeur'?'var(--or)':'#6366F1';
-      return '<div style="border-bottom:1px solid var(--bdr);padding:16px 20px;cursor:pointer;transition:background .15s;background:'+(c.lu?'transparent':'#FFFBF7')+'" onclick="openSupportMsg(''+c.id+'')" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''+(c.lu?'transparent':'#FFFBF7')+''">'
+      var bg = c.lu ? 'transparent' : '#FFFBF7';
+      var cid = c.id;
+      return '<div class="crow" data-cid="'+cid+'" data-bg="'+bg+'" style="border-bottom:1px solid var(--bdr);padding:16px 20px;cursor:pointer;background:'+bg+';transition:background .15s">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
         +'<div style="display:flex;align-items:center;gap:8px">'
         +(c.lu?'':'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0"></div>')
-        +'<span style="font-size:14px;font-weight:'+(c.lu?'500':'700')+';color:var(--ink)">'+(c.nom||c.email)+'</span>'
+        +'<span style="font-size:14px;font-weight:'+(c.lu?500:700)+';color:var(--ink)">'+(c.nom||c.email||'')+'</span>'
         +'<span style="font-size:11px;font-weight:600;color:'+roleColor+';background:'+(c.role==='professeur'?'var(--orp)':'#EEF2FF')+';padding:2px 8px;border-radius:50px">'+(c.role||'')+'</span>'
         +'</div>'
         +'<span style="font-size:11px;color:var(--lite)">'+date+'</span>'
         +'</div>'
-        +'<div style="font-size:12px;font-weight:600;color:var(--or);margin-bottom:4px">'+c.sujet+'</div>'
-        +'<div style="font-size:13px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">'+c.message+'</div>'
+        +'<div style="font-size:13px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.message||c.sujet||'')+'</div>'
         +'</div>';
     }).join('');
+    list.querySelectorAll('.crow').forEach(function(el){
+      el.onclick=function(){openSupportMsg(this.dataset.cid);};
+      el.onmouseenter=function(){this.style.background='var(--bg)';};
+      el.onmouseleave=function(){this.style.background=this.dataset.bg;};
+    });
   }catch(e){
     list.innerHTML='<div style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Erreur de chargement</div>';
   }
@@ -911,9 +917,12 @@ async function openSupportMsg(id){
     +'</div>'
     +'<div style="display:flex;gap:10px;margin-top:16px">'
     +'<a href="mailto:'+c.email+'?subject=Re: '+encodeURIComponent(c.sujet||'Votre message CoursPool')+'" style="flex:1;background:var(--or);color:#fff;border-radius:12px;padding:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px">Répondre par email</a>'
-    +'<button onclick="deleteSupportMsg(''+id+'')" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;color:#EF4444">Supprimer</button>'
+    +'<button class="del-msg-btn" data-mid="'+id+'" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;color:#EF4444">Supprimer</button>'
     +'</div>';
   document.getElementById('modalActions').innerHTML = '';
+  // Attacher le listener sur le bouton supprimer
+  var delBtn = document.querySelector('.del-msg-btn');
+  if(delBtn) delBtn.onclick = function(){deleteSupportMsg(this.dataset.mid);};
   document.getElementById('overlay').classList.add('on');
 }
 
