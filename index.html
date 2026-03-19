@@ -31,8 +31,9 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{overflow-x:hidden;max-width:100vw;width:100%;}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
-  /* Empêcher le rebond iOS */
   overscroll-behavior:none;
+  /* Scroll fluide iOS */
+  -webkit-overflow-scrolling:touch;
 }
 /* Safe area iOS — s'assurer que rien ne touche le notch ni le home indicator */
 :root{
@@ -103,13 +104,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:16px;outline:none;}
 .mob-search .si{top:50%;left:31px;}
 
-.pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;}
+.pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
-  .pg{min-height:calc(100dvh - 130px);}
+  .pg{min-height:calc(100dvh - 130px);-webkit-overflow-scrolling:touch;}
   #pgMsg{height:calc(100dvh - 130px) !important;}
   #pgMsg.on{display:flex !important;}
+  /* Empêcher le double scroll sur les pages fixes */
+  .pg.on{overflow-x:hidden;}
 }
 .cnt{padding:20px 16px;max-width:1200px;}
 .locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;position:relative;}
@@ -139,7 +142,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
-.pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;-webkit-overflow-scrolling:touch;}
 .pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
 .pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill:not(.on):hover{border-color:var(--or);color:var(--or);}
@@ -235,7 +238,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .bd{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
 .bd.on{display:flex;animation:bi .18s ease;}
 @keyframes bi{from{opacity:0}to{opacity:1}}
-.modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;animation:mi .25s ease;}
+.modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:mi .25s ease;}
 .modal.sm{max-width:380px;}
 @keyframes mi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .mhd{padding:18px 18px 0;display:flex;align-items:flex-start;justify-content:space-between;}
@@ -358,7 +361,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   .bni svg{width:22px;height:22px;}
   .bni span{font-size:10px;}
   .bni-sep{display:none !important;}
-  #app .cnt{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
+  #app .cnt{padding-bottom:max(110px, calc(90px + env(safe-area-inset-bottom,0px)));}
   .acc-body{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
 }
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
@@ -920,7 +923,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 
   <div class="pg" id="pgAcc">
-    <div style="background:var(--bg);min-height:100%;padding-bottom:120px">
+    <div style="background:var(--bg);min-height:100%;padding-bottom:max(120px,calc(100px + env(safe-area-inset-bottom,0px)))">
 
       <!-- HERO PROFIL iOS style -->
       <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:40px 20px 28px;text-align:center;position:relative">
@@ -1432,7 +1435,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- MODAL CONTACT -->
 <div class="bd" id="bdContact" onclick="if(event.target===this)closeM('bdContact')" style="z-index:600;align-items:flex-end">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,20px);animation:mi .25s ease">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:env(safe-area-inset-bottom,20px);animation:mi .25s ease">
 
     <!-- Handle iOS -->
     <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:99px;display:inline-block"></div></div>
@@ -1603,7 +1606,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- TUTORIEL v3 — slides plein écran centrées, fiables sur tous les devices -->
 <div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;">
-  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
+  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
 
     <!-- Illustration zone -->
     <div id="tutoIllu" style="height:160px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;flex-shrink:0;"></div>
@@ -4178,8 +4181,25 @@ function previewCni(input){
 
 // UTILS
 function g(id){return document.getElementById(id);}
-function openM(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
-function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
+function openM(id){
+  var el=g(id);if(!el)return;
+  el.classList.add('on');
+  document.body.style.overflow='hidden';
+  document.body.style.position='fixed';
+  document.body.style.width='100%';
+  // Sauvegarder la position de scroll pour la restaurer
+  document.body.dataset.scrollY=window.scrollY;
+}
+function closeM(id){
+  var el=g(id);if(!el)return;
+  el.classList.remove('on');
+  document.body.style.overflow='';
+  document.body.style.position='';
+  document.body.style.width='';
+  // Restaurer la position de scroll
+  var sy=parseFloat(document.body.dataset.scrollY||0);
+  if(sy)window.scrollTo(0,sy);
+}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
 function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
 
