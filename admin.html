@@ -330,7 +330,7 @@ tr:hover td{background:#FAFAF9;}
         </div>
         <div class="card">
           <table>
-            <thead><tr><th>Élève</th><th>Email</th><th>Réservations</th><th>Inscrit le</th></tr></thead>
+            <thead><tr><th>Élève</th><th>Email</th><th>Réservations</th><th>Inscrit le</th><th></th></tr></thead>
             <tbody id="elevesTable"></tbody>
           </table>
         </div>
@@ -664,7 +664,7 @@ function renderEleves(search){
     var ini=((e.prenom&&e.prenom[0]||'')+(e.nom&&e.nom[0]||'')).toUpperCase()||'?';
     var nbRes=allRes.filter(function(r){return r.user_id===e.id;}).length;
     var date=e.created_at?new Date(e.created_at).toLocaleDateString('fr-FR'):'—';
-    return'<tr><td><div class="user-cell"><div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+'</div><div class="email">'+(e.email||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+'</span></td><td>'+date+'</td></tr>';
+    return'<tr><td><div class="user-cell"><div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+'</div><div class="email">'+(e.email||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+'</span></td><td>'+date+'</td><td><button class="btn btn-red" onclick="deleteUser(\''+e.id+'\',\''+(((e.prenom||'')+' '+(e.nom||'')).trim())+'\')" style="font-size:11px;padding:4px 8px">Supprimer</button></td></tr>';
   }).join('');
 }
 function searchEleves(q){renderEleves(q);}
@@ -753,9 +753,9 @@ function openProfModal(id){
   if(!p.verified&&p.statut_compte!=='bloqué'){
     actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Valider</button><button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rejeter</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button>';
   } else if(p.verified){
-    actions.innerHTML='<button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')">Révoquer</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button>';
+    actions.innerHTML='<button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')">Révoquer</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button><button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;margin-top:8px;width:100%;justify-content:center">Supprimer le compte</button>';
   } else {
-    actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')">Débloquer</button>';
+    actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')">Débloquer</button><button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="margin-top:8px;width:100%;justify-content:center">Supprimer le compte</button>';
   }
   document.getElementById('modalProf').classList.add('on');
 }
@@ -982,6 +982,30 @@ function addNotifHistory(title,body,cible,sent){
       +'<span class="badge '+(h.sent>0?'green':'gray')+'">'+h.sent+' envoi'+(h.sent>1?'s':'')+'</span>'
       +'</div>';
   }).join('');
+}
+
+// ============================================================
+// SUPPRIMER UN COMPTE UTILISATEUR
+// ============================================================
+async function deleteUser(id, nom){
+  if(!confirm('Supprimer définitivement le compte de '+nom+' ? Cette action est irréversible.'))return;
+  try{
+    // Supprimer les réservations
+    await fetch(SUPABASE_URL+'/rest/v1/reservations?user_id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    // Supprimer les follows
+    await fetch(SUPABASE_URL+'/rest/v1/follows?user_id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    // Supprimer les push subscriptions
+    await fetch(SUPABASE_URL+'/rest/v1/push_subscriptions?user_id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    // Supprimer le profil
+    var r=await fetch(SUPABASE_URL+'/rest/v1/profiles?id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    if(!r.ok){toast('Erreur lors de la suppression','error');return;}
+    // Mettre à jour les listes locales
+    allProfs=allProfs.filter(function(p){return p.id!==id;});
+    allEleves=allEleves.filter(function(e){return e.id!==id;});
+    closeModal();
+    renderDashboard();renderProfs();renderEleves();
+    toast('Compte de '+nom+' supprimé définitivement');
+  }catch(e){toast('Erreur: '+e.message);}
 }
 
 </script>
