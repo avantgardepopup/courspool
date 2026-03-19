@@ -2185,8 +2185,8 @@ function doGuest(){
   var bnav=g('bnav');
   if(bnav)bnav.classList.add('on');
   var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
-  if(bniMsg)bniMsg.style.display='none';
-  if(bniAcc)bniAcc.style.display='none';
+  if(bniMsg)bniMsg.style.display='none';  // Messages inutile sans compte
+  if(bniAcc)bniAcc.style.display='flex';  // Profil = bouton "Se connecter"
   if(bniAdd)bniAdd.style.display='none';
   // Header invité
   var mobT=g('mobTitle'),mobS=g('mobSub');
@@ -2195,6 +2195,8 @@ function doGuest(){
   var tav=g('tav');if(tav){tav.style.background='var(--bdr)';tav.textContent='?';}
   var tavMob=g('tavMob');if(tavMob){tavMob.style.background='var(--bdr)';tavMob.textContent='?';}
   loadData().then(function(){buildCards();});
+  // Synchro nav
+  navTo('exp');
   // Onboarding + tuto
   setTimeout(obShow, 500);
 }
@@ -2241,6 +2243,8 @@ function applyUser(){
   // Vérifier si première connexion prof pour CNI
   checkFirstProfLogin();
   updateVerifBand();
+  // Forcer la synchro complète de la nav et du header
+  navTo('exp');
 }
 
 // Titres et sous-titres par page
@@ -2319,6 +2323,8 @@ function navTo(tab){
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
+    // Guest clique sur Profil → écran de connexion
+    if(user.guest){scrollToLogin();return;}
     if(pgAcc)pgAcc.classList.add('on');
     var bAcc=g('bniAcc');if(bAcc)bAcc.classList.add('on');
     restoreNav();
@@ -2657,6 +2663,11 @@ function doLogout(){
   // Reset avatar
   var tav=g('tav');if(tav){tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';}
   var tavM=g('tavMob');if(tavM){tavM.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavM.textContent='?';}
+  // Reset état nav
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
+  if(pgExp)pgExp.classList.add('on');
+  if(pgAcc)pgAcc.classList.remove('on');
+  if(pgMsg)pgMsg.classList.remove('on');
   // Afficher login, cacher app
   g('app').style.display='none';
   var login=g('login');if(login){login.style.display='flex';login.style.zIndex='999';login.style.pointerEvents='';}
