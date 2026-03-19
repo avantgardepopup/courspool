@@ -107,6 +107,11 @@ html.dk #locGeoBtn{background:#2A1A0F;}
 html.dk .card,html.dk .rrow,html.dk .fol-row{background:var(--wh);}
 /* Cards couleurs — atténuer les dégradés trop flashy */
 html.dk .ctop{filter:saturate(.7) brightness(.75);}
+html.dk .cbody{background:var(--wh);}
+html.dk .ctitle{color:var(--ink) !important;}
+html.dk .mi{color:var(--mid) !important;}
+html.dk .ltag{color:var(--mid) !important;}
+html.dk .pm{color:var(--or) !important;}
 /* Modals et bottom sheets */
 html.dk .modal,html.dk .bd>div{background:var(--wh);}
 html.dk #popupPaid>div,html.dk #popupFailed>div,html.dk #tutoCard{background:var(--wh);color:var(--ink);}
@@ -198,10 +203,15 @@ html.dk .ntog::after{background:#fff;}
   border-bottom-color:var(--bdr);
   box-shadow:0 1px 12px rgba(0,0,0,.06);
 }
-.mob-title{transition:font-size .25s cubic-bezier(.4,0,.2,1),opacity .2s;}
-.mob-header.scrolled .mob-title{font-size:18px !important;font-weight:700;}
+.mob-title{
+  transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s;
+  transform-origin:left center;
+  font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;
+  display:block;
+  will-change:transform;
+}
+.mob-header.scrolled .mob-title{transform:scale(.72);font-weight:700;}
 .mob-header-inner{display:flex;align-items:flex-end;justify-content:space-between;}
-.mob-title{font-size:26px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1;}
 .mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
 .mob-actions{display:flex;align-items:center;gap:10px;}
 .mob-search{display:block;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:sticky;top:62px;z-index:49;}
@@ -2535,7 +2545,7 @@ function navTo(tab){
   if(tab==='exp'){
     if(pgExp)pgExp.classList.add('on');
     var bExp=g('bniExp');if(bExp)bExp.classList.add('on');
-    var br=g('btnRefresh');if(br)br.style.display=user&&user.role==='professeur'?'flex':'none';
+    var br=g('btnRefresh');if(br)br.style.display=user?'flex':'none';
     restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
@@ -2918,12 +2928,25 @@ function saveProf(){
   if(user.role==='professeur'){
     if(g('pfStatut'))user.statut=g('pfStatut').value;
     if(g('pfNiveau'))user.niveau=g('pfNiveau').value;
-    // Lire les matières depuis les chips ou le champ direct
-    var matVal=g('pfMatieresVal');
-    if(matVal&&matVal.value)user.matieres=matVal.value;
-    else if(g('pfMatieres'))user.matieres=g('pfMatieres').value;
+    // Lire les matières depuis les chips (source de vérité = _matieres[])
+    user.matieres=_matieres.join(', ');
+    var matHid=g('pfMatieresVal');if(matHid)matHid.value=user.matieres;
   }
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+  // Pousser vers le serveur (Supabase via Railway)
+  if(user.id){
+    var payload={prenom:user.pr,nom:user.nm,bio:user.bio||'',ville:user.ville||''};
+    if(user.role==='professeur'){
+      payload.statut=user.statut||'';
+      payload.niveau=user.niveau||'';
+      payload.matieres=user.matieres||'';
+    }
+    fetch(API+'/profiles/'+user.id,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).catch(function(){});
+  }
   applyUser();
   var an=g('accName');if(an)an.textContent=user.pr+(user.nm?' '+user.nm:'');
   var ae=g('accEmail');if(ae)ae.textContent=user.em;
@@ -3981,18 +4004,19 @@ async function loadMessages(){
 
 async function sendMsg(){
   var txt=(g('msgInput').value||'').trim();
-  if(!txt||!msgDestId||!user)return;
-  if(user.role==='professeur'&&!user.verified){
-    toast('Compte non vérifié','Votre compte doit être vérifié pour envoyer des messages');
-    return;
-  }
-  g('msgInput').value='';
+  if(!txt||!user)return;
+  if(!msgDestId){toast('Erreur','Aucun destinataire sélectionné');return;}
+  var inp=g('msgInput');
+  inp.value='';inp.style.height='auto';
+  var btn=document.querySelector('#msgConvPane button[onclick*="sendMsg"]');
+  if(btn)btn.disabled=true;
   try{
-    await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    var r=await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       expediteur_id:user.id,
       destinataire_id:msgDestId,
       contenu:txt
     })});
+    if(!r.ok){var err=await r.json().catch(function(){return{};});toast('Erreur',err.error||'Message non envoyé');inp.value=txt;return;}
     // Marquer comme lu immédiatement dans l'UI
     var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
     if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('div[style*="border-radius:50%"]');if(dot)dot.remove();}
@@ -4005,7 +4029,8 @@ async function sendMsg(){
     }
 
     loadMessages();
-  }catch(e){toast('Erreur','Message non envoyé');}
+  }catch(e){inp.value=txt;toast('Erreur','Message non envoyé — vérifiez votre connexion');}
+  finally{if(btn)btn.disabled=false;}
 }
 
 function closeMsg(){
