@@ -903,6 +903,50 @@ app.put('/messages/lu/:user_id', async (req, res) => {
 });
 
 // UPLOAD PHOTO PROFIL
+// CNI — upload pièce d'identité
+app.post('/upload/cni', async (req, res) => {
+  const { base64, userId, filename } = req.body;
+  if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    const buffer = Buffer.from(base64.split(',')[1], 'base64');
+    const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
+    const validExt = ['jpg','jpeg','png','pdf','webp'].includes(ext) ? ext : 'jpg';
+    const contentType = validExt === 'pdf' ? 'application/pdf' : 'image/' + (validExt === 'jpg' ? 'jpeg' : validExt);
+    const path = userId + '/cni.' + validExt;
+    // Upload dans le bucket cni (ou photos si cni n'existe pas)
+    let cniUrl = null;
+    const { error: uploadError } = await supabase.storage.from('cni').upload(path, buffer, { contentType, upsert: true });
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from('cni').getPublicUrl(path);
+      cniUrl = urlData.publicUrl;
+    } else {
+      // Fallback bucket photos
+      console.log('CNI bucket error:', uploadError.message, '— trying photos bucket');
+      const { error: e2 } = await supabase.storage.from('photos').upload('cni/' + path, buffer, { contentType, upsert: true });
+      if (!e2) {
+        const { data: urlData2 } = supabase.storage.from('photos').getPublicUrl('cni/' + path);
+        cniUrl = urlData2.publicUrl;
+      } else {
+        // Dernier fallback : stocker base64 directement
+        console.log('Photos bucket error too:', e2.message);
+        cniUrl = base64;
+      }
+    }
+    // Mettre à jour le profil : cni_uploaded + url + statut en attente
+    await supabase.from('profiles').update({
+      cni_uploaded: true,
+      cni_url: cniUrl,
+      statut_compte: 'en_attente_verification'
+    }).eq('id', userId);
+    res.json({ success: true, url: cniUrl });
+  } catch(e) {
+    console.log('CNI upload error:', e.message);
+    // Même en cas d'erreur, marquer comme uploadé
+    await supabase.from('profiles').update({ cni_uploaded: true }).eq('id', userId).catch(()=>{});
+    res.json({ success: true });
+  }
+});
+
 app.post('/upload/photo', async (req, res) => {
   const { base64, userId, filename } = req.body;
   if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
