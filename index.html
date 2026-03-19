@@ -2620,44 +2620,6 @@ function goExplore(){
   restoreNav();
 }
 
-// Démarrage
-(function(){
-  try{
-    var saved=localStorage.getItem('cp_user');
-    if(saved){
-      var parsedUser=JSON.parse(saved);
-      // Guest = pas de session persistante → ramener à l'écran login
-      if(parsedUser.guest){
-        localStorage.removeItem('cp_user');
-        // Charger les cours en arrière-plan pour que l'app soit prête
-        loadData();
-        // Rester sur l'écran login — l'utilisateur devra cliquer "Continuer sans compte"
-        return;
-      }
-      // Utilisateur connecté → restaurer la session
-      user=parsedUser;
-      applyUser();
-      if(user.id){
-        Promise.all([
-          fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id).then(function(r){return r.json();}).catch(function(){return [];})
-        ]).then(function(results){
-          var resData=results[0],folData=results[1];
-          Object.keys(res).forEach(function(k){delete res[k];});
-          if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
-          fol.clear();
-          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
-        }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
-      } else {
-        loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
-      }
-    } else {
-      // Pas de session → écran login, charger les cours en arrière-plan
-      loadData();
-    }
-  }catch(e){loadData();}
-})();
 
 async function checkStripeReturn(){
   try{
@@ -8015,6 +7977,46 @@ if('serviceWorker' in navigator){
     }).catch(function(err){console.log('SW erreur:',err);});
   });
 }
+
+// Démarrage
+(function(){
+  try{
+    var saved=localStorage.getItem('cp_user');
+    if(saved){
+      var parsedUser=JSON.parse(saved);
+      // Guest = pas de session persistante → ramener à l'écran login
+      if(parsedUser.guest){
+        localStorage.removeItem('cp_user');
+        // Charger les cours en arrière-plan pour que l'app soit prête
+        loadData();
+        // Rester sur l'écran login — l'utilisateur devra cliquer "Continuer sans compte"
+        return;
+      }
+      // Utilisateur connecté → restaurer la session
+      user=parsedUser;
+      applyUser();
+      if(user.id){
+        Promise.all([
+          fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).catch(function(){return [];}),
+          fetch(API+'/follows/'+user.id).then(function(r){return r.json();}).catch(function(){return [];})
+        ]).then(function(results){
+          var resData=results[0],folData=results[1];
+          Object.keys(res).forEach(function(k){delete res[k];});
+          if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+          fol.clear();
+          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
+          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
+        }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
+      } else {
+        loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
+      }
+    } else {
+      // Pas de session → écran login, charger les cours en arrière-plan
+      loadData();
+    }
+  }catch(e){loadData();}
+})();
+
 </script>
 </body>
 </html>
