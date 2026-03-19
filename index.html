@@ -1344,27 +1344,50 @@ html.dk .ntog::after{background:#fff;}
           <div id="pfProfExtra" style="display:none">
             <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Enseignement</div>
             <div class="pref-group">
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                <span class="pref-label">Statut</span>
-                <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;max-width:160px">
-                  <option value="">Choisir…</option>
-                  <option value="etudiant">Étudiant</option>
-                  <option value="prof_ecole">Prof d'école</option>
-                  <option value="prof_college">Prof collège/lycée</option>
-                  <option value="prof_universite">Enseignant-chercheur</option>
-                </select>
+
+              <!-- Statut -->
+              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr)">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Statut</span>
+                </div>
+                <div style="position:relative">
+                  <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 36px 10px 12px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
+                    <option value="">Choisir votre statut…</option>
+                    <option value="etudiant">Étudiant</option>
+                    <option value="prof_ecole">Professeur des écoles</option>
+                    <option value="prof_college">Professeur collège / lycée</option>
+                    <option value="prof_universite">Enseignant-chercheur</option>
+                    <option value="auto">Auto-entrepreneur</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                  <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
               </div>
-              <div class="pref-row" id="pfNiveauField">
-                <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <span class="pref-label" id="pfNiveauLabel" style="flex:1;min-width:0;white-space:nowrap">Niveau enseigné</span>
-                <select id="pfNiveau" style="border:none;font-family:inherit;font-size:14px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;flex-shrink:0;max-width:120px;text-overflow:ellipsis"><option value="">Choisir…</option></select>
+
+              <!-- Niveau enseigné -->
+              <div style="padding:14px 16px;border-bottom:1px solid var(--bdr);display:none" id="pfNiveauField">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)" id="pfNiveauLabel">Niveau enseigné</span>
+                </div>
+                <div style="position:relative">
+                  <select id="pfNiveau" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 36px 10px 12px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;-webkit-appearance:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
+                    <option value="">Choisir…</option>
+                  </select>
+                  <svg style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
               </div>
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
-                <span class="pref-label">Matières</span>
-                <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:160px">
+
+              <!-- Matières -->
+              <div style="padding:14px 16px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="pref-icon" style="background:#F0FDF4;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Matières enseignées</span>
+                </div>
+                <input id="pfMatieres" type="text" placeholder="Ex : Maths, Physique, Anglais…" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
               </div>
+
             </div>
           </div>
 
