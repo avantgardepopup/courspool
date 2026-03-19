@@ -29,13 +29,10 @@
   --sh:0 6px 28px rgba(0,0,0,.11);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html{overflow-x:hidden;max-width:100vw;width:100%;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);
-  overflow-x:hidden;
-  overflow-y:auto;
-  overscroll-behavior-y:none;
-  -webkit-overflow-scrolling:touch;
-  position:relative;
+html,body{overflow-x:hidden;max-width:100vw;width:100%;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
+  /* Empêcher le rebond iOS */
+  overscroll-behavior:none;
 }
 /* Safe area iOS — s'assurer que rien ne touche le notch ni le home indicator */
 :root{
@@ -44,7 +41,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
 }
-#login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;transition:opacity .2s;}
+#login{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 .lbox{background:var(--wh);border-radius:24px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.12);}
 .lhero{background:linear-gradient(135deg,var(--or),var(--ord));padding:32px 28px 24px;color:#fff;position:relative;overflow:hidden;}
 .lhero::after{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.08);}
@@ -106,14 +103,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:16px;outline:none;}
 .mob-search .si{top:50%;left:31px;}
 
-.pg{display:none;}.pg.on{display:block;}
+.pg{display:none;min-height:calc(100vh - 112px);}.pg.on{display:block;}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
+  .pg{min-height:calc(100dvh - 130px);}
   #pgMsg{height:calc(100dvh - 130px) !important;}
   #pgMsg.on{display:flex !important;}
-  #app .cnt{padding-bottom:100px;}
-  #pgAcc{padding-bottom:100px;}
 }
 .cnt{padding:20px 16px;max-width:1200px;}
 .locbar{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;position:relative;}
@@ -122,7 +118,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .loc-geo-btn{background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;transition:all .18s;}
 .loc-geo-btn:hover{background:var(--or);color:#fff;}
 .loc-geo-btn.loading{opacity:.6;cursor:not-allowed;}
-.loc-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);z-index:200;overflow:hidden;display:none;}
+.loc-suggestions{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;box-shadow:var(--sh);z-index:200;overflow:hidden;display:none;pointer-events:auto;}
 .loc-sug-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px;transition:background .15s;}
 .loc-sug-item:last-child{border-bottom:none;}
 .loc-sug-item:hover{background:var(--orp);}
@@ -130,45 +126,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .loc-sug-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .loc-sug-icon.geo-icon{background:var(--orp);}
 .loc-sug-icon.place-icon{background:var(--bg);}
-.atab-hero{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;font-size:10px;font-weight:700;color:rgba(255,255,255,.6);cursor:pointer;transition:all .2s;letter-spacing:.02em;text-transform:uppercase;border:none;background:none;font-family:inherit;}
-.atab-hero.on{color:#fff;background:rgba(255,255,255,.15);}
-.atab-hero:active{opacity:.7;}
-.acc-stat-cell{background:rgba(255,255,255,.12);padding:14px 8px;text-align:center;backdrop-filter:blur(4px);}
-.acc-stat-val{font-size:22px;font-weight:800;color:#fff;line-height:1;}
-.acc-stat-lbl{font-size:10px;color:rgba(255,255,255,.7);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-/* Feedback tactile sur TOUS les éléments cliquables */
-.card:active{transform:scale(.98) !important;box-shadow:none !important;transition:transform .1s !important;}
-.btnr:active,.pb:active,.lbtn:active,.btnadd:active{transform:scale(.96);transition:transform .1s !important;}
-.bni:active{opacity:.7;transform:scale(.92);}
-.rrow:active{transform:scale(.98);}
-/* Toast en haut */
-
-/* Section paramètres style iOS */
-.pref-section{margin-bottom:8px;}
-.pref-header{font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 20px 8px;}
-.pref-group{background:var(--wh);border-radius:16px;overflow:hidden;}
-.pref-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .15s;min-height:52px;}
-.pref-row:last-child{border-bottom:none;}
-.pref-row:active{background:var(--bg);}
-.pref-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pref-icon svg{width:16px;height:16px;}
-.pref-label{flex:1;font-size:15px;font-weight:500;color:var(--ink);}
-.pref-value{font-size:14px;color:var(--lite);font-weight:400;}
-.pref-arrow{color:var(--bdr);}
-.contact-subj{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
-.contact-subj.on{background:var(--ink);color:#fff;border-color:var(--ink);}
-.contact-subj:not(.on):hover{border-color:var(--or);color:var(--or);}
-.crn-chip{padding:6px 13px;border-radius:50px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
-.crn-chip.on{background:var(--or);color:#fff;border-color:var(--or);}
-.crn-chip:not(.on):hover{border-color:var(--or);color:var(--or);}
-.niv-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.85);border-radius:50px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--ink);}
-.niv-fchip{padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
-.niv-fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
-.niv-fchip:not(.on):hover{border-color:var(--or);color:var(--or);}
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
-.pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;-webkit-overflow-scrolling:touch;}
+.pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.crn-chip{padding:6px 13px;border-radius:50px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
+.crn-chip.on{background:var(--or);color:#fff;border-color:var(--or);}
+.niv-badge{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.85);border-radius:50px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--ink);}
+.niv-fchip{padding:10px 18px;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
+.niv-fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
 .pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill:not(.on):hover{border-color:var(--or);color:var(--or);}
@@ -184,6 +150,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .skel-line.w60{width:60%;}
 .skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
+.card:active{transform:scale(.98) !important;box-shadow:none !important;}
+.btnr:active,.pb:active,.lbtn:active{transform:scale(.96);transition:transform .1s !important;}
+.bni:active{opacity:.7;}
 .card-prive{border-color:#E8D9C4;background:linear-gradient(to bottom,#FFFBF5,var(--wh));}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -264,7 +233,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .bd{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
 .bd.on{display:flex;animation:bi .18s ease;}
 @keyframes bi{from{opacity:0}to{opacity:1}}
-.modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:mi .25s ease;}
+.modal{background:var(--wh);border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;animation:mi .25s ease;}
 .modal.sm{max-width:380px;}
 @keyframes mi{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .mhd{padding:18px 18px 0;display:flex;align-items:flex-start;justify-content:space-between;}
@@ -388,7 +357,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   .bni svg{width:22px;height:22px;}
   .bni span{font-size:10px;}
   .bni-sep{display:none !important;}
-  #app .cnt{padding-bottom:max(110px, calc(90px + env(safe-area-inset-bottom,0px)));}
+  #app .cnt{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
   .acc-body{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
 }
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
@@ -594,7 +563,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 </style>
 </head>
 <body>
-<div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s;touch-action:none">
+<div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
   <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
     <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center">
       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -806,11 +775,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()">
   </div>
 
-  <!-- Bannière état prof — cachée par défaut, gérée par updateVerifBanner() -->
-  <div id="unverifiedBanner" style="display:none;border-bottom:1px solid;padding:11px 20px;font-size:13px;align-items:center;gap:10px;transition:all .3s">
-    <svg id="bannerIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span id="bannerText"><strong>Compte en cours de vérification</strong> — Votre pièce d'identité est examinée. Email de confirmation sous 24h.</span>
-    <button id="bannerCniBtn" onclick="openM('bdCni')" style="margin-left:auto;background:rgba(0,0,0,.07);border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">Envoyer ma CNI</button>
+  <div id="unverifiedBanner" style="display:none;background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:10px 20px;font-size:13px;color:#92400E;align-items:center;gap:8px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    ⏳ <strong>Compte en cours de vérification</strong> — Votre pièce d'identité est en cours d'examen. Vous recevrez un email dès que votre compte est activé (sous 24h).
   </div>
 
   <!-- PAGE EXPLORER -->
@@ -826,7 +793,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
           Autour de moi
         </button>
-        <div class="loc-suggestions" id="locSuggestions"></div>
+        <div class="loc-suggestions" id="locSuggestions" style="pointer-events:auto"></div>
       </div>
       <div class="pills" id="pillsBar">
         <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
@@ -837,32 +804,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
         <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
         <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
-        <div class="pill" id="pillNiv" onclick="openNivFilter()" style="display:flex;align-items:center;gap:5px;color:var(--mid)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          Niveau
-        </div>
         <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Filtre
-        </div>
-      </div>
-
-      <!-- Modal filtre niveau -->
-      <div id="bdNivFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeNivFilter()">
-        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 24px 32px;animation:mi .25s ease">
-          <div style="text-align:center;margin-bottom:16px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:99px;display:inline-block"></div></div>
-          <div style="font-size:17px;font-weight:800;margin-bottom:4px">Filtrer par niveau</div>
-          <div style="font-size:13px;color:var(--lite);margin-bottom:20px">Choisissez le niveau d'études des cours</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px" id="nivFilterChips">
-            <div class="niv-fchip on" onclick="setNivFilter("",this)">Tous niveaux</div>
-            <div class="niv-fchip" onclick="setNivFilter('Primaire',this)">Primaire</div>
-            <div class="niv-fchip" onclick="setNivFilter('Collège',this)">Collège</div>
-            <div class="niv-fchip" onclick="setNivFilter('Lycée',this)">Lycée</div>
-            <div class="niv-fchip" onclick="setNivFilter('Bac+1/2',this)">Bac+1/2</div>
-            <div class="niv-fchip" onclick="setNivFilter('Bac+3/4',this)">Bac+3/4</div>
-            <div class="niv-fchip" onclick="setNivFilter('Bac+5',this)">Bac+5</div>
-          </div>
-          <button onclick="closeNivFilter()" style="width:100%;background:var(--ink);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Appliquer</button>
         </div>
       </div>
 
@@ -951,62 +895,51 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
     </div>
   </div>
 
-  <div class="pg" id="pgAcc" style="background:var(--bg);">
-    <div>
+  <div class="pg" id="pgAcc">
+    <div style="background:var(--bg);min-height:100%;padding-bottom:120px">
 
-      <!-- HERO PROFIL amélioré -->
-      <div style="background:linear-gradient(145deg,#FF7A3D,var(--ord));padding:0 0 0;position:relative;overflow:visible">
-        <!-- Cercles décoratifs -->
-        <div style="position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
-        <div style="position:absolute;left:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>
-
-        <!-- Contenu hero -->
-        <div style="padding:40px 24px 24px;text-align:center;position:relative;z-index:1">
-          <!-- Avatar + bouton photo -->
-          <div style="position:relative;display:inline-block;margin-bottom:14px">
-            <div id="accAv" style="width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.4);margin:0 auto;box-shadow:0 8px 24px rgba(0,0,0,.15)">?</div>
-            <label style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);border:2px solid rgba(255,255,255,.8)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
-            </label>
-          </div>
-
-          <!-- Nom + role badge -->
-          <div id="accName" style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.02em">—</div>
-          <div id="accRoleBadge" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:20px">
-            <span id="accRoleLabel">—</span>
-          </div>
-
-          <!-- Stats grid selon rôle -->
-          <div id="accStatsGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.15);border-radius:16px;overflow:hidden;margin:0 4px"></div>
+      <!-- HERO PROFIL iOS style -->
+      <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:40px 20px 28px;text-align:center;position:relative">
+        <div style="position:relative;display:inline-block;margin-bottom:12px">
+          <div id="accAv" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.5);margin:0 auto">?</div>
+          <label style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+          </label>
         </div>
-
-        <!-- Onglets collés au bas du hero -->
-        <div id="accTabs" style="display:flex;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);">
-          <div class="atab-hero on" id="aTabR" onclick="switchATab('R',this)">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2" opacity=".15"/><rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/></svg>
-            <span>Mes cours</span>
+        <div id="accName" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:3px">—</div>
+        <div id="accEmail" style="font-size:13px;color:rgba(255,255,255,.75);margin-bottom:12px">—</div>
+        <div style="display:flex;justify-content:center;gap:10px">
+          <div style="background:rgba(255,255,255,.2);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="accChipR">0 réservation</span>
           </div>
-          <div class="atab-hero" id="aTabF" onclick="switchATab('F',this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            <span>Suivis</span>
-          </div>
-          <div class="atab-hero" id="aTabH" onclick="switchATab('H',this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Historique</span>
-          </div>
-          <div class="atab-hero" id="aTabP" onclick="switchATab('P',this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-            <span>Profil</span>
-          </div>
-          <div class="atab-hero" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-            <span>Revenus</span>
+          <div style="background:rgba(255,255,255,.2);border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span id="accChipF">0 prof suivi</span>
           </div>
         </div>
       </div>
 
-
+      <!-- ONGLETS iOS style -->
+      <div style="display:flex;background:var(--wh);border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none">
+        <div class="atab on" id="aTabR" onclick="switchATab('R',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Réservations
+        </div>
+        <div class="atab" id="aTabF" onclick="switchATab('F',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Suivis
+        </div>
+        <div class="atab" id="aTabH" onclick="switchATab('H',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique
+        </div>
+        <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil
+        </div>
+        <!-- Onglet Paiements — visible uniquement pour les profs -->
+        <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none;flex:1;min-width:70px;text-align:center;padding:12px 8px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--lite);white-space:nowrap;display:none;flex-direction:column;align-items:center;gap:4px;transition:all .18s">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Paiements
+        </div>
+      </div>
 
       <div class="acc-body">
 
@@ -1124,138 +1057,89 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <!-- PROFIL iOS style -->
         <div class="asec" id="asecP">
 
-          <!-- Infos perso — style iOS Settings -->
-          <div class="pref-section">
-            <div class="pref-header">Compte</div>
-            <div class="pref-group">
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                <span class="pref-label">Prénom</span>
-                <input id="pfPr" type="text" style="border:none;font-family:inherit;font-size:15px;font-weight:400;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
-              </div>
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                <span class="pref-label">Nom</span>
-                <input id="pfNm" type="text" style="border:none;font-family:inherit;font-size:15px;font-weight:400;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
-              </div>
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-                <span class="pref-label">Email</span>
-                <input id="pfEm" type="email" style="border:none;font-family:inherit;font-size:15px;font-weight:400;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:180px" placeholder="—">
-              </div>
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-                <span class="pref-label">Ville</span>
-                <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;font-weight:400;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px">
-              </div>
-              <div class="pref-row" style="cursor:default">
-                <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
-                <span class="pref-label">Rôle</span>
-                <div id="pfRoleDisplay" style="font-size:14px;color:var(--lite)"></div>
-              </div>
+          <!-- Section infos perso -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Informations personnelles</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
+              <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Nom</span>
+              <input id="pfNm" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Email</span>
+              <input id="pfEm" type="email" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Ville</span>
+              <input id="pfVille" type="text" placeholder="Paris…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            </div>
+            <div style="display:flex;align-items:center;padding:13px 16px">
+              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Rôle</span>
+              <div id="pfRoleDisplay" style="flex:1;font-size:14px;font-weight:500;text-align:right;color:var(--mid)"></div>
             </div>
           </div>
 
           <!-- Bio -->
-          <div class="pref-section">
-            <div class="pref-header">À propos</div>
-            <div class="pref-group" style="padding:14px 16px">
-              <textarea id="pfBio" rows="3" placeholder="Présentez-vous, partagez votre approche pédagogique…" style="width:100%;border:none;font-family:inherit;font-size:15px;outline:none;background:transparent;resize:none;color:var(--ink);line-height:1.6"></textarea>
-              <div style="text-align:right;font-size:11px;color:var(--lite);margin-top:4px" id="pfBioCount">0 / 200</div>
-            </div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Bio</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden;padding:13px 16px">
+            <textarea id="pfBio" rows="3" placeholder="Présentez-vous…" style="width:100%;border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;resize:none;color:var(--ink)"></textarea>
           </div>
 
           <!-- Section prof -->
           <div id="pfProfExtra" style="display:none">
-            <div class="pref-section">
-              <div class="pref-header">Enseignement</div>
-              <div class="pref-group">
-                <div class="pref-row">
-                  <div class="pref-icon" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                  <span class="pref-label">Statut</span>
-                  <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;max-width:180px">
-                    <option value="">Choisir...</option>
-                    <option value="etudiant">Étudiant</option>
-                    <option value="prof_ecole">Prof d'école</option>
-                    <option value="prof_college">Prof collège/lycée</option>
-                    <option value="prof_universite">Enseignant-chercheur</option>
-                  </select>
-                </div>
-                <div class="pref-row" id="pfNiveauField">
-                  <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                  <span class="pref-label" id="pfNiveauLabel">Niveau</span>
-                  <select id="pfNiveau" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);cursor:pointer;max-width:160px"><option value="">Choisir...</option></select>
-                </div>
-                <div class="pref-row">
-                  <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
-                  <span class="pref-label">Matières</span>
-                  <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:160px">
-                </div>
+            <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Enseignement</div>
+            <div style="background:var(--wh);border-radius:16px;overflow:hidden">
+              <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Statut</span>
+                <select id="pfStatut" onchange="updateNiveauxPf(this.value)" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer">
+                  <option value="">Choisir...</option>
+                  <option value="etudiant">🎓 Étudiant</option>
+                  <option value="prof_ecole">🏫 Prof d'école</option>
+                  <option value="prof_college">📚 Prof collège/lycée</option>
+                  <option value="prof_universite">🏛️ Prof université</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)" id="pfNiveauField">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0" id="pfNiveauLabel">Niveau</span>
+                <select id="pfNiveau" style="flex:1;border:none;font-family:inherit;font-size:14px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink);cursor:pointer"><option value="">Choisir...</option></select>
+              </div>
+              <div style="display:flex;align-items:center;padding:13px 16px">
+                <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Matières</span>
+                <input id="pfMatieres" type="text" placeholder="Maths, Physique…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
               </div>
             </div>
           </div>
 
-          <!-- Bouton sauvegarder sticky -->
-          <div style="padding:4px 0 16px">
-            <button onclick="saveProf()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.35);transition:all .18s" onmouseenter="this.style.transform='scale(1.01)'" onmouseleave="this.style.transform=''" onmousedown="this.style.transform='scale(.98)'" onmouseup="this.style.transform=''">
+          <!-- Bouton sauvegarder -->
+          <div style="padding:16px">
+            <button onclick="saveProf()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-              Sauvegarder les modifications
+              Sauvegarder
             </button>
           </div>
 
-          <!-- Notifications push -->
-          <div class="pref-header" style="padding-left:0">Notifications</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="notifBlock">
-
-            <!-- Statut permission -->
-            <div id="notifStatus" style="padding:16px;border-bottom:1px solid var(--bdr)">
-              <!-- Rempli par renderNotifStatus() -->
+          <!-- Notifications -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:8px 16px 8px">Notifications</div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr)">
+              <div><div style="font-size:14px;font-weight:500">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Quand un prof suivi publie</div></div>
+              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
             </div>
-
-            <!-- Types de notifs (visible si activé) -->
-            <div id="notifTypes" style="display:none">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr)">
-                <div>
-                  <div style="font-size:14px;font-weight:500">Nouveaux cours</div>
-                  <div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifSubLbl">—</div>
-                </div>
-                <div class="ntog on" id="ntogCours" onclick="toggleNotifPref('cours',this)"></div>
-              </div>
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
-                <div>
-                  <div style="font-size:14px;font-weight:500" id="notifRemLbl">—</div>
-                  <div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifRemSub">Messages importants de l'équipe CoursPool</div>
-                </div>
-                <div class="ntog on" id="ntogPromo" onclick="toggleNotifPref('promo',this)"></div>
-              </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+              <div><div style="font-size:14px;font-weight:500">Rappel de cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">1h avant le début</div></div>
+              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
             </div>
           </div>
 
-          <!-- Assistance + Déco -->
-          <div class="pref-section" style="margin-top:8px">
-            <div class="pref-header" style="padding-left:0">Assistance</div>
-            <div class="pref-group">
-              <div class="pref-row" onclick="openContact()">
-                <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-                <div style="flex:1">
-                  <div class="pref-label">Nous contacter</div>
-                  <div style="font-size:12px;color:var(--lite);margin-top:1px">Réponse sous 24h</div>
-                </div>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14" class="pref-arrow"><polyline points="9 18 15 12 9 6"/></svg>
-              </div>
-            </div>
+          <!-- Se déconnecter -->
+          <div style="padding:16px;margin-top:8px">
+            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">
+              Se déconnecter
+            </button>
           </div>
-
-          <!-- Déconnexion -->
-          <div class="pref-section">
-            <div class="pref-group">
-              <div class="pref-row" onclick="doLogout()" style="justify-content:center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                <span style="font-size:15px;font-weight:600;color:#EF4444;margin-left:8px">Se déconnecter</span>
-              </div>
-            </div>
-          </div>
-          <div style="height:8px"></div>
 
         </div>
       </div>
@@ -1268,15 +1152,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   <div class="modal">
     <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Réservation</div><div style="font-size:17px;font-weight:800" id="rTit"></div></div><button class="mcl" onclick="closeR()">✕</button></div>
     <div class="mbd">
-      <div class="rban">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;position:relative;z-index:1">
-          <span style="font-size:12px;opacity:.8" id="rSbj"></span>
-          <span id="rNivBadge" style="display:none;background:rgba(255,255,255,.25);border-radius:50px;padding:2px 8px;font-size:10px;font-weight:700;color:#fff"></span>
-        </div>
-        <div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div>
-        <div style="font-size:12px;opacity:.75;margin-top:6px;position:relative;z-index:1" id="rLc"></div>
-      </div>
-      <div id="rDescBox" style="display:none;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--mid);line-height:1.6"></div>
+      <div class="rban"><div style="font-size:12px;opacity:.8;margin-bottom:3px;position:relative;z-index:1" id="rSbj"></div><div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div><div style="font-size:12px;opacity:.75;margin-top:6px;position:relative;z-index:1" id="rLc"></div></div>
       <div style="font-size:13px;font-weight:700;margin-bottom:10px">Détail du prix</div>
       <div class="bdn">
         <div class="br"><span class="l">Prix total du cours</span><span class="v" id="rTot"></span></div>
@@ -1371,7 +1247,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, les pré-requis, ce que les élèves vont apprendre…" style="resize:vertical"></textarea></div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours…" style="resize:vertical"></textarea></div>
       <div style="margin-bottom:12px">
         <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Niveau visé</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px" id="crNiveauChips">
@@ -1490,62 +1366,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- MODAL CONTACT -->
-<div class="bd" id="bdContact" onclick="if(event.target===this)closeM('bdContact')" style="z-index:600;align-items:flex-end">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:env(safe-area-inset-bottom,20px);animation:mi .25s ease">
-
-    <!-- Handle iOS -->
-    <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:99px;display:inline-block"></div></div>
-
-    <!-- Header -->
-    <div style="padding:16px 24px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)">
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px">Assistance</div>
-        <div style="font-size:18px;font-weight:800;color:var(--ink)">Nous contacter</div>
-      </div>
-      <button onclick="closeM('bdContact')" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-
-    <!-- Body -->
-    <div style="padding:20px 24px">
-
-      <!-- Sujets rapides -->
-      <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Sujet</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px" id="contactSubjects">
-        <div class="contact-subj on" onclick="pickContactSubj(this)" data-s="Question générale">Question générale</div>
-        <div class="contact-subj" onclick="pickContactSubj(this)" data-s="Problème de paiement">Paiement</div>
-        <div class="contact-subj" onclick="pickContactSubj(this)" data-s="Problème technique">Technique</div>
-        <div class="contact-subj" onclick="pickContactSubj(this)" data-s="Signaler un problème">Signalement</div>
-        <div class="contact-subj" onclick="pickContactSubj(this)" data-s="Autre">Autre</div>
-      </div>
-
-      <!-- Champs -->
-      <div style="margin-bottom:14px">
-        <label style="font-size:12px;font-weight:700;color:var(--mid);display:block;margin-bottom:6px">Votre email</label>
-        <input id="contactEmail" type="email" placeholder="votre@email.com" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:11px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;color:var(--ink)" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-      </div>
-
-      <div style="margin-bottom:20px">
-        <label style="font-size:12px;font-weight:700;color:var(--mid);display:block;margin-bottom:6px">Votre message</label>
-        <textarea id="contactMsg" rows="5" placeholder="Décrivez votre demande…" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;resize:none;line-height:1.6;color:var(--ink);transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
-      </div>
-
-      <!-- Info délai -->
-      <div style="display:flex;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:10px 14px;margin-bottom:20px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="15" height="15" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span style="font-size:12.5px;color:var(--or);font-weight:600">Réponse sous 24h · Du lun. au sam.</span>
-      </div>
-
-      <button id="contactSendBtn" onclick="submitContact()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .18s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Envoyer le message
-      </button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL NOTATION -->
 <div class="bd" id="bdNote" onclick="if(event.target===this)closeM('bdNote')">
   <div class="modal sm">
@@ -1579,82 +1399,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- MODAL CNI — première connexion professeur -->
 <div class="bd" id="bdCni" style="z-index:500">
-  <div class="modal" style="max-width:400px;padding:0;overflow:hidden;border-radius:24px">
-
-    <!-- Hero orange -->
-    <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:32px 28px 28px;position:relative;overflow:hidden">
-      <div style="position:absolute;right:-24px;top:-24px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
-      <div style="position:absolute;left:-16px;bottom:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05)"></div>
-
-      <!-- Icône carte ID stylisée SVG -->
-      <div style="width:56px;height:56px;background:rgba(255,255,255,.18);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;z-index:1;backdrop-filter:blur(4px)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
-          <rect x="2" y="5" width="20" height="14" rx="3"/>
-          <circle cx="8" cy="11" r="2"/>
-          <path d="M4 19c0-2 1.8-3 4-3s4 1 4 3"/>
-          <line x1="15" y1="9" x2="20" y2="9"/>
-          <line x1="15" y1="12" x2="19" y2="12"/>
-        </svg>
+  <div class="modal" style="max-width:400px">
+    <div class="mhd">
+      <div>
+        <div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Vérification</div>
+        <div style="font-size:17px;font-weight:800">Votre pièce d'identité</div>
       </div>
-
-      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:6px;position:relative;z-index:1">Vérification d'identité</div>
-      <div style="font-size:21px;font-weight:800;color:#fff;line-height:1.2;position:relative;z-index:1">Confirmez qui<br>vous êtes</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:8px;line-height:1.55;position:relative;z-index:1">Requis pour publier vos cours et<br>recevoir vos paiements.</div>
     </div>
-
-    <!-- Corps -->
-    <div style="padding:24px 24px 20px">
-
-      <!-- Étapes -->
-      <div style="display:flex;gap:0;margin-bottom:24px;background:var(--bg);border-radius:14px;padding:4px">
-        <div style="flex:1;text-align:center;padding:10px 6px">
-          <div style="width:28px;height:28px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 5px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          </div>
-          <div style="font-size:10px;font-weight:700;color:var(--ink)">Envoi</div>
-        </div>
-        <div style="display:flex;align-items:center;padding-bottom:16px"><div style="height:1px;width:20px;background:var(--bdr)"></div></div>
-        <div style="flex:1;text-align:center;padding:10px 6px">
-          <div style="width:28px;height:28px;background:var(--bdr);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 5px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </div>
-          <div style="font-size:10px;font-weight:700;color:var(--lite)">Vérif</div>
-        </div>
-        <div style="display:flex;align-items:center;padding-bottom:16px"><div style="height:1px;width:20px;background:var(--bdr)"></div></div>
-        <div style="flex:1;text-align:center;padding:10px 6px">
-          <div style="width:28px;height:28px;background:var(--bdr);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 5px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <div style="font-size:10px;font-weight:700;color:var(--lite)">Activé</div>
-        </div>
+    <div class="mbd">
+      <div style="background:var(--orp);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--mid);line-height:1.6;display:flex;gap:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Pour publier des cours, nous devons vérifier votre identité. Cela prend <strong>5 min à 2 heures</strong>.</span>
       </div>
-
-      <!-- Zone de dépôt -->
-      <div id="cniDropModal" onclick="g('cniFileModal').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:24px 20px;text-align:center;cursor:pointer;transition:all .22s;margin-bottom:16px;position:relative;background:var(--bg)" onmouseenter="this.style.borderColor='var(--or)';this.style.background='var(--orp)'" onmouseleave="this.style.borderColor='var(--bdr)';this.style.background='var(--bg)'">
-        <div id="cniIconArea" style="width:44px;height:44px;background:var(--wh);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
-            <rect x="2" y="5" width="20" height="14" rx="3"/>
-            <circle cx="8" cy="11" r="2"/>
-            <path d="M4 19c0-2 1.8-3 4-3s4 1 4 3"/>
-            <line x1="15" y1="9" x2="20" y2="9"/>
-            <line x1="15" y1="12" x2="19" y2="12"/>
-          </svg>
-        </div>
-        <div id="cniLabelModal" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px">CNI ou Passeport</div>
-        <div style="font-size:12px;color:var(--lite)">JPG, PNG ou PDF · Max 5 Mo</div>
+      <div id="cniDropModal" onclick="g('cniFileModal').click()" style="border:2px dashed var(--bdr);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .18s;margin-bottom:14px" onmouseenter="this.style.borderColor='var(--or)';this.style.background='var(--orp)'" onmouseleave="this.style.borderColor='var(--bdr)';this.style.background=''">
+        <div style="font-size:36px;margin-bottom:8px">🪪</div>
+        <div id="cniLabelModal" style="font-size:14px;font-weight:700;color:var(--ink)">CNI ou Passeport</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:4px">JPG, PNG, PDF · Max 5MB · Cliquez pour choisir</div>
         <input type="file" id="cniFileModal" accept="image/*,.pdf" style="display:none" onchange="previewCniModal(this)">
       </div>
-
-      <!-- Info délai -->
-      <div style="display:flex;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:10px 14px;margin-bottom:20px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span style="font-size:12.5px;color:var(--or);font-weight:600">Vérification en 5 min — 2 heures. Email de confirmation.</span>
-      </div>
-
-      <button class="pb pri" style="width:100%;margin-bottom:10px;padding:14px" id="cniSubmitBtn" onclick="submitCni()">
+      <button class="pb pri" style="width:100%;margin-bottom:10px" id="cniSubmitBtn" onclick="submitCni()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
         Envoyer pour vérification
       </button>
-      <button style="width:100%;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer;padding:10px;border-radius:12px;transition:color .18s" onmouseenter="this.style.color='var(--ink)'" onmouseleave="this.style.color='var(--lite)'" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil');setTimeout(tutoStart,400);">
+      <button class="pb sec" style="width:100%" onclick="closeM('bdCni');toast('À compléter','Vous pourrez envoyer votre CNI depuis votre profil');setTimeout(tutoStart,400);">
         Plus tard
       </button>
     </div>
@@ -1663,7 +1430,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 <!-- TUTORIEL v3 — slides plein écran centrées, fiables sur tous les devices -->
 <div id="tutoRoot" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;">
-  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
+  <div id="tutoCard" style="background:#fff;border-radius:24px;width:100%;max-width:380px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.3);position:relative;animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">
 
     <!-- Illustration zone -->
     <div id="tutoIllu" style="height:160px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;flex-shrink:0;"></div>
@@ -1929,8 +1696,6 @@ async function doLogin(){
     toast('Bienvenue '+pr+' !','Connecté à CoursPool');
     // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
     if(role!=='professeur'){setTimeout(tutoStart,1200);}
-    // Démarrer le polling de vérification si prof non vérifié
-    if(role==='professeur'&&!user.verified){setTimeout(startVerifPolling,2000);}
   }catch(e){toast('Erreur','Impossible de se connecter');}
   finally{g('lEm').disabled=false;g('lPw').disabled=false;}
 }
@@ -1969,13 +1734,14 @@ function go(pr,nm,em,role,uid,photoUrl){
 }
 
 function applyUser(){
-  var loginEl=g('login');loginEl.style.display='none';loginEl.style.pointerEvents='none';loginEl.style.zIndex='-1';g('app').style.display='block';
+  var _l=g('login');_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';g('app').style.display='block';
   var tav=g('tav');
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
-  g('btnProposer').style.display=(user.role==='professeur'&&user.verified)?'flex':'none';
-  // Bannière prof — état dynamique selon CNI uploadée ou non
-  updateVerifBanner();
+  g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
+  // Bannière prof non vérifié
+  var banner=g('unverifiedBanner');
+  if(banner)banner.style.display=(user.role==='professeur'&&!user.verified)?'block':'none';
   // Bottom nav
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
@@ -1986,7 +1752,7 @@ function applyUser(){
     else{tavMob.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavMob.textContent=user.ini||'?';}
   }
   var bp=g('btnProposerMob');
-  if(bp)bp.style.display=(user.role==='professeur'&&user.verified)?'flex':'none';
+  if(bp)bp.style.display=user.role==='professeur'?'flex':'none';
   updateMobHeader('exp');
   // Vérifier si première connexion prof pour CNI
   checkFirstProfLogin();
@@ -2008,7 +1774,7 @@ function updateMobHeader(tab){
   var ms2=g('mobSearch');if(ms2)ms2.style.display=tab==='exp'?'block':'none';
   // Bouton proposer mobile
   var bp=g('btnProposerMob');
-  if(bp)bp.style.display=(tab==='exp'&&user&&user.role==='professeur'&&user.verified)?'flex':'none';
+  if(bp)bp.style.display=(tab==='exp'&&user&&user.role==='professeur')?'flex':'none';
   // Avatar mobile sync
   var tavMob=g('tavMob');
   if(tavMob&&user){
@@ -2217,51 +1983,13 @@ function switchATab(s,el){
     if(sec)sec.classList.remove('on');if(tab)tab.classList.remove('on');
   });
   var sec=g('asec'+s);if(sec)sec.classList.add('on');el.classList.add('on');
-  var sec=g('asec'+s);if(sec)sec.classList.add('on');el.classList.add('on');
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
-  if(s==='P'){setTimeout(renderNotifStatus,100);}
 }
-
-function buildHeroStats(rIds,fIds){
-  var grid=g('accStatsGrid');
-  if(!grid)return;
-  var isProf=user&&user.role==='professeur';
-  var roleLabel=g('accRoleLabel');
-  if(roleLabel){
-    if(isProf) roleLabel.textContent='Professeur';
-    else roleLabel.textContent='Élève';
-  }
-  if(isProf){
-    // Stats prof : élèves, cours publiés, note
-    var nbCours=0;
-    // Compter les cours du prof dans C
-    if(typeof C!=='undefined') nbCours=C.filter(function(c){return c.pr===user.id;}).length;
-    var profData=typeof P!=='undefined'?P[user.id]:null;
-    var note=profData?profData.n:'—';
-    var eleves=profData?profData.e:0;
-    grid.innerHTML=
-      '<div class="acc-stat-cell"><div class="acc-stat-val">'+eleves+'</div><div class="acc-stat-lbl">Élèves</div></div>'+
-      '<div class="acc-stat-cell"><div class="acc-stat-val">'+nbCours+'</div><div class="acc-stat-lbl">Cours</div></div>'+
-      '<div class="acc-stat-cell"><div class="acc-stat-val">'+(note==='—'?'—':note+'★')+'</div><div class="acc-stat-lbl">Note</div></div>';
-  } else {
-    // Stats élève : réservations, profs suivis
-    grid.innerHTML=
-      '<div class="acc-stat-cell"><div class="acc-stat-val">'+rIds.length+'</div><div class="acc-stat-lbl">Réservés</div></div>'+
-      '<div class="acc-stat-cell"><div class="acc-stat-val">'+fIds.length+'</div><div class="acc-stat-lbl">Profs suivis</div></div>'+
-      '<div class="acc-stat-cell"><div class="acc-stat-val">'+Object.keys(res).length+'</div><div class="acc-stat-lbl">Total cours</div></div>';
-  }
-}
-
-// Compteur bio
-document.addEventListener('DOMContentLoaded',function(){
-  var bio=g('pfBio'),cnt=g('pfBioCount');
-  if(bio&&cnt){bio.addEventListener('input',function(){cnt.textContent=bio.value.length+' / 200';if(bio.value.length>180)cnt.style.color='var(--or)';else cnt.style.color='var(--lite)';});}
-});
 
 function buildAccLists(){
   var rIds=Object.keys(res),fIds=Array.from(fol);
-  // Mettre à jour les stats dans le hero
-  buildHeroStats(rIds,fIds);
+  g('accChipR').textContent=rIds.length+' réservation'+(rIds.length>1?'s':'');
+  g('accChipF').textContent=fIds.length+' prof'+(fIds.length>1?'s':'')+' suivi'+(fIds.length>1?'s':'');
   var lr=g('listR');
   if(!rIds.length){lr.innerHTML='<div class="bempty"><p>Aucun cours réservé.<br><a onclick="goExplore()">Explorer →</a></p></div>';}
   else{
@@ -2343,7 +2071,7 @@ function saveProf(){
 }
 
 function doLogout(){
-  g('app').style.display='none';var loginEl=g('login');loginEl.style.display='flex';loginEl.style.pointerEvents='';loginEl.style.zIndex='999';
+  g('app').style.display='none';g('login').style.display='flex';
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();user=null;
   try{localStorage.removeItem('cp_user');}catch(e){}
   var tav=g('tav');tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';
@@ -2408,6 +2136,7 @@ function applyFilter(){
   var raw=g('srch').value.trim();
   var q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   filteredCards=C.filter(function(c){
+    // Cours privés cachés sauf si propriétaire ou déjà réservé
     if(c.prive&&!(user&&c.pr===user.id)&&!res[c.id])return false;
     var title=(c.title||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var subj=(c.subj||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -2416,19 +2145,10 @@ function applyFilter(){
     var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
+    // Filtre localisation
     var matchLoc=!actLoc||loc.includes(actLoc);
-    var matchNiv=!actNiv||(c.niveau&&c.niveau===actNiv)||(actNiv&&(!c.niveau||c.niveau===''));
-    return matchFilter&&matchSearch&&matchLoc&&(!actNiv||c.niveau===actNiv||(!c.niveau));
+    return matchFilter&&matchSearch&&matchLoc;
   });
-  // En mode géo : trier par distance si les cours ont des coordonnées
-  if(geoMode&&userCoords){
-    filteredCards.sort(function(a,b){
-      var da=Infinity,db=Infinity;
-      if(a.lat&&a.lon)da=haversine(userCoords.lat,userCoords.lon,parseFloat(a.lat),parseFloat(a.lon));
-      if(b.lat&&b.lon)db=haversine(userCoords.lat,userCoords.lon,parseFloat(b.lat),parseFloat(b.lon));
-      return da-db;
-    });
-  }
   renderPage();
 }
 
@@ -2453,9 +2173,7 @@ function renderPage(){
     var d=document.createElement('div');
     d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
     d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
-    var nivBadge=c.niveau?'<span class="niv-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'+c.niveau+'</span>':'';
-    var descPreview=c.description?'<div style="font-size:12px;color:var(--lite);margin-bottom:8px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+c.description+'</div>':'';
-    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+'</div><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descPreview+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div class="ps">Total '+c.tot+'€</div><div class="pm">'+pp+'€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span><div class="pbub" style="background:'+c.prof_col+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div><div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div class="ps">Total '+c.tot+'€</div><div class="pm">'+pp+'€ <span>/ élève</span></div></div><div class="sw2"><div class="st"><span>Places</span><span>'+c.fl+'/'+c.sp+'</span></div><div class="bar"><div class="bf" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -2497,15 +2215,9 @@ function openR(id){
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
-  // Niveau
-  var nivBadgeEl=g('rNivBadge');
-  if(nivBadgeEl){if(c.niveau){nivBadgeEl.textContent=c.niveau;nivBadgeEl.style.display='inline';}else{nivBadgeEl.style.display='none';}}
-  // Description
-  var descBox=g('rDescBox');
-  if(descBox){if(c.description){descBox.innerHTML='<span style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">À propos de ce cours</span>'+c.description;descBox.style.display='block';}else{descBox.style.display='none';}}
   var isOwner=user&&c.pr===user.id;
-  var btnConf=document.querySelector("#bdR .pb.pri");
-  var btnContact=document.querySelector("#bdR .pb.sec");
+  var btnConf=document.querySelector('#bdR .pb.pri');
+  var btnContact=document.querySelector('#bdR .pb.sec');
   var btnDel=g('btnDelCours');
   var btnEleves=g('btnVoirEleves');
   if(isOwner){
@@ -2578,7 +2290,7 @@ async function confR(){
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
-  var btn=document.querySelector("#bdR .pb.pri");
+  var btn=document.querySelector('#bdR .pb.pri');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Redirection…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
@@ -2629,7 +2341,7 @@ function confO(){
   g('rFin').textContent=pp+'€';
   g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Réservation d\'une place supplémentaire · '+pp+'€ par personne.';
-  var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector("#bdR .pb.pri"),btnContact=document.querySelector("#bdR .pb.sec");
+  var btnDel=g('btnDelCours'),btnEleves=g('btnVoirEleves'),btnConf=document.querySelector('#bdR .pb.pri'),btnContact=document.querySelector('#bdR .pb.sec');
   if(btnDel)btnDel.style.display='none';
   if(btnEleves)btnEleves.style.display='none';
   if(btnConf){btnConf.style.display='flex';btnConf.onclick=function(){confAmi(id);};}
@@ -2641,7 +2353,7 @@ async function confAmi(id){
   var c=C.find(function(x){return x.id===id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  var btn=document.querySelector("#bdR .pb.pri");
+  var btn=document.querySelector('#bdR .pb.pri');
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
@@ -2765,13 +2477,12 @@ function closeCr(){closeM('bdCr');}
 async function subCr(){
   if(window._publishing){toast('En cours...','Publication déjà en cours');return;}
   window._publishing=true;
-  var btn=document.querySelector("#bdCr .pb.pri");
+  var btn=document.querySelector('#bdCr .pb.pri');
   if(btn){btn.textContent='⏳ Publication…';btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var desc=g('crDesc')?g('crDesc').value.trim():'';
-  var niveauInp=g('crNiveau');var niveau=niveauInp?niveauInp.value:'';
-  var sujetEl=document.querySelector("#bdCr .so.on");
+  var sujetEl=document.querySelector('#bdCr .so.on');
   var sujet=sujetEl?sujetEl.textContent.trim():'Autre';
   if(!titre||!date||!heure||!lieu||!prix){
     toast('Champs manquants','Remplissez tous les champs obligatoires');
@@ -2794,7 +2505,6 @@ async function subCr(){
     prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
     prof_nom:user.pr+(user.nm?' '+user.nm:''),
     description:desc,
-    niveau:niveau,
     prive:isCoursPrivé,
     code_acces:isCoursPrivé?codePrivé:null
   };
@@ -2806,9 +2516,7 @@ async function subCr(){
     g('crTitre').value='';g('crDate').value='';g('crHeure').value='';
     g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
     if(g('crDesc'))g('crDesc').value='';
-    if(g('crNiveau'))g('crNiveau').value='';
     document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});
-    document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c,i){c.classList.toggle('on',i===0);});
     // Reset cours privé
     isCoursPrivé=false;codePrivé='';
     var tog=g('togglePrive');var knob=g('togglePriveKnob');var box=g('codePriveBox');
@@ -3016,7 +2724,7 @@ async function sendMsg(){
     })});
     // Marquer comme lu immédiatement dans l'UI
     var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
-    if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('[style*="border-radius:50%"]');if(dot)dot.remove();}
+    if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('div[style*="border-radius:50%"]');if(dot)dot.remove();}
     // Mettre à jour badge nav
     var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
     var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
@@ -3138,150 +2846,29 @@ async function loadConversations(){
 
 
 // ============================================================
-// LOCALISATION — filtre par ville + géolocalisation
+// LOCALISATION — filtre par ville
 // ============================================================
 var locFilterTimer=null;
 var actLoc='';
-var userCoords=null; // {lat, lon} si géoloc activée
-var geoMode=false;   // true = filtre "autour de moi" actif
-var actNiv='';       // '' = tous niveaux, sinon ex: 'Lycée'
 
-// --- Input texte ---
-function onLocInput(val){
-  geoMode=false;
-  userCoords=null;
+function filterByLoc(val){
   var btn=g('locClearBtn');
   if(btn)btn.style.display=val.trim()?'block':'none';
-  var geoBtn=g('locGeoBtn');
-  if(geoBtn){geoBtn.style.background='';geoBtn.style.color='';}
-  if(!val||val.length<3){
-    closeLoc();
-    clearTimeout(locFilterTimer);
-    locFilterTimer=setTimeout(function(){actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');applyFilter();},300);
-    return;
-  }
   clearTimeout(locFilterTimer);
-  locFilterTimer=setTimeout(async function(){
+  locFilterTimer=setTimeout(function(){
     actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     applyFilter();
-    // Suggestions Nominatim
-    try{
-      var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(val+', France')+'&format=json&limit=5&countrycodes=fr&addressdetails=1',{headers:{'Accept-Language':'fr'}});
-      var data=await r.json();
-      if(!data.length){closeLoc();return;}
-      var box=g('locSuggestions');
-      box.innerHTML=data.map(function(d){
-        var parts=d.display_name.split(',');
-        var name=parts.slice(0,2).join(',').trim();
-        var sub=parts.slice(2,4).join(',').trim();
-        return'<div class="loc-sug-item" onclick="pickLocSug(\''+name.replace(/'/g,"\\'")+'\')">'
-          +'<div class="loc-sug-icon place-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
-          +'<div><div style="font-weight:600;font-size:13px">'+name+'</div><div style="font-size:11px;color:var(--lite)">'+sub+'</div></div>'
-          +'</div>';
-      }).join('');
-      box.style.display='block';
-    }catch(e){closeLoc();}
-  },350);
-}
-
-// --- Focus sur le champ vide : proposer "Autour de moi" en premier ---
-function onLocFocus(){
-  var val=g('locInput').value.trim();
-  if(val.length>=3)return; // déjà en train de taper
-  var box=g('locSuggestions');
-  box.innerHTML='<div class="loc-sug-item geo" onclick="requestGeoloc();closeLoc()">'
-    +'<div class="loc-sug-icon geo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>'
-    +'<div><div style="font-weight:700;font-size:13px;color:var(--or)">📍 Autour de moi</div><div style="font-size:11px;color:var(--lite)">Utiliser ma position actuelle</div></div>'
-    +'</div>'
-    +'<div style="padding:6px 14px 4px;font-size:11px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em">Villes populaires</div>'
-    +['Paris','Lyon','Marseille','Bordeaux','Toulouse','Nantes','Lille','Strasbourg'].map(function(v){
-      return'<div class="loc-sug-item" onclick="pickLocSug(\''+v+'\')">'
-        +'<div class="loc-sug-icon place-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
-        +'<div style="font-weight:500;font-size:13px">'+v+'</div>'
-        +'</div>';
-    }).join('');
-  box.style.display='block';
-}
-
-function pickLocSug(name){
-  g('locInput').value=name;
-  g('locClearBtn').style.display='block';
-  closeLoc();
-  actLoc=name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  geoMode=false;
-  applyFilter();
-}
-
-function closeLoc(){
-  var box=g('locSuggestions');
-  if(box)box.style.display='none';
-}
-
-document.addEventListener('click',function(e){
-  if(!e.target.closest||!e.target.closest('#locbarWrap'))closeLoc();
-});
-
-// --- Géolocalisation ---
-function requestGeoloc(){
-  var btn=g('locGeoBtn');
-  if(!navigator.geolocation){toast('Non supporté','Votre navigateur ne permet pas la géolocalisation');return;}
-  if(btn){btn.classList.add('loading');btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".3"/><path d="M21 12a9 9 0 00-9-9"/></svg> Localisation…';}
-  navigator.geolocation.getCurrentPosition(
-    async function(pos){
-      var lat=pos.coords.latitude,lon=pos.coords.longitude;
-      userCoords={lat:lat,lon:lon};
-      geoMode=true;
-      // Reverse geocoding
-      try{
-        var r=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&accept-language=fr');
-        var d=await r.json();
-        var ville=d.address.city||d.address.town||d.address.village||d.address.county||'';
-        var inp=g('locInput');
-        if(inp)inp.value=ville?'📍 '+ville:'📍 Autour de moi';
-        g('locClearBtn').style.display='block';
-        actLoc=ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      }catch(e){
-        var inp=g('locInput');
-        if(inp)inp.value='📍 Autour de moi';
-        actLoc='';
-      }
-      if(btn){
-        btn.classList.remove('loading');
-        btn.style.background='var(--or)';btn.style.color='#fff';
-        btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Activé';
-      }
-      applyFilter();
-      toast('📍 Position détectée','Cours triés par distance autour de vous');
-    },
-    function(err){
-      if(btn){btn.classList.remove('loading');btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Autour de moi';}
-      var msg=err.code===1?'Accès à la position refusé. Activez la géolocalisation dans vos réglages.':'Impossible de vous localiser.';
-      toast('Géolocalisation',msg);
-    },
-    {enableHighAccuracy:false,timeout:8000,maximumAge:60000}
-  );
-}
-
-// --- Distance haversine (km) ---
-function haversine(lat1,lon1,lat2,lon2){
-  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  },300);
 }
 
 function locInputClear(){
   var inp=g('locInput');
   if(inp)inp.value='';
-  g('locClearBtn').style.display='none';
-  var btn=g('locGeoBtn');
-  if(btn){btn.style.background='';btn.style.color='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Autour de moi';}
-  actLoc='';geoMode=false;userCoords=null;
-  closeLoc();
+  var btn=g('locClearBtn');
+  if(btn)btn.style.display='none';
+  actLoc='';
   applyFilter();
 }
-
-// Ancienne fonction conservée pour compatibilité
-function filterByLoc(val){onLocInput(val);}
 
 // ============================================================
 // FILTRES CUSTOM
@@ -3344,94 +2931,6 @@ function renderCustomPills(){
 }
 
 // ============================================================
-// VÉRIFICATION COMPTE — bannière + polling + notification
-// ============================================================
-
-// Bannière dynamique selon l'état du prof
-function updateVerifBanner(){
-  var banner=g('unverifiedBanner');
-  if(!banner)return;
-  if(!user||user.role!=='professeur'){banner.style.display='none';return;}
-  if(user.verified){banner.style.display='none';return;}
-
-  // Prof non vérifié : deux états possibles
-  var cniDone=false;
-  try{cniDone=!!localStorage.getItem('cp_cni_done_'+user.id);}catch(e){}
-
-  banner.style.display='flex';
-  var icon=g('bannerIcon');
-  var text=g('bannerText');
-  var btn=g('bannerCniBtn');
-
-  if(cniDone){
-    // CNI déjà envoyée — en attente de validation
-    banner.style.background='#FEF3C7';banner.style.borderColor='#FDE68A';banner.style.color='#92400E';
-    if(icon)icon.innerHTML='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
-    if(text)text.innerHTML='<strong>CNI en cours d\'examen</strong> — Vous serez notifié par email dès validation (sous 24h).';
-    if(btn)btn.style.display='none';
-  } else {
-    // CNI pas encore envoyée
-    banner.style.background='#FFF7ED';banner.style.borderColor='#FED7AA';banner.style.color='#9A3412';
-    if(icon)icon.innerHTML='<rect x="2" y="5" width="20" height="14" rx="3"/><circle cx="8" cy="11" r="2"/><path d="M4 19c0-2 1.8-3 4-3s4 1 4 3"/><line x1="15" y1="9" x2="20" y2="9"/><line x1="15" y1="12" x2="19" y2="12"/>';
-    if(text)text.innerHTML='<strong>Identité non vérifiée</strong> — Envoyez votre CNI ou passeport pour publier des cours.';
-    if(btn)btn.style.display='block';
-  }
-}
-
-// Polling : vérifie si le compte vient d'être validé (toutes les 30s si prof non vérifié)
-var _verifPollTimer=null;
-function startVerifPolling(){
-  if(_verifPollTimer)return;
-  if(!user||user.role!=='professeur'||user.verified)return;
-  _verifPollTimer=setInterval(async function(){
-    if(!user||user.verified){clearInterval(_verifPollTimer);_verifPollTimer=null;return;}
-    try{
-      var r=await fetch(API+'/profiles/'+user.id);
-      var p=await r.json();
-      if(p&&p.verified){
-        // Compte validé !
-        user.verified=true;
-        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
-        clearInterval(_verifPollTimer);_verifPollTimer=null;
-        onAccountVerified();
-      }
-    }catch(e){}
-  },30000);
-}
-
-// Appelée quand le compte passe verified=true
-function onAccountVerified(){
-  // Bannière disparaît
-  updateVerifBanner();
-  // Boutons "Proposer un cours" apparaissent
-  var bp=g('btnProposer');if(bp)bp.style.display='flex';
-  var bpm=g('btnProposerMob');if(bpm)bpm.style.display='flex';
-  // Toast de félicitations
-  toast('🎉 Compte vérifié !','Vous pouvez maintenant publier vos cours.');
-  // Notification visuelle plein écran pendant 3s
-  showVerifiedCelebration();
-}
-
-function showVerifiedCelebration(){
-  var el=document.createElement('div');
-  el.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fu .3s ease';
-  el.innerHTML=
-    '<div style="background:#fff;border-radius:28px;padding:40px 32px;text-align:center;max-width:320px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,.3);animation:tutoCardIn .4s cubic-bezier(.34,1.26,.64,1)">'
-    +'<div style="width:72px;height:72px;background:linear-gradient(135deg,var(--green),#16A34A);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(34,192,105,.35)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>'
-    +'</div>'
-    +'<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:8px">Identité vérifiée</div>'
-    +'<div style="font-size:22px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:10px">Votre compte<br>est activé !</div>'
-    +'<div style="font-size:14px;color:var(--mid);margin-bottom:28px;line-height:1.55">Vous pouvez maintenant publier vos cours et accueillir vos premiers élèves.</div>'
-    +'<button onclick="this.closest("[style*=fixed]").remove();openCr();" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:10px">Publier mon premier cours</button>'
-    +'<button onclick="this.closest("[style*=fixed]").remove();" style="width:100%;background:none;border:none;font-family:inherit;font-weight:600;font-size:14px;color:var(--lite);cursor:pointer;padding:8px">Plus tard</button>'
-    +'</div>';
-  document.body.appendChild(el);
-  // Auto-fermeture après 8s
-  setTimeout(function(){if(el.parentNode)el.remove();},8000);
-}
-
-// ============================================================
 // CNI MODAL — première connexion prof
 // ============================================================
 async function checkFirstProfLogin(){
@@ -3457,19 +2956,9 @@ async function checkFirstProfLogin(){
 
 function previewCniModal(input){
   if(input.files&&input.files[0]){
-    var f=input.files[0];
-    var drop=g('cniDropModal');
-    var label=g('cniLabelModal');
-    var icon=g('cniIconArea');
-    // Feedback visuel vert
-    drop.style.borderColor='var(--green)';
-    drop.style.background='#F0FDF4';
-    drop.onmouseenter=null;drop.onmouseleave=null;
-    // Icône check
-    if(icon)icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg>';
-    // Nom du fichier tronqué
-    var name=f.name.length>28?f.name.substring(0,25)+'…':f.name;
-    if(label){label.textContent=name;label.style.color='#16A34A';}
+    g('cniLabelModal').textContent='✅ '+input.files[0].name;
+    g('cniDropModal').style.borderColor='var(--green)';
+    g('cniDropModal').style.background='#F0FDF4';
   }
 }
 
@@ -3489,10 +2978,8 @@ async function submitCni(){
       }).catch(function(){});
       try{localStorage.setItem('cp_cni_done_'+user.id,'1');}catch(e){}
       closeM('bdCni');
-      toast('CNI envoyée !','Vérification en cours. Vous serez notifié par email dès validation.');
-      updateVerifBanner();
+      toast('CNI envoyée !','Vérification sous 5 min à 2 heures. Email de confirmation à venir.');
       setTimeout(tutoStart, 600);
-      startVerifPolling();
       btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Envoyer pour vérification';
     };
     reader.readAsDataURL(file);
@@ -4085,97 +3572,6 @@ function pickSCustom(el){
   if(modal)modal.remove();
 }
 
-// ============================================================
-// NIVEAU — sélection dans le formulaire + filtre
-// ============================================================
-function pickNiveau(el){
-  document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  var inp=g('crNiveau');
-  if(inp)inp.value=el.dataset.n||'';
-}
-
-function openNivFilter(){
-  g('bdNivFilter').style.display='flex';
-  // Sync l'état actuel
-  document.querySelectorAll('#nivFilterChips .niv-fchip').forEach(function(c){
-    c.classList.toggle('on', (c.textContent==='Tous niveaux'&&!actNiv)||(c.textContent===actNiv));
-  });
-}
-function closeNivFilter(){g('bdNivFilter').style.display='none';}
-
-function setNivFilter(niv,el){
-  actNiv=niv;
-  document.querySelectorAll('#nivFilterChips .niv-fchip').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  // Mettre à jour le pill bouton
-  var pill=g('pillNiv');
-  if(pill){
-    if(niv){
-      pill.style.background='var(--ink)';pill.style.color='#fff';pill.style.borderColor='var(--ink)';
-      pill.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'+niv+'<span onclick="event.stopPropagation();setNivFilter("",document.querySelector("#nivFilterChips .niv-fchip"))" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
-    } else {
-      pill.style.background='';pill.style.color='';pill.style.borderColor='';
-      pill.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Niveau';
-    }
-  }
-  applyFilter();
-}
-
-// ============================================================
-// CONTACT — formulaire vers dashboard
-// ============================================================
-var contactSubjSelected = 'Question générale';
-
-function openContact(){
-  var inp = g('contactEmail');
-  if(inp && user && user.em) inp.value = user.em;
-  g('contactMsg').value = '';
-  // Reset sujets
-  document.querySelectorAll('.contact-subj').forEach(function(el){el.classList.remove('on');});
-  var first = document.querySelector(".contact-subj");
-  if(first){first.classList.add('on');contactSubjSelected=first.dataset.s;}
-  openM('bdContact');
-}
-
-function pickContactSubj(el){
-  document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
-  el.classList.add('on');
-  contactSubjSelected = el.dataset.s || el.textContent;
-}
-
-async function submitContact(){
-  var email = g('contactEmail').value.trim();
-  var msg = g('contactMsg').value.trim();
-  if(!email || !email.includes('@')){toast('Email manquant','Saisissez votre adresse email');return;}
-  if(!msg || msg.length < 10){toast('Message trop court','Décrivez mieux votre demande');return;}
-  var btn = g('contactSendBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".3"/><path d="M21 12a9 9 0 00-9-9"/></svg> Envoi…';
-  try{
-    var r = await fetch(API+'/contact', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        email: email,
-        sujet: contactSubjSelected,
-        message: msg,
-        nom: user ? (user.pr + ' ' + (user.nm||'')).trim() : '',
-        role: user ? user.role : 'inconnu',
-        userId: user ? user.id : null
-      })
-    });
-    var data = await r.json();
-    if(data.error){toast('Erreur',"Impossible d'envoyer. Réessayez.");btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer le message';return;}
-    closeM('bdContact');
-    toast('Message envoyé !','On vous répond dans les 24h 📬');
-  }catch(e){
-    toast('Erreur réseau','Vérifiez votre connexion');
-  }
-  btn.disabled = false;
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer le message';
-}
-
 // NOTATION
 var noteVal=0,noteCours=null;
 var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 😊','Excellent ! 🌟'];
@@ -4219,8 +3615,16 @@ async function submitNote(){
   }catch(e){toast('Erreur réseau','Impossible d\'envoyer la note');}
 }
 
-// LIEU SEARCH
+// ============================================================
+// LOCALISATION — filtre + géolocalisation
+// ============================================================
 var lieuTimer=null;
+var locFilterTimer=null;
+var actLoc='';
+var userCoords=null;
+var geoMode=false;
+var actNiv='';
+
 function searchLieu(q){
   var box=g('lieuSuggestions');
   if(!q||q.length<3){box.style.display='none';return;}
@@ -4232,16 +3636,112 @@ function searchLieu(q){
       if(!data.length){box.style.display='none';return;}
       box.innerHTML=data.map(function(d){
         var name=d.display_name.split(',').slice(0,3).join(', ');
-        return'<div style="padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr)" onmouseover="this.style.background=\'var(--orp)\'" onmouseout="this.style.background=\'\'" onclick="pickLieu(\''+name.replace(/'/g,"\\'")+'\')" >📍 '+name+'</div>';
+        return'<div style="padding:10px 13px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr)" onclick="pickLieu(\''+name.replace(/\'\'/g,"\\\'")+'\')">📍 '+name+'</div>';
       }).join('');
       box.style.display='block';
     }catch(e){box.style.display='none';}
   },400);
 }
 function pickLieu(name){g('crLieu').value=name;g('lieuSuggestions').style.display='none';}
+
+function onLocInput(val){
+  geoMode=false;userCoords=null;
+  var btn=g('locClearBtn');
+  if(btn)btn.style.display=val.trim()?'block':'none';
+  var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
+  if(!val||val.length<3){closeLoc();clearTimeout(locFilterTimer);locFilterTimer=setTimeout(function(){actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');applyFilter();},300);return;}
+  clearTimeout(locFilterTimer);
+  locFilterTimer=setTimeout(async function(){
+    actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    applyFilter();
+    try{
+      var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(val+', France')+'&format=json&limit=5&countrycodes=fr',{headers:{'Accept-Language':'fr'}});
+      var data=await r.json();
+      if(!data.length){closeLoc();return;}
+      var box=g('locSuggestions');
+      box.innerHTML=data.map(function(d){
+        var parts=d.display_name.split(',');
+        var name=parts.slice(0,2).join(',').trim();
+        var sub=parts.slice(2,4).join(',').trim();
+        return'<div class="loc-sug-item" onclick="pickLocSug(\'' + name + '\')">'
+          +'<div class="loc-sug-icon place-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
+          +'<div><div style="font-weight:600;font-size:13px">'+name+'</div><div style="font-size:11px;color:var(--lite)">'+sub+'</div></div>'
+          +'</div>';
+      }).join('');
+      box.style.display='block';
+    }catch(e){closeLoc();}
+  },350);
+}
+
+function onLocFocus(){
+  var val=g('locInput').value.trim();
+  if(val.length>=3)return;
+  var box=g('locSuggestions');
+  box.innerHTML='<div class="loc-sug-item geo" onclick="requestGeoloc();closeLoc()">'
+    +'<div class="loc-sug-icon geo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>'
+    +'<div><div style="font-weight:700;font-size:13px;color:var(--or)">Autour de moi</div><div style="font-size:11px;color:var(--lite)">Utiliser ma position</div></div>'
+    +'</div>'
+    +['Paris','Lyon','Marseille','Bordeaux','Toulouse','Nantes'].map(function(v){
+      return'<div class="loc-sug-item" onclick="pickLocSug(\''+v+'\')">'
+        +'<div class="loc-sug-icon place-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
+        +'<div style="font-weight:500;font-size:13px">'+v+'</div>'
+        +'</div>';
+    }).join('');
+  box.style.display='block';
+}
+
+function pickLocSug(name){
+  g('locInput').value=name;g('locClearBtn').style.display='block';closeLoc();
+  actLoc=name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');geoMode=false;applyFilter();
+}
+
+function closeLoc(){var box=g('locSuggestions');if(box)box.style.display='none';}
+
 document.addEventListener('click',function(e){
   if(!e.target.closest||(!e.target.closest('#crLieu')&&!e.target.closest('#lieuSuggestions'))){var box=g('lieuSuggestions');if(box)box.style.display='none';}
+  if(!e.target.closest||!e.target.closest('#locbarWrap'))closeLoc();
 });
+
+function requestGeoloc(){
+  var btn=g('locGeoBtn');
+  if(!navigator.geolocation){toast('Non supporté','Géolocalisation non disponible');return;}
+  if(btn){btn.classList.add('loading');btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/></svg> Localisation…';}
+  navigator.geolocation.getCurrentPosition(
+    async function(pos){
+      userCoords={lat:pos.coords.latitude,lon:pos.coords.longitude};geoMode=true;
+      try{
+        var r=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=fr');
+        var d=await r.json();
+        var ville=d.address.city||d.address.town||d.address.village||'';
+        var inp=g('locInput');if(inp)inp.value=ville?'📍 '+ville:'📍 Autour de moi';
+        g('locClearBtn').style.display='block';
+        actLoc=ville.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      }catch(e){var inp=g('locInput');if(inp)inp.value='📍 Autour de moi';actLoc='';}
+      if(btn){btn.classList.remove('loading');btn.style.background='var(--or)';btn.style.color='#fff';btn.innerHTML='Activé';}
+      applyFilter();toast('Position détectée','Cours autour de vous 📍');
+    },
+    function(){
+      if(btn){btn.classList.remove('loading');btn.innerHTML='Autour de moi';}
+      toast('Refusé','Activez la géolocalisation dans vos réglages');
+    },
+    {enableHighAccuracy:false,timeout:8000,maximumAge:60000}
+  );
+}
+
+function haversine(lat1,lon1,lat2,lon2){
+  var R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function locInputClear(){
+  var inp=g('locInput');if(inp)inp.value='';
+  g('locClearBtn').style.display='none';
+  var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
+  actLoc='';geoMode=false;userCoords=null;closeLoc();applyFilter();
+}
+
+function filterByLoc(val){onLocInput(val);}
 
 // NIVEAUX
 var NIVEAUX={
@@ -4265,6 +3765,13 @@ function updateNiveauxPf(statut){
   sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
 }
 
+// Fonctions niveau cours
+function pickNiveau(el){
+  document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  var inp=g('crNiveau');if(inp)inp.value=el.dataset.n||'';
+}
+
 // CNI
 function previewCni(input){
   if(input.files&&input.files[0]){
@@ -4275,184 +3782,17 @@ function previewCni(input){
 
 // UTILS
 function g(id){return document.getElementById(id);}
-function openM(id){
-  var el=g(id);if(!el)return;
-  el.classList.add('on');
-  // Bloquer le scroll du body sans position:fixed (qui casse le scroll)
-  document.body.style.overflow='hidden';
-}
-function closeM(id){
-  var el=g(id);if(!el)return;
-  el.classList.remove('on');
-  document.body.style.overflow='';
-}
+function openM(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
+function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
 function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
 
-// ============================================================
-// PUSH NOTIFICATIONS — système complet VAPID
-// ============================================================
-var VAPID_PUBLIC_KEY = 'BDyXpxjqx8h9llIzLNcaYdMpEX_jbkqEt4fjXOV_bSgENcpW7KaPFUHEjk0uXKT--ZajXK_zAJwgplwNz3j4jA8';
-var _swReg = null;
-var _pushSubscription = null;
-
-// Convertir la clé VAPID base64 en Uint8Array
-function urlBase64ToUint8Array(base64String) {
-  var padding = '='.repeat((4 - base64String.length % 4) % 4);
-  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  var rawData = window.atob(base64);
-  var arr = new Uint8Array(rawData.length);
-  for (var i = 0; i < rawData.length; i++) arr[i] = rawData.charCodeAt(i);
-  return arr;
-}
-
-// Enregistrer le SW et récupérer l'abonnement existant
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      _swReg = reg;
-      return reg.pushManager.getSubscription();
-    }).then(function(sub) {
-      _pushSubscription = sub;
-      renderNotifStatus();
-    }).catch(function(err) { console.log('SW erreur:', err); });
-  });
-}
-
-// Afficher le statut des notifications dans le profil
-function renderNotifStatus() {
-  var el = g('notifStatus');
-  if (!el) return;
-  var perm = ('Notification' in window) ? Notification.permission : 'unsupported';
-
-  if (perm === 'unsupported' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-    el.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
-      + '<div style="width:36px;height:36px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
-      + '</div>'
-      + '<div><div style="font-size:14px;font-weight:600;color:var(--mid)">Non disponible</div>'
-      + '<div style="font-size:12px;color:var(--lite);margin-top:1px">Votre navigateur ne supporte pas les notifications push</div></div>'
-      + '</div>';
-    return;
-  }
-
-  if (perm === 'denied') {
-    el.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
-      + '<div style="width:36px;height:36px;background:#FEF2F2;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>'
-      + '</div>'
-      + '<div><div style="font-size:14px;font-weight:600;color:var(--ink)">Notifications bloquées</div>'
-      + '<div style="font-size:12px;color:var(--lite);margin-top:1px">Autorisez dans les réglages de votre navigateur</div></div>'
-      + '</div>';
-    return;
-  }
-
-  if (perm === 'granted' && _pushSubscription) {
-    var types = g('notifTypes');
-    if (types) types.style.display = 'block';
-    // Labels selon rôle
-    var isProf = user && user.role === 'professeur';
-    var lbl = g('notifSubLbl'), rl = g('notifRemLbl');
-    if (lbl) lbl.textContent = isProf ? 'Quand un élève réserve votre cours' : 'Quand un prof suivi publie un cours';
-    if (rl) rl.textContent = isProf ? 'Rappels & actualités' : 'Rappels & actualités';
-    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between">'
-      + '<div style="display:flex;align-items:center;gap:10px">'
-      + '<div style="width:36px;height:36px;background:#F0FDF4;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
-      + '</div>'
-      + '<div><div style="font-size:14px;font-weight:600;color:var(--ink)">Notifications activées</div>'
-      + '<div style="font-size:12px;color:var(--green);margin-top:1px;font-weight:500">Vous recevrez des alertes en temps réel</div></div>'
-      + '</div>'
-      + '<button onclick="unsubscribePush()" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:8px;padding:5px 10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--mid)">Désactiver</button>'
-      + '</div>';
-    return;
-  }
-
-  // Par défaut : bouton d'activation
-  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between">'
-    + '<div style="display:flex;align-items:center;gap:10px">'
-    + '<div style="width:36px;height:36px;background:var(--orp);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
-    + '</div>'
-    + '<div><div style="font-size:14px;font-weight:600;color:var(--ink)">Activer les notifications</div>'
-    + '<div style="font-size:12px;color:var(--lite);margin-top:1px">Restez informé en temps réel</div></div>'
-    + '</div>'
-    + '<button onclick="subscribePush()" style="background:var(--or);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Activer</button>'
-    + '</div>';
-}
-
-// Demander la permission et s'abonner
-async function subscribePush() {
-  if (!_swReg) { toast('Erreur', 'Service worker non disponible'); return; }
-  try {
-    var perm = await Notification.requestPermission();
-    if (perm !== 'granted') { toast('Refusé', 'Autorisez les notifications dans vos réglages'); return; }
-    var sub = await _swReg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-    _pushSubscription = sub;
-    // Sauvegarder en base
-    await fetch(API + '/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subscription: sub.toJSON(),
-        user_id: user ? user.id : null,
-        role: user ? user.role : 'inconnu'
-      })
-    });
-    renderNotifStatus();
-    toast('Notifications activées !', 'Vous recevrez les alertes CoursPool 🔔');
-  } catch(e) {
-    console.log('Push subscribe error:', e);
-    toast('Erreur', "Impossible d'activer les notifications");
-  }
-}
-
-// Se désabonner
-async function unsubscribePush() {
-  if (!_pushSubscription) return;
-  try {
-    await _pushSubscription.unsubscribe();
-    // Supprimer en base
-    if (user) {
-      await fetch(API + '/push/subscribe', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id })
-      });
-    }
-    _pushSubscription = null;
-    var types = g('notifTypes');
-    if (types) types.style.display = 'none';
-    renderNotifStatus();
-    toast('Notifications désactivées', '');
-  } catch(e) { toast('Erreur', 'Impossible de désactiver'); }
-}
-
-// Toggle préférences
-function toggleNotifPref(type, el) {
-  el.classList.toggle('on');
-  var prefs = {};
-  try { prefs = JSON.parse(localStorage.getItem('cp_notif_prefs_' + (user ? user.id : '')) || '{}'); } catch(e) {}
-  prefs[type] = el.classList.contains('on');
-  try { localStorage.setItem('cp_notif_prefs_' + (user ? user.id : ''), JSON.stringify(prefs)); } catch(e) {}
-}
-
-// Appeler renderNotifStatus quand on ouvre l'onglet Profil
-var _origSwitchATab = typeof switchATab === 'function' ? switchATab : null;
-
 // SERVICE WORKER PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      _swReg = reg;
-      return reg.pushManager.getSubscription();
-    }).then(function(sub) {
-      _pushSubscription = sub;
-      renderNotifStatus();
-    }).catch(function(err) { console.log('SW erreur:', err); });
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').then(function(reg){
+      return reg.pushManager ? reg.pushManager.getSubscription() : null;
+    }).catch(function(err){console.log('SW erreur:',err);});
   });
 }
 </script>
