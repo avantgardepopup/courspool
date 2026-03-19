@@ -5969,63 +5969,7 @@ if('serviceWorker' in navigator){
     }).catch(function(err){console.log('SW erreur:',err);});
   });
 }
-</script>
-</body>
-</htmlmsgList.innerHTML='<div style="text-align:center;padding:60px 20px 80px"><div style="width:72px;height:72px;margin:0 auto 20px"><svg viewBox="0 0 72 72" style="animation:emptyFloat 3s ease-in-out infinite .3s both"><circle cx="36" cy="36" r="32" fill="var(--orp)"/><rect x="20" y="24" width="32" height="22" rx="7" fill="none" stroke="var(--or)" stroke-width="3"/><circle cx="28" cy="35" r="2" fill="var(--or)"/><circle cx="36" cy="35" r="2" fill="var(--or)"/><circle cx="44" cy="35" r="2" fill="var(--or)"/><path d="M28 46 l4 5 l4-5" fill="var(--or)"/></svg></div><div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Aucune conversation</div><div style="font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px">Contactez un professeur depuis<br>la fiche d’un cours</div><button onclick="navTo('exp')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours</button></div>';
-      _convLoading=false;return;
-    }
-    // Grouper par interlocuteur
-    var convs={};
-    msgs.forEach(function(m){
-      var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
-      if(!otherId||otherId===user.id)return;
-      if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
-    });
-    var nonLus=0;
-    var html=Object.keys(convs).map(function(otherId){
-      var m=convs[otherId];
-      var isMe=m.sender_id===user.id;
-      var nonLu=!isMe&&!m.lu;
-      if(nonLu)nonLus++;
-      // Chercher le profil dans P ou fallback
-      var p=P[otherId];
-      var nm=p?p.nm:'';
-      var col=p?p.col:'linear-gradient(135deg,#FF8C55,#E04E10)';
-      var photo=p?p.photo:null;
-      var ini=p?p.i:'';
-      // Si pas de profil en cache, charger depuis l'API en arrière-plan
-      if(!p){
-        fetch(API+'/profiles/'+otherId).then(function(r){return r.json();}).then(function(prof){
-          if(prof&&prof.id){
-            var pr=prof.prenom||'';var no=prof.nom||'';
-            P[otherId]={nm:(pr+(no?' '+no:'')).trim()||'Utilisateur',i:((pr[0]||'')+(no[0]||'')).toUpperCase()||'U',col:'linear-gradient(135deg,#FF8C55,#E04E10)',photo:prof.photo_url||null,rl:'',e:0};
-            // Recharger la liste
-            loadConversations();
-          }
-        }).catch(function(){});
-      }
-      if(!nm)nm='Utilisateur';
-      if(!ini)ini=nm[0]?nm[0].toUpperCase():'U';
-      var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
-      var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      var preview=m.contenu?m.contenu.slice(0,35)+(m.contenu.length>35?'…':''):'…';
-      var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
-    }).join('');
-    lm.innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
-    var badge=g('msgBadge');
-    if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
-    var bnavBadge=g('bnavBadge');
-    if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
-  }catch(e){
-    if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
-  }finally{clearTimeout(_convTimeout);_convLoading=false;}
-}
 
-
-// ============================================================
-// LOCALISATION — filtre par ville
-// ============================================================
 var locFilterTimer=null;
 var actLoc='';
 
@@ -7929,41 +7873,6 @@ function showEmptyAnimated(el,title,sub){
 // ============================================================
 // VÉRIFICATION COMPTE ACTIF — déconnecte si supprimé
 // ============================================================
-function startAccountCheck(){
-  if(!user||!user.id||user.guest)return;
-  setInterval(async function(){
-    if(!user||!user.id)return;
-    try{
-      var r=await fetch(API+'/profiles/'+user.id);
-      var p=await r.json();
-      if(!r.ok||!p||!p.id){
-        toast('Votre compte a été désactivé','Vous allez être déconnecté');
-        setTimeout(doLogout,2000);return;
-      }
-      if(p.statut_compte==='bloqué'&&user.statut_compte!=='bloqué'){
-        toast('Votre compte a été bloqué','Vous allez être déconnecté');
-        setTimeout(doLogout,2000);return;
-      }
-      // Mettre à jour le statut si changé (ex: vérifié par admin)
-      if(p.statut_compte!==user.statut_compte||p.verified!==user.verified){
-        user.statut_compte=p.statut_compte;
-        user.verified=p.verified;
-        user.can_retry_cni=p.can_retry_cni;
-        user.rejection_reason=p.rejection_reason;
-        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
-        // Mettre à jour la bannière de vérification
-        updateVerifBand();
-        // Notifier si compte maintenant vérifié
-        if(p.statut_compte==='verified'||p.verified){
-          toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
-          haptic([10,50,100,50,10]);
-        } else if(p.statut_compte==='rejeté'){
-          toast('Document refusé','Vérifiez votre email pour plus d\'informations');
-        }
-      }
-    }catch(e){}
-  }, 30000);
-}
 
 // SERVICE WORKER PWA
 if('serviceWorker' in navigator){
@@ -8016,7 +7925,6 @@ if('serviceWorker' in navigator){
     }
   }catch(e){loadData();}
 })();
-
 </script>
 </body>
 </html>
