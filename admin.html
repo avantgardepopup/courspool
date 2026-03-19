@@ -226,6 +226,16 @@ tr:hover td{background:#FAFAF9;}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         Paiements
       </div>
+      <div class="nav-section">Support</div>
+      <div class="nav-item" onclick="goPage('support',this)" id="navSupport">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messages
+        <span class="nav-badge" id="supportBadge" style="display:none">0</span>
+      </div>
+      <div class="nav-item" onclick="goPage('notifs',this)" id="navNotifs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Notifications
+      </div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">
@@ -331,7 +341,7 @@ tr:hover td{background:#FAFAF9;}
         <div class="section-title">Cours publiés <span id="coursCount" style="font-size:13px;color:var(--lite);font-weight:500"></span></div>
         <div class="card">
           <table>
-            <thead><tr><th>Cours</th><th>Professeur</th><th>Date</th><th>Places</th><th>Prix</th><th></th></tr></thead>
+            <thead><tr><th>Cours</th><th>Professeur</th><th>Niveau</th><th>Date</th><th>Places</th><th>Prix</th><th></th></tr></thead>
             <tbody id="coursTable"></tbody>
           </table>
         </div>
@@ -352,6 +362,77 @@ tr:hover td{background:#FAFAF9;}
             <thead><tr><th>Cours</th><th>Montant</th><th>Commission</th><th>Prof reçoit</th><th>Statut</th><th>Date</th></tr></thead>
             <tbody id="paiementsTable"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- PAGE NOTIFICATIONS -->
+      <div class="page" id="pageNotifs">
+        <div class="section-title">Notifications push</div>
+
+        <!-- Stats abonnés -->
+        <div class="stats-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px">
+          <div class="stat-card"><div class="stat-icon" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><div><div class="stat-val" id="statPushTotal">—</div><div class="stat-lbl">Total abonnés</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg></div><div><div class="stat-val" id="statPushProfs">—</div><div class="stat-lbl">Profs abonnés</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="stat-val" id="statPushEleves">—</div><div class="stat-lbl">Élèves abonnés</div></div></div>
+        </div>
+
+        <!-- Envoyer notif perso -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header"><h3>Envoyer une notification personnalisée</h3></div>
+          <div style="padding:20px">
+            <!-- Cible -->
+            <div style="margin-bottom:16px">
+              <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Destinataires</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-orange" id="btnTargetProfs" onclick="setNotifTarget('professeur',this)">Tous les profs</button>
+                <button class="btn" id="btnTargetEleves" onclick="setNotifTarget('eleve',this)" style="background:var(--bg);border:1.5px solid var(--bdr);color:var(--mid)">Tous les élèves</button>
+                <button class="btn" id="btnTargetAll" onclick="setNotifTarget('all',this)" style="background:var(--bg);border:1.5px solid var(--bdr);color:var(--mid)">Tout le monde</button>
+              </div>
+              <input type="hidden" id="notifTarget" value="professeur">
+            </div>
+            <!-- Titre -->
+            <div style="margin-bottom:12px">
+              <label style="font-size:12px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px">Titre de la notification</label>
+              <input id="notifTitle" type="text" placeholder="Ex : Nouveauté CoursPool 🎉" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14px;outline:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
+            </div>
+            <!-- Message -->
+            <div style="margin-bottom:12px">
+              <label style="font-size:12px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px">Message</label>
+              <textarea id="notifBody" rows="3" placeholder="Ex : Une nouvelle fonctionnalité est disponible sur CoursPool..." style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14px;outline:none;resize:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+            </div>
+            <!-- URL optionnelle -->
+            <div style="margin-bottom:20px">
+              <label style="font-size:12px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px">URL de destination (optionnel)</label>
+              <input id="notifUrl" type="url" placeholder="https://courspool.vercel.app" style="width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 13px;font-family:inherit;font-size:14px;outline:none;transition:border .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
+            </div>
+            <div style="display:flex;gap:10px">
+              <button onclick="sendBroadcastNotif()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Envoyer la notification
+              </button>
+              <button onclick="sendRelance()" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:13px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;color:var(--mid);white-space:nowrap">
+                Relance auto
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historique -->
+        <div class="card">
+          <div class="card-header"><h3>Historique des envois</h3></div>
+          <div id="notifHistory" style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Aucun envoi pour l'instant</div>
+        </div>
+      </div>
+
+      <!-- PAGE SUPPORT -->
+      <div class="page" id="pageSupport">
+        <div class="section-title">Messages support <span id="supportCount" style="font-size:13px;color:var(--lite);font-weight:500"></span></div>
+        <div class="card">
+          <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+            <h3>Demandes des utilisateurs</h3>
+            <button onclick="markAllSupportRead()" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:8px;padding:6px 12px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--mid)">Tout marquer lu</button>
+          </div>
+          <div id="supportList" style="padding:0"></div>
         </div>
       </div>
 
@@ -502,7 +583,7 @@ async function loadAll(){
     allRes=Array.isArray(resData)?resData:[];
     allEleves=all.filter(function(p){return p.role==='eleve';});
     allProfs=all.filter(function(p){return p.role==='professeur';});
-    renderDashboard();renderProfs();renderEleves();renderCours();renderPaiements();
+    renderDashboard();renderProfs();renderEleves();renderCours();renderPaiements();renderSupport();loadPushStats();
   }catch(e){console.log('Erreur chargement',e);}
 }
 
@@ -597,7 +678,7 @@ function renderCours(){
     var nbRes=allRes.filter(function(r){return r.cours_id===c.id;}).length;
     var full=(c.places_prises||0)>=(c.places_max||5);
     var priveTag=c.prive?'<span class="badge gray" style="margin-left:4px">Privé</span>':'';
-    return'<tr><td><div style="font-weight:600">'+(c.titre||'—')+priveTag+'</div><div style="font-size:11px;color:var(--mid)">'+(c.sujet||'')+'</div></td><td style="font-size:12px">'+(c.prof_nom||'—')+'</td><td style="font-size:11.5px">'+(c.date_heure||'—')+'</td><td><span class="badge '+(full?'red':'green')+'">'+(c.places_prises||0)+'/'+(c.places_max||5)+'</span></td><td><strong>'+(c.prix_total||0)+'€</strong></td><td><button class="btn btn-red" onclick="deleteCours(\''+c.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>';
+    return'<tr><td><div style="font-weight:600">'+(c.titre||'—')+priveTag+'</div><div style="font-size:11px;color:var(--mid)">'+(c.sujet||'')+'</div></td><td style="font-size:12px">'+(c.prof_nom||'—')+'</td><td><span style="font-size:11px;background:var(--bg);border-radius:6px;padding:3px 8px;font-weight:600;color:var(--mid)">'+(c.niveau||'—')+'</span></td><td style="font-size:11.5px">'+(c.date_heure||'—')+'</td><td><span class="badge '+(full?'red':'green')+'">'+(c.places_prises||0)+'/'+(c.places_max||5)+'</span></td><td><strong>'+(c.prix_total||0)+'€</strong></td><td><button class="btn btn-red" onclick="deleteCours(\''+c.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td></tr>';
   }).join('');
 }
 
@@ -725,6 +806,184 @@ function toast(msg,isError){
   t.classList.add('on');
   setTimeout(function(){t.classList.remove('on');},3000);
 }
+// ============================================================
+// SUPPORT — messages de contact
+// ============================================================
+var allContacts = [];
+
+async function renderSupport(){
+  var list = document.getElementById('supportList');
+  var count = document.getElementById('supportCount');
+  if(!list) return;
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Chargement…</div>';
+  try{
+    var data = await supabaseQuery('contacts?select=*&order=created_at.desc');
+    allContacts = Array.isArray(data) ? data : [];
+    var nonLus = allContacts.filter(function(c){return !c.lu;}).length;
+    if(count) count.textContent = allContacts.length + ' message' + (allContacts.length>1?'s':'');
+    // Badge nav
+    var badge = document.getElementById('supportBadge');
+    if(badge){badge.style.display=nonLus>0?'inline':'none';badge.textContent=nonLus;}
+    if(!allContacts.length){
+      list.innerHTML='<div style="padding:40px;text-align:center;color:var(--lite);font-size:14px">Aucun message reçu</div>';
+      return;
+    }
+    list.innerHTML = allContacts.map(function(c,i){
+      var date = new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      var roleColor = c.role==='professeur'?'var(--or)':'#6366F1';
+      return '<div style="border-bottom:1px solid var(--bdr);padding:16px 20px;cursor:pointer;transition:background .15s;background:'+(c.lu?'transparent':'#FFFBF7')+'" onclick="openSupportMsg(''+c.id+'')" onmouseenter="this.style.background='var(--bg)'" onmouseleave="this.style.background=''+(c.lu?'transparent':'#FFFBF7')+''">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +(c.lu?'':'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0"></div>')
+        +'<span style="font-size:14px;font-weight:'+(c.lu?'500':'700')+';color:var(--ink)">'+(c.nom||c.email)+'</span>'
+        +'<span style="font-size:11px;font-weight:600;color:'+roleColor+';background:'+(c.role==='professeur'?'var(--orp)':'#EEF2FF')+';padding:2px 8px;border-radius:50px">'+(c.role||'')+'</span>'
+        +'</div>'
+        +'<span style="font-size:11px;color:var(--lite)">'+date+'</span>'
+        +'</div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--or);margin-bottom:4px">'+c.sujet+'</div>'
+        +'<div style="font-size:13px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">'+c.message+'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){
+    list.innerHTML='<div style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Erreur de chargement</div>';
+  }
+}
+
+async function openSupportMsg(id){
+  var c = allContacts.find(function(x){return x.id===id;});
+  if(!c) return;
+  // Marquer comme lu
+  if(!c.lu){
+    await supabaseUpdate('contacts',id,{lu:true});
+    c.lu = true;
+    renderSupport();
+  }
+  var date = new Date(c.created_at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  // Ouvrir modal
+  document.getElementById('modalTitle').textContent = c.sujet || 'Message';
+  document.getElementById('modalBody').innerHTML =
+    '<div style="margin-bottom:16px">'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">'
+    +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">De : '+(c.nom||'Anonyme')+'</span>'
+    +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">'+c.email+'</span>'
+    +'<span style="background:var(--orp);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--or)">'+c.sujet+'</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--lite);margin-bottom:16px">'+date+'</div>'
+    +'<div style="background:var(--bg);border-radius:14px;padding:16px;font-size:14px;color:var(--ink);line-height:1.7;white-space:pre-wrap">'+c.message+'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;margin-top:16px">'
+    +'<a href="mailto:'+c.email+'?subject=Re: '+encodeURIComponent(c.sujet||'Votre message CoursPool')+'" style="flex:1;background:var(--or);color:#fff;border-radius:12px;padding:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px">Répondre par email</a>'
+    +'<button onclick="deleteSupportMsg(''+id+'')" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;color:#EF4444">Supprimer</button>'
+    +'</div>';
+  document.getElementById('modalActions').innerHTML = '';
+  document.getElementById('overlay').classList.add('on');
+}
+
+async function deleteSupportMsg(id){
+  if(!confirm('Supprimer ce message ?')) return;
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/contacts?id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    closeModal();
+    renderSupport();
+    toast('Message supprimé');
+  }catch(e){toast('Erreur lors de la suppression');}
+}
+
+async function markAllSupportRead(){
+  try{
+    var unread = allContacts.filter(function(c){return !c.lu;});
+    await Promise.all(unread.map(function(c){return supabaseUpdate('contacts',c.id,{lu:true});}));
+    allContacts.forEach(function(c){c.lu=true;});
+    renderSupport();
+    toast('Tous les messages marqués comme lus');
+  }catch(e){toast('Erreur');}
+}
+
+// ============================================================
+// NOTIFICATIONS PUSH — admin
+// ============================================================
+var notifTarget = 'professeur';
+var notifHistory = [];
+
+async function loadPushStats(){
+  try{
+    var data = await supabaseQuery('push_subscriptions?select=role');
+    if(!Array.isArray(data)) return;
+    var profs = data.filter(function(s){return s.role==='professeur';}).length;
+    var eleves = data.filter(function(s){return s.role==='eleve';}).length;
+    var total = data.length;
+    var sp=document.getElementById('statPushTotal'),
+        spr=document.getElementById('statPushProfs'),
+        se=document.getElementById('statPushEleves');
+    if(sp)sp.textContent=total;
+    if(spr)spr.textContent=profs;
+    if(se)se.textContent=eleves;
+  }catch(e){}
+}
+
+function setNotifTarget(target, el){
+  notifTarget = target;
+  ['btnTargetProfs','btnTargetEleves','btnTargetAll'].forEach(function(id){
+    var btn=document.getElementById(id);
+    if(!btn)return;
+    btn.style.background='var(--bg)';btn.style.color='var(--mid)';btn.style.borderColor='var(--bdr)';
+  });
+  el.style.background='var(--or)';el.style.color='#fff';el.style.borderColor='var(--or)';
+  document.getElementById('notifTarget').value=target;
+}
+
+async function sendBroadcastNotif(){
+  var title=document.getElementById('notifTitle').value.trim();
+  var body=document.getElementById('notifBody').value.trim();
+  var url=document.getElementById('notifUrl').value.trim()||'https://courspool.vercel.app';
+  if(!title||!body){toast('Champs manquants','Remplissez le titre et le message');return;}
+  if(!confirm('Envoyer cette notification à tous les '+notifTarget+'s ?'))return;
+  try{
+    if(notifTarget==='all'){
+      // Envoyer aux deux groupes
+      var r1=await fetch(API+'/push/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'professeur',title,body,url})});
+      var r2=await fetch(API+'/push/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'eleve',title,body,url})});
+      var d1=await r1.json(),d2=await r2.json();
+      var total=(d1.sent||0)+(d2.sent||0);
+      addNotifHistory(title,body,'Tout le monde',total);
+      toast('Envoyé !',''+total+' notification'+(total>1?'s':'')+' envoyée'+(total>1?'s':''));
+    }else{
+      var r=await fetch(API+'/push/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:notifTarget,title,body,url})});
+      var d=await r.json();
+      addNotifHistory(title,body,notifTarget==='professeur'?'Profs':'Élèves',d.sent||0);
+      toast('Envoyé !',''+(d.sent||0)+' notification'+(d.sent>1?'s':'')+' envoyée'+(d.sent>1?'s':''));
+    }
+    document.getElementById('notifTitle').value='';
+    document.getElementById('notifBody').value='';
+  }catch(e){toast('Erreur',e.message);}
+}
+
+async function sendRelance(){
+  if(!confirm('Envoyer les relances automatiques aux profs ET élèves inactifs ?'))return;
+  try{
+    var r1=await fetch(API+'/push/relance-profs',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    var r2=await fetch(API+'/push/relance-eleves',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    var d1=await r1.json(),d2=await r2.json();
+    var total=(d1.sent||0)+(d2.sent||0);
+    addNotifHistory('Relance auto','Profs et élèves inactifs relancés','Auto',total);
+    toast('Relances envoyées !',''+total+' utilisateurs relancés');
+  }catch(e){toast('Erreur',e.message);}
+}
+
+function addNotifHistory(title,body,cible,sent){
+  notifHistory.unshift({title,body,cible,sent,date:new Date().toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})});
+  var el=document.getElementById('notifHistory');
+  if(!el)return;
+  el.innerHTML=notifHistory.map(function(h){
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bdr)">'
+      +'<div><div style="font-size:13px;font-weight:600;color:var(--ink)">'+h.title+'</div>'
+      +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+h.body+'</div>'
+      +'<div style="font-size:11px;color:var(--lite);margin-top:2px">→ '+h.cible+' · '+h.date+'</div></div>'
+      +'<span class="badge '+(h.sent>0?'green':'gray')+'">'+h.sent+' envoi'+(h.sent>1?'s':'')+'</span>'
+      +'</div>';
+  }).join('');
+}
+
 </script>
 </body>
 </html>
