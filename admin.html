@@ -1045,8 +1045,8 @@ async function deleteUser(id, nom){
     await fetch(base+'follows?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
     await fetch(base+'notations?eleve_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
     await fetch(base+'notations?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'messages?expediteur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'messages?destinataire_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
+    await fetch(base+'messages?expediteur_id=eq.'+id,{method:'DELETE',headers:h}).then(()=>{}).catch(()=>{});
+    await fetch(base+'messages?destinataire_id=eq.'+id,{method:'DELETE',headers:h}).then(()=>{}).catch(()=>{});
     await fetch(base+'cours?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
     await fetch(base+'push_subscriptions?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
     // Supprimer le profil
