@@ -985,8 +985,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>Profil
           </div>
-          <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none;flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;flex-direction:column;align-items:center;gap:3px;background:transparent">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Revenus
+          <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Revenus
           </div>
         </div>
       </div>
@@ -2114,6 +2115,14 @@ function goAccount(){
   // Onglet Revenus visible uniquement pour les profs
   var tabRev = g('aTabRev');
   if (tabRev) tabRev.style.display = (user && user.role==='professeur') ? 'flex' : 'none';
+  // Afficher le statut des notifications push
+  setTimeout(renderNotifStatus, 100);
+  // Afficher les préférences notif si push actif
+  var notifTypes = g('notifTypes');
+  if (notifTypes) notifTypes.style.display = (_pushSubscription) ? 'block' : 'none';
+  // Rôle pill
+  var rp = g('accRolePill');
+  if (rp) rp.textContent = (user.role==='professeur') ? '👨‍🏫 Professeur' : '👤 Élève';
 }
 
 function switchATab(s,el){
@@ -2134,6 +2143,7 @@ function switchATab(s,el){
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
+  if(s==='P'){setTimeout(renderNotifStatus,100);}
 }
 
 function buildAccLists(){
@@ -4019,6 +4029,9 @@ function showSkeletonsV2(){
 function renderNotifStatus(){
   var block=g('notifStatus');
   if(!block)return;
+  // Montrer/cacher les préférences selon l'état push
+  var types=g('notifTypes');
+  if(types)types.style.display=(_pushSubscription)?'block':'none';
   if(!('Notification' in window)){
     block.innerHTML='<div style="font-size:13px;color:var(--lite)">Les notifications ne sont pas supportées sur cet appareil.</div>';
     return;
