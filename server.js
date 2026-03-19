@@ -48,89 +48,221 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY
 );
 
-// EMAILS
-async function sendEmailReservation(eleveEmail, eleveName, coursTitle, coursDate, coursLieu, montant) {
+// ============================================================
+// EMAILS — domaine vérifié Resend
+// ============================================================
+const FROM_EMAIL = 'CoursPool <hello@courspool.fr>'; // ← ton domaine vérifié Resend
+
+// Template de base partagé
+function emailBase(headerBg, headerContent, bodyContent) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F6F4F1;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+  <!-- HEADER -->
+  <tr><td style="background:${headerBg};padding:36px 32px;position:relative">
+    <table cellpadding="0" cellspacing="0" width="100%"><tr>
+      <td>
+        <div style="display:inline-block;background:rgba(255,255,255,.2);border-radius:10px;padding:8px 14px;margin-bottom:16px">
+          <span style="color:#fff;font-weight:800;font-size:15px;letter-spacing:-.01em">CoursPool</span>
+        </div>
+        ${headerContent}
+      </td>
+    </tr></table>
+  </td></tr>
+  <!-- BODY -->
+  <tr><td style="padding:32px 32px 24px">${bodyContent}</td></tr>
+  <!-- FOOTER -->
+  <tr><td style="padding:20px 32px;border-top:1px solid #F0EDE8;text-align:center">
+    <p style="margin:0;font-size:12px;color:#aaa;line-height:1.6">
+      CoursPool · Plateforme de cours partagés<br>
+      <a href="https://courspool.vercel.app" style="color:#FF6B2B;text-decoration:none">courspool.vercel.app</a>
+    </p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+}
+
+// ── Email 1 : Bienvenue à l'inscription ──────────────────────
+async function sendEmailWelcome(userEmail, userName, role) {
+  const isProf = role === 'professeur';
+  const header = `
+    <h1 style="margin:0;font-size:26px;font-weight:800;color:#fff;line-height:1.2">
+      Bienvenue sur<br>CoursPool ! 👋
+    </h1>
+    <p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">
+      ${isProf ? 'Votre compte professeur est créé' : 'Votre compte élève est prêt'}
+    </p>`;
+  const body = `
+    <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${userName} !</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.7">
+      ${isProf
+        ? 'Bienvenue dans la communauté CoursPool. Pour commencer à proposer des cours, vous devez d'abord vérifier votre identité en envoyant une pièce d'identité depuis l'application.'
+        : 'Bienvenue sur CoursPool ! Vous pouvez dès maintenant explorer les cours disponibles près de chez vous et réserver votre première session.'
+      }
+    </p>
+    <div style="background:#FFF7F3;border-radius:14px;padding:20px;margin-bottom:24px">
+      ${isProf ? `
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+          <div style="width:28px;height:28px;background:#FF6B2B;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <span style="color:#fff;font-size:12px;font-weight:800">1</span>
+          </div>
+          <div><p style="margin:0;font-size:13px;font-weight:700;color:#111">Envoyer votre CNI ou passeport</p>
+          <p style="margin:4px 0 0;font-size:12px;color:#777">Vérification sous 5 min à 2 heures</p></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+          <div style="width:28px;height:28px;background:#E8E3DC;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <span style="color:#999;font-size:12px;font-weight:800">2</span>
+          </div>
+          <div><p style="margin:0;font-size:13px;font-weight:700;color:#111">Compte activé par email</p>
+          <p style="margin:4px 0 0;font-size:12px;color:#777">Vous recevrez un email de confirmation</p></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div style="width:28px;height:28px;background:#E8E3DC;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <span style="color:#999;font-size:12px;font-weight:800">3</span>
+          </div>
+          <div><p style="margin:0;font-size:13px;font-weight:700;color:#111">Publiez votre premier cours</p>
+          <p style="margin:4px 0 0;font-size:12px;color:#777">Et accueillez vos premiers élèves !</p></div>
+        </div>
+      ` : `
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111">Avec CoursPool vous pouvez :</p>
+        <p style="margin:0;font-size:13px;color:#555;line-height:1.8">
+          🔍 Explorer des cours près de chez vous<br>
+          📅 Réserver en quelques secondes<br>
+          💬 Contacter les professeurs directement<br>
+          ⭐ Laisser des avis après vos cours
+        </p>
+      `}
+    </div>
+    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">
+      ${isProf ? 'Ouvrir l'application →' : 'Découvrir les cours →'}
+    </a>`;
   try {
     await resend.emails.send({
-      from: 'CoursPool <onboarding@resend.dev>',
+      from: FROM_EMAIL,
+      to: userEmail,
+      subject: `Bienvenue sur CoursPool, ${userName} ! 🎉`,
+      html: emailBase('linear-gradient(135deg,#FF8C55,#E04E10)', header, body)
+    });
+  } catch(e) { console.log('Email welcome error:', e.message); }
+}
+
+// ── Email 2 : Confirmation de réservation (élève) ────────────
+async function sendEmailReservation(eleveEmail, eleveName, coursTitle, coursDate, coursLieu, montant) {
+  const dateFormatted = coursDate ? new Date(coursDate).toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : coursDate;
+  const header = `
+    <h1 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2">
+      Réservation confirmée !
+    </h1>
+    <p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">
+      Votre place est assurée 🎓
+    </p>`;
+  const body = `
+    <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${eleveName},</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#555">Votre inscription est confirmée pour le cours suivant :</p>
+    <div style="background:#FFF7F3;border:1px solid #FFD9C8;border-radius:16px;padding:22px;margin-bottom:24px">
+      <p style="margin:0 0 14px;font-size:18px;font-weight:800;color:#111">${coursTitle}</p>
+      <table cellpadding="0" cellspacing="0" width="100%">
+        <tr><td style="padding:6px 0">
+          <span style="font-size:13px;color:#888;display:inline-block;width:20px">📅</span>
+          <span style="font-size:13px;color:#555;font-weight:500">${dateFormatted}</span>
+        </td></tr>
+        <tr><td style="padding:6px 0">
+          <span style="font-size:13px;color:#888;display:inline-block;width:20px">📍</span>
+          <span style="font-size:13px;color:#555;font-weight:500">${coursLieu}</span>
+        </td></tr>
+        <tr><td style="padding:12px 0 0">
+          <div style="display:inline-block;background:linear-gradient(135deg,#FF8C55,#E04E10);border-radius:10px;padding:8px 16px">
+            <span style="font-size:20px;font-weight:800;color:#fff">${montant}€</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.8);margin-left:4px">payé</span>
+          </div>
+        </td></tr>
+      </table>
+    </div>
+    <p style="margin:0 0 24px;font-size:13px;color:#888;line-height:1.6">
+      Retrouvez toutes vos réservations dans la section <strong>Mon profil</strong> de l'application.
+    </p>
+    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">
+      Voir dans l'application →
+    </a>`;
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
       to: eleveEmail,
-      subject: '✅ Réservation confirmée — ' + coursTitle,
-      html: `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#FF8C55,#E04E10);padding:32px;text-align:center">
-            <h1 style="color:#fff;margin:0;font-size:24px">✅ Réservation confirmée !</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="font-size:16px;color:#111">Bonjour <strong>${eleveName}</strong>,</p>
-            <p style="color:#555">Votre place est réservée pour :</p>
-            <div style="background:#FFF2EC;border-radius:12px;padding:20px;margin:16px 0">
-              <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">${coursTitle}</div>
-              <div style="color:#555;font-size:14px">📅 ${coursDate}</div>
-              <div style="color:#555;font-size:14px;margin-top:4px">📍 ${coursLieu}</div>
-              <div style="color:#FF6B2B;font-size:18px;font-weight:700;margin-top:12px">${montant}€</div>
-            </div>
-            <p style="color:#555;font-size:14px">Retrouvez votre réservation dans l'app CoursPool.</p>
-            <a href="https://courspool.vercel.app" style="display:inline-block;background:#FF6B2B;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:8px">Voir dans l'app →</a>
-          </div>
-          <div style="padding:20px;text-align:center;color:#999;font-size:12px;border-top:1px solid #eee">CoursPool · Plateforme de cours partagés</div>
-        </div>
-      `
+      subject: `✅ Réservation confirmée — ${coursTitle}`,
+      html: emailBase('linear-gradient(135deg,#FF8C55,#E04E10)', header, body)
     });
   } catch(e) { console.log('Email reservation error:', e.message); }
 }
 
+// ── Email 3 : Nouvelle inscription (prof) ──────────────────
 async function sendEmailProfNewEleve(profEmail, profName, eleveName, coursTitle, montant) {
+  const header = `
+    <h1 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2">Nouvel élève inscrit !</h1>
+    <p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">Votre cours fait des heureux</p>`;
+  const body = `
+    <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#555">
+      <strong>${eleveName}</strong> vient de réserver une place dans votre cours.
+    </p>
+    <div style="background:#FFF7F3;border:1px solid #FFD9C8;border-radius:16px;padding:22px;margin-bottom:24px">
+      <p style="margin:0 0 10px;font-size:17px;font-weight:800;color:#111">${coursTitle}</p>
+      <div style="display:inline-block;background:linear-gradient(135deg,#22C069,#16A34A);border-radius:10px;padding:8px 16px">
+        <span style="font-size:18px;font-weight:800;color:#fff">+${montant}€</span>
+        <span style="font-size:12px;color:rgba(255,255,255,.8);margin-left:4px">encaissé</span>
+      </div>
+    </div>
+    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">
+      Voir mes élèves →
+    </a>`;
   try {
     await resend.emails.send({
-      from: 'CoursPool <onboarding@resend.dev>',
+      from: FROM_EMAIL,
       to: profEmail,
-      subject: '🎉 Nouvelle inscription — ' + coursTitle,
-      html: `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#FF8C55,#E04E10);padding:32px;text-align:center">
-            <h1 style="color:#fff;margin:0;font-size:24px">🎉 Nouvelle inscription !</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="font-size:16px;color:#111">Bonjour <strong>${profName}</strong>,</p>
-            <p style="color:#555"><strong>${eleveName}</strong> vient de réserver une place dans votre cours :</p>
-            <div style="background:#FFF2EC;border-radius:12px;padding:20px;margin:16px 0">
-              <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:8px">${coursTitle}</div>
-              <div style="color:#FF6B2B;font-size:16px;font-weight:700">+${montant}€ encaissé</div>
-            </div>
-            <a href="https://courspool.vercel.app" style="display:inline-block;background:#FF6B2B;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:8px">Voir mes élèves →</a>
-          </div>
-          <div style="padding:20px;text-align:center;color:#999;font-size:12px;border-top:1px solid #eee">CoursPool · Plateforme de cours partagés</div>
-        </div>
-      `
+      subject: `Nouvelle inscription — ${coursTitle}`,
+      html: emailBase('linear-gradient(135deg,#FF8C55,#E04E10)', header, body)
     });
   } catch(e) { console.log('Email prof error:', e.message); }
 }
 
+// ── Email 4 : Vérification compte prof ──────────────────────
 async function sendEmailProfVerification(profEmail, profName, status) {
   const isApproved = status === 'approved';
+  const headerBg = isApproved ? 'linear-gradient(135deg,#22C069,#16A34A)' : 'linear-gradient(135deg,#EF4444,#DC2626)';
+  const header = `
+    <h1 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2">
+      ${isApproved ? 'Compte activé !' : 'Vérification refusée'}
+    </h1>
+    <p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">
+      ${isApproved ? 'Vous êtes prêt à enseigner' : 'Une action est requise'}
+    </p>`;
+  const body = isApproved ? `
+    <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;line-height:1.7">Votre identité a été vérifiée. Vous pouvez dès maintenant publier vos cours et accueillir vos premiers élèves.</p>
+    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:16px;padding:20px;margin-bottom:24px">
+      <p style="margin:0;font-size:13px;color:#166534;line-height:1.8;font-weight:500">
+        ✓ Votre profil est maintenant visible<br>✓ Vous pouvez créer et publier des cours<br>✓ Vous pouvez recevoir des paiements
+      </p>
+    </div>
+    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Proposer mon premier cours →</a>` : `
+    <p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#555;line-height:1.7">Votre demande de vérification n'a pas pu être acceptée. La pièce d'identité est peut-être illisible ou ne correspond pas aux informations du profil.</p>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:16px;padding:20px;margin-bottom:24px">
+      <p style="margin:0;font-size:13px;color:#991B1B;line-height:1.8">Photo nette et bien éclairée · Document entier et non expiré · Nom et prénom correspondants</p>
+    </div>
+    <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Renvoyer ma pièce d'identité →</a>`;
   try {
     await resend.emails.send({
-      from: 'CoursPool <onboarding@resend.dev>',
+      from: FROM_EMAIL,
       to: profEmail,
-      subject: isApproved ? '✅ Compte vérifié — Bienvenue sur CoursPool !' : '❌ Vérification refusée',
-      html: `
-        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden">
-          <div style="background:${isApproved ? 'linear-gradient(135deg,#22C069,#16A34A)' : 'linear-gradient(135deg,#EF4444,#DC2626)'};padding:32px;text-align:center">
-            <h1 style="color:#fff;margin:0;font-size:24px">${isApproved ? '✅ Compte vérifié !' : '❌ Vérification refusée'}</h1>
-          </div>
-          <div style="padding:32px">
-            <p style="font-size:16px;color:#111">Bonjour <strong>${profName}</strong>,</p>
-            ${isApproved
-              ? '<p style="color:#555">Votre identité a été vérifiée. Vous pouvez maintenant publier des cours et recevoir des élèves !</p><a href="https://courspool.vercel.app" style="display:inline-block;background:#FF6B2B;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:8px">Proposer mon premier cours →</a>'
-              : '<p style="color:#555">Votre demande de vérification n\'a pas été acceptée. Vérifiez que votre pièce d\'identité est lisible et réessayez.</p>'
-            }
-          </div>
-          <div style="padding:20px;text-align:center;color:#999;font-size:12px;border-top:1px solid #eee">CoursPool · Plateforme de cours partagés</div>
-        </div>
-      `
+      subject: isApproved ? `Votre compte CoursPool est activé, ${profName} !` : "Vérification d'identité — Action requise",
+      html: emailBase(headerBg, header, body)
     });
   } catch(e) { console.log('Email verification error:', e.message); }
 }
+
 
 // TEST
 app.get('/', (req, res) => {
@@ -155,6 +287,9 @@ app.post('/auth/register', async (req, res) => {
     matieres: req.body.matieres || null,
     verified: role === 'eleve' ? true : false
   }]);
+  // Email de bienvenue
+  const userName = (prenom + ' ' + (nom||'')).trim();
+  sendEmailWelcome(email, prenom || userName, role).catch(() => {});
   res.json({ user: data.user });
 });
 
@@ -178,8 +313,10 @@ app.get('/cours', async (req, res) => {
 
   let query = supabase.from('cours').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
+  const niveau_filter = req.query.niveau || null;
   if (sujet && sujet !== 'tous') query = query.ilike('sujet', '%' + sujet + '%');
   if (search) query = query.or('titre.ilike.%' + search + '%,sujet.ilike.%' + search + '%,lieu.ilike.%' + search + '%,prof_nom.ilike.%' + search + '%');
+  if (niveau_filter) query = query.eq('niveau', niveau_filter);
 
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error });
@@ -188,14 +325,32 @@ app.get('/cours', async (req, res) => {
 
 // COURS — créer
 app.post('/cours', async (req, res) => {
-  const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description } = req.body;
+  const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total || !professeur_id) {
     return res.status(400).json({ error: 'Champs manquants' });
   }
   const { data, error } = await supabase.from('cours')
-    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description }])
+    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau: niveau || null }])
     .select();
   if (error) return res.status(500).json({ error });
+  // Push aux élèves qui suivent ce prof
+  if (data && data[0] && professeur_id) {
+    const titreNotif = data[0].titre || titre;
+    (async () => {
+      try {
+        const { data: follows } = await supabase.from('follows').select('user_id').eq('professeur_id', professeur_id);
+        if (!follows || !follows.length) return;
+        const { data: profP } = await supabase.from('profiles').select('prenom,nom').eq('id', professeur_id).single();
+        const profNom = profP ? (profP.prenom + ' ' + (profP.nom||'')).trim() : 'Un professeur';
+        await Promise.all(follows.map(f => pushToUser(f.user_id, {
+          title: `📚 Nouveau cours de ${profNom}`,
+          body: `"${titreNotif}" est disponible — réservez avant que les places partent !`,
+          tag: 'new-cours', icon: '/icon-192.png',
+          data: { url: 'https://courspool.vercel.app' }
+        })));
+      } catch(e) {}
+    })();
+  }
   res.json(data);
 });
 
@@ -314,6 +469,16 @@ app.get('/stripe/success', async (req, res) => {
       if (eleve?.email) await sendEmailReservation(eleve.email, (eleve.prenom+' '+eleve.nom).trim(), coursData?.titre, coursData?.date_heure, coursData?.lieu, montant);
       if (prof?.email) await sendEmailProfNewEleve(prof.email, (prof.prenom+' '+prof.nom).trim(), (eleve?.prenom+' '+eleve?.nom||'').trim(), coursData?.titre, montant);
     } catch(e) {}
+    // Push prof : nouvelle réservation
+    if (coursData?.professeur_id) {
+      const eleveName = (eleve?.prenom||'') + ' ' + (eleve?.nom||'');
+      pushToUser(coursData.professeur_id, {
+        title: '🎉 Nouvelle réservation !',
+        body: `${eleveName.trim() || 'Un élève'} a réservé "${coursData?.titre}" (+${montant}€)`,
+        tag: 'new-eleve', icon: '/icon-192.png',
+        data: { url: 'https://courspool.vercel.app' }
+      }).catch(() => {});
+    }
 
     // Rediriger vers le site avec paramètre de succès
     res.redirect((redirect || 'https://courspool.vercel.app') + '?paid=1&cours_id=' + cours_id + (pour_ami==='1'?'&ami=1':''));
@@ -385,6 +550,80 @@ app.get('/follows/:user_id', async (req, res) => {
 });
 
 // EMAIL — vérification prof
+// CONTACT — formulaire utilisateur → dashboard admin + email
+app.post('/contact', async (req, res) => {
+  const { email, sujet, message, nom, role, userId } = req.body;
+  if (!email || !message) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    // 1. Stocker en base Supabase
+    const { error: dbErr } = await supabase.from('contacts').insert([{
+      email, sujet: sujet || 'Question générale', message,
+      nom: nom || '', role: role || 'inconnu',
+      user_id: userId || null,
+      lu: false,
+      created_at: new Date().toISOString()
+    }]);
+    if (dbErr) console.log('Contact DB error:', dbErr.message);
+
+    // 2. Email de notification vers l'admin
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: 'admin@courspool.fr', // ← ton email admin
+      replyTo: email,
+      subject: `[Contact] ${sujet || 'Question'} — ${nom || email}`,
+      html: emailBase(
+        'linear-gradient(135deg,#6366F1,#4F46E5)',
+        `<h1 style="margin:0;font-size:22px;font-weight:800;color:#fff">Nouveau message</h1>
+         <p style="margin:8px 0 0;color:rgba(255,255,255,.8);font-size:14px">${sujet || 'Question générale'}</p>`,
+        `<table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:20px">
+          <tr><td style="padding:6px 0;font-size:13px;color:#888;width:80px">De</td><td style="font-size:13px;font-weight:600;color:#111">${nom || 'Anonyme'} &lt;${email}&gt;</td></tr>
+          <tr><td style="padding:6px 0;font-size:13px;color:#888">Rôle</td><td style="font-size:13px;color:#555">${role || '—'}</td></tr>
+          <tr><td style="padding:6px 0;font-size:13px;color:#888">Sujet</td><td style="font-size:13px;font-weight:600;color:#111">${sujet || '—'}</td></tr>
+        </table>
+        <div style="background:#F8F7F5;border-radius:14px;padding:18px;margin-bottom:24px;border-left:3px solid #6366F1">
+          <p style="margin:0;font-size:14px;color:#333;line-height:1.7;white-space:pre-wrap">${message}</p>
+        </div>
+        <a href="mailto:${email}" style="display:block;background:linear-gradient(135deg,#6366F1,#4F46E5);color:#fff;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;text-align:center">Répondre à ${nom || email} →</a>`
+      )
+    }).catch(e => console.log('Contact email admin error:', e.message));
+
+    // 3. Email de confirmation à l'utilisateur
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Nous avons bien reçu votre message — CoursPool',
+      html: emailBase(
+        'linear-gradient(135deg,#FF8C55,#E04E10)',
+        `<h1 style="margin:0;font-size:22px;font-weight:800;color:#fff">Message reçu !</h1>
+         <p style="margin:8px 0 0;color:rgba(255,255,255,.8);font-size:14px">On vous répond dans les 24h</p>`,
+        `<p style="margin:0 0 16px;font-size:15px;color:#111;font-weight:600">Bonjour ${nom || ''} !</p>
+         <p style="margin:0 0 20px;font-size:14px;color:#555;line-height:1.7">Votre message a bien été transmis à notre équipe. Nous vous répondrons sous 24h, du lundi au samedi.</p>
+         <div style="background:#F8F7F5;border-radius:14px;padding:16px;margin-bottom:24px">
+           <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em">Votre message</p>
+           <p style="margin:0;font-size:13px;color:#555;line-height:1.6;white-space:pre-wrap">${message}</p>
+         </div>
+         <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;text-align:center">Retour à l'application →</a>`
+      )
+    }).catch(e => console.log('Contact email user error:', e.message));
+
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PATCH profil — mise à jour verified / statut_compte (appelé depuis admin)
+app.patch('/profiles/:id', async (req, res) => {
+  const { id } = req.params;
+  const allowedFields = ['verified', 'statut_compte', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'cni_uploaded'];
+  const updates = {};
+  allowedFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
+  try {
+    const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true, profile: data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/email/verification', async (req, res) => {
   const { prof_id, status } = req.body;
   if (!prof_id || !status) return res.status(400).json({ error: 'Données manquantes' });
@@ -630,6 +869,185 @@ app.get('/notations/:professeur_id', async (req, res) => {
     .order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error });
   res.json(data);
+});
+
+// ============================================================
+// PUSH NOTIFICATIONS — web-push VAPID
+// ============================================================
+let webpush;
+try {
+  webpush = require('web-push');
+  webpush.setVapidDetails(
+    'mailto:admin@courspool.fr',
+    process.env.VAPID_PUBLIC_KEY  || 'BDyXpxjqx8h9llIzLNcaYdMpEX_jbkqEt4fjXOV_bSgENcpW7KaPFUHEjk0uXKT--ZajXK_zAJwgplwNz3j4jA8',
+    process.env.VAPID_PRIVATE_KEY || 'cbNwfClkXILrevGfrI1bPQF_AI9ExpvZ8CC3GdCkt9E'
+  );
+} catch(e) { console.log('web-push non installé:', e.message); }
+
+// Helper : envoyer une notif à un abonnement, silencieux en cas d'erreur
+async function sendPushToSub(sub, payload) {
+  if (!webpush || !sub) return;
+  try {
+    await webpush.sendNotification(sub, JSON.stringify(payload));
+  } catch(e) {
+    // Abonnement expiré → supprimer
+    if (e.statusCode === 410 || e.statusCode === 404) {
+      await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint).catch(() => {});
+    }
+  }
+}
+
+// Helper : envoyer à tous les users d'un rôle
+async function broadcastToRole(role, payload) {
+  const { data: subs } = await supabase.from('push_subscriptions').select('*').eq('role', role);
+  if (!subs || !subs.length) return 0;
+  await Promise.all(subs.map(s => sendPushToSub({
+    endpoint: s.endpoint,
+    keys: { auth: s.auth, p256dh: s.p256dh }
+  }, payload)));
+  return subs.length;
+}
+
+// Helper : envoyer à un user spécifique
+async function pushToUser(userId, payload) {
+  const { data: subs } = await supabase.from('push_subscriptions').select('*').eq('user_id', userId);
+  if (!subs || !subs.length) return;
+  await Promise.all(subs.map(s => sendPushToSub({
+    endpoint: s.endpoint,
+    keys: { auth: s.auth, p256dh: s.p256dh }
+  }, payload)));
+}
+
+// PUSH — s'abonner
+app.post('/push/subscribe', async (req, res) => {
+  const { subscription, user_id, role } = req.body;
+  if (!subscription || !subscription.endpoint) return res.status(400).json({ error: 'Abonnement invalide' });
+  try {
+    await supabase.from('push_subscriptions').upsert([{
+      endpoint: subscription.endpoint,
+      auth: subscription.keys?.auth,
+      p256dh: subscription.keys?.p256dh,
+      user_id: user_id || null,
+      role: role || 'inconnu',
+      updated_at: new Date().toISOString()
+    }], { onConflict: 'endpoint' });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUSH — se désabonner
+app.delete('/push/subscribe', async (req, res) => {
+  const { user_id } = req.body;
+  if (!user_id) return res.status(400).json({ error: 'user_id manquant' });
+  try {
+    await supabase.from('push_subscriptions').delete().eq('user_id', user_id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUSH — notif prof : un élève a réservé son cours (appelé dans stripe/success)
+app.post('/push/prof-new-eleve', async (req, res) => {
+  const { prof_id, eleve_nom, cours_titre, montant } = req.body;
+  if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
+  await pushToUser(prof_id, {
+    title: '🎉 Nouvelle réservation !',
+    body: `${eleve_nom || 'Un élève'} vient de réserver "${cours_titre}" (+${montant}€)`,
+    tag: 'new-eleve',
+    icon: '/icon-192.png',
+    data: { url: 'https://courspool.vercel.app' }
+  });
+  res.json({ success: true });
+});
+
+// PUSH — notif élève : un prof suivi publie un cours
+app.post('/push/new-cours', async (req, res) => {
+  const { prof_id, cours_titre, cours_id } = req.body;
+  if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
+  try {
+    // Récupérer tous les élèves qui suivent ce prof
+    const { data: follows } = await supabase.from('follows').select('user_id').eq('professeur_id', prof_id);
+    if (!follows || !follows.length) return res.json({ success: true, sent: 0 });
+    const { data: profProfile } = await supabase.from('profiles').select('prenom,nom').eq('id', prof_id).single();
+    const profNom = profProfile ? (profProfile.prenom + ' ' + (profProfile.nom||'')).trim() : 'Un prof';
+    let sent = 0;
+    await Promise.all(follows.map(async f => {
+      await pushToUser(f.user_id, {
+        title: `📚 Nouveau cours de ${profNom}`,
+        body: `"${cours_titre}" est disponible — réservez avant que les places partent !`,
+        tag: 'new-cours-' + cours_id,
+        icon: '/icon-192.png',
+        data: { url: 'https://courspool.vercel.app' }
+      });
+      sent++;
+    }));
+    res.json({ success: true, sent });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUSH — broadcast admin → tous les profs ou tous les élèves
+app.post('/push/broadcast', async (req, res) => {
+  const { role, title, body, url } = req.body;
+  if (!role || !title || !body) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    const payload = {
+      title,
+      body,
+      tag: 'broadcast-' + Date.now(),
+      icon: '/icon-192.png',
+      data: { url: url || 'https://courspool.vercel.app' }
+    };
+    const sent = await broadcastToRole(role, payload);
+    res.json({ success: true, sent });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUSH — relance profs inactifs (cron ou manuel via admin)
+app.post('/push/relance-profs', async (req, res) => {
+  try {
+    // Profs vérifiés qui n'ont pas publié de cours depuis 14 jours
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: profs } = await supabase.from('profiles').select('id').eq('role', 'professeur').eq('verified', true);
+    if (!profs || !profs.length) return res.json({ success: true, sent: 0 });
+    const { data: recentCours } = await supabase.from('cours').select('professeur_id').gte('created_at', cutoff);
+    const activeProfs = new Set((recentCours || []).map(c => c.professeur_id));
+    const inactiveProfs = profs.filter(p => !activeProfs.has(p.id));
+    let sent = 0;
+    await Promise.all(inactiveProfs.map(async p => {
+      await pushToUser(p.id, {
+        title: '👋 Des élèves vous attendent !',
+        body: 'Vous n'avez pas publié de cours depuis un moment. Créez un nouveau cours et accueillez de nouveaux élèves.',
+        tag: 'relance-prof',
+        icon: '/icon-192.png',
+        data: { url: 'https://courspool.vercel.app' }
+      });
+      sent++;
+    }));
+    res.json({ success: true, sent });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUSH — relance élèves inactifs
+app.post('/push/relance-eleves', async (req, res) => {
+  try {
+    const cutoff = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: eleves } = await supabase.from('profiles').select('id').eq('role', 'eleve');
+    if (!eleves || !eleves.length) return res.json({ success: true, sent: 0 });
+    const { data: recentRes } = await supabase.from('reservations').select('user_id').gte('created_at', cutoff);
+    const activeEleves = new Set((recentRes || []).map(r => r.user_id));
+    const inactiveEleves = eleves.filter(e => !activeEleves.has(e.id));
+    let sent = 0;
+    await Promise.all(inactiveEleves.map(async e => {
+      await pushToUser(e.id, {
+        title: '📚 De nouveaux cours vous attendent',
+        body: 'Des professeurs ont publié de nouveaux cours. Explorez les cours disponibles près de chez vous !',
+        tag: 'relance-eleve',
+        icon: '/icon-192.png',
+        data: { url: 'https://courspool.vercel.app' }
+      });
+      sent++;
+    }));
+    res.json({ success: true, sent });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 const PORT = process.env.PORT || 3000;
