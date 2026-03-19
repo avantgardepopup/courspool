@@ -2361,29 +2361,21 @@ function goExplore(){
   restoreNav();
 }
 
-// Vérifier retour paiement
+// Démarrage
 (function(){
   try{
     var saved=localStorage.getItem('cp_user');
     if(saved){
       var parsedUser=JSON.parse(saved);
-      // Si c'était un guest → on ne restaure pas, on repart en mode visiteur
+      // Guest = pas de session persistante → ramener à l'écran login
       if(parsedUser.guest){
         localStorage.removeItem('cp_user');
-        // Recharger en mode visiteur propre (bnav cachée, app visible)
-        g('app').style.display='block';
-        var _l=g('login');if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}
-        var bnav=g('bnav');if(bnav)bnav.classList.add('on');
-        var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
-        if(bniMsg)bniMsg.style.display='none';
-        if(bniAcc)bniAcc.style.display='none';
-        if(bniAdd)bniAdd.style.display='none';
-        var mobT=g('mobTitle');if(mobT)mobT.textContent='Explorer';
-        loadData().then(function(){
-          buildCards();checkPrivateCoursAccess();
-          setTimeout(obShow,400);
-        });
-      } else {
+        // Charger les cours en arrière-plan pour que l'app soit prête
+        loadData();
+        // Rester sur l'écran login — l'utilisateur devra cliquer "Continuer sans compte"
+        return;
+      }
+      // Utilisateur connecté → restaurer la session
       user=parsedUser;
       applyUser();
       if(user.id){
@@ -2401,16 +2393,11 @@ function goExplore(){
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
       }
-      } // fin du else non-guest
     } else {
-      // Visiteur sans compte — lancer l'onboarding
-      loadData().then(function(){
-        buildCards();
-        checkPrivateCoursAccess();
-        setTimeout(obShow, 400);
-      });
+      // Pas de session → écran login, charger les cours en arrière-plan
+      loadData();
     }
-  }catch(e){}
+  }catch(e){loadData();}
 })();
 
 async function checkStripeReturn(){
