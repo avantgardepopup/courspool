@@ -5543,57 +5543,6 @@ function resetFilters(){
 }
 
 // ============================================================
-// PULL-TO-REFRESH
-// ============================================================
-(function(){
-  var startY=0,pulling=false,threshold=65,refreshing=false;
-  var ind=null,spin=null,txt=null;
-  document.addEventListener('touchstart',function(e){
-    if(window.scrollY>0)return;
-    var pg=g('pgExp');if(!pg||!pg.classList.contains('on'))return;
-    startY=e.touches[0].clientY;pulling=true;
-  },{passive:true});
-  document.addEventListener('touchmove',function(e){
-    if(!pulling||refreshing)return;
-    var dy=e.touches[0].clientY-startY;
-    if(dy<0){pulling=false;return;}
-    ind=ind||g('ptrIndicator');spin=spin||g('ptrSpinner');txt=txt||g('ptrText');
-    if(!ind)return;
-    var progress=Math.min(dy/threshold,1);
-    ind.style.opacity=progress;
-    ind.style.top=(-50+(dy*0.4))+'px';
-    if(dy>threshold){
-      if(txt)txt.textContent='Relâcher pour actualiser';
-      if(spin)spin.style.transform='rotate('+(dy*3)+'deg)';
-    } else {
-      if(txt)txt.textContent='Tirer pour actualiser';
-      if(spin)spin.style.transform='rotate('+(dy*2)+'deg)';
-    }
-  },{passive:true});
-  document.addEventListener('touchend',function(e){
-    if(!pulling)return;
-    pulling=false;
-    var dy=e.changedTouches[0].clientY-startY;
-    ind=ind||g('ptrIndicator');spin=spin||g('ptrSpinner');txt=txt||g('ptrText');
-    if(dy>threshold&&!refreshing){
-      refreshing=true;
-      if(navigator.vibrate)navigator.vibrate(8);
-      if(spin)spin.classList.add('spinning');
-      if(txt)txt.textContent='Actualisation…';
-      loadData(1).then(function(){
-        buildCards();
-        refreshing=false;
-        if(ind){ind.style.opacity='0';ind.style.top='-50px';}
-        if(spin)spin.classList.remove('spinning');
-        toast('Actualisé','');
-      });
-    } else {
-      if(ind){ind.style.opacity='0';ind.style.top='-50px';}
-    }
-  },{passive:true});
-})();
-
-// ============================================================
 // HAPTIC FEEDBACK
 // ============================================================
 function haptic(ms){try{if(navigator.vibrate)navigator.vibrate(ms||8);}catch(e){}}
