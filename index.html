@@ -118,7 +118,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
-.pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.pills{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px;}
+.pills::-webkit-scrollbar{display:none;}
 .pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
 .pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill:not(.on):hover{border-color:var(--or);color:var(--or);}
@@ -134,6 +135,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .skel-line.w60{width:60%;}
 .skel-line.w40{width:40%;}
 .card{background:var(--wh);border-radius:var(--r);border:1px solid var(--bdr);overflow:hidden;cursor:pointer;transition:all .22s;animation:fu .35s ease both;}
+.card:active{transform:scale(.97);transition:transform .1s;}
+.btnr:active,.pb:active,.lbtn:active,.btnadd:active{transform:scale(.95);transition:transform .1s;}
+.bni:active{opacity:.6;transform:scale(.9);}
 .card-prive{border-color:#E8D9C4;background:linear-gradient(to bottom,#FFFBF5,var(--wh));}
 .card:hover{transform:translateY(-3px);box-shadow:var(--sh);border-color:#D5CEC6;}
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -355,6 +359,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .prl{font-size:12.5px;color:var(--mid);margin-bottom:8px;}
 .pbdg{display:inline-flex;align-items:center;gap:5px;background:var(--orp);color:var(--or);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:600;}
 .pstbl{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bdr);border-radius:12px;overflow:hidden;margin:14px 18px;}
+.pref-section{margin-bottom:8px;}
+.pref-header{font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 0 8px;}
+.pref-group{background:var(--wh);border-radius:16px;overflow:hidden;}
+.pref-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--bdr);min-height:52px;}
+.pref-row:last-child{border-bottom:none;}
+.pref-row:active{background:var(--bg);}
+.pref-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pref-icon svg{width:16px;height:16px;}
+.pref-label{flex:1;font-size:15px;font-weight:500;color:var(--ink);}
 .pstc{background:var(--wh);padding:11px;text-align:center;}
 .pstv{font-size:18px;font-weight:800;}
 .pstl{font-size:11px;color:var(--lite);margin-top:1px;}
@@ -374,6 +387,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);box-sizing:border-box;-webkit-appearance:none;appearance:none;height:46px;}
 .fi3:focus{border-color:var(--or);}
 .toast{position:fixed;bottom:24px;right:20px;left:20px;max-width:400px;margin:0 auto;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);pointer-events:none;transition:all .28s;}
+@media(max-width:640px){.toast{bottom:auto;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;transform:translateY(-8px);}
+.toast.on{transform:translateY(0);}}
 .toast.on{opacity:1;transform:translateY(0);}
 .tico{width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .tico svg{width:13px;height:13px;color:#fff;}
@@ -769,6 +784,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <button onclick="locInputClear()" id="locClearBtn" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:2px;line-height:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+        <button onclick="requestGeoloc()" id="locGeoBtn" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          Autour de moi
+        </button>
       </div>
       <div class="pills" id="pillsBar">
         <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
@@ -1033,27 +1052,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="asec" id="asecP">
 
           <!-- Section infos perso -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Informations personnelles</div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden">
-            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
-              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Prénom</span>
-              <input id="pfPr" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+          <div class="pref-header">Compte</div>
+          <div class="pref-group">
+            <div class="pref-row">
+              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <span class="pref-label">Prénom</span>
+              <input id="pfPr" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
             </div>
-            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
-              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Nom</span>
-              <input id="pfNm" type="text" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            <div class="pref-row">
+              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <span class="pref-label">Nom</span>
+              <input id="pfNm" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
             </div>
-            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
-              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Email</span>
-              <input id="pfEm" type="email" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            <div class="pref-row">
+              <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <span class="pref-label">Email</span>
+              <input id="pfEm" type="email" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:180px" placeholder="—">
             </div>
-            <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--bdr)">
-              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Ville</span>
-              <input id="pfVille" type="text" placeholder="Paris…" style="flex:1;border:none;font-family:inherit;font-size:16px;font-weight:500;text-align:right;outline:none;background:transparent;color:var(--ink)">
+            <div class="pref-row">
+              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+              <span class="pref-label">Ville</span>
+              <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px">
             </div>
-            <div style="display:flex;align-items:center;padding:13px 16px">
-              <span style="font-size:14px;color:var(--mid);width:80px;flex-shrink:0">Rôle</span>
-              <div id="pfRoleDisplay" style="flex:1;font-size:14px;font-weight:500;text-align:right;color:var(--mid)"></div>
+            <div class="pref-row" style="cursor:default">
+              <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+              <span class="pref-label">Rôle</span>
+              <div id="pfRoleDisplay" style="font-size:14px;color:var(--lite)"></div>
             </div>
           </div>
 
@@ -1222,7 +1246,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
       </div>
       <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours, le niveau requis…" style="resize:vertical"></textarea></div>
+      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours…" style="resize:vertical"></textarea></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Niveau visé</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="crNiveauChips">
+          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="">Tous</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire">Primaire</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège">Collège</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée">Lycée</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+1/2">Bac+1/2</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+3/4">Bac+3/4</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+5">Bac+5</div>
+        </div>
+        <input type="hidden" id="crNiveau" value="">
+      </div>
       <div style="margin-bottom:12px">
         <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
         <input class="fi3" id="crDate" type="date" style="width:100%;box-sizing:border-box">
@@ -1696,6 +1733,15 @@ function go(pr,nm,em,role,uid,photoUrl){
 
 function applyUser(){
   var _l=g('login');_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';g('app').style.display='block';
+  // Greeting dynamique
+  try{
+    var h=new Date().getHours();
+    var greet=h<6?'Bonne nuit':h<12?'Bonjour':h<18?'Bonjour':h<22?'Bonsoir':'Bonne nuit';
+    var prenom=(data.profile&&data.profile.prenom)||'';
+    var mobT=g('mobTitle'),mobS=g('mobSub');
+    if(mobT)mobT.textContent=prenom?greet+' '+prenom+' 👋':greet+' 👋';
+    if(mobS){var msgs=['Cours près de vous','Que voulez-vous apprendre ?','Trouvez votre prochain cours'];mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
+  }catch(e){}
   var tav=g('tav');
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
@@ -2812,6 +2858,28 @@ async function loadConversations(){
 var locFilterTimer=null;
 var actLoc='';
 
+function requestGeoloc(){
+  if(!navigator.geolocation){toast('Non supporté','Géolocalisation non disponible');return;}
+  var btn=g('locGeoBtn');
+  if(btn)btn.textContent='…';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=fr')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var ville=d.address.city||d.address.town||d.address.village||'';
+      var inp=g('locInput');
+      if(inp)inp.value=ville?'📍 '+ville:'📍 Autour de moi';
+      var cb=g('locClearBtn');if(cb)cb.style.display='block';
+      if(btn){btn.style.background='var(--or)';btn.style.color='#fff';btn.textContent='✓ Activé';}
+      filterByLoc(ville);
+      toast('Position détectée','Cours autour de vous');
+    }).catch(function(){toast('Erreur','Impossible de détecter la position');if(btn)btn.textContent='Autour de moi';});
+  },function(){
+    toast('Refusé','Activez la géolocalisation');
+    if(btn)btn.textContent='Autour de moi';
+  },{timeout:8000});
+}
+
 function filterByLoc(val){
   var btn=g('locClearBtn');
   if(btn)btn.style.display=val.trim()?'block':'none';
@@ -3636,6 +3704,13 @@ function openM(id){g(id).classList.add('on');document.body.style.overflow='hidde
 function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
 function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
+
+// Niveau cours
+function pickNiveau(el){
+  document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  var inp=g('crNiveau');if(inp)inp.value=el.dataset.n||'';
+}
 
 // SERVICE WORKER PWA
 if('serviceWorker' in navigator){
