@@ -813,22 +813,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           Autour de moi
         </button>
       </div>
-      <div class="pills" id="pillsBar">
-        <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
-        <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
-        <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
-        <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
-        <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
-        <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
-        <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
-        <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
-        <div class="pill" id="pillNiv" onclick="openNivFilter()" style="display:flex;align-items:center;gap:5px;color:var(--mid)">
+      <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px">
+        <!-- Bouton Niveau — fixe à gauche -->
+        <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
           <span id="pillNivLabel">Niveau</span>
         </div>
-        <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Filtre
+        <!-- Séparateur vertical -->
+        <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0;margin-right:8px"></div>
+        <!-- Pills matières scrollables -->
+        <div class="pills" id="pillsBar" style="margin-bottom:0;flex:1">
+          <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
+          <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
+          <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
+          <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
+          <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
+          <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
+          <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
+          <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
+          <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid);flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            +
+          </div>
         </div>
       </div>
 
@@ -978,7 +985,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
           <div class="atab" id="aTabP" onclick="switchATab('P',this)" style="flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>Profil
           </div>
-          <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none;flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;flex-direction:column;align-items:center;gap:3px;background:transparent;border:none">
+          <div class="atab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none;flex:1;padding:12px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;color:rgba(255,255,255,.6);border-bottom:2px solid transparent;transition:all .18s;flex-direction:column;align-items:center;gap:3px;background:transparent">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Revenus
           </div>
         </div>
@@ -1173,18 +1180,23 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
             </button>
           </div>
 
-          <!-- Notifications -->
+          <!-- Notifications push -->
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Notifications</div>
           <div class="pref-group">
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Quand un prof suivi publie</div></div>
-              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
-            </div>
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Rappel de cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px">1h avant le début</div></div>
-              <div class="ntog on" onclick="this.classList.toggle('on')"></div>
+            <!-- Statut push — rempli par renderNotifStatus() -->
+            <div id="notifStatus" style="padding:16px;border-bottom:1px solid var(--bdr)"></div>
+            <!-- Préférences — visibles si push actif -->
+            <div id="notifTypes" style="display:none">
+              <div class="pref-row">
+                <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+                <div style="flex:1"><div class="pref-label" id="notifRemLbl">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifSubLbl">Alertes en temps réel</div></div>
+                <div class="ntog on" id="ntogCours" onclick="toggleNotifPref('cours',this)"></div>
+              </div>
+              <div class="pref-row">
+                <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+                <div style="flex:1"><div class="pref-label">Messages importants</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifRemSub">De l'équipe CoursPool</div></div>
+                <div class="ntog on" id="ntogPromo" onclick="toggleNotifPref('promo',this)"></div>
+              </div>
             </div>
           </div>
 
