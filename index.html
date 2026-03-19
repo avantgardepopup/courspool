@@ -2971,18 +2971,9 @@ function saveProf(){
   var av=g('accAv');
   if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{av.style.background='rgba(255,255,255,.2)';av.textContent=user.ini;}
-  toast('Profil sauvegardé','Modifications enregistrées');
-  // Mettre à jour la photo sur les cards du prof
-  if(user&&user.id&&user.photo){
-    if(P[user.id])P[user.id].photo=user.photo;
-    // Cibler directement les pbub du prof par data-prof
-    document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
-      el.style.background='none';
-      el.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover">';
-    });
-    // Mettre à jour aussi dans C[]
-    C.forEach(function(cours){if(cours.pr===user.id)cours.prof_photo=user.photo;});
-  }
+  toast('Profil sauvegardé ✓','');
+  // Sync photo partout si présente
+  if(user&&user.photo) _applyPhotoPartout(user.photo);
 }
 
 function doLogout(){
@@ -3033,10 +3024,42 @@ function compressImage(file,maxSizeMB,cb){
   reader.readAsDataURL(file);
 }
 
+// Applique une photo partout dans le DOM sans reconstruire les cards
+function _applyPhotoPartout(url){
+  if(!user||!user.id||!url)return;
+  // 1. Avatars header
+  var imgRound='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  var imgSquare='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover">';
+  var tav=g('tav');if(tav){tav.style.background='none';tav.innerHTML=imgRound;}
+  var tavM=g('tavMob');if(tavM){tavM.style.background='none';tavM.innerHTML=imgRound;}
+  var accAv=g('accAv');if(accAv){accAv.style.background='none';accAv.innerHTML=imgRound;}
+  // 2. Tous les .pbub[data-prof] dans les cards Explorer (déjà dans le DOM)
+  document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
+    el.style.background='none';
+    el.innerHTML=imgSquare;
+  });
+  // 3. Cache P[] et C[] pour que buildCards() utilise la bonne photo
+  if(!P[user.id])P[user.id]={};
+  P[user.id].photo=url;
+  C.forEach(function(cours){if(cours.pr===user.id)cours.prof_photo=url;});
+  // 4. Avatar dans la fiche prof ouverte (bdPr) si c'est le même prof
+  var mpav=g('mpav');
+  if(mpav&&curProf===user.id){mpav.style.background='none';mpav.innerHTML=imgSquare;}
+  // 5. Avatar dans le modal réservation si c'est le prof du cours courant
+  var rAv=g('rProfAv');
+  if(rAv&&curId){var cc=C.find(function(x){return x.id===curId;});if(cc&&cc.pr===user.id){rAv.style.background='none';rAv.innerHTML=imgSquare;}}
+  // 6. Avatars dans la liste de conversations
+  document.querySelectorAll('[data-uid="'+user.id+'"] .msg-av').forEach(function(el){
+    el.style.background='none';el.innerHTML=imgSquare;
+  });
+  // 7. Avatar dans la conversation active
+  var convAv=g('msgConvAv');
+  if(convAv&&msgDestId===user.id){convAv.style.background='none';convAv.innerHTML=imgRound;}
+}
+
 function previewPhoto(input){
   if(input.files&&input.files[0]){
     var file=input.files[0];
-    // Vérifier la taille max 2MB
     if(file.size>2*1024*1024){
       toast('Photo trop lourde','Maximum 2MB. Compressez votre image.');
       input.value='';return;
@@ -3044,20 +3067,9 @@ function previewPhoto(input){
     var reader=new FileReader();
     reader.onload=function(e){
       var src=e.target.result;
-      // Afficher preview immédiatement
-      var accAv=g('accAv');accAv.style.background='none';accAv.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      var tav=g('tav');tav.style.background='none';tav.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-      // Mettre à jour P[] et les cards immédiatement avec la preview locale
-      if(user&&user.id){
-        if(!P[user.id])P[user.id]={};
-        P[user.id].photo=src;
-        document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
-          el.style.background='none';
-          el.innerHTML='<img src="'+src+'" style="width:100%;height:100%;object-fit:cover">';
-        });
-        C.forEach(function(cours){if(cours.pr===user.id)cours.prof_photo=src;});
-      }
-      // Uploader vers Supabase Storage si connecté
+      // Appliquer la preview base64 immédiatement partout
+      _applyPhotoPartout(src);
+      // Uploader vers Supabase
       if(user&&user.id){
         fetch(API+'/upload/photo',{
           method:'POST',
@@ -3067,21 +3079,9 @@ function previewPhoto(input){
           if(data.url){
             user.photo=data.url;
             try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
-            // Mettre à jour les avatars avec l'URL Supabase
-            var img='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-            g('tav').innerHTML=img;g('accAv').innerHTML=img;
-            var tavM=g('tavMob');if(tavM){tavM.style.background='none';tavM.innerHTML=img;}
-            // Mettre à jour immédiatement les pbub sur toutes les cards du prof
-            if(user.id){
-              if(P[user.id])P[user.id].photo=data.url;
-              document.querySelectorAll('.pbub[data-prof="'+user.id+'"]').forEach(function(el){
-                el.style.background='none';
-                el.innerHTML='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover">';
-              });
-              C.forEach(function(cours){if(cours.pr===user.id)cours.prof_photo=data.url;});
-            }
-            buildCards();
-            toast('Photo mise à jour','Visible sur toutes vos cards');
+            // Remplacer la base64 par l'URL Supabase définitive
+            _applyPhotoPartout(data.url);
+            toast('Photo mise à jour ✓','');
           }
         }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
       }
