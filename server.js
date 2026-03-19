@@ -1015,7 +1015,7 @@ app.post('/push/relance-profs', async (req, res) => {
     await Promise.all(inactiveProfs.map(async p => {
       await pushToUser(p.id, {
         title: '👋 Des élèves vous attendent !',
-        body: 'Vous n'avez pas publié de cours depuis un moment. Créez un nouveau cours et accueillez de nouveaux élèves.',
+        body: "Vous n'avez pas publié de cours depuis un moment. Créez un nouveau cours et accueillez de nouveaux élèves.",
         tag: 'relance-prof',
         icon: '/icon-192.png',
         data: { url: 'https://courspool.vercel.app' }
@@ -1039,7 +1039,7 @@ app.post('/push/relance-eleves', async (req, res) => {
     await Promise.all(inactiveEleves.map(async e => {
       await pushToUser(e.id, {
         title: '📚 De nouveaux cours vous attendent',
-        body: 'Des professeurs ont publié de nouveaux cours. Explorez les cours disponibles près de chez vous !',
+        body: "Des professeurs ont publié de nouveaux cours. Explorez les cours disponibles près de chez vous !",
         tag: 'relance-eleve',
         icon: '/icon-192.png',
         data: { url: 'https://courspool.vercel.app' }
