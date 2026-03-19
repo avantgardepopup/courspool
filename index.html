@@ -2972,7 +2972,22 @@ function previewPhoto(input){
             // Mettre à jour les avatars avec l'URL Supabase
             var img='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
             g('tav').innerHTML=img;g('accAv').innerHTML=img;
-            toast('Photo sauvegardée','Votre photo est maintenant visible partout');
+            var tavM=g('tavMob');if(tavM){tavM.style.background='none';tavM.innerHTML=img;}
+            // Mettre à jour immédiatement les pbub sur toutes les cards du prof
+            if(user.id){
+              if(P[user.id])P[user.id].photo=data.url;
+              document.querySelectorAll('.pbub').forEach(function(el){
+                var card=el.closest('[data-id]');
+                if(!card)return;
+                var cours=C.find(function(x){return x.id===card.dataset.id;});
+                if(cours&&cours.pr===user.id){
+                  cours.prof_photo=data.url;
+                  el.style.background='none';
+                  el.innerHTML='<img src="'+data.url+'" style="width:100%;height:100%;object-fit:cover">';
+                }
+              });
+            }
+            toast('Photo mise à jour','Visible sur toutes vos cards');
           }
         }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
       }
