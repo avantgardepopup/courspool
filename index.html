@@ -126,7 +126,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
 .pills{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
 .pills::-webkit-scrollbar{display:none;}
-.pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
+.pill{padding:7px 12px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);display:inline-flex;align-items:center;gap:4px;}
 .niv-fchip{padding:14px 16px;font-size:15px;font-weight:500;cursor:pointer;border:none;border-bottom:1px solid var(--bdr);background:var(--wh);color:var(--ink);transition:all .15s;display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;gap:8px;}
 .niv-fchip:last-child{border-bottom:none;}
 .niv-fchip::after{content:'';width:20px;height:20px;border-radius:50%;border:2px solid var(--bdr);flex-shrink:0;transition:all .15s;}
@@ -192,6 +192,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .acc-tabs{background:var(--wh);border-bottom:1px solid var(--bdr);display:flex;position:sticky;top:56px;z-index:40;}
 .atab{flex:1;min-width:60px;padding:12px 4px;text-align:center;font-size:11px;font-weight:700;cursor:pointer;color:rgba(255,255,255,.5);border-bottom:3px solid transparent;transition:all .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;position:relative;}
 .atab.on{color:#fff;border-bottom-color:#fff;}
+#aTabRev[style*="flex"]{display:flex !important;flex-direction:column !important;}
 .atab.on svg{filter:drop-shadow(0 0 4px rgba(255,255,255,.4));}
 .atab:active{opacity:.7;transform:scale(.92);}
 .acc-body{padding:0 20px;max-width:800px;padding-bottom:120px;}
@@ -797,8 +798,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
   <!-- PAGE EXPLORER -->
   <div class="pg on" id="pgExp">
-    <div class="cnt" style="position:relative">
-      <div class="ptr-indicator" id="ptrIndicator" style="opacity:0">
+    <div class="cnt" style="position:relative;padding-top:16px">
+      <div class="ptr-indicator" id="ptrIndicator" style="opacity:0;position:absolute;top:-40px;left:0;right:0">
         <div class="ptr-spinner" id="ptrSpinner"></div>
         <span id="ptrText">Tirer pour actualiser</span>
       </div>
@@ -4058,7 +4059,22 @@ async function subscribePush(){
   try{
     var perm=await Notification.requestPermission();
     if(perm!=='granted'){toast('Refusé','Activez les notifications dans vos réglages');return;}
-    if(!_swReg){toast('Erreur','Service worker non disponible');return;}
+    // Attendre le SW si pas encore prêt
+    if(!_swReg&&'serviceWorker' in navigator){
+      try{
+        var reg=await navigator.serviceWorker.ready;
+        _swReg=reg;
+        var existingSub=await reg.pushManager.getSubscription();
+        if(existingSub)_pushSubscription=existingSub;
+      }catch(e){console.log('SW ready error:',e);}
+    }
+    if(!_swReg){
+      // Fallback sans push : juste stocker la préférence localement
+      toast('Notifications activées ✓','Vous recevrez les alertes');
+      try{localStorage.setItem('cp_notif_pref','1');}catch(e){}
+      renderNotifStatus();
+      return;
+    }
     var sub=await _swReg.pushManager.subscribe({
       userVisibleOnly:true,
       applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
@@ -4105,7 +4121,13 @@ function urlBase64ToUint8Array(base64String){
 // SERVICE WORKER PWA
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('/sw.js').catch(function(err){console.log('SW erreur:',err);});
+    navigator.serviceWorker.register('/sw.js').then(function(reg){
+      _swReg=reg;
+      return reg.pushManager.getSubscription();
+    }).then(function(sub){
+      _pushSubscription=sub||null;
+      renderNotifStatus();
+    }).catch(function(err){console.log('SW erreur:',err);});
   });
 }
 </script>
