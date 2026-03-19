@@ -2420,9 +2420,8 @@ function applyUser(){
   try{
     var h=new Date().getHours();
     var greet=h<6?'Bonne nuit':h<12?'Bonjour':h<18?'Bonjour':h<22?'Bonsoir':'Bonne nuit';
-    var prenom=(data.profile&&data.profile.prenom)||'';
     var mobT=g('mobTitle'),mobS=g('mobSub');
-    if(mobT)mobT.textContent=prenom?greet+' '+prenom+' 👋':greet+' 👋';
+    if(mobT)mobT.textContent=user&&user.pr?greet+' '+user.pr+' 👋':greet+' 👋';
     if(mobS){var msgs=['Cours près de vous','Que voulez-vous apprendre ?','Trouvez votre prochain cours'];mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
   }catch(e){}
   var tav=g('tav');
@@ -2448,8 +2447,23 @@ function applyUser(){
   // Vérifier si première connexion prof pour CNI
   checkFirstProfLogin();
   updateVerifBand();
+  // Rappel cours à venir
+  setTimeout(checkUpcomingReminder, 2000);
   // Vérification périodique que le compte est toujours actif
   startAccountCheck();
+  // Polling badge messages non lus
+  if(user&&user.id&&!user.guest){
+    setInterval(function(){
+      if(!user||!user.id)return;
+      fetch(API+'/conversations/'+user.id).then(function(r){return r.json();}).then(function(msgs){
+        if(!Array.isArray(msgs))return;
+        var convs={},nonLus=0;
+        msgs.forEach(function(m){var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;if(!otherId||otherId===user.id)return;if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;});
+        Object.keys(convs).forEach(function(id){if(!convs[id].lu&&convs[id].sender_id!==user.id)nonLus++;});
+        updateMsgBadge(nonLus);
+      }).catch(function(){});
+    },30000);
+  }
   // Swipe to dismiss sur les principales bottom sheets
   setTimeout(function(){
     initSwipeDismiss(g('bdR'), function(){closeM('bdR');});
@@ -2521,6 +2535,7 @@ function navTo(tab){
   if(tab==='exp'){
     if(pgExp)pgExp.classList.add('on');
     var bExp=g('bniExp');if(bExp)bExp.classList.add('on');
+    var br=g('btnRefresh');if(br)br.style.display=user&&user.role==='professeur'?'flex':'none';
     restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
@@ -2540,7 +2555,7 @@ function navTo(tab){
     }
     ['bniMsg','bniAcc','bniAdd','bniSepAdd'].forEach(function(id){var e=g(id);if(e)e.style.display='none';});
   
-    var br3=g('btnRefresh');if(br3)br3.style.display='none';
+    var br3=g('btnRefresh');if(br3)br3.style.display='none'; // messages: refresh masqué
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
@@ -2552,7 +2567,7 @@ function navTo(tab){
     }
     if(pgAcc)pgAcc.classList.add('on');
     var bAcc=g('bniAcc');if(bAcc){bAcc.classList.add('on');_springIcon(bAcc);}
-    var br2=g('btnRefresh');if(br2)br2.style.display='none';
+    var br2=g('btnRefresh');if(br2)br2.style.display='none'; // acc: refresh masqué
     restoreNav();
     goAccount();
   }
@@ -2630,7 +2645,7 @@ function goExplore(){
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
           fol.clear();
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
+          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
@@ -4648,6 +4663,17 @@ function toggleCoursPrivé(){
 // ============================================================
 // ACCÈS COURS PRIVÉ — barre de recherche + URL
 // ============================================================
+function checkProfDeepLink(){
+  try{
+    var params=new URLSearchParams(window.location.search);
+    var profId=params.get('prof');
+    if(profId){
+      window.history.replaceState({},'',window.location.pathname);
+      setTimeout(function(){openPr(profId);},800);
+    }
+  }catch(e){}
+}
+
 function checkPrivateCoursAccess(){
   // Vérifier si URL contient ?code=XXXX
   try{
