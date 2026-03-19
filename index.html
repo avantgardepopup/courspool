@@ -1895,43 +1895,50 @@ html.dk .ntog::after{background:#fff;}
 
 <!-- BOTTOM SHEET CNI -->
 <!-- GROUPE DE COURS -->
-<div id="bdGroupe" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeGroupe()">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .28s cubic-bezier(.32,0,.67,0)">
+<div id="bdGroupe" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;height:92dvh;display:flex;flex-direction:column;animation:mi .28s cubic-bezier(.32,0,.67,0)">
+
     <!-- Handle -->
-    <div style="display:flex;justify-content:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:2px"></div></div>
+    <div style="display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0">
+      <div style="width:36px;height:4px;background:var(--bdr);border-radius:2px"></div>
+    </div>
+
     <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px">
-      <div>
-        <div style="font-size:18px;font-weight:800;color:var(--ink)" id="groupeTitle">Groupe du cours</div>
-        <div style="font-size:13px;color:var(--lite);margin-top:2px" id="groupeSubtitle">Envoyer un message à tous les inscrits</div>
-      </div>
-      <button onclick="closeGroupe()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--mid);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
-    </div>
-
-    <!-- Toggle élèves peuvent écrire -->
-    <div style="margin:0 20px 16px;background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600;color:var(--ink)">Élèves peuvent répondre</div>
-        <div style="font-size:12px;color:var(--lite);margin-top:2px">Autorise les élèves à écrire dans le groupe</div>
-      </div>
-      <div id="groupeToggle" onclick="toggleGroupePerm()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
-        <div id="groupeToggleKnob" style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
-      </div>
-    </div>
-
-    <!-- Champ message -->
-    <div style="margin:0 20px 16px">
-      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message pour le groupe</label>
-      <textarea id="groupeMsg" rows="4" placeholder="Écrivez votre message pour tous les élèves inscrits…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
-    </div>
-
-    <!-- Bouton envoyer -->
-    <div style="padding:0 20px">
-      <button id="groupeSubmitBtn" onclick="sendGroupeMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Envoyer au groupe
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px 10px;border-bottom:1px solid var(--bdr);flex-shrink:0">
+      <button onclick="closeGroupe()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:4px;display:flex;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--or),var(--ord));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="groupeTitle">Groupe du cours</div>
+        <div style="font-size:12px;color:var(--lite)" id="groupeSubtitle">Discussion de groupe</div>
+      </div>
+      <!-- Toggle permission élèves — visible uniquement pour le prof -->
+      <div id="groupePermWrap" style="display:none;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--lite);font-weight:600" id="groupePermLabel">Élèves muets</span>
+        <div id="groupeToggle" onclick="toggleGroupePerm()" style="width:40px;height:24px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+          <div id="groupeToggleKnob" style="position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+        </div>
+      </div>
     </div>
+
+    <!-- Messages -->
+    <div id="groupeMsgList" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:4px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
+
+    <!-- Barre saisie -->
+    <div id="groupeInputBar" style="background:var(--wh);border-top:1px solid var(--bdr);padding:10px 14px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0">
+      <div style="display:flex;gap:8px;align-items:flex-end;background:var(--bg);border-radius:24px;padding:8px 8px 8px 16px;border:1.5px solid var(--bdr);transition:border-color .18s" onfocusin="this.style.borderColor='var(--or)'" onfocusout="this.style.borderColor='var(--bdr)'">
+        <textarea id="groupeMsg" placeholder="Message au groupe…" rows="1" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;outline:none;resize:none;max-height:100px;line-height:1.45;padding:2px 0;overflow-y:auto" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupeMsg();}"></textarea>
+        <button id="groupeSubmitBtn" onclick="sendGroupeMsg()" style="background:var(--or);border:none;border-radius:50%;width:36px;height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 3px 10px rgba(255,107,43,.4);transition:transform .15s" onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <!-- Message muet -->
+      <div id="groupeMuetMsg" style="display:none;text-align:center;padding:10px;font-size:13px;color:var(--lite)">🔇 Seul le professeur peut écrire dans ce groupe</div>
+    </div>
+
   </div>
 </div>
 
@@ -4233,96 +4240,145 @@ function getCniStatus(){
 // ============================================================
 var _groupeCoursId = null;
 var _groupeElevesPermis = false;
+var _groupePollTimer = null;
+var _groupeIsProf = false;
 
 function openGroupeMsg(coursId){
   _groupeCoursId = coursId;
   var c = C.find(function(x){return x.id===coursId;});
   if(!c) return;
-  // Titre
-  var gt = g('groupeTitle');
-  if(gt) gt.textContent = 'Groupe · ' + c.title;
-  var gs = g('groupeSubtitle');
-  if(gs) gs.textContent = 'Message pour tous les élèves inscrits';
-  // Toggle
+  _groupeIsProf = user && user.id === c.pr;
   _groupeElevesPermis = c.eleves_peuvent_ecrire || false;
+
+  var gt = g('groupeTitle'); if(gt) gt.textContent = c.title;
+  var gs = g('groupeSubtitle'); if(gs) gs.textContent = c.fl + ' inscrit' + (c.fl>1?'s':'') + ' · ' + c.dt;
+
+  // Toggle permission visible seulement pour le prof
+  var pw = g('groupePermWrap'); if(pw) pw.style.display = _groupeIsProf ? 'flex' : 'none';
   _updateGroupeToggle();
-  // Reset
-  var gm = g('groupeMsg');
-  if(gm) gm.value = '';
-  var bd = g('bdGroupe');
-  if(bd) bd.style.display = 'flex';
+  _updateGroupeInput();
+
+  var gm = g('groupeMsg'); if(gm){gm.value='';gm.style.height='auto';}
+  var bd = g('bdGroupe'); if(bd) bd.style.display = 'flex';
   haptic(4);
+
+  _loadGroupeMsgs();
+  clearInterval(_groupePollTimer);
+  _groupePollTimer = setInterval(_loadGroupeMsgs, 4000);
 }
 
 function closeGroupe(){
+  clearInterval(_groupePollTimer); _groupePollTimer = null;
   var bd = g('bdGroupe');
   if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
 }
 
 function _updateGroupeToggle(){
-  var tog = g('groupeToggle');
-  var knob = g('groupeToggleKnob');
+  var tog = g('groupeToggle'), knob = g('groupeToggleKnob'), lbl = g('groupePermLabel');
   if(tog) tog.style.background = _groupeElevesPermis ? 'var(--green)' : 'var(--bdr)';
   if(knob) knob.style.transform = _groupeElevesPermis ? 'translateX(18px)' : 'translateX(0)';
+  if(lbl) lbl.textContent = _groupeElevesPermis ? 'Élèves actifs' : 'Élèves muets';
+}
+
+function _updateGroupeInput(){
+  var muet = g('groupeMuetMsg'), inp = g('groupeMsg'), btn = g('groupeSubmitBtn');
+  var canWrite = _groupeIsProf || _groupeElevesPermis;
+  if(inp) inp.style.display = canWrite ? '' : 'none';
+  if(btn) btn.style.display = canWrite ? '' : 'none';
+  if(muet) muet.style.display = canWrite ? 'none' : 'block';
 }
 
 function toggleGroupePerm(){
-  // Pop-up d'avertissement
-  var msg = _groupeElevesPermis
-    ? 'Les élèves ne pourront plus envoyer de messages dans le groupe.'
-    : 'Les élèves pourront envoyer des messages à tout le groupe. Êtes-vous sûr ?';
-  if(!confirm(msg)) return;
   _groupeElevesPermis = !_groupeElevesPermis;
   _updateGroupeToggle();
+  _updateGroupeInput();
   haptic(6);
-  // Sauvegarder en base
   if(_groupeCoursId){
     fetch(API+'/cours/'+_groupeCoursId+'/groupe',{
       method:'PATCH',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({eleves_peuvent_ecrire:_groupeElevesPermis})
     }).catch(function(){});
-    // Mettre à jour en local
     var c = C.find(function(x){return x.id===_groupeCoursId;});
     if(c) c.eleves_peuvent_ecrire = _groupeElevesPermis;
   }
+  toast(_groupeElevesPermis ? 'Élèves peuvent écrire' : 'Élèves mis en lecture seule', '');
+}
+
+async function _loadGroupeMsgs(){
+  if(!_groupeCoursId) return;
+  try{
+    var r = await fetch(API+'/messages/groupe/'+_groupeCoursId);
+    var msgs = await r.json();
+    var container = g('groupeMsgList');
+    if(!container) return;
+    if(!Array.isArray(msgs)||!msgs.length){
+      container.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite);font-size:13px">Aucun message pour l\'instant.<br>Soyez le premier à écrire !</div>';
+      return;
+    }
+    var wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+    var html='';
+    var lastDate='';
+    msgs.forEach(function(m){
+      var d = new Date(m.created_at);
+      var dateKey = d.toDateString();
+      if(dateKey !== lastDate){
+        lastDate = dateKey;
+        var today = new Date(); today.setHours(0,0,0,0);
+        var diff = Math.round((today.getTime() - new Date(dateKey).getTime())/(1000*60*60*24));
+        var label = diff===0?"Aujourd'hui":diff===1?'Hier':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+        html+='<div style="text-align:center;margin:10px 0 6px"><span style="background:var(--wh);color:var(--lite);font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;box-shadow:0 1px 4px rgba(0,0,0,.07)">'+label+'</span></div>';
+      }
+      var isMe = m.sender_id === (user&&user.id);
+      var time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var nm = m.sender_nom || 'Utilisateur';
+      var ini = nm[0]||'?';
+      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end">'+ini+'</div>';
+      var nameHtml = isMe ? '' : '<div style="font-size:11px;color:var(--lite);margin-bottom:2px;padding-left:34px">'+nm+'</div>';
+      var bg = isMe ? 'linear-gradient(135deg,var(--or),var(--ord))' : 'var(--wh)';
+      var col = isMe ? '#fff' : 'var(--ink)';
+      var br = isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
+      html+='<div style="display:flex;flex-direction:column;margin-bottom:2px">'+nameHtml
+        +'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px">'
+        +avHtml
+        +'<div style="max-width:75%;background:'+bg+';color:'+col+';border-radius:'+br+';padding:9px 13px;font-size:14px;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
+        +m.contenu
+        +'<div style="font-size:10px;opacity:.5;margin-top:3px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+        +'</div></div></div>';
+    });
+    container.innerHTML = html;
+    if(wasAtBottom) container.scrollTop = container.scrollHeight;
+  }catch(e){}
 }
 
 async function sendGroupeMsg(){
-  var msg = g('groupeMsg');
-  var contenu = msg ? msg.value.trim() : '';
-  if(!contenu){
-    msg && (msg.style.borderColor='var(--red)');
-    toast('Message vide','Écrivez un message pour le groupe',true);
-    return;
-  }
-  var btn = g('groupeSubmitBtn');
-  if(btn){btn.disabled=true;btn.textContent='Envoi…';}
+  if(!user) return;
+  var canWrite = _groupeIsProf || _groupeElevesPermis;
+  if(!canWrite){ toast('Lecture seule',"Le professeur n'a pas activé les réponses"); return; }
+  var inp = g('groupeMsg');
+  var contenu = inp ? inp.value.trim() : '';
+  if(!contenu) return;
+  var btn = g('groupeSubmitBtn'); if(btn) btn.disabled = true;
+  inp.value = ''; inp.style.height = 'auto';
   try{
     var c = C.find(function(x){return x.id===_groupeCoursId;});
-    var r = await fetch(API+'/messages/groupe',{
+    await fetch(API+'/messages/groupe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         cours_id:_groupeCoursId,
         expediteur_id:user.id,
+        expediteur_nom:(user.pr+(user.nm?' '+user.nm:'')).trim(),
         contenu:contenu,
         cours_titre:c?c.title:'Cours'
       })
     });
-    var data = await r.json();
-    if(data.success){
-      closeGroupe();
-      toast('Message envoyé',''+( data.sent||0)+' élève'+(data.sent>1?'s':'')+ ' notifié'+(data.sent>1?'s':''));
-      haptic([10,50,100]);
-    } else {
-      toast('Erreur','Impossible d’envoyer le message',true);
-    }
-  }catch(e){
-    toast('Erreur',e.message,true);
-  }finally{
-    if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer au groupe';}
-  }
+    await _loadGroupeMsgs();
+    var container = g('groupeMsgList');
+    if(container) container.scrollTop = container.scrollHeight;
+    haptic(6);
+  }catch(e){ toast('Erreur','Message non envoyé'); }
+  finally{ if(btn) btn.disabled = false; }
 }
 
 // ============================================================
