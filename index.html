@@ -2179,7 +2179,7 @@ function doGuest(){
   // Mode visiteur : pas de bnav, pas de stockage localStorage
   user={pr:'Invité',nm:'',em:'',role:'eleve',id:null,ini:'I',photo:null,guest:true};
   var _l=g('login');
-  if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}
+  if(_l){_l.style.display='none';_l.style.zIndex='-1';}  // pas de pointerEvents:none pour pouvoir revenir
   g('app').style.display='block';
   // Bnav réduite pour les invités : pas de "Profil", juste Explorer
   var bnav=g('bnav');
@@ -2310,7 +2310,12 @@ function navTo(tab){
     restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
-    if(user.guest){scrollToLogin();return;}
+    // Guest → proposer de se connecter sans brutalité
+    if(user.guest){
+      toast('Connectez-vous pour accéder aux messages','');
+      setTimeout(scrollToLogin, 800);
+      return;
+    }
     if(pgMsg)pgMsg.classList.add('on');
     if(nav){var isMob=window.innerWidth<=640;if(!isMob){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}else{nav.style.left='';nav.style.transform='';nav.style.padding='';}}
     var bniExp=g('bniExp');
@@ -2324,8 +2329,12 @@ function navTo(tab){
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
-    // Guest clique sur Profil → écran de connexion
-    if(user.guest){scrollToLogin();return;}
+    // Guest clique sur Profil → écran de connexion avec message
+    if(user.guest){
+      toast('Connectez-vous pour accéder à votre profil','');
+      setTimeout(scrollToLogin, 800);
+      return;
+    }
     if(pgAcc)pgAcc.classList.add('on');
     var bAcc=g('bniAcc');if(bAcc)bAcc.classList.add('on');
     restoreNav();
@@ -2977,10 +2986,16 @@ function showLoginPrompt(){
 }
 
 function scrollToLogin(){
-  // Afficher l'écran de connexion
   var app=g('app'),login=g('login');
   if(app)app.style.display='none';
-  if(login){login.style.display='flex';login.style.zIndex='999';}
+  if(login){
+    login.style.display='flex';
+    login.style.zIndex='999';
+    login.style.pointerEvents='';  // réactiver les clics
+    login.style.opacity='1';
+  }
+  // Aussi réinitialiser le formulaire sur Se connecter
+  var ltC=g('ltC');if(ltC&&!ltC.classList.contains('on'))switchLT('C');
 }
 
 function openR(id){haptic(4);
