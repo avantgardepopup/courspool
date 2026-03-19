@@ -2246,6 +2246,7 @@ window.addEventListener('DOMContentLoaded',function(){
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 var C=[],P={},res={},fol=new Set();
+var _currentTab='exp';
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
@@ -2724,6 +2725,29 @@ async function checkStripeReturn(){
 function shake(id){var e=g(id);e.style.animation='shake .3s';setTimeout(function(){e.style.animation=''},400);}
 
 // PAGES
+function updateProfileCompletion(){
+  if(!user||user.role!=='professeur')return;
+  var items=[
+    {done:!!(user.photo),tip:'Ajoutez une photo de profil'},
+    {done:!!(user.bio&&user.bio.trim().length>20),tip:'Rédigez une biographie (20 car. min)'},
+    {done:!!(user.statut&&user.statut!==''),tip:'Renseignez votre statut'},
+    {done:!!(user.matieres&&user.matieres.trim()),tip:'Ajoutez vos matières'},
+    {done:!!(user.niveau&&user.niveau!==''),tip:'Précisez votre niveau enseigné'},
+    {done:!!(user.ville&&user.ville.trim()),tip:'Ajoutez votre ville'},
+  ];
+  var done=items.filter(function(i){return i.done;}).length;
+  var pct=Math.round(done/items.length*100);
+  var bar=g('pfCompletionBar'),pctEl=g('pfCompletionPct'),tips=g('pfCompletionTips');
+  if(bar)bar.style.width=pct+'%';
+  if(pctEl){pctEl.textContent=pct+'%';pctEl.style.color=pct===100?'#22C069':'var(--or)';}
+  if(tips){
+    var missing=items.filter(function(i){return!i.done;}).map(function(i){return i.tip;});
+    tips.textContent=pct===100?'Profil complet ✓':missing[0]||'';
+    tips.style.color=pct===100?'#22C069':'var(--lite)';
+  }
+  if(bar)bar.style.background=pct===100?'#22C069':'linear-gradient(90deg,var(--or),#22C069)';
+}
+
 function goAccount(){
   if(!user)return;
   g('pgExp').classList.remove('on');g('pgMsg').classList.remove('on');g('pgAcc').classList.add('on');
@@ -2757,7 +2781,7 @@ function goAccount(){
     if(user.role==='professeur'){
       var wrap=g('pfCompletionWrap');
       if(wrap)wrap.style.display='block';
-      updateProfileCompletion();
+      if(typeof updateProfileCompletion==='function')updateProfileCompletion();
     }
     if(pfMat&&user.matieres)pfMat.value=user.matieres;
   } else {
@@ -2918,7 +2942,7 @@ function saveProf(){
   if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{av.style.background='rgba(255,255,255,.2)';av.textContent=user.ini;}
   toast('Profil sauvegardé','Modifications enregistrées');
-  updateProfileCompletion();
+  if(typeof updateProfileCompletion==='function')updateProfileCompletion();
   // Mettre à jour la photo sur les cards du prof
   if(user&&user.id&&user.photo){
     if(P[user.id])P[user.id].photo=user.photo;
@@ -5245,29 +5269,6 @@ function updateNiveaux(statut){
   if(lbl)lbl.textContent=n.label;
   sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
 }
-function updateProfileCompletion(){
-  if(!user||user.role!=='professeur')return;
-  var items=[
-    {done:!!(user.photo),tip:'Ajoutez une photo de profil'},
-    {done:!!(user.bio&&user.bio.trim().length>20),tip:'Rédigez une biographie (20 car. min)'},
-    {done:!!(user.statut&&user.statut!==''),tip:'Renseignez votre statut'},
-    {done:!!(user.matieres&&user.matieres.trim()),tip:'Ajoutez vos matières'},
-    {done:!!(user.niveau&&user.niveau!==''),tip:'Précisez votre niveau enseigné'},
-    {done:!!(user.ville&&user.ville.trim()),tip:'Ajoutez votre ville'},
-  ];
-  var done=items.filter(function(i){return i.done;}).length;
-  var pct=Math.round(done/items.length*100);
-  var bar=g('pfCompletionBar'),pctEl=g('pfCompletionPct'),tips=g('pfCompletionTips');
-  if(bar)bar.style.width=pct+'%';
-  if(pctEl){pctEl.textContent=pct+'%';pctEl.style.color=pct===100?'#22C069':'var(--or)';}
-  if(tips){
-    var missing=items.filter(function(i){return!i.done;}).map(function(i){return i.tip;});
-    tips.textContent=pct===100?'Profil complet ✓':missing[0]||'';
-    tips.style.color=pct===100?'#22C069':'var(--lite)';
-  }
-  if(bar)bar.style.background=pct===100?'#22C069':'linear-gradient(90deg,var(--or),#22C069)';
-}
-
 function updateNiveauxPf(statut){
   var nf=g('pfNiveauField'),lbl=g('pfNiveauLabel'),valLbl=g('pfNiveauValLabel');
   if(!statut||!NIVEAUX[statut]){if(nf)nf.style.display='none';return;}
