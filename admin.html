@@ -761,20 +761,58 @@ function openProfModal(id){
 }
 function closeModal(){document.getElementById('modalProf').classList.remove('on');}
 
+var _rejectProfId = null;
+
+function openRejectModal(id) {
+  _rejectProfId = id;
+  var p = allProfs.find(function(x){return x.id===id;});
+  var name = p ? ((p.prenom||'')+' '+(p.nom||'')).trim() : '';
+  document.getElementById('rejectProfName').textContent = name;
+  document.getElementById('rejectRaison').value = '';
+  document.getElementById('modalRejet').style.display = 'flex';
+}
+
+function closeRejectModal() {
+  document.getElementById('modalRejet').style.display = 'none';
+  _rejectProfId = null;
+}
+
+async function submitReject(type) {
+  // type = 'retry' (peut renvoyer) ou 'final' (refus définitif)
+  var raison = document.getElementById('rejectRaison').value.trim();
+  var id = _rejectProfId;
+  if (!id) return;
+  var status = type === 'final' ? 'rejected_final' : 'rejected_retry';
+  var statut_compte = type === 'final' ? 'bloqué' : 'rejeté';
+  // L'API /email/verification met aussi à jour le profil
+  try {
+    var r = await fetch(API+'/email/verification', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prof_id: id, status, raison })
+    });
+    if (r.ok) {
+      var p = allProfs.find(function(x){return x.id===id;});
+      if (p) { p.verified = false; p.statut_compte = statut_compte; }
+      closeRejectModal(); closeModal(); renderDashboard(); renderProfs();
+      toast(type==='final' ? 'Refus définitif envoyé.' : 'Email de refus envoyé — le prof peut renvoyer sa CNI.');
+    } else { toast('Erreur lors de l\'envoi'); }
+  } catch(e) { toast('Erreur réseau'); }
+}
+
 async function verifyProf(id,action){
+  if (action === 'reject') { openRejectModal(id); return; }
   var data={};
   if(action==='verify') data={verified:true,statut_compte:'actif'};
-  else if(action==='reject') data={verified:false,statut_compte:'rejeté'};
   else if(action==='block') data={verified:false,statut_compte:'bloqué'};
   var ok=await supabaseUpdate('profiles',id,data);
   if(ok){
     var p=allProfs.find(function(x){return x.id===id;});
     if(p){p.verified=data.verified;p.statut_compte=data.statut_compte;}
-    if(action==='verify'||action==='reject'){
-      fetch(API+'/email/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prof_id:id,status:action==='verify'?'approved':'rejected'})}).catch(function(){});
+    if(action==='verify'){
+      fetch(API+'/email/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prof_id:id,status:'approved'})}).catch(function(){});
     }
     closeModal();renderDashboard();renderProfs();
-    var msgs={verify:'Professeur validé ! Email de confirmation envoyé.',reject:'Compte rejeté. Email envoyé.',block:'Compte bloqué.'};
+    var msgs={verify:'Professeur validé ! Email de confirmation envoyé.',block:'Compte bloqué.'};
     toast(msgs[action]||'Mise à jour effectuée');
   } else {toast('Erreur lors de la mise à jour');}
 }
@@ -1004,5 +1042,41 @@ async function deleteUser(id, nom){
 }
 
 </script>
+<!-- MODALE REFUS PROF -->
+<div id="modalRejet" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:460px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-size:18px;font-weight:700;color:#111">Refus de vérification</div>
+      <button onclick="closeRejectModal()" style="background:#F3F4F6;border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <div style="font-size:13px;color:#6B7280;margin-bottom:20px">Prof : <strong id="rejectProfName"></strong></div>
+
+    <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Message pour le professeur <span style="color:#9CA3AF;font-weight:400">(optionnel)</span></label>
+    <textarea id="rejectRaison" rows="3" placeholder="Ex: La photo est floue, le document est expiré, le nom ne correspond pas au profil…" style="width:100%;border:1.5px solid #E5E7EB;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;resize:none;margin-bottom:20px;line-height:1.5" onfocus="this.style.borderColor='#FF6B2B'" onblur="this.style.borderColor='#E5E7EB'"></textarea>
+
+    <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:10px">Type de refus</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="submitReject('retry')" style="display:flex;align-items:flex-start;gap:12px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%">
+        <div style="width:32px;height:32px;background:#F97316;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#92400E">Peut renvoyer sa CNI</div>
+          <div style="font-size:12px;color:#B45309;margin-top:2px">Le prof reçoit votre message + un bouton pour soumettre un nouveau document. Son compte reste en attente.</div>
+        </div>
+      </button>
+      <button onclick="submitReject('final')" style="display:flex;align-items:flex-start;gap:12px;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:12px;padding:14px;cursor:pointer;text-align:left;width:100%">
+        <div style="width:32px;height:32px;background:#EF4444;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#991B1B">Refus définitif</div>
+          <div style="font-size:12px;color:#DC2626;margin-top:2px">Le compte est bloqué définitivement. Le prof reçoit votre message mais ne peut plus renvoyer de document.</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
