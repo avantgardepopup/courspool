@@ -697,7 +697,7 @@ app.delete('/users/:id', async (req, res) => {
 // PATCH profil — mise à jour verified / statut_compte (appelé depuis admin)
 app.patch('/profiles/:id', async (req, res) => {
   const { id } = req.params;
-  const allowedFields = ['verified', 'statut_compte', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'cni_uploaded'];
+  const allowedFields = ['verified', 'statut_compte', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'cni_uploaded', 'bio', 'ville', 'photo_url', 'rejection_reason', 'can_retry_cni'];
   const updates = {};
   allowedFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
