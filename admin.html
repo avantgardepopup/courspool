@@ -498,6 +498,7 @@ tr:hover td{background:#FAFAF9;}
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 var SUPABASE_URL='https://bpyqjfylukbdarjwapsm.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweXFqZnlsdWtiZGFyandhcHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTcwOTUsImV4cCI6MjA4OTA5MzA5NX0.ZO3ezBLSy3R2bv1AjN0ik7o4h4J3gcBiLBqUBQ537gg';
+var SUPABASE_SERVICE_KEY=''; // ← colle ici ta service_role key Supabase
 var ADMIN_PW='ABDALLAH8788z.';
 var allProfs=[],allEleves=[],allCours=[],allRes=[];
 var profFilter='all';
@@ -1052,8 +1053,19 @@ async function deleteUser(id, nom){
     // Supprimer le profil
     var rp=await fetch(base+'profiles?id=eq.'+id,{method:'DELETE',headers:h});
     if(!rp.ok){toast('Erreur suppression profil');return;}
-    // Tenter via Railway pour supprimer le compte Auth (optionnel)
-    fetch(API+'/users/'+id,{method:'DELETE',headers:{'Content-Type':'application/json'}}).catch(()=>{});
+    // Supprimer le compte Auth directement avec la service role key
+    if(SUPABASE_SERVICE_KEY){
+      await fetch(SUPABASE_URL+'/auth/v1/admin/users/'+id,{
+        method:'DELETE',
+        headers:{
+          'apikey':SUPABASE_SERVICE_KEY,
+          'Authorization':'Bearer '+SUPABASE_SERVICE_KEY
+        }
+      }).catch(function(e){console.log('Auth delete:',e.message);});
+    } else {
+      // Fallback : tenter via Railway
+      fetch(API+'/users/'+id,{method:'DELETE',headers:{'Content-Type':'application/json'}}).catch(()=>{});
+    }
     // Mettre à jour les listes locales
     allProfs=allProfs.filter(function(p){return p.id!==id;});
     allEleves=allEleves.filter(function(e){return e.id!==id;});
