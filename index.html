@@ -29,7 +29,8 @@
   --sh:0 6px 28px rgba(0,0,0,.11);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{overflow-x:hidden;max-width:100vw;width:100%;}
+html{max-width:100vw;width:100%;overflow-x:clip;}
+body{max-width:100vw;width:100%;overflow-x:clip;}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;
   /* Empêcher le rebond iOS */
   overscroll-behavior:none;
@@ -120,8 +121,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
 .pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
 .pill{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);}
+.niv-fchip{padding:13px 16px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;border:2px solid var(--bdr);background:var(--wh);color:var(--ink);transition:all .18s;display:block;width:100%;text-align:left;}
+.niv-fchip.on{border-color:var(--or);background:var(--orp);color:var(--or);}
+.niv-fchip:active{transform:scale(.98);}
 .pill.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .pill:not(.on):hover{border-color:var(--or);color:var(--or);}
+.crn-chip{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;}
+.crn-chip.on{background:var(--or);color:#fff;border-color:var(--or);}
+.crn-chip:active{transform:scale(.95);}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 /* SKELETON LOADING */
 .skeleton{background:linear-gradient(90deg,var(--bdr) 25%,#ede8e2 50%,var(--bdr) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
@@ -797,9 +804,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
         <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
         <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
+        <div class="pill" id="pillNiv" onclick="openNivFilter()" style="display:flex;align-items:center;gap:5px;color:var(--mid)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <span id="pillNivLabel">Niveau</span>
+        </div>
         <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Filtre
+        </div>
+      </div>
+
+      <!-- Bottom sheet filtre niveau -->
+      <div id="bdNivFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeNivFilter()">
+        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:17px;font-weight:800">Niveau d'études</div>
+            <button onclick="closeNivFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="nivFilterList">
+            <div class="niv-fchip on" onclick="setNivFilter('',this)">🎓 Tous les niveaux</div>
+            <div class="niv-fchip" onclick="setNivFilter('Primaire',this)">📚 Primaire</div>
+            <div class="niv-fchip" onclick="setNivFilter('Collège',this)">📖 Collège</div>
+            <div class="niv-fchip" onclick="setNivFilter('Lycée',this)">✏️ Lycée</div>
+            <div class="niv-fchip" onclick="setNivFilter('Bac+1/2',this)">🏛️ Bac+1/2</div>
+            <div class="niv-fchip" onclick="setNivFilter('Bac+3/4',this)">🎓 Bac+3/4</div>
+            <div class="niv-fchip" onclick="setNivFilter('Bac+5',this)">🏆 Bac+5</div>
+          </div>
         </div>
       </div>
 
@@ -1221,34 +1251,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 </div>
 
 <!-- MODAL CRÉER COURS -->
-<div class="bd" id="bdCr" onclick="if(event.target===this)closeCr()">
-  <div class="modal">
-    <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Nouveau cours</div><div style="font-size:17px;font-weight:800">Proposer un cours</div></div><button class="mcl" onclick="closeCr()">✕</button></div>
-    <div class="mbd">
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Matière</label>
-        <div class="sg" id="sgMatieres">
-          <div class="so" onclick="pickS(this)">📐 Maths</div>
-          <div class="so" onclick="pickS(this)">⚗️ Physique</div>
-          <div class="so" onclick="pickS(this)">💻 Info</div>
-          <div class="so" onclick="pickS(this)">🌍 Langues</div>
-          <div class="so" onclick="pickS(this)">📊 Éco</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">🧪 Chimie</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">🧬 SVT</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">🏛️ Histoire</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">⚖️ Droit</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">🎵 Musique</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">🎨 Arts</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">🏃 Sport</div>
-          <div class="so so-extra" onclick="pickS(this)" style="display:none">💬 Philo</div>
-          <div class="so" id="btnVoirPlusMat" onclick="toggleMoreMat()" style="border-style:dashed;color:var(--lite)">+ Voir plus</div>
-          <div class="so" onclick="pickS(this)">✨ Autre</div>
+<div class="bd" id="bdCr" onclick="if(event.target===this)closeM('bdCr')" style="align-items:flex-end">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:540px;max-height:92dvh;display:flex;flex-direction:column;animation:mi .25s ease">
+
+    <!-- Header sticky -->
+    <div style="padding:20px 20px 16px;border-bottom:1px solid var(--bdr);flex-shrink:0">
+      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:20px;font-weight:800;color:var(--ink)">Nouveau cours</div>
+          <div style="font-size:13px;color:var(--lite);margin-top:1px">Remplissez les infos essentielles</div>
+        </div>
+        <button onclick="closeM('bdCr')" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid)">✕</button>
+      </div>
+    </div>
+
+    <!-- Contenu scrollable -->
+    <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:0 20px 32px">
+
+      <!-- Section 1 : Matière -->
+      <div style="padding:16px 0 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Matière</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="fi3" id="crTitre" type="text" placeholder="Ex: Algèbre linéaire, Python débutant…" style="flex:1">
         </div>
       </div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Titre</label><input class="fi3" id="crTitre" type="text" placeholder="Ex : Dérivées et primitives…"></div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Description</label><textarea class="fi3" id="crDesc" rows="3" placeholder="Décrivez le contenu du cours…" style="resize:vertical"></textarea></div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Niveau visé</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px" id="crNiveauChips">
+
+      <!-- Section 2 : Niveau -->
+      <div style="padding:12px 0 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Niveau visé</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px" id="crNiveauChips">
           <div class="crn-chip on" onclick="pickNiveau(this)" data-n="">Tous</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire">Primaire</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège">Collège</div>
@@ -1259,51 +1291,99 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
         </div>
         <input type="hidden" id="crNiveau" value="">
       </div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Date</label>
-        <input class="fi3" id="crDate" type="date" style="width:100%;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Heure</label>
-        <input class="fi3" id="crHeure" type="time" style="width:100%;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Lieu</label>
-        <div style="position:relative">
-          <input class="fi3" id="crLieu" type="text" placeholder="Rechercher un lieu en France…" oninput="searchLieu(this.value)" autocomplete="off">
-          <div id="lieuSuggestions" style="position:absolute;top:100%;left:0;right:0;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;z-index:100;display:none;max-height:200px;overflow-y:auto;box-shadow:var(--sh);margin-top:4px"></div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Durée (min)</label><input class="fi3" id="crDuree" type="number" value="60"></div>
-        <div><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Places max</label><input class="fi3" id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()"></div>
-      </div>
-      <div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:var(--mid);margin-bottom:6px;display:block">Prix total (€)</label><input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()"><div id="cH" style="font-size:12px;color:var(--lite);margin-top:5px"></div></div>
-      <!-- Option cours privé -->
-      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-              Cours privé
+
+      <!-- Section 3 : Quand & Où -->
+      <div style="padding:12px 0 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Quand &amp; Où</div>
+        <div style="background:var(--bg);border-radius:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+            <input class="fi3" id="crDate" type="date" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;height:auto">
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <input class="fi3" id="crHeure" type="time" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;height:auto">
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div style="flex:1;position:relative">
+              <input class="fi3" id="crLieu" type="text" placeholder="Ville ou adresse…" oninput="searchLieu(this.value)" autocomplete="off" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;width:100%;height:auto">
+              <div id="lieuSuggestions" style="position:absolute;top:calc(100% + 8px);left:-14px;right:-14px;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;z-index:100;display:none;max-height:180px;overflow-y:auto;box-shadow:var(--sh)"></div>
             </div>
-            <div style="font-size:12px;color:var(--lite);margin-top:2px">N'apparaît pas dans le fil. Accès par code ou lien uniquement.</div>
-          </div>
-          <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
-            <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
-          </div>
-        </div>
-        <div id="codePriveBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
-          <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:6px">Code d'accès (généré automatiquement)</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div id="codePriveVal" style="flex:1;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:10px 14px;font-size:16px;font-weight:800;letter-spacing:.15em;color:var(--ink);text-align:center"></div>
-            <button onclick="regenCode()" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:10px;cursor:pointer;transition:all .18s" title="Regénérer">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-            </button>
           </div>
         </div>
       </div>
-      <button class="pb pri" style="width:100%" onclick="subCr()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Publier le cours</button>
+
+      <!-- Section 4 : Infos pratiques -->
+      <div style="padding:12px 0 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Infos pratiques</div>
+        <div style="background:var(--bg);border-radius:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0">Durée</span>
+            <input class="fi3" id="crDuree" type="number" value="60" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;text-align:right;padding:0;height:auto">
+            <span style="font-size:14px;color:var(--lite)">min</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0">Places max</span>
+            <input class="fi3" id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;text-align:right;padding:0;height:auto">
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0">Prix total</span>
+            <input class="fi3" id="cPr" type="number" placeholder="50" oninput="calcH()" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;text-align:right;padding:0;height:auto">
+            <span style="font-size:14px;color:var(--lite)">€</span>
+          </div>
+        </div>
+        <div id="cH" style="font-size:12px;color:var(--or);font-weight:600;margin-top:6px;text-align:center;min-height:18px"></div>
+      </div>
+
+      <!-- Section 5 : Description optionnelle -->
+      <div style="padding:12px 0 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnelle)</span></div>
+        <textarea class="fi3" id="crDesc" rows="2" placeholder="Niveau requis, programme abordé…" style="resize:none;font-size:15px"></textarea>
+      </div>
+
+      <!-- Section 6 : Cours privé -->
+      <div style="padding:12px 0 4px">
+        <div style="background:var(--bg);border-radius:14px;padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:34px;height:34px;background:var(--wh);border-radius:10px;display:flex;align-items:center;justify-content:center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:var(--ink)">Cours privé</div>
+                <div style="font-size:12px;color:var(--lite);margin-top:1px">Accès par code uniquement</div>
+              </div>
+            </div>
+            <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+              <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
+            </div>
+          </div>
+          <div id="codePriveBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr)">
+            <div style="font-size:12px;color:var(--mid);margin-bottom:6px">Code d'accès</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="codePriveVal" style="flex:1;background:var(--wh);border-radius:10px;padding:10px 14px;font-size:18px;font-weight:800;letter-spacing:.2em;color:var(--ink);text-align:center"></div>
+              <button onclick="regenCode()" style="background:var(--wh);border:none;border-radius:10px;padding:10px;cursor:pointer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Bouton publier sticky en bas -->
+    <div style="padding:12px 20px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--bdr);flex-shrink:0;background:var(--wh)">
+      <button class="pb pri" style="width:100%;padding:15px;font-size:16px;border-radius:14px;box-shadow:0 4px 14px rgba(255,107,43,.3)" onclick="subCr()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Publier le cours
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -2153,7 +2233,8 @@ function applyFilter(){
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
     // Filtre localisation
     var matchLoc=!actLoc||loc.includes(actLoc);
-    return matchFilter&&matchSearch&&matchLoc;
+    var matchNiv=!actNiv||(c.niveau||'')=== actNiv;
+    return matchFilter&&matchSearch&&matchLoc&&matchNiv;
   });
   renderPage();
 }
@@ -3703,6 +3784,39 @@ function openM(id){g(id).classList.add('on');document.body.style.overflow='hidde
 function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
 function toast(t,s){g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
+
+// Niveau cours
+function pickNiveau(el){
+  document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  var inp=g('crNiveau');if(inp)inp.value=el.dataset.n||'';
+}
+
+// ============================================================
+// FILTRE NIVEAU
+// ============================================================
+var actNiv = '';
+function openNivFilter(){
+  var el=g('bdNivFilter');
+  if(el){el.style.display='flex';}
+}
+function closeNivFilter(){
+  var el=g('bdNivFilter');
+  if(el){el.style.display='none';}
+}
+function setNivFilter(niv, el){
+  actNiv=niv;
+  // Mettre à jour les chips
+  document.querySelectorAll('#nivFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
+  // Mettre à jour le pill label
+  var lbl=g('pillNivLabel');
+  var pill=g('pillNiv');
+  if(lbl){lbl.textContent=niv||'Niveau';}
+  if(pill){pill.classList.toggle('on',!!niv);}
+  closeNivFilter();
+  applyFilter();
+}
 
 // Niveau cours
 function pickNiveau(el){
