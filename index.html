@@ -585,72 +585,6 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 @keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
 @media(max-width:640px){.cnt{padding:12px 16px}.acc-body{padding:0 20px !important}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
 
-/* ── Desktop (≥641px) ── */
-@media(min-width:641px){
-  /* Centrer tout le contenu */
-  .cnt{max-width:1100px;margin:0 auto;padding:28px 40px 120px;}
-
-  /* Header : padding horizontal généreux */
-  .mob-header{padding-left:40px;padding-right:40px;}
-  .mob-search{padding-left:40px;padding-right:40px;}
-
-  /* Grille 2-3 colonnes */
-  .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
-
-  /* Cards hover élégant */
-  .card{transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;}
-  .card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.1);border-color:var(--or);}
-  html.dk .card:hover{box-shadow:0 12px 40px rgba(0,0,0,.35);}
-
-  /* Profil centré */
-  #pgAcc{max-width:860px;margin:0 auto;padding-bottom:100px;}
-  .acc-hero{border-radius:20px;margin:24px 40px 0;}
-  .acc-body{padding:24px 40px !important;}
-  .acc-tabs{margin:0 0px;}
-
-  /* Messagerie : liste + conversation côte à côte */
-  #pgMsg{
-    max-width:1100px;
-    margin:0 auto;
-    flex-direction:row !important;
-    height:calc(100vh - 120px) !important;
-    height:calc(100dvh - 120px) !important;
-    padding:0 40px;
-    gap:0;
-  }
-  #msgPane{width:300px;flex-shrink:0;border-right:1px solid var(--bdr);overflow-y:auto;height:100%;}
-  #msgConvPane{
-    flex:1;min-width:0;height:100%;
-    position:static !important;
-    display:flex !important;
-  }
-  #pgMsg.conv-open #msgPane{display:flex !important;}
-  .msg-back-btn{display:none !important;}
-
-  /* bnav flottante centrée */
-  #bnav{
-    left:50% !important;
-    transform:translateX(-50%) !important;
-    width:auto !important;
-    min-width:340px;
-    max-width:480px;
-    bottom:20px !important;
-    border-radius:24px !important;
-    box-shadow:0 8px 32px rgba(0,0,0,.12) !important;
-    padding:6px 16px !important;
-    border-top:none !important;
-  }
-  html.dk #bnav{box-shadow:0 8px 32px rgba(0,0,0,.4) !important;}
-
-  /* Pills filtres */
-  .pills{flex-wrap:wrap;overflow:visible;}
-}
-
-@media(min-width:1200px){
-  .grid{grid-template-columns:repeat(3,1fr);}
-  .cnt{max-width:1200px;}
-}
-
 /* ============================================================
    ONBOARDING — style Apple iOS
    ============================================================ */
@@ -1234,11 +1168,11 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;background:var(--bg);overflow:hidden">
+    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
-        <button id="msgBackBtn" class="msg-back-btn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
+        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
@@ -1327,7 +1261,7 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
         <!-- PROFS SUIVIS -->
         <div class="asec" id="asecF" style="overflow:visible">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Professeurs suivis</div>
-          <div id="listF" style="min-height:200px"></div>
+          <div id="listF"></div>
         </div>
 
         <!-- PAIEMENTS PROF -->
@@ -2808,14 +2742,10 @@ async function checkStripeReturn(){
     window.history.replaceState({},'',window.location.pathname);
 
     if(cancelled){
-      // Ne déclencher que si pas de pending in-app (pour éviter faux positifs)
-      var hasPending=false;try{hasPending=!!localStorage.getItem('cp_stripe_pending');}catch(e){}
-      if(!hasPending){
-        setTimeout(function(){
-          var p=document.getElementById('popupFailed');
-          if(p)p.style.display='flex';
-        },400);
-      }
+      setTimeout(function(){
+        var p=document.getElementById('popupFailed');
+        if(p)p.style.display='flex';
+      },400);
       return;
     }
 
@@ -2940,7 +2870,7 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){setTimeout(buildAccLists, 150);}
+  if(s==='F'||s==='R'){buildAccLists();}
 }
 
 function buildAccLists(){
@@ -3642,66 +3572,11 @@ async function confR(){haptic(15);
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    // Ouvrir Stripe dans le modal in-app
-    openStripeModal(data.url,{cours_id:id,user_id:user.id,montant:pp,pour_ami:false});
+    // Rediriger vers paiement
+    window.location.href=data.url;
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
-// ── Modal Stripe in-app ──
-function openStripeModal(url, pendingData){
-  try{localStorage.setItem('cp_stripe_pending', JSON.stringify(pendingData));}catch(e){}
-  var iframe = g('stripeIframe');
-  var bd = g('bdStripe');
-  if(!iframe || !bd) return;
-  iframe.src = url;
-  bd.style.display = 'flex';
-  closeM('bdR');
-  haptic(10);
-}
-
-function closeStripeModal(userCancelled){
-  var bd = g('bdStripe');
-  var iframe = g('stripeIframe');
-  if(bd) bd.style.display = 'none';
-  if(iframe) iframe.src = '';
-  try{
-    var pending = localStorage.getItem('cp_stripe_pending');
-    if(!pending || !user || !user.id) return;
-    var p = JSON.parse(pending);
-    var coursId = p.cours_id;
-    if(!coursId) return;
-    // Attendre 1.5s que Stripe/webhook traite
-    setTimeout(function(){
-      fetch(API+'/reservations/'+user.id)
-        .then(function(r){return r.json();})
-        .then(function(data){
-          if(!Array.isArray(data)) return;
-          var found = data.find(function(r){return r.cours_id === coursId;});
-          localStorage.removeItem('cp_stripe_pending');
-          if(found){
-            // Paiement réussi
-            if(!p.pour_ami) res[coursId] = true;
-            loadData().then(function(){buildCards();});
-            setTimeout(function(){
-              var popup = document.getElementById('popupPaid');
-              var msg = document.getElementById('popupPaidMsg');
-              if(msg) msg.textContent = p.pour_ami ? 'La place supplémentaire a été réservée.' : 'Votre place est réservée. Un email de confirmation vous a été envoyé.';
-              if(popup){popup.style.display = 'flex'; haptic(40);}
-            }, 200);
-          } else if(userCancelled === true){
-            // Annulation explicite
-            setTimeout(function(){
-              var popup = document.getElementById('popupFailed');
-              if(popup) popup.style.display = 'flex';
-            }, 200);
-          }
-          // Sinon : fermeture simple, pas de popup
-        })
-        .catch(function(){localStorage.removeItem('cp_stripe_pending');});
-    }, 1500);
-  }catch(e){}
-}
-
 function contR(){
   var c=C.find(function(x){return x.id===curId});
   var nm=c?c.prof_nm:'le professeur';
@@ -3761,7 +3636,7 @@ async function confAmi(id){
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    openStripeModal(data.url,{cours_id:id,user_id:user.id,montant:pp,pour_ami:true});
+    window.location.href=data.url;
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.onclick=function(){confAmi(id);};}}
 }
@@ -5825,8 +5700,6 @@ function toggleDarkMode(){
   var tm=document.getElementById('themeColorMeta');
   if(tm)tm.content=_darkMode?'#131110':'#ffffff';
   haptic([10,40,10]);
-  // Reconstruire les cards pour appliquer bgDark/bg
-  if(C && C.length) buildCards();
 }
 
 function updateDarkBtn(){
@@ -6420,25 +6293,5 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-
-<!-- Modal Stripe in-app -->
-<div id="bdStripe" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center">
-  <div style="width:100%;max-width:560px;background:var(--wh);border-radius:24px 24px 0 0;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bdr)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:32px;height:32px;background:#635BFF;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        </div>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--ink)">Paiement sécurisé</div>
-          <div style="font-size:11px;color:var(--lite)">Propulsé par Stripe · SSL</div>
-        </div>
-      </div>
-      <button onclick="closeStripeModal(false)" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid);flex-shrink:0">✕</button>
-    </div>
-    <iframe id="stripeIframe" src="" style="width:100%;height:68vh;border:none;display:block" allow="payment *"></iframe>
-  </div>
-</div>
-
 </body>
 </html>
