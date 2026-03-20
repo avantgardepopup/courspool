@@ -589,65 +589,61 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
    DESKTOP — Layout style Superprof/Hinge (min-width:641px)
    ============================================================ */
 @media(min-width:641px){
-  /* ── App container ── */
+  /* ── App ── */
   #app{background:var(--bg);}
 
   /* ── Header glassmorphism ── */
   .mob-header{
     padding:14px 48px 12px;
-    background:rgba(255,255,255,.88);
-    backdrop-filter:saturate(180%) blur(20px);
-    -webkit-backdrop-filter:saturate(180%) blur(20px);
-    border-bottom:1px solid rgba(0,0,0,.06);
-    position:sticky;top:0;
+    background:rgba(255,255,255,.9);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.07);
   }
-  html.dk .mob-header{background:rgba(19,17,16,.88);border-bottom:1px solid rgba(255,255,255,.06);}
+  html.dk .mob-header{background:rgba(19,17,16,.9);border-bottom-color:rgba(255,255,255,.07);}
   .mob-title{font-size:21px !important;}
   .mob-header.scrolled .mob-title{transform:none !important;font-size:21px !important;}
   .mob-sub{display:none;}
   .mob-header-inner{align-items:center;}
 
-  /* ── Barre de recherche centrée ── */
+  /* ── Search bar ── */
   .mob-search{
     padding:10px 48px 14px;
-    background:rgba(255,255,255,.88);
-    backdrop-filter:saturate(180%) blur(20px);
-    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    background:rgba(255,255,255,.9);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
   }
-  html.dk .mob-search{background:rgba(19,17,16,.88);}
+  html.dk .mob-search{background:rgba(19,17,16,.9);}
   .mob-search>div{max-width:700px;margin:0 auto;}
 
-  /* ── Contenu centré ── */
-  .cnt{
-    max-width:1100px;
-    margin:0 auto;
-    padding:28px 48px 40px;
-  }
+  /* ── Explorer contenu centré ── */
+  #pgExp .cnt{max-width:1100px;margin:0 auto;padding:28px 48px 100px;}
 
   /* ── Grille cards ── */
-  .grid{
-    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-    gap:20px;
-  }
+  .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
 
-  /* ── Cards hover élégant ── */
-  .card{
-    border-radius:20px;
-    border:1px solid var(--bdr);
-    transition:transform .22s cubic-bezier(.4,0,.2,1),box-shadow .22s,border-color .22s;
-    cursor:pointer;
-  }
-  .card:hover{
-    transform:translateY(-5px) scale(1.01);
-    box-shadow:0 16px 48px rgba(0,0,0,.1);
-    border-color:var(--or);
-  }
-  html.dk .card:hover{box-shadow:0 16px 48px rgba(0,0,0,.4);}
+  /* ── Cards hover ── */
+  .card{border-radius:20px;border:1px solid var(--bdr);transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;}
+  .card:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(0,0,0,.1);border-color:var(--or);}
+  html.dk .card:hover{box-shadow:0 14px 40px rgba(0,0,0,.35);}
 
-  /* ── Bottom nav cachée — nav dans le header ── */
-  #bnav{display:none !important;}
+  /* ── bnav : garder mais style desktop flottant ── */
+  #bnav{
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:auto !important;
+    min-width:360px !important;
+    max-width:500px !important;
+    bottom:24px !important;
+    border-radius:24px !important;
+    box-shadow:0 8px 32px rgba(0,0,0,.15) !important;
+    padding:8px 16px !important;
+    border-top:none !important;
+  }
+  html.dk #bnav{box-shadow:0 8px 32px rgba(0,0,0,.4) !important;}
+  #bnav .bni{min-width:64px;padding:8px 16px;}
 
-  /* ── Nav desktop ── */
+  /* ── Nav desktop dans header ── */
   #deskNav{display:flex;align-items:center;gap:4px;}
   .desk-nav-btn{
     display:flex;align-items:center;gap:6px;
@@ -655,28 +651,68 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
     font-size:14px;font-weight:600;
     color:var(--mid);cursor:pointer;
     border:none;background:transparent;
-    font-family:inherit;
-    transition:all .18s;
-    white-space:nowrap;
+    font-family:inherit;transition:all .18s;white-space:nowrap;
   }
   .desk-nav-btn:hover{background:var(--bg);color:var(--ink);}
   .desk-nav-btn.on{background:var(--orp);color:var(--or);}
   .desk-nav-btn svg{width:16px;height:16px;flex-shrink:0;}
 
-  /* ── Pages profil/messages centrées ── */
-  #pgAcc{max-width:760px;margin:0 auto;}
-  #pgMsg{max-width:900px;margin:0 auto;}
-  .acc-body{max-width:600px;}
+  /* ── Messagerie desktop ── */
+  .msg-back-btn{display:none !important;}
+  #pgMsg{
+    display:flex !important;
+    flex-direction:row !important;
+    max-width:1100px;
+    margin:0 auto;
+    height:calc(100vh - 120px);
+    padding:0 48px;
+    gap:0;
+  }
+  #pgMsg.on{display:flex !important;}
+  /* Liste conversations — colonne gauche */
+  #msgPane{
+    width:320px;
+    flex-shrink:0;
+    border-right:1px solid var(--bdr);
+    overflow-y:auto;
+    height:100%;
+  }
+  /* Conversation ouverte — colonne droite */
+  #msgConvPane{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    min-width:0;
+  }
+  /* Toujours visible sur desktop */
+  #pgMsg.conv-open #msgPane{display:flex !important;}
+  #pgMsg.conv-open #msgConvPane{display:flex !important;}
+  #pgMsg #msgConvPane{display:flex !important;}
+  /* Placeholder quand aucune conv sélectionnée */
+  #msgEmptyDesk{display:flex;}
 
-  /* ── Bouton flottant repositionné ── */
-  #btnAddCours{bottom:32px;right:48px;}
+  /* ── Profil desktop ── */
+  #pgAcc{
+    max-width:900px;
+    margin:0 auto;
+    padding:0 48px 100px;
+  }
+  .acc-hero{border-radius:20px;margin:24px 0 0;}
+  .acc-tabs{border-radius:12px 12px 0 0;}
+  .acc-body{padding:24px 32px !important;}
 
-  /* ── Pills filtres ── */
+  /* ── Pills ── */
   .pills{flex-wrap:wrap;overflow:visible;padding-bottom:0;}
+
+  /* ── FAB ── */
+  #btnAddCours{bottom:80px;right:48px;}
 }
 
-@media(min-width:1200px){.grid{grid-template-columns:repeat(3,1fr);}}
-  #pgExp{grid-template-columns:300px 1fr;}
+@media(min-width:1200px){
+  .grid{grid-template-columns:repeat(3,1fr);}
+  #pgMsg{max-width:1200px;}
+  #pgAcc{max-width:1000px;}
 }
 
 /* ============================================================
@@ -1285,11 +1321,11 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
+    <div id="msgConvPane" style="display:none;flex-direction:column;background:var(--bg);overflow:hidden">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
-        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
+        <button id="msgBackBtn" onclick="closeMsgConv()" class="msg-back-btn" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
@@ -1299,6 +1335,16 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
         </div>
       </div>
 
+      <!-- Placeholder desktop quand aucune conv -->
+      <div id="msgEmptyDesk" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--lite)">
+        <div style="width:64px;height:64px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="32" height="32"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px">Vos messages</div>
+          <div style="font-size:13px;color:var(--lite)">Sélectionnez une conversation</div>
+        </div>
+      </div>
       <!-- Messages -->
       <div id="msgMessages" style="flex:1;min-height:0;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:4px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
 
@@ -2738,6 +2784,8 @@ function navTo(tab){
   
     var br3=g('btnRefresh');if(br3)br3.style.display='none'; // messages: refresh masqué
     loadConversations();
+    // Desktop : montrer placeholder si aucune conv active
+    if(window.innerWidth>=641){var ed=g('msgEmptyDesk');if(ed)ed.style.display='flex';}
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
     // Guest clique sur Profil → invitation douce à se connecter
@@ -2860,10 +2908,18 @@ async function checkStripeReturn(){
     window.history.replaceState({},'',window.location.pathname);
 
     if(cancelled){
-      setTimeout(function(){
-        var p=document.getElementById('popupFailed');
-        if(p)p.style.display='flex';
-      },400);
+      // Vérifier quand même si la réservation existe (Stripe peut avoir traité)
+      if(user&&user.id&&coursId){
+        setTimeout(function(){
+          fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+            var found=Array.isArray(data)&&data.find(function(r){return r.cours_id===coursId;});
+            if(found){res[coursId]=true;loadData().then(function(){buildCards();});var pp=document.getElementById('popupPaid');if(pp)pp.style.display='flex';}
+            else{var pf=document.getElementById('popupFailed');if(pf)pf.style.display='flex';}
+          }).catch(function(){var pf=document.getElementById('popupFailed');if(pf)pf.style.display='flex';});
+        },1000);
+      } else {
+        setTimeout(function(){var p=document.getElementById('popupFailed');if(p)p.style.display='flex';},400);
+      }
       return;
     }
 
@@ -2988,7 +3044,15 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){setTimeout(buildAccLists,50);}
+  if(s==='F'||s==='R'){
+    // Attendre que les données soient chargées
+    function tryBuildF(attempts){
+      if(attempts>10)return;
+      // Si les réservations/follows semblent chargées ou après 500ms max
+      setTimeout(function(){buildAccLists();},attempts*100);
+    }
+    tryBuildF(1);
+  }
 }
 
 function buildAccLists(){
@@ -3707,7 +3771,7 @@ function openStripeModal(url,pendingData){
   haptic(10);
 }
 
-function closeStripeModal(){
+function closeStripeModal(userCancelled){
   var bd=g('bdStripe');
   var iframe=g('stripeIframe');
   if(bd)bd.style.display='none';
@@ -3715,30 +3779,35 @@ function closeStripeModal(){
   // Vérifier si le paiement a abouti
   try{
     var pending=localStorage.getItem('cp_stripe_pending');
-    if(!pending||!user||!user.id)return;
+    if(!pending||!user||!user.id){return;}
     var p=JSON.parse(pending);
     var coursId=p.cours_id;
     if(!coursId)return;
-    fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
-      if(!Array.isArray(data))return;
-      var found=data.find(function(r){return r.cours_id===coursId;});
-      localStorage.removeItem('cp_stripe_pending');
-      if(found){
-        if(!p.pour_ami)res[coursId]=true;
-        loadData().then(function(){buildCards();});
-        setTimeout(function(){
-          var popup=document.getElementById('popupPaid');
-          var msg=document.getElementById('popupPaidMsg');
-          if(msg)msg.textContent=p.pour_ami?'La place supplémentaire a été réservée.':'Votre place est réservée !';
-          if(popup){popup.style.display='flex';haptic(40);}
-        },400);
-      } else {
-        setTimeout(function(){
-          var popup=document.getElementById('popupFailed');
-          if(popup)popup.style.display='flex';
-        },300);
-      }
-    }).catch(function(){localStorage.removeItem('cp_stripe_pending');});
+    // Attendre 1.5s pour laisser le temps au webhook Stripe de traiter
+    setTimeout(function(){
+      fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+        if(!Array.isArray(data))return;
+        var found=data.find(function(r){return r.cours_id===coursId;});
+        localStorage.removeItem('cp_stripe_pending');
+        if(found){
+          if(!p.pour_ami)res[coursId]=true;
+          loadData().then(function(){buildCards();});
+          setTimeout(function(){
+            var popup=document.getElementById('popupPaid');
+            var msg=document.getElementById('popupPaidMsg');
+            if(msg)msg.textContent=p.pour_ami?'La place supplémentaire a été réservée.':'Votre place est réservée !';
+            if(popup){popup.style.display='flex';haptic(40);}
+          },200);
+        } else if(userCancelled){
+          // Afficher "annulé" UNIQUEMENT si l'utilisateur a explicitement annulé
+          setTimeout(function(){
+            var popup=document.getElementById('popupFailed');
+            if(popup)popup.style.display='flex';
+          },200);
+        }
+        // Si ni payé ni annulé → on ne fait rien (paiement peut-être en cours)
+      }).catch(function(){localStorage.removeItem('cp_stripe_pending');});
+    },1500);
   }catch(e){}
 }
 
@@ -4169,6 +4238,8 @@ function openMsg(profNm,destId,avatar){
   navTo('msg');
 
   // Ouvrir la conversation
+  // Cacher placeholder desktop
+  var emptyDesk=g('msgEmptyDesk');if(emptyDesk)emptyDesk.style.display='none';
   // Mobile : ajouter classe conv-open (CSS gère display:flex)
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
@@ -4210,6 +4281,16 @@ function openMsg(profNm,destId,avatar){
 }
 
 function closeMsgConv(){
+  // Sur desktop — montrer le placeholder
+  if(window.innerWidth>=641){
+    var emptyDesk=g('msgEmptyDesk');if(emptyDesk)emptyDesk.style.display='flex';
+    var convPane=g('msgConvPane');
+    if(convPane){
+      var msgs=g('msgMessages');if(msgs)msgs.innerHTML='';
+      var header=convPane.querySelector('[id="msgConvAv"]');
+    }
+    return;
+  }
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
   // Réafficher la barre de nav
@@ -6496,11 +6577,8 @@ document.addEventListener('visibilitychange', function(){
           if(popup){popup.style.display='flex';haptic(40);}
         },400);
       } else {
-        // Paiement annulé
-        setTimeout(function(){
-          var popup=document.getElementById('popupFailed');
-          if(popup)popup.style.display='flex';
-        },400);
+        // Pas trouvé après retour — peut être en traitement, ne rien afficher
+        // popupFailed géré par closeStripeModal si userCancelled=true
       }
     }).catch(function(){localStorage.removeItem('cp_stripe_pending');});
   }catch(e){}
@@ -6533,7 +6611,7 @@ if('serviceWorker' in navigator){
           <div style="font-size:11px;color:var(--lite)">Propulsé par Stripe</div>
         </div>
       </div>
-      <button onclick="closeStripeModal()" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid)">✕</button>
+      <button onclick="closeStripeModal(false)" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid)">✕</button>
     </div>
     <div style="padding:12px 16px;background:#F8F7FF;border-bottom:1px solid rgba(99,91,255,.1)">
       <div style="font-size:12px;color:#635BFF;font-weight:600;display:flex;align-items:center;gap:6px">
