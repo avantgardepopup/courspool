@@ -586,6 +586,128 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 @media(max-width:640px){.cnt{padding:12px 16px}.acc-body{padding:0 20px !important}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
 
 /* ============================================================
+   DESKTOP — Layout style Superprof/Hinge (min-width:641px)
+   ============================================================ */
+@media(min-width:641px){
+  #app{background:var(--bg);}
+  
+  /* Header desktop raffiné */
+  .mob-header{
+    padding:16px 40px 14px;
+    max-width:100%;
+    border-bottom:1px solid var(--bdr);
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+  }
+  html.dk .mob-header{background:rgba(19,17,16,.92);}
+  .mob-title{font-size:22px !important;}
+  .mob-header.scrolled .mob-title{transform:none !important;font-size:22px !important;}
+  
+  /* Search bar desktop */
+  .mob-search{padding:10px 40px 14px;max-width:100%;}
+  .mob-search .sw{max-width:600px;margin:0 auto;}
+
+  /* Layout 2 colonnes : sidebar + contenu */
+  #pgExp{
+    display:grid !important;
+    grid-template-columns:280px 1fr;
+    gap:0;
+    min-height:calc(100vh - 120px);
+    max-width:1400px;
+    margin:0 auto;
+    padding:0 40px;
+  }
+  #pgExp.on{display:grid !important;}
+
+  /* Sidebar filtres à gauche */
+  .rsel{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:24px 24px 24px 0;
+    border-right:1px solid var(--bdr);
+    position:sticky;
+    top:120px;
+    height:fit-content;
+    align-self:start;
+  }
+  .ro{
+    width:100%;
+    text-align:left;
+    padding:10px 14px;
+    border-radius:12px;
+    font-size:14px;
+  }
+
+  /* Zone principale cards */
+  .cnt{
+    padding:24px 0 24px 32px;
+    max-width:100%;
+  }
+
+  /* Pills matières */
+  .pills{flex-wrap:wrap;overflow:visible;}
+
+  /* Grille de cards — 2 à 3 colonnes selon largeur */
+  .grid{
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:20px;
+  }
+
+  /* Cards plus raffinées sur desktop */
+  .card{
+    border-radius:20px;
+    transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s;
+    border:1px solid var(--bdr);
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 12px 40px rgba(0,0,0,.12);
+  }
+
+  /* Bottom nav cachée sur desktop — remplacée par topbar */
+  #bnav{display:none !important;}
+  
+  /* Top nav desktop dans le header */
+  .mob-header-inner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+  }
+  
+  /* Navigation horizontale desktop */
+  #deskNav{display:flex;align-items:center;gap:4px;}
+  .desk-nav-btn{
+    display:flex;align-items:center;gap:6px;
+    padding:8px 16px;border-radius:50px;
+    font-size:14px;font-weight:600;
+    color:var(--mid);cursor:pointer;
+    border:none;background:transparent;
+    font-family:inherit;
+    transition:all .18s;
+  }
+  .desk-nav-btn:hover{background:var(--bg);color:var(--ink);}
+  .desk-nav-btn.on{background:var(--orp);color:var(--or);}
+  .desk-nav-btn svg{width:16px;height:16px;}
+
+  /* Pages profil et messages — layout centré */
+  #pgAcc,#pgMsg{max-width:800px;margin:0 auto;padding:0 40px;}
+  
+  /* Cacher le header mobile sur desktop, afficher le titre dans la topbar */
+  .mob-sub{display:none;}
+
+  /* Bouton ajouter flottant style desktop */
+  #btnAddCours{bottom:32px;right:40px;}
+}
+
+@media(min-width:1200px){
+  .grid{grid-template-columns:repeat(3,1fr);}
+  #pgExp{grid-template-columns:300px 1fr;}
+}
+
+/* ============================================================
    ONBOARDING — style Apple iOS
    ============================================================ */
 #onboarding{
@@ -956,11 +1078,34 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
   <!-- MOBILE HEADER iOS large title -->
   <div class="mob-header" id="mobHeader">
     <div class="mob-header-inner">
-      <div>
-        <div class="mob-title" id="mobTitle">Accueil</div>
-        <div class="mob-sub" id="mobSub">Cours près de vous</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="mob-title" id="mobTitle" style="font-size:20px;font-weight:800">CoursPool</div>
+        </div>
+        <!-- Nav desktop -->
+        <nav id="deskNav" style="display:none">
+          <button class="desk-nav-btn on" id="deskBtnExp" onclick="navTo('exp')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Explorer
+          </button>
+          <button class="desk-nav-btn" id="deskBtnMsg" onclick="navTo('msg')" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Messages
+          </button>
+          <button class="desk-nav-btn" id="deskBtnAcc" onclick="navTo('acc')" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Mon profil
+          </button>
+          <button class="desk-nav-btn" id="deskBtnAdd" onclick="openCr()" style="display:none;background:var(--or);color:#fff">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Proposer
+          </button>
+        </nav>
       </div>
-      <div class="mob-actions">
+      <div class="mob-actions" style="display:flex;align-items:center;gap:8px">
         <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
         </button>
@@ -2588,6 +2733,7 @@ function navTo(tab){
   clearInterval(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
   ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  updateDeskNav();
   var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
@@ -2870,7 +3016,7 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){buildAccLists();}
+  if(s==='F'||s==='R'){setTimeout(buildAccLists,50);}
 }
 
 function buildAccLists(){
@@ -5696,11 +5842,34 @@ function toggleDarkMode(){
   document.documentElement.classList.toggle('dk',_darkMode);
   try{localStorage.setItem('cp_dark',_darkMode?'1':'0');}catch(e){}
   updateDarkBtn();
-  // Mettre à jour la couleur de la status bar
   var tm=document.getElementById('themeColorMeta');
   if(tm)tm.content=_darkMode?'#131110':'#ffffff';
   haptic([10,40,10]);
+  // Reconstruire les cards pour appliquer les bgDark/bg
+  if(C&&C.length)buildCards();
 }
+
+// Nav desktop — afficher/masquer selon la taille d'écran
+function updateDeskNav(){
+  var isDesk=window.innerWidth>=641;
+  var deskNav=g('deskNav');
+  if(deskNav)deskNav.style.display=isDesk?'flex':'none';
+  var tavMob=g('tavMob');
+  if(tavMob)tavMob.style.display=isDesk?'none':'flex';
+  // Boutons selon statut connexion
+  if(isDesk&&user&&!user.guest){
+    var dm=g('deskBtnMsg');if(dm)dm.style.display='';
+    var da=g('deskBtnAcc');if(da)da.style.display='';
+    if(user.role==='professeur'){var dd=g('deskBtnAdd');if(dd)dd.style.display='';}
+  }
+}
+function updateDeskNavActive(tab){
+  ['Exp','Msg','Acc'].forEach(function(t){
+    var b=g('deskBtn'+t);
+    if(b)b.classList.toggle('on',t.toLowerCase()===tab);
+  });
+}
+window.addEventListener('resize',updateDeskNav);
 
 function updateDarkBtn(){
   var tog=g('darkModeToggle');
@@ -6279,6 +6448,44 @@ function startAccountCheck(){
     }catch(e){}
   }, 30000);
 }
+
+// ── DÉTECTION RETOUR DANS L'APP après paiement Stripe ──
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState!=='visible')return;
+  // Reset les boutons bloqués dans le modal réservation
+  var btnConf=document.querySelector('#bdR .pb.pri');
+  if(btnConf){btnConf.disabled=false;btnConf.style.opacity='';btnConf.style.pointerEvents='';}
+  // Vérifier si un paiement Stripe était en cours
+  try{
+    var pending=localStorage.getItem('cp_stripe_pending');
+    if(!pending||!user||!user.id)return;
+    var p=JSON.parse(pending);
+    var coursId=p.cours_id;
+    if(!coursId)return;
+    fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+      if(!Array.isArray(data))return;
+      var found=data.find(function(r){return r.cours_id===coursId;});
+      localStorage.removeItem('cp_stripe_pending');
+      if(found){
+        // Paiement réussi
+        if(!p.pour_ami)res[coursId]=true;
+        loadData().then(function(){buildCards();});
+        setTimeout(function(){
+          var popup=document.getElementById('popupPaid');
+          var msg=document.getElementById('popupPaidMsg');
+          if(msg)msg.textContent=p.pour_ami?'La place supplémentaire a été réservée.':'Votre place est réservée. Un email de confirmation vous a été envoyé.';
+          if(popup){popup.style.display='flex';haptic(40);}
+        },400);
+      } else {
+        // Paiement annulé
+        setTimeout(function(){
+          var popup=document.getElementById('popupFailed');
+          if(popup)popup.style.display='flex';
+        },400);
+      }
+    }).catch(function(){localStorage.removeItem('cp_stripe_pending');});
+  }catch(e){}
+});
 
 // SERVICE WORKER PWA
 if('serviceWorker' in navigator){
