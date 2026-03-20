@@ -585,6 +585,72 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 @keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
 @media(max-width:640px){.cnt{padding:12px 16px}.acc-body{padding:0 20px !important}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
 
+/* ── Desktop (≥641px) ── */
+@media(min-width:641px){
+  /* Centrer tout le contenu */
+  .cnt{max-width:1100px;margin:0 auto;padding:28px 40px 120px;}
+
+  /* Header : padding horizontal généreux */
+  .mob-header{padding-left:40px;padding-right:40px;}
+  .mob-search{padding-left:40px;padding-right:40px;}
+
+  /* Grille 2-3 colonnes */
+  .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+
+  /* Cards hover élégant */
+  .card{transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;}
+  .card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.1);border-color:var(--or);}
+  html.dk .card:hover{box-shadow:0 12px 40px rgba(0,0,0,.35);}
+
+  /* Profil centré */
+  #pgAcc{max-width:860px;margin:0 auto;padding-bottom:100px;}
+  .acc-hero{border-radius:20px;margin:24px 40px 0;}
+  .acc-body{padding:24px 40px !important;}
+  .acc-tabs{margin:0 0px;}
+
+  /* Messagerie : liste + conversation côte à côte */
+  #pgMsg{
+    max-width:1100px;
+    margin:0 auto;
+    flex-direction:row !important;
+    height:calc(100vh - 120px) !important;
+    height:calc(100dvh - 120px) !important;
+    padding:0 40px;
+    gap:0;
+  }
+  #msgPane{width:300px;flex-shrink:0;border-right:1px solid var(--bdr);overflow-y:auto;height:100%;}
+  #msgConvPane{
+    flex:1;min-width:0;height:100%;
+    position:static !important;
+    display:flex !important;
+  }
+  #pgMsg.conv-open #msgPane{display:flex !important;}
+  .msg-back-btn{display:none !important;}
+
+  /* bnav flottante centrée */
+  #bnav{
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:auto !important;
+    min-width:340px;
+    max-width:480px;
+    bottom:20px !important;
+    border-radius:24px !important;
+    box-shadow:0 8px 32px rgba(0,0,0,.12) !important;
+    padding:6px 16px !important;
+    border-top:none !important;
+  }
+  html.dk #bnav{box-shadow:0 8px 32px rgba(0,0,0,.4) !important;}
+
+  /* Pills filtres */
+  .pills{flex-wrap:wrap;overflow:visible;}
+}
+
+@media(min-width:1200px){
+  .grid{grid-template-columns:repeat(3,1fr);}
+  .cnt{max-width:1200px;}
+}
+
 /* ============================================================
    ONBOARDING — style Apple iOS
    ============================================================ */
@@ -1168,11 +1234,11 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
+    <div id="msgConvPane" style="display:none;flex-direction:column;background:var(--bg);overflow:hidden">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
-        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
+        <button id="msgBackBtn" class="msg-back-btn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
