@@ -54,6 +54,14 @@
   --sh:0 6px 28px rgba(0,0,0,.11);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
+/* Supprimer le délai 300ms iOS sur tous les éléments tappables */
+a,button,input,select,textarea,label,
+[onclick],[role="button"],.pill,.bni,.card,.rrow,.fol-row,.msg-row,
+.pb,.btnr,.btnadd,.lbtn,.lguest,.mcl,.ptab,.ntog,.crn-chip,
+.niv-fchip,.mat-item,.ob-btn,.ob-skip,.picker-opt{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
 html{max-width:100vw;width:100%;overflow-x:clip;}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);
   max-width:100vw;width:100%;overflow-x:clip;
@@ -89,6 +97,7 @@ html.dk input,html.dk textarea,html.dk select{
   color-scheme:dark;background:var(--bg);color:var(--ink);
   -webkit-text-fill-color:var(--ink);
 }
+html.dk input[type=date],html.dk input[type=time]{color-scheme:dark;color:var(--ink);}
 html.dk input::placeholder,html.dk textarea::placeholder{color:var(--lite);}
 /* Pref-row inputs — pas de fond bizarre */
 html.dk .pref-row input,html.dk .pref-row select,html.dk .pref-row textarea{
@@ -134,7 +143,23 @@ html.dk div[style*="background:var(--orp)"]{background:#2A1A0F!important;}
 html.dk #pgAcc .ptab{background:var(--wh);color:var(--mid);}
 html.dk #pgAcc .ptab.on{color:var(--or);border-bottom-color:var(--or);}
 /* Login */
-html.dk .lbox{box-shadow:0 20px 60px rgba(0,0,0,.7);}
+html.dk .lbox{box-shadow:0 20px 60px rgba(0,0,0,.7);background:#1C1917;}
+html.dk .lbody{background:#1C1917;}
+html.dk .ltabs{background:#131110;}
+html.dk .ltab{color:var(--mid);}
+html.dk .ltab.on{background:#1C1917;color:var(--ink);}
+html.dk .lfield input,html.dk .lfield select{
+  background:#131110 !important;
+  color:var(--ink) !important;
+  -webkit-text-fill-color:var(--ink) !important;
+  border-color:var(--bdr) !important;
+}
+html.dk .lfield input::placeholder{color:#4A4540 !important;}
+html.dk .lfield label{color:var(--mid);}
+html.dk .lguest{background:#1C1917;color:var(--mid);border-color:var(--bdr);}
+html.dk .ropt{background:#1C1917;color:var(--mid);border-color:var(--bdr);}
+html.dk .ropt.on{background:#2A1A0F;color:var(--or);border-color:var(--or);}
+html.dk #profFields select{background:#131110 !important;color:var(--ink) !important;}
 /* Locbar */
 html.dk .locbar{background:var(--wh);border-color:var(--bdr);}
 html.dk #verifBand{background:#2A1E08 !important;border-color:#4A3410 !important;}
@@ -1701,14 +1726,14 @@ html.dk .ntog::after{background:#fff;}
       <div style="padding:12px 0 4px">
         <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Quand &amp; Où</div>
         <div style="background:var(--bg);border-radius:14px;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-            <input class="fi3" id="crDate" type="date" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;height:auto">
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <input class="fi3" id="crHeure" type="time" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;padding:0;height:auto">
-          </div>
+          <label for="crDate" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+            <input id="crDate" type="date" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:16px;color:var(--ink);min-height:28px;cursor:pointer;-webkit-appearance:none;appearance:none;width:100%">
+          </label>
+          <label for="crHeure" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;-webkit-tap-highlight-color:transparent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <input id="crHeure" type="time" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:16px;color:var(--ink);min-height:28px;cursor:pointer;-webkit-appearance:none;appearance:none;width:100%">
+          </label>
           <div style="display:flex;align-items:center;gap:12px;padding:13px 14px">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <div style="flex:1;position:relative">
@@ -2284,6 +2309,7 @@ async function loadData(page){
         subj:c.sujet||'Autre',
         sc:(function(){var m=findMatiere(c.sujet||'');return m?m.color:(c.couleur_sujet||'#7C3AED');}()),
         bg:(function(){var m=findMatiere(c.sujet||'');return m?m.bg:(c.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)');}()),
+        bgDark:(function(){var m=findMatiere(c.sujet||'');return m&&m.bgDark?m.bgDark:'linear-gradient(135deg,#1A1A2E,#16213E)';}()),
         title:c.titre||'',dt:c.date_heure||'',lc:c.lieu||'',
         tot:c.prix_total||0,sp:c.places_max||5,fl:c.places_prises||0,
         pr:c.professeur_id,em:c.emoji||'📚',
@@ -2451,7 +2477,7 @@ function applyUser(){
   // Banner géré par updateVerifBand() uniquement
   // Bottom nav — restaurer tous les items avant d'appliquer le rôle
   var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc');
-  if(bniMsg2)bniMsg2.style.display=(!user||user.guest)?'none':'';
+  if(bniMsg2)bniMsg2.style.display=(user&&!user.guest)?'':'none';
   if(bniAcc2)bniAcc2.style.display='';
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
@@ -2579,10 +2605,20 @@ function navTo(tab){
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
-    // Guest clique sur Profil → écran de connexion avec message
+    // Guest clique sur Profil → invitation douce à se connecter
     if(user.guest){
-      toast('Connectez-vous pour accéder à votre profil','');
-      setTimeout(scrollToLogin, 800);
+      var bd=g('bdLoginPrompt');
+      if(bd){
+        // Personnaliser le message pour le profil
+        var t=bd.querySelector('[style*="font-size:21px"]');
+        var s=bd.querySelector('[style*="font-size:14px"][style*="color:var(--lite)"]');
+        if(t)t.textContent='Créez votre compte gratuit';
+        if(s)s.innerHTML='Rejoignez CoursPool pour réserver des cours,<br>suivre des professeurs et gérer votre profil.';
+        bd.style.display='flex';
+      } else {
+        toast('Connectez-vous pour accéder à votre profil','');
+        setTimeout(scrollToLogin, 800);
+      }
       return;
     }
     if(pgAcc)pgAcc.classList.add('on');
@@ -2622,7 +2658,7 @@ function restoreNav(){
     bniExp.onclick=function(){navTo('exp');};
   }
   // Réafficher tous les items
-  var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display='';
+  var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display=(user&&user.guest)?'none':'';
   var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
   if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
   // bni-sep supprimés de la nav
@@ -3186,8 +3222,11 @@ function renderPage(){
     else if(isR) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
     else if(isFull) btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet</button>';
     else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
+    var _isDark=document.documentElement.classList.contains('dk');
     var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
     var profAv=_pPhoto?'<img src="'+_pPhoto+'" style="width:100%;height:100%;object-fit:cover">':c.prof_ini;
+    var _mFound=findMatiere(c.subj||'');
+    var _cardBg=_isDark?((_mFound&&_mFound.bgDark?_mFound.bgDark:c.bgDark)||c.bg):((_mFound?_mFound.bg:null)||c.bg);
     var d=document.createElement('div');
     d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
     d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
@@ -3198,7 +3237,7 @@ function renderPage(){
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+c.bg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -3221,27 +3260,27 @@ function loadMore(){
 // RÉFÉRENTIEL MATIÈRES — partagé formulaire + filtres
 // ============================================================
 var MATIERES = [
-  {label:'Maths',          key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)'},
-  {label:'Physique',       key:'physique',      color:'#8B5CF6', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)'},
-  {label:'Chimie',         key:'chimie',        color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)'},
-  {label:'SVT / Biologie', key:'svt',           color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)'},
-  {label:'Informatique',   key:'informatique',  color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)'},
-  {label:'Python',         key:'python',        color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)'},
-  {label:'Anglais',        key:'anglais',       color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)'},
-  {label:'Espagnol',       key:'espagnol',      color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)'},
-  {label:'Français',       key:'francais',      color:'#EC4899', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)'},
-  {label:'Histoire-Géo',   key:'histoire',      color:'#92400E', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)'},
-  {label:'Philosophie',    key:'philo',         color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)'},
-  {label:'Économie',       key:'economie',      color:'#059669', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)'},
-  {label:'Droit',          key:'droit',         color:'#DC2626', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)'},
-  {label:'Musique',        key:'musique',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)'},
-  {label:'Arts plastiques',key:'arts',          color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)'},
-  {label:'Sport / EPS',    key:'sport',         color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)'},
-  {label:'Architecture',   key:'architecture',  color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)'},
-  {label:'Comptabilité',   key:'compta',        color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)'},
-  {label:'Marketing',      key:'marketing',     color:'#EA580C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)'},
-  {label:'Statistiques',   key:'stats',         color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)'},
-  {label:'Autre',          key:'autre',         color:'#6B7280', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)'},
+  {label:'Maths',          key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',         bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Physique',       key:'physique',      color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',         bgDark:'linear-gradient(135deg,#1A1035,#2D1F5E)'},
+  {label:'Chimie',         key:'chimie',        color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',         bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'SVT / Biologie', key:'svt',           color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',         bgDark:'linear-gradient(135deg,#052E16,#0F4A24)'},
+  {label:'Informatique',   key:'informatique',  color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Python',         key:'python',        color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Anglais',        key:'anglais',       color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Espagnol',       key:'espagnol',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Français',       key:'francais',      color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',         bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Histoire-Géo',   key:'histoire',      color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Philosophie',    key:'philo',         color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',         bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  {label:'Économie',       key:'economie',      color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',         bgDark:'linear-gradient(135deg,#062318,#0A3D25)'},
+  {label:'Droit',          key:'droit',         color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Musique',        key:'musique',       color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Arts plastiques',key:'arts',          color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',         bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Sport / EPS',    key:'sport',         color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',         bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Architecture',   key:'architecture',  color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',         bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Comptabilité',   key:'compta',        color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',         bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Marketing',      key:'marketing',     color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',         bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Statistiques',   key:'stats',         color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',         bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
+  {label:'Autre',          key:'autre',         color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',         bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
 
 // Fonction pour normaliser une chaîne
