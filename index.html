@@ -589,131 +589,129 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
    DESKTOP — Layout style Superprof/Hinge (min-width:641px)
    ============================================================ */
 @media(min-width:641px){
-  /* ── App ── */
-  #app{background:var(--bg);}
+  /* ── Masquer éléments mobile ── */
+  .mob-header{display:none !important;}
+  .mob-search{display:none !important;}
+  #bnav{display:none !important;}
 
-  /* ── Header glassmorphism ── */
-  .mob-header{
-    padding:14px 48px 12px;
-    background:rgba(255,255,255,.9);
+  /* ── App layout ── */
+  #app{
+    background:var(--bg);
+    padding-top:64px; /* espace pour la topbar fixe */
+  }
+
+  /* ── Topbar desktop fixe ── */
+  #deskTopbar{
+    display:flex !important;
+    position:fixed;
+    top:0;left:0;right:0;
+    height:64px;
+    background:rgba(255,255,255,.92);
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
     border-bottom:1px solid rgba(0,0,0,.07);
+    z-index:100;
+    align-items:center;
+    padding:0 48px;
+    gap:32px;
   }
-  html.dk .mob-header{background:rgba(19,17,16,.9);border-bottom-color:rgba(255,255,255,.07);}
-  .mob-title{font-size:21px !important;}
-  .mob-header.scrolled .mob-title{transform:none !important;font-size:21px !important;}
-  .mob-sub{display:none;}
-  .mob-header-inner{align-items:center;}
-
-  /* ── Search bar ── */
-  .mob-search{
-    padding:10px 48px 14px;
-    background:rgba(255,255,255,.9);
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
+  html.dk #deskTopbar{
+    background:rgba(19,17,16,.92);
+    border-bottom-color:rgba(255,255,255,.07);
   }
-  html.dk .mob-search{background:rgba(19,17,16,.9);}
-  .mob-search>div{max-width:700px;margin:0 auto;}
 
   /* ── Explorer contenu centré ── */
-  #pgExp .cnt{max-width:1100px;margin:0 auto;padding:28px 48px 100px;}
+  #pgExp .cnt{max-width:1100px;margin:0 auto;padding:28px 48px 60px;}
+
+  /* ── Barre de recherche desktop intégrée dans topbar ── */
+  #deskSearchBar{
+    flex:1;
+    max-width:480px;
+    display:flex !important;
+    align-items:center;
+    background:var(--bg);
+    border:1.5px solid var(--bdr);
+    border-radius:50px;
+    padding:0 16px;
+    gap:8px;
+    height:40px;
+    transition:border-color .18s;
+  }
+  #deskSearchBar:focus-within{border-color:var(--or);}
+  #deskSearchBar input{
+    flex:1;border:none;background:transparent;
+    outline:none;font-family:inherit;font-size:14px;
+    color:var(--ink);
+  }
+  #deskSearchBar input::placeholder{color:#BBBBBB;opacity:1;}
 
   /* ── Grille cards ── */
   .grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
 
   /* ── Cards hover ── */
-  .card{border-radius:20px;border:1px solid var(--bdr);transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;}
-  .card:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(0,0,0,.1);border-color:var(--or);}
+  .card{
+    border-radius:20px;
+    border:1px solid var(--bdr);
+    transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s,border-color .2s;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 14px 40px rgba(0,0,0,.1);
+    border-color:var(--or);
+  }
   html.dk .card:hover{box-shadow:0 14px 40px rgba(0,0,0,.35);}
 
-  /* ── bnav : garder mais style desktop flottant ── */
-  #bnav{
-    left:50% !important;
-    transform:translateX(-50%) !important;
-    width:auto !important;
-    min-width:360px !important;
-    max-width:500px !important;
-    bottom:24px !important;
-    border-radius:24px !important;
-    box-shadow:0 8px 32px rgba(0,0,0,.15) !important;
-    padding:8px 16px !important;
-    border-top:none !important;
-  }
-  html.dk #bnav{box-shadow:0 8px 32px rgba(0,0,0,.4) !important;}
-  #bnav .bni{min-width:64px;padding:8px 16px;}
-
-  /* ── Nav desktop dans header ── */
-  #deskNav{display:flex;align-items:center;gap:4px;}
-  .desk-nav-btn{
-    display:flex;align-items:center;gap:6px;
-    padding:8px 16px;border-radius:50px;
-    font-size:14px;font-weight:600;
-    color:var(--mid);cursor:pointer;
-    border:none;background:transparent;
-    font-family:inherit;transition:all .18s;white-space:nowrap;
-  }
-  .desk-nav-btn:hover{background:var(--bg);color:var(--ink);}
-  .desk-nav-btn.on{background:var(--orp);color:var(--or);}
-  .desk-nav-btn svg{width:16px;height:16px;flex-shrink:0;}
-
-  /* ── Messagerie desktop ── */
-  .msg-back-btn{display:none !important;}
+  /* ── Messagerie 2 colonnes ── */
   #pgMsg{
-    display:flex !important;
-    flex-direction:row !important;
+    display:grid !important;
+    grid-template-columns:300px 1fr;
     max-width:1100px;
     margin:0 auto;
-    height:calc(100vh - 120px);
+    height:calc(100vh - 64px);
     padding:0 48px;
     gap:0;
+    overflow:hidden;
   }
-  #pgMsg.on{display:flex !important;}
-  /* Liste conversations — colonne gauche */
+  #pgMsg.on{display:grid !important;}
   #msgPane{
-    width:320px;
-    flex-shrink:0;
     border-right:1px solid var(--bdr);
     overflow-y:auto;
     height:100%;
+    display:flex;
+    flex-direction:column;
   }
-  /* Conversation ouverte — colonne droite */
   #msgConvPane{
     flex:1;
-    display:flex;
+    display:flex !important;
     flex-direction:column;
     height:100%;
     min-width:0;
+    overflow:hidden;
   }
-  /* Toujours visible sur desktop */
   #pgMsg.conv-open #msgPane{display:flex !important;}
-  #pgMsg.conv-open #msgConvPane{display:flex !important;}
-  #pgMsg #msgConvPane{display:flex !important;}
-  /* Placeholder quand aucune conv sélectionnée */
+  .msg-back-btn{display:none !important;}
   #msgEmptyDesk{display:flex;}
 
   /* ── Profil desktop ── */
-  #pgAcc{
-    max-width:900px;
-    margin:0 auto;
-    padding:0 48px 100px;
-  }
+  #pgAcc{max-width:860px;margin:0 auto;padding:0 48px 60px;}
   .acc-hero{border-radius:20px;margin:24px 0 0;}
-  .acc-tabs{border-radius:12px 12px 0 0;}
   .acc-body{padding:24px 32px !important;}
 
   /* ── Pills ── */
   .pills{flex-wrap:wrap;overflow:visible;padding-bottom:0;}
 
-  /* ── FAB ── */
-  #btnAddCours{bottom:80px;right:48px;}
+  /* ── FAB caché sur desktop (nav dans topbar) ── */
+  #btnAddCours{display:none !important;}
 }
 
 @media(min-width:1200px){
   .grid{grid-template-columns:repeat(3,1fr);}
   #pgMsg{max-width:1200px;}
-  #pgAcc{max-width:1000px;}
+  #pgAcc{max-width:960px;}
+  #pgExp .cnt{max-width:1200px;}
 }
+
+
 
 /* ============================================================
    ONBOARDING — style Apple iOS
@@ -1070,6 +1068,53 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 </div>
 
 <!-- APP -->
+<!-- ── Topbar desktop (cachée sur mobile via CSS) ── -->
+<div id="deskTopbar" style="display:none">
+  <!-- Logo -->
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;cursor:pointer" onclick="navTo('exp')">
+    <div style="width:34px;height:34px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <span style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">CoursPool</span>
+  </div>
+
+  <!-- Barre de recherche -->
+  <div id="deskSearchBar" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15" style="color:var(--lite);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()" id="deskSearchInput">
+  </div>
+
+  <!-- Spacer -->
+  <div style="flex:1"></div>
+
+  <!-- Navigation -->
+  <div style="display:flex;align-items:center;gap:4px" id="deskNav">
+    <button id="deskBtnExp" onclick="navTo('exp')" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mid);cursor:pointer;border:none;background:transparent;font-family:inherit;transition:all .18s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Explorer
+    </button>
+    <button id="deskBtnMsg" onclick="navTo('msg')" style="display:none;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mid);cursor:pointer;border:none;background:transparent;font-family:inherit;transition:all .18s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Messages
+      <span id="deskMsgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50px;min-width:18px;height:18px;padding:0 5px;font-size:10px;font-weight:700;align-items:center;justify-content:center"></span>
+    </button>
+    <button id="deskBtnAcc" onclick="navTo('acc')" style="display:none;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;font-size:14px;font-weight:600;color:var(--mid);cursor:pointer;border:none;background:transparent;font-family:inherit;transition:all .18s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Mon profil
+    </button>
+    <button id="deskBtnAdd" onclick="openCr()" style="display:none;align-items:center;gap:6px;padding:8px 18px;border-radius:50px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;border:none;background:var(--or);font-family:inherit;box-shadow:0 4px 14px rgba(255,107,43,.35);transition:all .18s">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Proposer
+    </button>
+    <button id="deskBtnLogin" onclick="navTo('exp');setTimeout(scrollToLogin,200)" style="display:none;align-items:center;gap:6px;padding:8px 18px;border-radius:50px;font-size:14px;font-weight:700;color:var(--or);cursor:pointer;border:1.5px solid var(--or);background:transparent;font-family:inherit;transition:all .18s">
+      Se connecter
+    </button>
+  </div>
+
+  <!-- Avatar -->
+  <div id="deskAvatar" style="display:none;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));cursor:pointer;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid var(--bdr)" onclick="navTo('acc')"></div>
+</div>
+
 <div id="app">
 
   <!-- TOPBAR DESKTOP -->
@@ -2641,6 +2686,7 @@ function go(pr,nm,em,role,uid,photoUrl){
 }
 
 function applyUser(){
+  updateDeskNav();
   var _l=g('login');_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';g('app').style.display='block';
   // Greeting dynamique
   try{
@@ -2660,6 +2706,7 @@ function applyUser(){
   if(bniMsg2)bniMsg2.style.display=(user&&!user.guest)?'':'none';
   if(bniAcc2)bniAcc2.style.display='';
   g('bnav').classList.add('on');
+  updateDeskNav();
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
   // Sync mobile header
   var tavMob=g('tavMob');
@@ -2752,6 +2799,7 @@ function navTo(tab){
 
   ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   updateDeskNav();
+  updateDeskNavActive(tab);
   var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
@@ -3592,6 +3640,9 @@ var FM={
   weekend:function(t){return /sam|dim|week/.test(t);}
 };
 function doFilter(){
+  // Sync desktop search
+  var dsi=g('deskSearchInput');
+  if(dsi&&document.activeElement!==dsi){dsi.value=g('srch').value;}
   var val=g('srch').value.trim();
   if(checkCodeInSearch(val))return;
   currentPage=1;applyFilter();
@@ -5949,26 +6000,48 @@ function toggleDarkMode(){
   if(C&&C.length)buildCards();
 }
 
-// Nav desktop — afficher/masquer selon la taille d'écran
+// ── Topbar desktop ──
 function updateDeskNav(){
   var isDesk=window.innerWidth>=641;
-  var deskNav=g('deskNav');
-  if(deskNav)deskNav.style.display=isDesk?'flex':'none';
-  var tavMob=g('tavMob');
-  if(tavMob)tavMob.style.display=isDesk?'none':'flex';
-  // Boutons selon statut connexion
-  if(isDesk&&user&&!user.guest){
-    var dm=g('deskBtnMsg');if(dm)dm.style.display='';
-    var da=g('deskBtnAcc');if(da)da.style.display='';
-    if(user.role==='professeur'){var dd=g('deskBtnAdd');if(dd)dd.style.display='';}
+  var topbar=g('deskTopbar');
+  if(!topbar)return;
+  topbar.style.display=isDesk?'flex':'none';
+  if(!isDesk)return;
+  var isLoggedIn=user&&!user.guest;
+  var btnMsg=g('deskBtnMsg'),btnAcc=g('deskBtnAcc'),btnAdd=g('deskBtnAdd'),btnLogin=g('deskBtnLogin'),avatar=g('deskAvatar');
+  if(isLoggedIn){
+    if(btnMsg)btnMsg.style.display='flex';
+    if(btnAcc)btnAcc.style.display='flex';
+    var canAdd=user.role==='professeur'&&user.verified;
+    if(btnAdd)btnAdd.style.display=canAdd?'flex':'none';
+    if(btnLogin)btnLogin.style.display='none';
+    if(avatar){
+      avatar.style.display='flex';
+      if(user.photo){avatar.style.background='none';avatar.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+      else{avatar.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';avatar.textContent=user.ini||'?';}
+    }
+  } else {
+    if(btnMsg)btnMsg.style.display='none';
+    if(btnAcc)btnAcc.style.display='none';
+    if(btnAdd)btnAdd.style.display='none';
+    if(btnLogin)btnLogin.style.display='flex';
+    if(avatar)avatar.style.display='none';
   }
 }
+
 function updateDeskNavActive(tab){
-  ['Exp','Msg','Acc'].forEach(function(t){
-    var b=g('deskBtn'+t);
-    if(b)b.classList.toggle('on',t.toLowerCase()===tab);
+  var btns={exp:'deskBtnExp',msg:'deskBtnMsg',acc:'deskBtnAcc'};
+  Object.keys(btns).forEach(function(t){
+    var b=g(btns[t]);
+    if(!b)return;
+    b.style.background=t===tab?'var(--orp)':'transparent';
+    b.style.color=t===tab?'var(--or)':'var(--mid)';
   });
+  // Barre de recherche visible seulement sur Explorer
+  var dsb=g('deskSearchBar');
+  if(dsb)dsb.style.display=tab==='exp'?'flex':'none';
 }
+
 window.addEventListener('resize',updateDeskNav);
 
 function updateDarkBtn(){
