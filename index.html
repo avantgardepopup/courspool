@@ -98,7 +98,8 @@ html.dk input,html.dk textarea,html.dk select{
   -webkit-text-fill-color:var(--ink);
 }
 html.dk input[type=date],html.dk input[type=time]{color-scheme:dark;color:var(--ink);}
-html.dk input::placeholder,html.dk textarea::placeholder{color:var(--lite);}
+html.dk input::placeholder,html.dk textarea::placeholder{color:#3A3530 !important;opacity:1;}
+html.dk .fi3::placeholder,html.dk .fi2::placeholder{color:#3A3530 !important;opacity:1;}
 /* Pref-row inputs — pas de fond bizarre */
 html.dk .pref-row input,html.dk .pref-row select,html.dk .pref-row textarea{
   background:transparent!important;
@@ -154,7 +155,7 @@ html.dk .lfield input,html.dk .lfield select{
   -webkit-text-fill-color:var(--ink) !important;
   border-color:var(--bdr) !important;
 }
-html.dk .lfield input::placeholder{color:#4A4540 !important;}
+html.dk .lfield input::placeholder{color:#3A3530 !important;}
 html.dk .lfield label{color:var(--mid);}
 html.dk .lguest{background:#1C1917;color:var(--mid);border-color:var(--bdr);}
 html.dk .ropt{background:#1C1917;color:var(--mid);border-color:var(--bdr);}
@@ -1088,7 +1089,7 @@ html.dk .ntog::after{background:#fff;}
       </div>
 
       <!-- Bottom sheet choix matière -->
-      <div id="bdMatFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeMatFilter()">
+      <div id="bdMatFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:800;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeMatFilter()">
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:70vh;display:flex;flex-direction:column;animation:mi .25s ease">
           <div style="padding:20px 20px 12px;flex-shrink:0">
             <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
@@ -3298,6 +3299,8 @@ function findMatiere(txt){
 function openMatFilter(){
   var bd=g('bdMatFilter');
   if(!bd)return;
+  // Déplacer en fin de body pour éviter les problèmes de overflow parent
+  if(bd.parentNode!==document.body)document.body.appendChild(bd);
   // Construire la liste
   var list=g('matFilterList');
   if(list){
