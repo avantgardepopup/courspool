@@ -2868,6 +2868,7 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
+  if(s==='F'||s==='R'){buildAccLists();}
 }
 
 function buildAccLists(){
