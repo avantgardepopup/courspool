@@ -2870,7 +2870,20 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){buildAccLists();}
+  if(s==='F'||s==='R'){
+    // Attendre que les follows soient chargés (peut prendre du temps sur compte prof)
+    var _tries=0;
+    function _tryBuildF(){
+      _tries++;
+      buildAccLists();
+      // Si listF est encore vide et qu'on n'a pas encore les données, réessayer
+      var lf=g('listF');
+      if(lf&&!lf.innerHTML.trim()&&_tries<5){
+        setTimeout(_tryBuildF,200);
+      }
+    }
+    setTimeout(_tryBuildF,100);
+  }
 }
 
 function buildAccLists(){
@@ -5696,10 +5709,13 @@ function toggleDarkMode(){
   document.documentElement.classList.toggle('dk',_darkMode);
   try{localStorage.setItem('cp_dark',_darkMode?'1':'0');}catch(e){}
   updateDarkBtn();
-  // Mettre à jour la couleur de la status bar
   var tm=document.getElementById('themeColorMeta');
   if(tm)tm.content=_darkMode?'#131110':'#ffffff';
   haptic([10,40,10]);
+  // Reconstruire les cards pour appliquer les bgDark/bg instantanément
+  requestAnimationFrame(function(){
+    if(C&&C.length)buildCards();
+  });
 }
 
 function updateDarkBtn(){
