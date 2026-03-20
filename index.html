@@ -2871,18 +2871,10 @@ function switchATab(s,el){
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='F'||s==='R'){
-    // Attendre que les follows soient chargés (peut prendre du temps sur compte prof)
-    var _tries=0;
-    function _tryBuildF(){
-      _tries++;
-      buildAccLists();
-      // Si listF est encore vide et qu'on n'a pas encore les données, réessayer
-      var lf=g('listF');
-      if(lf&&!lf.innerHTML.trim()&&_tries<5){
-        setTimeout(_tryBuildF,200);
-      }
-    }
-    setTimeout(_tryBuildF,100);
+    // Double appel : immédiat + après 300ms pour couvrir le cas
+    // où fol n'est pas encore chargé (compte prof plus lent)
+    buildAccLists();
+    setTimeout(buildAccLists, 300);
   }
 }
 
@@ -2967,6 +2959,8 @@ function buildAccLists(){
     });
   },200);
   var lf=g('listF');
+  if(!lf)return; // sécurité
+  lf.style.display='block'; // forcer visibilité
   if(!fIds.length){
     lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
       +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
