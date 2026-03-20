@@ -589,95 +589,65 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
    DESKTOP — Layout style Superprof/Hinge (min-width:641px)
    ============================================================ */
 @media(min-width:641px){
+  /* ── App container ── */
   #app{background:var(--bg);}
-  
-  /* Header desktop raffiné */
+
+  /* ── Header glassmorphism ── */
   .mob-header{
-    padding:16px 40px 14px;
-    max-width:100%;
-    border-bottom:1px solid var(--bdr);
-    background:rgba(255,255,255,.92);
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
+    padding:14px 48px 12px;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.06);
+    position:sticky;top:0;
   }
-  html.dk .mob-header{background:rgba(19,17,16,.92);}
-  .mob-title{font-size:22px !important;}
-  .mob-header.scrolled .mob-title{transform:none !important;font-size:22px !important;}
-  
-  /* Search bar desktop */
-  .mob-search{padding:10px 40px 14px;max-width:100%;}
-  .mob-search .sw{max-width:600px;margin:0 auto;}
+  html.dk .mob-header{background:rgba(19,17,16,.88);border-bottom:1px solid rgba(255,255,255,.06);}
+  .mob-title{font-size:21px !important;}
+  .mob-header.scrolled .mob-title{transform:none !important;font-size:21px !important;}
+  .mob-sub{display:none;}
+  .mob-header-inner{align-items:center;}
 
-  /* Layout 2 colonnes : sidebar + contenu */
-  #pgExp{
-    display:grid !important;
-    grid-template-columns:280px 1fr;
-    gap:0;
-    min-height:calc(100vh - 120px);
-    max-width:1400px;
-    margin:0 auto;
-    padding:0 40px;
+  /* ── Barre de recherche centrée ── */
+  .mob-search{
+    padding:10px 48px 14px;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
   }
-  #pgExp.on{display:grid !important;}
+  html.dk .mob-search{background:rgba(19,17,16,.88);}
+  .mob-search>div{max-width:700px;margin:0 auto;}
 
-  /* Sidebar filtres à gauche */
-  .rsel{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    padding:24px 24px 24px 0;
-    border-right:1px solid var(--bdr);
-    position:sticky;
-    top:120px;
-    height:fit-content;
-    align-self:start;
-  }
-  .ro{
-    width:100%;
-    text-align:left;
-    padding:10px 14px;
-    border-radius:12px;
-    font-size:14px;
-  }
-
-  /* Zone principale cards */
+  /* ── Contenu centré ── */
   .cnt{
-    padding:24px 0 24px 32px;
-    max-width:100%;
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 48px 40px;
   }
 
-  /* Pills matières */
-  .pills{flex-wrap:wrap;overflow:visible;}
-
-  /* Grille de cards — 2 à 3 colonnes selon largeur */
+  /* ── Grille cards ── */
   .grid{
-    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
     gap:20px;
   }
 
-  /* Cards plus raffinées sur desktop */
+  /* ── Cards hover élégant ── */
   .card{
     border-radius:20px;
-    transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .2s;
     border:1px solid var(--bdr);
+    transition:transform .22s cubic-bezier(.4,0,.2,1),box-shadow .22s,border-color .22s;
+    cursor:pointer;
   }
   .card:hover{
-    transform:translateY(-4px);
-    box-shadow:0 12px 40px rgba(0,0,0,.12);
+    transform:translateY(-5px) scale(1.01);
+    box-shadow:0 16px 48px rgba(0,0,0,.1);
+    border-color:var(--or);
   }
+  html.dk .card:hover{box-shadow:0 16px 48px rgba(0,0,0,.4);}
 
-  /* Bottom nav cachée sur desktop — remplacée par topbar */
+  /* ── Bottom nav cachée — nav dans le header ── */
   #bnav{display:none !important;}
-  
-  /* Top nav desktop dans le header */
-  .mob-header-inner{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:24px;
-  }
-  
-  /* Navigation horizontale desktop */
+
+  /* ── Nav desktop ── */
   #deskNav{display:flex;align-items:center;gap:4px;}
   .desk-nav-btn{
     display:flex;align-items:center;gap:6px;
@@ -687,23 +657,25 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
     border:none;background:transparent;
     font-family:inherit;
     transition:all .18s;
+    white-space:nowrap;
   }
   .desk-nav-btn:hover{background:var(--bg);color:var(--ink);}
   .desk-nav-btn.on{background:var(--orp);color:var(--or);}
-  .desk-nav-btn svg{width:16px;height:16px;}
+  .desk-nav-btn svg{width:16px;height:16px;flex-shrink:0;}
 
-  /* Pages profil et messages — layout centré */
-  #pgAcc,#pgMsg{max-width:800px;margin:0 auto;padding:0 40px;}
-  
-  /* Cacher le header mobile sur desktop, afficher le titre dans la topbar */
-  .mob-sub{display:none;}
+  /* ── Pages profil/messages centrées ── */
+  #pgAcc{max-width:760px;margin:0 auto;}
+  #pgMsg{max-width:900px;margin:0 auto;}
+  .acc-body{max-width:600px;}
 
-  /* Bouton ajouter flottant style desktop */
-  #btnAddCours{bottom:32px;right:40px;}
+  /* ── Bouton flottant repositionné ── */
+  #btnAddCours{bottom:32px;right:48px;}
+
+  /* ── Pills filtres ── */
+  .pills{flex-wrap:wrap;overflow:visible;padding-bottom:0;}
 }
 
-@media(min-width:1200px){
-  .grid{grid-template-columns:repeat(3,1fr);}
+@media(min-width:1200px){.grid{grid-template-columns:repeat(3,1fr);}}
   #pgExp{grid-template-columns:300px 1fr;}
 }
 
@@ -3718,11 +3690,58 @@ async function confR(){haptic(15);
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    // Rediriger vers paiement
-    window.location.href=data.url;
+    // Ouvrir Stripe dans le modal in-app
+    openStripeModal(data.url,{cours_id:id,user_id:user.id,montant:pp,pour_ami:false});
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
+// ── Stripe in-app modal ──
+function openStripeModal(url,pendingData){
+  try{localStorage.setItem('cp_stripe_pending',JSON.stringify(pendingData));}catch(e){}
+  var iframe=g('stripeIframe');
+  var bd=g('bdStripe');
+  if(!iframe||!bd)return;
+  iframe.src=url;
+  bd.style.display='flex';
+  closeM('bdR');
+  haptic(10);
+}
+
+function closeStripeModal(){
+  var bd=g('bdStripe');
+  var iframe=g('stripeIframe');
+  if(bd)bd.style.display='none';
+  if(iframe)iframe.src='';
+  // Vérifier si le paiement a abouti
+  try{
+    var pending=localStorage.getItem('cp_stripe_pending');
+    if(!pending||!user||!user.id)return;
+    var p=JSON.parse(pending);
+    var coursId=p.cours_id;
+    if(!coursId)return;
+    fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).then(function(data){
+      if(!Array.isArray(data))return;
+      var found=data.find(function(r){return r.cours_id===coursId;});
+      localStorage.removeItem('cp_stripe_pending');
+      if(found){
+        if(!p.pour_ami)res[coursId]=true;
+        loadData().then(function(){buildCards();});
+        setTimeout(function(){
+          var popup=document.getElementById('popupPaid');
+          var msg=document.getElementById('popupPaidMsg');
+          if(msg)msg.textContent=p.pour_ami?'La place supplémentaire a été réservée.':'Votre place est réservée !';
+          if(popup){popup.style.display='flex';haptic(40);}
+        },400);
+      } else {
+        setTimeout(function(){
+          var popup=document.getElementById('popupFailed');
+          if(popup)popup.style.display='flex';
+        },300);
+      }
+    }).catch(function(){localStorage.removeItem('cp_stripe_pending');});
+  }catch(e){}
+}
+
 function contR(){
   var c=C.find(function(x){return x.id===curId});
   var nm=c?c.prof_nm:'le professeur';
@@ -3782,7 +3801,7 @@ async function confAmi(id){
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    window.location.href=data.url;
+    openStripeModal(data.url,{cours_id:id,user_id:user.id,montant:pp,pour_ami:true});
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.onclick=function(){confAmi(id);};}}
 }
@@ -6500,5 +6519,31 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- ── Modal Stripe in-app ── -->
+<div id="bdStripe" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:540px;background:var(--wh);border-radius:24px 24px 0 0;overflow:hidden;animation:slideUp .3s cubic-bezier(.4,0,.2,1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bdr)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;background:#635BFF;border-radius:8px;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--ink)">Paiement sécurisé</div>
+          <div style="font-size:11px;color:var(--lite)">Propulsé par Stripe</div>
+        </div>
+      </div>
+      <button onclick="closeStripeModal()" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid)">✕</button>
+    </div>
+    <div style="padding:12px 16px;background:#F8F7FF;border-bottom:1px solid rgba(99,91,255,.1)">
+      <div style="font-size:12px;color:#635BFF;font-weight:600;display:flex;align-items:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#635BFF" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Paiement chiffré SSL · Données sécurisées
+      </div>
+    </div>
+    <iframe id="stripeIframe" src="" style="width:100%;height:65vh;border:none;display:block" allow="payment *"></iframe>
+  </div>
+</div>
+
 </body>
 </html>
