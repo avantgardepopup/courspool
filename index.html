@@ -186,8 +186,8 @@ html.dk .ntog::after{background:#fff;}
 .lfield label{font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:4px;}
 .lfield input,.lfield select,.lfield textarea{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);}
 .lfield input:focus,.lfield select:focus{border-color:var(--or);}
-.lfield input::placeholder{color:#D8D3CC;opacity:0.55;}
-input::placeholder,textarea::placeholder{color:#D8D3CC;opacity:0.55;}
+.lfield input::placeholder{color:#BBBBBB;opacity:1;}
+input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .lbtn{width:100%;background:var(--or);color:#fff;border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:6px;transition:background .18s;}
 .lbtn:hover{background:var(--ord);}
 .lsep{text-align:center;font-size:12px;color:var(--lite);margin:14px 0;position:relative;}
@@ -573,8 +573,8 @@ input::placeholder,textarea::placeholder{color:#D8D3CC;opacity:0.55;}
 .so:hover,.so.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 .fi3{width:100%;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;outline:none;transition:border .18s;background:var(--wh);box-sizing:border-box;-webkit-appearance:none;appearance:none;height:46px;}
 .fi3:focus{border-color:var(--or);}
-.fi3::placeholder,.fi2::placeholder{color:#D8D3CC !important;opacity:0.45;}
-textarea.fi3::placeholder{color:#D8D3CC !important;opacity:0.45;}
+.fi3::placeholder,.fi2::placeholder{color:#BBBBBB !important;opacity:1;}
+textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 .toast{position:fixed;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;max-width:420px;margin:0 auto;background:#1A1714;color:#F0EDE8;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-12px);pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(0,0,0,.2);}
 @media(max-width:640px){.toast{bottom:auto;top:max(16px,env(safe-area-inset-top,16px));left:16px;right:16px;transform:translateY(-8px);}
 .toast.on{transform:translateY(0);}}
@@ -1259,7 +1259,7 @@ textarea.fi3::placeholder{color:#D8D3CC !important;opacity:0.45;}
         </div>
 
         <!-- PROFS SUIVIS -->
-        <div class="asec" id="asecF">
+        <div class="asec" id="asecF" style="overflow:visible">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Professeurs suivis</div>
           <div id="listF"></div>
         </div>
@@ -2718,6 +2718,8 @@ function goExplore(){
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
           fol.clear();
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
+          // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
+          if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
@@ -3167,6 +3169,8 @@ function previewPhoto(input){
 function buildCards(){
   currentPage=1;
   if(!C.length){
+    // Éviter de re-render si nocard est déjà affiché (évite les sauts visuels)
+    if(g('nocard').style.display==='block')return;
     g('nocard').style.display='block';
     g('nocardTitle').textContent='Aucun cours disponible';
     g('nocardSub').textContent='Soyez le premier à proposer un cours !';
@@ -3723,9 +3727,25 @@ function openPr(pid){
   fb.style.display=isSelf?'none':'flex';
   fb.classList.toggle('on',fol.has(pid));ft.textContent=fol.has(pid)?'Suivi ✓':'Suivre';
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
-  // Charger les vraies données du profil (bio, matières, niveau)
+  // Appliquer les données du cache P[] immédiatement si disponibles
+  var pCache=P[pid];
+  if(pCache){
+    var bioEl0=g('mpBio');if(bioEl0&&pCache.bio)bioEl0.textContent=pCache.bio;
+    var tagsEl0=g('mpTags');
+    if(tagsEl0&&pCache.matieres){
+      var mats0=pCache.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
+      tagsEl0.innerHTML=mats0.map(function(m){return'<span style="background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600">'+m+'</span>';}).join('');
+    }
+    if(pCache.niveau&&g('mpbd'))g('mpbd').textContent=pCache.niveau;
+  }
+  // Charger les vraies données du profil (bio, matières, niveau) — mise à jour silencieuse
   fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
+    // Mettre à jour le cache P[]
+    if(!P[pid])P[pid]={};
+    if(prof.bio!==undefined)P[pid].bio=prof.bio;
+    if(prof.matieres!==undefined)P[pid].matieres=prof.matieres;
+    if(prof.niveau!==undefined)P[pid].niveau=prof.niveau;
     // Bio
     var bioEl=g('mpBio');
     if(bioEl)bioEl.textContent=prof.bio||'';
