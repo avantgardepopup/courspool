@@ -2178,7 +2178,7 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 </div>
 
 <!-- POPUP CONFIRMATION PAIEMENT -->
-<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
+<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2190,7 +2190,7 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 </div>
 
 <!-- POPUP PAIEMENT ÉCHOUÉ -->
-<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
+<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -3573,15 +3573,77 @@ async function confR(){haptic(15);
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    // Réactiver le bouton avant de quitter la page
     if(btn){btn.disabled=false;btn.innerHTML=_btnHTML||btn.innerHTML;}
-    // Marquer paiement en cours pour détection au retour
-    _stripeInProgress=true; _stripeCoursId=id;
-    // Ouvrir Stripe dans le navigateur externe
-    window.open(data.url,'_system');
+    // Ouvrir Stripe dans le modal iframe in-app
+    openStripeIframe(data.url, id, pp, false);
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
+// ── Stripe iframe in-app ──
+var _stripeIframeCours = null;
+var _stripeIframeMontant = 0;
+var _stripeIframePourAmi = false;
+var _stripeIframePoll = null;
+
+function openStripeIframe(url, coursId, montant, pourAmi){
+  _stripeIframeCours = coursId;
+  _stripeIframeMontant = montant;
+  _stripeIframePourAmi = pourAmi;
+  var bd = g('bdStripeIframe');
+  var iframe = g('stripeIframe');
+  if(!bd || !iframe) return;
+  iframe.src = url;
+  bd.style.display = 'flex';
+  closeM('bdR');
+  haptic(10);
+  // Polling toutes les 2s pour détecter si le paiement est passé
+  _stripeIframePoll = setInterval(function(){
+    if(!user || !user.id || !_stripeIframeCours) return;
+    fetch(API+'/reservations/'+user.id)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(!Array.isArray(data)) return;
+        var found = data.find(function(r){return r.cours_id === _stripeIframeCours;});
+        if(found) confirmStripeSuccess();
+      }).catch(function(){});
+  }, 2000);
+}
+
+function confirmStripeSuccess(){
+  clearInterval(_stripeIframePoll);
+  var coursId = _stripeIframeCours;
+  var montant = _stripeIframeMontant;
+  var pourAmi = _stripeIframePourAmi;
+  closeStripeIframe();
+  if(!pourAmi) res[coursId] = true;
+  loadData().then(function(){buildCards();});
+  setTimeout(function(){
+    var msg = document.getElementById('popupPaidMsg');
+    if(msg) msg.textContent = pourAmi ? 'La place supplémentaire a été réservée !' : 'Votre place est réservée. Un email de confirmation vous a été envoyé.';
+    var popup = document.getElementById('popupPaid');
+    if(popup){ popup.style.display='flex'; haptic(40); }
+  }, 200);
+}
+
+function cancelStripeIframe(){
+  clearInterval(_stripeIframePoll);
+  closeStripeIframe();
+  setTimeout(function(){
+    var popup = document.getElementById('popupFailed');
+    if(popup) popup.style.display = 'flex';
+  }, 200);
+}
+
+function closeStripeIframe(){
+  clearInterval(_stripeIframePoll);
+  _stripeIframePoll = null;
+  _stripeIframeCours = null;
+  var bd = g('bdStripeIframe');
+  var iframe = g('stripeIframe');
+  if(bd) bd.style.display = 'none';
+  if(iframe) iframe.src = '';
+}
+
 function contR(){
   var c=C.find(function(x){return x.id===curId});
   var nm=c?c.prof_nm:'le professeur';
@@ -3642,7 +3704,7 @@ async function confAmi(id){
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
     if(btn){btn.disabled=false;}
-    window.open(data.url,'_system');
+    openStripeIframe(data.url, id, pp, true);
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.onclick=function(){confAmi(id);};}}
 }
@@ -6333,5 +6395,23 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- Modal Stripe iframe in-app -->
+<div id="bdStripeIframe" style="display:none;position:fixed;inset:0;z-index:1200;flex-direction:column;background:var(--wh)">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:12px;padding:max(16px,env(safe-area-inset-top,16px)) 16px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);flex-shrink:0">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#635BFF,#4F46E5);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:800;color:var(--ink)">Paiement sécurisé</div>
+      <div style="font-size:11px;color:var(--lite)">Propulsé par Stripe · SSL</div>
+    </div>
+    <button onclick="cancelStripeIframe()" style="padding:8px 16px;background:var(--bg);border:1px solid var(--bdr);border-radius:50px;font-family:inherit;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer">Annuler</button>
+  </div>
+  <!-- iframe -->
+  <iframe id="stripeIframe" src="" style="flex:1;border:none;width:100%" allow="payment"></iframe>
+</div>
+
 </body>
 </html>
