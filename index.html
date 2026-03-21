@@ -3617,7 +3617,8 @@ async function confR(){haptic(15);
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
     if(data.already_reserved){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
-    // Ouvrir le modal Stripe Elements
+    // Réactiver le bouton AVANT d'ouvrir le modal
+    if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}
     openStripeElements({
       clientSecret:data.client_secret,
       paymentIntentId:data.payment_intent_id,
@@ -3672,7 +3673,6 @@ function openStripeElements(data){
     else if(errEl){ errEl.style.display='none'; }
   });
   bd.style.display = 'flex';
-  closeM('bdR');
   haptic(10);
 }
 
@@ -3728,23 +3728,21 @@ async function submitStripePayment(){
       var resp = await r.json();
       if(resp.success || resp.already_existed){
         var savedD = {coursId:d.coursId, montant:d.montant, pourAmi:d.pourAmi, coursNom:d.coursNom};
-        closeStripeModal();
         if(!savedD.pourAmi) res[savedD.coursId] = true;
         loadData().then(function(){buildCards();});
-        // Attendre 2 frames que le modal soit bien fermé
-        requestAnimationFrame(function(){
-          requestAnimationFrame(function(){
-            var cours = C.find(function(x){return x.id===savedD.coursId;});
-            var el = document.getElementById;
-            if(el('popupPaidCoursNom')) el('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
-            if(el('popupPaidProf')) el('popupPaidProf').textContent = cours ? (cours.prof_nm||'—') : '—';
-            if(el('popupPaidDate')) el('popupPaidDate').textContent = cours ? (cours.dt||'—') : '—';
-            if(el('popupPaidLieu')) el('popupPaidLieu').textContent = cours ? (cours.lc||'—') : '—';
-            if(el('popupPaidMontant')) el('popupPaidMontant').textContent = savedD.montant + '€';
-            var popup = document.getElementById('popupPaid');
-            if(popup){ popup.style.display='flex'; haptic(40); }
-          });
-        });
+        closeStripeModal();
+        closeM('bdR');
+        setTimeout(function(){
+          var cours = C.find(function(x){return x.id===savedD.coursId;});
+          var eid = document.getElementById.bind(document);
+          if(eid('popupPaidCoursNom')) eid('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
+          if(eid('popupPaidProf')) eid('popupPaidProf').textContent = cours ? (cours.prof_nm||'—') : '—';
+          if(eid('popupPaidDate')) eid('popupPaidDate').textContent = cours ? (cours.dt||'—') : '—';
+          if(eid('popupPaidLieu')) eid('popupPaidLieu').textContent = cours ? (cours.lc||'—') : '—';
+          if(eid('popupPaidMontant')) eid('popupPaidMontant').textContent = savedD.montant + '€';
+          var popup = eid('popupPaid');
+          if(popup){ popup.style.display='flex'; haptic(40); }
+        }, 200);
       } else {
         if(errEl){ errEl.textContent = resp.error||'Erreur serveur. Contactez le support.'; errEl.style.display='block'; }
       }
