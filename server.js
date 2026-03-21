@@ -488,6 +488,86 @@ app.post('/stripe/checkout', async (req, res) => {
   }
 });
 
+// STRIPE — PaymentIntent in-app (Stripe Elements)
+app.post('/stripe/payment-intent', async (req, res) => {
+  const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
+  if (!cours_id || !user_id || !montant) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    // Vérifier si déjà réservé
+    if (!pour_ami) {
+      const { data: existing } = await supabase.from('reservations')
+        .select('id').eq('cours_id', cours_id).eq('user_id', user_id).maybeSingle();
+      if (existing) return res.json({ already_reserved: true });
+    }
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(montant * 100),
+      currency: 'eur',
+      description: cours_titre || 'Réservation CoursPool',
+      metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0' },
+      automatic_payment_methods: { enabled: true },
+    });
+    res.json({ client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id });
+  } catch (e) {
+    console.log('PaymentIntent error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// STRIPE — confirmer paiement in-app et créer réservation
+app.post('/stripe/confirm-payment', async (req, res) => {
+  const { payment_intent_id, cours_id, user_id, montant, pour_ami } = req.body;
+  if (!payment_intent_id || !cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
+  try {
+    // Vérifier le statut du paiement côté Stripe
+    const pi = await stripe.paymentIntents.retrieve(payment_intent_id);
+    if (pi.status !== 'succeeded') return res.status(400).json({ error: 'Paiement non confirmé', status: pi.status });
+
+    // Vérifier si déjà réservé
+    if (!pour_ami) {
+      const { data: existing } = await supabase.from('reservations')
+        .select('id').eq('cours_id', cours_id).eq('user_id', user_id).maybeSingle();
+      if (existing) return res.json({ success: true, already_existed: true });
+    }
+
+    // Créer la réservation
+    await supabase.from('reservations').insert([{
+      cours_id, user_id,
+      montant_paye: parseFloat(montant) || 0,
+      stripe_payment_intent_id: payment_intent_id,
+      type_paiement: pour_ami ? 'stripe_ami' : 'stripe'
+    }]);
+
+    // Incrémenter places
+    const { data: coursData } = await supabase.from('cours')
+      .select('places_prises,titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
+    await supabase.from('cours').update({ places_prises: (coursData?.places_prises || 0) + 1 }).eq('id', cours_id);
+
+    // Emails
+    try {
+      const { data: eleve } = await supabase.from('profiles').select('email,prenom,nom').eq('id', user_id).single();
+      const { data: prof } = await supabase.from('profiles').select('email,prenom,nom').eq('id', coursData?.professeur_id).single();
+      if (eleve?.email) await sendEmailReservation(eleve.email, (eleve.prenom+' '+eleve.nom).trim(), coursData?.titre, coursData?.date_heure, coursData?.lieu, montant);
+      if (prof?.email) await sendEmailProfNewEleve(prof.email, (prof.prenom+' '+prof.nom).trim(), (eleve?.prenom+' '+(eleve?.nom||'')).trim(), coursData?.titre, montant);
+    } catch(e) {}
+
+    // Push prof
+    if (coursData?.professeur_id) {
+      const { data: eleve2 } = await supabase.from('profiles').select('prenom,nom').eq('id', user_id).single().catch(()=>({data:null}));
+      pushToUser(coursData.professeur_id, {
+        title: '🎉 Nouvelle réservation !',
+        body: `${((eleve2?.prenom||'')+' '+(eleve2?.nom||'')).trim() || 'Un élève'} a réservé "${coursData?.titre}" (+${montant}€)`,
+        tag: 'new-eleve', icon: '/icon-192.png',
+        data: { url: 'https://courspool.vercel.app' }
+      }).catch(() => {});
+    }
+
+    res.json({ success: true });
+  } catch (e) {
+    console.log('Confirm payment error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // STRIPE — page de succès qui crée la réservation et redirige
 app.get('/stripe/success', async (req, res) => {
   const { cours_id, user_id, montant, pour_ami, redirect } = req.query;
