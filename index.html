@@ -2875,10 +2875,11 @@ function switchATab(s,el){
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='F'||s==='R'){
-    // Appeler APRÈS que la section est visible (classList.add déjà fait)
+    // La section est maintenant visible (classList.add fait avant)
+    // Appeler immédiatement ET avec délais pour couvrir tous les cas
     buildAccLists();
-    setTimeout(buildAccLists, 600);
-    setTimeout(buildAccLists, 1500);
+    setTimeout(buildAccLists, 300);
+    setTimeout(buildAccLists, 1000);
   }
 }
 
@@ -2964,6 +2965,9 @@ function buildAccLists(){
   },200);
   var lf=g('listF');
   if(!lf) return;
+  // Forcer la visibilité même si parent est display:none
+  lf.style.display='block';
+  lf.style.minHeight='10px';
   if(!fIds.length){
     lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
       +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
