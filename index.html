@@ -2875,9 +2875,10 @@ function switchATab(s,el){
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='F'||s==='R'){
+    // Appeler APRÈS que la section est visible (classList.add déjà fait)
     buildAccLists();
-    // Re-render après 500ms pour les comptes prof (follows chargent plus tard)
-    setTimeout(buildAccLists, 500);
+    setTimeout(buildAccLists, 600);
+    setTimeout(buildAccLists, 1500);
   }
 }
 
