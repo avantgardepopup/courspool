@@ -3607,25 +3607,25 @@ async function confR(){haptic(15);
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
   var btn=document.querySelector('#bdR .pb.pri');
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Redirection…';}
+  var btnOrigHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+(g('rFinB')?g('rFinB').textContent:'')+'</strong>';
+  function resetBtn(){if(btn){btn.disabled=false;btn.innerHTML=btnOrigHTML;}}
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Chargement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
-    // Créer un PaymentIntent côté serveur
     var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       cours_id:id,user_id:user.id,montant:pp,cours_titre:c.title,pour_ami:false
     })});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
-    if(data.already_reserved){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
-    // Réactiver le bouton AVANT d'ouvrir le modal
-    if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}
+    if(data.error){toast('Erreur',data.error);resetBtn();return;}
+    if(data.already_reserved){toast('Déjà réservé','Vous avez déjà une place pour ce cours');resetBtn();return;}
+    resetBtn(); // Réactiver avant d'ouvrir
     openStripeElements({
       clientSecret:data.client_secret,
       paymentIntentId:data.payment_intent_id,
       coursId:id,montant:pp,coursNom:c.title,pourAmi:false
     });
-  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
+  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');resetBtn();}
+  finally{resetBtn();}
 }
 // ── Stripe Elements in-app ──
 var _stripeEl = null; // instance Stripe
@@ -3725,27 +3725,25 @@ async function submitStripePayment(){
           pour_ami: d.pourAmi
         })
       });
-      var resp = await r.json();
-      if(resp.success || resp.already_existed){
-        var savedD = {coursId:d.coursId, montant:d.montant, pourAmi:d.pourAmi, coursNom:d.coursNom};
-        if(!savedD.pourAmi) res[savedD.coursId] = true;
-        loadData().then(function(){buildCards();});
-        closeStripeModal();
-        closeM('bdR');
-        setTimeout(function(){
-          var cours = C.find(function(x){return x.id===savedD.coursId;});
-          var eid = document.getElementById.bind(document);
-          if(eid('popupPaidCoursNom')) eid('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
-          if(eid('popupPaidProf')) eid('popupPaidProf').textContent = cours ? (cours.prof_nm||'—') : '—';
-          if(eid('popupPaidDate')) eid('popupPaidDate').textContent = cours ? (cours.dt||'—') : '—';
-          if(eid('popupPaidLieu')) eid('popupPaidLieu').textContent = cours ? (cours.lc||'—') : '—';
-          if(eid('popupPaidMontant')) eid('popupPaidMontant').textContent = savedD.montant + '€';
-          var popup = eid('popupPaid');
-          if(popup){ popup.style.display='flex'; haptic(40); }
-        }, 200);
-      } else {
-        if(errEl){ errEl.textContent = resp.error||'Erreur serveur. Contactez le support.'; errEl.style.display='block'; }
-      }
+      var resp = await r.json().catch(function(){return{success:true};});
+      // Afficher le succès si Stripe a confirmé (même si serveur a un souci)
+      var savedD = {coursId:d.coursId, montant:d.montant, pourAmi:d.pourAmi, coursNom:d.coursNom};
+      if(!savedD.pourAmi) res[savedD.coursId] = true;
+      loadData().then(function(){buildCards();});
+      closeStripeModal();
+      closeM('bdR');
+      // Afficher popup succès
+      setTimeout(function(){
+        var cours = C.find(function(x){return x.id===savedD.coursId;});
+        var eid = document.getElementById.bind(document);
+        if(eid('popupPaidCoursNom')) eid('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
+        if(eid('popupPaidProf')) eid('popupPaidProf').textContent = cours ? (cours.prof_nm||'—') : '—';
+        if(eid('popupPaidDate')) eid('popupPaidDate').textContent = cours ? (cours.dt||'—') : '—';
+        if(eid('popupPaidLieu')) eid('popupPaidLieu').textContent = cours ? (cours.lc||'—') : '—';
+        if(eid('popupPaidMontant')) eid('popupPaidMontant').textContent = savedD.montant + '€';
+        var popup = eid('popupPaid');
+        if(popup){ popup.style.display='flex'; haptic(40); }
+      }, 150);
     }
   }catch(e){
     if(errEl){ errEl.textContent = 'Erreur réseau. Réessayez.'; errEl.style.display='block'; }
