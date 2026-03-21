@@ -2189,19 +2189,44 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 </div>
 
 <!-- POPUP CONFIRMATION PAIEMENT -->
-<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
-    <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
+<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--wh);border-radius:24px;padding:32px 28px;text-align:center;max-width:380px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+    <!-- Icône succès -->
+    <div style="width:72px;height:72px;background:linear-gradient(135deg,#22C069,#16A34A);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 24px rgba(34,192,105,.35)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" width="34" height="34"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement confirmé !</div>
-    <div id="popupPaidMsg" style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5">Votre place est réservée. Un email de confirmation vous a été envoyé.</div>
-    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Super ! 🎉</button>
+    <div style="font-size:22px;font-weight:800;margin-bottom:4px;color:var(--ink)">Réservation confirmée !</div>
+    <div style="font-size:13px;color:var(--lite);margin-bottom:20px">Un email de confirmation vous a été envoyé</div>
+    <!-- Récap réservation -->
+    <div id="popupPaidRecap" style="background:var(--bg);border-radius:16px;padding:16px;text-align:left;margin-bottom:20px;border:1px solid var(--bdr)">
+      <div id="popupPaidCoursNom" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--lite)">Professeur</span>
+          <span id="popupPaidProf" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--lite)">Date</span>
+          <span id="popupPaidDate" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--lite)">Lieu</span>
+          <span id="popupPaidLieu" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
+        </div>
+        <div style="height:1px;background:var(--bdr);margin:4px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">Total payé</span>
+          <span id="popupPaidMontant" style="font-size:16px;font-weight:800;color:#22C069"></span>
+        </div>
+      </div>
+    </div>
+    <div id="popupPaidMsg" style="display:none"></div>
+    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:linear-gradient(135deg,#FF6B2B,#E04E10);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Super ! 🎉</button>
   </div>
 </div>
 
 <!-- POPUP PAIEMENT ÉCHOUÉ -->
-<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
+<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -3691,13 +3716,20 @@ async function submitStripePayment(){
       });
       var resp = await r.json();
       if(resp.success || resp.already_existed){
+        var savedD = {coursId:d.coursId, montant:d.montant, pourAmi:d.pourAmi, coursNom:d.coursNom};
         closeStripeModal();
-        if(!d.pourAmi) res[d.coursId] = true;
+        if(!savedD.pourAmi) res[savedD.coursId] = true;
         loadData().then(function(){buildCards();});
         setTimeout(function(){
+          // Remplir le récap
+          var cours = C.find(function(x){return x.id===savedD.coursId;});
+          var el = document.getElementById;
+          if(el('popupPaidCoursNom')) el('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
+          if(el('popupPaidProf')) el('popupPaidProf').textContent = cours ? cours.prof_nm : '—';
+          if(el('popupPaidDate')) el('popupPaidDate').textContent = cours ? cours.dt : '—';
+          if(el('popupPaidLieu')) el('popupPaidLieu').textContent = cours ? cours.lc : '—';
+          if(el('popupPaidMontant')) el('popupPaidMontant').textContent = savedD.montant + '€';
           var popup = document.getElementById('popupPaid');
-          var msg = document.getElementById('popupPaidMsg');
-          if(msg) msg.textContent = d.pourAmi ? 'La place supplémentaire a été réservée !' : 'Votre place est réservée. Un email de confirmation vous a été envoyé.';
           if(popup){ popup.style.display='flex'; haptic(40); }
         }, 300);
       } else {
@@ -6450,7 +6482,7 @@ if('serviceWorker' in navigator){
           <div style="font-size:11px;color:var(--lite);margin-top:1px" id="stripeSubtitle">SSL · Propulsé par Stripe</div>
         </div>
       </div>
-      <button onclick="closeStripeModal()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:18px">✕</button>
+      <button onclick="closeStripeModal()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:18px" title="Fermer">✕</button>
     </div>
     <!-- Montant -->
     <div id="stripeMontantBar" style="background:linear-gradient(135deg,#635BFF,#4F46E5);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
