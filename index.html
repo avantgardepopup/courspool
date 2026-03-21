@@ -583,17 +583,6 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 .tico svg{width:13px;height:13px;color:#fff;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
-/* ── Animations cards au scroll ── */
-@keyframes cardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.card{animation:cardIn .35s cubic-bezier(.4,0,.2,1) both;}
-.card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.08s}
-.card:nth-child(3){animation-delay:.12s}.card:nth-child(4){animation-delay:.16s}
-.card:nth-child(5){animation-delay:.20s}.card:nth-child(6){animation-delay:.24s}
-/* ── Transitions pages ── */
-.pg.on{animation:pgIn .28s cubic-bezier(.4,0,.2,1) both;}
-@keyframes pgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-/* ── Modal slide up ── */
-@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:640px){.cnt{padding:12px 16px}.acc-body{padding:0 20px !important}.grid{grid-template-columns:1fr}.rsel{display:none}.fgrid{grid-template-columns:1fr}.atab{font-size:11px;padding:12px 4px}.btnadd-txt{display:none}.acc-tabs{top:0;}}
 
 /* ============================================================
@@ -2189,44 +2178,19 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 </div>
 
 <!-- POPUP CONFIRMATION PAIEMENT -->
-<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--wh);border-radius:24px;padding:32px 28px;text-align:center;max-width:380px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
-    <!-- Icône succès -->
-    <div style="width:72px;height:72px;background:linear-gradient(135deg,#22C069,#16A34A);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 24px rgba(34,192,105,.35)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" width="34" height="34"><polyline points="20 6 9 17 4 12"/></svg>
+<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+    <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:4px;color:var(--ink)">Réservation confirmée !</div>
-    <div style="font-size:13px;color:var(--lite);margin-bottom:20px">Un email de confirmation vous a été envoyé</div>
-    <!-- Récap réservation -->
-    <div id="popupPaidRecap" style="background:var(--bg);border-radius:16px;padding:16px;text-align:left;margin-bottom:20px;border:1px solid var(--bdr)">
-      <div id="popupPaidCoursNom" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:10px"></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:var(--lite)">Professeur</span>
-          <span id="popupPaidProf" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:var(--lite)">Date</span>
-          <span id="popupPaidDate" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:var(--lite)">Lieu</span>
-          <span id="popupPaidLieu" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
-        </div>
-        <div style="height:1px;background:var(--bdr);margin:4px 0"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;font-weight:700;color:var(--ink)">Total payé</span>
-          <span id="popupPaidMontant" style="font-size:16px;font-weight:800;color:#22C069"></span>
-        </div>
-      </div>
-    </div>
-    <div id="popupPaidMsg" style="display:none"></div>
-    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:linear-gradient(135deg,#FF6B2B,#E04E10);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Super ! 🎉</button>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement confirmé !</div>
+    <div id="popupPaidMsg" style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5">Votre place est réservée. Un email de confirmation vous a été envoyé.</div>
+    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Super ! 🎉</button>
   </div>
 </div>
 
 <!-- POPUP PAIEMENT ÉCHOUÉ -->
-<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
+<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -2906,12 +2870,7 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){
-    // Double appel : immédiat + après 300ms pour couvrir le cas
-    // où fol n'est pas encore chargé (compte prof plus lent)
-    buildAccLists();
-    setTimeout(buildAccLists, 300);
-  }
+  if(s==='F'||s==='R'){buildAccLists();}
 }
 
 function buildAccLists(){
@@ -2995,8 +2954,6 @@ function buildAccLists(){
     });
   },200);
   var lf=g('listF');
-  if(!lf)return; // sécurité
-  lf.style.display='block'; // forcer visibilité
   if(!fIds.length){
     lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
       +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
@@ -3278,12 +3235,7 @@ function renderPage(){
         return'<div onclick="openR(\''+c.id+'\')" style="display:flex;align-items:center;gap:10px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .18s" onmouseenter="this.style.boxShadow=\'var(--sh)\'" onmouseleave="this.style.boxShadow=\'none\'">'+'<div style="width:36px;height:36px;border-radius:10px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mf.color+'"></div></div>'+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div><div style="font-size:11px;color:var(--lite);margin-top:2px">'+c.subj+' · '+c.dt+'</div></div>'+'<div style="font-size:15px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'€</div>'+'</div>';
       }).join('');
       sgHtml+='</div>';
-      var nc=g('nocard');
-    if(nc){
-      // Réinitialiser le nocard avant d'ajouter les suggestions (évite l'accumulation)
-      nc.innerHTML='<div style="width:64px;height:64px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em" id="nocardTitle">Aucun cours trouvé</div><div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px" id="nocardSub">Essayez un autre filtre ou une autre ville</div>';
-      nc.innerHTML+=sgHtml;
-    }
+      var nc=g('nocard');if(nc)nc.innerHTML+=sgHtml;
     }
     return;
   }
@@ -3607,152 +3559,29 @@ async function confR(){haptic(15);
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
   var btn=document.querySelector('#bdR .pb.pri');
-  var btnOrigHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+(g('rFinB')?g('rFinB').textContent:'')+'</strong>';
-  function resetBtn(){if(btn){btn.disabled=false;btn.innerHTML=btnOrigHTML;}}
+  var _btnHTML=btn?btn.innerHTML:'';
   if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Chargement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
-    var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      cours_id:id,user_id:user.id,montant:pp,cours_titre:c.title,pour_ami:false
+    // Sauvegarder les infos avant paiement
+    try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:false}));}catch(e){}
+    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      cours_id:id,
+      user_id:user.id,
+      montant:pp,
+      cours_titre:c.title
     })});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);resetBtn();return;}
-    if(data.already_reserved){toast('Déjà réservé','Vous avez déjà une place pour ce cours');resetBtn();return;}
-    resetBtn(); // Réactiver avant d'ouvrir
-    openStripeElements({
-      clientSecret:data.client_secret,
-      paymentIntentId:data.payment_intent_id,
-      coursId:id,montant:pp,coursNom:c.title,pourAmi:false
-    });
-  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');resetBtn();}
-  finally{resetBtn();}
+    if(data.error){toast('Erreur',data.error);return;}
+    // Réactiver le bouton avant de quitter la page
+    if(btn){btn.disabled=false;btn.innerHTML=_btnHTML||btn.innerHTML;}
+    // Marquer paiement en cours pour détection au retour
+    _stripeInProgress=true; _stripeCoursId=id;
+    // Ouvrir Stripe dans le navigateur externe
+    window.open(data.url,'_system');
+  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
-// ── Stripe Elements in-app ──
-var _stripeEl = null; // instance Stripe
-var _stripeCard = null; // élément carte
-var _stripePendingData = null; // données en cours
-
-function openStripeElements(data){
-  _stripePendingData = data;
-  // Initialiser Stripe
-  if(!_stripeEl){
-    try{ _stripeEl = Stripe('pk_live_51TB9Am3FNybFliKQGUpI1uSMheaSyFV0TwgRoAfmgRJtLtxAujacxrLJqM5zaOdLa0EuZNLJe7HOXKSZWmwZHyR500YZcvAF6h'); } catch(e){ console.log('Stripe init error',e); return; }
-  }
-  // Afficher le modal
-  var bd = g('bdStripe');
-  if(!bd) return;
-  // Mettre à jour les infos
-  var titleEl = g('stripeTitle'); if(titleEl) titleEl.textContent = 'Paiement sécurisé';
-  var subEl = g('stripeSubtitle'); if(subEl) subEl.textContent = data.coursNom;
-  var nomEl = g('stripeCoursNom'); if(nomEl) nomEl.textContent = data.coursNom;
-  var montEl = g('stripeMontant'); if(montEl) montEl.textContent = data.montant + '€';
-  var btnTxt = g('stripePayBtnTxt'); if(btnTxt) btnTxt.textContent = 'Payer ' + data.montant + '€';
-  var errEl = g('stripeCardError'); if(errEl){errEl.style.display='none';errEl.textContent='';}
-  // Créer l'élément carte
-  var elements = _stripeEl.elements();
-  var cardEl = g('stripeCardElement');
-  if(cardEl) cardEl.innerHTML = ''; // reset
-  _stripeCard = elements.create('card', {
-    style:{
-      base:{
-        fontFamily:'"Plus Jakarta Sans",sans-serif',
-        fontSize:'16px',
-        color:'#1a1a1a',
-        backgroundColor:'#ffffff',
-        '::placeholder':{color:'#AAAAAA'},
-        iconColor:'#635BFF'
-      },
-      invalid:{color:'#EF4444'}
-    },
-    hidePostalCode: true
-  });
-  if(cardEl) _stripeCard.mount('#stripeCardElement');
-  _stripeCard.on('change', function(e){
-    var errEl = g('stripeCardError');
-    if(e.error && errEl){ errEl.textContent = e.error.message; errEl.style.display='block'; }
-    else if(errEl){ errEl.style.display='none'; }
-  });
-  bd.style.display = 'flex';
-  haptic(10);
-}
-
-function closeStripeModal(){
-  var bd = g('bdStripe');
-  if(bd) bd.style.display = 'none';
-  if(_stripeCard){ try{_stripeCard.unmount();}catch(e){} _stripeCard = null; }
-  _stripePendingData = null;
-  // Réactiver le bouton Confirmer dans le modal réservation
-  var btnR = document.querySelector('#bdR .pb.pri');
-  if(btnR){
-    btnR.disabled = false;
-    btnR.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer';
-  }
-  // Réactiver le bouton Payer dans le modal Stripe
-  var btnPay = g('stripePayBtn');
-  if(btnPay) btnPay.disabled = false;
-  var btnTxt = g('stripePayBtnTxt');
-  if(btnTxt) btnTxt.textContent = 'Payer';
-}
-
-async function submitStripePayment(){
-  if(!_stripeEl || !_stripeCard || !_stripePendingData) return;
-  var btn = g('stripePayBtn');
-  var btnTxt = g('stripePayBtnTxt');
-  var errEl = g('stripeCardError');
-  if(btn) btn.disabled = true;
-  if(btnTxt) btnTxt.textContent = '⏳ Paiement en cours…';
-  if(errEl) errEl.style.display = 'none';
-  try{
-    // Confirmer le paiement avec Stripe.js
-    var result = await _stripeEl.confirmCardPayment(_stripePendingData.clientSecret, {
-      payment_method: { card: _stripeCard }
-    });
-    if(result.error){
-      // Erreur de paiement (carte refusée, etc.)
-      if(errEl){ errEl.textContent = result.error.message; errEl.style.display='block'; }
-      haptic([10,10,10]);
-    } else if(result.paymentIntent && result.paymentIntent.status === 'succeeded'){
-      // Paiement réussi — confirmer côté serveur
-      var d = _stripePendingData;
-      var r = await fetch(API+'/stripe/confirm-payment',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          payment_intent_id: result.paymentIntent.id,
-          cours_id: d.coursId,
-          user_id: user.id,
-          montant: d.montant,
-          pour_ami: d.pourAmi
-        })
-      });
-      var resp = await r.json().catch(function(){return{success:true};});
-      // Afficher le succès si Stripe a confirmé (même si serveur a un souci)
-      var savedD = {coursId:d.coursId, montant:d.montant, pourAmi:d.pourAmi, coursNom:d.coursNom};
-      if(!savedD.pourAmi) res[savedD.coursId] = true;
-      loadData().then(function(){buildCards();});
-      closeStripeModal();
-      closeM('bdR');
-      // Afficher popup succès
-      setTimeout(function(){
-        var cours = C.find(function(x){return x.id===savedD.coursId;});
-        var eid = document.getElementById.bind(document);
-        if(eid('popupPaidCoursNom')) eid('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
-        if(eid('popupPaidProf')) eid('popupPaidProf').textContent = cours ? (cours.prof_nm||'—') : '—';
-        if(eid('popupPaidDate')) eid('popupPaidDate').textContent = cours ? (cours.dt||'—') : '—';
-        if(eid('popupPaidLieu')) eid('popupPaidLieu').textContent = cours ? (cours.lc||'—') : '—';
-        if(eid('popupPaidMontant')) eid('popupPaidMontant').textContent = savedD.montant + '€';
-        var popup = eid('popupPaid');
-        if(popup){ popup.style.display='flex'; haptic(40); }
-      }, 150);
-    }
-  }catch(e){
-    if(errEl){ errEl.textContent = 'Erreur réseau. Réessayez.'; errEl.style.display='block'; }
-  }finally{
-    if(btn) btn.disabled = false;
-    if(btnTxt) btnTxt.textContent = 'Payer '+(_stripePendingData?_stripePendingData.montant+'€':'');
-  }
-}
-
 function contR(){
   var c=C.find(function(x){return x.id===curId});
   var nm=c?c.prof_nm:'le professeur';
@@ -3802,17 +3631,18 @@ async function confAmi(id){
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
     var pp=Math.ceil(c.tot/c.sp);
-    var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      cours_id:id,user_id:user.id,montant:pp,cours_titre:c.title+' · Place supplémentaire',pour_ami:true
+    try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:true}));}catch(e){}
+    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      cours_id:id,
+      user_id:user.id,
+      montant:pp,
+      cours_titre:c.title+' · Place supplémentaire',
+      pour_ami:true
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    if(data.already_reserved){toast('Déjà réservé','');return;}
-    openStripeElements({
-      clientSecret:data.client_secret,
-      paymentIntentId:data.payment_intent_id,
-      coursId:id,montant:pp,coursNom:c.title+' · Place supplémentaire',pourAmi:true
-    });
+    if(btn){btn.disabled=false;}
+    window.open(data.url,'_system');
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.onclick=function(){confAmi(id);};}}
 }
@@ -3967,10 +3797,6 @@ function togFP(){
     fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
-    // Supprimer en base
-    if(user&&user.id){
-      fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
-    }
   } else {
     fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
@@ -5876,13 +5702,10 @@ function toggleDarkMode(){
   document.documentElement.classList.toggle('dk',_darkMode);
   try{localStorage.setItem('cp_dark',_darkMode?'1':'0');}catch(e){}
   updateDarkBtn();
+  // Mettre à jour la couleur de la status bar
   var tm=document.getElementById('themeColorMeta');
   if(tm)tm.content=_darkMode?'#131110':'#ffffff';
   haptic([10,40,10]);
-  // Reconstruire les cards pour appliquer les bgDark/bg instantanément
-  requestAnimationFrame(function(){
-    if(C&&C.length)buildCards();
-  });
 }
 
 function updateDarkBtn(){
@@ -6463,6 +6286,40 @@ function startAccountCheck(){
   }, 30000);
 }
 
+// ── Détection retour depuis Stripe (Capacitor) ──
+var _stripeInProgress = false;
+var _stripeCoursId = null;
+var _strapeMontant = 0;
+
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState !== 'visible' || !_stripeInProgress) return;
+  _stripeInProgress = false;
+  var coursId = _stripeCoursId;
+  if(!coursId || !user || !user.id) return;
+  // Vérifier côté serveur si la réservation existe
+  setTimeout(function(){
+    fetch(API+'/reservations/'+user.id)
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(!Array.isArray(data)) return;
+        var found = data.find(function(r){return r.cours_id === coursId;});
+        if(found){
+          res[coursId] = true;
+          loadData().then(function(){buildCards();});
+          var popup = document.getElementById('popupPaid');
+          var msg = document.getElementById('popupPaidMsg');
+          if(msg) msg.textContent = 'Votre place est réservée. Un email de confirmation vous a été envoyé.';
+          if(popup) popup.style.display = 'flex';
+          haptic(40);
+        } else {
+          var popup = document.getElementById('popupFailed');
+          if(popup) popup.style.display = 'flex';
+        }
+      })
+      .catch(function(){});
+  }, 1000);
+});
+
 // SERVICE WORKER PWA
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
@@ -6476,44 +6333,5 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
-
-<!-- ── Modal Stripe Elements in-app ── -->
-<div id="bdStripe" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:flex-end;justify-content:center">
-  <div id="stripeSheet" style="width:100%;max-width:560px;background:var(--wh);border-radius:24px 24px 0 0;animation:slideUp .35s cubic-bezier(.4,0,.2,1)">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--bdr)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;background:linear-gradient(135deg,#635BFF,#4F46E5);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(99,91,255,.35)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        </div>
-        <div>
-          <div style="font-size:15px;font-weight:800;color:var(--ink)" id="stripeTitle">Paiement sécurisé</div>
-          <div style="font-size:11px;color:var(--lite);margin-top:1px" id="stripeSubtitle">SSL · Propulsé par Stripe</div>
-        </div>
-      </div>
-      <button onclick="closeStripeModal()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:18px" title="Fermer">✕</button>
-    </div>
-    <!-- Montant -->
-    <div id="stripeMontantBar" style="background:linear-gradient(135deg,#635BFF,#4F46E5);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:13px;color:rgba(255,255,255,.8)" id="stripeCoursNom">Réservation</div>
-      <div style="font-size:20px;font-weight:800;color:#fff" id="stripeMontant">—€</div>
-    </div>
-    <!-- Formulaire carte -->
-    <div style="padding:20px">
-      <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Informations de paiement</div>
-      <div id="stripeCardElement" style="background:#fff;border:1.5px solid #E8E3DC;border-radius:12px;padding:14px 16px;transition:border-color .18s;font-family:inherit"></div>
-      <div id="stripeCardError" style="color:#EF4444;font-size:13px;margin-top:8px;display:none"></div>
-      <button id="stripePayBtn" onclick="submitStripePayment()" style="width:100%;margin-top:16px;background:linear-gradient(135deg,#635BFF,#4F46E5);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(99,91,255,.4);transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <span id="stripePayBtnTxt">Payer maintenant</span>
-      </button>
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <span style="font-size:11px;color:var(--lite)">Paiement 100% sécurisé · Données chiffrées</span>
-      </div>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
