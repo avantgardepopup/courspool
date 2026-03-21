@@ -2720,6 +2720,10 @@ function goExplore(){
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+          // Toujours re-render après chargement (peu importe l'onglet actif)
+          setTimeout(function(){
+            if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+          },200);
           loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
@@ -2870,7 +2874,11 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){buildAccLists();}
+  if(s==='F'||s==='R'){
+    buildAccLists();
+    // Re-render après 500ms pour les comptes prof (follows chargent plus tard)
+    setTimeout(buildAccLists, 500);
+  }
 }
 
 function buildAccLists(){
@@ -2954,6 +2962,7 @@ function buildAccLists(){
     });
   },200);
   var lf=g('listF');
+  if(!lf) return;
   if(!fIds.length){
     lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
       +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
