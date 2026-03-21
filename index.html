@@ -2977,7 +2977,7 @@ function buildAccLists(){
         '<span style="font-size:15px;font-weight:800;color:#fff">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
       var dispoLabel=prochainCours?' · <span style="color:var(--or);font-weight:600">'+prochainCours+' cours dispo</span>':'';
-      return'<div onclick="openPr(\''+id+'\')" class="fol-row" style="'+border+'">'
+      return'<div onclick="openPr(\''+id+'\')" class="fol-row" data-prof-id="'+id+'" style="'+border+'">'
         +'<div style="width:46px;height:46px;border-radius:50%;background:'+p.col+';display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.nm+'</div>'
@@ -3235,7 +3235,18 @@ function renderPage(){
         return'<div onclick="openR(\''+c.id+'\')" style="display:flex;align-items:center;gap:10px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .18s" onmouseenter="this.style.boxShadow=\'var(--sh)\'" onmouseleave="this.style.boxShadow=\'none\'">'+'<div style="width:36px;height:36px;border-radius:10px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mf.color+'"></div></div>'+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div><div style="font-size:11px;color:var(--lite);margin-top:2px">'+c.subj+' · '+c.dt+'</div></div>'+'<div style="font-size:15px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'€</div>'+'</div>';
       }).join('');
       sgHtml+='</div>';
-      var nc=g('nocard');if(nc)nc.innerHTML+=sgHtml;
+      var nc=g('nocard');
+      if(nc){
+        // Réinitialiser entièrement pour éviter accumulation
+        nc.querySelector('#nocardTitle') && (nc.querySelector('#nocardTitle').textContent='Aucun cours trouvé');
+        nc.querySelector('#nocardSub') && (nc.querySelector('#nocardSub').textContent='Essayez un autre filtre ou une autre ville');
+        // Supprimer les suggestions précédentes
+        var oldSg=nc.querySelector('.sg-block');if(oldSg)oldSg.remove();
+        var sgWrap=document.createElement('div');
+        sgWrap.className='sg-block';
+        sgWrap.innerHTML=sgHtml;
+        nc.appendChild(sgWrap);
+      }
     }
     return;
   }
@@ -3791,6 +3802,25 @@ function togFP(){
     fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
+    // Supprimer en base
+    if(user&&user.id){
+      fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
+    }
+    // Animation de suppression dans la liste Suivis
+    var row=document.querySelector('#listF [data-prof-id="'+id+'"]');
+    if(row){
+      row.style.transition='all .35s cubic-bezier(.4,0,.2,1)';
+      row.style.opacity='0';
+      row.style.transform='translateX(60px)';
+      row.style.maxHeight=row.offsetHeight+'px';
+      setTimeout(function(){
+        row.style.maxHeight='0';
+        row.style.padding='0';
+        row.style.margin='0';
+        row.style.overflow='hidden';
+        setTimeout(function(){row.remove();},200);
+      },300);
+    }
   } else {
     fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
