@@ -2874,12 +2874,32 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='F'||s==='R'){
-    // La section est maintenant visible (classList.add fait avant)
-    // Appeler immédiatement ET avec délais pour couvrir tous les cas
-    buildAccLists();
-    setTimeout(buildAccLists, 300);
-    setTimeout(buildAccLists, 1000);
+  if(s==='R'){ buildAccLists(); setTimeout(buildAccLists,300); }
+  if(s==='F'){
+    // Injection directe dans listF au moment où la section est visible
+    var lf=g('listF');
+    if(lf){
+      var fIds=Array.from(fol);
+      if(!fIds.length){
+        lf.style.cssText='display:block;min-height:200px';
+        lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
+          +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
+          +'<div style="width:80px;height:80px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:emptyFloat 3s ease-in-out infinite">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.6" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
+          +'</div>'
+          +'<div style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--bg)">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
+          +'</div></div>'
+          +'<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Aucun professeur suivi</div>'
+          +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être alerté.</div>'
+          +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer">Explorer les cours →</button>'
+          +'</div>';
+      } else {
+        buildAccLists();
+      }
+    }
+    // Re-render après chargement au cas où fol arrive plus tard
+    setTimeout(buildAccLists, 800);
   }
 }
 
