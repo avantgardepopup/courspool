@@ -3679,8 +3679,19 @@ function openStripeElements(data){
 function closeStripeModal(){
   var bd = g('bdStripe');
   if(bd) bd.style.display = 'none';
-  if(_stripeCard){ _stripeCard.unmount(); _stripeCard = null; }
+  if(_stripeCard){ try{_stripeCard.unmount();}catch(e){} _stripeCard = null; }
   _stripePendingData = null;
+  // Réactiver le bouton Confirmer dans le modal réservation
+  var btnR = document.querySelector('#bdR .pb.pri');
+  if(btnR){
+    btnR.disabled = false;
+    btnR.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer';
+  }
+  // Réactiver le bouton Payer dans le modal Stripe
+  var btnPay = g('stripePayBtn');
+  if(btnPay) btnPay.disabled = false;
+  var btnTxt = g('stripePayBtnTxt');
+  if(btnTxt) btnTxt.textContent = 'Payer';
 }
 
 async function submitStripePayment(){
@@ -3720,18 +3731,20 @@ async function submitStripePayment(){
         closeStripeModal();
         if(!savedD.pourAmi) res[savedD.coursId] = true;
         loadData().then(function(){buildCards();});
-        setTimeout(function(){
-          // Remplir le récap
-          var cours = C.find(function(x){return x.id===savedD.coursId;});
-          var el = document.getElementById;
-          if(el('popupPaidCoursNom')) el('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
-          if(el('popupPaidProf')) el('popupPaidProf').textContent = cours ? cours.prof_nm : '—';
-          if(el('popupPaidDate')) el('popupPaidDate').textContent = cours ? cours.dt : '—';
-          if(el('popupPaidLieu')) el('popupPaidLieu').textContent = cours ? cours.lc : '—';
-          if(el('popupPaidMontant')) el('popupPaidMontant').textContent = savedD.montant + '€';
-          var popup = document.getElementById('popupPaid');
-          if(popup){ popup.style.display='flex'; haptic(40); }
-        }, 300);
+        // Attendre 2 frames que le modal soit bien fermé
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            var cours = C.find(function(x){return x.id===savedD.coursId;});
+            var el = document.getElementById;
+            if(el('popupPaidCoursNom')) el('popupPaidCoursNom').textContent = cours ? cours.title : savedD.coursNom;
+            if(el('popupPaidProf')) el('popupPaidProf').textContent = cours ? (cours.prof_nm||'—') : '—';
+            if(el('popupPaidDate')) el('popupPaidDate').textContent = cours ? (cours.dt||'—') : '—';
+            if(el('popupPaidLieu')) el('popupPaidLieu').textContent = cours ? (cours.lc||'—') : '—';
+            if(el('popupPaidMontant')) el('popupPaidMontant').textContent = savedD.montant + '€';
+            var popup = document.getElementById('popupPaid');
+            if(popup){ popup.style.display='flex'; haptic(40); }
+          });
+        });
       } else {
         if(errEl){ errEl.textContent = resp.error||'Erreur serveur. Contactez le support.'; errEl.style.display='block'; }
       }
