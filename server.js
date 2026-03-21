@@ -674,6 +674,19 @@ app.post('/follows', async (req, res) => {
   res.json({ success: true });
 });
 
+// FOLLOWS — supprimer (désabonnement)
+app.delete('/follows', async (req, res) => {
+  const { user_id, professeur_id } = req.body;
+  if (!user_id || !professeur_id) return res.status(400).json({ error: 'Données manquantes' });
+  const { error } = await supabase.from('follows').delete().eq('user_id', user_id).eq('professeur_id', professeur_id);
+  if (error) return res.status(500).json({ error });
+  // Décrémenter le compteur d'élèves du prof
+  const { data: profData } = await supabase.from('profiles').select('eleves_count').eq('id', professeur_id).single();
+  const newCount = Math.max(0, (profData?.eleves_count || 1) - 1);
+  await supabase.from('profiles').update({ eleves_count: newCount }).eq('id', professeur_id);
+  res.json({ success: true });
+});
+
 // FOLLOWS — récupérer
 app.get('/follows/:user_id', async (req, res) => {
   const { data, error } = await supabase.from('follows').select('*').eq('user_id', req.params.user_id);
