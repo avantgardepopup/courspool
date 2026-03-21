@@ -3253,7 +3253,12 @@ function renderPage(){
         return'<div onclick="openR(\''+c.id+'\')" style="display:flex;align-items:center;gap:10px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .18s" onmouseenter="this.style.boxShadow=\'var(--sh)\'" onmouseleave="this.style.boxShadow=\'none\'">'+'<div style="width:36px;height:36px;border-radius:10px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mf.color+'"></div></div>'+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div><div style="font-size:11px;color:var(--lite);margin-top:2px">'+c.subj+' · '+c.dt+'</div></div>'+'<div style="font-size:15px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'€</div>'+'</div>';
       }).join('');
       sgHtml+='</div>';
-      var nc=g('nocard');if(nc)nc.innerHTML+=sgHtml;
+      var nc=g('nocard');
+    if(nc){
+      // Réinitialiser le nocard avant d'ajouter les suggestions (évite l'accumulation)
+      nc.innerHTML='<div style="width:64px;height:64px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em" id="nocardTitle">Aucun cours trouvé</div><div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px" id="nocardSub">Essayez un autre filtre ou une autre ville</div>';
+      nc.innerHTML+=sgHtml;
+    }
     }
     return;
   }
@@ -3626,8 +3631,9 @@ function openStripeElements(data){
       base:{
         fontFamily:'"Plus Jakarta Sans",sans-serif',
         fontSize:'16px',
-        color:'#111',
-        '::placeholder':{color:'#BBBBBB'},
+        color:'#1a1a1a',
+        backgroundColor:'#ffffff',
+        '::placeholder':{color:'#AAAAAA'},
         iconColor:'#635BFF'
       },
       invalid:{color:'#EF4444'}
@@ -3920,6 +3926,10 @@ function togFP(){
     fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
+    // Supprimer en base
+    if(user&&user.id){
+      fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
+    }
   } else {
     fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
@@ -6450,7 +6460,7 @@ if('serviceWorker' in navigator){
     <!-- Formulaire carte -->
     <div style="padding:20px">
       <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Informations de paiement</div>
-      <div id="stripeCardElement" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:14px 16px;transition:border-color .18s;font-family:inherit"></div>
+      <div id="stripeCardElement" style="background:#fff;border:1.5px solid #E8E3DC;border-radius:12px;padding:14px 16px;transition:border-color .18s;font-family:inherit"></div>
       <div id="stripeCardError" style="color:#EF4444;font-size:13px;margin-top:8px;display:none"></div>
       <button id="stripePayBtn" onclick="submitStripePayment()" style="width:100%;margin-top:16px;background:linear-gradient(135deg,#635BFF,#4F46E5);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(99,91,255,.4);transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
