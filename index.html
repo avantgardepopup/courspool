@@ -7182,28 +7182,12 @@ async function subCrStep(){
   navTo=function(tab){
     var pm=g('pgMes'),bm=g('bniMes');
     if(tab==='mes'){
-      // Page Mes cours : indépendante, highlight bniMes
+      // Page native Mes cours — afficher pgMes directement
+      ['pgExp','pgMsg','pgAcc'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+      var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.add('on');
       ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
       var bniMesEl=g('bniMes');if(bniMesEl)bniMesEl.classList.add('on');
-      // Ouvrir pgAcc avec l'onglet R sans toucher au highlight
-      var pgExpEl=g('pgExp'),pgMsgEl=g('pgMsg'),pgAccEl=g('pgAcc');
-      if(pgExpEl)pgExpEl.classList.remove('on');
-      if(pgMsgEl)pgMsgEl.classList.remove('on');
-      if(pgAccEl)pgAccEl.classList.add('on');
-      // Forcer l'onglet Mes cours
-      setTimeout(function(){
-        var tabR=g('aTabR');
-        if(tabR){
-          // switchATab sans override nav highlight
-          ['R','F','H','P','Rev'].forEach(function(x){var sec=g('asec'+x),t=g('aTab'+x);if(sec)sec.classList.remove('on');if(t)t.classList.remove('on');});
-          var secR=g('asecR');if(secR)secR.classList.add('on');
-          tabR.classList.add('on');
-          buildAccLists();
-        }
-        // Remettre le bon highlight nav
-        ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
-        var bm2=g('bniMes');if(bm2)bm2.classList.add('on');
-      },30);
+      buildMesCours();
       return;
     }
     if(pm)pm.classList.remove('on');if(bm)bm.classList.remove('on');
