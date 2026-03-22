@@ -1003,6 +1003,110 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
   cursor: pointer;
 }
 
+
+/* ── MSG EDIT/DELETE ── */
+.msg-bubble-wrap { position:relative; }
+.msg-actions {
+  display:none; position:absolute; top:-8px;
+  background:var(--wh); border-radius:20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.06);
+  padding:4px; gap:2px; z-index:10; white-space:nowrap;
+}
+.msg-bubble-wrap:hover .msg-actions,
+.msg-bubble-wrap.touched .msg-actions { display:flex; }
+.msg-actions.right { right:0; }
+.msg-actions.left { left:0; }
+.msg-act-btn {
+  background:none; border:none; cursor:pointer;
+  padding:6px 10px; border-radius:14px; font-size:12px;
+  font-weight:600; color:var(--mid); font-family:inherit;
+  display:flex; align-items:center; gap:5px;
+  transition:background .15s;
+}
+.msg-act-btn:hover { background:var(--bg); }
+.msg-act-btn.del { color:#EF4444; }
+.msg-edit-wrap {
+  display:flex; gap:8px; margin-top:6px; align-items:center;
+}
+.msg-edit-input {
+  flex:1; border:1.5px solid var(--or); border-radius:12px;
+  padding:8px 12px; font-family:inherit; font-size:14px;
+  background:var(--wh); color:var(--ink); outline:none;
+}
+
+/* ── FILTER BAR — redesign ── */
+.filter-bar {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 16px 6px; overflow-x:scroll; overflow-y:visible;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  white-space:nowrap;
+}
+.filter-bar::-webkit-scrollbar { display:none; }
+.fchip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:50px; border:1.5px solid var(--bdr);
+  background:var(--wh); color:var(--mid); font-size:13px; font-weight:600;
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.fchip.on {
+  background:linear-gradient(135deg,#FF7D42,#FF4500);
+  border-color:transparent; color:#fff;
+  box-shadow:0 3px 12px rgba(255,69,0,.3);
+}
+.fchip svg { width:14px;height:14px;flex-shrink:0; }
+.fchip-level {
+  background:var(--bg); border-color:var(--bdr);
+}
+.fchip-level.on {
+  background:var(--ink); border-color:var(--ink); color:#fff;
+  box-shadow:0 3px 12px rgba(0,0,0,.2);
+}
+.sort-chip {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 12px;border-radius:50px;border:1.5px solid var(--bdr);
+  background:var(--bg);color:var(--mid);font-size:12px;font-weight:600;
+  cursor:pointer;flex-shrink:0;
+}
+
+/* ── HOME — simplified ── */
+.home-hero {
+  padding:max(60px,env(safe-area-inset-top,60px)) 20px 16px;
+  background:var(--wh);
+}
+.home-search {
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg);border-radius:16px;
+  padding:12px 16px;margin-bottom:0;
+  border:1.5px solid transparent;transition:border-color .2s;
+}
+.home-search:focus-within {
+  border-color:var(--or);background:var(--wh);
+  box-shadow:0 0 0 3px rgba(255,107,43,.1);
+}
+.home-search input {
+  flex:1;background:none;border:none;outline:none;
+  font-family:inherit;font-size:15px;color:var(--ink);
+}
+
+/* ── CARD — mode badge ── */
+.card-mode-badge {
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:50px;font-size:9.5px;font-weight:700;
+  letter-spacing:.03em;text-transform:uppercase;margin-left:4px;
+}
+.card-mode-badge.visio {
+  background:rgba(0,113,227,.12);color:#0055B3;
+}
+.card-mode-badge.presentiel {
+  background:rgba(0,177,79,.12);color:#007A38;
+}
+
+/* ── dark ── */
+html.dk .msg-actions{background:var(--bg);}
+html.dk .home-search{background:var(--bg);}
+
 </style>
 </head>
 <body>
@@ -1230,9 +1334,12 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
     </div>
   </div>
   <!-- Barre de recherche mobile (visible seulement sur Explorer) -->
-  <div class="mob-search" id="mobSearch">
-    <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-    <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()">
+  <!-- Search bar — clean, part of page scroll -->
+  <div id="mobSearch" style="padding:8px 16px 4px;background:var(--wh)">
+    <div class="home-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17" style="color:var(--lite);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()" style="flex:1;background:none;border:none;outline:none;font-family:inherit;font-size:15px;color:var(--ink)">
+    </div>
   </div>
 
   <div id="unverifiedBanner" style="display:none"></div>
@@ -1280,39 +1387,36 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
           </button>
         </div>
       </div>
-      <!-- Tri rapide -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:12px;color:var(--lite)" id="sortResultCount" style="display:none"></div>
-        <select id="sortSelect" onchange="setSortMode(this.value)" style="border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);outline:none;cursor:pointer;padding:2px 0">
-          <option value="date">Par date</option>
-          <option value="prix">Prix croissant</option>
-          <option value="recent">Récemment ajoutés</option>
-        </select>
-      </div>
-      <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:8px;overflow:visible;padding-top:8px;padding-bottom:8px">
-        <!-- Bouton Niveau — fixe à gauche -->
-        <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
+      <!-- Filter bar — clean chips -->
+      <div class="filter-bar" id="filterBar">
+        <!-- Tri -->
+        <div class="sort-chip" onclick="cycleSort(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          <span id="sortLabel">Date</span>
+        </div>
+        <!-- Niveau -->
+        <div class="fchip fchip-level" id="pillNiv" onclick="openNivFilter()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
           <span id="pillNivLabel">Niveau</span>
         </div>
-        <!-- Séparateur vertical -->
-        <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0;margin-right:8px"></div>
-        <!-- Pills matières scrollables -->
-        <div class="pills" id="pillsBar" style="margin-bottom:0;flex:1">
-          <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
-          <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
-          <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
-          <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
-          <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
-          <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
-          <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
-          <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
-          <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid);flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            +
-          </div>
+        <!-- Séparateur -->
+        <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0"></div>
+        <!-- Matières -->
+        <div class="fchip on" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</div>
+        <div class="fchip" data-f="maths" onclick="setPill(this)">Maths</div>
+        <div class="fchip" data-f="physique" onclick="setPill(this)">Physique</div>
+        <div class="fchip" data-f="informatique" onclick="setPill(this)">Info</div>
+        <div class="fchip" data-f="langues" onclick="setPill(this)">Langues</div>
+        <div class="fchip" data-f="economie" onclick="setPill(this)">Éco</div>
+        <div class="fchip" data-f="soir" onclick="setPill(this)">Ce soir</div>
+        <div class="fchip" data-f="weekend" onclick="setPill(this)">Week-end</div>
+        <div class="fchip" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;gap:4px;color:var(--mid)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Filtre
         </div>
+        <!-- keep hidden pillsBar for JS compat -->
+        <div id="pillsBar" style="display:none"></div>
+        <input type="hidden" id="srch" value="">
       </div>
 
       <!-- Bottom sheet filtre niveau -->
@@ -3632,11 +3736,12 @@ function renderPage(){
     var nivBadge=c.niveau?'<span style="display:inline-flex;align-items:center;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px;letter-spacing:.02em">'+c.niveau+'</span>':'';
     var isNew=c.created_at&&(Date.now()-new Date(c.created_at).getTime()<86400000);
     var newBadge=isNew?'<span style="display:inline-flex;align-items:center;background:#FF6B2B;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:800;color:#fff;margin-left:6px;letter-spacing:.04em;animation:pulse 1.5s infinite">NOUVEAU</span>':'';
+    var modeBadge=(c.mode&&c.mode!=='presentiel')?'<span class="card-mode-badge visio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio</span>':'';
     var descLine=c.description?'<div style="font-size:12px;color:var(--lite);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4">'+c.description+'</div>':'';
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -4496,12 +4601,25 @@ async function loadMessages(){
       var bubbleColor=isMe?'#fff':'var(--ink)';
       var bubbleRadius=isMe?'20px 20px 5px 20px':'20px 20px 20px 5px';
       var bubbleShadow=isMe?'0 2px 8px rgba(255,107,43,.3)':'0 1px 4px rgba(0,0,0,.08)';
+      var isProf=user&&user.role==='professeur';
+      var canAct=isMe||(isProf&&!isMe);
+      var actionsHtml='';
+      if(canAct){
+        var actClass='msg-actions '+(isMe?'right':'left');
+        actionsHtml='<div class="'+actClass+'">'
+          +(isMe?'<button class="msg-act-btn" onclick="editMsg(\''+m.id+'\',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Modifier</button>':'')
+          +'<button class="msg-act-btn del" onclick="deleteMsg(\''+m.id+'\')">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Supprimer</button>'
+          +'</div>';
+      }
       html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:7px;margin-bottom:2px">'
         +(isMe?'':''+avHtml)
-        +'<div style="max-width:72%;background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
-        +'<div>'+m.contenu+'</div>'
+        +'<div class="msg-bubble-wrap" style="max-width:72%;position:relative">'
+        +actionsHtml
+        +'<div style="background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
+        +'<div class="msg-content" data-id="'+m.id+'">'+m.contenu+'</div>'
         +'<div style="font-size:10px;opacity:.55;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
-        +'</div>'
+        +'</div></div>'
         +(isMe?'':'')
         +'</div>';
     });
@@ -7277,6 +7395,117 @@ function showAccHome(){
     }
   };
 })();
+
+// ---- setPill compat for new fchip ----
+(function(){
+  var _sp=setPill;
+  setPill=function(el){
+    // Support both .pill and .fchip
+    haptic(4);
+    var bar=el.closest('#filterBar')||el.closest('.pills');
+    var selector=bar?'.fchip[data-f],.pill[data-f]':'.pill';
+    document.querySelectorAll(selector).forEach(function(p){p.classList.remove('on');});
+    el.classList.add('on');
+    actF=el.dataset.f;
+    doFilter();
+    try{sessionStorage.setItem('cp_filter',actF);}catch(e){}
+  };
+})();
+
+// ---- Cycle sort ----
+var _sortModes=['date','prix','recent'];
+var _sortLabels=['Date','Prix','Récents'];
+var _sortIdx=0;
+function cycleSort(el){
+  _sortIdx=(_sortIdx+1)%_sortModes.length;
+  sortMode=_sortModes[_sortIdx];
+  var lbl=document.getElementById('sortLabel');
+  if(lbl)lbl.textContent=_sortLabels[_sortIdx];
+  el.style.background=_sortIdx===0?'var(--bg)':'var(--orp)';
+  el.style.color=_sortIdx===0?'var(--mid)':'var(--or)';
+  applyFilter();
+  haptic(6);
+}
+
+// ---- Message edit ----
+function editMsg(msgId, btn){
+  var wrap=btn.closest('.msg-bubble-wrap');
+  if(!wrap)return;
+  var contentEl=wrap.querySelector('.msg-content[data-id="'+msgId+'"]');
+  if(!contentEl)return;
+  var oldText=contentEl.textContent;
+  // Hide actions, show inline editor
+  var actions=wrap.querySelector('.msg-actions');
+  if(actions)actions.style.display='none';
+  var editWrap=document.createElement('div');
+  editWrap.className='msg-edit-wrap';
+  editWrap.innerHTML='<input class="msg-edit-input" value="'+oldText.replace(/"/g,'&quot;')+'" maxlength="1000">'
+    +'<button onclick="submitEditMsg(\''+msgId+'\',this)" style="background:var(--or);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">OK</button>'
+    +'<button onclick="cancelEditMsg(this,\''+oldText.replace(/'/g,"\'")+'\',\''+msgId+'\')" style="background:var(--bg);color:var(--mid);border:none;border-radius:10px;padding:7px 10px;font-family:inherit;font-size:13px;cursor:pointer">✕</button>';
+  wrap.appendChild(editWrap);
+  var inp=editWrap.querySelector('input');
+  if(inp){inp.focus();inp.select();}
+}
+function cancelEditMsg(btn, oldText, msgId){
+  var wrap=btn.closest('.msg-bubble-wrap');if(!wrap)return;
+  var ew=wrap.querySelector('.msg-edit-wrap');if(ew)ew.remove();
+  var ac=wrap.querySelector('.msg-actions');if(ac)ac.style.display='';
+}
+async function submitEditMsg(msgId, btn){
+  var wrap=btn.closest('.msg-bubble-wrap');if(!wrap)return;
+  var inp=wrap.querySelector('.msg-edit-input');if(!inp)return;
+  var newText=inp.value.trim();if(!newText)return;
+  btn.disabled=true;btn.textContent='...';
+  try{
+    var r=await fetch(API+'/messages/'+msgId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({contenu:newText,user_id:user.id})});
+    if(r.ok){
+      var contentEl=wrap.querySelector('.msg-content[data-id="'+msgId+'"]');
+      if(contentEl)contentEl.textContent=newText;
+      var ew=wrap.querySelector('.msg-edit-wrap');if(ew)ew.remove();
+      var ac=wrap.querySelector('.msg-actions');if(ac)ac.style.display='';
+      haptic(6);
+    }else{toast('Erreur','Impossible de modifier');}
+  }catch(e){toast('Erreur réseau','');}
+  finally{btn.disabled=false;btn.textContent='OK';}
+}
+
+// ---- Message delete ----
+async function deleteMsg(msgId){
+  if(!confirm('Supprimer ce message ?'))return;
+  try{
+    var r=await fetch(API+'/messages/'+msgId,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id})});
+    if(r.ok){
+      var el=document.querySelector('.msg-content[data-id="'+msgId+'"]');
+      if(el){
+        var wrap=el.closest('.msg-bubble-wrap');
+        var row=wrap?wrap.closest('[style*="display:flex"]'):null;
+        if(row){row.style.transition='opacity .25s,max-height .3s';row.style.opacity='0';row.style.maxHeight='0';row.style.overflow='hidden';setTimeout(function(){row.remove();},300);}
+        else if(wrap)wrap.remove();
+      }
+      haptic([10,30]);toast('Message supprimé','');
+    }else{toast('Erreur','Impossible de supprimer');}
+  }catch(e){toast('Erreur réseau','');}
+}
+
+// Touch-hold on mobile to show msg actions
+document.addEventListener('touchstart',function(e){
+  var wrap=e.target.closest('.msg-bubble-wrap');
+  if(!wrap)return;
+  wrap._holdTimer=setTimeout(function(){
+    document.querySelectorAll('.msg-bubble-wrap.touched').forEach(function(w){if(w!==wrap)w.classList.remove('touched');});
+    wrap.classList.toggle('touched');
+    haptic(10);
+  },450);
+},{passive:true});
+document.addEventListener('touchend',function(e){
+  var wrap=e.target.closest('.msg-bubble-wrap');
+  if(wrap)clearTimeout(wrap._holdTimer);
+},{passive:true});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.msg-actions')&&!e.target.closest('.msg-bubble-wrap')){
+    document.querySelectorAll('.msg-bubble-wrap.touched').forEach(function(w){w.classList.remove('touched');});
+  }
+});
 
 </script>
 </body>
