@@ -848,7 +848,7 @@ html.dk .bnav {
 }
 .bni-mes.on  { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; box-shadow: 0 4px 14px rgba(255,69,0,.35); }
 .bni-mes svg { width: 22px; height: 22px; }
-.bni-mes span { font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }
+
 
 /* ── TOAST ── */
 .toast {
@@ -983,7 +983,7 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
 
 
 /* ── MSG EDIT/DELETE ── */
-.msg-bubble-wrap { position:relative; max-width: min(72%, calc(100vw - 80px)); min-width:0; overflow:hidden; }
+
 .msg-actions {
   display:none; position:absolute; top:-8px;
   background:var(--wh); border-radius:20px;
@@ -1191,21 +1191,15 @@ html.dk .settings-group { background:var(--wh); }
 
 
 
-/* ══ MSG FINAL ══ */
-#pgMsg { overflow: hidden; }
-#msgListPane { overflow: hidden; }
-#msgConvPane {
-  display: none;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg);
-  z-index: 200;
-  overflow: hidden;
-}
-#msgMessages { overflow-x: hidden; overflow-y: auto; }
-.msg-bubble-wrap { max-width: min(72%, calc(100vw - 80px)); min-width: 0; position: relative; }
-.msg-content { word-break: break-word; overflow-wrap: anywhere; max-width: 100%; }
+
+/* ── Messagerie ── */
+#pgMsg { display:none; flex-direction:column; height:calc(100dvh - 56px); overflow:hidden; }
+#pgMsg.on { display:flex !important; }
+#msgListPane { display:flex; flex-direction:column; height:100%; overflow:hidden; }
+#msgConvPane { display:none; flex-direction:column; position:fixed; inset:0; background:var(--bg); z-index:200; overflow:hidden; }
+#msgMessages { flex:1; overflow-y:auto; overflow-x:hidden; min-height:0; }
+.msg-content { word-break:break-word; overflow-wrap:anywhere; }
+.chat-cours-card { display:block; max-width:240px; background:var(--wh); border:1.5px solid var(--bdr); border-radius:16px; overflow:hidden; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -2634,7 +2628,7 @@ html.dk .settings-group { background:var(--wh); }
 
   <div class="bni-mes" id="bniMes" onclick="navTo('mes')" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 12px;border-radius:40px;color:var(--lite);min-width:48px;justify-content:center">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-    <span>Réservés</span>
+    <span>Mes cours</span>
   </div>
 
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
@@ -4620,100 +4614,68 @@ async function loadMessages(){
     var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId);
     var msgs=await r.json();
     if(!Array.isArray(msgs))return;
-    var container=g('msgMessages');
+    var box=g('msgMessages');
     if(!msgs.length){
-      container.innerHTML='<div style="text-align:center;padding:30px;color:var(--lite);font-size:13px">Aucun message. Dites bonjour ! 👋</div>';
+      box.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour 👋</div>';
       return;
     }
-    // Clear unread badge when we actually read the messages
     updateMsgBadge(0);
     var html='';
     var lastDate='';
-    var now=new Date();
     msgs.forEach(function(m){
       var d=new Date(m.created_at);
-      var dateKey=d.toDateString();
-      if(dateKey!==lastDate){
-        lastDate=dateKey;
-        var label='';
+      var dk=d.toDateString();
+      if(dk!==lastDate){
+        lastDate=dk;
         var today=new Date();today.setHours(0,0,0,0);
-        var yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
-        var msgDay=new Date(d);msgDay.setHours(0,0,0,0);
-        var diff=Math.round((today-msgDay)/(1000*60*60*24));
-        if(diff===0)label='Aujourd\'hui';
-        else if(diff===1)label='Hier';
-        else if(diff===2)label='Avant-hier';
-        else{
-          label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-          label=label.charAt(0).toUpperCase()+label.slice(1);
-        }
-        html+='<div style="text-align:center;margin:12px 0 8px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+label+'</span></div>';
+        var diff=Math.round((today-(new Date(dk)))/(864e5));
+        var lbl=diff===0?"Aujourd'hui":diff===1?'Hier':d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+        lbl=lbl.charAt(0).toUpperCase()+lbl.slice(1);
+        html+='<div style="text-align:center;margin:12px 0 6px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+lbl+'</span></div>';
       }
       var isMe=m.sender_id===user.id;
       var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      // Avatar interlocuteur pour les messages reçus
-      var otherP=P[msgDestId]||{};
-      var otherPhoto=otherP.photo||null;
-      var otherIni=(otherP.i)||((msgDestinataire&&msgDestinataire[0])||'?');
-      var otherCol=otherP.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
+      var txt=m.contenu||'';
+      // Detect raw JSON garbage — hide it
+      var isGarbage=txt.includes('"mode":"presentiel"')||txt.includes('"mode":"visio"')||txt.includes('prof_couleur');
+      if(isGarbage)return;
+      // Detect HTML card
+      var isHtml=txt.trimStart().startsWith('<');
+      var content=isHtml?txt:txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var bg=isMe?'linear-gradient(135deg,var(--or),var(--ord))':'var(--wh)';
+      var col=isMe?'#fff':'var(--ink)';
+      var br=isMe?'18px 18px 4px 18px':'18px 18px 18px 4px';
+      var sh=isMe?'0 2px 8px rgba(255,107,43,.25)':'0 1px 4px rgba(0,0,0,.08)';
+      // Avatar for received
       var avHtml='';
       if(!isMe){
-        avHtml='<div style="width:28px;height:28px;border-radius:50%;background:'+otherCol+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;margin-top:2px;align-self:flex-end">'+(otherPhoto?'<img src="'+otherPhoto+'" style="width:100%;height:100%;object-fit:cover">':otherIni)+'</div>';
+        var op=P[msgDestId]||{};
+        var oPhoto=op.photo||null;
+        var oIni=(op.i||(msgDestinataire&&msgDestinataire[0])||'?');
+        var oCol=op.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
+        avHtml='<div style="width:28px;height:28px;border-radius:50%;background:'+oCol+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;align-self:flex-end">'+(oPhoto?'<img src="'+oPhoto+'" style="width:100%;height:100%;object-fit:cover">':oIni)+'</div>';
       }
-      var bubbleBg=isMe?'linear-gradient(135deg,var(--or),var(--ord))':'var(--wh)';
-      var bubbleColor=isMe?'#fff':'var(--ink)';
-      var bubbleRadius=isMe?'20px 20px 5px 20px':'20px 20px 20px 5px';
-      var bubbleShadow=isMe?'0 2px 8px rgba(255,107,43,.3)':'0 1px 4px rgba(0,0,0,.08)';
-      var isProf=user&&user.role==='professeur';
-      var canAct=isMe||(isProf&&!isMe);
-      var actionsHtml='';
-      if(canAct){
-        var actClass='msg-actions '+(isMe?'right':'left');
-        actionsHtml='<div class="'+actClass+'">'
-          +(isMe?'<button class="msg-act-btn" onclick="editMsg(\''+m.id+'\',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Modifier</button>':'')
-          +'<button class="msg-act-btn del" onclick="deleteMsg(\''+m.id+'\')">'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Supprimer</button>'
-          +'</div>';
+      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px;margin-bottom:3px">'
+        +(isMe?'':avHtml)
+        +'<div style="max-width:72%;min-width:0">'
+        +'<div style="background:'+bg+';color:'+col+';border-radius:'+br+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+sh+';word-break:break-word;overflow-wrap:anywhere">';
+      if(isHtml){
+        html+='<div>'+content+'</div>';
+      } else {
+        html+='<div style="white-space:pre-wrap">'+content+'</div>';
       }
-      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:7px;margin-bottom:2px;min-width:0;overflow:hidden">'
-        +(isMe?'':''+avHtml)
-        +'<div class="msg-bubble-wrap" style="max-width:72%;min-width:0;position:relative;overflow:hidden">'
-        +actionsHtml
-        +'<div style="background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
-        +(function(){
-        var _raw=m.contenu||'';
-        // Skip raw COURSCARD JSON (old format stored before HTML cards)
-        var _isCoursCard=_raw.includes('"mode":"presentiel"')||_raw.includes('"mode":"visio"')||_raw.includes('COURSCARD:');
-        if(_isCoursCard){
-          // Show as a simple clickable link instead of raw JSON
-          var _cardId=_raw.match(/"id":"([^"]+)"/);
-          var _cardTitle=_raw.match(/"title":"([^"]+)"/);
-          var _label=_cardTitle?_cardTitle[1]:'Voir le cours';
-          var _cid=_cardId?_cardId[1]:'';
-          return '<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word"><span style="background:var(--orp);color:var(--or);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block" onclick="'+(_cid?'openR(\''+_cid+'\')':'')+'">📚 '+_label+'</span></div>';
-        }
-        var _isHtml=_raw.trimStart().startsWith('<');
-        var _safe=_isHtml?_raw:_raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return '<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word;overflow-wrap:anywhere;'+(_isHtml?'':'white-space:pre-wrap')+'">'+_safe+'</div>';
-      }())
-        +'<div style="font-size:10px;opacity:.55;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+      html+='<div style="font-size:10px;opacity:.5;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
         +'</div></div>'
         +(isMe?'':'')
         +'</div>';
     });
-    container.innerHTML=html;
-    container.scrollTop=container.scrollHeight;
-    // Marquer comme lu
+    box.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
+    box.scrollTop=box.scrollHeight;
+    // Mark as read
     if(msgDestId){
-      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).then(function(){
-        // Mettre à jour badge
-        var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
-        var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
-        // Mettre à jour aperçu dans la liste
-        document.querySelectorAll('.msg-unread').forEach(function(r){r.classList.remove('msg-unread');});
-      }).catch(function(){});
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
     }
-  }catch(e){}
+  }catch(e){console.log('loadMessages err',e);}
 }
 
 async function sendMsg(){
