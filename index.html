@@ -4854,7 +4854,7 @@ async function loadMessages(){
     if(!Array.isArray(msgs))return;
     var box=g('msgMessages');
     if(!msgs.length){
-      box.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour 👋</div>';
+      box.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour !</div>';
       return;
     }
     updateMsgBadge(0);
@@ -4866,53 +4866,52 @@ async function loadMessages(){
       if(dk!==lastDate){
         lastDate=dk;
         var today=new Date();today.setHours(0,0,0,0);
-        var diff=Math.round((today-(new Date(dk)))/(864e5));
+        var diff=Math.round((today-new Date(dk))/(864e5));
         var lbl=diff===0?"Aujourd'hui":diff===1?'Hier':d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-        lbl=lbl.charAt(0).toUpperCase()+lbl.slice(1);
-        html+='<div style="text-align:center;margin:12px 0 6px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+lbl+'</span></div>';
+        html+='<div style="text-align:center;margin:12px 0 6px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+lbl.charAt(0).toUpperCase()+lbl.slice(1)+'</span></div>';
       }
       var isMe=m.sender_id===user.id;
       var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var txt=m.contenu||'';
-      // Detect raw JSON garbage — hide it
-      var isGarbage=txt.includes('"mode":"presentiel"')||txt.includes('"mode":"visio"')||txt.includes('prof_couleur');
-      if(isGarbage)return;
-      // Detect HTML card
+      // Masquer JSON brut
+      if(txt.includes('"mode":"presentiel"')||txt.includes('prof_couleur'))return;
+      var isCard=txt.trimStart().startsWith('<div class="chat-cours-card"')||txt.trimStart().startsWith('<div class=\"chat-cours-card');
       var isHtml=txt.trimStart().startsWith('<');
-      var content=isHtml?txt:txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      var bg=isMe?'linear-gradient(135deg,var(--or),var(--ord))':'var(--wh)';
-      var col=isMe?'#fff':'var(--ink)';
-      var br=isMe?'18px 18px 4px 18px':'18px 18px 18px 4px';
-      var sh=isMe?'0 2px 8px rgba(255,107,43,.25)':'0 1px 4px rgba(0,0,0,.08)';
-      // Avatar for received
+      
+      var op=P[msgDestId]||{};
+      var oPhoto=op.photo||null;
+      var oIni=(op.i||(msgDestinataire&&msgDestinataire[0])||'?');
+      var oCol=op.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
       var avHtml='';
       if(!isMe){
-        var op=P[msgDestId]||{};
-        var oPhoto=op.photo||null;
-        var oIni=(op.i||(msgDestinataire&&msgDestinataire[0])||'?');
-        var oCol=op.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
         avHtml='<div style="width:28px;height:28px;border-radius:50%;background:'+oCol+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;align-self:flex-end">'+(oPhoto?'<img src="'+oPhoto+'" style="width:100%;height:100%;object-fit:cover">':oIni)+'</div>';
       }
-      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px;margin-bottom:3px">'
-        +(isMe?'':avHtml)
-        +'<div style="max-width:72%;min-width:0">'
-        +'<div style="background:'+bg+';color:'+col+';border-radius:'+br+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+sh+';word-break:break-word;overflow-wrap:anywhere">';
-      if(isHtml){
-        html+='<div>'+content+'</div>';
+
+      if(isCard){
+        // Card cours : pas de bulle, juste la card avec max-width
+        html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px;margin-bottom:6px">'
+          +(isMe?'':avHtml)
+          +'<div style="max-width:240px;min-width:0;overflow:hidden">'+txt
+          +'<div style="font-size:10px;color:var(--lite);margin-top:3px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+          +'</div></div>';
       } else {
-        html+='<div style="white-space:pre-wrap">'+content+'</div>';
+        // Bulle texte normale
+        var content=isHtml?txt:txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var bg=isMe?'linear-gradient(135deg,var(--or),var(--ord))':'var(--wh)';
+        var col=isMe?'#fff':'var(--ink)';
+        var br=isMe?'18px 18px 4px 18px':'18px 18px 18px 4px';
+        html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px;margin-bottom:3px">'
+          +(isMe?'':avHtml)
+          +'<div style="max-width:72%;min-width:0">'
+          +'<div style="background:'+bg+';color:'+col+';border-radius:'+br+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.08);word-break:break-word;overflow-wrap:anywhere">'
+          +'<div style="white-space:pre-wrap">'+content+'</div>'
+          +'<div style="font-size:10px;opacity:.5;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+          +'</div></div></div>';
       }
-      html+='<div style="font-size:10px;opacity:.5;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
-        +'</div></div>'
-        +(isMe?'':'')
-        +'</div>';
     });
     box.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
     box.scrollTop=box.scrollHeight;
-    // Mark as read
-    if(msgDestId){
-      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
-    }
+    if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
   }catch(e){console.log('loadMessages err',e);}
 }
 
