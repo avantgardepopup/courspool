@@ -876,6 +876,43 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
 ::-webkit-scrollbar{width:3px;height:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px;}
+
+/* Acc cards grid */
+.acc-card:hover{transform:translateY(-3px)!important;box-shadow:0 4px 24px rgba(0,0,0,.1)!important;}
+.acc-card:active{transform:scale(.97)!important;transition-duration:.1s!important;}
+#accStats>div{background:var(--wh);border-radius:16px;padding:16px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.05);}
+
+/* Home/Detail mode */
+#pgAcc.home-mode .acc-body{display:none!important;}
+#pgAcc.detail-mode #accHome{display:none!important;}
+#pgAcc.detail-mode #accDetailHeader{display:flex!important;}
+#pgAcc.detail-mode .acc-body{display:block!important;}
+
+/* Nav collapse in conversation — ONLY back arrow */
+.bnav.conv-mode{padding:6px 8px!important;}
+.bnav.conv-mode .bni:not(#bniMsg),
+.bnav.conv-mode .bni-mes,
+.bnav.conv-mode #bniAdd{
+  width:0!important;overflow:hidden!important;padding:0!important;margin:0!important;
+  min-width:0!important;opacity:0!important;pointer-events:none!important;
+  transition:all .25s cubic-bezier(.4,0,.2,1)!important;
+}
+.bnav.conv-mode #bniMsg{background:var(--bg)!important;color:var(--mid)!important;box-shadow:none!important;min-width:36px!important;padding:8px!important;}
+.bnav.conv-mode #bniMsg .bni-ico-off{display:none!important;}
+.bnav.conv-mode #bniMsg .bni-ico-on{display:none!important;}
+.bnav.conv-mode #bniMsg span{display:none!important;}
+.bnav.conv-mode #bniMsg .bni-back{display:flex!important;}
+.bni-back{display:none;align-items:center;justify-content:center;width:36px;height:36px;}
+.bni-badge{position:absolute;top:4px;right:8px;min-width:16px;height:16px;background:#EF4444;border-radius:50px;font-size:10px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none;}
+
+/* Card stagger animation */
+#accHome .acc-card:nth-child(1){animation-delay:.03s;}
+#accHome .acc-card:nth-child(2){animation-delay:.06s;}
+#accHome .acc-card:nth-child(3){animation-delay:.09s;}
+#accHome .acc-card:nth-child(4){animation-delay:.12s;}
+#accHome .acc-card:nth-child(5){animation-delay:.15s;}
+#accHome .acc-card:nth-child(6){animation-delay:.18s;}
+
 </style>
 </head>
 <body>
@@ -1336,54 +1373,106 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
   <div class="pg" id="pgAcc">
     <div style="background:var(--bg);min-height:100%;padding-bottom:120px">
 
-      <!-- HERO PROFIL -->
-      <div style="background:linear-gradient(145deg,#FF7A3D,var(--ord));padding:max(44px,env(safe-area-inset-top,44px)) 20px 0;text-align:center;position:relative;overflow:hidden">
-        <!-- Cercles déco -->
-        <div style="position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
-        <div style="position:absolute;left:-30px;bottom:0;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
+      <!-- PROFILE HOME — minimal, 6 cards -->
+      <div id="accHome" style="padding:max(56px,env(safe-area-inset-top,56px)) 20px 0">
 
-        <div style="position:relative;z-index:1;padding-bottom:20px">
-          <!-- Avatar -->
-          <div style="position:relative;display:inline-block;margin-bottom:12px">
-            <div id="accAv" style="width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.4);margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.15)">?</div>
-            <label style="position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <!-- Avatar + name header -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px">
+          <div style="position:relative;flex-shrink:0">
+            <div id="accAv" style="width:64px;height:64px;border-radius:50%;background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--mid);overflow:hidden;border:2px solid var(--bdr2,var(--bdr))">?</div>
+            <label style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid var(--bg)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
             </label>
           </div>
-          <!-- Nom + rôle -->
-          <div id="accName" style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.02em">—</div>
-          <div id="accRolePill" style="display:inline-block;background:rgba(255,255,255,.2);border-radius:50px;padding:4px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:20px"></div>
-          <!-- Stats -->
-          <div id="accStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.2);border-radius:16px;overflow:hidden;margin:0 4px"></div>
+          <div style="flex:1;min-width:0">
+            <div id="accName" style="font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.035em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+            <div id="accRolePill" style="font-size:13px;color:var(--lite);margin-top:2px"></div>
+          </div>
         </div>
 
+        <!-- Stats row (rempli par buildAccLists) -->
+        <div id="accStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:32px"></div>
+
+        <!-- 6 cards grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px">
+
+          <!-- Mes cours -->
+          <div class="acc-card" onclick="switchATab('R',document.getElementById('aTabR'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#FFF4EE;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes cours</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Réservations</div>
+          </div>
+
+          <!-- Suivis -->
+          <div class="acc-card" onclick="switchATab('F',document.getElementById('aTabF'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#FFF0F0;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Suivis</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Professeurs</div>
+          </div>
+
+          <!-- Historique -->
+          <div class="acc-card" onclick="switchATab('H',document.getElementById('aTabH'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F0F9FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Historique</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Cours passés</div>
+          </div>
+
+          <!-- Profil -->
+          <div class="acc-card" onclick="switchATab('P',document.getElementById('aTabP'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mon profil</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Infos &amp; réglages</div>
+          </div>
+
+          <!-- Revenus (prof seulement) -->
+          <div class="acc-card" id="accCardRev" onclick="switchATab('Rev',document.getElementById('aTabRev'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Revenus</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Paiements reçus</div>
+          </div>
+
+          <!-- Paramètres -->
+          <div class="acc-card" id="accCardParams" onclick="switchATab('P',document.getElementById('aTabP'));setTimeout(function(){var el=document.querySelector('#asecP [onclick*=doLogout]');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},300)" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Paramètres</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Notifications, CGU…</div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- ONGLETS — barre blanche sticky sous le hero -->
-      <div style="display:flex;background:var(--wh);border-bottom:2px solid var(--bdr);position:sticky;top:0;z-index:40;overflow-x:auto;scrollbar-width:none">
-        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Mes cours
+      <!-- DETAIL VIEWS (hidden by default, shown via switchATab) -->
+      <!-- Back button header for detail views -->
+      <div id="accDetailHeader" style="display:none;align-items:center;gap:12px;padding:max(56px,env(safe-area-inset-top,56px)) 20px 16px;position:sticky;top:0;background:var(--wh);z-index:10;border-bottom:1px solid var(--bdr)">
+        <button onclick="showAccHome()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          Suivis
-        </button>
-        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Historique
-        </button>
-        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-          Profil
-        </button>
-        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          Revenus
-        </button>
+        <div id="accDetailTitle" style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em"></div>
       </div>
 
+      <!-- Hidden tabs (needed for JS) -->
+      <div style="display:none">
+        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">Mes cours</button>
+        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">Suivis</button>
+        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">Historique</button>
+        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">Profil</button>
+        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">Revenus</button>
+      </div>
+
+      <div class="acc-body">
 
       <div class="acc-body">
 
@@ -2264,7 +2353,8 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
     <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" class="bni-ico-on" style="display:none"><circle cx="11" cy="11" r="8" fill="currentColor" opacity=".15"/><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2.5"/></svg>
     <span>Explorer</span>
   </div>
-  <div class="bni" id="bniMsg" onclick="navTo('msg')">
+  <div class="bni" id="bniMsg" onclick="if(document.getElementById('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
+    <div class="bni-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg></div>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" class="bni-ico-on" style="display:none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" opacity=".9"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
@@ -7039,6 +7129,78 @@ async function sendCoursCardMsg(c){
     bar.style.paddingBottom=kbH>50?(kbH+10)+'px':'max(12px,env(safe-area-inset-bottom))';
     var msgs=g('msgMessages');if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},50);
   },{passive:true});
+})();
+
+// ============================================================
+// PROFILE — Home grid + Detail view navigation
+// ============================================================
+var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus'};
+
+function showAccHome(){
+  var pg=g('pgAcc');
+  if(pg){pg.classList.remove('detail-mode');pg.classList.add('home-mode');}
+  ['R','F','H','P','Rev'].forEach(function(x){
+    var t=g('aTab'+x),s=g('asec'+x);
+    if(t)t.classList.remove('on');
+    if(s)s.classList.remove('on');
+  });
+  // Scroll page to top
+  var pgEl=g('pgAcc');if(pgEl)pgEl.scrollTop=0;
+}
+
+// Override switchATab to show detail view
+(function(){
+  var _orig=switchATab;
+  switchATab=function(s,el){
+    _orig(s,el);
+    var pg=g('pgAcc');
+    if(pg){pg.classList.remove('home-mode');pg.classList.add('detail-mode');}
+    var dh=g('accDetailHeader');if(dh)dh.style.display='flex';
+    var dt=g('accDetailTitle');if(dt)dt.textContent=ACC_TITLES[s]||'';
+    var body=document.querySelector('#pgAcc .acc-body');
+    if(body)body.scrollTop=0;
+  };
+})();
+
+// Override navTo to reset to home when going to acc tab
+(function(){
+  var _nt2=navTo;
+  navTo=function(tab){
+    _nt2(tab);
+    if(tab==='acc'){setTimeout(showAccHome,20);}
+  };
+})();
+
+// applyUser — show revenue card for profs
+(function(){
+  var _au2=applyUser;
+  applyUser=function(){
+    _au2();
+    var cr=g('accCardRev');
+    if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+    var bm=g('bniMes');
+    if(bm)bm.style.display=(user&&user.id&&user.role!=='professeur')?'flex':'none';
+    var sb=g('btnShareCours');
+    if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
+    var pg=g('pgAcc');
+    if(pg&&!pg.classList.contains('detail-mode'))pg.classList.add('home-mode');
+  };
+})();
+
+// Init
+(function(){
+  var pg=g('pgAcc');if(pg)pg.classList.add('home-mode');
+  // Also style accStats cells dynamically
+  var _orig2=buildAccLists;
+  buildAccLists=function(){
+    _orig2.apply(this,arguments);
+    var stats=g('accStats');
+    if(stats){
+      stats.querySelectorAll('div').forEach(function(cell){
+        if(!cell.style.background){cell.style.cssText+='background:var(--wh);border-radius:16px;padding:16px;text-align:center;';}
+      });
+    }
+  };
 })();
 
 </script>
