@@ -729,6 +729,55 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 /* ============================================================
    CoursPool — Design System (clean, no conflicts)
    ============================================================ */
+
+/* ── NAVIGATION BAR — visual polish only (positioning in original CSS) ── */
+.bnav {
+  background: rgba(255,255,255,.94);
+  backdrop-filter: saturate(2) blur(40px);
+  -webkit-backdrop-filter: saturate(2) blur(40px);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,1);
+}
+html.dk .bnav {
+  background: rgba(16,14,12,.93);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 8px 32px rgba(0,0,0,.4);
+}
+
+/* Active nav item */
+.bni.on {
+  background: linear-gradient(148deg,#FF7D42,#FF4500);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(255,69,0,.35);
+}
+
+/* ── NAV — MOBILE: keep floating pill ── */
+@media (max-width: 640px) {
+  .bni              { padding: 8px 12px; min-width: 48px; flex: none; border-radius: 40px; }
+  .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
+  .bni span         { font-size: 9px; }
+  .bni-mes          { padding: 8px 12px; min-width: 48px; border-radius: 40px; }
+  .bni-mes.on       { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
+  #app .cnt         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
+  .acc-body         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
+}
+
+/* ── NAV — CONVERSATION MODE (only back arrow) ── */
+.bnav.conv-mode { padding: 6px 8px !important; }
+.bnav.conv-mode .bni:not(#bniMsg),
+.bnav.conv-mode .bni-mes,
+.bnav.conv-mode #bniAdd {
+  width: 0 !important; overflow: hidden !important; padding: 0 !important; margin: 0 !important;
+  min-width: 0 !important; opacity: 0 !important; pointer-events: none !important; flex: 0 !important;
+  transition: all .22s cubic-bezier(.4,0,.2,1) !important;
+}
+.bnav.conv-mode #bniMsg {
+  background: var(--bg) !important; color: var(--mid) !important;
+  box-shadow: none !important; min-width: 44px !important;
+  padding: 8px !important; flex: 0 !important;
+}
+.bnav.conv-mode #bniMsg .bni-msg-icon,
+.bnav.conv-mode #bniMsg span { display: none !important; }
+.bnav.conv-mode #bniMsg .bni-back { display: flex !important; }
+
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap');
 
 /* Base font */
@@ -793,39 +842,14 @@ body, input, textarea, button, select {
 .cnt { overflow: visible; }
 .pills { overflow: visible; }
 
-/* ── NAVIGATION BAR ── */
-.bnav {
-  background: rgba(255,255,255,.92);
-  backdrop-filter: saturate(2.5) blur(40px);
-  -webkit-backdrop-filter: saturate(2.5) blur(40px);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.055), 0 8px 32px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,1);
-}
 html.dk .bnav {
   background: rgba(16,14,12,.93);
   box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 8px 32px rgba(0,0,0,.4);
 }
 
-/* Active nav item */
-.bni.on {
-  background: linear-gradient(148deg,#FF7D42,#FF4500);
-  box-shadow: 0 4px 14px rgba(255,69,0,.35);
-}
 
 /* Mobile — keep floating pill */
 @media (max-width: 640px) {
-  .bnav {
-    bottom: max(20px, env(safe-area-inset-bottom, 20px));
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: auto;
-    min-width: min(90vw, 340px);
-    border-radius: 50px;
-    justify-content: center;
-    padding: 8px 10px;
-    border-top: none;
-    gap: 2px;
-  }
   .bni              { padding: 8px 14px; min-width: 52px; flex: none; border-radius: 40px; }
   .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
   .bni span         { font-size: 9px; }
@@ -835,30 +859,7 @@ html.dk .bnav {
   .acc-body         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
 }
 
-/* Nav collapse — conversation mode */
-.bnav.conv-mode { padding: 6px 8px !important; min-width: unset !important; width: auto !important; }
-.bnav.conv-mode .bni:not(#bniMsg),
-.bnav.conv-mode .bni-mes,
-.bnav.conv-mode #bniAdd {
-  width: 0 !important; overflow: hidden !important; padding: 0 !important; margin: 0 !important;
-  min-width: 0 !important; opacity: 0 !important; pointer-events: none !important; flex: 0 !important;
-  transition: all .25s cubic-bezier(.4,0,.2,1) !important;
-}
-.bnav.conv-mode #bniMsg { background: var(--bg) !important; color: var(--mid) !important; box-shadow: none !important; min-width: 44px !important; padding: 8px !important; flex: 0 !important; }
-.bnav.conv-mode #bniMsg .bni-msg-icon,
-.bnav.conv-mode #bniMsg span { display: none !important; }
-.bnav.conv-mode #bniMsg .bni-back { display: flex !important; }
-.bni-back { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; }
 
-/* Nav badge */
-.bni-badge {
-  position: absolute; top: 4px; right: 8px;
-  min-width: 16px; height: 16px;
-  background: #EF4444; border-radius: 50px;
-  font-size: 10px; font-weight: 700; color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 4px; pointer-events: none;
-}
 
 /* Mes cours nav item */
 .bni-mes {
@@ -906,13 +907,6 @@ html.dk .bnav {
 .acc-card:active { transform: scale(.97); transition-duration: .1s; }
 #accStats > div  { background: var(--wh); border-radius: 16px; padding: 14px 8px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.05); }
 
-/* Card stagger animation */
-#accHome .acc-card:nth-child(1) { animation-delay: .03s; }
-#accHome .acc-card:nth-child(2) { animation-delay: .06s; }
-#accHome .acc-card:nth-child(3) { animation-delay: .09s; }
-#accHome .acc-card:nth-child(4) { animation-delay: .12s; }
-#accHome .acc-card:nth-child(5) { animation-delay: .15s; }
-#accHome .acc-card:nth-child(6) { animation-delay: .18s; }
 
 /* ── PROFILE — HOME vs DETAIL MODES ── */
 #pgAcc.home-mode .acc-body          { display: none; }
@@ -1296,7 +1290,7 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
         </select>
       </div>
       <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px;overflow:visible;padding-top:6px;padding-bottom:6px">
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:8px;overflow:visible;padding-top:8px;padding-bottom:8px">
         <!-- Bouton Niveau — fixe à gauche -->
         <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -3608,29 +3602,7 @@ function renderPage(){
     g('nocardTitle').textContent='Aucun cours trouvé';
     g('nocardSub').textContent='Essayez un autre filtre ou une autre ville';
     g('loadMoreWrap').style.display='none';
-    // Cours similaires : suggerer des cours d'autres matieres
-    var suggestions=sortCourses(C.filter(function(c){return c.fl<c.sp&&!(c.prive&&!res[c.id]);}).slice(0,3));
-    if(suggestions.length){
-      var sgHtml='<div style="margin-top:16px;text-align:left"><div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;text-align:center">Cours disponibles</div>';
-      sgHtml+=suggestions.map(function(c){
-        var pp=Math.ceil(c.tot/c.sp);
-        var mf=findMatiere(c.subj)||MATIERES[MATIERES.length-1];
-        return'<div onclick="openR(\''+c.id+'\')" style="display:flex;align-items:center;gap:10px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:all .18s" onmouseenter="this.style.boxShadow=\'var(--sh)\'" onmouseleave="this.style.boxShadow=\'none\'">'+'<div style="width:36px;height:36px;border-radius:10px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mf.color+'"></div></div>'+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div><div style="font-size:11px;color:var(--lite);margin-top:2px">'+c.subj+' · '+c.dt+'</div></div>'+'<div style="font-size:15px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'€</div>'+'</div>';
-      }).join('');
-      sgHtml+='</div>';
-      var nc=g('nocard');
-      if(nc){
-        // Réinitialiser entièrement pour éviter accumulation
-        nc.querySelector('#nocardTitle') && (nc.querySelector('#nocardTitle').textContent='Aucun cours trouvé');
-        nc.querySelector('#nocardSub') && (nc.querySelector('#nocardSub').textContent='Essayez un autre filtre ou une autre ville');
-        // Supprimer les suggestions précédentes
-        var oldSg=nc.querySelector('.sg-block');if(oldSg)oldSg.remove();
-        var sgWrap=document.createElement('div');
-        sgWrap.className='sg-block';
-        sgWrap.innerHTML=sgHtml;
-        nc.appendChild(sgWrap);
-      }
-    }
+
     return;
   }
   // Compteur de résultats dans le sous-titre du header
