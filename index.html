@@ -1648,7 +1648,7 @@ html.dk .settings-group { background:var(--wh); }
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden;max-width:100vw">
+    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
@@ -3126,21 +3126,15 @@ function navTo(tab){
     restoreNav();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
-    // Guest → proposer de se connecter sans brutalité
     if(user.guest){
       toast('Connectez-vous pour accéder aux messages','');
       setTimeout(scrollToLogin, 800);
       return;
     }
     if(pgMsg)pgMsg.classList.add('on');
-    if(nav){var isMob=window.innerWidth<=640;if(!isMob){nav.style.left='20px';nav.style.transform='none';nav.style.padding='8px 12px';}else{nav.style.left='';nav.style.transform='';nav.style.padding='';}}
-    var bniExp=g('bniExp');
-    if(bniExp){
-      bniExp.classList.add('on');
-      bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg><span>Retour</span>';
-      bniExp.onclick=function(){navTo('exp');};
-    }
-    // Don't hide nav items - conv-mode CSS handles it
+    // Messages list page: normal nav, bniMsg highlighted
+    restoreNav();
+    var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     loadConversations();
   } else if(tab==='acc'){
@@ -4571,19 +4565,12 @@ function openMsg(profNm,destId,avatar){
   if(!destId){toast('Erreur','Destinataire introuvable');return;}
   if(destId===user.id){toast('Action impossible','Vous ne pouvez pas vous écrire à vous-même');return;}
   msgDestinataire=profNm;msgDestId=destId;
-  // Clear badge when opening a conversation
   var _b=g('bnavBadge');if(_b){_b.classList.remove('on');_b.textContent='';}
 
-  // Naviguer vers la page messages
+  // Go to messages tab first
   navTo('msg');
 
-  // Ouvrir la conversation
-  // Mobile : ajouter classe conv-open (CSS gère display:flex)
-  var pgMsg=g('pgMsg');
-  if(pgMsg)pgMsg.classList.add('conv-open');
-  var bnav=g('bnav');
-  // bnav hidden via conv-mode class (CSS)
-  // Avatar et nom
+  // Fill conv header
   var av=g('msgConvAv');
   if(avatar&&avatar!=='null'&&avatar!==''){
     av.style.background='none';
@@ -4596,42 +4583,47 @@ function openMsg(profNm,destId,avatar){
   g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   var inp=g('msgInput');inp.value='';inp.style.height='auto';
 
-  // Show conv pane
+  // Show conv pane + add conv-mode to collapse nav
   var convPane=g('msgConvPane');
   if(convPane)convPane.style.display='flex';
-  g('pgMsg').classList.add('conv-open');
+  var pgMsg=g('pgMsg');
+  if(pgMsg)pgMsg.classList.add('conv-open');
+  var bnav=g('bnav');
+  if(bnav)bnav.classList.add('conv-mode');
+  var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
 
-  // Marquer conversation active dans la liste
+  // Mark active row
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
   var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
   if(activeRow)activeRow.classList.add('active');
 
   loadMessages();
   clearInterval(msgPollTimer);
-  // Polling optimisé — augmente progressivement
   var pollDelay=3000;
   function schedulePoll(){
     msgPollTimer=setTimeout(function(){
       loadMessages();
-      if(msgDestId)schedulePoll(); // continuer seulement si conv active
+      if(msgDestId)schedulePoll();
     },pollDelay);
-    pollDelay=Math.min(pollDelay+500,8000); // augmente jusqu'à 8s
+    pollDelay=Math.min(pollDelay+500,8000);
   }
   schedulePoll();
 }
 
 function closeMsgConv(){
-  var pgMsg=g('pgMsg');
-  if(pgMsg)pgMsg.classList.remove('conv-open');
-  // Hide conv pane
+  // Hide conv pane, stay on messages list
   var convPane=g('msgConvPane');
   if(convPane)convPane.style.display='none';
-  clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
-  document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
-  // Restore nav fully
-  restoreNav();
+  var pgMsg=g('pgMsg');
+  if(pgMsg)pgMsg.classList.remove('conv-open');
+  // Remove conv-mode from nav
   var bnav=g('bnav');
   if(bnav)bnav.classList.remove('conv-mode');
+  // Restore normal nav state for messages page (bniMsg highlighted)
+  restoreNav();
+  var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
+  clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
+  document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
 }
 
 async function loadMessages(){
@@ -7234,18 +7226,8 @@ async function subCrStep(){
     return _cs();
   };
 
-  // openMsg — collapse nav
-  var _om=openMsg;
-  openMsg=function(profNm,destId,avatar){
-    _om(profNm,destId,avatar);
-    var nav=g('bnav');if(nav)nav.classList.add('conv-mode');
-    var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
-  };
-  var _cm=closeMsgConv;
-  closeMsgConv=function(){
-    _cm();
-    var nav=g('bnav');if(nav)nav.classList.remove('conv-mode');
-  };
+  // openMsg/closeMsgConv — handled directly in functions above
+  var _om=openMsg; // keep reference for compatibility
 
   // buildCards — mode badge on visio cards
   var _bc=buildCards;
