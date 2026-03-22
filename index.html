@@ -200,7 +200,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 #app{display:none;height:100dvh;overflow-y:auto;overflow-x:hidden;position:relative;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;overscroll-behavior-y:auto;}
 /* === TOPBAR DESKTOP — masquée, remplacée par mob-header sur tous les écrans === */
-.topbar{display:none !important;}
+.topbar{display:none;}
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ttitle{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 .sw{flex:1;min-width:0;position:relative;}
@@ -412,8 +412,8 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
 /* MESSAGING PAGE */
-#pgMsg{height:calc(100vh - 56px);height:calc(100dvh - 56px);}
-#pgMsg.on{display:flex !important;}
+
+
 
 /* Liste conversations iOS style */
 .msg-row{
@@ -441,16 +441,12 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .msg-unread .msg-preview{color:var(--mid);font-weight:500;}
 #msgMessages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;}
 /* Desktop */
-@media(min-width:769px){
-  #msgListPane{max-width:380px;border-right:1px solid var(--bdr);}
-  
-  
-  #msgBackBtn{display:flex !important;}
-}
+
 /* Mobile */
 @media(max-width:768px){
-  #msgListPane{width:100%;max-width:100%;border-right:none;}
   
+  
+}
 .bnav{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
   background:rgba(255,255,255,0.85);
@@ -887,14 +883,10 @@ html.dk .bnav {
 
 /* ── PROFILE — HOME vs DETAIL MODES ── */
 #pgAcc.home-mode .acc-body          { display: none; }
-#pgAcc.home-mode #accDetailHeader   { display: none; }
-#pgAcc.detail-mode #accHome         { display: none; }
-#pgAcc.detail-mode #accDetailHeader { display: flex; }
-#pgAcc.detail-mode .acc-body        {
-  display: block;
-  /* push content below the fixed header (~90px) */
-  /* padding-top handled by sticky header */
-}
+#pgAcc.home-mode 
+
+
+
 
 /* Remove extra top gap in first section label */
 #pgAcc.detail-mode .asec.on > div:first-child[style*="padding:20px"] {
@@ -1192,13 +1184,13 @@ html.dk .settings-group { background:var(--wh); }
 
 
 
-/* ── Messagerie ── */
-#pgMsg { display:none; flex-direction:column; height:calc(100dvh - 56px); overflow:hidden; }
-#pgMsg.on { display:flex !important; }
-#msgListPane { display:flex; flex-direction:column; height:100%; overflow:hidden; }
-#msgConvPane { display:none; flex-direction:column; position:fixed; inset:0; background:var(--bg); z-index:200; overflow:hidden; }
-#msgMessages { flex:1; overflow-y:auto; overflow-x:hidden; min-height:0; }
-.msg-content { word-break:break-word; overflow-wrap:anywhere; }
+
+
+
+
+
+
+
 .chat-cours-card { display:block; max-width:240px; background:var(--wh); border:1.5px solid var(--bdr); border-radius:16px; overflow:hidden; cursor:pointer; }
 
 /* ── Filter bar restructure ── */
@@ -1236,6 +1228,620 @@ html.dk .settings-group { background:var(--wh); }
 
 
 .bni span { display:none; }
+
+
+@media(max-width:768px){
+  .topbar{display:none !important;}
+}
+
+/* ── Topbar Nav Desktop ── */
+.topbar-nav {
+  display:flex; align-items:center; gap:4px;
+  margin:0 8px;
+}
+.tnav-item {
+  display:flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:50px;
+  font-size:13px; font-weight:600; color:var(--mid);
+  cursor:pointer; transition:all .18s;
+  white-space:nowrap; position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.tnav-item:hover { background:var(--bg); color:var(--ink); }
+.tnav-item.active { background:var(--orp); color:var(--or); }
+.tnav-badge {
+  position:absolute; top:4px; right:6px;
+  width:8px; height:8px; border-radius:50%;
+  background:#EF4444; display:none;
+}
+.tnav-badge.on { display:block; }
+
+
+
+
+
+
+
+
+/* ── Desktop (>768px) ── */
+@media(min-width:769px){
+  .topbar { display:none !important; }
+  #app { padding-top:0; }
+  .pg { min-height:100vh; }
+  .cnt { padding:28px 40px; max-width:1400px; margin:0 auto; }
+  .grid { grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:20px; }
+  .filter-bar-wrap { padding:12px 40px 8px; }
+  #pgAcc .acc-body { max-width:720px; margin:0 auto; }
+
+  /* Messagerie 2 colonnes */
+  #pgMsg {
+    flex-direction:row !important;
+    height:100vh !important;
+  }
+  #msgListPane {
+    width:340px !important;
+    max-width:340px !important;
+    border-right:1px solid var(--bdr) !important;
+    height:100% !important;
+  }
+  #msgConvPane {
+    position:relative !important;
+    display:flex !important;
+    flex:1 !important;
+    inset:auto !important;
+    z-index:1 !important;
+    height:100% !important;
+  }
+  #msgBackBtn { display:none !important; }
+
+  /* Nav desktop — plus grande, draggable */
+  .bnav {
+    padding:10px 16px !important;
+    gap:8px !important;
+    cursor:grab !important;
+    border-radius:60px !important;
+  }
+  .bnav:active { cursor:grabbing !important; }
+
+  .bni {
+    padding:10px 16px !important;
+    min-width:52px !important;
+    gap:6px !important;
+  }
+  .bni svg { width:24px !important; height:24px !important; }
+  #bniAdd > div { width:48px !important; height:28px !important; }
+}
+
+/* ── Mobile (<769px) ── */
+@media(max-width:768px){
+  .topbar { display:none !important; }
+  #msgListPane { width:100% !important; max-width:100% !important; border-right:none !important; }
+}
+
+
+
+
+
+
+
+/* ════════════════════════════════════
+   MESSAGERIE — CSS propre et complet
+   ════════════════════════════════════ */
+
+/* Page messages */
+#pgMsg {
+  display: none;
+  overflow: hidden;
+}
+#pgMsg.on {
+  display: flex !important;
+  flex-direction: column;
+  height: calc(100dvh - 56px);
+}
+
+/* Liste conversations */
+#msgListPane {
+  display: flex;
+  flex-direction: column;
+  background: var(--wh);
+  overflow: hidden;
+  flex-shrink: 0;
+  width: 100%;
+}
+.msg-list-header {
+  padding: max(20px,env(safe-area-inset-top,0px)) 20px 14px;
+  border-bottom: 1px solid var(--bdr);
+  position: relative;
+  flex-shrink: 0;
+}
+.msg-list-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+#msgBadge {
+  display: none;
+  position: absolute;
+  top: 20px; right: 20px;
+  background: #EF4444;
+  color: #fff;
+  border-radius: 50px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+}
+#msgBadge.on { display: flex; }
+.msg-list-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 16px 6px;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 9px 14px;
+  flex-shrink: 0;
+}
+.msg-list-search svg { color: var(--lite); flex-shrink: 0; }
+.msg-list-search input {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  width: 100%;
+}
+.msg-list-search input::placeholder { color: var(--lite); }
+#listM {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 10px;
+}
+
+/* Rows conversations */
+.msg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.msg-row:hover { background: var(--bg); }
+.msg-row.active { background: var(--orp); }
+.msg-av {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#FF8C55,var(--ord));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.msg-info { flex: 1; min-width: 0; }
+.msg-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.msg-preview {
+  font-size: 12px;
+  color: var(--lite);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.msg-unread .msg-preview { color: var(--ink); font-weight: 600; }
+
+/* Panneau conversation */
+#msgConvPane {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  background: var(--wh);
+  z-index: 200;
+  overflow: hidden;
+}
+.msg-conv-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: max(16px,env(safe-area-inset-top,0px)) 16px 14px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--wh);
+  flex-shrink: 0;
+}
+#msgBackBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--or);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+#msgBackBtn:hover { background: var(--orp); }
+.msg-conv-av {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#FF8C55,var(--ord));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.msg-conv-info { flex: 1; min-width: 0; }
+.msg-conv-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.msg-share-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--orp);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--or);
+  flex-shrink: 0;
+}
+
+/* Zone messages */
+#msgMessages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bulles */
+.msg-bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.msg-bubble-row.me { justify-content: flex-end; }
+.msg-bubble-row.them { justify-content: flex-start; }
+.msg-bubble-av {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#FF8C55,var(--ord));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+  align-self: flex-end;
+}
+.msg-bubble {
+  max-width: min(68%, 320px);
+  min-width: 0;
+  border-radius: 18px;
+  padding: 9px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.msg-bubble.me {
+  background: linear-gradient(135deg,var(--or),var(--ord));
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(255,107,43,.25);
+}
+.msg-bubble.them {
+  background: var(--wh);
+  color: var(--ink);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.msg-bubble-time {
+  font-size: 10px;
+  opacity: .5;
+  margin-top: 3px;
+}
+.msg-bubble-time.me { text-align: right; }
+
+/* Card cours dans messages */
+.msg-card-wrap {
+  max-width: min(260px, 72vw);
+  min-width: 0;
+}
+.msg-card-wrap .chat-cours-card {
+  display: block;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1.5px solid var(--bdr);
+  background: var(--wh);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.msg-card-time {
+  font-size: 10px;
+  color: var(--lite);
+  margin-top: 4px;
+}
+
+/* Barre de saisie */
+#msgInputBar {
+  flex-shrink: 0;
+  background: var(--wh);
+  border-top: 1px solid var(--bdr);
+  padding: 10px 14px;
+  padding-bottom: max(12px,env(safe-area-inset-bottom,12px));
+}
+.msg-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: var(--bg);
+  border-radius: 24px;
+  padding: 8px 8px 8px 16px;
+  border: 1.5px solid var(--bdr);
+  transition: border-color .18s;
+}
+.msg-input-wrap:focus-within { border-color: var(--or); }
+#msgInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  resize: none;
+  max-height: 120px;
+  line-height: 1.45;
+  padding: 2px 0;
+  overflow-y: auto;
+  color: var(--ink);
+}
+.msg-send-btn {
+  background: var(--or);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(255,107,43,.4);
+  transition: transform .15s;
+}
+.msg-send-btn:active { transform: scale(.92); }
+
+/* Séparateur date */
+.msg-date-sep {
+  text-align: center;
+  margin: 12px 0 6px;
+}
+.msg-date-sep span {
+  background: var(--bg);
+  color: var(--lite);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 50px;
+}
+
+/* DESKTOP */
+@media(min-width:769px){
+  #pgMsg.on {
+    flex-direction: row !important;
+    height: 100vh !important;
+  }
+  #msgListPane {
+    width: 340px !important;
+    height: 100% !important;
+    border-right: 1px solid var(--bdr);
+  }
+  #msgConvPane {
+    position: relative !important;
+    display: flex !important;
+    flex: 1 !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    height: 100% !important;
+  }
+  #msgBackBtn { display: none !important; }
+  #msgMessages { padding: 20px 32px 12px !important; }
+  #msgInputBar { padding: 12px 32px 16px !important; }
+  .msg-bubble { max-width: min(55%, 420px) !important; }
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  #msgListPane { height: 100%; }
+}
+
+/* ── pgAcc modes ── */
+#pgAcc.home-mode .acc-body { display: none; }
+#pgAcc.detail-mode #accHome { display: none; }
+#pgAcc.detail-mode .acc-body { display: block; }
+
+/* ════ SEARCH BAR PREMIUM ════ */
+.mob-search-wrap {
+  padding:10px 16px 6px;
+  background:var(--bg);
+}
+.search-bar-premium {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--wh);
+  border-radius:16px;
+  padding:11px 14px;
+  border:1.5px solid var(--bdr);
+  transition:border-color .2s, box-shadow .2s;
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+}
+.search-bar-premium:focus-within {
+  border-color:var(--or);
+  box-shadow:0 0 0 3px rgba(255,107,43,.1);
+}
+.search-icon-wrap {
+  color:var(--lite);
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+  transition:color .2s;
+}
+.search-bar-premium:focus-within .search-icon-wrap {
+  color:var(--or);
+}
+.search-input-premium {
+  flex:1;
+  border:none;
+  background:transparent;
+  font-family:inherit;
+  font-size:15px;
+  color:var(--ink);
+  outline:none;
+  min-width:0;
+}
+.search-input-premium::placeholder { color:var(--lite); }
+.search-clear-btn {
+  display:none;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:var(--bdr);
+  border:none;
+  cursor:pointer;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  color:var(--mid);
+  transition:background .15s;
+}
+.search-clear-btn:hover { background:var(--mid); color:#fff; }
+
+/* ════ FILTER BAR PREMIUM ════ */
+.filter-bar-wrap {
+  display:flex;
+  align-items:center;
+  padding:8px 0 8px;
+  gap:0;
+  overflow:hidden;
+  background:var(--bg);
+}
+.filter-fixed {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:0 0 0 16px;
+  flex-shrink:0;
+}
+.filter-sep {
+  width:1px;
+  height:18px;
+  background:var(--bdr);
+  flex-shrink:0;
+  margin-left:2px;
+}
+.filter-bar {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:0 16px 0 10px;
+  overflow-x:auto;
+  overflow-y:visible;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  flex:1;
+}
+.filter-bar::-webkit-scrollbar { display:none; }
+
+/* Pills filtres */
+.filter-pill-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 14px;
+  border-radius:50px;
+  border:1.5px solid var(--bdr);
+  background:var(--wh);
+  color:var(--mid);
+  font-family:inherit;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:all .18s;
+  outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.filter-pill-btn:hover {
+  border-color:var(--or);
+  color:var(--or);
+}
+.filter-pill-btn.active, .filter-pill-btn.on {
+  background:var(--or);
+  border-color:var(--or);
+  color:#fff;
+  box-shadow:0 3px 10px rgba(255,107,43,.25);
+}
+.filter-pill-add {
+  border-style:dashed;
+  padding:7px 10px;
+}
+.filter-pill-add:hover {
+  background:var(--orp);
+  border-color:var(--or);
+  color:var(--or);
+}
+
+/* Dark mode */
+html.dk .search-bar-premium { background:var(--wh); border-color:var(--bdr); }
+html.dk .filter-pill-btn { background:var(--wh); }
 </style>
 </head>
 <body>
@@ -1438,6 +2044,22 @@ html.dk .settings-group { background:var(--wh); }
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
     <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <!-- Nav desktop -->
+    <nav class="topbar-nav" id="topbarNav">
+      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Explorer
+      </div>
+      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Messages
+        <div class="tnav-badge" id="tnavBadge"></div>
+      </div>
+      <div class="tnav-item" id="tnavMes" onclick="navTo('mes')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        Mes cours
+      </div>
+    </nav>
     <div class="topbar-right">
       <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
@@ -1462,14 +2084,17 @@ html.dk .settings-group { background:var(--wh); }
       </div>
     </div>
   </div>
-  <!-- Barre de recherche mobile (visible seulement sur Explorer) -->
-  <!-- Search bar — premium -->
+  <!-- Barre de recherche premium -->
   <div id="mobSearch" class="mob-search-wrap">
-    <div class="search-bar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17" style="color:var(--lite);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="mobSearchInput" placeholder="Matière, professeur, ville…" oninput="window._mq=this.value;var s=document.getElementById('srch');if(s)s.value=this.value;doFilter();">
-      <button id="searchClearBtn" onclick="clearSearch()" style="display:none;background:var(--bdr);border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <div class="search-bar-premium">
+      <div class="search-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <input type="text" id="mobSearchInput" class="search-input-premium"
+        placeholder="Matière, professeur, ville…"
+        oninput="g('srch').value=this.value;doFilter();document.getElementById('searchClearBtn').style.display=this.value?'flex':'none'">
+      <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
   </div>
@@ -1521,37 +2146,35 @@ html.dk .settings-group { background:var(--wh); }
       </div>
       <!-- Filter bar — clean chips -->
       <div class="filter-bar-wrap">
-        <!-- Fixé à gauche : Tri + Niveau -->
+        <!-- Tri + Niveau fixes -->
         <div class="filter-fixed">
-          <div class="sort-chip" onclick="cycleSort(this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          <button class="filter-pill-btn" id="sortBtn" onclick="cycleSort(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
             <span id="sortLabel">Date</span>
-          </div>
-          <div class="fchip fchip-level" id="pillNiv" onclick="openNivFilter()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </button>
+          <button class="filter-pill-btn" id="pillNiv" onclick="openNivFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span id="pillNivLabel">Niveau</span>
-          </div>
-          <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0"></div>
+          </button>
+          <div class="filter-sep"></div>
         </div>
-        <!-- Scrollable : Matières -->
+        <!-- Matières scrollables -->
         <div class="filter-bar" id="filterBar">
-        <!-- Matières -->
-        <div class="fchip on" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</div>
-        <div class="fchip" data-f="maths" onclick="setPill(this)">Maths</div>
-        <div class="fchip" data-f="physique" onclick="setPill(this)">Physique</div>
-        <div class="fchip" data-f="informatique" onclick="setPill(this)">Info</div>
-        <div class="fchip" data-f="langues" onclick="setPill(this)">Langues</div>
-        <div class="fchip" data-f="economie" onclick="setPill(this)">Éco</div>
-        <div class="fchip" data-f="soir" onclick="setPill(this)">Ce soir</div>
-        <div class="fchip" data-f="weekend" onclick="setPill(this)">Week-end</div>
-        <div class="fchip" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;gap:4px;color:var(--mid)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Filtre
+          <button class="filter-pill-btn active" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</button>
+          <button class="filter-pill-btn" data-f="maths" onclick="setPill(this)">Maths</button>
+          <button class="filter-pill-btn" data-f="physique" onclick="setPill(this)">Physique</button>
+          <button class="filter-pill-btn" data-f="informatique" onclick="setPill(this)">Info</button>
+          <button class="filter-pill-btn" data-f="langues" onclick="setPill(this)">Langues</button>
+          <button class="filter-pill-btn" data-f="economie" onclick="setPill(this)">Éco</button>
+          <button class="filter-pill-btn" data-f="soir" onclick="setPill(this)">Ce soir</button>
+          <button class="filter-pill-btn" data-f="weekend" onclick="setPill(this)">Week-end</button>
+          <button class="filter-pill-btn filter-pill-add" id="pillAdd" onclick="openAddFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div id="pillsBar" style="display:none"></div>
+          <input type="hidden" id="srch" value="">
         </div>
-        <!-- keep hidden pillsBar for JS compat -->
-        <div id="pillsBar" style="display:none"></div>
-        </div><!-- end .filter-bar scroll -->
-      </div><!-- end .filter-bar-wrap -->
+      </div>
 
       <!-- Bottom sheet filtre niveau -->
       <div id="bdNivFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeNivFilter()">
@@ -1655,47 +2278,46 @@ html.dk .settings-group { background:var(--wh); }
   <!-- PAGE MESSAGES -->
   <div class="pg" id="pgMsg">
 
-    <!-- LISTE DES CONVERSATIONS -->
-    <div id="msgListPane" style="display:flex;flex-direction:column;height:100%;width:100%;background:var(--bg)">
-      <!-- Header -->
-      <div style="padding:max(20px,env(safe-area-inset-top,0px)) 20px 12px;flex-shrink:0;background:var(--wh);border-bottom:1px solid var(--bdr)">
-        <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Messages</div>
-        <div style="font-size:13px;color:var(--lite);margin-top:2px">Vos conversations</div>
-        <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50px;min-width:20px;height:20px;padding:0 6px;font-size:11px;font-weight:700;align-items:center;justify-content:center;position:absolute;top:20px;right:20px"></span>
+    <!-- LISTE CONVERSATIONS -->
+    <div id="msgListPane">
+      <div class="msg-list-header">
+        <div class="msg-list-title">Messages</div>
+        <span id="msgBadge"></span>
       </div>
-      <div style="padding:8px 16px 4px;position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" style="position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--lite);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="msgSearch" placeholder="Rechercher..." oninput="filterConversations(this.value)" style="width:100%;background:var(--bg);border:1.5px solid transparent;border-radius:14px;padding:10px 14px 10px 38px;font-family:inherit;font-size:15px;outline:none;color:var(--ink);transition:border-color .2s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='transparent'"></div>
-      <div id="listM" style="flex:1;overflow-y:auto;padding:8px 16px"></div>
+      <div class="msg-list-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="msgSearch" placeholder="Rechercher..." oninput="filterConversations(this.value)">
+      </div>
+      <div id="listM"></div>
     </div>
 
-    <!-- CONVERSATION ACTIVE -->
+    <!-- CONVERSATION -->
     <div id="msgConvPane">
-
-      <!-- Header conversation -->
-      <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
-        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+      <div class="msg-conv-header">
+        <button id="msgBackBtn" onclick="closeMsgConv()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="msgConvName"></div>
+        <div id="msgConvAv" class="msg-conv-av"></div>
+        <div class="msg-conv-info">
+          <div id="msgConvName" class="msg-conv-name"></div>
         </div>
-        <button id="btnShareCours" onclick="openShareCoursSheet()" style="display:none;width:36px;height:36px;border-radius:50%;background:var(--orp);border:none;cursor:pointer;align-items:center;justify-content:center;color:var(--or);flex-shrink:0" title="Partager un cours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></button>
+        <button id="btnShareCours" onclick="openShareCoursSheet()" class="msg-share-btn" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        </button>
       </div>
-
-      <!-- Messages -->
-      <div id="msgMessages" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px 14px 8px;display:flex;flex-direction:column;gap:4px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
-
-      <!-- Barre de saisie — fix iPhone Safari -->
-      <div id="msgInputBar" style="background:var(--wh);border-top:1px solid var(--bdr);padding:10px 14px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0;position:relative;z-index:1">
-        <div style="display:flex;gap:8px;align-items:flex-end;background:var(--bg);border-radius:24px;padding:8px 8px 8px 16px;border:1.5px solid var(--bdr);transition:border-color .18s" onfocusin="this.style.borderColor='var(--or)'" onfocusout="this.style.borderColor='var(--bdr)'">
-          <textarea id="msgInput" placeholder="Message…" rows="1" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;outline:none;resize:none;max-height:100px;line-height:1.45;padding:2px 0;overflow-y:auto" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-          <button onclick="sendMsg()" style="background:var(--or);border:none;border-radius:50%;width:36px;height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 3px 10px rgba(255,107,43,.4);transition:transform .15s,background .15s" onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <div id="msgMessages"></div>
+      <div id="msgInputBar">
+        <div class="msg-input-wrap">
+          <textarea id="msgInput" placeholder="Message…" rows="1"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button class="msg-send-btn" onclick="sendMsg()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
       </div>
-
     </div>
+
   </div>
 
   <div class="pg" id="pgAcc">
@@ -1782,13 +2404,6 @@ html.dk .settings-group { background:var(--wh); }
       </div>
 
       <!-- DETAIL VIEWS (hidden by default, shown via switchATab) -->
-      <!-- Back button header for detail views -->
-      <div id="accDetailHeader" style="display:none;align-items:center;gap:12px;padding:max(16px,env(safe-area-inset-top,16px)) 20px 14px;position:sticky;top:0;background:var(--wh);z-index:50;border-bottom:1px solid var(--bdr)">
-        <button onclick="showAccHome()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <div id="accDetailTitle" style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em"></div>
-      </div>
 
       <!-- Hidden tabs (needed for JS) -->
       <div style="display:none">
@@ -3092,6 +3707,19 @@ function getGreeting(){
   return'Bonne nuit';
 }
 
+
+// ── Sync topbar nav desktop ──
+function updateTopbarNav(tab){
+  ['tnavExp','tnavMsg','tnavMes'].forEach(function(id){
+    var el=g(id);if(el)el.classList.remove('active');
+  });
+  var map={exp:'tnavExp',msg:'tnavMsg',mes:'tnavMes'};
+  var active=g(map[tab]);if(active)active.classList.add('active');
+  // bniMes / tnavMes visible seulement pour élèves
+  var tme=g('tnavMes');
+  if(tme)tme.style.display=(user&&user.id&&user.role!=='professeur')?'flex':'none';
+}
+
 function updateMobHeader(tab){
   var t=MOB_TITLES[tab]||{title:'CoursPool',sub:''};
   var mt=g('mobTitle'),ms=g('mobSub');
@@ -3132,6 +3760,7 @@ function navTo(tab){
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
   updateMobHeader(tab);
+  updateTopbarNav(tab);
   var nav=g('bnav');
 
   if(tab==='exp'){
@@ -3756,7 +4385,7 @@ function buildCards(){
 }
 
 function applyFilter(){
-  var raw=(g('srch').value||window._mq||'').trim();
+  var raw=g('srch').value.trim();
   var q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   filteredCards=C.filter(function(c){
     // Cours privés cachés sauf si propriétaire ou déjà réservé
@@ -4606,6 +5235,7 @@ function openMsg(profNm,destId,avatar){
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
   if(bnav)bnav.classList.add('conv-mode');
+  var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
   var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
 
   // Mark active row
@@ -4650,11 +5280,11 @@ async function loadMessages(){
     if(!Array.isArray(msgs))return;
     var box=g('msgMessages');
     if(!msgs.length){
-      box.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour 👋</div>';
+      box.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour !</div>';
       return;
     }
     updateMsgBadge(0);
-    var html='';
+    var h='';
     var lastDate='';
     msgs.forEach(function(m){
       var d=new Date(m.created_at);
@@ -4662,53 +5292,49 @@ async function loadMessages(){
       if(dk!==lastDate){
         lastDate=dk;
         var today=new Date();today.setHours(0,0,0,0);
-        var diff=Math.round((today-(new Date(dk)))/(864e5));
+        var diff=Math.round((today-new Date(dk))/(864e5));
         var lbl=diff===0?"Aujourd'hui":diff===1?'Hier':d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-        lbl=lbl.charAt(0).toUpperCase()+lbl.slice(1);
-        html+='<div style="text-align:center;margin:12px 0 6px"><span style="background:var(--bg);color:var(--lite);font-size:11px;font-weight:600;padding:4px 12px;border-radius:50px">'+lbl+'</span></div>';
+        h+='<div class="msg-date-sep"><span>'+lbl.charAt(0).toUpperCase()+lbl.slice(1)+'</span></div>';
       }
       var isMe=m.sender_id===user.id;
       var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var txt=m.contenu||'';
-      // Detect raw JSON garbage — hide it
-      var isGarbage=txt.includes('"mode":"presentiel"')||txt.includes('"mode":"visio"')||txt.includes('prof_couleur');
-      if(isGarbage)return;
-      // Detect HTML card
-      var isHtml=txt.trimStart().startsWith('<');
-      var content=isHtml?txt:txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      var bg=isMe?'linear-gradient(135deg,var(--or),var(--ord))':'var(--wh)';
-      var col=isMe?'#fff':'var(--ink)';
-      var br=isMe?'18px 18px 4px 18px':'18px 18px 18px 4px';
-      var sh=isMe?'0 2px 8px rgba(255,107,43,.25)':'0 1px 4px rgba(0,0,0,.08)';
-      // Avatar for received
+      // Masquer JSON brut
+      if(txt.includes('"mode":"presentiel"')||txt.includes('prof_couleur'))return;
+      // Détecter card cours
+      var isCard=txt.trimStart().startsWith('<');
+      var op=P[msgDestId]||{};
+      var oPhoto=op.photo||null;
+      var oIni=(op.i||(msgDestinataire&&msgDestinataire[0])||'?');
+      var oCol=op.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
       var avHtml='';
       if(!isMe){
-        var op=P[msgDestId]||{};
-        var oPhoto=op.photo||null;
-        var oIni=(op.i||(msgDestinataire&&msgDestinataire[0])||'?');
-        var oCol=op.col||'linear-gradient(135deg,#FF8C55,var(--ord))';
-        avHtml='<div style="width:28px;height:28px;border-radius:50%;background:'+oCol+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;align-self:flex-end">'+(oPhoto?'<img src="'+oPhoto+'" style="width:100%;height:100%;object-fit:cover">':oIni)+'</div>';
+        avHtml='<div class="msg-bubble-av" style="background:'+oCol+'">'+(oPhoto?'<img src="'+oPhoto+'" style="width:100%;height:100%;object-fit:cover">':oIni)+'</div>';
       }
-      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px;margin-bottom:3px">'
-        +(isMe?'':avHtml)
-        +'<div style="max-width:72%;min-width:0">'
-        +'<div style="background:'+bg+';color:'+col+';border-radius:'+br+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+sh+';word-break:break-word;overflow-wrap:anywhere">';
-      if(isHtml){
-        html+='<div>'+content+'</div>';
+      if(isCard){
+        // Card cours
+        h+='<div class="msg-bubble-row '+(isMe?'me':'them')+'">'
+          +(isMe?'':avHtml)
+          +'<div class="msg-card-wrap">'
+          +txt
+          +'<div class="msg-card-time" style="text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+          +'</div>'
+          +'</div>';
       } else {
-        html+='<div style="white-space:pre-wrap">'+content+'</div>';
+        // Bulle texte
+        var safe=txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        h+='<div class="msg-bubble-row '+(isMe?'me':'them')+'">'
+          +(isMe?'':avHtml)
+          +'<div class="msg-bubble '+(isMe?'me':'them')+'">'
+          +'<div style="white-space:pre-wrap">'+safe+'</div>'
+          +'<div class="msg-bubble-time '+(isMe?'me':'them')+'">'+time+'</div>'
+          +'</div>'
+          +'</div>';
       }
-      html+='<div style="font-size:10px;opacity:.5;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
-        +'</div></div>'
-        +(isMe?'':'')
-        +'</div>';
     });
-    box.innerHTML=html||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
+    box.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
     box.scrollTop=box.scrollHeight;
-    // Mark as read
-    if(msgDestId){
-      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
-    }
+    if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
   }catch(e){console.log('loadMessages err',e);}
 }
 
@@ -4848,7 +5474,14 @@ async function loadConversations(){
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
   }catch(e){
     if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
-  }finally{clearTimeout(_convTimeout);_convLoading=false;}
+  }finally{
+    clearTimeout(_convTimeout);_convLoading=false;
+    // Desktop : montrer placeholder si pas de conv active
+    if(window.innerWidth>=769){
+      var cp=g('msgConvPane');
+      if(cp&&!msgDestId){cp.classList.add('empty-state');}
+    }
+  }
 }
 
 
@@ -7181,28 +7814,11 @@ async function subCrStep(){
   navTo=function(tab){
     var pm=g('pgMes'),bm=g('bniMes');
     if(tab==='mes'){
-      // Page Mes cours : indépendante, highlight bniMes
-      ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
-      var bniMesEl=g('bniMes');if(bniMesEl)bniMesEl.classList.add('on');
-      // Ouvrir pgAcc avec l'onglet R sans toucher au highlight
-      var pgExpEl=g('pgExp'),pgMsgEl=g('pgMsg'),pgAccEl=g('pgAcc');
-      if(pgExpEl)pgExpEl.classList.remove('on');
-      if(pgMsgEl)pgMsgEl.classList.remove('on');
-      if(pgAccEl)pgAccEl.classList.add('on');
-      // Forcer l'onglet Mes cours
-      setTimeout(function(){
-        var tabR=g('aTabR');
-        if(tabR){
-          // switchATab sans override nav highlight
-          ['R','F','H','P','Rev'].forEach(function(x){var sec=g('asec'+x),t=g('aTab'+x);if(sec)sec.classList.remove('on');if(t)t.classList.remove('on');});
-          var secR=g('asecR');if(secR)secR.classList.add('on');
-          tabR.classList.add('on');
-          buildAccLists();
-        }
-        // Remettre le bon highlight nav
-        ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
-        var bm2=g('bniMes');if(bm2)bm2.classList.add('on');
-      },30);
+      ['pgExp','pgMsg','pgAcc'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+      var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.add('on');
+      ['bniExp','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+      var bm=g('bniMes');if(bm)bm.classList.add('on');
+      buildMesCours();
       return;
     }
     if(pm)pm.classList.remove('on');if(bm)bm.classList.remove('on');
@@ -7435,7 +8051,7 @@ function showAccHome(){
   var pg=g('pgAcc');
   if(pg){pg.classList.remove('detail-mode');pg.classList.add('home-mode');}
   // Always explicitly hide the detail header (CSS can't beat inline style)
-  var dh=g('accDetailHeader');if(dh)dh.style.display='none';
+
   ['R','F','H','P','Rev'].forEach(function(x){
     var t=g('aTab'+x),s=g('asec'+x);
     if(t)t.classList.remove('on');
@@ -7451,8 +8067,7 @@ function showAccHome(){
     _orig(s,el);
     var pg=g('pgAcc');
     if(pg){pg.classList.remove('home-mode');pg.classList.add('detail-mode');}
-    var dh=g('accDetailHeader');if(dh){dh.style.display='';dh.style.removeProperty('display');}
-    var dt=g('accDetailTitle');if(dt)dt.textContent=ACC_TITLES[s]||'';
+
     var body=document.querySelector('#pgAcc .acc-body');
     if(body)body.scrollTop=0;
   };
@@ -7502,12 +8117,12 @@ function showAccHome(){
 (function(){
   var _sp=setPill;
   setPill=function(el){
-    // Support both .pill and .fchip
     haptic(4);
-    var bar=el.closest('#filterBar')||el.closest('.pills');
-    var selector=bar?'.fchip[data-f],.pill[data-f]':'.pill';
-    document.querySelectorAll(selector).forEach(function(p){p.classList.remove('on');});
-    el.classList.add('on');
+    // Support .filter-pill-btn, .fchip, .pill
+    document.querySelectorAll('.filter-pill-btn[data-f],.fchip[data-f],.pill[data-f]').forEach(function(p){
+      p.classList.remove('on','active');
+    });
+    el.classList.add('on','active');
     actF=el.dataset.f;
     doFilter();
     try{sessionStorage.setItem('cp_filter',actF);}catch(e){}
@@ -7626,7 +8241,7 @@ function clearSearch(){
   var inp=document.getElementById('mobSearchInput');
   var srch=document.getElementById('srch');
   var btn=document.getElementById('searchClearBtn');
-  if(inp)inp.value='';if(srch)srch.value='';window._mq='';
+  if(inp)inp.value='';if(srch)srch.value='';
   if(btn)btn.style.display='none';
   doFilter();if(inp)inp.focus();
 }
@@ -7669,6 +8284,85 @@ function _stepOptClick(el){
   el.style.borderColor='var(--or)';
   haptic(8);
 }
+
+// ── Drag & drop bnav sur desktop ──
+(function(){
+  var nav = null;
+  var dragging = false;
+  var ox = 0, oy = 0; // offset souris par rapport au coin du nav
+
+  function initNavDrag(){
+    nav = document.getElementById('bnav');
+    if(!nav) return;
+
+    nav.addEventListener('mousedown', function(e){
+      // Ignorer si clic sur un bouton
+      if(e.target.closest('button,a,[onclick]') && e.target !== nav) return;
+      if(window.innerWidth < 769) return; // mobile : pas de drag
+      dragging = true;
+      var rect = nav.getBoundingClientRect();
+      ox = e.clientX - rect.left;
+      oy = e.clientY - rect.top;
+      nav.style.transition = 'none';
+      nav.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e){
+      if(!dragging || !nav) return;
+      var x = e.clientX - ox;
+      var y = e.clientY - oy;
+      // Garder dans la fenêtre
+      var rect = nav.getBoundingClientRect();
+      x = Math.max(0, Math.min(window.innerWidth - rect.width, x));
+      y = Math.max(0, Math.min(window.innerHeight - rect.height, y));
+      nav.style.left = x + 'px';
+      nav.style.top = y + 'px';
+      nav.style.bottom = 'auto';
+      nav.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', function(){
+      if(!dragging || !nav) return;
+      dragging = false;
+      nav.style.cursor = '';
+      nav.style.transition = '';
+      // Sauvegarder position
+      try{
+        localStorage.setItem('cp_nav_pos', JSON.stringify({
+          left: nav.style.left,
+          top: nav.style.top,
+          bottom: nav.style.bottom,
+          transform: nav.style.transform
+        }));
+      }catch(e){}
+    });
+
+    // Restaurer position sauvegardée
+    try{
+      var saved = localStorage.getItem('cp_nav_pos');
+      if(saved && window.innerWidth >= 769){
+        var pos = JSON.parse(saved);
+        if(pos.left) nav.style.left = pos.left;
+        if(pos.top) nav.style.top = pos.top;
+        if(pos.bottom !== undefined) nav.style.bottom = pos.bottom;
+        if(pos.transform !== undefined) nav.style.transform = pos.transform;
+      }
+    }catch(e){}
+
+    // Curseur grab sur desktop
+    if(window.innerWidth >= 769){
+      nav.style.cursor = 'grab';
+    }
+  }
+
+  // Attendre que le DOM soit prêt
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initNavDrag);
+  } else {
+    setTimeout(initNavDrag, 500);
+  }
+})();
 </script>
 <!-- SETTINGS SHEET -->
 <div id="bdSettings" onclick="if(event.target===this)closeSettings()">
