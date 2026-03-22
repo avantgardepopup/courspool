@@ -450,29 +450,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 /* Mobile */
 @media(max-width:768px){
   #msgListPane{width:100%;max-width:100%;border-right:none;}
-  #msgConvPane{
-    position:fixed;
-    top:0;left:0;right:0;bottom:0;
-    height:100%;
-    height:100dvh;
-    background:var(--wh);
-    z-index:55;
-    display:none !important;
-    flex-direction:column;
-  }
   
-  #msgBackBtn{display:flex !important;}
-  #msgMessages{flex:1;overflow-y:auto;min-height:0;}
-  #msgInputBar{
-    flex-shrink:0;
-    padding:10px 14px;
-    padding-bottom:max(12px,env(safe-area-inset-bottom));
-    border-top:1px solid var(--bdr);
-    background:var(--wh);
-    position:relative;
-    z-index:1;
-  }
-}
 .bnav{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
   background:rgba(255,255,255,0.85);
