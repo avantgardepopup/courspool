@@ -506,31 +506,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
 .pw-toggle:hover{color:var(--or);}
 .pw-toggle svg{width:18px;height:18px;}
-@media(max-width:640px){
-  .bnav{
-    bottom:0;
-    border-radius:0;
-    left:0 !important;
-    right:0;
-    transform:none !important;
-    width:100%;
-    justify-content:space-around;
-    padding:10px 4px;
-    padding-bottom:max(16px,env(safe-area-inset-bottom,0px));
-    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-    border-top:1px solid rgba(0,0,0,.06);
-    box-shadow:0 -1px 0 rgba(0,0,0,.05);
-    gap:0;
-    background:rgba(255,255,255,0.95);
-  }
-  .bni{padding:6px 16px;min-width:0;flex:1;border-radius:0;}
-  .bni.on{background:transparent;box-shadow:none;color:var(--or);}
-  .bni svg{width:22px;height:22px;}
-  .bni span{font-size:10px;}
-  .bni-sep{display:none !important;}
-  #app .cnt{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
-  .acc-body{padding-bottom:max(100px, calc(80px + env(safe-area-inset-bottom,0px)));}
-}
+/* mobile nav — floating pill, no bottom bar */
 .rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
 .rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
 .bdn{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px;}
@@ -860,15 +836,15 @@ html.dk .bnav {
 }
 
 /* Nav collapse — conversation mode */
-.bnav.conv-mode { padding: 6px 8px; }
+.bnav.conv-mode { padding: 6px 8px !important; min-width: unset !important; width: auto !important; }
 .bnav.conv-mode .bni:not(#bniMsg),
 .bnav.conv-mode .bni-mes,
 .bnav.conv-mode #bniAdd {
-  width: 0; overflow: hidden; padding: 0; margin: 0;
-  min-width: 0; opacity: 0; pointer-events: none;
-  transition: all .25s cubic-bezier(.4,0,.2,1);
+  width: 0 !important; overflow: hidden !important; padding: 0 !important; margin: 0 !important;
+  min-width: 0 !important; opacity: 0 !important; pointer-events: none !important; flex: 0 !important;
+  transition: all .25s cubic-bezier(.4,0,.2,1) !important;
 }
-.bnav.conv-mode #bniMsg { background: var(--bg); color: var(--mid); box-shadow: none; min-width: 36px; padding: 8px; }
+.bnav.conv-mode #bniMsg { background: var(--bg) !important; color: var(--mid) !important; box-shadow: none !important; min-width: 44px !important; padding: 8px !important; flex: 0 !important; }
 .bnav.conv-mode #bniMsg .bni-ico-off,
 .bnav.conv-mode #bniMsg .bni-ico-on,
 .bnav.conv-mode #bniMsg span { display: none; }
@@ -947,7 +923,7 @@ html.dk .bnav {
 #pgAcc.detail-mode .acc-body        {
   display: block;
   /* push content below the fixed header (~90px) */
-  padding-top: max(90px, calc(76px + env(safe-area-inset-top, 0px)));
+  /* padding-top handled by sticky header */
 }
 
 /* Remove extra top gap in first section label */
@@ -1568,7 +1544,7 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
 
       <!-- DETAIL VIEWS (hidden by default, shown via switchATab) -->
       <!-- Back button header for detail views -->
-      <div id="accDetailHeader" style="display:none;align-items:center;gap:12px;padding:max(56px,env(safe-area-inset-top,56px)) 20px 16px;position:fixed;top:0;left:0;right:0;background:var(--wh);z-index:200;border-bottom:1px solid var(--bdr);max-width:100vw">
+      <div id="accDetailHeader" style="display:none;align-items:center;gap:12px;padding:max(16px,env(safe-area-inset-top,16px)) 20px 14px;position:sticky;top:0;background:var(--wh);z-index:50;border-bottom:1px solid var(--bdr)">
         <button onclick="showAccHome()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
@@ -4499,6 +4475,8 @@ async function loadMessages(){
       container.innerHTML='<div style="text-align:center;padding:30px;color:var(--lite);font-size:13px">Aucun message. Dites bonjour ! 👋</div>';
       return;
     }
+    // Clear unread badge when we actually read the messages
+    updateMsgBadge(0);
     var html='';
     var lastDate='';
     var now=new Date();
