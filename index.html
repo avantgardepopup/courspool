@@ -2092,7 +2092,7 @@ html.dk .filter-pill-btn { background:var(--wh); }
       </div>
       <input type="text" id="mobSearchInput" class="search-input-premium"
         placeholder="Matière, professeur, ville…"
-        oninput="g('srch').value=this.value;doFilter();document.getElementById('searchClearBtn').style.display=this.value?'flex':'none'">
+      oninput="var _v=this.value;var _s=document.getElementById('srch');if(_s)_s.value=_v;doFilter();var _cb=document.getElementById('searchClearBtn');if(_cb)_cb.style.display=_v?'flex':'none'"
       <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -2172,7 +2172,6 @@ html.dk .filter-pill-btn { background:var(--wh); }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <div id="pillsBar" style="display:none"></div>
-          <input type="hidden" id="srch" value="">
         </div>
       </div>
 
@@ -4385,7 +4384,9 @@ function buildCards(){
 }
 
 function applyFilter(){
-  var raw=g('srch').value.trim();
+  var _s=document.getElementById('srch');
+  var _m=document.getElementById('mobSearchInput');
+  var raw=((_s?_s.value:'')||(_m?_m.value:'')||'').trim();
   var q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   filteredCards=C.filter(function(c){
     // Cours privés cachés sauf si propriétaire ou déjà réservé
@@ -4602,7 +4603,9 @@ var FM={
   weekend:function(t){return /sam|dim|week/.test(t);}
 };
 function doFilter(){
-  var val=g('srch').value.trim();
+  var _s=document.getElementById('srch');
+  var _m=document.getElementById('mobSearchInput');
+  var val=((_s?_s.value:'')||(_m?_m.value:'')||'').trim();
   if(checkCodeInSearch(val))return;
   currentPage=1;applyFilter();
 }
