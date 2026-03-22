@@ -200,7 +200,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .ropt.on{border-color:var(--or);color:var(--or);background:var(--orp);}
 #app{display:none;height:100dvh;overflow-y:auto;overflow-x:hidden;position:relative;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;overscroll-behavior-y:auto;}
 /* === TOPBAR DESKTOP — masquée, remplacée par mob-header sur tous les écrans === */
-.topbar{display:none !important;}
+.topbar{display:none;}
 .tlogo{width:30px;height:30px;background:var(--or);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .ttitle{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0;}
 .sw{flex:1;min-width:0;position:relative;}
@@ -441,12 +441,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .msg-unread .msg-preview{color:var(--mid);font-weight:500;}
 #msgMessages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:4px;}
 /* Desktop */
-@media(min-width:769px){
-  #msgListPane{max-width:380px;border-right:1px solid var(--bdr);}
-  
-  
-  #msgBackBtn{display:flex !important;}
-}
+
 /* Mobile */
 @media(max-width:768px){
   #msgListPane{width:100%;max-width:100%;border-right:none;}
@@ -1236,6 +1231,25 @@ html.dk .settings-group { background:var(--wh); }
 
 
 .bni span { display:none; }
+
+@media(min-width:769px){
+  .topbar{display:flex !important;align-items:center;gap:16px;padding:0 24px;height:56px;background:var(--wh);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;}
+  .mob-header,.mob-search{display:none !important;}
+  #app{padding-top:0;}
+  .pg{min-height:calc(100vh - 56px);}
+  .bnav{display:none !important;}
+  .cnt{padding:28px 40px;max-width:1400px;margin:0 auto;}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px;}
+  #pgMsg{flex-direction:row !important;height:calc(100vh - 56px) !important;}
+  #msgListPane{width:320px;max-width:320px;border-right:1px solid var(--bdr);flex-shrink:0;}
+  #msgConvPane{position:relative !important;display:flex !important;flex:1;inset:auto !important;z-index:1 !important;}
+  #msgBackBtn{display:none !important;}
+  #pgAcc .acc-body{max-width:720px;margin:0 auto;}
+  .filter-bar-wrap{padding:12px 40px 8px;}
+}
+@media(max-width:768px){
+  .topbar{display:none !important;}
+}
 </style>
 </head>
 <body>
