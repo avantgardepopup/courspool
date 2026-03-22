@@ -477,7 +477,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .bni .bni-ico-on{display:none;}
 .bni.on .bni-ico-off{display:none;}
 .bni.on .bni-ico-on{display:block;}
-.bni span{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+
 .bni-badge{position:absolute;top:4px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.85);}
 .bni-badge.on{display:flex;animation:badgePulse 2s ease infinite;}
 @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 4px rgba(239,68,68,0)}}
@@ -731,7 +731,7 @@ html.dk .bnav {
 /* ── NAV — MOBILE: keep floating pill ── */
 @media (max-width: 640px) {
     .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
-  .bni span         { font-size: 9px; }
+  
   .bni-mes          { padding: 8px 12px; min-width: 48px; border-radius: 40px; }
   .bni-mes.on       { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
   #app .cnt         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
@@ -829,7 +829,7 @@ html.dk .bnav {
 /* Mobile — keep floating pill */
 @media (max-width: 640px) {
     .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
-  .bni span         { font-size: 9px; }
+  
   .bni-mes          { padding: 8px 14px; min-width: 52px; border-radius: 40px; }
   .bni-mes.on       { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
   #app .cnt         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
@@ -1234,6 +1234,8 @@ html.dk .settings-group { background:var(--wh); }
 }
 .filter-bar::-webkit-scrollbar { display:none; }
 
+
+.bni span { display:none; }
 </style>
 </head>
 <body>
@@ -7180,11 +7182,28 @@ async function subCrStep(){
   navTo=function(tab){
     var pm=g('pgMes'),bm=g('bniMes');
     if(tab==='mes'){
-      // Aller sur pgAcc et ouvrir l'onglet Mes cours
-      navTo('acc');
+      // Page Mes cours : indépendante, highlight bniMes
+      ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+      var bniMesEl=g('bniMes');if(bniMesEl)bniMesEl.classList.add('on');
+      // Ouvrir pgAcc avec l'onglet R sans toucher au highlight
+      var pgExpEl=g('pgExp'),pgMsgEl=g('pgMsg'),pgAccEl=g('pgAcc');
+      if(pgExpEl)pgExpEl.classList.remove('on');
+      if(pgMsgEl)pgMsgEl.classList.remove('on');
+      if(pgAccEl)pgAccEl.classList.add('on');
+      // Forcer l'onglet Mes cours
       setTimeout(function(){
-        var tabR=g('aTabR');if(tabR)switchATab('R',tabR);
-      },50);
+        var tabR=g('aTabR');
+        if(tabR){
+          // switchATab sans override nav highlight
+          ['R','F','H','P','Rev'].forEach(function(x){var sec=g('asec'+x),t=g('aTab'+x);if(sec)sec.classList.remove('on');if(t)t.classList.remove('on');});
+          var secR=g('asecR');if(secR)secR.classList.add('on');
+          tabR.classList.add('on');
+          buildAccLists();
+        }
+        // Remettre le bon highlight nav
+        ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+        var bm2=g('bniMes');if(bm2)bm2.classList.add('on');
+      },30);
       return;
     }
     if(pm)pm.classList.remove('on');if(bm)bm.classList.remove('on');
