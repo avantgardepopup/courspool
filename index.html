@@ -1251,6 +1251,28 @@ html.dk .settings-group { background:var(--wh); }
 @media(max-width:768px){
   .topbar{display:none !important;}
 }
+
+/* ── Topbar Nav Desktop ── */
+.topbar-nav {
+  display:flex; align-items:center; gap:4px;
+  margin:0 8px;
+}
+.tnav-item {
+  display:flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:50px;
+  font-size:13px; font-weight:600; color:var(--mid);
+  cursor:pointer; transition:all .18s;
+  white-space:nowrap; position:relative;
+  -webkit-tap-highlight-color:transparent;
+}
+.tnav-item:hover { background:var(--bg); color:var(--ink); }
+.tnav-item.active { background:var(--orp); color:var(--or); }
+.tnav-badge {
+  position:absolute; top:4px; right:6px;
+  width:8px; height:8px; border-radius:50%;
+  background:#EF4444; display:none;
+}
+.tnav-badge.on { display:block; }
 </style>
 </head>
 <body>
@@ -1453,6 +1475,22 @@ html.dk .settings-group { background:var(--wh); }
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
     <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <!-- Nav desktop -->
+    <nav class="topbar-nav" id="topbarNav">
+      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Explorer
+      </div>
+      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Messages
+        <div class="tnav-badge" id="tnavBadge"></div>
+      </div>
+      <div class="tnav-item" id="tnavMes" onclick="navTo('mes')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        Mes cours
+      </div>
+    </nav>
     <div class="topbar-right">
       <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
@@ -3108,6 +3146,19 @@ function getGreeting(){
   return'Bonne nuit';
 }
 
+
+// ── Sync topbar nav desktop ──
+function updateTopbarNav(tab){
+  ['tnavExp','tnavMsg','tnavMes'].forEach(function(id){
+    var el=g(id);if(el)el.classList.remove('active');
+  });
+  var map={exp:'tnavExp',msg:'tnavMsg',mes:'tnavMes'};
+  var active=g(map[tab]);if(active)active.classList.add('active');
+  // bniMes / tnavMes visible seulement pour élèves
+  var tme=g('tnavMes');
+  if(tme)tme.style.display=(user&&user.id&&user.role!=='professeur')?'flex':'none';
+}
+
 function updateMobHeader(tab){
   var t=MOB_TITLES[tab]||{title:'CoursPool',sub:''};
   var mt=g('mobTitle'),ms=g('mobSub');
@@ -3148,6 +3199,7 @@ function navTo(tab){
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
   updateMobHeader(tab);
+  updateTopbarNav(tab);
   var nav=g('bnav');
 
   if(tab==='exp'){
