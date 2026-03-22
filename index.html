@@ -456,7 +456,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   background:rgba(255,255,255,0.85);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-radius:50px;display:none;z-index:60;
-  padding:6px 10px;
+  padding:6px 8px; display:flex; align-items:center;
   box-shadow:0 8px 32px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.8) inset,0 0 0 1px rgba(0,0,0,.06);
   align-items:center;gap:4px;
   transition:all .4s cubic-bezier(.34,1.56,.64,1);
@@ -464,7 +464,8 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .bnav.on{display:flex;}
 .bni{
   display:flex;flex-direction:column;align-items:center;gap:2px;
-  cursor:pointer;padding:6px 10px;border-radius:40px;
+  cursor:pointer;padding:6px 0;border-radius:40px;
+  flex:1; min-width:0;
   color:var(--lite);transition:all .25s cubic-bezier(.34,1.56,.64,1);
   position:relative;min-width:58px;
 }
@@ -729,8 +730,7 @@ html.dk .bnav {
 
 /* ── NAV — MOBILE: keep floating pill ── */
 @media (max-width: 640px) {
-  .bni              { padding: 8px 12px; min-width: 48px; flex: none; border-radius: 40px; }
-  .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
+    .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
   .bni span         { font-size: 9px; }
   .bni-mes          { padding: 8px 12px; min-width: 48px; border-radius: 40px; }
   .bni-mes.on       { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
@@ -828,8 +828,7 @@ html.dk .bnav {
 
 /* Mobile — keep floating pill */
 @media (max-width: 640px) {
-  .bni              { padding: 8px 14px; min-width: 52px; flex: none; border-radius: 40px; }
-  .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
+    .bni.on           { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
   .bni span         { font-size: 9px; }
   .bni-mes          { padding: 8px 14px; min-width: 52px; border-radius: 40px; }
   .bni-mes.on       { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
@@ -2657,7 +2656,7 @@ html.dk .settings-group { background:var(--wh); }
     <span>Messages</span>
   </div>
 
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:0 4px;min-width:52px;justify-content:center">
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex:1;min-width:0;justify-content:center">
     <div style="width:40px;height:24px;border-radius:12px;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
@@ -6994,7 +6993,7 @@ function stepRender(idx){
       +'</div>';
 
   }else if(step.id==='lieu'){
-    var ph=_sd.mode==='visio'?'Lien Zoom, Meet, Jitsi...':'Ville ou adresse...';
+    var ph=_sd.mode==='visio'?'Optionnel — lien généré automatiquement':'Ville ou adresse...';
     html+='<div style="width:100%">'
       +'<input id="stepLieu" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="'+ph+'" value="'+escH(_sd.lieu)+'">'
       +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>';
@@ -7154,7 +7153,7 @@ async function subCrStep(){
       description:_sd.desc||'',
       prof_id:user.id,professeur_id:user.id,
       mode:_sd.mode||'presentiel',
-      visio_url:_sd.mode==='visio'?_sd.lieu:'',
+      visio_url:_sd.mode==='visio'?(_sd.lieu||('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase())):'',
       prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
       couleur_sujet:_sc2,background:_bg,
       emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
