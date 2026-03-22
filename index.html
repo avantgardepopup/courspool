@@ -935,7 +935,7 @@ html.dk .bnav {
 .btn-visio:hover { background: #005BBF; transform: translateY(-1px); }
 
 /* ── CHAT COURSE CARD ── */
-.chat-cours-card { background: var(--wh); border: 1.5px solid var(--bdr); border-radius: 18px; overflow: hidden; cursor: pointer; max-width: 260px; display: inline-block; transition: transform .2s, box-shadow .2s; box-shadow: 0 2px 8px rgba(0,0,0,.06); text-decoration: none; }
+.chat-cours-card { background: var(--wh); border: 1.5px solid var(--bdr); border-radius: 18px; overflow: hidden; cursor: pointer; max-width: 260px; display: block; transition: transform .2s, box-shadow .2s; box-shadow: 0 2px 8px rgba(0,0,0,.06); text-decoration: none; }
 .chat-cours-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,.12); }
 .chat-cours-card-header { height: 64px; display: flex; align-items: center; padding: 0 14px; gap: 10px; }
 .chat-cours-card-body   { padding: 10px 14px 12px; }
@@ -983,7 +983,7 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
 
 
 /* ── MSG EDIT/DELETE ── */
-.msg-bubble-wrap { position:relative; }
+.msg-bubble-wrap { position:relative; max-width: min(72%, calc(100vw - 80px)); min-width:0; overflow:hidden; }
 .msg-actions {
   display:none; position:absolute; top:-8px;
   background:var(--wh); border-radius:20px;
@@ -4681,8 +4681,19 @@ async function loadMessages(){
         +actionsHtml
         +'<div style="background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
         +(function(){
-        var _isHtml=(m.contenu||'').trimStart().startsWith('<');
-        var _safe=_isHtml?m.contenu:(m.contenu||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var _raw=m.contenu||'';
+        // Skip raw COURSCARD JSON (old format stored before HTML cards)
+        var _isCoursCard=_raw.includes('"mode":"presentiel"')||_raw.includes('"mode":"visio"')||_raw.includes('COURSCARD:');
+        if(_isCoursCard){
+          // Show as a simple clickable link instead of raw JSON
+          var _cardId=_raw.match(/"id":"([^"]+)"/);
+          var _cardTitle=_raw.match(/"title":"([^"]+)"/);
+          var _label=_cardTitle?_cardTitle[1]:'Voir le cours';
+          var _cid=_cardId?_cardId[1]:'';
+          return '<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word"><span style="background:var(--orp);color:var(--or);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;display:inline-block" onclick="'+(_cid?'openR(\''+_cid+'\')':'')+'">📚 '+_label+'</span></div>';
+        }
+        var _isHtml=_raw.trimStart().startsWith('<');
+        var _safe=_isHtml?_raw:_raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         return '<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word;overflow-wrap:anywhere;'+(_isHtml?'':'white-space:pre-wrap')+'">'+_safe+'</div>';
       }())
         +'<div style="font-size:10px;opacity:.55;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
