@@ -1225,6 +1225,47 @@ html.dk .settings-group { background:var(--wh); }
 .bni-mes { display: none; flex-direction: column; align-items: center; gap: 3px; }
 .bni-mes.show { display: flex !important; }
 
+
+/* ── MESSAGING — complete layout fix ── */
+#pgMsg {
+  position: relative;
+  overflow: hidden;
+}
+#msgListPane {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+}
+#msgConvPane {
+  position: absolute !important;
+  top: 0; left: 0; right: 0; bottom: 0;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  z-index: 10 !important;
+}
+#msgMessages {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+/* Bubble constraints */
+.msg-bubble-wrap {
+  max-width: min(72%, calc(100vw - 80px)) !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.msg-content {
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+/* Chat course card in messages */
+.chat-cours-card {
+  max-width: min(260px, calc(100vw - 100px)) !important;
+}
+
 </style>
 </head>
 <body>
@@ -1655,7 +1696,7 @@ html.dk .settings-group { background:var(--wh); }
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden;max-width:100vw">
+    <div id="msgConvPane" style="display:none;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:10;overflow:hidden">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
@@ -4590,7 +4631,7 @@ function openMsg(profNm,destId,avatar){
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
-  if(bnav)bnav.style.display='none';
+  // bnav hidden via conv-mode class (CSS)
   // Avatar et nom
   var av=g('msgConvAv');
   if(avatar&&avatar!=='null'&&avatar!==''){
@@ -4707,7 +4748,11 @@ async function loadMessages(){
         +'<div class="msg-bubble-wrap" style="max-width:72%;min-width:0;position:relative;overflow:hidden">'
         +actionsHtml
         +'<div style="background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
-        +'<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">'+m.contenu+'</div>'
+        +(function(){
+        var _isHtml=(m.contenu||'').trimStart().startsWith('<');
+        var _safe=_isHtml?m.contenu:(m.contenu||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return '<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word;overflow-wrap:anywhere;'+(_isHtml?'':'white-space:pre-wrap')+'">'+_safe+'</div>';
+      }())
         +'<div style="font-size:10px;opacity:.55;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
         +'</div></div>'
         +(isMe?'':'')
@@ -6978,7 +7023,7 @@ function stepRender(idx){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
-    var topM=['Maths','Physique','Anglais','Fran\u00e7ais','Informatique','Histoire-G\u00e9o','Espagnol','Chimie','SVT / Biologie','Autre'];
+    var topM=['Maths','Physique','Chimie','SVT / Biologie','Anglais','Espagnol','Fran\u00e7ais','Histoire-G\u00e9o','Philosophie','Informatique','\u00c9conomie','Droit','Comptabilit\u00e9','Marketing','Architecture','Statistiques','Musique','Arts plastiques','Sport / EPS','Autre'];
     html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
     topM.forEach(function(m){
       var mo=MATIERES.find(function(x){return x.label===m;})||{bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)'};
@@ -7153,13 +7198,24 @@ async function subCrStep(){
     var dt=new Date(_sd.date+'T'+_sd.heure+':00');
     var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
     var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
+    var _mat=MATIERES.find(function(m){return m.key===(_sd.matiere_key||_sd.matiere.toLowerCase());});
+    var _sc2=_mat?_mat.color:'#7C3AED';
+    var _bg=_mat?_mat.bg:'linear-gradient(135deg,#F5F3FF,#DDD6FE)';
     var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
       date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
       lieu:_sd.mode==='visio'?('Visio - '+_sd.lieu):_sd.lieu,
       prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
-      description:_sd.desc||'',prof_id:user.id,mode:_sd.mode||'presentiel',
+      description:_sd.desc||'',
+      prof_id:user.id,professeur_id:user.id,
+      mode:_sd.mode||'presentiel',
       visio_url:_sd.mode==='visio'?_sd.lieu:'',
-      prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null};
+      prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
+      couleur_sujet:_sc2,background:_bg,
+      emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
+      prof_initiales:user.ini||'?',
+      prof_couleur:user.col||'linear-gradient(135deg,#FF8C55,#E04E10)',
+      prof_nom:(user.pr+(user.nm?' '+user.nm:'')).trim()};
+    if(user.photo)p.prof_photo=user.photo;
     var r=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
     var data=await r.json();
     if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
