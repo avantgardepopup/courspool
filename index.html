@@ -789,9 +789,7 @@ html.dk .bnav{background:rgba(16,14,12,.93)!important;box-shadow:0 0 0 1px rgba(
 }
 
 /* Nav collapse in conversation */
-.bnav.conv-mode{overflow:hidden!important;}
-.bnav.conv-mode .bni:not(#bniMsg){max-width:0!important;overflow:hidden!important;padding:0!important;min-width:0!important;opacity:0!important;transition:all .3s cubic-bezier(.4,0,.2,1)!important;}
-.bnav.conv-mode #bniMsg{background:var(--orp)!important;box-shadow:none!important;color:var(--or)!important;}
+/* conv-mode handled below */
 
 /* Toast — floating pill */
 .toast{left:50%!important;right:auto!important;transform:translateX(-50%) translateY(-14px) scale(.95)!important;max-width:340px!important;min-width:200px!important;width:auto!important;border-radius:50px!important;padding:11px 20px!important;font-size:14px!important;font-weight:600!important;white-space:nowrap!important;background:rgba(12,10,8,.92)!important;backdrop-filter:blur(40px)!important;-webkit-backdrop-filter:blur(40px)!important;}
@@ -912,6 +910,11 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
 #accHome .acc-card:nth-child(4){animation-delay:.12s;}
 #accHome .acc-card:nth-child(5){animation-delay:.15s;}
 #accHome .acc-card:nth-child(6){animation-delay:.18s;}
+
+
+/* Detail header fixed - push content down */
+#pgAcc.detail-mode .acc-body{padding-top:max(100px, calc(80px + env(safe-area-inset-top,0px)))!important;}
+#pgAcc.home-mode #accDetailHeader{display:none!important;}
 
 </style>
 </head>
@@ -1130,7 +1133,7 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
       </div>
       <div class="mob-actions">
         <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="17" height="17"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
         <button id="btnProposerMob" onclick="openCr()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(255,107,43,.4)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1377,18 +1380,17 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
       <div id="accHome" style="padding:max(56px,env(safe-area-inset-top,56px)) 20px 0">
 
         <!-- Avatar + name header -->
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:32px">
-          <div style="position:relative;flex-shrink:0">
-            <div id="accAv" style="width:64px;height:64px;border-radius:50%;background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--mid);overflow:hidden;border:2px solid var(--bdr2,var(--bdr))">?</div>
-            <label style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid var(--bg)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <!-- Avatar centered -->
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="position:relative;display:inline-block;margin-bottom:12px">
+            <div id="accAv" style="width:80px;height:80px;border-radius:50%;background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--mid);overflow:hidden;border:3px solid var(--wh);box-shadow:0 2px 12px rgba(0,0,0,.1)">?</div>
+            <label style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2.5px solid var(--bg);box-shadow:0 2px 6px rgba(255,107,43,.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
             </label>
           </div>
-          <div style="flex:1;min-width:0">
-            <div id="accName" style="font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.035em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
-            <div id="accRolePill" style="font-size:13px;color:var(--lite);margin-top:2px"></div>
-          </div>
+          <div id="accName" style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.04em;margin-bottom:4px">&#8212;</div>
+          <div id="accRolePill" style="font-size:13px;color:var(--lite)"></div>
         </div>
 
         <!-- Stats row (rempli par buildAccLists) -->
@@ -1456,7 +1458,7 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
 
       <!-- DETAIL VIEWS (hidden by default, shown via switchATab) -->
       <!-- Back button header for detail views -->
-      <div id="accDetailHeader" style="display:none;align-items:center;gap:12px;padding:max(56px,env(safe-area-inset-top,56px)) 20px 16px;position:sticky;top:0;background:var(--wh);z-index:10;border-bottom:1px solid var(--bdr)">
+      <div id="accDetailHeader" style="display:none;align-items:center;gap:12px;padding:max(56px,env(safe-area-inset-top,56px)) 20px 16px;position:fixed;top:0;left:0;right:0;background:var(--wh);z-index:200;border-bottom:1px solid var(--bdr);max-width:100vw">
         <button onclick="showAccHome()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
@@ -3157,14 +3159,14 @@ function buildAccLists(){
     var nbCours=isProf?C.filter(function(c){return c.pr===user.id;}).length:0;
     if(isProf){
       stats.innerHTML=
-        '<div style="background:rgba(255,255,255,.15);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+nbCours+'</div><div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
-        '<div style="background:rgba(255,255,255,.15);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+rIds.length+'</div><div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
-        '<div style="background:rgba(255,255,255,.15);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">—</div><div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
+        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--or)">—</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
     } else {
       stats.innerHTML=
-        '<div style="background:rgba(255,255,255,.15);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+rIds.length+'</div><div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
-        '<div style="background:rgba(255,255,255,.15);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+fIds.length+'</div><div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
-        '<div style="background:rgba(255,255,255,.15);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">0</div><div style="font-size:10px;color:rgba(255,255,255,.75);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
+        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
+        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
+        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
     }
   }
   // Rôle pill
@@ -4314,6 +4316,8 @@ function openMsg(profNm,destId,avatar){
   if(!destId){toast('Erreur','Destinataire introuvable');return;}
   if(destId===user.id){toast('Action impossible','Vous ne pouvez pas vous écrire à vous-même');return;}
   msgDestinataire=profNm;msgDestId=destId;
+  // Clear badge when opening a conversation
+  var _b=g('bnavBadge');if(_b){_b.classList.remove('on');_b.textContent='';}
 
   // Naviguer vers la page messages
   navTo('msg');
@@ -5341,8 +5345,8 @@ var _tutoSteps=[], _tutoIdx=0;
 // Définir les étapes avec sélecteur CSS de l'élément ciblé
 var _TUTO_SVG={
   logo:'<div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="color:#fff;font-size:22px;font-weight:800;letter-spacing:-.03em">CoursPool</div>',
-  locbar:'<div style="background:rgba(255,255,255,.15);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;max-width:260px;margin:0 auto;border:1.5px solid rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="color:rgba(255,255,255,.7);font-size:13px;flex:1">Ville, code postal...</span><div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span style="color:#fff;font-size:11px;font-weight:700">Autour de moi</span></div></div>',
-  card:'<div style="background:rgba(255,255,255,.12);border-radius:16px;overflow:hidden;max-width:230px;margin:0 auto;border:1.5px solid rgba(255,255,255,.25)"><div style="background:rgba(255,255,255,.15);padding:10px 14px"><span style="background:rgba(255,255,255,.2);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">Maths</span></div><div style="padding:12px 14px"><div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:4px">Algèbre niveau terminale</div><div style="color:rgba(255,255,255,.65);font-size:11px;margin-bottom:10px">Sam. 22 mars · 14h00 · Paris</div><div style="display:flex;justify-content:space-between;align-items:center"><div style="color:#fff;font-weight:800;font-size:18px">8€<span style="font-size:11px;font-weight:400;opacity:.7"> /élève</span></div><div style="background:#fff;color:#22C069;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700">Réserver</div></div></div></div>',
+  locbar:'<div style="background:var(--wh);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;max-width:260px;margin:0 auto;border:1.5px solid rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="color:rgba(255,255,255,.7);font-size:13px;flex:1">Ville, code postal...</span><div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span style="color:#fff;font-size:11px;font-weight:700">Autour de moi</span></div></div>',
+  card:'<div style="background:rgba(255,255,255,.12);border-radius:16px;overflow:hidden;max-width:230px;margin:0 auto;border:1.5px solid rgba(255,255,255,.25)"><div style="background:var(--wh);padding:10px 14px"><span style="background:rgba(255,255,255,.2);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#fff">Maths</span></div><div style="padding:12px 14px"><div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:4px">Algèbre niveau terminale</div><div style="color:rgba(255,255,255,.65);font-size:11px;margin-bottom:10px">Sam. 22 mars · 14h00 · Paris</div><div style="display:flex;justify-content:space-between;align-items:center"><div style="color:#fff;font-weight:800;font-size:18px">8€<span style="font-size:11px;font-weight:400;opacity:.7"> /élève</span></div><div style="background:#fff;color:#22C069;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700">Réserver</div></div></div></div>',
   msg:'<div style="display:flex;flex-direction:column;gap:8px;max-width:240px;margin:0 auto"><div style="background:rgba(255,255,255,.9);border-radius:14px 14px 4px 14px;padding:10px 14px;align-self:flex-start;max-width:85%"><span style="font-size:12px;color:#4338CA;font-weight:500">Bonjour, le cours est encore disponible ?</span></div><div style="background:rgba(255,255,255,.2);border-radius:14px 14px 14px 4px;padding:10px 14px;align-self:flex-end;border:1.5px solid rgba(255,255,255,.3);max-width:75%"><span style="font-size:12px;color:#fff">Oui, il reste 2 places !</span></div></div>',
   plus:'<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="background:rgba(0,0,0,.15);border-radius:24px;padding:16px 24px;display:flex;align-items:center;gap:16px;border:1.5px solid rgba(255,255,255,.2)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.5"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="20" height="20"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span style="color:#fff;font-size:9px;font-weight:600">EXPLORER</span></div><div style="width:44px;height:26px;border-radius:14px;background:#FF6B2B;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,107,43,.5)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div style="display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.5"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span style="color:#fff;font-size:9px;font-weight:600">PROFIL</span></div></div><span style="color:rgba(255,255,255,.7);font-size:11px;font-weight:600">Appuyez sur + pour créer</span></div>',
   profil:'<div style="background:rgba(255,255,255,.12);border-radius:16px;padding:14px;max-width:210px;margin:0 auto;border:1.5px solid rgba(255,255,255,.2)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div style="color:#fff;font-weight:700;font-size:13px">Mon compte</div><div style="color:rgba(255,255,255,.55);font-size:11px">Réservations · Suivis</div></div></div><div style="display:flex;gap:6px"><div style="flex:1;background:rgba(255,255,255,.12);border-radius:8px;padding:8px;text-align:center"><div style="color:#fff;font-weight:800;font-size:15px">3</div><div style="color:rgba(255,255,255,.55);font-size:10px">Réservés</div></div><div style="flex:1;background:rgba(255,255,255,.12);border-radius:8px;padding:8px;text-align:center"><div style="color:#fff;font-weight:800;font-size:15px">2</div><div style="color:rgba(255,255,255,.55);font-size:10px">Suivis</div></div></div></div>',
