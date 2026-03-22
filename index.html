@@ -1705,6 +1705,143 @@ html.dk .settings-group { background:var(--wh); }
 #pgAcc.home-mode .acc-body { display: none; }
 #pgAcc.detail-mode #accHome { display: none; }
 #pgAcc.detail-mode .acc-body { display: block; }
+
+/* ════ SEARCH BAR PREMIUM ════ */
+.mob-search-wrap {
+  padding:10px 16px 6px;
+  background:var(--bg);
+}
+.search-bar-premium {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--wh);
+  border-radius:16px;
+  padding:11px 14px;
+  border:1.5px solid var(--bdr);
+  transition:border-color .2s, box-shadow .2s;
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+}
+.search-bar-premium:focus-within {
+  border-color:var(--or);
+  box-shadow:0 0 0 3px rgba(255,107,43,.1);
+}
+.search-icon-wrap {
+  color:var(--lite);
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+  transition:color .2s;
+}
+.search-bar-premium:focus-within .search-icon-wrap {
+  color:var(--or);
+}
+.search-input-premium {
+  flex:1;
+  border:none;
+  background:transparent;
+  font-family:inherit;
+  font-size:15px;
+  color:var(--ink);
+  outline:none;
+  min-width:0;
+}
+.search-input-premium::placeholder { color:var(--lite); }
+.search-clear-btn {
+  display:none;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:var(--bdr);
+  border:none;
+  cursor:pointer;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  color:var(--mid);
+  transition:background .15s;
+}
+.search-clear-btn:hover { background:var(--mid); color:#fff; }
+
+/* ════ FILTER BAR PREMIUM ════ */
+.filter-bar-wrap {
+  display:flex;
+  align-items:center;
+  padding:8px 0 8px;
+  gap:0;
+  overflow:hidden;
+  background:var(--bg);
+}
+.filter-fixed {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:0 0 0 16px;
+  flex-shrink:0;
+}
+.filter-sep {
+  width:1px;
+  height:18px;
+  background:var(--bdr);
+  flex-shrink:0;
+  margin-left:2px;
+}
+.filter-bar {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:0 16px 0 10px;
+  overflow-x:auto;
+  overflow-y:visible;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  flex:1;
+}
+.filter-bar::-webkit-scrollbar { display:none; }
+
+/* Pills filtres */
+.filter-pill-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 14px;
+  border-radius:50px;
+  border:1.5px solid var(--bdr);
+  background:var(--wh);
+  color:var(--mid);
+  font-family:inherit;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:all .18s;
+  outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.filter-pill-btn:hover {
+  border-color:var(--or);
+  color:var(--or);
+}
+.filter-pill-btn.active, .filter-pill-btn.on {
+  background:var(--or);
+  border-color:var(--or);
+  color:#fff;
+  box-shadow:0 3px 10px rgba(255,107,43,.25);
+}
+.filter-pill-add {
+  border-style:dashed;
+  padding:7px 10px;
+}
+.filter-pill-add:hover {
+  background:var(--orp);
+  border-color:var(--or);
+  color:var(--or);
+}
+
+/* Dark mode */
+html.dk .search-bar-premium { background:var(--wh); border-color:var(--bdr); }
+html.dk .filter-pill-btn { background:var(--wh); }
 </style>
 </head>
 <body>
@@ -1947,14 +2084,17 @@ html.dk .settings-group { background:var(--wh); }
       </div>
     </div>
   </div>
-  <!-- Barre de recherche mobile (visible seulement sur Explorer) -->
-  <!-- Search bar — premium -->
+  <!-- Barre de recherche premium -->
   <div id="mobSearch" class="mob-search-wrap">
-    <div class="search-bar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17" style="color:var(--lite);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="mobSearchInput" placeholder="Matière, professeur, ville…" oninput="g('srch').value=this.value;doFilter()">
-      <button id="searchClearBtn" onclick="clearSearch()" style="display:none;background:var(--bdr);border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <div class="search-bar-premium">
+      <div class="search-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <input type="text" id="mobSearchInput" class="search-input-premium"
+        placeholder="Matière, professeur, ville…"
+        oninput="g('srch').value=this.value;doFilter();document.getElementById('searchClearBtn').style.display=this.value?'flex':'none'">
+      <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
   </div>
@@ -2006,38 +2146,35 @@ html.dk .settings-group { background:var(--wh); }
       </div>
       <!-- Filter bar — clean chips -->
       <div class="filter-bar-wrap">
-        <!-- Fixé à gauche : Tri + Niveau -->
+        <!-- Tri + Niveau fixes -->
         <div class="filter-fixed">
-          <div class="sort-chip" onclick="cycleSort(this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+          <button class="filter-pill-btn" id="sortBtn" onclick="cycleSort(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
             <span id="sortLabel">Date</span>
-          </div>
-          <div class="fchip fchip-level" id="pillNiv" onclick="openNivFilter()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </button>
+          <button class="filter-pill-btn" id="pillNiv" onclick="openNivFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span id="pillNivLabel">Niveau</span>
-          </div>
-          <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0"></div>
+          </button>
+          <div class="filter-sep"></div>
         </div>
-        <!-- Scrollable : Matières -->
+        <!-- Matières scrollables -->
         <div class="filter-bar" id="filterBar">
-        <!-- Matières -->
-        <div class="fchip on" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</div>
-        <div class="fchip" data-f="maths" onclick="setPill(this)">Maths</div>
-        <div class="fchip" data-f="physique" onclick="setPill(this)">Physique</div>
-        <div class="fchip" data-f="informatique" onclick="setPill(this)">Info</div>
-        <div class="fchip" data-f="langues" onclick="setPill(this)">Langues</div>
-        <div class="fchip" data-f="economie" onclick="setPill(this)">Éco</div>
-        <div class="fchip" data-f="soir" onclick="setPill(this)">Ce soir</div>
-        <div class="fchip" data-f="weekend" onclick="setPill(this)">Week-end</div>
-        <div class="fchip" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;gap:4px;color:var(--mid)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Filtre
+          <button class="filter-pill-btn active" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</button>
+          <button class="filter-pill-btn" data-f="maths" onclick="setPill(this)">Maths</button>
+          <button class="filter-pill-btn" data-f="physique" onclick="setPill(this)">Physique</button>
+          <button class="filter-pill-btn" data-f="informatique" onclick="setPill(this)">Info</button>
+          <button class="filter-pill-btn" data-f="langues" onclick="setPill(this)">Langues</button>
+          <button class="filter-pill-btn" data-f="economie" onclick="setPill(this)">Éco</button>
+          <button class="filter-pill-btn" data-f="soir" onclick="setPill(this)">Ce soir</button>
+          <button class="filter-pill-btn" data-f="weekend" onclick="setPill(this)">Week-end</button>
+          <button class="filter-pill-btn filter-pill-add" id="pillAdd" onclick="openAddFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div id="pillsBar" style="display:none"></div>
+          <input type="hidden" id="srch" value="">
         </div>
-        <!-- keep hidden pillsBar for JS compat -->
-        <div id="pillsBar" style="display:none"></div>
-        <input type="hidden" id="srch" value="">
-        </div><!-- end .filter-bar scroll -->
-      </div><!-- end .filter-bar-wrap -->
+      </div>
 
       <!-- Bottom sheet filtre niveau -->
       <div id="bdNivFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeNivFilter()">
@@ -7980,12 +8117,12 @@ function showAccHome(){
 (function(){
   var _sp=setPill;
   setPill=function(el){
-    // Support both .pill and .fchip
     haptic(4);
-    var bar=el.closest('#filterBar')||el.closest('.pills');
-    var selector=bar?'.fchip[data-f],.pill[data-f]':'.pill';
-    document.querySelectorAll(selector).forEach(function(p){p.classList.remove('on');});
-    el.classList.add('on');
+    // Support .filter-pill-btn, .fchip, .pill
+    document.querySelectorAll('.filter-pill-btn[data-f],.fchip[data-f],.pill[data-f]').forEach(function(p){
+      p.classList.remove('on','active');
+    });
+    el.classList.add('on','active');
     actF=el.dataset.f;
     doFilter();
     try{sessionStorage.setItem('cp_filter',actF);}catch(e){}
