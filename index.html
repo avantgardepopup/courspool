@@ -1235,8 +1235,6 @@ html.dk .settings-group { background:var(--wh); }
 }
 .filter-bar::-webkit-scrollbar { display:none; }
 
-#bniMes { display:none; }
-#bniMes.show { display:flex !important; }
 </style>
 </head>
 <body>
@@ -3216,6 +3214,7 @@ function restoreNav(){
   // Réafficher tous les items
   var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display=(user&&user.guest)?'none':'';
   var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
+  var bniMesR=g('bniMes');if(bniMesR)bniMesR.style.display=(user&&user.id&&user.role!=='professeur')?'flex':'none';
   if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
   // bni-sep supprimés de la nav
 }
@@ -7202,7 +7201,7 @@ async function subCrStep(){
     _au();
     // Show "Mes cours" nav for students
     var bm=g('bniMes');
-    if(bm){var showMes=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes);}
+    if(bm){var showMes=!!(user&&user.id&&user.role!=='professeur');bm.style.display=showMes?'flex':'none';}
     // Show share button for profs
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -7463,7 +7462,7 @@ function showAccHome(){
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
     var bm=g('bniMes');
-    if(bm){var showMes2=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes2);}
+    if(bm){var showMes2=!!(user&&user.id&&user.role!=='professeur');bm.style.display=showMes2?'flex':'none';}
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
