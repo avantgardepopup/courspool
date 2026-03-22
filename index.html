@@ -1200,25 +1200,7 @@ html.dk .settings-header { background:var(--bg); }
 html.dk .settings-group { background:var(--wh); }
 
 
-/* Message overflow fix */
-.msg-content {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-  max-width: 100%;
-}
-.msg-bubble-wrap {
-  min-width: 0;
-  overflow: hidden;
-  max-width: 72%;
-}
-#msgConvPane, #pgMsg {
-  overflow-x: hidden !important;
-  max-width: 100vw;
-}
-#msgMessages {
-  overflow-x: hidden;
-}
+
 
 
 /* bniMes — explicit show/hide */
@@ -1226,46 +1208,16 @@ html.dk .settings-group { background:var(--wh); }
 .bni-mes.show { display: flex !important; }
 
 
-/* ── MESSAGING — complete layout fix ── */
-#pgMsg {
-  position: relative;
-  overflow: hidden;
-}
-#msgListPane {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  overflow: hidden;
-}
-#msgConvPane {
-  position: absolute !important;
-  top: 0; left: 0; right: 0; bottom: 0;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  z-index: 10 !important;
-}
-#msgMessages {
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-/* Bubble constraints */
-.msg-bubble-wrap {
-  max-width: min(72%, calc(100vw - 80px)) !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-}
-.msg-content {
-  word-break: break-word !important;
-  overflow-wrap: anywhere !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-}
-/* Chat course card in messages */
-.chat-cours-card {
-  max-width: min(260px, calc(100vw - 100px)) !important;
-}
 
+
+
+/* ── MESSAGING — clean layout ── */
+#pgMsg { overflow: hidden; }
+#msgConvPane { overflow: hidden; max-width: 100vw; }
+#msgMessages { overflow-x: hidden; overflow-y: auto; }
+.msg-bubble-wrap { min-width: 0; overflow: hidden; max-width: min(72%, calc(100vw - 80px)); }
+.msg-content { word-break: break-word; overflow-wrap: anywhere; max-width: 100%; }
+.chat-cours-card { max-width: min(260px, calc(100vw - 100px)); }
 </style>
 </head>
 <body>
@@ -1696,7 +1648,7 @@ html.dk .settings-group { background:var(--wh); }
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:10;overflow:hidden">
+    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden;max-width:100vw">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
@@ -3188,9 +3140,8 @@ function navTo(tab){
       bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg><span>Retour</span>';
       bniExp.onclick=function(){navTo('exp');};
     }
-    ['bniMsg','bniAcc','bniAdd','bniSepAdd'].forEach(function(id){var e=g(id);if(e)e.style.display='none';});
-  
-    var br3=g('btnRefresh');if(br3)br3.style.display='none'; // messages: refresh masqué
+    // Don't hide nav items - conv-mode CSS handles it
+    var br3=g('btnRefresh');if(br3)br3.style.display='none';
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
@@ -4645,7 +4596,9 @@ function openMsg(profNm,destId,avatar){
   g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   var inp=g('msgInput');inp.value='';inp.style.height='auto';
 
-  // Mobile : montrer la conv
+  // Show conv pane
+  var convPane=g('msgConvPane');
+  if(convPane)convPane.style.display='flex';
   g('pgMsg').classList.add('conv-open');
 
   // Marquer conversation active dans la liste
@@ -4670,16 +4623,15 @@ function openMsg(profNm,destId,avatar){
 function closeMsgConv(){
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
-  // Réafficher la barre de nav
-  var bnav=g('bnav');
-  if(bnav&&user){
-    var isMob=window.innerWidth<=640;
-    bnav.style.display='flex';
-    if(!isMob){bnav.style.left='50%';bnav.style.transform='translateX(-50%)';}
-    else{bnav.style.left='';bnav.style.transform='';bnav.style.padding='';}
-  }
+  // Hide conv pane
+  var convPane=g('msgConvPane');
+  if(convPane)convPane.style.display='none';
   clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
+  // Restore nav fully
+  restoreNav();
+  var bnav=g('bnav');
+  if(bnav)bnav.classList.remove('conv-mode');
 }
 
 async function loadMessages(){
