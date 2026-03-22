@@ -456,7 +456,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   background:rgba(255,255,255,0.85);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-radius:50px;display:none;z-index:60;
-  padding:6px 8px;
+  padding:6px 10px;
   box-shadow:0 8px 32px rgba(0,0,0,.12),0 1px 0 rgba(255,255,255,.8) inset,0 0 0 1px rgba(0,0,0,.06);
   align-items:center;gap:4px;
   transition:all .4s cubic-bezier(.34,1.56,.64,1);
@@ -464,7 +464,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .bnav.on{display:flex;}
 .bni{
   display:flex;flex-direction:column;align-items:center;gap:2px;
-  cursor:pointer;padding:6px 8px;border-radius:40px;
+  cursor:pointer;padding:6px 10px;border-radius:40px;
   color:var(--lite);transition:all .25s cubic-bezier(.34,1.56,.64,1);
   position:relative;min-width:58px;
 }
@@ -3214,7 +3214,7 @@ function restoreNav(){
   // Réafficher tous les items
   var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display=(user&&user.guest)?'none':'';
   var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
-  var bniMesR=g('bniMes');if(bniMesR)bniMesR.style.display='flex';
+  var bniMesR=g('bniMes');if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
   if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
   // bni-sep supprimés de la nav
 }
@@ -7186,10 +7186,12 @@ async function subCrStep(){
   navTo=function(tab){
     var pm=g('pgMes'),bm=g('bniMes');
     if(tab==='mes'){
-      ['pgExp','pgMsg','pgAcc'].forEach(function(id){var el=g(id);if(el){el.classList.remove('on');if(id==='pgMsg'){el.style.display='';el.classList.remove('conv-open');}}});
-      ['bniExp','bniMsg','bniAcc'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
-      if(pm)pm.classList.add('on');if(bm)bm.classList.add('on');
-      buildMesCours();return;
+      // Aller sur pgAcc et ouvrir l'onglet Mes cours
+      navTo('acc');
+      setTimeout(function(){
+        var tabR=g('aTabR');if(tabR)switchATab('R',tabR);
+      },50);
+      return;
     }
     if(pm)pm.classList.remove('on');if(bm)bm.classList.remove('on');
     _nt(tab);
@@ -7200,7 +7202,7 @@ async function subCrStep(){
   applyUser=function(){
     _au();
     // Show "Mes cours" nav for students
-    var bm=g('bniMes');if(bm)bm.style.display='flex';
+    var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     // Show share button for profs
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -7460,7 +7462,7 @@ function showAccHome(){
     _au2();
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
-    var bm=g('bniMes');if(bm)bm.style.display='flex';
+    var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
