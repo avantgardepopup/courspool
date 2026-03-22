@@ -279,7 +279,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .rsel{display:flex;gap:6px;}
 .ro{padding:5px 10px;border-radius:50px;font-size:12px;font-weight:600;border:1.5px solid var(--bdr);cursor:pointer;transition:all .18s;color:var(--mid);}
 .ro.on,.ro:hover{border-color:var(--or);color:var(--or);background:var(--orp);}
-.pills{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
+.pills{display:flex;gap:8px;margin-bottom:14px;overflow-x:scroll;overflow-y:visible;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-top:4px;padding-bottom:4px;}
 .pills::-webkit-scrollbar{display:none;}
 .pill{padding:7px 12px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);display:inline-flex;align-items:center;gap:4px;}
 .niv-fchip{padding:14px 16px;font-size:15px;font-weight:500;cursor:pointer;border:none;border-bottom:1px solid var(--bdr);background:var(--wh);color:var(--ink);transition:all .15s;display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;gap:8px;}
@@ -1001,6 +1001,14 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
 ::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 3px; }
+
+/* Step form touch-action fix */
+#bdCrStep button, #bdCrStep [data-sa] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
 </style>
 </head>
 <body>
@@ -1288,7 +1296,7 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
         </select>
       </div>
       <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px;overflow:visible;padding-bottom:4px">
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px;overflow:visible;padding-top:6px;padding-bottom:6px">
         <!-- Bouton Niveau — fixe à gauche -->
         <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -6725,7 +6733,7 @@ var _sc=0;
 function openCrStep(){
   if(!user||!user.id){showLoginPrompt();return;}
   if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
-  if(!user.verified){toast('Compte non v\u00e9rifi\u00e9','V\u00e9rification en cours (sous 24h)');return;}
+  if(user.verified===false){toast('Compte non v\u00e9rifi\u00e9','V\u00e9rification en cours (sous 24h)');return;}
   _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',desc:''};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
