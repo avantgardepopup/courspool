@@ -246,7 +246,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .mob-header-inner{display:flex;align-items:flex-end;justify-content:space-between;}
 .mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
 .mob-actions{display:flex;align-items:center;gap:10px;}
-.mob-search{display:block;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:-webkit-sticky;position:sticky;top:62px;z-index:49;-webkit-transform:translateZ(0);transform:translateZ(0);}
+.mob-search{display:block;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:-webkit-sticky;position:sticky;top:0;z-index:49;-webkit-transform:translateZ(0);transform:translateZ(0);}
 .mob-search input{width:100%;background:var(--bg);border:none;border-radius:12px;padding:10px 12px 10px 36px;font-family:inherit;font-size:16px;outline:none;}
 .mob-search .si{top:50%;left:31px;}
 
@@ -268,7 +268,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   #pgMsg{height:calc(100dvh - 130px) !important;}
   #pgMsg.on{display:flex !important;;animation:pgIn .25s cubic-bezier(.4,0,.2,1) both;}
 }
-.cnt{padding:20px 16px;max-width:1200px;}
+.cnt{padding:20px 16px;max-width:1200px;overflow:visible;}
 .ptr-indicator{position:absolute;top:-50px;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;color:var(--lite);font-size:13px;font-weight:500;gap:8px;transition:opacity .2s;}
 .ptr-spinner{width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--or);border-radius:50%;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -913,8 +913,21 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
 
 
 /* Detail header fixed - push content down */
-#pgAcc.detail-mode .acc-body{padding-top:max(100px, calc(80px + env(safe-area-inset-top,0px)))!important;}
+#pgAcc.detail-mode .acc-body{padding-top:max(88px, calc(72px + env(safe-area-inset-top,0px)))!important;}
 #pgAcc.home-mode #accDetailHeader{display:none!important;}
+
+
+/* Fix: reduce top gap in detail sections */
+#pgAcc.detail-mode .asec.on > *:first-child {
+  padding-top: 8px !important;
+}
+#pgAcc.detail-mode .asec.on > div[style*="padding:20px 4px 8px"]:first-child {
+  padding-top: 8px !important;
+}
+/* Fix: ensure sort row doesn't add confusion */
+#pgAcc .acc-body .asec > div[style*="text-transform:uppercase"] {
+  margin-top: 0;
+}
 
 </style>
 </head>
@@ -1195,7 +1208,7 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
       </div>
       <!-- Tri rapide -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:12px;color:var(--lite)" id="sortResultCount"></div>
+        <div style="font-size:12px;color:var(--lite)" id="sortResultCount" style="display:none"></div>
         <select id="sortSelect" onchange="setSortMode(this.value)" style="border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);outline:none;cursor:pointer;padding:2px 0">
           <option value="date">Par date</option>
           <option value="prix">Prix croissant</option>
@@ -1203,7 +1216,7 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
         </select>
       </div>
       <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px;overflow:visible;padding-bottom:4px">
         <!-- Bouton Niveau — fixe à gauche -->
         <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -1763,7 +1776,7 @@ html.dk .pref-group{box-shadow:0 1px 3px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.3
           </div>
 
           <!-- Partager profil (profs) -->
-          <div id="shareProfBtn" style="display:none;padding:4px 0 4px">
+          <div id="shareProfBtn" style="display:none;padding:20px 0 4px">
             <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Partager mon profil
