@@ -1306,17 +1306,7 @@ html.dk .settings-group { background:var(--wh); }
     border-radius:60px !important;
   }
   .bnav:active { cursor:grabbing !important; }
-  .bnav::before {
-    content:'⠿';
-    position:absolute;
-    top:-18px; left:50%;
-    transform:translateX(-50%);
-    font-size:14px;
-    color:rgba(0,0,0,.25);
-    letter-spacing:2px;
-    pointer-events:none;
-    user-select:none;
-  }
+
   .bni {
     padding:10px 16px !important;
     min-width:52px !important;
@@ -1332,54 +1322,90 @@ html.dk .settings-group { background:var(--wh); }
   #msgListPane { width:100% !important; max-width:100% !important; border-right:none !important; }
 }
 
-/* ── Messagerie style Instagram desktop ── */
-@media(min-width:769px){
-  /* Liste conversations */
-  #msgListPane {
-    border-right:1px solid var(--bdr) !important;
-  }
-  #msgListPane > div:first-child {
-    padding:20px 20px 12px !important;
-    border-bottom:1px solid var(--bdr);
-  }
-  .msg-row {
-    border-radius:12px;
-    padding:10px 12px !important;
-    margin:2px 0;
-  }
-  .msg-row:hover { background:var(--bg); }
-  .msg-row.active { background:var(--orp); }
 
-  /* Conversation */
+
+/* ── Cards cours dans messages ── */
+.chat-cours-card {
+  display:block;
+  max-width:220px;
+  width:100%;
+  background:var(--wh);
+  border:1.5px solid var(--bdr);
+  border-radius:16px;
+  overflow:hidden;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
+}
+.chat-cours-card-header {
+  height:56px;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  gap:8px;
+}
+.chat-cours-card-body {
+  padding:8px 12px 10px;
+}
+.chat-cours-card-title {
+  font-size:13px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chat-cours-card-meta {
+  font-size:11px;
+  color:var(--lite);
+}
+
+/* ── Messagerie desktop propre ── */
+@media(min-width:769px){
+  /* Conv pane : layout flex colonne strict */
   #msgConvPane {
-    background:var(--wh) !important;
-    border-left:none !important;
+    display:flex;
+    flex-direction:column;
   }
+  /* Header fixe en haut */
   #msgConvPane > div:first-child {
-    padding:16px 24px !important;
-    border-bottom:1px solid var(--bdr) !important;
-    background:var(--wh) !important;
+    flex-shrink:0;
   }
+  /* Messages scrollable */
   #msgMessages {
-    padding:20px 24px !important;
-    background:var(--wh) !important;
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    padding-bottom:80px;
   }
+  /* Input fixe en bas */
   #msgInputBar {
-    padding:12px 24px !important;
-    padding-bottom:16px !important;
-    background:var(--wh) !important;
-    border-top:1px solid var(--bdr) !important;
+    flex-shrink:0;
+    position:sticky;
+    bottom:0;
   }
-  /* Placeholder vide quand pas de conv sélectionnée */
+  /* Padding messages plus grand */
+  #msgMessages {
+    padding:16px 24px;
+  }
+  /* Bulle max-width adaptée */
+  #msgMessages > div > div:last-child {
+    max-width:60% !important;
+  }
+  /* Placeholder quand pas de conv */
   #msgConvPane.empty-state {
     align-items:center;
     justify-content:center;
   }
-  #msgConvPane.empty-state::before {
-    content:'Sélectionnez une conversation';
-    font-size:16px;
+  #msgConvPane.empty-state > *:not(:first-child) {
+    display:none;
+  }
+  #msgConvPane.empty-state::after {
+    content:'Sélectionnez une conversation pour commencer';
+    font-size:15px;
     color:var(--lite);
     font-weight:500;
+    margin-top:20px;
   }
 }
 </style>
