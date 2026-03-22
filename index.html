@@ -412,8 +412,8 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .pb.sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}.pb.sec:hover{border-color:var(--or);color:var(--or);}
 .pb svg{width:16px;height:16px;}
 /* MESSAGING PAGE */
-#pgMsg{height:calc(100vh - 56px);height:calc(100dvh - 56px);}
-#pgMsg.on{display:flex !important;}
+
+
 
 /* Liste conversations iOS style */
 .msg-row{
@@ -444,7 +444,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 
 /* Mobile */
 @media(max-width:768px){
-  #msgListPane{width:100%;max-width:100%;border-right:none;}
+  
   
 }
 .bnav{
@@ -1189,10 +1189,10 @@ html.dk .settings-group { background:var(--wh); }
 
 
 /* ── Messagerie ── */
-#pgMsg { display:none; flex-direction:column; height:calc(100dvh - 56px); overflow:hidden; }
-#pgMsg.on { display:flex !important; }
-#msgListPane { display:flex; flex-direction:column; height:100%; overflow:hidden; }
-#msgConvPane { display:none; flex-direction:column; position:fixed; inset:0; background:var(--bg); z-index:200; overflow:hidden; }
+
+
+
+
 #msgMessages { flex:1; overflow-y:auto; overflow-x:hidden; min-height:0; }
 .msg-content { word-break:break-word; overflow-wrap:anywhere; }
 .chat-cours-card { display:block; max-width:240px; background:var(--wh); border:1.5px solid var(--bdr); border-radius:16px; overflow:hidden; cursor:pointer; }
@@ -1233,19 +1233,7 @@ html.dk .settings-group { background:var(--wh); }
 
 .bni span { display:none; }
 
-@media(min-width:769px){
-  .topbar{display:none !important;}
-  #app{padding-top:0;}
-  .pg{min-height:calc(100vh - 56px);}
-  .cnt{padding:28px 40px;max-width:1400px;margin:0 auto;}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px;}
-  #pgMsg{flex-direction:row !important;height:calc(100vh - 56px) !important;}
-  #msgListPane{width:320px;max-width:320px;border-right:1px solid var(--bdr);flex-shrink:0;}
-  #msgConvPane{position:relative !important;display:flex !important;flex:1;inset:auto !important;z-index:1 !important;}
-  #msgBackBtn{display:none !important;}
-  #pgAcc .acc-body{max-width:720px;margin:0 auto;}
-  .filter-bar-wrap{padding:12px 40px 8px;}
-}
+
 @media(max-width:768px){
   .topbar{display:none !important;}
 }
@@ -1271,6 +1259,51 @@ html.dk .settings-group { background:var(--wh); }
   background:#EF4444; display:none;
 }
 .tnav-badge.on { display:block; }
+
+/* ── Messagerie ── */
+#pgMsg { display:none; flex-direction:column; height:calc(100dvh - 56px); overflow:hidden; }
+#pgMsg.on { display:flex !important; }
+#msgListPane { display:flex; flex-direction:column; width:100%; height:100%; overflow:hidden; flex-shrink:0; }
+#msgConvPane { display:none; flex-direction:column; position:fixed; inset:0; background:var(--bg); z-index:200; overflow:hidden; }
+#msgMessages { flex:1; overflow-y:auto; overflow-x:hidden; min-height:0; }
+
+/* ── Desktop (>768px) ── */
+@media(min-width:769px){
+  .topbar { display:none !important; }
+  #app { padding-top:0; }
+  .pg { min-height:100vh; }
+  .cnt { padding:28px 40px; max-width:1400px; margin:0 auto; }
+  .grid { grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:20px; }
+  .filter-bar-wrap { padding:12px 40px 8px; }
+  #pgAcc .acc-body { max-width:720px; margin:0 auto; }
+
+  /* Messagerie 2 colonnes */
+  #pgMsg {
+    flex-direction:row !important;
+    height:100vh !important;
+  }
+  #msgListPane {
+    width:340px !important;
+    max-width:340px !important;
+    border-right:1px solid var(--bdr) !important;
+    height:100% !important;
+  }
+  #msgConvPane {
+    position:relative !important;
+    display:flex !important;
+    flex:1 !important;
+    inset:auto !important;
+    z-index:1 !important;
+    height:100% !important;
+  }
+  #msgBackBtn { display:none !important; }
+}
+
+/* ── Mobile (<769px) ── */
+@media(max-width:768px){
+  .topbar { display:none !important; }
+  #msgListPane { width:100% !important; max-width:100% !important; border-right:none !important; }
+}
 </style>
 </head>
 <body>
