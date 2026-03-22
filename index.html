@@ -1015,11 +1015,17 @@ html.dk .mob-header { background: rgba(11,10,9,.88); }
 /* ── FILTER BAR — redesign ── */
 .filter-bar {
   display:flex; align-items:center; gap:8px;
-  padding:10px 16px 6px; overflow-x:scroll; overflow-y:visible;
+  padding:10px 16px 6px; overflow-x:auto; overflow-y:visible;
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
-  white-space:nowrap;
+  white-space:nowrap; position:relative;
 }
 .filter-bar::-webkit-scrollbar { display:none; }
+.sort-chip, .fchip-level {
+  position:sticky; left:0; z-index:2;
+  background:var(--wh) !important;
+  flex-shrink:0;
+}
+.fchip-level { left:52px; }
 .fchip {
   display:inline-flex; align-items:center; gap:6px;
   padding:8px 14px; border-radius:50px; border:1.5px solid var(--bdr);
@@ -6243,10 +6249,11 @@ function toggleDarkMode(){
   document.documentElement.classList.toggle('dk',_darkMode);
   try{localStorage.setItem('cp_dark',_darkMode?'1':'0');}catch(e){}
   updateDarkBtn();
-  // Mettre à jour la couleur de la status bar
   var tm=document.getElementById('themeColorMeta');
   if(tm)tm.content=_darkMode?'#131110':'#ffffff';
   haptic([10,40,10]);
+  // Rebuild cards so bg colors update instantly
+  if(C&&C.length)buildCards();
 }
 
 function updateDarkBtn(){
