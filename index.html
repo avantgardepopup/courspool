@@ -1220,6 +1220,11 @@ html.dk .settings-group { background:var(--wh); }
   overflow-x: hidden;
 }
 
+
+/* bniMes — explicit show/hide */
+.bni-mes { display: none; flex-direction: column; align-items: center; gap: 3px; }
+.bni-mes.show { display: flex !important; }
+
 </style>
 </head>
 <body>
@@ -2914,7 +2919,7 @@ async function doLogin(){
     user={pr:pr,nm:nm,em:em,role:role,id:uid,
       ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
       photo:photo,
-      verified:p.verified||false,
+      verified:p.verified!=null?p.verified:undefined,
       statut:p.statut||'',
       niveau:p.niveau||'',
       matieres:p.matieres||''
@@ -4382,7 +4387,7 @@ function togFP(){
 // CRÉER COURS
 function openCr(){
   if(!user||user.role!=='professeur'){toast('Accès refusé','Seuls les professeurs peuvent proposer des cours');return;}
-  if(!user.verified){
+  if(user.verified===false){
     toast('Compte non vérifié','Votre compte est en cours de vérification par notre équipe. Vous pourrez publier des cours dès validation (sous 24h).');
     return;
   }
@@ -7170,7 +7175,7 @@ async function subCrStep(){
   openCr=function(){
     if(!user||!user.id){showLoginPrompt();return;}
     if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
-    if(!user.verified){toast('Compte non v\u00e9rifi\u00e9','V\u00e9rification en cours (sous 24h)');return;}
+    if(user.verified===false){toast('Compte non v\u00e9rifi\u00e9','V\u00e9rification en cours (sous 24h)');return;}
     openCrStep();
   };
 
@@ -7194,7 +7199,7 @@ async function subCrStep(){
     _au();
     // Show "Mes cours" nav for students
     var bm=g('bniMes');
-    if(bm)bm.style.display=(user&&user.id&&user.role!=='professeur')?'flex':'none';
+    if(bm){var showMes=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes);bm.style.display=showMes?'flex':'none';}
     // Show share button for profs
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -7457,7 +7462,7 @@ function showAccHome(){
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
     var bm=g('bniMes');
-    if(bm)bm.style.display=(user&&user.id&&user.role!=='professeur')?'flex':'none';
+    if(bm){var showMes2=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes2);bm.style.display=showMes2?'flex':'none';}
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
