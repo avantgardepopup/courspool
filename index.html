@@ -7768,6 +7768,85 @@ function _stepOptClick(el){
   el.style.borderColor='var(--or)';
   haptic(8);
 }
+
+// ── Drag & drop bnav sur desktop ──
+(function(){
+  var nav = null;
+  var dragging = false;
+  var ox = 0, oy = 0; // offset souris par rapport au coin du nav
+
+  function initNavDrag(){
+    nav = document.getElementById('bnav');
+    if(!nav) return;
+
+    nav.addEventListener('mousedown', function(e){
+      // Ignorer si clic sur un bouton
+      if(e.target.closest('button,a,[onclick]') && e.target !== nav) return;
+      if(window.innerWidth < 769) return; // mobile : pas de drag
+      dragging = true;
+      var rect = nav.getBoundingClientRect();
+      ox = e.clientX - rect.left;
+      oy = e.clientY - rect.top;
+      nav.style.transition = 'none';
+      nav.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e){
+      if(!dragging || !nav) return;
+      var x = e.clientX - ox;
+      var y = e.clientY - oy;
+      // Garder dans la fenêtre
+      var rect = nav.getBoundingClientRect();
+      x = Math.max(0, Math.min(window.innerWidth - rect.width, x));
+      y = Math.max(0, Math.min(window.innerHeight - rect.height, y));
+      nav.style.left = x + 'px';
+      nav.style.top = y + 'px';
+      nav.style.bottom = 'auto';
+      nav.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', function(){
+      if(!dragging || !nav) return;
+      dragging = false;
+      nav.style.cursor = '';
+      nav.style.transition = '';
+      // Sauvegarder position
+      try{
+        localStorage.setItem('cp_nav_pos', JSON.stringify({
+          left: nav.style.left,
+          top: nav.style.top,
+          bottom: nav.style.bottom,
+          transform: nav.style.transform
+        }));
+      }catch(e){}
+    });
+
+    // Restaurer position sauvegardée
+    try{
+      var saved = localStorage.getItem('cp_nav_pos');
+      if(saved && window.innerWidth >= 769){
+        var pos = JSON.parse(saved);
+        if(pos.left) nav.style.left = pos.left;
+        if(pos.top) nav.style.top = pos.top;
+        if(pos.bottom !== undefined) nav.style.bottom = pos.bottom;
+        if(pos.transform !== undefined) nav.style.transform = pos.transform;
+      }
+    }catch(e){}
+
+    // Curseur grab sur desktop
+    if(window.innerWidth >= 769){
+      nav.style.cursor = 'grab';
+    }
+  }
+
+  // Attendre que le DOM soit prêt
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initNavDrag);
+  } else {
+    setTimeout(initNavDrag, 500);
+  }
+})();
 </script>
 <!-- SETTINGS SHEET -->
 <div id="bdSettings" onclick="if(event.target===this)closeSettings()">
