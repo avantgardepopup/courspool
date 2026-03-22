@@ -1234,6 +1234,9 @@ html.dk .settings-group { background:var(--wh); }
   flex:1;
 }
 .filter-bar::-webkit-scrollbar { display:none; }
+
+#bniMes { display:none; }
+#bniMes.show { display:flex !important; }
 </style>
 </head>
 <body>
@@ -2663,7 +2666,7 @@ html.dk .settings-group { background:var(--wh); }
     <span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--or)">Créer</span>
   </div>
 
-  <div class="bni-mes" id="bniMes" onclick="navTo('mes')" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 12px;border-radius:40px;color:var(--lite);min-width:48px;justify-content:center">
+  <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
     <span>Mes cours</span>
   </div>
@@ -4839,7 +4842,8 @@ async function loadConversations(){
       if(!ini)ini=nm[0]?nm[0].toUpperCase():'U';
       var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      var preview=m.contenu?m.contenu.slice(0,35)+(m.contenu.length>35?'…':''):'…';
+      var _pc=m.contenu||'';
+      var preview=_pc.includes('chat-cours-card')||_pc.includes('"mode":"')?'📚 A partagé un cours':(_pc.slice(0,35)+(_pc.length>35?'…':''));
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
       return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
@@ -7198,7 +7202,7 @@ async function subCrStep(){
     _au();
     // Show "Mes cours" nav for students
     var bm=g('bniMes');
-    if(bm){var showMes=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes);bm.style.display=showMes?'flex':'none';}
+    if(bm){var showMes=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes);}
     // Show share button for profs
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -7459,7 +7463,7 @@ function showAccHome(){
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
     var bm=g('bniMes');
-    if(bm){var showMes2=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes2);bm.style.display=showMes2?'flex':'none';}
+    if(bm){var showMes2=!!(user&&user.id&&user.role!=='professeur');bm.classList.toggle('show',showMes2);}
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
