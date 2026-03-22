@@ -1199,6 +1199,27 @@ html.dk .settings-sheet { background:var(--bg); }
 html.dk .settings-header { background:var(--bg); }
 html.dk .settings-group { background:var(--wh); }
 
+
+/* Message overflow fix */
+.msg-content {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+.msg-bubble-wrap {
+  min-width: 0;
+  overflow: hidden;
+  max-width: 72%;
+}
+#msgConvPane, #pgMsg {
+  overflow-x: hidden !important;
+  max-width: 100vw;
+}
+#msgMessages {
+  overflow-x: hidden;
+}
+
 </style>
 </head>
 <body>
@@ -1629,7 +1650,7 @@ html.dk .settings-group { background:var(--wh); }
     </div>
 
     <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
+    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden;max-width:100vw">
 
       <!-- Header conversation -->
       <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
@@ -1644,7 +1665,7 @@ html.dk .settings-group { background:var(--wh); }
       </div>
 
       <!-- Messages -->
-      <div id="msgMessages" style="flex:1;min-height:0;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:4px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
+      <div id="msgMessages" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px 14px 8px;display:flex;flex-direction:column;gap:4px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
 
       <!-- Barre de saisie — fix iPhone Safari -->
       <div id="msgInputBar" style="background:var(--wh);border-top:1px solid var(--bdr);padding:10px 14px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0;position:relative;z-index:1">
@@ -2625,7 +2646,7 @@ html.dk .settings-group { background:var(--wh); }
     <span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--or)">Créer</span>
   </div>
 
-  <div class="bni-mes" id="bniMes" onclick="navTo('mes')" style="display:none">
+  <div class="bni-mes" id="bniMes" onclick="navTo('mes')" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 12px;border-radius:40px;color:var(--lite);min-width:48px;justify-content:center">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
     <span>Mes cours</span>
   </div>
@@ -3422,9 +3443,9 @@ function buildAccLists(){
         '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--or)">—</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
     } else {
       stats.innerHTML=
-        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
-        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
-        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:#fff">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
     }
   }
   // Rôle pill
@@ -3437,7 +3458,7 @@ function buildAccLists(){
     +'</div>'
     +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours à venir</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Réservez votre premier cours<br>et retrouvez-le ici</div>'
-    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:var(--or);border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
     +'</div>';}
   else{
     var now=new Date();
@@ -3463,7 +3484,7 @@ function buildAccLists(){
       var _mf=findMatiere(c.subj||'');
       var _dc=_mf?_mf.color:'var(--or)';
       var _ph=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
-      var _phHtml=_ph?'<img src="'+_ph+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<span style="font-size:10px;font-weight:700;color:#fff">'+( c.prof_ini||'?')+'</span>';
+      var _phHtml=_ph?'<img src="'+_ph+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<span style="font-size:10px;font-weight:700;color:var(--or)">'+( c.prof_ini||'?')+'</span>';
       return'<div class="rrow" onclick="openR(\''+c.id+'\')" style="cursor:pointer;align-items:flex-start">'
         +'<div style="width:44px;height:44px;border-radius:12px;background:'+( _mf?_mf.bg:'var(--orp)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+_dc+'"></div></div>'
         +'<div class="ri" style="flex:1;min-width:0">'
@@ -3504,7 +3525,7 @@ function buildAccLists(){
       +'</div></div>'
       +'<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
       +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alert\u00e9 d\u00e8s qu\'un nouveau cours est publi\u00e9.</div>'
-      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:var(--or);border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
       +'</div>';
   } else {
     var folRows=fIds.map(function(id,i){
@@ -3513,7 +3534,7 @@ function buildAccLists(){
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
       var prochainCours=cours.filter(function(c){return c.fl<c.sp;}).length;
       var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
-        '<span style="font-size:15px;font-weight:800;color:#fff">'+p.i+'</span>';
+        '<span style="font-size:15px;font-weight:800;color:var(--or)">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
       var dispoLabel=prochainCours?' · <span style="color:var(--or);font-weight:600">'+prochainCours+' cours dispo</span>':'';
       return'<div onclick="openPr(\''+id+'\')" class="fol-row" data-prof-id="'+id+'" style="'+border+'">'
@@ -4676,12 +4697,12 @@ async function loadMessages(){
           +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Supprimer</button>'
           +'</div>';
       }
-      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:7px;margin-bottom:2px">'
+      html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:7px;margin-bottom:2px;min-width:0;overflow:hidden">'
         +(isMe?'':''+avHtml)
-        +'<div class="msg-bubble-wrap" style="max-width:72%;position:relative">'
+        +'<div class="msg-bubble-wrap" style="max-width:72%;min-width:0;position:relative;overflow:hidden">'
         +actionsHtml
         +'<div style="background:'+bubbleBg+';color:'+bubbleColor+';border-radius:'+bubbleRadius+';padding:10px 14px;font-size:14px;line-height:1.5;box-shadow:'+bubbleShadow+'">'
-        +'<div class="msg-content" data-id="'+m.id+'">'+m.contenu+'</div>'
+        +'<div class="msg-content" data-id="'+m.id+'" style="word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">'+m.contenu+'</div>'
         +'<div style="font-size:10px;opacity:.55;margin-top:4px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
         +'</div></div>'
         +(isMe?'':'')
