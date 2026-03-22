@@ -864,6 +864,17 @@ html.dk .pb.pri{box-shadow:0 4px 18px rgba(255,69,0,.2)!important;}
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px;}
 :focus-visible{outline:2px solid var(--or);outline-offset:3px;border-radius:6px;}
 
+
+/* Profile section headers (CSS class) */
+.settings-section-header{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lite);padding:20px 4px 8px;display:block;}
+
+/* Profile pref-group spacing */
+#asecP .pref-group{margin-bottom:0;}
+
+/* Mes cours nav pill */
+.bni#bniMes{display:none;}
+.bni#bniMes.show{display:flex;}
+
 </style>
 </head>
 <body>
@@ -1080,8 +1091,8 @@ html.dk .pb.pri{box-shadow:0 4px 18px rgba(255,69,0,.2)!important;}
         <div class="mob-sub" id="mobSub">Cours près de vous</div>
       </div>
       <div class="mob-actions">
-        <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="17" height="17"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
         </button>
         <button id="btnProposerMob" onclick="openCr()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(255,107,43,.4)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1160,7 +1171,7 @@ html.dk .pb.pri{box-shadow:0 4px 18px rgba(255,69,0,.2)!important;}
         <!-- Séparateur vertical -->
         <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0;margin-right:8px"></div>
         <!-- Pills matières scrollables -->
-        <div class="pills" id="pillsBar" style="margin-bottom:0;flex:1">
+        <div class="pills" id="pillsBar" style="margin-bottom:0;flex:1;overflow-x:auto;overflow-y:visible;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
           <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
           <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
           <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
@@ -1505,11 +1516,13 @@ html.dk .pb.pri{box-shadow:0 4px 18px rgba(255,69,0,.2)!important;}
         </div>
 
         <!-- PROFIL -->
-        <div class="asec" id="asecP" style="padding:0 16px 16px">
+        <div class="asec" id="asecP" style="padding:0 0 40px">
 
-          <!-- Infos perso -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Mon compte</div>
-          <div class="pref-group">
+          <!-- ══ MON COMPTE ══ -->
+          <div style="padding:20px 20px 8px">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">Mon compte</div>
+          </div>
+          <div class="pref-group" style="margin:0 16px">
             <div class="pref-row">
               <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="pref-label">Prénom</span>
@@ -1537,182 +1550,120 @@ html.dk .pb.pri{box-shadow:0 4px 18px rgba(255,69,0,.2)!important;}
             </div>
           </div>
 
-          <!-- Bio -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">À propos</div>
-          <div class="pref-group" style="padding:14px 16px">
+          <!-- ══ À PROPOS ══ -->
+          <div style="padding:20px 20px 8px">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">À propos</div>
+          </div>
+          <div class="pref-group" style="margin:0 16px;padding:14px 16px">
             <textarea id="pfBio" rows="3" placeholder="Présentez-vous, partagez votre approche…" style="width:100%;border:none;font-family:inherit;font-size:15px;outline:none;background:transparent;resize:none;color:var(--ink);line-height:1.6"></textarea>
           </div>
 
-          <!-- Enseignement (prof seulement) -->
+          <!-- ══ ENSEIGNEMENT (prof) ══ -->
           <div id="pfProfExtra" style="display:none">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Enseignement</div>
-            <div class="pref-group">
-
-              <!-- Statut -->
+            <div style="padding:20px 20px 8px">
+              <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">Enseignement</div>
+            </div>
+            <div class="pref-group" style="margin:0 16px">
               <div style="padding:0 16px;border-bottom:1px solid var(--bdr)" onclick="openPicker('statut')" class="pref-row">
                 <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
                 <span style="font-size:15px;font-weight:500;color:var(--ink);flex:0 0 auto">Statut</span>
-                <span id="pfStatutLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px">Choisir…</span>
+                <span id="pfStatutLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;margin:0 8px">Choisir…</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
                 <input type="hidden" id="pfStatut">
               </div>
-
-              <!-- Niveau enseigné -->
               <div id="pfNiveauField" style="display:none;padding:0 16px;border-bottom:1px solid var(--bdr)" onclick="openPicker('niveau')" class="pref-row">
                 <div class="pref-icon" style="background:#FFF7ED;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 <span style="font-size:15px;font-weight:500;color:var(--ink);flex:0 0 auto" id="pfNiveauLabel">Niveau</span>
-                <span id="pfNiveauValLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 8px">Choisir…</span>
+                <span id="pfNiveauValLabel" style="font-size:14px;color:var(--or);font-weight:600;flex:1;text-align:right;margin:0 8px">Choisir…</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
                 <input type="hidden" id="pfNiveau">
               </div>
-
-              <!-- Matières — système de chips/tags -->
               <div style="padding:14px 16px">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
                   <div class="pref-icon" style="background:#F0FDF4;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
                   <span style="font-size:15px;font-weight:500;color:var(--ink)">Matières enseignées</span>
                 </div>
-                <!-- Chips des matières -->
                 <div id="matieresChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
-                <!-- Suggestions rapides -->
                 <div id="matieresSugg" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-                <!-- Champ d'ajout -->
                 <div style="display:flex;gap:8px;align-items:center">
                   <div style="flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid var(--bdr);border-radius:10px;padding:9px 12px;transition:border .18s" id="matieresInputWrap">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <input id="pfMatieres" type="text" placeholder="Ajouter une matière…" style="border:none;font-family:inherit;font-size:14px;outline:none;background:transparent;color:var(--ink);flex:1;min-width:0" onfocus="document.getElementById('matieresInputWrap').style.borderColor='var(--or)'" onblur="document.getElementById('matieresInputWrap').style.borderColor='var(--bdr)'" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();addMatiere();}">
                   </div>
-                  <button onclick="addMatiere()" style="background:var(--or);color:#fff;border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(255,107,43,.3)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </button>
                 </div>
-                <!-- Input caché pour sauvegarder la valeur -->
-                <input type="hidden" id="pfMatieresVal">
               </div>
-
-            </div>
-          </div>
-
-          <!-- Bouton sauvegarder -->
-          <div style="padding:20px 0 4px">
-            <button onclick="saveProf()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.3)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-              Sauvegarder
-            </button>
-          </div>
-
-          <!-- Notifications push -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Notifications</div>
-          <div class="pref-group">
-            <!-- Statut push — rempli par renderNotifStatus() -->
-            <div id="notifStatus" style="padding:16px;border-bottom:1px solid var(--bdr)"></div>
-            <!-- Préférences — visibles si push actif -->
-            <div id="notifTypes" style="display:none">
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
-                <div style="flex:1"><div class="pref-label" id="notifRemLbl">Nouveaux cours</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifSubLbl">Alertes en temps réel</div></div>
-                <div class="ntog on" id="ntogCours" onclick="toggleNotifPref('cours',this)"></div>
-              </div>
-              <div class="pref-row">
-                <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
-                <div style="flex:1"><div class="pref-label">Messages importants</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="notifRemSub">De l'équipe CoursPool</div></div>
-                <div class="ntog on" id="ntogPromo" onclick="toggleNotifPref('promo',this)"></div>
+              <div class="pref-row" style="cursor:default">
+                <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                <span class="pref-label">Tarif horaire</span>
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input id="pfTarif" type="number" placeholder="0" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);width:60px">
+                  <span style="font-size:14px;color:var(--lite)">€/h</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Apparence -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Apparence</div>
-          <div class="pref-group" style="margin-bottom:0">
+          <!-- ══ STATUT VÉRIFICATION ══ -->
+          <div id="pfVerifBlock"></div>
+
+          <!-- ══ PRÉFÉRENCES ══ -->
+          <div style="padding:20px 20px 8px">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">Préférences</div>
+          </div>
+          <div class="pref-group" style="margin:0 16px">
             <div class="pref-row">
-              <div class="pref-icon" style="background:#1A1714"><svg viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Mode sombre</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="darkModeSubLabel">Suit le système</div></div>
-              <div class="ntog" id="darkModeToggle" onclick="toggleDarkMode()"></div>
-            </div>
-          </div>
-
-          <!-- Statut vérification (profs uniquement) -->
-          <div id="verifStatusBlock" style="display:none;padding:4px 0 4px"></div>
-
-          <!-- Assistance -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Assistance</div>
-          <div class="pref-group">
-            <div class="pref-row" onclick="shareApp()" style="cursor:pointer">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Inviter un ami</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Partager CoursPool</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="openContact()" style="cursor:pointer">
-              <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Nous contacter</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Une question ? On répond vite</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')" style="cursor:pointer">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Confidentialité</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Politique de confidentialité</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')" style="cursor:pointer">
-              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-              <div style="flex:1"><div class="pref-label">CGU</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Conditions générales d'utilisation</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
-          <!-- Partager profil (profs) -->
-          <div id="shareProfBtn" style="display:none;padding:4px 0 4px">
-            <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Partager mon profil
-            </button>
-          </div>
-
-          <!-- Déconnexion -->
-          <div style="padding:20px 0 8px">
-            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Se déconnecter
-            </button>
-
-          <!-- PRÉFÉRENCES -->
-          <div class="settings-section-header">Préférences</div>
-          <div class="pref-group">
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#1A1A2E"><svg viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
+              <div class="pref-icon" style="background:#1C1A35"><svg viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
               <span class="pref-label">Mode sombre</span>
               <div id="darkToggle" onclick="toggleDark()" style="width:48px;height:28px;border-radius:50px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;background:var(--bdr)">
                 <div id="darkKnob" style="position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .22s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
               </div>
             </div>
-            <div class="pref-row" style="cursor:pointer" onclick="navTo('acc')">
+            <div id="notifPrefsRow" class="pref-row" style="cursor:pointer" onclick="switchATab('N',document.getElementById('aTabN'));navTo('acc')">
               <div class="pref-icon" style="background:#FEF3C7"><svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
               <span class="pref-label">Notifications</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
 
-          <!-- LEGAL -->
-          <div class="settings-section-header">Legal &amp; Support</div>
-          <div class="pref-group">
-            <div class="pref-row" style="cursor:pointer" onclick="window.open('https://courspool.fr/cgu','_blank')">
+          <!-- ══ SAUVEGARDE ══ -->
+          <div style="padding:16px 16px 0">
+            <button onclick="saveProfil()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:50px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.28);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .22s cubic-bezier(.34,1.56,.64,1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Sauvegarder le profil
+            </button>
+          </div>
+
+          <!-- ══ COMPTE ══ -->
+          <div style="padding:20px 20px 8px">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">Compte</div>
+          </div>
+          <!-- Legal & Support -->
+          <div style="padding:8px 20px 8px">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">Legal &amp; Support</div>
+          </div>
+          <div class="pref-group" style="margin:0 16px 16px">
+            <div class="pref-row" style="cursor:pointer" id="rowCGU">
               <div class="pref-icon" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-              <span class="pref-label">CGU &amp; Confidentialité</span>
+              <span class="pref-label">CGU &amp; Confidentialit&#233;</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="pref-row" style="cursor:pointer" onclick="window.open('mailto:support@courspool.fr','_blank')">
+            <div class="pref-row" style="cursor:pointer" id="rowContact">
               <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
               <span class="pref-label">Nous contacter</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="pref-row" style="cursor:default">
-              <div class="pref-icon" style="background:var(--bg)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-              <span class="pref-label">Version</span>
-              <span style="font-size:13px;color:var(--lite)">2.0 β</span>
-            </div>
-          </div>
           </div>
 
-        </div>
+          <div style="padding:0 20px 8px">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase">Compte</div>
+          </div>
+          <div class="pref-group" style="margin:0 16px">
+            <div class="pref-row" style="cursor:pointer" onclick="doLogout()">
+              <div class="pref-icon" style="background:#FEF2F2"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+              <span class="pref-label" style="color:#EF4444">Se déconnecter</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="14" height="14" style="opacity:.4"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>        </div>
       </div>
     </div>
   </div>
@@ -3471,7 +3422,7 @@ function renderPage(){
     return;
   }
   // Compteur de résultats dans le sous-titre du header
-  if(user){var ms=g('mobSub');if(ms&&actF!=='tous'||actNiv||actLoc)ms.textContent=toShow.length+' cours trouvé'+(toShow.length>1?'s':'');}
+  // result count in subtitle removed
   g('nocard').style.display='none';
   toShow.forEach(function(c,i){
     var pp=Math.ceil(c.tot/c.sp);
@@ -6725,6 +6676,7 @@ function openAddVisioLink(coursId){
 // ---- Step form illustrations (SVG inline) ----
 var STEP_DEFS=[
   {id:'mode',em:'<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="8" y="14" width="32" height="22" rx="4" stroke="#FF6B2B" stroke-width="2" fill="#FF8A5530"/><line x1="8" y1="21" x2="40" y2="21" stroke="#FF6B2B" stroke-width="2"/><circle cx="24" cy="31" r="3" fill="#FF6B2B"/></svg>',q:'Type de cours',h:'Pr&#233;sentiel ou en ligne'},
+  {id:'prive',em:'<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="16" width="28" height="22" rx="3" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><path d="M16 16v-4a8 8 0 0116 0v4" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="27" r="3" fill="#FF6B2B"/><line x1="24" y1="30" x2="24" y2="33" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/></svg>',q:'Visibilit&#233; du cours',h:'Un cours priv&#233; n&#39;est pas visible dans les r&#233;sultats — acc&#232;s uniquement via code'},
   {id:'titre',em:'<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="12" y="12" width="24" height="28" rx="3" stroke="#FF6B2B" stroke-width="2" fill="#FF8A5520"/><line x1="17" y1="19" x2="31" y2="19" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="24" x2="31" y2="24" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" opacity=".5"/><line x1="17" y1="29" x2="24" y2="29" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" opacity=".3"/></svg>',q:'Titre du cours',h:'Donnez un titre clair et accrocheur'},
   {id:'matiere',em:'<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="9" width="14" height="30" rx="2" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><rect x="18" y="12" width="18" height="26" rx="2" fill="#FFF4EE" stroke="#FF6B2B" stroke-width="2"/><line x1="22" y1="18" x2="32" y2="18" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round"/><line x1="22" y1="22" x2="32" y2="22" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><line x1="22" y1="26" x2="28" y2="26" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".3"/></svg>',q:'Quelle mati&#232;re ?',h:'Choisissez la discipline'},
   {id:'niveau',em:'<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><path d="M24 9l4 8.5 9 1.3-6.5 6.4 1.5 9L24 29.7 16 34.2l1.5-9L11 18.8l9-1.3L24 9z" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2" stroke-linejoin="round"/></svg>',q:'Niveau vis&#233;',h:'Quel public ciblez-vous ?'},
@@ -6783,6 +6735,15 @@ function stepRender(idx){
     html+='<div style="display:flex;flex-direction:column;gap:12px;width:100%">'
       +sOpt('mode','presentiel','Pr&#233;sentiel','Cours en personne',_sd.mode==='presentiel','rgba(0,177,79,.1)')
       +sOpt('mode','visio','Visio','Cours en ligne',_sd.mode==='visio','rgba(0,113,227,.1)')
+      +'</div>';
+  }else if(step.id==='prive'){
+    html+='<div style="display:flex;flex-direction:column;gap:14px;width:100%">'
+      +'<div class="step-option'+((!_sd.prive&&_sd.prive!==true)?' selected':'')+' '+((!_sd.prive)?' selected':'')+'" data-sa="prive" data-sv="public" style="background:var(--wh);border:2px solid '+(!_sd.prive?'var(--or)':'var(--bdr)')+';border-radius:18px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:16px">'
+      +'<div style="width:52px;height:52px;border-radius:14px;flex-shrink:0;background:linear-gradient(135deg,rgba(0,177,79,.12),rgba(0,177,79,.06));display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#00B14F" stroke-width="2" stroke-linecap="round" width="24" height="24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>'
+      +'<div><div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em">Cours public</div><div style="font-size:13px;color:var(--lite);margin-top:3px">Visible par tous dans les résultats</div></div></div>'
+      +'<div class="step-option'+((_sd.prive)?' selected':'')+'" data-sa="prive" data-sv="prive" style="background:var(--wh);border:2px solid '+(_sd.prive?'var(--or)':'var(--bdr)')+';border-radius:18px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:16px">'
+      +'<div style="width:52px;height:52px;border-radius:14px;flex-shrink:0;background:linear-gradient(135deg,rgba(255,107,43,.12),rgba(255,107,43,.06));display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="24" height="24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>'
+      +'<div><div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em">Cours privé</div><div style="font-size:13px;color:var(--lite);margin-top:3px">Accès via code unique — non visible au public</div></div></div>'
       +'</div>';
   }else if(step.id==='titre'){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
@@ -6848,6 +6809,7 @@ function stepRender(idx){
       if(a==='mode'){_sd.mode=v;}
       else if(a==='matiere'){_sd.matiere=v;var mo=MATIERES.find(function(x){return x.label===v;});_sd.matiere_key=mo?mo.key:v.toLowerCase();}
       else if(a==='niveau'){_sd.niveau=v;}
+      else if(a==='prive'){_sd.prive=(v==='prive');if(_sd.prive&&!_sd.code_acces){_sd.code_acces=genCode();}}
       body.querySelectorAll('[data-sa="'+a+'"]').forEach(function(o){o.classList.remove('selected');});
       el.classList.add('selected');haptic(8);
     });
@@ -7126,6 +7088,51 @@ async function sendCoursCardMsg(c){
     bar.style.paddingBottom=kbH>50?(kbH+10)+'px':'max(12px,env(safe-area-inset-bottom))';
     var msgs=g('msgMessages');if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},50);
   },{passive:true});
+})();
+
+// Wire CGU + Contact rows in profile to original handlers
+(function(){
+  function wireProfileLinks(){
+    var cgu=g('rowCGU'), contact=g('rowContact');
+    if(cgu && !cgu._wired){ cgu._wired=true; cgu.addEventListener('click',function(){ if(typeof openCGU==='function')openCGU(); else if(typeof showCGU==='function')showCGU(); else{var bd=g('bdCGU')||g('bdLegal')||g('bdCGUModal');if(bd){bd.style.display='flex';}}});  }
+    if(contact && !contact._wired){ contact._wired=true; contact.addEventListener('click',function(){ if(typeof openContact==='function')openContact(); else if(typeof showContact==='function')showContact(); else{var bd=g('bdContact');if(bd){bd.style.display='flex';}}});  }
+  }
+  // wire on tab switch
+  var _origSAT2=switchATab;
+  switchATab=function(s,el){
+    _origSAT2(s,el);
+    if(s==='P') setTimeout(wireProfileLinks, 80);
+  };
+  // also wire on nav
+  document.addEventListener('DOMContentLoaded', wireProfileLinks);
+  setTimeout(wireProfileLinks, 1500);
+})();
+
+// Dark mode toggle (safe re-declaration)
+if(typeof toggleDark === 'undefined'){
+  window.toggleDark=function(){
+    var isDk=document.documentElement.classList.toggle('dk');
+    try{localStorage.setItem('cp_dark',isDk?'1':'0');}catch(e){}
+    var tog=g('darkToggle'),knob=g('darkKnob');
+    if(tog)tog.style.background=isDk?'var(--or)':'var(--bdr)';
+    if(knob)knob.style.transform=isDk?'translateX(20px)':'';
+  };
+}
+if(typeof initDarkToggle === 'undefined'){
+  window.initDarkToggle=function(){
+    var isDk=document.documentElement.classList.contains('dk');
+    var tog=g('darkToggle'),knob=g('darkKnob');
+    if(tog)tog.style.background=isDk?'var(--or)':'var(--bdr)';
+    if(knob)knob.style.transform=isDk?'translateX(20px)':'';
+  };
+}
+// Init dark toggle when switching to profil tab
+(function(){
+  var _sat=switchATab;
+  switchATab=function(s,el){
+    _sat(s,el);
+    if(s==='P')setTimeout(function(){if(typeof initDarkToggle!=='undefined')initDarkToggle();},60);
+  };
 })();
 
 </script>
