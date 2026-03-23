@@ -1360,34 +1360,24 @@ html.dk .settings-chevron { color:var(--bdr); }
 
 /* ── Filter bar restructure ── */
 .filter-bar-wrap {
-  display:flex; align-items:center;
-  padding:10px 0 6px;
+  display:flex; flex-direction:column; align-items:stretch;
+  padding:8px 0 4px;
   gap:0;
-  overflow:hidden;
   background:var(--bg);
 }
 .filter-fixed {
   display:flex; align-items:center; gap:8px;
-  padding:0 0 0 16px;
-  flex-shrink:0;
-  background:var(--bg);
-  position:relative;
-  z-index:2;
-}
-.filter-fixed::after {
-  content:'';
-  position:absolute;
-  right:-12px; top:0; bottom:0;
-  width:12px;
-  background:linear-gradient(to right, var(--bg), transparent);
-  pointer-events:none;
-}
-.filter-bar {
-  display:flex; align-items:center; gap:8px;
-  padding:0 16px 0 8px;
+  padding:0 16px 8px;
   overflow-x:auto; overflow-y:visible;
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
-  flex:1;
+}
+.filter-fixed::-webkit-scrollbar { display:none; }
+.filter-bar {
+  display:flex; align-items:center; gap:8px;
+  padding:6px 16px 2px;
+  overflow-x:auto; overflow-y:visible;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  border-top:1px solid var(--bdr);
 }
 .filter-bar::-webkit-scrollbar { display:none; }
 
@@ -1968,36 +1958,34 @@ html.dk .msg-bubble-time.them { color: #fff; }
 /* ════ FILTER BAR PREMIUM ════ */
 .filter-bar-wrap {
   display:flex;
-  align-items:center;
-  padding:8px 0 8px;
+  flex-direction:column;
+  align-items:stretch;
+  padding:8px 0 4px;
   gap:0;
-  overflow:hidden;
   background:var(--bg);
 }
 .filter-fixed {
   display:flex;
   align-items:center;
   gap:6px;
-  padding:0 0 0 16px;
-  flex-shrink:0;
-}
-.filter-sep {
-  width:1px;
-  height:18px;
-  background:var(--bdr);
-  flex-shrink:0;
-  margin-left:2px;
-}
-.filter-bar {
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:0 16px 0 10px;
+  padding:0 16px 8px;
   overflow-x:auto;
   overflow-y:visible;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  flex:1;
+}
+.filter-fixed::-webkit-scrollbar { display:none; }
+.filter-sep { display:none; }
+.filter-bar {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 16px 2px;
+  overflow-x:auto;
+  overflow-y:visible;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  border-top:1px solid var(--bdr);
 }
 .filter-bar::-webkit-scrollbar { display:none; }
 
