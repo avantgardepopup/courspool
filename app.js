@@ -821,9 +821,11 @@ function goAccount(){
     if(pfProfExtra)pfProfExtra.style.display='none';
   }
   buildAccLists();
-  // Onglet Revenus visible uniquement pour les profs
+  // Onglet et carte Revenus visibles uniquement pour les profs
   var tabRev = g('aTabRev');
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
+  var cr=g('accCardRev');
+  if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Statut vérification

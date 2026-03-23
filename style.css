@@ -453,8 +453,8 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   font-weight: 700;
 }
 
-/* Favoris — toujours orange */
-#bniFav { display: none; color: var(--or); }
+/* Favoris — orange seulement actif */
+#bniFav { display: none; }
 #bniFav.on { color: var(--or); }
 
 /* ico on/off */
