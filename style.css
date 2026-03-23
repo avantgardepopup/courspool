@@ -453,9 +453,9 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   font-weight: 700;
 }
 
-/* Favoris actif */
-#bniFav.on { color: #E0005E; }
-#bniFav { display: none; }
+/* Favoris — toujours orange */
+#bniFav { display: none; color: var(--or); }
+#bniFav.on { color: var(--or); }
 
 /* ico on/off */
 .bni .bni-ico-off { display: block; }
@@ -1571,19 +1571,21 @@ html.dk .settings-chevron { color:var(--bdr); }
   padding: 6px 10px;
 }
 
-/* Rows conversations */
+/* Rows conversations — style card */
 .msg-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 16px;
+  padding: 12px 14px;
   cursor: pointer;
-  transition: background .12s;
-  border-bottom: 0.5px solid var(--bdr);
+  transition: transform .12s, box-shadow .12s;
+  background: var(--wh);
+  border-radius: 16px;
+  margin-bottom: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 2px 10px rgba(0,0,0,.05);
 }
-.msg-row:last-child { border-bottom: none; }
-.msg-row:active { background: var(--bg); }
-.msg-row.active { background: var(--orp); }
+.msg-row:active { transform: scale(.98); box-shadow: none; }
+.msg-row.active { background: var(--orp); box-shadow: 0 2px 12px rgba(255,107,43,.15); }
 .msg-av {
   width: 52px;
   height: 52px;
@@ -1626,10 +1628,11 @@ html.dk .settings-chevron { color:var(--bdr); }
   flex-direction: column;
   position: fixed;
   inset: 0;
-  background: var(--wh);
+  background: #F2F2F7;
   z-index: 200;
   overflow: hidden;
 }
+html.dk #msgConvPane { background: #1C1C1E; }
 .msg-conv-header {
   display: flex;
   align-items: center;
@@ -1686,18 +1689,22 @@ html.dk .settings-chevron { color:var(--bdr); }
   letter-spacing: -.02em;
 }
 .msg-share-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
   background: var(--orp);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 5px;
   color: var(--or);
+  font-size: 13px;
+  font-weight: 600;
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+  letter-spacing: -.01em;
 }
 html.dk .msg-conv-header {
   background: rgba(28,28,30,.88);
