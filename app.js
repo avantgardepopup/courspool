@@ -595,6 +595,7 @@ function navTo(tab){
     var bExp=g('bniExp');if(bExp)bExp.classList.add('on');
     var br=g('btnRefresh');if(br)br.style.display=user?'flex':'none';
     restoreNav();
+    _syncAllFollowBtns();
   } else if(tab==='fav'){
     if(!user||user.guest){
       toast('Connectez-vous pour accéder à vos favoris','');
@@ -1846,6 +1847,20 @@ function contPr(){
   var pid=curProf;
   closePr();
   openMsg(p.nm||'le professeur',pid,p.photo||null);
+}
+/* ── sync tous les card-follow-btn au retour sur Explorer ── */
+function _syncAllFollowBtns(){
+  var svgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
+  var svgOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
+  document.querySelectorAll('.card-follow-btn[data-pid]').forEach(function(btn){
+    var pid=btn.getAttribute('data-pid');
+    var on=fol.has(pid);
+    btn.setAttribute('data-fol',on?'1':'0');
+    btn.title=on?'Ne plus suivre':'Suivre ce professeur';
+    btn.innerHTML=on?svgOn:svgOff;
+    btn.style.background=on?'rgba(255,107,43,0.12)':'rgba(255,255,255,0.85)';
+    btn.style.color=on?'#FF6B2B':'var(--lite)';
+  });
 }
 /* ── sync tous les card-follow-btn d'un prof sur les cards explorer ── */
 function _syncFollowBtns(pid,isFollowing){
