@@ -192,7 +192,7 @@ function buildFavPage(){
             +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Retirer</button>'
             +'</div>';
         }
-        var pp=Math.ceil(c.tot/c.sp);
+        var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
         var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);})||MATIERES[MATIERES.length-1];
         var bg=mat?mat.bg:'linear-gradient(135deg,var(--orp),#FFE8DC)';
         return'<div class="fav-cours-card" onclick="openR(\''+c.id+'\')">'
@@ -264,6 +264,8 @@ function unfollowProf(pid){
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
+var msgBadgePollTimer=null;
+var _searchTimer=null;
 
 // LOAD DATA
 function showSkeletons(){
@@ -462,7 +464,7 @@ function applyUser(){
     var greet=h<6?'Bonne nuit':h<12?'Bonjour':h<18?'Bonjour':h<22?'Bonsoir':'Bonne nuit';
     var mobT=g('mobTitle'),mobS=g('mobSub');
     if(mobT)mobT.textContent=user&&user.pr?greet+' '+user.pr+' 👋':greet+' 👋';
-    if(mobS){var msgs=['Cours près de vous','Que voulez-vous apprendre ?','Trouvez votre prochain cours'];mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
+    if(mobS){var msgs=['Cours près de vous','Que voulez-vous apprendre ?','Trouvez votre prochain cours'];if(msgs&&msgs.length)mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
   }catch(e){}
   var tav=g('tav');
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
@@ -494,7 +496,8 @@ function applyUser(){
   startAccountCheck();
   // Polling badge messages non lus
   if(user&&user.id&&!user.guest){
-    setInterval(function(){
+    clearInterval(msgBadgePollTimer);
+    msgBadgePollTimer=setInterval(function(){
       if(!user||!user.id)return;
       fetch(API+'/conversations/'+user.id).then(function(r){return r.json();}).then(function(msgs){
         if(!Array.isArray(msgs))return;
@@ -1081,7 +1084,9 @@ function saveProf(){
 
 function doLogout(){
   user=null;
+  clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;
   try{localStorage.removeItem('cp_user');}catch(e){}
+  try{localStorage.removeItem('cp_res');}catch(e){}
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
@@ -1284,7 +1289,7 @@ function renderPage(){
   // result count removed
   g('nocard').style.display='none';
   toShow.forEach(function(c,i){
-    var pp=Math.ceil(c.tot/c.sp);
+    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
     var pleft=c.sp-c.fl;
     var bc=c.fl>=c.sp?'#ccc':pleft<=1?'#EF4444':pleft<=2?'var(--or)':'#22C069';
@@ -1472,7 +1477,8 @@ function doFilter(){
   }
   val=val.trim();
   if(checkCodeInSearch(val))return;
-  currentPage=1;applyFilter();
+  clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(function(){currentPage=1;applyFilter();},250);
 }
 function setPill(el){haptic(4);document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
 function restoreFilters(){
@@ -1518,7 +1524,7 @@ function openR(id){haptic(4);
   if(!isOwner&&res[id]){openO(id);return;}
   if(!isOwner&&c.fl>=c.sp){openF(c.pr,c.title);return;}
   curId=id;
-  var pp=Math.ceil(c.tot/c.sp);
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
@@ -1623,7 +1629,7 @@ async function confR(){haptic(15);
   var btn=document.querySelector('#bdR .pb.pri');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Redirection…';}
   try{
-    var pp=Math.ceil(c.tot/c.sp);
+    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     // Sauvegarder les infos avant paiement
     try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:false}));}catch(e){}
     var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -1651,7 +1657,7 @@ function contR(){
 // AUTRE PERSONNE
 function openO(id){
   curId=id;var c=C.find(function(x){return x.id===id});
-  g('oTit').textContent=c.title;g('oPrc').textContent=Math.ceil(c.tot/c.sp)+'€';
+  g('oTit').textContent=c.title;g('oPrc').textContent=(c.sp>0?Math.ceil(c.tot/c.sp):0)+'€';
   openM('bdO');
 }
 function closeO(){closeM('bdO');}
@@ -1661,7 +1667,7 @@ function confO(){
   if(!c||c.fl>=c.sp){if(c)openF(c.pr,c.title);return;}
   // Afficher la modal de paiement pour une autre personne
   curId=id;
-  var pp=Math.ceil(c.tot/c.sp);
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title+' · Place supplémentaire';
   g('rSbj').textContent=c.subj;
   g('rDt').textContent=c.dt;
@@ -1687,7 +1693,7 @@ async function confAmi(id){
   var btn=document.querySelector('#bdR .pb.pri');
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
-    var pp=Math.ceil(c.tot/c.sp);
+    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:true}));}catch(e){}
     var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       cours_id:id,
@@ -2421,6 +2427,7 @@ async function loadConversations(){
     var bnavBadge=g('bnavBadge');
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
   }catch(e){
+    _convLoading=false;
     if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
   }finally{
     clearTimeout(_convTimeout);_convLoading=false;
@@ -3779,7 +3786,10 @@ function openM(id){g(id).classList.add('on');document.body.style.overflow='hidde
 function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
 function toast(t,s,isError){
-  if(isError&&navigator.vibrate)navigator.vibrate([10,50,10]);g('tT').textContent=t;g('tS').textContent=s;var e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
+  if(isError&&navigator.vibrate)navigator.vibrate([10,50,10]);
+  var e=g('toast');
+  if(e){e.classList.remove('on');}
+  g('tT').textContent=t;g('tS').textContent=s;e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
 
 // Niveau cours
 function pickNiveau(el){
@@ -4914,7 +4924,7 @@ function buildMesCours(){
 
 function buildMesCard(c,isPast,isProf){
   var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
-  var pp=Math.ceil(c.tot/c.sp);
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   var mL=c.mode==='visio'?'Visio':'Pr\u00e9sentiel';
   var mC=c.mode==='visio'?'visio':'presentiel';
   var visio='';
@@ -4984,7 +4994,7 @@ function openShareCoursSheet(){
   var list=document.createElement('div');list.style.cssText='overflow-y:auto;flex:1';
   myC.forEach(function(c){
     var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
-    var pp=Math.ceil(c.tot/c.sp);
+    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     var row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:opacity .15s';
     row.innerHTML='<div style="width:44px;height:44px;border-radius:12px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+mf.color+'"></div></div>'
@@ -5002,7 +5012,7 @@ function openShareCoursSheet(){
 async function sendCoursCardMsg(c){
   if(!user||!msgDestId)return;
   var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
-  var pp=Math.ceil(c.tot/c.sp);
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   // Build native HTML card
   var _cIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   var cardHtml='<div class="chat-cours-card" onclick="openR(\''+escH(c.id)+'\')" style="max-width:260px">'
