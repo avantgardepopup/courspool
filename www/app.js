@@ -1041,6 +1041,17 @@ function saveProf(){
     user.matieres=_matieres.join(', ');
     var matHid=g('pfMatieresVal');if(matHid)matHid.value=user.matieres;
   }
+  // Sync P cache immédiatement pour que openPr() reflète les changements sans rechargement
+  if(user.id&&P[user.id]){
+    var _fullNm=(user.pr||'')+(user.nm?' '+user.nm:'');
+    if(_fullNm)P[user.id].nm=_fullNm;
+    P[user.id].i=user.ini||P[user.id].i;
+    P[user.id].bio=user.bio||'';
+    if(user.statut!==undefined)P[user.id].statut=user.statut;
+    if(user.niveau!==undefined)P[user.id].niveau=user.niveau;
+    if(user.matieres!==undefined)P[user.id].matieres=user.matieres;
+    if(user.photo)P[user.id].photo=user.photo;
+  }
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   // Pousser vers le serveur (Supabase via Railway)
   if(user.id){
