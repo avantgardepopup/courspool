@@ -908,23 +908,8 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
   .acc-body         { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 }
 
-/* ── NAV — CONVERSATION MODE (only back arrow) ── */
-.bnav.conv-mode { padding: 6px 8px !important; }
-.bnav.conv-mode .bni:not(#bniMsg),
-.bnav.conv-mode .bni-mes,
-.bnav.conv-mode #bniAdd {
-  width: 0 !important; overflow: hidden !important; padding: 0 !important; margin: 0 !important;
-  min-width: 0 !important; opacity: 0 !important; pointer-events: none !important; flex: 0 !important;
-  transition: all .22s cubic-bezier(.4,0,.2,1) !important;
-}
-.bnav.conv-mode #bniMsg {
-  background: var(--bg) !important; color: var(--mid) !important;
-  box-shadow: none !important; min-width: 44px !important;
-  padding: 8px !important; flex: 0 !important;
-}
-.bnav.conv-mode #bniMsg .bni-msg-icon,
-.bnav.conv-mode #bniMsg span { display: none !important; }
-.bnav.conv-mode #bniMsg .bni-back { display: flex !important; }
+/* ── NAV — CONVERSATION MODE (hidden, back button is in header) ── */
+.bnav.conv-mode { display: none !important; }
 
 /* Base font */
 body, input, textarea, button, select {
