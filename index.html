@@ -20,14 +20,13 @@
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF6B2B'/%3E%3Ctext x='16' y='23' font-size='20' font-weight='800' text-anchor='middle' fill='white' font-family='system-ui'%3EC%3C/text%3E%3C/svg%3E">
-<meta name="theme-color" content="#FF6B2B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CoursPool">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <!-- SEO -->
-<meta name="description" content="Trouvez et réservez des cours près de chez vous">
+<meta name="description" content="CoursPool — Trouvez et réservez des cours près de chez vous. Partagez les frais entre élèves pour des cours abordables.">
 <meta property="og:title" content="CoursPool — Partagez les frais d'un cours">
 <meta property="og:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves. Qualité d'un cours particulier, prix d'un cours collectif.">
 <meta property="og:type" content="website">
@@ -41,10 +40,10 @@
 <meta name="twitter:title" content="CoursPool — Partagez les frais d'un cours">
 <meta name="twitter:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves.">
 <meta name="twitter:image" content="https://courspool.vercel.app/og-image.png">
-<meta name="description" content="CoursPool — Trouvez et réservez des cours près de chez vous. Partagez les frais entre élèves pour des cours abordables.">
 <!-- Lib paiement sécurisé -->
 <script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -247,6 +246,22 @@
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
     <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <!-- Nav desktop -->
+    <nav class="topbar-nav" id="topbarNav">
+      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Explorer
+      </div>
+      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Messages
+        <div class="tnav-badge" id="tnavBadge"></div>
+      </div>
+      <div class="tnav-item" id="tnavMes" onclick="navTo('mes')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        Mes cours
+      </div>
+    </nav>
     <div class="topbar-right">
       <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
@@ -261,8 +276,8 @@
         <div class="mob-sub" id="mobSub">Cours près de vous</div>
       </div>
       <div class="mob-actions">
-        <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:32px;height:32px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
         <button id="btnProposerMob" onclick="openCr()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(255,107,43,.4)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -270,11 +285,21 @@
         <div class="tav-btn" id="tavMob" onclick="navTo('acc')" title="Mon compte" style="width:36px;height:36px;">?</div>
       </div>
     </div>
-  </div>
-  <!-- Barre de recherche mobile (visible seulement sur Explorer) -->
-  <div class="mob-search" id="mobSearch">
-    <span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-    <input type="text" placeholder="Maths, Python, anglais…" oninput="g('srch').value=this.value;doFilter()">
+    <!-- Barre de recherche — dans le header sticky pour ne jamais être cachée -->
+    <div id="mobSearch" style="padding:8px 0 4px">
+      <div class="search-bar-premium">
+        <div class="search-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <input type="text" id="mobSearchInput" class="search-input-premium"
+          placeholder="Matière, professeur, ville…"
+          autocomplete="off"
+          oninput="this._t=this.value;var s=document.getElementById('srch');if(s)s.value=this._t;doFilter();document.getElementById('searchClearBtn').style.display=this._t?'flex':'none'">
+        <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div id="unverifiedBanner" style="display:none"></div>
@@ -322,38 +347,34 @@
           </button>
         </div>
       </div>
-      <!-- Tri rapide -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:12px;color:var(--lite)" id="sortResultCount"></div>
-        <select id="sortSelect" onchange="setSortMode(this.value)" style="border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);outline:none;cursor:pointer;padding:2px 0">
-          <option value="date">Par date</option>
-          <option value="prix">Prix croissant</option>
-          <option value="recent">Récemment ajoutés</option>
-        </select>
-      </div>
-      <!-- Barre de filtres : bouton Niveau fixe + matières scrollables -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px">
-        <!-- Bouton Niveau — fixe à gauche -->
-        <div id="pillNiv" onclick="openNivFilter()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--wh);color:var(--mid);transition:all .18s;white-space:nowrap;margin-right:8px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          <span id="pillNivLabel">Niveau</span>
+      <!-- Filter bar — clean chips -->
+      <div class="filter-bar-wrap">
+        <!-- Tri + Niveau fixes -->
+        <div class="filter-fixed">
+          <button class="filter-pill-btn" id="sortBtn" onclick="cycleSort(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+            <span id="sortLabel">Date</span>
+          </button>
+          <button class="filter-pill-btn" id="pillNiv" onclick="openNivFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span id="pillNivLabel">Niveau</span>
+          </button>
+          <div class="filter-sep"></div>
         </div>
-        <!-- Séparateur vertical -->
-        <div style="width:1px;height:20px;background:var(--bdr);flex-shrink:0;margin-right:8px"></div>
-        <!-- Pills matières scrollables -->
-        <div class="pills" id="pillsBar" style="margin-bottom:0;flex:1">
-          <div class="pill on" data-f="tous" onclick="setPill(this)">Tous</div>
-          <div class="pill" data-f="maths" onclick="setPill(this)">Maths</div>
-          <div class="pill" data-f="physique" onclick="setPill(this)">Physique</div>
-          <div class="pill" data-f="informatique" onclick="setPill(this)">Informatique</div>
-          <div class="pill" data-f="langues" onclick="setPill(this)">Langues</div>
-          <div class="pill" data-f="economie" onclick="setPill(this)">Économie</div>
-          <div class="pill" data-f="soir" onclick="setPill(this)">Ce soir</div>
-          <div class="pill" data-f="weekend" onclick="setPill(this)">Week-end</div>
-          <div class="pill" id="pillAdd" onclick="openAddFilter()" style="border-style:dashed;display:flex;align-items:center;gap:5px;color:var(--mid);flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            +
-          </div>
+        <!-- Matières scrollables -->
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-pill-btn active" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</button>
+          <button class="filter-pill-btn" data-f="maths" onclick="setPill(this)">Maths</button>
+          <button class="filter-pill-btn" data-f="physique" onclick="setPill(this)">Physique</button>
+          <button class="filter-pill-btn" data-f="informatique" onclick="setPill(this)">Info</button>
+          <button class="filter-pill-btn" data-f="langues" onclick="setPill(this)">Langues</button>
+          <button class="filter-pill-btn" data-f="economie" onclick="setPill(this)">Éco</button>
+          <button class="filter-pill-btn" data-f="soir" onclick="setPill(this)">Ce soir</button>
+          <button class="filter-pill-btn" data-f="weekend" onclick="setPill(this)">Week-end</button>
+          <button class="filter-pill-btn filter-pill-add" id="pillAdd" onclick="openAddFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div id="pillsBar" style="display:none"></div>
         </div>
       </div>
 
@@ -453,102 +474,170 @@
     </div>
   </div>
 
-  <!-- PAGE MESSAGES -->
-  <div class="pg" id="pgMsg" style="display:none;flex-direction:column;height:calc(100vh - 56px);height:calc(100dvh - 56px);">
+  <!-- PAGE MES COURS -->
+  <div class="pg" id="pgMes"><div class="cnt" id="pgMesCnt" style="padding-top:20px"></div></div>
 
-    <!-- LISTE DES CONVERSATIONS -->
-    <div id="msgListPane" style="display:flex;flex-direction:column;height:100%;width:100%;background:var(--bg)">
-      <!-- Header -->
-      <div style="padding:max(20px,env(safe-area-inset-top,0px)) 20px 12px;flex-shrink:0;background:var(--wh);border-bottom:1px solid var(--bdr)">
-        <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">Messages</div>
-        <div style="font-size:13px;color:var(--lite);margin-top:2px">Vos conversations</div>
-        <span id="msgBadge" style="display:none;background:#EF4444;color:#fff;border-radius:50px;min-width:20px;height:20px;padding:0 6px;font-size:11px;font-weight:700;align-items:center;justify-content:center;position:absolute;top:20px;right:20px"></span>
+  <!-- PAGE FAVORIS -->
+  <div class="pg" id="pgFav">
+    <!-- Cours sauvegardés -->
+    <div id="favCoursSection">
+      <div class="fav-section-title">❤️ Cours sauvegardés</div>
+      <div id="favCoursCarousel" class="fav-carousel"></div>
+    </div>
+    <!-- Profs suivis -->
+    <div id="favProfsSection">
+      <div class="fav-section-title">👤 Professeurs suivis</div>
+      <div id="favProfsCarousel" class="fav-carousel"></div>
+    </div>
+    <!-- Empty global -->
+    <div id="favEmptyAll" style="display:none;text-align:center;padding:60px 24px">
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,#FFE8F0,#FFCCD6);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E01060" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
       </div>
-      <div id="listM" style="flex:1;overflow-y:auto;padding:12px 16px"></div>
+      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Aucun favori encore</div>
+      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px">Appuyez sur le ❤️ d'un cours ou suivez<br>un professeur pour les retrouver ici.</div>
+      <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Explorer les cours →</button>
+    </div>
+  </div>
+
+  <!-- PAGE MESSAGES -->
+  <div class="pg" id="pgMsg">
+
+    <!-- LISTE CONVERSATIONS -->
+    <div id="msgListPane">
+      <div class="msg-list-header">
+        <div class="msg-list-title">Messages</div>
+        <span id="msgBadge"></span>
+      </div>
+      <div class="msg-list-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="msgSearch" placeholder="Rechercher..." oninput="filterConversations(this.value)">
+      </div>
+      <div id="listM"></div>
     </div>
 
-    <!-- CONVERSATION ACTIVE -->
-    <div id="msgConvPane" style="display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;overflow:hidden">
-
-      <!-- Header conversation -->
-      <div style="background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 16px;min-height:60px;display:flex;align-items:center;gap:12px;flex-shrink:0;padding-top:max(16px,env(safe-area-inset-top,0px));box-sizing:content-box;">
-        <button id="msgBackBtn" onclick="closeMsgConv()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:6px;display:flex;align-items:center;border-radius:50%;transition:background .15s" onmouseenter="this.style.background='var(--orp)'" onmouseleave="this.style.background='none'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+    <!-- CONVERSATION -->
+    <div id="msgConvPane">
+      <div class="msg-conv-header">
+        <button id="msgBackBtn" onclick="closeMsgConv()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div id="msgConvAv" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12)"></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="msgConvName"></div>
-
+        <div id="msgConvAv" class="msg-conv-av"></div>
+        <div class="msg-conv-info">
+          <div id="msgConvName" class="msg-conv-name"></div>
         </div>
+        <button id="btnShareCours" onclick="openShareCoursSheet()" class="msg-share-btn" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        </button>
       </div>
-
-      <!-- Messages -->
-      <div id="msgMessages" style="flex:1;min-height:0;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:4px;background:var(--bg);-webkit-overflow-scrolling:touch"></div>
-
-      <!-- Barre de saisie — fix iPhone Safari -->
-      <div id="msgInputBar" style="background:var(--wh);border-top:1px solid var(--bdr);padding:10px 14px;padding-bottom:max(12px,env(safe-area-inset-bottom));flex-shrink:0;position:relative;z-index:1">
-        <div style="display:flex;gap:8px;align-items:flex-end;background:var(--bg);border-radius:24px;padding:8px 8px 8px 16px;border:1.5px solid var(--bdr);transition:border-color .18s" onfocusin="this.style.borderColor='var(--or)'" onfocusout="this.style.borderColor='var(--bdr)'">
-          <textarea id="msgInput" placeholder="Message…" rows="1" style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;outline:none;resize:none;max-height:100px;line-height:1.45;padding:2px 0;overflow-y:auto" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-          <button onclick="sendMsg()" style="background:var(--or);border:none;border-radius:50%;width:36px;height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;box-shadow:0 3px 10px rgba(255,107,43,.4);transition:transform .15s,background .15s" onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <div id="msgMessages"></div>
+      <div id="msgInputBar">
+        <div class="msg-input-wrap">
+          <textarea id="msgInput" placeholder="Message…" rows="1"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button class="msg-send-btn" onclick="sendMsg()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
       </div>
-
     </div>
+
   </div>
 
   <div class="pg" id="pgAcc">
     <div style="background:var(--bg);min-height:100%;padding-bottom:120px">
 
-      <!-- HERO PROFIL -->
-      <div style="background:linear-gradient(145deg,#FF7A3D,var(--ord));padding:max(44px,env(safe-area-inset-top,44px)) 20px 0;text-align:center;position:relative;overflow:hidden">
-        <!-- Cercles déco -->
-        <div style="position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none"></div>
-        <div style="position:absolute;left:-30px;bottom:0;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none"></div>
+      <!-- PROFILE HOME — minimal, 6 cards -->
+      <div id="accHome" style="padding:max(56px,env(safe-area-inset-top,56px)) 20px 0">
 
-        <div style="position:relative;z-index:1;padding-bottom:20px">
-          <!-- Avatar -->
+        <!-- Avatar + name header -->
+        <!-- Avatar centered -->
+        <div style="text-align:center;margin-bottom:24px">
           <div style="position:relative;display:inline-block;margin-bottom:12px">
-            <div id="accAv" style="width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.4);margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.15)">?</div>
-            <label style="position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <div id="accAv" style="width:80px;height:80px;border-radius:50%;background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--mid);overflow:hidden;border:3px solid var(--wh);box-shadow:0 2px 12px rgba(0,0,0,.1)">?</div>
+            <label style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2.5px solid var(--bg);box-shadow:0 2px 6px rgba(255,107,43,.3)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <input type="file" id="pfPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
             </label>
           </div>
-          <!-- Nom + rôle -->
-          <div id="accName" style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;letter-spacing:-.02em">—</div>
-          <div id="accRolePill" style="display:inline-block;background:rgba(255,255,255,.2);border-radius:50px;padding:4px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,.9);margin-bottom:20px"></div>
-          <!-- Stats -->
-          <div id="accStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.2);border-radius:16px;overflow:hidden;margin:0 4px"></div>
+          <div id="accName" style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.04em;margin-bottom:4px">&#8212;</div>
+          <div id="accRolePill" style="font-size:13px;color:var(--lite)"></div>
         </div>
 
+        <!-- Stats row (rempli par buildAccLists) -->
+        <div id="accStats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:32px"></div>
+
+        <!-- 6 cards grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px">
+
+          <!-- Mes cours -->
+          <div class="acc-card" onclick="switchATab('R',document.getElementById('aTabR'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#FFF4EE;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes cours</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Réservations</div>
+          </div>
+
+          <!-- Suivis -->
+          <div class="acc-card" onclick="switchATab('F',document.getElementById('aTabF'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#FFF0F0;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Suivis</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Professeurs</div>
+          </div>
+
+          <!-- Historique -->
+          <div class="acc-card" onclick="switchATab('H',document.getElementById('aTabH'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F0F9FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Historique</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Cours passés</div>
+          </div>
+
+          <!-- Profil -->
+          <div class="acc-card" onclick="switchATab('P',document.getElementById('aTabP'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mon profil</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Infos &amp; réglages</div>
+          </div>
+
+          <!-- Revenus (prof seulement) -->
+          <div class="acc-card" id="accCardRev" onclick="switchATab('Rev',document.getElementById('aTabRev'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Revenus</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Paiements reçus</div>
+          </div>
+
+          <!-- Paramètres -->
+          <div class="acc-card" id="accCardParams" onclick="openSettings()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Paramètres</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Notifications, CGU…</div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- ONGLETS — barre blanche sticky sous le hero -->
-      <div style="display:flex;background:var(--wh);border-bottom:2px solid var(--bdr);position:sticky;top:0;z-index:40;overflow-x:auto;scrollbar-width:none">
-        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Mes cours
-        </button>
-        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          Suivis
-        </button>
-        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Historique
-        </button>
-        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-          Profil
-        </button>
-        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          Revenus
-        </button>
-      </div>
+      <!-- DETAIL VIEWS (hidden by default, shown via switchATab) -->
 
+      <!-- Hidden tabs (needed for JS) -->
+      <div style="display:none">
+        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">Mes cours</button>
+        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">Suivis</button>
+        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">Historique</button>
+        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">Profil</button>
+        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">Revenus</button>
+      </div>
 
       <div class="acc-body">
 
@@ -561,7 +650,9 @@
         <!-- PROFS SUIVIS -->
         <div class="asec" id="asecF" style="overflow:visible">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Professeurs suivis</div>
-          <div id="listF"></div>
+          <div id="listF">
+            <!-- Contenu rempli dynamiquement par buildAccLists() -->
+          </div>
         </div>
 
         <!-- PAIEMENTS PROF -->
@@ -784,55 +875,24 @@
             </div>
           </div>
 
-          <!-- Apparence -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Apparence</div>
-          <div class="pref-group" style="margin-bottom:0">
-            <div class="pref-row">
-              <div class="pref-icon" style="background:#1A1714"><svg viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Mode sombre</div><div style="font-size:12px;color:var(--lite);margin-top:1px" id="darkModeSubLabel">Suit le système</div></div>
-              <div class="ntog" id="darkModeToggle" onclick="toggleDarkMode()"></div>
-            </div>
-          </div>
-
           <!-- Statut vérification (profs uniquement) -->
           <div id="verifStatusBlock" style="display:none;padding:4px 0 4px"></div>
 
-          <!-- Assistance -->
-          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Assistance</div>
-          <div class="pref-group">
-            <div class="pref-row" onclick="shareApp()" style="cursor:pointer">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Inviter un ami</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Partager CoursPool</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="openContact()" style="cursor:pointer">
-              <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Nous contacter</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Une question ? On répond vite</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')" style="cursor:pointer">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-              <div style="flex:1"><div class="pref-label">Confidentialité</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Politique de confidentialité</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="pref-row" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')" style="cursor:pointer">
-              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-              <div style="flex:1"><div class="pref-label">CGU</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Conditions générales d'utilisation</div></div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
           <!-- Partager profil (profs) -->
-          <div id="shareProfBtn" style="display:none;padding:4px 0 4px">
-            <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <div id="shareProfBtn" style="display:none;padding:16px 0 4px">
+            <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:50px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
               Partager mon profil
             </button>
           </div>
 
-          <!-- Déconnexion -->
-          <div style="padding:20px 0 8px">
-            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:1.5px solid #FECACA;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <!-- Paramètres + Déconnexion — dans la settings sheet -->
+          <div style="padding:16px 0 8px;display:flex;flex-direction:column;gap:10px">
+            <button onclick="openSettings()" style="width:100%;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              Paramètres
+            </button>
+            <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:1.5px solid #FECACA;border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
               <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Se déconnecter
             </button>
@@ -856,6 +916,8 @@
         <div class="br"><span class="l">Nombre de places</span><span class="v" id="rCnt"></span></div>
         <div class="br tot"><span class="l">Votre part</span><span class="v" id="rFin"></span></div>
       </div>
+      <div style="margin-bottom:10px"><span id="rModeBadge"></span></div>
+      <a id="rVisioJoin" class="btn-visio" target="_blank" rel="noopener" style="display:none;width:100%;justify-content:center;margin-bottom:14px;text-decoration:none">Rejoindre en visio</a>
       <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
       <button class="pb pri" style="width:100%;margin-bottom:10px" onclick="confR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong></button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
@@ -964,7 +1026,6 @@
         Contacter
       </button>
       <button id="bFP" onclick="togFP()" style="flex:1;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         <span id="bFPt">Suivre</span>
       </button>
     </div>
@@ -1408,28 +1469,42 @@
 
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
+
   <div class="bni on" id="bniExp" onclick="navTo('exp')">
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" class="bni-ico-off"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor"/></svg>
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" class="bni-ico-on" style="display:none"><circle cx="11" cy="11" r="8" fill="currentColor" opacity=".15"/><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2.5"/></svg>
-    <span>Explorer</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span class="bni-lbl">Explorer</span>
   </div>
-  <div class="bni" id="bniMsg" onclick="navTo('msg')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0" stroke-linecap="round" class="bni-ico-on" style="display:none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" opacity=".9"/></svg>
+
+  <div class="bni" id="bniFav" onclick="navTo('fav')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <div class="bni-badge" id="bnavFavBadge" style="background:#E01060"></div>
+    <span class="bni-lbl">Favoris</span>
+  </div>
+
+  <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
+    <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
-    <span>Messages</span>
+    <span class="bni-lbl bni-msg-lbl">Messages</span>
   </div>
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:0 4px;flex:1;min-width:58px;justify-content:center">
-    <div style="width:44px;height:26px;border-radius:14px;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;min-height:58px;padding:10px 6px;-webkit-tap-highlight-color:transparent;user-select:none;">
+    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,107,43,.38)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
-    <span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--or)">Créer</span>
+    <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1">Créer</span>
   </div>
+
+  <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+    <span class="bni-lbl">Mes cours</span>
+  </div>
+
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="bni-ico-off"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" class="bni-ico-on" style="display:none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" opacity=".9"/><circle cx="12" cy="7" r="4"/></svg>
-    <span>Profil</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span class="bni-lbl">Profil</span>
   </div>
+
 </nav>
 
 <!-- MODAL CONTACT -->
@@ -1478,44 +1553,19 @@
 </div>
 
 <!-- POPUP CONFIRMATION PAIEMENT -->
-<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--wh);border-radius:24px;padding:32px 28px;text-align:center;max-width:380px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
-    <!-- Icône succès -->
-    <div style="width:72px;height:72px;background:linear-gradient(135deg,#22C069,#16A34A);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 24px rgba(34,192,105,.35)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" width="34" height="34"><polyline points="20 6 9 17 4 12"/></svg>
+<div id="popupPaid" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
+    <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:4px;color:var(--ink)">Réservation confirmée !</div>
-    <div style="font-size:13px;color:var(--lite);margin-bottom:20px">Un email de confirmation vous a été envoyé</div>
-    <!-- Récap réservation -->
-    <div id="popupPaidRecap" style="background:var(--bg);border-radius:16px;padding:16px;text-align:left;margin-bottom:20px;border:1px solid var(--bdr)">
-      <div id="popupPaidCoursNom" style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:10px"></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:var(--lite)">Professeur</span>
-          <span id="popupPaidProf" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:var(--lite)">Date</span>
-          <span id="popupPaidDate" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:var(--lite)">Lieu</span>
-          <span id="popupPaidLieu" style="font-size:13px;font-weight:600;color:var(--ink)"></span>
-        </div>
-        <div style="height:1px;background:var(--bdr);margin:4px 0"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;font-weight:700;color:var(--ink)">Total payé</span>
-          <span id="popupPaidMontant" style="font-size:16px;font-weight:800;color:#22C069"></span>
-        </div>
-      </div>
-    </div>
-    <div id="popupPaidMsg" style="display:none"></div>
-    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:linear-gradient(135deg,#FF6B2B,#E04E10);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Super ! 🎉</button>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement confirmé !</div>
+    <div id="popupPaidMsg" style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5">Votre place est réservée. Un email de confirmation vous a été envoyé.</div>
+    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Super ! 🎉</button>
   </div>
 </div>
 
 <!-- POPUP PAIEMENT ÉCHOUÉ -->
-<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1300;align-items:center;justify-content:center;padding:20px">
+<div id="popupFailed" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--wh);border-radius:24px;padding:40px 32px;text-align:center;max-width:340px;width:100%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)">
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1529,42 +1579,90 @@
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
 <script src="/app.js" defer></script>
+<!-- SETTINGS SHEET -->
+<div id="bdSettings" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-sheet" id="settingsSheet">
+    <div class="settings-handle"></div>
 
-<!-- ── Modal Stripe Elements in-app ── -->
-<div id="bdStripe" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:flex-end;justify-content:center">
-  <div id="stripeSheet" style="width:100%;max-width:560px;background:var(--wh);border-radius:24px 24px 0 0;animation:slideUp .35s cubic-bezier(.4,0,.2,1)">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--bdr)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;background:linear-gradient(135deg,#635BFF,#4F46E5);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(99,91,255,.35)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        </div>
-        <div>
-          <div style="font-size:15px;font-weight:800;color:var(--ink)" id="stripeTitle">Paiement sécurisé</div>
-          <div style="font-size:11px;color:var(--lite);margin-top:1px" id="stripeSubtitle">SSL · Propulsé par Stripe</div>
-        </div>
-      </div>
-      <button onclick="closeStripeModal()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:18px" title="Fermer">✕</button>
-    </div>
-    <!-- Montant -->
-    <div id="stripeMontantBar" style="background:linear-gradient(135deg,#635BFF,#4F46E5);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:13px;color:rgba(255,255,255,.8)" id="stripeCoursNom">Réservation</div>
-      <div style="font-size:20px;font-weight:800;color:#fff" id="stripeMontant">—€</div>
-    </div>
-    <!-- Formulaire carte -->
-    <div style="padding:20px">
-      <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Informations de paiement</div>
-      <div id="stripeCardElement" style="background:#fff;border:1.5px solid #E8E3DC;border-radius:12px;padding:14px 16px;transition:border-color .18s;font-family:inherit"></div>
-      <div id="stripeCardError" style="color:#EF4444;font-size:13px;margin-top:8px;display:none"></div>
-      <button id="stripePayBtn" onclick="submitStripePayment()" style="width:100%;margin-top:16px;background:linear-gradient(135deg,#635BFF,#4F46E5);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(99,91,255,.4);transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <span id="stripePayBtnTxt">Payer maintenant</span>
+    <div class="settings-header">
+      <button onclick="closeSettings()" style="width:34px;height:34px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <span style="font-size:11px;color:var(--lite)">Paiement 100% sécurisé · Données chiffrées</span>
+      <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em">Paramètres</div>
+    </div>
+
+    <!-- Apparence -->
+    <div class="settings-section-lbl">Apparence</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="toggleDarkMode()" style="cursor:pointer">
+        <div class="settings-icon" style="background:#1A1714">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="settings-label">Mode sombre</div>
+          <div class="settings-sub" id="darkModeSubLabel">Suit le système</div>
+        </div>
+        <div class="ntog" id="darkModeToggle" onclick="event.stopPropagation();toggleDarkMode()"></div>
       </div>
     </div>
+
+    <!-- Assistance -->
+    <div class="settings-section-lbl">Assistance</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="shareApp()">
+        <div class="settings-icon" style="background:#EFF6FF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="settings-label">Inviter un ami</div>
+          <div class="settings-sub">Partager CoursPool</div>
+        </div>
+        <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="settings-row" onclick="closeSettings();openContact()">
+        <div class="settings-icon" style="background:var(--orp)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="settings-label">Nous contacter</div>
+          <div class="settings-sub">Une question ? On répond vite</div>
+        </div>
+        <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="settings-row" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')">
+        <div class="settings-icon" style="background:#EFF6FF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="settings-label">Confidentialité</div>
+          <div class="settings-sub">Politique de confidentialité</div>
+        </div>
+        <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div class="settings-row" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')">
+        <div class="settings-icon" style="background:#F0FDF4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="settings-label">CGU</div>
+          <div class="settings-sub">Conditions générales d'utilisation</div>
+        </div>
+        <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <!-- Compte -->
+    <div class="settings-section-lbl">Compte</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="closeSettings();doLogout()" style="cursor:pointer">
+        <div class="settings-icon" style="background:#FEF2F2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+        <div class="settings-label" style="color:#EF4444">Se déconnecter</div>
+      </div>
+    </div>
+
+    <div style="height:8px"></div>
   </div>
 </div>
 
