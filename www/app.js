@@ -1552,6 +1552,8 @@ function openR(id){haptic(4);
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
   var rLcEl=g('rLc');if(rLcEl){rLcEl.textContent=_oIsVisio?'':c.lc;rLcEl.style.display=_oIsVisio?'none':'';}
+  var rDescEl=g('rDesc');
+  if(rDescEl){if(c.description){rDescEl.textContent=c.description;rDescEl.style.display='block';}else{rDescEl.style.display='none';}}
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
@@ -1750,6 +1752,7 @@ function confF(){
 // PROFIL PROF
 function openPr(pid){
   curProf=pid;
+  var _ts=g('mpTagsSection');if(_ts)_ts.style.display='none';
   var cours=C.filter(function(x){return x.pr===pid;});
   var dernierCours=cours[0]||null;
   var p=P[pid]||{};
@@ -1785,17 +1788,47 @@ function openPr(pid){
 
   // Matières : depuis cache P[] ou depuis les cours en attente API
   var tagsEl=g('mpTags');
+  var tagsSect=g('mpTagsSection');
+  var MAT_ICONS={
+    'maths':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>',
+    'physique':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>',
+    'chimie':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M9 3h6M10 9l-5 9a2 2 0 001.7 3h10.6A2 2 0 0019 18l-5-9V3"/></svg>',
+    'svt':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M12 22V12M12 12C12 7 7 3 3 3c0 4 2.5 9 9 9zM12 12c0-5 5-9 9-9-1 5-4 9-9 9"/></svg>',
+    'informatique': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    'python':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+    'anglais':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
+    'espagnol':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>',
+    'francais':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+    'histoire':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    'philo':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/></svg>',
+    'economie':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    'droit':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+    'musique':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    'arts':         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M2 13.5V19a2 2 0 002 2h3.5M2 8.5V5a2 2 0 012-2h3.5M13.5 2H19a2 2 0 012 2v3.5M20 13.5V19a2 2 0 01-2 2h-3.5"/></svg>',
+    'sport':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    'architecture': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    'compta':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    'marketing':    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+    'stats':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    'autre':        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
+  };
   function _renderTags(list){
-    if(!tagsEl||!list.length)return;
+    if(!tagsEl||!list.length){if(tagsSect)tagsSect.style.display='none';return;}
+    if(tagsSect)tagsSect.style.display='block';
     tagsEl.innerHTML=list.map(function(m){
       var mat=findMatiere(m);
-      var col=mat?mat.color:'var(--or)';var bg=mat?mat.bg.split(',')[1]||'var(--orp)':'var(--orp)';
-      return'<span style="background:var(--orp);color:'+col+';border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;border:1.5px solid '+col+'22">'+esc(m)+'</span>';
+      var col=mat?mat.color:'var(--or)';
+      var key=mat?mat.key:'autre';
+      var icon=MAT_ICONS[key]||MAT_ICONS['autre'];
+      return'<div style="display:inline-flex;align-items:center;gap:7px;background:var(--bg);border-radius:50px;padding:5px 12px 5px 5px;border:1.5px solid '+col+'30">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:'+col+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+col+'">'+icon+'</div>'
+        +'<span style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap">'+esc(m)+'</span>'
+        +'</div>';
     }).join('');
   }
   if(pCache.matieres){_renderTags(pCache.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
   else if(immediateTags.length){_renderTags(immediateTags);}
-  else if(tagsEl){tagsEl.innerHTML='';}
+  else{if(tagsSect)tagsSect.style.display='none';}
 
   // Prochains cours — belle carte avec date formatée
   var prochains=cours.filter(function(c){return c.fl<c.sp;});

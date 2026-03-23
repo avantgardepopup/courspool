@@ -972,6 +972,7 @@
     <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Réservation</div><div style="font-size:17px;font-weight:800" id="rTit"></div></div><button class="mcl" onclick="closeR()">✕</button></div>
     <div class="mbd">
       <div class="rban"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;position:relative;z-index:1"><div id="rProfAv" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:700;color:#fff" id="rProfNm"></div><div style="font-size:11px;opacity:.75;color:#fff" id="rSbj"></div></div></div><div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div><div style="font-size:12px;opacity:.75;margin-top:4px;position:relative;z-index:1" id="rLc"></div></div>
+      <div id="rDesc" style="display:none;font-size:13.5px;color:var(--mid);line-height:1.75;background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:16px"></div>
       <div style="font-size:13px;font-weight:700;margin-bottom:10px">Détail du prix</div>
       <div class="bdn">
         <div class="br"><span class="l">Prix total du cours</span><span class="v" id="rTot"></span></div>
@@ -1079,7 +1080,10 @@
     <p id="mpBio" style="margin:16px 16px 0;font-size:14px;color:var(--mid);line-height:1.65"></p>
 
     <!-- Tags matières -->
-    <div id="mpTags" style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 16px 0;padding:0"></div>
+    <div id="mpTagsSection" style="margin:16px 16px 0;display:none">
+      <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Matières enseignées</div>
+      <div id="mpTags" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
 
     <!-- Boutons actions -->
     <div style="display:flex;gap:10px;margin:16px 16px 0">
