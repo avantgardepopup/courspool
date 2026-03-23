@@ -1249,8 +1249,11 @@ function applyFilter(){
       matchLoc=loc.includes(actLoc);
     }
     var matchNiv=!actNiv||(c.niveau||'')=== actNiv;
-    return matchFilter&&matchSearch&&matchLoc&&matchNiv;
+    var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+    var matchMode=!actMode||(actMode==='visio'?_isVisio:!_isVisio);
+    return matchFilter&&matchSearch&&matchLoc&&matchNiv&&matchMode;
   });
+  updateResetBtn();
   renderPage();
 }
 
@@ -3800,9 +3803,17 @@ function pickNiveau(el){
 }
 
 // ============================================================
-// FILTRE NIVEAU
+// FILTRE NIVEAU + MODE
 // ============================================================
 var actNiv = '';
+var actMode = '';
+
+function updateResetBtn(){
+  var btn=g('pillReset');if(!btn)return;
+  var active=actF!=='tous'||!!actNiv||!!actMode||!!actLoc||geoMode;
+  btn.style.display=active?'inline-flex':'none';
+}
+
 function openNivFilter(){
   var el=g('bdNivFilter');
   if(el){el.style.display='flex';}
@@ -3813,15 +3824,30 @@ function closeNivFilter(){
 }
 function setNivFilter(niv, el){
   actNiv=niv;try{sessionStorage.setItem('cp_niv',niv);}catch(e){}
-  // Mettre à jour les chips
   document.querySelectorAll('#nivFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   if(el)el.classList.add('on');
-  // Mettre à jour le pill label
   var lbl=g('pillNivLabel');
   var pill=g('pillNiv');
   if(lbl){lbl.textContent=niv||'Niveau';}
   if(pill){pill.classList.toggle('on',!!niv);}
   closeNivFilter();
+  applyFilter();
+}
+
+function openModeFilter(){
+  var el=g('bdModeFilter');if(el)el.style.display='flex';
+}
+function closeModeFilter(){
+  var el=g('bdModeFilter');if(el)el.style.display='none';
+}
+function setModeFilter(mode, el){
+  actMode=mode;
+  document.querySelectorAll('#modeFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
+  var labels={'':'Mode','presentiel':'Présentiel','visio':'Visio'};
+  var lbl=g('pillModeLabel');if(lbl)lbl.textContent=labels[mode]||'Mode';
+  var pill=g('pillMode');if(pill)pill.classList.toggle('on',!!mode);
+  closeModeFilter();
   applyFilter();
 }
 
@@ -3996,7 +4022,7 @@ function sortCourses(arr){
 }
 
 function resetFilters(){
-  actF='tous';actLoc='';actNiv='';
+  actF='tous';actLoc='';actNiv='';actMode='';
   var inp=g('locInput');if(inp)inp.value='';
   var cb=g('locClearBtn');if(cb)cb.style.display='none';
   var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
@@ -4006,6 +4032,11 @@ function resetFilters(){
   var fn=document.querySelector('#nivFilterList .niv-fchip');if(fn)fn.classList.add('on');
   var lbl=g('pillNivLabel');if(lbl)lbl.textContent='Niveau';
   var pn=g('pillNiv');if(pn)pn.classList.remove('on');
+  document.querySelectorAll('#modeFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
+  var fm=document.querySelector('#modeFilterList .niv-fchip');if(fm)fm.classList.add('on');
+  var lm=g('pillModeLabel');if(lm)lm.textContent='Mode';
+  var pm=g('pillMode');if(pm)pm.classList.remove('on');
+  var pr=g('pillReset');if(pr)pr.style.display='none';
   if(g('srch'))g('srch').value='';
   if(g('mobSearchInput'))g('mobSearchInput').value='';
   applyFilter();

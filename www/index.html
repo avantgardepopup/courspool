@@ -389,6 +389,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span id="pillNivLabel">Niveau</span>
           </button>
+          <button class="filter-pill-btn" id="pillMode" onclick="openModeFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <span id="pillModeLabel">Mode</span>
+          </button>
+          <button class="filter-pill-btn" id="pillReset" onclick="resetFilters()" style="display:none;color:var(--or);border-color:rgba(255,107,43,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Effacer
+          </button>
           <div class="filter-sep"></div>
         </div>
         <!-- Matières scrollables -->
@@ -424,6 +432,29 @@
             <div class="niv-fchip" onclick="setNivFilter('Bac+3/4',this)">Bac +3/4 <span style="font-size:11px;color:var(--lite);font-weight:400">L3 · Master 1</span></div>
             <div class="niv-fchip" onclick="setNivFilter('Bac+5',this)">Bac +5 <span style="font-size:11px;color:var(--lite);font-weight:400">Master 2 · Grandes écoles</span></div>
           </div>
+          <button onclick="resetFilters();closeNivFilter()" style="width:100%;margin-top:16px;background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:11px 0;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--lite);cursor:pointer">Réinitialiser tous les filtres</button>
+        </div>
+      </div>
+
+      <!-- Bottom sheet filtre mode -->
+      <div id="bdModeFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeModeFilter()">
+        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:17px;font-weight:800">Format du cours</div>
+            <button onclick="closeModeFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+          </div>
+          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="modeFilterList">
+            <div class="niv-fchip on" onclick="setModeFilter('',this)">Tous les formats</div>
+            <div class="niv-fchip" onclick="setModeFilter('presentiel',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" style="margin-right:8px;flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Présentiel <span style="font-size:11px;color:var(--lite);font-weight:400;margin-left:6px">En personne</span>
+            </div>
+            <div class="niv-fchip" onclick="setModeFilter('visio',this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" style="margin-right:8px;flex-shrink:0"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              Visio <span style="font-size:11px;color:var(--lite);font-weight:400;margin-left:6px">En ligne</span>
+            </div>
+          </div>
+          <button onclick="resetFilters();closeModeFilter()" style="width:100%;margin-top:16px;background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:11px 0;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--lite);cursor:pointer">Réinitialiser tous les filtres</button>
         </div>
       </div>
 
