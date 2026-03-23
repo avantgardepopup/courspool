@@ -47,6 +47,38 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+
+<!-- ── DESKTOP BLOCKER ── -->
+<div id="desktopBlock" style="display:none;position:fixed;inset:0;z-index:99999;background:#FAFAF9;align-items:center;justify-content:center;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:420px;padding:48px 32px;text-align:center">
+    <div style="width:80px;height:80px;background:linear-gradient(135deg,#FF8C55,#FF6B2B);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 32px;box-shadow:0 12px 32px rgba(255,107,43,.35)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="38" height="38"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    </div>
+    <div style="font-size:26px;font-weight:800;color:#1A1A1A;letter-spacing:-.03em;margin-bottom:12px">CoursPool est mobile</div>
+    <div style="font-size:16px;color:#888;line-height:1.6;margin-bottom:36px">L'application n'est pas encore disponible sur ordinateur. Ouvre-la depuis ton téléphone pour profiter de l'expérience complète.</div>
+    <div style="background:#FFF4EF;border:1.5px solid rgba(255,107,43,.2);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;text-align:left">
+      <div style="width:40px;height:40px;background:linear-gradient(135deg,#FF8C55,#FF6B2B);border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:2px">courspool.vercel.app</div>
+        <div style="font-size:12px;color:#888">Ouvre ce lien sur ton téléphone</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  function checkDesktop(){
+    var isDesktop=window.innerWidth>900&&!/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var el=document.getElementById('desktopBlock');
+    if(el)el.style.display=isDesktop?'flex':'none';
+  }
+  checkDesktop();
+  window.addEventListener('resize',checkDesktop);
+})();
+</script>
+
 <div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
   <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
     <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;animation:splashPulse 1.5s ease-in-out infinite">
