@@ -667,7 +667,7 @@ function goExplore(){
       if(parsedUser.guest){
         localStorage.removeItem('cp_user');
         // Charger les cours en arrière-plan pour que l'app soit prête
-        loadData();
+        loadData().then(function(){buildCards();});
         // Rester sur l'écran login — l'utilisateur devra cliquer "Continuer sans compte"
         return;
       }
@@ -698,9 +698,9 @@ function goExplore(){
       }
     } else {
       // Pas de session → écran login, charger les cours en arrière-plan
-      loadData();
+      loadData().then(function(){buildCards();});
     }
-  }catch(e){loadData();}
+  }catch(e){loadData().then(function(){buildCards();});}
 })();
 
 async function checkStripeReturn(){
@@ -2267,14 +2267,20 @@ async function loadConversations(){
       var ini=p?p.i:'';
       // Si pas de profil en cache, charger depuis l'API en arrière-plan
       if(!p){
-        fetch(API+'/profiles/'+otherId).then(function(r){return r.json();}).then(function(prof){
-          if(prof&&prof.id){
-            var pr=prof.prenom||'';var no=prof.nom||'';
-            P[otherId]={nm:(pr+(no?' '+no:'')).trim()||'Utilisateur',i:((pr[0]||'')+(no[0]||'')).toUpperCase()||'U',col:'linear-gradient(135deg,#FF8C55,#E04E10)',photo:prof.photo_url||null,rl:'',e:0};
-            // Recharger la liste
-            loadConversations();
-          }
-        }).catch(function(){});
+        (function(uid){
+          fetch(API+'/profiles/'+uid).then(function(r){return r.json();}).then(function(prof){
+            if(prof&&prof.id){
+              var pr=prof.prenom||'';var no=prof.nom||'';
+              var nm2=(pr+(no?' '+no:'')).trim()||'Utilisateur';
+              P[uid]={nm:nm2,i:((pr[0]||'')+(no[0]||'')).toUpperCase()||'U',col:'linear-gradient(135deg,#FF8C55,#E04E10)',photo:prof.photo_url||null,rl:'',e:0};
+              // Mettre à jour uniquement le nom dans la row déjà affichée
+              var row=document.querySelector('[data-uid="'+uid+'"] .msg-name');
+              if(row)row.textContent=nm2;
+              var av=document.querySelector('[data-uid="'+uid+'"] .msg-av');
+              if(av){if(prof.photo_url){av.innerHTML='<img src="'+prof.photo_url+'" style="width:100%;height:100%;object-fit:cover">';}else{av.textContent=P[uid].i;}}
+            }
+          }).catch(function(){});
+        })(otherId);
       }
       if(!nm)nm='Utilisateur';
       if(!ini)ini=nm[0]?nm[0].toUpperCase():'U';
