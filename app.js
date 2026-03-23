@@ -93,10 +93,10 @@ function setAvatar(el,photo,ini,col){
   else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
 }
 
-// Charger les favoris cours depuis localStorage dès le démarrage
-loadFavCours();
 // Badge sera mis à jour après chargement des follows
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
+// Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
+loadFavCours();
 
 // ── FAVORIS COURS — persistance localStorage ──
 function loadFavCours(){
@@ -1226,6 +1226,35 @@ function applyFilter(){
   renderPage();
 }
 
+function toggleFollowCard(pid,btn){
+  if(!user||user.guest){toast('Connectez-vous pour suivre un professeur','');return;}
+  if(!pid)return;
+  var isFollowing=fol.has(pid);
+  if(isFollowing){
+    fol.delete(pid);
+    btn.setAttribute('data-fol','0');
+    btn.title='Suivre ce professeur';
+    btn.querySelector('svg').setAttribute('fill','none');
+    btn.querySelector('svg').setAttribute('stroke','currentColor');
+    btn.style.background='rgba(255,255,255,0.85)';
+    btn.style.color='var(--lite)';
+    fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
+    toast('Retiré des suivis','');
+  } else {
+    fol.add(pid);
+    btn.setAttribute('data-fol','1');
+    btn.title='Ne plus suivre';
+    btn.querySelector('svg').setAttribute('fill','#E01060');
+    btn.querySelector('svg').setAttribute('stroke','#E01060');
+    btn.style.background='rgba(255,255,255,0.95)';
+    btn.style.color='#E01060';
+    fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
+    toast('Vous suivez ce professeur','Notifié dès son prochain cours 🔔');
+  }
+  updateFavBadge();
+  haptic(8);
+}
+
 function renderPage(){
   var grid=g('grid');grid.innerHTML='';
   var sorted=sortCourses(filteredCards);
@@ -1276,7 +1305,7 @@ function renderPage(){
       var isSaved=favCours.has(c.id);
       heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="'+(isSaved?'#E01060':'none')+'" stroke="'+(isSaved?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(c.dt)+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#E01060':'var(--lite)')+'"><svg viewBox="0 0 24 24" fill="'+(fol.has(c.pr)?'#E01060':'none')+'" stroke="'+(fol.has(c.pr)?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(c.dt)+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -4915,18 +4944,28 @@ function showAccHome(){
   var pgEl=g('pgAcc');if(pgEl)pgEl.scrollTop=0;
 }
 
-// Override switchATab to show detail view + update topbar title
+// Override switchATab to show detail view + update topbar title + animate icon
 (function(){
   var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
+  var _animTabs={R:true,H:true};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
     var pg=g('pgAcc');
     if(pg){pg.classList.remove('home-mode');pg.classList.add('detail-mode');}
-    // Mettre à jour le titre de la topbar
     var mt=g('mobTitle');if(mt&&_tabTitles[s])mt.textContent=_tabTitles[s];
     var mh=g('mobHeader');if(mh)mh.style.display='block';
     var ms=g('mobSearch');if(ms)ms.style.display='none';
+    // Animer l'icône de la card cliquée (Mes cours + Historique)
+    if(_animTabs[s]){
+      var cards=document.querySelectorAll('#accHome .acc-card');
+      cards.forEach(function(card){
+        if(card.getAttribute('onclick')&&card.getAttribute('onclick').includes("'"+s+"'")){
+          var ico=card.querySelector('div[style*="border-radius:14px"]');
+          if(ico){ico.classList.remove('acc-card-icon-anim');void ico.offsetWidth;ico.classList.add('acc-card-icon-anim');}
+        }
+      });
+    }
     var body=document.querySelector('#pgAcc .acc-body');
     if(body)body.scrollTop=0;
   };

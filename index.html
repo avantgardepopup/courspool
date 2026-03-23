@@ -263,7 +263,7 @@
       </div>
     </nav>
     <div class="topbar-right">
-      <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="btnadd-txt">Proposer un cours</span></button>
+      <button class="btnadd" id="btnProposer" onclick="openCr()" style="display:none!important"></button>
       <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
     </div>
   </header>
@@ -279,9 +279,7 @@
         <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
-        <button id="btnProposerMob" onclick="openCr()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(255,107,43,.4)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
+        <button id="btnProposerMob" style="display:none!important"></button>
         <div class="tav-btn" id="tavMob" onclick="navTo('acc')" title="Mon compte" style="width:36px;height:36px;">?</div>
       </div>
     </div>
@@ -1489,8 +1487,8 @@
   </div>
 
   <div class="bni" id="bniAdd" onclick="openCr()" style="display:none;">
-    <div class="bni-add-circle" style="width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12),0 0 0 1.5px rgba(0,0,0,.06)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <div class="bni-add-circle" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
     <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1">Créer</span>
   </div>

@@ -514,7 +514,6 @@ html.dk .bnav {
   box-shadow: 0 -2px 16px rgba(0,0,0,0.3);
 }
 html.dk .bni { color: #6B6B6B; }
-html.dk #bniAdd .bni-add-circle { background: #2A2A2A !important; box-shadow: 0 2px 8px rgba(0,0,0,.3), 0 0 0 1.5px rgba(255,255,255,.08) !important; }
 html.dk .bni.on { color: #FF6B2B; }
 html.dk #bniFav.on { color: #FF375F; }
 html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
@@ -2024,3 +2023,18 @@ html.dk .settings-chevron { color:var(--bdr); }
 /* Dark mode */
 html.dk .search-bar-premium { background:var(--wh); border-color:var(--bdr); }
 html.dk .filter-pill-btn { background:var(--wh); }
+
+@keyframes accIconPop {
+  0%   { transform: scale(1) rotate(0deg); }
+  35%  { transform: scale(1.35) rotate(-8deg); }
+  65%  { transform: scale(0.88) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.acc-card-icon-anim {
+  animation: accIconPop 0.45s cubic-bezier(.22,.61,.36,1) forwards;
+}
+.card-follow-btn {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s, background 0.15s;
+}
+.card-follow-btn:active { transform: scale(0.85); }
