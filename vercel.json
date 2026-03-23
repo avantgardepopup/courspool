@@ -4,10 +4,13 @@
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "*.json", "use": "@vercel/static" },
     { "src": "*.js", "use": "@vercel/static" },
+    { "src": "*.css", "use": "@vercel/static" },
     { "src": "*.svg", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/app.js", "dest": "/app.js" },
+    { "src": "/style.css", "dest": "/style.css" },
     { "src": "/admin", "dest": "/admin.html" },
     { "src": "/admin.html", "dest": "/admin.html" },
     { "src": "/privacy", "dest": "/privacy.html" },
