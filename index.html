@@ -451,113 +451,139 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   
   
 }
-/* ═══════════════════════════════════════════════
-   NAVIGATION — pleine largeur mobile, pill desktop
-   ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   NAVIGATION — Tab bar native iOS/Android style
+   ═══════════════════════════════════════════════════════ */
 .bnav{
-  /* MOBILE default: full-width bottom bar */
   position:fixed;
   bottom:0;left:0;right:0;
-  background:rgba(255,255,255,0.96);
-  backdrop-filter:blur(40px) saturate(2.2);
-  -webkit-backdrop-filter:blur(40px) saturate(2.2);
-  border-top:1px solid rgba(0,0,0,.07);
-  border-radius:0;
-  display:none;z-index:60;
-  padding:8px 4px max(10px,env(safe-area-inset-bottom,10px));
-  align-items:center;justify-content:space-around;
-  box-shadow:0 -1px 0 rgba(0,0,0,.06),0 -8px 32px rgba(0,0,0,.07);
+  /* Fond semi-transparent avec blur — exactement comme iOS */
+  background:rgba(249,249,249,.94);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:0.5px solid rgba(0,0,0,.12);
+  display:none;
+  z-index:100;
+  padding:6px 0 0;
+  padding-bottom:max(12px,env(safe-area-inset-bottom,12px));
+  align-items:flex-start;
+  justify-content:space-around;
   gap:0;
-  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;
-  transform:translateY(0);
 }
 .bnav.on{display:flex;}
-.bnav.hidden-bar{transform:translateY(100%);opacity:0;}
 
-/* Items — full width bar */
+/* Item de navigation — style iOS */
 .bni{
-  display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;padding:6px 4px 4px;border-radius:14px;
-  flex:1;min-width:0;
-  color:var(--lite);
-  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  display:flex;flex-direction:column;align-items:center;
+  gap:2px;
+  cursor:pointer;
+  padding:2px 4px 0;
+  flex:1;min-width:44px;max-width:96px;
+  color:#8E8E93;
+  transition:opacity .12s;
   position:relative;
   -webkit-tap-highlight-color:transparent;
+  user-select:none;
 }
-.bni-lbl{font-size:10px;font-weight:600;letter-spacing:-.01em;line-height:1.1;transition:all .2s;color:var(--lite);}
-.bni.on .bni-lbl{color:var(--or);font-weight:700;}
-.bni svg{width:24px;height:24px;transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
-.bni.on svg{transform:scale(1.08);}
-/* Active: just tint the icon+label, no pill background on mobile */
-.bni.on{color:var(--or);background:none;box-shadow:none;}
-.bni:not(.on):hover{color:var(--mid);}
-/* Active indicator dot under icon */
-.bni.on::after{
-  content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
-  width:4px;height:4px;border-radius:50%;background:var(--or);
+.bni:active{opacity:.5;}
+.bni svg{
+  width:26px;height:26px;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1);
 }
+.bni.on svg{transform:scale(1.05);}
+.bni-lbl{
+  font-size:10px;font-weight:500;
+  line-height:1.2;
+  margin-top:1px;
+  letter-spacing:.01em;
+  color:#8E8E93;
+  white-space:nowrap;
+}
+/* Actif : couleur orange (comme iOS blue → notre orange) */
+.bni.on{color:var(--or);}
+.bni.on .bni-lbl{color:var(--or);font-weight:600;}
+.bni.on svg{color:var(--or);}
+/* Favoris actif : rose */
 #bniFav.on{color:#E01060;}
 #bniFav.on .bni-lbl{color:#E01060;}
-#bniFav.on::after{background:#E01060;}
-#bniFav.on svg{stroke:#E01060;}
-
-/* bni-lbl color states */
+#bniFav.on svg{color:#E01060;}
+/* Favoris caché par défaut */
+#bniFav{display:none;}
+/* ico states */
 .bni .bni-ico-off{display:block;}
 .bni .bni-ico-on{display:none;}
 .bni.on .bni-ico-off{display:none;}
 .bni.on .bni-ico-on{display:block;}
-
-/* FAV button default hidden — JS shows it */
-#bniFav{display:none;}
-
-/* Dark mode bar */
-html.dk .bnav{
-  background:rgba(13,11,10,.96);
-  border-top-color:rgba(255,255,255,.07);
-  box-shadow:0 -1px 0 rgba(255,255,255,.05);
+/* Badge */
+.bni-badge{
+  position:absolute;top:0;right:14px;
+  background:#FF3B30;color:#fff;
+  border-radius:50%;min-width:16px;height:16px;
+  padding:0 4px;font-size:10px;font-weight:700;
+  display:none;align-items:center;justify-content:center;
+  border:2px solid rgba(249,249,249,.94);
 }
-html.dk .bni-lbl{color:#6A6560;}
-html.dk .bni.on .bni-lbl{color:var(--or);}
+.bni-badge.on{display:flex;}
+.bni-sep{display:none;}
+/* Dark mode */
+html.dk .bnav{
+  background:rgba(28,26,24,.94);
+  border-top-color:rgba(255,255,255,.1);
+}
+html.dk .bni{color:#636366;}
+html.dk .bni-lbl{color:#636366;}
 html.dk .bni.on{color:var(--or);}
+html.dk .bni.on .bni-lbl{color:var(--or);}
+html.dk #bniFav.on{color:#FF375F;}
+html.dk #bniFav.on .bni-lbl{color:#FF375F;}
+html.dk .bni-badge{border-color:rgba(28,26,24,.94);}
 
-/* ── DESKTOP: pill flottante ── */
-@media(min-width:641px){
+/* ── DESKTOP : pill flottante ── */
+@media(min-width:768px){
   .bnav{
-    bottom:max(22px,env(safe-area-inset-bottom,22px));
+    bottom:max(24px,env(safe-area-inset-bottom,24px));
     left:50%;right:auto;
+    width:auto;
     transform:translateX(-50%);
-    border-radius:56px;
+    border-radius:50px;
     border-top:none;
-    padding:8px 10px;
-    background:rgba(255,255,255,0.92);
-    box-shadow:0 10px 44px rgba(0,0,0,.16),0 1px 0 rgba(255,255,255,.95) inset,0 0 0 1px rgba(0,0,0,.08);
+    padding:6px 8px;
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(40px) saturate(2);
+    -webkit-backdrop-filter:blur(40px) saturate(2);
+    box-shadow:0 8px 40px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.07);
     justify-content:flex-start;
     gap:2px;
-    width:auto;
   }
-  .bnav.hidden-bar{transform:translateX(-50%) translateY(120%);opacity:0;}
-  /* Desktop: restore pill active state */
-  .bni{padding:10px 14px;border-radius:44px;min-width:54px;}
-  .bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 5px 20px rgba(255,69,0,.42);}
-  .bni.on svg{stroke:#fff;}
-  .bni.on .bni-lbl{color:#fff;}
-  .bni.on::after{display:none;}
-  #bniFav.on{background:linear-gradient(148deg,#FF5B8D,#E01060);color:#fff;box-shadow:0 5px 20px rgba(224,16,96,.4);}
-  #bniFav.on .bni-lbl{color:#fff;}
-  #bniFav.on svg{stroke:#fff;}
-  html.dk .bnav{background:rgba(16,14,12,.95);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 44px rgba(0,0,0,.5);}
+  .bni{
+    padding:8px 14px;
+    border-radius:40px;
+    min-width:52px;max-width:none;
+    flex:none;
+  }
+  .bni:active{opacity:1;}
+  .bni svg{width:22px;height:22px;}
+  .bni-lbl{font-size:11px;margin-top:2px;}
+  /* Desktop : pill de couleur sur l'item actif */
+  .bni.on{
+    background:linear-gradient(148deg,#FF7D42,#FF4500);
+    color:#fff !important;
+    box-shadow:0 4px 16px rgba(255,69,0,.4);
+  }
+  .bni.on .bni-lbl{color:#fff !important;}
+  .bni.on svg{color:#fff !important;transform:scale(1);}
+  #bniFav.on{
+    background:linear-gradient(148deg,#FF5B8D,#E01060) !important;
+    color:#fff !important;
+    box-shadow:0 4px 16px rgba(224,16,96,.4) !important;
+  }
+  #bniFav.on .bni-lbl{color:#fff !important;}
+  html.dk .bnav{
+    background:rgba(16,14,12,.94);
+    box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);
+  }
+  html.dk .bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);}
 }
-
-.bni-badge{
-  position:absolute;top:4px;right:6px;
-  background:#EF4444;color:#fff;border-radius:50%;
-  width:14px;height:14px;font-size:9px;font-weight:700;
-  display:none;align-items:center;justify-content:center;
-  border:2px solid rgba(255,255,255,0.96);
-}
-.bni-badge.on{display:flex;animation:badgePulse 2s ease infinite;}
-@keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 4px rgba(239,68,68,0)}}
-.bni-sep{display:none;}
 
 /* ── FAVORITES PAGE ── */
 #pgFav{padding-bottom:120px;}
@@ -635,23 +661,33 @@ html.dk .bni.on{color:var(--or);}
   -webkit-tap-highlight-color:transparent;
 }
 .fav-remove-btn:hover{background:rgba(239,68,68,.8);}
-/* Heart button on course cards — en bas à gauche pour ne pas masquer l'avatar prof */
-.card-heart-btn{
-  position:absolute;bottom:8px;left:10px;
-  width:30px;height:30px;border-radius:50%;
-  background:rgba(0,0,0,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1.5px solid rgba(255,255,255,.25);
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.9);
-  transition:all .22s cubic-bezier(.34,1.56,.64,1);
-  z-index:2;
-  -webkit-tap-highlight-color:transparent;
+/* Heart button — inline à droite du titre du cours */
+.ctitle-row{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:8px;margin-bottom:8px;
 }
-.card-heart-btn:hover{transform:scale(1.14);background:rgba(0,0,0,.42);}
-.card-heart-btn.saved{background:rgba(220,38,95,.88);border-color:rgba(255,60,100,.6);color:#fff;}
-.card-heart-btn.saved svg{fill:#fff;stroke:#fff;}
+.ctitle-row .ctitle{flex:1;min-width:0;margin-bottom:0;}
+.card-heart-btn{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:var(--bg);
+  border:1.5px solid var(--bdr);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--lite);
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent;
+  margin-top:-2px;
+}
+.card-heart-btn:hover{border-color:#E01060;color:#E01060;transform:scale(1.1);}
+.card-heart-btn.saved{
+  background:rgba(224,16,96,.08);
+  border-color:#E01060;
+  color:#E01060;
+}
+.card-heart-btn.saved svg{fill:#E01060;stroke:#E01060;}
 @keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.45)}70%{transform:scale(.88)}100%{transform:scale(1)}}
 .card-heart-btn.popping{animation:heartPop .35s cubic-bezier(.34,1.56,.64,1);}
+html.dk .card-heart-btn{background:var(--wh);border-color:var(--bdr);}
+html.dk .card-heart-btn.saved{background:rgba(224,16,96,.12);border-color:#E01060;}
 /* Dark mode */
 html.dk .fav-cours-card,html.dk .fav-prof-card{background:var(--wh);}
 html.dk .fav-cours-card-title,html.dk .fav-prof-name{color:var(--ink);}
@@ -2249,7 +2285,7 @@ html.dk .filter-pill-btn { background:var(--wh); }
       </div>
       <input type="text" id="mobSearchInput" class="search-input-premium"
         placeholder="Matière, professeur, ville…"
-        oninput="g('srch').value=this.value;doFilter();document.getElementById('searchClearBtn').style.display=this.value?'flex':'none'">
+        oninput="var s=g('srch');if(s)s.value=this.value;doFilter();document.getElementById('searchClearBtn').style.display=this.value?'flex':'none'">
       <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -2329,7 +2365,6 @@ html.dk .filter-pill-btn { background:var(--wh); }
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <div id="pillsBar" style="display:none"></div>
-          <input type="hidden" id="srch" value="">
         </div>
       </div>
 
@@ -4807,7 +4842,12 @@ function renderPage(){
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div><button class="card-heart-btn'+(favCours.has(c.id)?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder"><svg viewBox="0 0 24 24" fill="'+(favCours.has(c.id)?'#fff':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    var heartHtml='';
+    if(user&&!user.guest){
+      var isSaved=favCours.has(c.id);
+      heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="'+(isSaved?'#E01060':'none')+'" stroke="'+(isSaved?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
+    }
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
