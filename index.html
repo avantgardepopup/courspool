@@ -451,131 +451,173 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   
   
 }
-/* ═══════════════════════════════════════════════════════
-   NAVIGATION — Tab bar native iOS/Android style
-   ═══════════════════════════════════════════════════════ */
-.bnav{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  background:rgba(249,249,249,.95);
-  backdrop-filter:saturate(180%) blur(20px);
-  -webkit-backdrop-filter:saturate(180%) blur(20px);
-  border-top:0.5px solid rgba(0,0,0,.15);
-  display:none;
-  z-index:100;
-  /* Hauteur totale ~83px sur iPhone (49px zone + 34px home indicator) */
-  padding:10px 8px 0;
-  padding-bottom:max(16px,env(safe-area-inset-bottom,16px));
-  align-items:flex-start;
-  justify-content:space-around;
-  gap:0;
-}
-.bnav.on{display:flex;}
 
-/* Item — zone de tap ≥44×44pt comme recommandé Apple HIG */
-.bni{
-  display:flex;flex-direction:column;align-items:center;
-  gap:3px;
-  cursor:pointer;
-  padding:4px 8px 4px;
-  flex:1;min-width:44px;max-width:80px;
-  color:#8E8E93;
-  position:relative;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;
+/* ════════════════════════════════════════
+   BARRE DE NAVIGATION — rebuild from scratch
+   Mobile : tab bar pleine largeur
+   Desktop : pill flottante
+   ════════════════════════════════════════ */
+
+/* Conteneur */
+.bnav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: row;
+  align-items: stretch;
+  background: rgba(252,252,252,.96);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-top: 0.5px solid rgba(0,0,0,.13);
+  /* Hauteur : 49px zone active + home indicator */
+  padding-top: 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: 0;
+  padding-right: 0;
 }
-/* Feedback tactile natif — flash au tap */
-.bni:active{opacity:.4;transition:opacity .05s;}
-.bni svg{
-  width:26px;height:26px;
-  display:block;
+.bnav.on { display: flex; }
+
+/* Chaque item */
+.bni {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 0 2px 8px;
+  min-width: 44px;
+  cursor: pointer;
+  color: #8E8E93;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  position: relative;
+  border: none;
+  background: none;
+  text-decoration: none;
+  /* Feedback instantané au tap */
+  transition: none;
 }
-.bni-lbl{
-  font-size:10px;font-weight:500;
-  line-height:1;
-  letter-spacing:.005em;
-  color:#8E8E93;
-  white-space:nowrap;
+.bni:active { opacity: 0.35; }
+
+/* Icône */
+.bni svg {
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  display: block;
 }
-/* Actif = couleur accent, pas de fond sur mobile */
-.bni.on{color:var(--or);}
-.bni.on svg{color:var(--or);}
-.bni.on .bni-lbl{color:var(--or);font-weight:600;}
+
+/* Label */
+.bni-lbl {
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
+  color: #8E8E93;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+/* État actif */
+.bni.on { color: var(--or); }
+.bni.on svg { color: var(--or); stroke: var(--or); }
+.bni.on .bni-lbl { color: var(--or); font-weight: 600; }
+
 /* Favoris actif = rose */
-#bniFav.on{color:#E01060;}
-#bniFav.on svg{color:#E01060;}
-#bniFav.on .bni-lbl{color:#E01060;font-weight:600;}
-/* Caché par défaut */
-#bniFav{display:none;}
-/* ico states */
-.bni .bni-ico-off{display:block;}
-.bni .bni-ico-on{display:none;}
-.bni.on .bni-ico-off{display:none;}
-.bni.on .bni-ico-on{display:block;}
-/* Badge */
-.bni-badge{
-  position:absolute;top:2px;right:10px;
-  background:#FF3B30;color:#fff;
-  border-radius:50%;min-width:16px;height:16px;
-  padding:0 4px;font-size:10px;font-weight:700;
-  display:none;align-items:center;justify-content:center;
-  border:2px solid rgba(249,249,249,.95);
-}
-.bni-badge.on{display:flex;}
-.bni-sep{display:none;}
-/* Dark mode */
-html.dk .bnav{
-  background:rgba(22,20,18,.95);
-  border-top-color:rgba(255,255,255,.08);
-}
-html.dk .bni{color:#636366;}
-html.dk .bni-lbl{color:#636366;}
-html.dk .bni.on{color:var(--or);}
-html.dk .bni.on .bni-lbl{color:var(--or);}
-html.dk #bniFav.on{color:#FF375F;}
-html.dk #bniFav.on .bni-lbl{color:#FF375F;}
-html.dk .bni-badge{border-color:rgba(22,20,18,.95);}
+#bniFav.on { color: #E0005E; }
+#bniFav.on svg { color: #E0005E; stroke: #E0005E; }
+#bniFav.on .bni-lbl { color: #E0005E; font-weight: 600; }
 
-/* ── DESKTOP ≥768px : pill flottante ── */
-@media(min-width:768px){
-  .bnav{
-    bottom:max(24px,env(safe-area-inset-bottom,24px));
-    left:50%;right:auto;width:auto;
-    transform:translateX(-50%);
-    border-radius:50px;border-top:none;
-    padding:6px 8px;
-    background:rgba(255,255,255,.92);
-    backdrop-filter:blur(40px) saturate(2);
-    -webkit-backdrop-filter:blur(40px) saturate(2);
-    box-shadow:0 8px 40px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.07);
-    justify-content:flex-start;gap:2px;
+/* Caché par défaut (JS l'affiche) */
+#bniFav { display: none; }
+
+/* ico on/off states */
+.bni .bni-ico-off { display: block; }
+.bni .bni-ico-on  { display: none; }
+.bni.on .bni-ico-off { display: none; }
+.bni.on .bni-ico-on  { display: block; }
+
+/* Badge notification */
+.bni-badge {
+  position: absolute;
+  top: 0; right: 18%;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  background: #FF3B30;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(252,252,252,.96);
+}
+.bni-badge.on { display: flex; }
+.bni-sep { display: none; }
+
+/* Dark mode */
+html.dk .bnav {
+  background: rgba(18,16,14,.97);
+  border-top-color: rgba(255,255,255,.09);
+}
+html.dk .bni { color: #636366; }
+html.dk .bni-lbl { color: #636366; }
+html.dk .bni-badge { border-color: rgba(18,16,14,.97); }
+
+/* Desktop ≥ 769px : pill flottante */
+@media (min-width: 769px) {
+  .bnav {
+    bottom: 28px;
+    left: 50%; right: auto;
+    width: auto;
+    transform: translateX(-50%);
+    border-radius: 48px;
+    border-top: none;
+    padding: 7px 8px;
+    background: rgba(255,255,255,.92);
+    -webkit-backdrop-filter: blur(40px) saturate(2);
+    backdrop-filter: blur(40px) saturate(2);
+    box-shadow: 0 8px 40px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.07);
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
   }
-  .bni{
-    padding:9px 16px;border-radius:40px;
-    min-width:0;max-width:none;flex:none;
+  .bni {
+    flex: none;
+    flex-direction: column;
+    padding: 8px 16px;
+    border-radius: 40px;
+    min-width: 0;
+    gap: 3px;
+    transition: background .2s, box-shadow .2s;
   }
-  .bni:active{opacity:1;transition:none;}
-  .bni svg{width:22px;height:22px;}
-  .bni-lbl{font-size:11px;margin-top:2px;}
-  .bni.on{
-    background:linear-gradient(148deg,#FF7D42,#FF4500);
-    color:#fff;
-    box-shadow:0 4px 16px rgba(255,69,0,.4);
+  .bni:active { opacity: 1; }
+  .bni:hover:not(.on) { background: rgba(0,0,0,.05); }
+  .bni svg { width: 22px; height: 22px; }
+  .bni-lbl { font-size: 11px; }
+  /* Pill colorée sur l'actif */
+  .bni.on {
+    background: linear-gradient(145deg, #FF7D42, #FF4500);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255,69,0,.38);
+    border-radius: 40px;
   }
-  .bni.on svg{color:#fff;}
-  .bni.on .bni-lbl{color:#fff;}
-  #bniFav.on{
-    background:linear-gradient(148deg,#FF5B8D,#E01060);
-    color:#fff;
-    box-shadow:0 4px 16px rgba(224,16,96,.4);
+  .bni.on svg { color: #fff; stroke: #fff; }
+  .bni.on .bni-lbl { color: #fff; font-weight: 600; }
+  #bniFav.on {
+    background: linear-gradient(145deg, #FF5B8D, #E0005E);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(224,0,94,.38);
   }
-  #bniFav.on svg{color:#fff;}
-  #bniFav.on .bni-lbl{color:#fff;}
-  html.dk .bnav{
-    background:rgba(16,14,12,.94);
-    box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);
+  #bniFav.on svg { color: #fff; stroke: #fff; }
+  #bniFav.on .bni-lbl { color: #fff; }
+  html.dk .bnav {
+    background: rgba(14,12,10,.94);
+    box-shadow: 0 8px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.07);
   }
-  html.dk .bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);}
+  html.dk .bni:hover:not(.on) { background: rgba(255,255,255,.06); }
 }
 
 /* ── FAVORITES PAGE ── */
@@ -999,30 +1041,18 @@ body, input, textarea, button, select {
 .cnt { overflow: visible; }
 .pills { overflow: visible; }
 
-/* Mes cours nav item — same style as .bni for tab bar */
-.bni-mes {
-  display: none; flex-direction: column; align-items: center;
-  gap: 3px; cursor: pointer; padding: 6px 4px 4px; border-radius: 14px;
-  flex: 1; min-width: 0;
-  color: var(--lite); transition: color .2s;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-}
-.bni-mes .bni-lbl { font-size:10px;font-weight:600;color:var(--lite);line-height:1.1;transition:color .2s; }
-.bni-mes.on { color: var(--or); background: none; box-shadow: none; }
-.bni-mes.on .bni-lbl { color: var(--or); font-weight: 700; }
-.bni-mes.on::after {
-  content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%);
-  width:4px; height:4px; border-radius:50%; background:var(--or);
-}
-.bni-mes svg { width: 24px; height: 24px; }
+/* bni-mes hérite de .bni — aucun style propre, juste affiché/masqué par JS */
+.bni-mes { display: none; }
 .bni-mes.show { display: flex !important; }
-/* Desktop pill override */
-@media(min-width:641px){
-  .bni-mes { padding:10px 14px; border-radius:44px; min-width:54px; }
-  .bni-mes.on { background:linear-gradient(148deg,#FF7D42,#FF4500); color:#fff; box-shadow:0 5px 20px rgba(255,69,0,.42); }
-  .bni-mes.on .bni-lbl { color:#fff; }
-  .bni-mes.on::after { display:none; }
+/* Desktop pill : aligné avec les autres .bni.on */
+@media (min-width: 769px) {
+  .bni-mes.on {
+    background: linear-gradient(145deg, #FF7D42, #FF4500);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255,69,0,.38);
+  }
+  .bni-mes.on svg { color: #fff; stroke: #fff; }
+  .bni-mes.on .bni-lbl { color: #fff; font-weight: 600; }
 }
 
 
@@ -1362,11 +1392,6 @@ html.dk .settings-chevron { color:var(--bdr); }
 
 
 
-
-
-/* bniMes — explicit show/hide */
-.bni-mes { display: none; flex-direction: column; align-items: center; gap: 3px; }
-.bni-mes.show { display: flex !important; }
 
 
 
@@ -4408,33 +4433,7 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='R'){ buildAccLists(); setTimeout(buildAccLists,300); }
-  if(s==='F'){
-    // Injection directe dans listF au moment où la section est visible
-    var lf=g('listF');
-    if(lf){
-      var fIds=Array.from(fol);
-      if(!fIds.length){
-        lf.style.cssText='display:block;min-height:200px';
-        lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
-          +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
-          +'<div style="width:80px;height:80px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:emptyFloat 3s ease-in-out infinite">'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.6" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
-          +'</div>'
-          +'<div style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--bg)">'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
-          +'</div></div>'
-          +'<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Aucun professeur suivi</div>'
-          +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être alerté.</div>'
-          +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer">Explorer les cours →</button>'
-          +'</div>';
-      } else {
-        buildAccLists();
-      }
-    }
-    // Re-render après chargement au cas où fol arrive plus tard
-    setTimeout(buildAccLists, 800);
-  }
+  if(s==='R'||s==='F'){ buildAccLists(); }
 }
 
 function buildAccLists(){
