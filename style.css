@@ -1,7 +1,7 @@
 :root{
   --or:#FF6B2B;--orp:#FFF2EC;--ord:#E04E10;
   --ink:#111;--mid:#555;--lite:#999;
-  --bg:#F6F4F1;--wh:#fff;--bdr:#E8E3DC;
+  --bg:#F9F8F6;--wh:#fff;--bdr:#E8E3DC;
   --green:#22C069;--amber:#F59E0B;--r:20px;
   --sh:0 8px 32px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.04);
   --glass:rgba(247,245,242,.88);
@@ -649,10 +649,10 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 }
 .card-heart-btn:active { transform: scale(.88); }
 .card-heart-btn.saved {
-  background: rgba(224,16,96,.1);
-  color: #E01060;
+  background: rgba(255,107,43,.18);
+  color: #FF6B2B;
 }
-.card-heart-btn.saved svg { fill: #E01060; stroke: #E01060; }
+.card-heart-btn.saved svg { fill: #FF6B2B; stroke: #FF6B2B; }
 @keyframes heartPop { 0%{transform:scale(1)} 40%{transform:scale(1.5)} 70%{transform:scale(.88)} 100%{transform:scale(1)} }
 .card-heart-btn.popping { animation: heartPop .38s cubic-bezier(.34,1.56,.64,1); }
 html.dk .card-heart-btn { background: rgba(255,107,43,.18); color: #FF8C55; }
