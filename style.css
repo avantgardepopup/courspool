@@ -1506,6 +1506,7 @@ html.dk .settings-chevron { color:var(--bdr); }
 #pgMsg.on {
   display: flex !important;
   flex-direction: column;
+  min-height: calc(100dvh - 70px);
   height: calc(100dvh - 70px);
   background: var(--wh);
 }
@@ -1516,7 +1517,8 @@ html.dk .settings-chevron { color:var(--bdr); }
   flex-direction: column;
   background: var(--wh);
   overflow: hidden;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 100%;
   width: 100%;
 }
 .msg-list-header {
@@ -1898,7 +1900,7 @@ html.dk .msg-bubble-time.them { color: #fff; }
 
 /* MOBILE */
 @media(max-width:768px){
-  #msgListPane { height: 100%; }
+  #msgListPane { height: 100%; min-height: 100%; }
 }
 
 /* ════ SEARCH BAR PREMIUM ════ */
