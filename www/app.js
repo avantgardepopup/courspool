@@ -333,6 +333,20 @@ async function loadData(page){
         else if(c.prof_photo&&!P[c.pr].photo)P[c.pr].photo=c.prof_photo;
       }
     });
+    // Après traitement des cours, écraser P[user.id] avec les données fraîches du user connecté
+    // (bio/statut/niveau/matieres/nom ne viennent pas des cours)
+    if(user&&user.id&&page===1){
+      if(!P[user.id])P[user.id]={n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
+      var _pu=P[user.id];
+      var _fn=(user.pr||'')+(user.nm?' '+user.nm:'');
+      if(_fn)_pu.nm=_fn;
+      if(user.ini)_pu.i=user.ini;
+      if(user.photo)_pu.photo=user.photo;
+      _pu.bio=user.bio||_pu.bio||'';
+      if(user.statut)_pu.statut=user.statut;
+      if(user.niveau)_pu.niveau=user.niveau;
+      if(user.matieres)_pu.matieres=user.matieres;
+    }
   }catch(e){
     console.log('loadData err',e);
     if(page===1)showNetworkError();
@@ -369,7 +383,8 @@ async function doLogin(){
       verified:p.verified!=null?p.verified:undefined,
       statut:p.statut||'',
       niveau:p.niveau||'',
-      matieres:p.matieres||''
+      matieres:p.matieres||'',
+      bio:p.bio||''
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
     applyUser();
@@ -1041,9 +1056,10 @@ function saveProf(){
     user.matieres=_matieres.join(', ');
     var matHid=g('pfMatieresVal');if(matHid)matHid.value=user.matieres;
   }
-  // Sync P cache immédiatement pour que openPr() reflète les changements sans rechargement
-  if(user.id&&P[user.id]){
+  // Sync P[] et C[] immédiatement pour que openPr() reflète les changements sans rechargement
+  if(user.id){
     var _fullNm=(user.pr||'')+(user.nm?' '+user.nm:'');
+    if(!P[user.id])P[user.id]={};
     if(_fullNm)P[user.id].nm=_fullNm;
     P[user.id].i=user.ini||P[user.id].i;
     P[user.id].bio=user.bio||'';
@@ -1051,6 +1067,14 @@ function saveProf(){
     if(user.niveau!==undefined)P[user.id].niveau=user.niveau;
     if(user.matieres!==undefined)P[user.id].matieres=user.matieres;
     if(user.photo)P[user.id].photo=user.photo;
+    // Sync C[] pour que dernierCours.prof_nm soit à jour dans openPr()
+    C.forEach(function(c){
+      if(c.pr===user.id){
+        if(_fullNm)c.prof_nm=_fullNm;
+        c.prof_ini=user.ini;
+        if(user.photo)c.prof_photo=user.photo;
+      }
+    });
   }
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   // Pousser vers le serveur (Supabase via Railway)
@@ -1769,14 +1793,12 @@ function openPr(pid){
   var p=P[pid]||{};
   var pCache=P[pid]||{};
   var STATUT={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
-  // Données immédiates depuis C[] (toujours dispo)
-  if(dernierCours){
-    p.nm=dernierCours.prof_nm||p.nm||'Professeur';
-    p.i=dernierCours.prof_ini||p.i||'?';
-    p.col=dernierCours.prof_col||p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
-    p.photo=dernierCours.prof_photo||p.photo||null;
-  }
-  if(!p.nm){toast('Profil introuvable','');return;}
+  // Données immédiates depuis C[] — uniquement en fallback, sans écraser le cache P[]
+  var displayNm=p.nm||(dernierCours&&dernierCours.prof_nm)||'Professeur';
+  var displayIni=p.i||(dernierCours&&dernierCours.prof_ini)||'?';
+  var displayCol=p.col||(dernierCours&&dernierCours.prof_col)||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var displayPhoto=p.photo||(dernierCours&&dernierCours.prof_photo)||null;
+  if(!displayNm){toast('Profil introuvable','');return;}
 
   // Sujets uniques extraits des cours (dispo immédiatement)
   var subjSet={};cours.forEach(function(c){if(c.subj)subjSet[c.subj]=true;});
@@ -1784,9 +1806,9 @@ function openPr(pid){
 
   // ── Remplissage immédiat (0 latence) ──
   var av=g('mpav');
-  setAvatar(av,p.photo,p.i,p.col);
-  var hero=g('mpHero');if(hero)hero.style.background=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
-  g('mpnm').textContent=p.nm;
+  setAvatar(av,displayPhoto,displayIni,displayCol);
+  var hero=g('mpHero');if(hero)hero.style.background=displayCol;
+  g('mpnm').textContent=displayNm;
   g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:'Professeur';
   g('mpbd').textContent=pCache.niveau||'';
   g('mpC').textContent=cours.length;
