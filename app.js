@@ -186,11 +186,15 @@ function buildFavPage(){
       if(coursSection)coursSection.style.display='block';
       carousel.innerHTML=favIds.map(function(id){
         var c=C.find(function(x){return x.id===id;});
-        if(!c)return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);padding:24px 16px;text-align:center">'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2" stroke-linecap="round" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-          +'<div style="font-size:12px;color:var(--mid);font-weight:600;line-height:1.4">Cours supprimé</div>'
-          +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Retirer</button>'
-          +'</div>';
+        if(!c){
+          // Si C[] pas encore chargé, ne rien afficher (skeleton) pour éviter les faux positifs
+          if(!C.length)return'<div class="fav-cours-card skeleton" style="min-height:140px"></div>';
+          return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);padding:24px 16px;text-align:center">'
+            +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2" stroke-linecap="round" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+            +'<div style="font-size:12px;color:var(--mid);font-weight:600;line-height:1.4">Cours supprimé</div>'
+            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Retirer</button>'
+            +'</div>';
+        }
         var pp=Math.ceil(c.tot/c.sp);
         var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);})||MATIERES[MATIERES.length-1];
         var bg=mat?mat.bg:'linear-gradient(135deg,var(--orp),#FFE8DC)';
