@@ -452,38 +452,141 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   
 }
 .bnav{
-  position:fixed;bottom:max(20px,env(safe-area-inset-bottom,20px));
+  position:fixed;bottom:max(22px,env(safe-area-inset-bottom,22px));
   left:50%;transform:translateX(-50%);
-  background:rgba(255,255,255,0.88);
-  backdrop-filter:blur(32px) saturate(2);-webkit-backdrop-filter:blur(32px) saturate(2);
-  border-radius:50px;display:none;z-index:60;
-  padding:6px 10px;align-items:center;
-  box-shadow:0 8px 36px rgba(0,0,0,.13),0 1px 0 rgba(255,255,255,.9) inset,0 0 0 1px rgba(0,0,0,.07);
-  gap:4px;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(40px) saturate(2.2);-webkit-backdrop-filter:blur(40px) saturate(2.2);
+  border-radius:56px;display:none;z-index:60;
+  padding:8px 10px;align-items:center;
+  box-shadow:0 10px 44px rgba(0,0,0,.16),0 1px 0 rgba(255,255,255,.95) inset,0 0 0 1px rgba(0,0,0,.08);
+  gap:2px;
   transition:all .4s cubic-bezier(.34,1.56,.64,1);
 }
 .bnav.on{display:flex;}
 .bni{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  cursor:pointer;padding:8px 14px;border-radius:40px;
-  flex:1; min-width:0;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;padding:10px 14px;border-radius:44px;
+  flex:1;min-width:0;
   color:var(--lite);transition:all .25s cubic-bezier(.34,1.56,.64,1);
-  position:relative;min-width:52px;
+  position:relative;min-width:54px;
   -webkit-tap-highlight-color:transparent;
 }
-.bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 4px 16px rgba(255,69,0,.38);}
+.bni-lbl{font-size:10px;font-weight:700;letter-spacing:-.01em;line-height:1;transition:all .25s;}
+.bni.on .bni-lbl{color:#fff;}
+.bni:not(.on) .bni-lbl{color:var(--lite);}
+.bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 5px 20px rgba(255,69,0,.42);}
 .bni:not(.on):hover{color:var(--or);background:rgba(255,107,43,.08);}
-.bni svg{width:22px;height:22px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
-.bni.on svg{transform:scale(1.08);}
+.bni svg{width:23px;height:23px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.bni.on svg{transform:scale(1.1);}
 .bni .bni-ico-off{display:block;}
 .bni .bni-ico-on{display:none;}
 .bni.on .bni-ico-off{display:none;}
 .bni.on .bni-ico-on{display:block;}
-
-.bni-badge{position:absolute;top:4px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.88);}
+/* Favorites heart button — special pink active state */
+#bniFav.on{background:linear-gradient(148deg,#FF5B8D,#E01060);box-shadow:0 5px 20px rgba(224,16,96,.4);}
+#bniFav{display:none;}/* shown by JS for logged-in users */
+html.dk .bnav{background:rgba(16,14,12,.95);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 44px rgba(0,0,0,.5);}
+.bni-badge{position:absolute;top:6px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.92);}
 .bni-badge.on{display:flex;animation:badgePulse 2s ease infinite;}
 @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 4px rgba(239,68,68,0)}}
-.bni-sep{width:1px;height:20px;background:rgba(0,0,0,.08);margin:0 2px;}
+.bni-sep{width:1px;height:24px;background:rgba(0,0,0,.07);margin:0 2px;}
+
+/* ── FAVORITES PAGE ── */
+#pgFav{padding-bottom:120px;}
+.fav-section-title{
+  font-size:20px;font-weight:800;color:var(--ink);
+  letter-spacing:-.03em;padding:24px 20px 14px;
+}
+.fav-empty{
+  text-align:center;padding:40px 24px;
+}
+/* Carrousel horizontal */
+.fav-carousel{
+  display:flex;gap:14px;
+  overflow-x:auto;overflow-y:visible;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:4px 20px 16px;
+  scroll-snap-type:x mandatory;
+}
+.fav-carousel::-webkit-scrollbar{display:none;}
+/* Card cours dans carrousel */
+.fav-cours-card{
+  flex:0 0 220px;scroll-snap-align:start;
+  background:var(--wh);border-radius:20px;
+  overflow:hidden;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.06),0 6px 24px rgba(0,0,0,.08);
+  transition:transform .25s cubic-bezier(.22,.61,.36,1),box-shadow .25s;
+  position:relative;
+}
+.fav-cours-card:active{transform:scale(.97);}
+.fav-cours-card:hover{transform:translateY(-4px);box-shadow:0 6px 28px rgba(0,0,0,.13);}
+.fav-cours-card-top{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;position:relative;}
+.fav-cours-card-body{padding:11px 14px 14px;}
+.fav-cours-card-title{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-cours-card-meta{font-size:11.5px;color:var(--lite);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-cours-card-price{font-size:18px;font-weight:800;color:var(--or);letter-spacing:-.04em;}
+.fav-cours-card-price span{font-size:11px;font-weight:400;color:var(--lite);}
+/* Card prof dans carrousel */
+.fav-prof-card{
+  flex:0 0 160px;scroll-snap-align:start;
+  background:var(--wh);border-radius:20px;
+  overflow:hidden;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.06),0 6px 24px rgba(0,0,0,.08);
+  transition:transform .25s cubic-bezier(.22,.61,.36,1),box-shadow .25s;
+  padding:20px 14px 16px;
+  text-align:center;
+  position:relative;
+}
+.fav-prof-card:active{transform:scale(.97);}
+.fav-prof-card:hover{transform:translateY(-4px);box-shadow:0 6px 28px rgba(0,0,0,.13);}
+.fav-prof-av{
+  width:56px;height:56px;border-radius:50%;
+  margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;color:#fff;
+  overflow:hidden;
+  box-shadow:0 3px 14px rgba(0,0,0,.16);
+}
+.fav-prof-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-prof-role{font-size:11px;color:var(--lite);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-prof-btn{
+  background:var(--orp);color:var(--or);
+  border:none;border-radius:50px;
+  padding:6px 12px;font-family:inherit;font-weight:700;font-size:11.5px;
+  cursor:pointer;transition:all .18s;width:100%;
+}
+.fav-prof-btn:hover{background:var(--or);color:#fff;}
+/* Remove-fav btn */
+.fav-remove-btn{
+  position:absolute;top:8px;right:8px;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(0,0,0,.18);backdrop-filter:blur(8px);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;transition:background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.fav-remove-btn:hover{background:rgba(239,68,68,.8);}
+/* Heart button on course cards */
+.card-heart-btn{
+  position:absolute;top:10px;right:10px;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1.5px solid rgba(255,255,255,.35);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.85);
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  z-index:2;
+  -webkit-tap-highlight-color:transparent;
+}
+.card-heart-btn:hover{transform:scale(1.12);background:rgba(255,255,255,.4);}
+.card-heart-btn.saved{background:rgba(255,60,100,.85);border-color:rgba(255,60,100,.5);color:#fff;}
+.card-heart-btn.saved svg{fill:#fff;stroke:#fff;}
+@keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.4)}70%{transform:scale(.88)}100%{transform:scale(1)}}
+.card-heart-btn.popping{animation:heartPop .35s cubic-bezier(.34,1.56,.64,1);}
+/* Dark mode */
+html.dk .fav-cours-card,html.dk .fav-prof-card{background:var(--wh);}
+html.dk .fav-cours-card-title,html.dk .fav-prof-name{color:var(--ink);}
 .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--lite);display:flex;align-items:center;transition:color .18s;}
 .pw-toggle:hover{color:var(--or);}
 .pw-toggle svg{width:18px;height:18px;}
@@ -2261,6 +2364,29 @@ html.dk .filter-pill-btn { background:var(--wh); }
   <!-- PAGE MES COURS -->
   <div class="pg" id="pgMes"><div class="cnt" id="pgMesCnt" style="padding-top:20px"></div></div>
 
+  <!-- PAGE FAVORIS -->
+  <div class="pg" id="pgFav">
+    <!-- Cours sauvegardés -->
+    <div id="favCoursSection">
+      <div class="fav-section-title">❤️ Cours sauvegardés</div>
+      <div id="favCoursCarousel" class="fav-carousel"></div>
+    </div>
+    <!-- Profs suivis -->
+    <div id="favProfsSection">
+      <div class="fav-section-title">👤 Professeurs suivis</div>
+      <div id="favProfsCarousel" class="fav-carousel"></div>
+    </div>
+    <!-- Empty global -->
+    <div id="favEmptyAll" style="display:none;text-align:center;padding:60px 24px">
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,#FFE8F0,#FFCCD6);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#E01060" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Aucun favori encore</div>
+      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px">Appuyez sur le ❤️ d'un cours ou suivez<br>un professeur pour les retrouver ici.</div>
+      <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Explorer les cours →</button>
+    </div>
+  </div>
+
   <!-- PAGE MESSAGES -->
   <div class="pg" id="pgMsg">
 
@@ -3245,27 +3371,38 @@ html.dk .filter-pill-btn { background:var(--wh); }
 <nav class="bnav" id="bnav">
 
   <div class="bni on" id="bniExp" onclick="navTo('exp')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span class="bni-lbl">Explorer</span>
+  </div>
+
+  <div class="bni" id="bniFav" onclick="navTo('fav')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <div class="bni-badge" id="bnavFavBadge" style="background:#E01060"></div>
+    <span class="bni-lbl">Favoris</span>
   </div>
 
   <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
-    <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg></div>
-    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
+    <span class="bni-lbl bni-msg-lbl">Messages</span>
   </div>
 
   <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex:1;min-width:0;justify-content:center">
-    <div style="width:40px;height:24px;border-radius:12px;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <div style="width:44px;height:28px;border-radius:14px;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.45)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
+    <span style="font-size:10px;font-weight:700;color:var(--lite)">Créer</span>
   </div>
 
   <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+    <span class="bni-lbl">Mes cours</span>
   </div>
 
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span class="bni-lbl">Profil</span>
   </div>
 
 </nav>
@@ -3426,7 +3563,145 @@ window.addEventListener('DOMContentLoaded',function(){
 });
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
-var C=[],P={},res={},fol=new Set();
+// Charger les favoris cours depuis localStorage dès le démarrage
+loadFavCours();
+// Badge sera mis à jour après chargement des follows
+var C=[],P={},res={},fol=new Set(),favCours=new Set();
+
+// ── FAVORIS COURS — persistance localStorage ──
+function loadFavCours(){
+  try{
+    var saved=localStorage.getItem('cp_fav_cours');
+    if(saved){JSON.parse(saved).forEach(function(id){favCours.add(id);});}
+  }catch(e){}
+}
+function saveFavCours(){
+  try{localStorage.setItem('cp_fav_cours',JSON.stringify(Array.from(favCours)));}catch(e){}
+  updateFavBadge();
+}
+
+function updateFavBadge(){
+  var total=favCours.size+fol.size;
+  var badge=g('bnavFavBadge');
+  if(!badge)return;
+  if(total>0){badge.style.display='flex';badge.textContent=total>9?'9+':String(total);}
+  else{badge.style.display='none';}
+}
+function toggleFavCours(coursId,btn){
+  if(!user||user.guest){
+    toast('Connectez-vous pour sauvegarder des cours','');
+    setTimeout(scrollToLogin,800);
+    return;
+  }
+  var wasSaved=favCours.has(coursId);
+  if(wasSaved){
+    favCours.delete(coursId);
+    toast('Retiré des favoris','');
+  } else {
+    favCours.add(coursId);
+    toast('Cours sauvegardé ❤️','Retrouvez-le dans vos favoris');
+  }
+  saveFavCours();
+  haptic(wasSaved?4:12);
+  // Animate button
+  if(btn){
+    btn.classList.toggle('saved',!wasSaved);
+    btn.classList.add('popping');
+    setTimeout(function(){btn.classList.remove('popping');},400);
+    var svg=btn.querySelector('svg');
+    if(svg)svg.setAttribute('fill',wasSaved?'none':'#fff');
+  }
+  // Update all heart buttons for this course across all cards
+  document.querySelectorAll('[data-cours-id="'+coursId+'"] .card-heart-btn').forEach(function(b){
+    b.classList.toggle('saved',!wasSaved);
+    var s=b.querySelector('svg');if(s)s.setAttribute('fill',wasSaved?'none':'#fff');
+  });
+}
+
+// ── BUILD PAGE FAVORIS ──
+function buildFavPage(){
+  var favIds=Array.from(favCours);
+  var folIds=Array.from(fol);
+  var hasAny=favIds.length||folIds.length;
+
+  var emptyAll=g('favEmptyAll');
+  var coursSection=g('favCoursSection');
+  var profsSection=g('favProfsSection');
+  if(!hasAny){
+    if(emptyAll)emptyAll.style.display='block';
+    if(coursSection)coursSection.style.display='none';
+    if(profsSection)profsSection.style.display='none';
+    return;
+  }
+  if(emptyAll)emptyAll.style.display='none';
+
+  // ── Carrousel cours sauvegardés ──
+  var carousel=g('favCoursCarousel');
+  if(carousel){
+    if(!favIds.length){
+      if(coursSection)coursSection.style.display='none';
+    } else {
+      if(coursSection)coursSection.style.display='block';
+      carousel.innerHTML=favIds.map(function(id){
+        var c=C.find(function(x){return x.id===id;});
+        if(!c)return'<div class="fav-cours-card" style="display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--lite);font-size:12px;padding:20px">Cours introuvable</div>';
+        var pp=Math.ceil(c.tot/c.sp);
+        var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);})||MATIERES[MATIERES.length-1];
+        var bg=mat?mat.bg:'linear-gradient(135deg,var(--orp),#FFE8DC)';
+        return'<div class="fav-cours-card" onclick="openR(\''+c.id+'\')">'
+          +'<div class="fav-cours-card-top" style="background:'+bg+'">'
+          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+c.subj+'</span>'
+          +'<button class="fav-remove-btn" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',null);buildFavPage();" title="Retirer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+          +'</div>'
+          +'<div class="fav-cours-card-body">'
+          +'<div class="fav-cours-card-title">'+c.title+'</div>'
+          +'<div class="fav-cours-card-meta">📅 '+c.dt+'</div>'
+          +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+c.lc+'</div>'
+          +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+    }
+  }
+
+  // ── Carrousel profs suivis ──
+  var profsCarousel=g('favProfsCarousel');
+  if(profsCarousel){
+    if(!folIds.length){
+      if(profsSection)profsSection.style.display='none';
+    } else {
+      if(profsSection)profsSection.style.display='block';
+      profsCarousel.innerHTML=folIds.map(function(pid){
+        var p=P[pid]||{};
+        // Trouver depuis les cours si pas en cache
+        var cours=C.filter(function(x){return x.pr===pid;});
+        if(cours.length&&!p.nm){
+          p={nm:cours[0].prof_nm||'Professeur',i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
+        }
+        var nm=p.nm||'Professeur';
+        var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
+        var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
+        return'<div class="fav-prof-card">'
+          +'<button class="fav-remove-btn" onclick="event.stopPropagation();unfollowProf(\''+pid+'\');buildFavPage();" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+          +'<div class="fav-prof-av" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
+          +'<div class="fav-prof-name">'+nm+'</div>'
+          +'<div class="fav-prof-role">'+(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
+          +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
+          +'</div>';
+      }).join('');
+    }
+  }
+}
+
+function unfollowProf(pid){
+  fol.delete(pid);
+  if(user&&user.id){
+    fetch(API+'/follows/'+user.id+'/'+pid,{method:'DELETE'}).catch(function(){});
+  }
+  toast('Professeur retiré des suivis','');
+  haptic(4);
+  updateFavBadge();
+}
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
@@ -3590,10 +3865,11 @@ function doGuest(){
   // Bnav réduite pour les invités : pas de "Profil", juste Explorer
   var bnav=g('bnav');
   if(bnav)bnav.classList.add('on');
-  var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd');
-  if(bniMsg)bniMsg.style.display='none';  // Messages inutile sans compte
-  if(bniAcc)bniAcc.style.display='flex';  // Profil = bouton "Se connecter"
+  var bniMsg=g('bniMsg'),bniAcc=g('bniAcc'),bniAdd=g('bniAdd'),bniFavG=g('bniFav');
+  if(bniMsg)bniMsg.style.display='none';
+  if(bniAcc)bniAcc.style.display='flex';
   if(bniAdd)bniAdd.style.display='none';
+  if(bniFavG)bniFavG.style.display='none';
   // Header invité
   var mobT=g('mobTitle'),mobS=g('mobSub');
   if(mobT)mobT.textContent='Explorer';
@@ -3631,9 +3907,10 @@ function applyUser(){
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
   // Banner géré par updateVerifBand() uniquement
   // Bottom nav — restaurer tous les items avant d'appliquer le rôle
-  var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc');
+  var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc'),bniFav2=g('bniFav');
   if(bniMsg2)bniMsg2.style.display=(user&&!user.guest)?'':'none';
   if(bniAcc2)bniAcc2.style.display='';
+  if(bniFav2)bniFav2.style.display=(user&&!user.guest)?'':'none';
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
   // Sync mobile header
@@ -3679,6 +3956,7 @@ function applyUser(){
 // Titres et sous-titres par page
 var MOB_TITLES={
   exp:{title:'Accueil',sub:'Cours près de vous'},
+  fav:{title:'Mes favoris',sub:'Cours & professeurs sauvegardés'},
   msg:{title:'Messages',sub:'Vos conversations'},
   acc:{title:'Mon profil',sub:'Paramètres & réservations'}
 };
@@ -3738,20 +4016,31 @@ function navTo(tab){
   if(pgMsgEl&&tab!=='msg')pgMsgEl.classList.remove('conv-open');
   clearInterval(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
-  ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
+  ['bniExp','bniFav','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav');
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
+  if(pgFav)pgFav.classList.remove('on');
   updateMobHeader(tab);
   updateTopbarNav(tab);
-  var nav=g('bnav');
 
   if(tab==='exp'){
     if(pgExp)pgExp.classList.add('on');
     var bExp=g('bniExp');if(bExp)bExp.classList.add('on');
     var br=g('btnRefresh');if(br)br.style.display=user?'flex':'none';
     restoreNav();
+  } else if(tab==='fav'){
+    if(!user||user.guest){
+      toast('Connectez-vous pour accéder à vos favoris','');
+      setTimeout(scrollToLogin,800);
+      return;
+    }
+    if(pgFav)pgFav.classList.add('on');
+    var bFav=g('bniFav');if(bFav){bFav.classList.add('on');_springIcon(bFav);}
+    var brF=g('btnRefresh');if(brF)brF.style.display='none';
+    restoreNav();
+    buildFavPage();
   } else if(tab==='msg'){
     if(!user){navTo('exp');return;}
     if(user.guest){
@@ -3760,18 +4049,15 @@ function navTo(tab){
       return;
     }
     if(pgMsg)pgMsg.classList.add('on');
-    // Messages list page: normal nav, bniMsg highlighted
     restoreNav();
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     loadConversations();
   } else if(tab==='acc'){
     if(!user){navTo('exp');return;}
-    // Guest clique sur Profil → invitation douce à se connecter
     if(user.guest){
       var bd=g('bdLoginPrompt');
       if(bd){
-        // Personnaliser le message pour le profil
         var t=bd.querySelector('[style*="font-size:21px"]');
         var s=bd.querySelector('[style*="font-size:14px"][style*="color:var(--lite)"]');
         if(t)t.textContent='Créez votre compte gratuit';
@@ -3785,7 +4071,7 @@ function navTo(tab){
     }
     if(pgAcc)pgAcc.classList.add('on');
     var bAcc=g('bniAcc');if(bAcc){bAcc.classList.add('on');_springIcon(bAcc);}
-    var br2=g('btnRefresh');if(br2)br2.style.display='none'; // acc: refresh masqué
+    var br2=g('btnRefresh');if(br2)br2.style.display='none';
     restoreNav();
     goAccount();
   }
@@ -3806,7 +4092,6 @@ function restoreNav(){
   if(nav){
     var isMobile=window.innerWidth<=640;
     if(isMobile){
-      // Sur mobile : tout géré par CSS, on ne touche à rien sauf display
       nav.style.left='';nav.style.transform='';nav.style.padding='';
     } else {
       nav.style.left='50%';nav.style.transform='translateX(-50%)';nav.style.padding='8px 12px';
@@ -3816,23 +4101,24 @@ function restoreNav(){
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
   if(bniExp){
-    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Explorer</span>';
+    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="bni-lbl">Explorer</span>';
     bniExp.onclick=function(){navTo('exp');};
   }
   // Réafficher tous les items
+  var bniFavEl=g('bniFav');if(bniFavEl)bniFavEl.style.display=(user&&!user.guest)?'':'none';
   var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display=(user&&user.guest)?'none':'';
   var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
   var bniMesR=g('bniMes');if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
   if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
-  // bni-sep supprimés de la nav
 }
 
 function goExplore(){
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav');
   if(pgExp)pgExp.classList.add('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
-  ['bniExp','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  if(pgFav)pgFav.classList.remove('on');
+  ['bniExp','bniFav','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var b=g('bniExp');if(b)b.classList.add('on');
   restoreNav();
 }
@@ -3864,6 +4150,7 @@ function goExplore(){
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
           fol.clear();
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
+          updateFavBadge();
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           // Toujours re-render après chargement (peu importe l'onglet actif)
@@ -3951,7 +4238,10 @@ function shake(id){var e=g(id);e.style.animation='shake .3s';setTimeout(function
 // PAGES
 function goAccount(){
   if(!user)return;
-  g('pgExp').classList.remove('on');g('pgMsg').classList.remove('on');g('pgAcc').classList.add('on');
+  g('pgExp').classList.remove('on');
+  g('pgMsg').classList.remove('on');
+  var pgFavEl=g('pgFav');if(pgFavEl)pgFavEl.classList.remove('on');
+  g('pgAcc').classList.add('on');
   var av=g('accAv');
   if(av){if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{av.style.background='rgba(255,255,255,.25)';av.textContent=user.ini;}}
@@ -4436,7 +4726,7 @@ function renderPage(){
     var _mFound=findMatiere(c.subj||'');
     var _cardBg=_isDark?((_mFound&&_mFound.bgDark?_mFound.bgDark:c.bgDark)||c.bg):((_mFound?_mFound.bg:null)||c.bg);
     var d=document.createElement('div');
-    d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.style.animationDelay=(i*.04)+'s';
+    d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.dataset.coursId=c.id;d.style.animationDelay=(i*.04)+'s';
     d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
     var nivBadge=c.niveau?'<span style="display:inline-flex;align-items:center;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px;letter-spacing:.02em">'+c.niveau+'</span>':'';
     var isNew=c.created_at&&(Date.now()-new Date(c.created_at).getTime()<86400000);
@@ -4446,7 +4736,7 @@ function renderPage(){
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
     var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+noteProf+'</span>':'';
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+c.subj+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div><button class="card-heart-btn'+(favCours.has(c.id)?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder"><svg viewBox="0 0 24 24" fill="'+(favCours.has(c.id)?'#fff':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button></div><div class="cbody"><div class="ctitle">'+c.title+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -4901,7 +5191,15 @@ function openPr(pid){
   var fb=g('bFP'),ft=g('bFPt');
   var isSelf=user&&pid===user.id;
   fb.style.display=isSelf?'none':'flex';
-  fb.classList.toggle('on',fol.has(pid));ft.textContent=fol.has(pid)?'Suivi ✓':'Suivre';
+  var isFollowed=fol.has(pid);
+  fb.classList.toggle('on',isFollowed);
+  if(isFollowed){
+    fb.style.background='#FFF0F5';fb.style.borderColor='#FFB3CB';fb.style.color='#E01060';
+    ft.innerHTML='<svg viewBox="0 0 24 24" fill="#E01060" stroke="#E01060" stroke-width="2" stroke-linecap="round" width="14" height="14" style="vertical-align:middle;margin-right:4px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Suivi ✓';
+  } else {
+    fb.style.background='';fb.style.borderColor='';fb.style.color='';
+    ft.textContent='Suivre';
+  }
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
   // Appliquer les données du cache P[] immédiatement si disponibles
   var pCache=P[pid];
@@ -4964,39 +5262,34 @@ function togFP(){
   var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
   if(fol.has(id)){
-    fol.delete(id);fb.classList.remove('on');ft.textContent='Suivre';
+    fol.delete(id);
+    if(fb){fb.classList.remove('on');fb.style.background='var(--bg)';fb.style.borderColor='var(--bdr)';fb.style.color='var(--ink)';}
+    if(ft)ft.textContent='Suivre';
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
-    // Supprimer en base
     if(user&&user.id){
       fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
     }
-    // Animation de suppression dans la liste Suivis
     var row=document.querySelector('#listF [data-prof-id="'+id+'"]');
     if(row){
       row.style.transition='all .35s cubic-bezier(.4,0,.2,1)';
-      row.style.opacity='0';
-      row.style.transform='translateX(60px)';
-      row.style.maxHeight=row.offsetHeight+'px';
-      setTimeout(function(){
-        row.style.maxHeight='0';
-        row.style.padding='0';
-        row.style.margin='0';
-        row.style.overflow='hidden';
-        setTimeout(function(){row.remove();},200);
-      },300);
+      row.style.opacity='0';row.style.transform='translateX(60px)';row.style.maxHeight=row.offsetHeight+'px';
+      setTimeout(function(){row.style.maxHeight='0';row.style.padding='0';row.style.margin='0';row.style.overflow='hidden';setTimeout(function(){row.remove();},200);},300);
     }
   } else {
-    fol.add(id);fb.classList.add('on');ft.textContent='Suivi ✓';
+    fol.add(id);
+    if(fb){fb.classList.add('on');fb.style.background='#FFF0F5';fb.style.borderColor='#FFB3CB';fb.style.color='#E01060';}
+    if(ft){ft.innerHTML='<svg viewBox="0 0 24 24" fill="#E01060" stroke="#E01060" stroke-width="2" stroke-linecap="round" width="14" height="14" style="vertical-align:middle;margin-right:4px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Suivi ✓';}
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
     if(P[id])P[id].e=(P[id].e||0)+1;
-    // Sauvegarder en base
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
     }
   }
-  // Mettre à jour le compteur affiché
-  g('mpE').textContent=P[id]?P[id].e:0;
+  if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
+  // Refresh fav page if open
+  var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
+  updateFavBadge();
 }
 
 // CRÉER COURS
@@ -7930,12 +8223,18 @@ function buildMesCard(c,isPast,isProf){
   }
   var code='';
   if(isProf&&c.prive&&c.code){code='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Code d&#39;acc\u00e8s</div><div style="font-size:18px;font-weight:800;letter-spacing:.18em;color:var(--ink)">'+escH(c.code)+'</div></div><button class="mes-code-copy" data-code="'+escH(c.code)+'" style="background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer">Copier</button></div>';}
+  var heartBtn='';
+  if(!isProf){
+    var isFavMes=favCours.has(c.id);
+    heartBtn='<button class="card-heart-btn'+(isFavMes?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+escH(c.id)+'\',this)" title="Sauvegarder" style="position:static;width:34px;height:34px;border-radius:50%;background:'+(isFavMes?'rgba(255,60,100,.12)':'var(--bg)')+';border:1.5px solid '+(isFavMes?'#FFB3CB':'var(--bdr)')+';backdrop-filter:none;-webkit-backdrop-filter:none;color:'+(isFavMes?'#E01060':'var(--lite)')+';flex-shrink:0"><svg viewBox="0 0 24 24" fill="'+(isFavMes?'#E01060':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
+  }
   return '<div class="mes-card" data-cid="'+escH(c.id)+'"'+(isPast?' style="opacity:.65"':'')+' >'
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
     +'<div style="width:44px;height:44px;border-radius:14px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+mf.color+'"></div></div>'
     +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(c.title)+'</div>'
     +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+escH(c.subj)+' &middot; '+escH(c.dt)+'</div></div>'
     +'<div style="font-size:18px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'&euro;</div>'
+    +heartBtn
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:8px">'
     +'<span class="mode-badge '+mC+'">'+mL+'</span>'
