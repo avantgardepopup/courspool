@@ -4904,14 +4904,18 @@ function showAccHome(){
   var pgEl=g('pgAcc');if(pgEl)pgEl.scrollTop=0;
 }
 
-// Override switchATab to show detail view
+// Override switchATab to show detail view + update topbar title
 (function(){
+  var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
     var pg=g('pgAcc');
     if(pg){pg.classList.remove('home-mode');pg.classList.add('detail-mode');}
-
+    // Mettre à jour le titre de la topbar
+    var mt=g('mobTitle');if(mt&&_tabTitles[s])mt.textContent=_tabTitles[s];
+    var mh=g('mobHeader');if(mh)mh.style.display='block';
+    var ms=g('mobSearch');if(ms)ms.style.display='none';
     var body=document.querySelector('#pgAcc .acc-body');
     if(body)body.scrollTop=0;
   };
