@@ -457,57 +457,55 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .bnav{
   position:fixed;
   bottom:0;left:0;right:0;
-  /* Fond semi-transparent avec blur — exactement comme iOS */
-  background:rgba(249,249,249,.94);
+  background:rgba(249,249,249,.95);
   backdrop-filter:saturate(180%) blur(20px);
   -webkit-backdrop-filter:saturate(180%) blur(20px);
-  border-top:0.5px solid rgba(0,0,0,.12);
+  border-top:0.5px solid rgba(0,0,0,.15);
   display:none;
   z-index:100;
-  padding:6px 0 0;
-  padding-bottom:max(12px,env(safe-area-inset-bottom,12px));
+  /* Hauteur totale ~83px sur iPhone (49px zone + 34px home indicator) */
+  padding:10px 8px 0;
+  padding-bottom:max(16px,env(safe-area-inset-bottom,16px));
   align-items:flex-start;
   justify-content:space-around;
   gap:0;
 }
 .bnav.on{display:flex;}
 
-/* Item de navigation — style iOS */
+/* Item — zone de tap ≥44×44pt comme recommandé Apple HIG */
 .bni{
   display:flex;flex-direction:column;align-items:center;
-  gap:2px;
+  gap:3px;
   cursor:pointer;
-  padding:2px 4px 0;
-  flex:1;min-width:44px;max-width:96px;
+  padding:4px 8px 4px;
+  flex:1;min-width:44px;max-width:80px;
   color:#8E8E93;
-  transition:opacity .12s;
   position:relative;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
 }
-.bni:active{opacity:.5;}
+/* Feedback tactile natif — flash au tap */
+.bni:active{opacity:.4;transition:opacity .05s;}
 .bni svg{
   width:26px;height:26px;
-  transition:transform .15s cubic-bezier(.34,1.56,.64,1);
+  display:block;
 }
-.bni.on svg{transform:scale(1.05);}
 .bni-lbl{
   font-size:10px;font-weight:500;
-  line-height:1.2;
-  margin-top:1px;
-  letter-spacing:.01em;
+  line-height:1;
+  letter-spacing:.005em;
   color:#8E8E93;
   white-space:nowrap;
 }
-/* Actif : couleur orange (comme iOS blue → notre orange) */
+/* Actif = couleur accent, pas de fond sur mobile */
 .bni.on{color:var(--or);}
-.bni.on .bni-lbl{color:var(--or);font-weight:600;}
 .bni.on svg{color:var(--or);}
-/* Favoris actif : rose */
+.bni.on .bni-lbl{color:var(--or);font-weight:600;}
+/* Favoris actif = rose */
 #bniFav.on{color:#E01060;}
-#bniFav.on .bni-lbl{color:#E01060;}
 #bniFav.on svg{color:#E01060;}
-/* Favoris caché par défaut */
+#bniFav.on .bni-lbl{color:#E01060;font-weight:600;}
+/* Caché par défaut */
 #bniFav{display:none;}
 /* ico states */
 .bni .bni-ico-off{display:block;}
@@ -516,19 +514,19 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .bni.on .bni-ico-on{display:block;}
 /* Badge */
 .bni-badge{
-  position:absolute;top:0;right:14px;
+  position:absolute;top:2px;right:10px;
   background:#FF3B30;color:#fff;
   border-radius:50%;min-width:16px;height:16px;
   padding:0 4px;font-size:10px;font-weight:700;
   display:none;align-items:center;justify-content:center;
-  border:2px solid rgba(249,249,249,.94);
+  border:2px solid rgba(249,249,249,.95);
 }
 .bni-badge.on{display:flex;}
 .bni-sep{display:none;}
 /* Dark mode */
 html.dk .bnav{
-  background:rgba(28,26,24,.94);
-  border-top-color:rgba(255,255,255,.1);
+  background:rgba(22,20,18,.95);
+  border-top-color:rgba(255,255,255,.08);
 }
 html.dk .bni{color:#636366;}
 html.dk .bni-lbl{color:#636366;}
@@ -536,48 +534,43 @@ html.dk .bni.on{color:var(--or);}
 html.dk .bni.on .bni-lbl{color:var(--or);}
 html.dk #bniFav.on{color:#FF375F;}
 html.dk #bniFav.on .bni-lbl{color:#FF375F;}
-html.dk .bni-badge{border-color:rgba(28,26,24,.94);}
+html.dk .bni-badge{border-color:rgba(22,20,18,.95);}
 
-/* ── DESKTOP : pill flottante ── */
+/* ── DESKTOP ≥768px : pill flottante ── */
 @media(min-width:768px){
   .bnav{
     bottom:max(24px,env(safe-area-inset-bottom,24px));
-    left:50%;right:auto;
-    width:auto;
+    left:50%;right:auto;width:auto;
     transform:translateX(-50%);
-    border-radius:50px;
-    border-top:none;
+    border-radius:50px;border-top:none;
     padding:6px 8px;
     background:rgba(255,255,255,.92);
     backdrop-filter:blur(40px) saturate(2);
     -webkit-backdrop-filter:blur(40px) saturate(2);
     box-shadow:0 8px 40px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.07);
-    justify-content:flex-start;
-    gap:2px;
+    justify-content:flex-start;gap:2px;
   }
   .bni{
-    padding:8px 14px;
-    border-radius:40px;
-    min-width:52px;max-width:none;
-    flex:none;
+    padding:9px 16px;border-radius:40px;
+    min-width:0;max-width:none;flex:none;
   }
-  .bni:active{opacity:1;}
+  .bni:active{opacity:1;transition:none;}
   .bni svg{width:22px;height:22px;}
   .bni-lbl{font-size:11px;margin-top:2px;}
-  /* Desktop : pill de couleur sur l'item actif */
   .bni.on{
     background:linear-gradient(148deg,#FF7D42,#FF4500);
-    color:#fff !important;
+    color:#fff;
     box-shadow:0 4px 16px rgba(255,69,0,.4);
   }
-  .bni.on .bni-lbl{color:#fff !important;}
-  .bni.on svg{color:#fff !important;transform:scale(1);}
+  .bni.on svg{color:#fff;}
+  .bni.on .bni-lbl{color:#fff;}
   #bniFav.on{
-    background:linear-gradient(148deg,#FF5B8D,#E01060) !important;
-    color:#fff !important;
-    box-shadow:0 4px 16px rgba(224,16,96,.4) !important;
+    background:linear-gradient(148deg,#FF5B8D,#E01060);
+    color:#fff;
+    box-shadow:0 4px 16px rgba(224,16,96,.4);
   }
-  #bniFav.on .bni-lbl{color:#fff !important;}
+  #bniFav.on svg{color:#fff;}
+  #bniFav.on .bni-lbl{color:#fff;}
   html.dk .bnav{
     background:rgba(16,14,12,.94);
     box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);
@@ -3028,7 +3021,6 @@ html.dk .filter-pill-btn { background:var(--wh); }
         Contacter
       </button>
       <button id="bFP" onclick="togFP()" style="flex:1;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         <span id="bFPt">Suivre</span>
       </button>
     </div>
@@ -5302,15 +5294,7 @@ function openPr(pid){
   var fb=g('bFP'),ft=g('bFPt');
   var isSelf=user&&pid===user.id;
   fb.style.display=isSelf?'none':'flex';
-  var isFollowed=fol.has(pid);
-  fb.classList.toggle('on',isFollowed);
-  if(isFollowed){
-    fb.style.background='#FFF0F5';fb.style.borderColor='#FFB3CB';fb.style.color='#E01060';
-    ft.innerHTML='<svg viewBox="0 0 24 24" fill="#E01060" stroke="#E01060" stroke-width="2" stroke-linecap="round" width="14" height="14" style="vertical-align:middle;margin-right:4px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Suivi ✓';
-  } else {
-    fb.style.background='';fb.style.borderColor='';fb.style.color='';
-    ft.textContent='Suivre';
-  }
+  _setFollowBtn(fol.has(pid));
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
   // Appliquer les données du cache P[] immédiatement si disponibles
   var pCache=P[pid];
@@ -5368,14 +5352,30 @@ function contPr(){
   closePr();
   openMsg(p.nm||'le professeur',pid,p.photo||null);
 }
+/* ── helper pour l'état du bouton Suivre/Suivi — UN SEUL endroit ── */
+function _setFollowBtn(isFollowed){
+  var fb=g('bFP'),ft=g('bFPt');
+  if(!fb||!ft)return;
+  if(isFollowed){
+    fb.style.background='#FFF0F5';
+    fb.style.borderColor='#FFB3CB';
+    fb.style.color='#E01060';
+    ft.textContent='❤️ Suivi';
+  }else{
+    fb.style.background='';
+    fb.style.borderColor='';
+    fb.style.color='';
+    ft.textContent='+ Suivre';
+  }
+}
+
 function togFP(){
   haptic(6);
-  var id=curProf,p=P[id]||{nm:'ce prof'},fb=g('bFP'),ft=g('bFPt');
+  var id=curProf,p=P[id]||{nm:'ce prof'};
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
   if(fol.has(id)){
     fol.delete(id);
-    if(fb){fb.classList.remove('on');fb.style.background='var(--bg)';fb.style.borderColor='var(--bdr)';fb.style.color='var(--ink)';}
-    if(ft)ft.textContent='Suivre';
+    _setFollowBtn(false);
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
     if(user&&user.id){
@@ -5389,8 +5389,7 @@ function togFP(){
     }
   } else {
     fol.add(id);
-    if(fb){fb.classList.add('on');fb.style.background='#FFF0F5';fb.style.borderColor='#FFB3CB';fb.style.color='#E01060';}
-    if(ft){ft.innerHTML='<svg viewBox="0 0 24 24" fill="#E01060" stroke="#E01060" stroke-width="2" stroke-linecap="round" width="14" height="14" style="vertical-align:middle;margin-right:4px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Suivi ✓';}
+    _setFollowBtn(true);
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
     if(P[id])P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
@@ -5398,7 +5397,6 @@ function togFP(){
     }
   }
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
-  // Refresh fav page if open
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
   updateFavBadge();
 }
