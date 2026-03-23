@@ -658,8 +658,8 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 @keyframes heartPop { 0%{transform:scale(1)} 40%{transform:scale(1.5)} 70%{transform:scale(.88)} 100%{transform:scale(1)} }
 .card-heart-btn.popping { animation: heartPop .38s cubic-bezier(.34,1.56,.64,1); }
 html.dk .card-heart-btn { background: rgba(255,107,43,.18); color: #FF8C55; }
-html.dk .card-heart-btn.saved { background: rgba(255,55,95,.15); color: #FF375F; }
-html.dk .card-heart-btn.saved svg { fill: #FF375F; stroke: #FF375F; }
+html.dk .card-heart-btn.saved { background: rgba(255,107,43,.22); color: #FF8C55; }
+html.dk .card-heart-btn.saved svg { fill: #FF8C55; stroke: #FF8C55; }
 /* Dark mode */
 html.dk .fav-cours-card,html.dk .fav-prof-card{background:var(--wh);}
 html.dk .fav-cours-card-title,html.dk .fav-prof-name{color:var(--ink);}

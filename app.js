@@ -150,13 +150,10 @@ function toggleFavCours(coursId,btn){
     btn.classList.toggle('saved',!wasSaved);
     btn.classList.add('popping');
     setTimeout(function(){btn.classList.remove('popping');},400);
-    var svg=btn.querySelector('svg');
-    if(svg)svg.setAttribute('fill',wasSaved?'none':'#fff');
   }
   // Update all heart buttons for this course across all cards
   document.querySelectorAll('[data-cours-id="'+coursId+'"] .card-heart-btn').forEach(function(b){
     b.classList.toggle('saved',!wasSaved);
-    var s=b.querySelector('svg');if(s)s.setAttribute('fill',wasSaved?'none':'#fff');
   });
 }
 
@@ -243,7 +240,7 @@ function buildFavPage(){
         var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
         var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
-          +'<button class="fav-remove-btn" onclick="event.stopPropagation();unfollowProf(\''+pid+'\');buildFavPage();" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+          +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
           +'<div class="fav-prof-name">'+nm+'</div>'
           +'<div class="fav-prof-role">'+(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
@@ -1320,7 +1317,7 @@ function renderPage(){
     var heartHtml='';
     if(user&&!user.guest){
       var isSaved=favCours.has(c.id);
-      heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="'+(isSaved?'#E01060':'none')+'" stroke="'+(isSaved?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
+      heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
     d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-pid="'+c.pr+'" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#FF6B2B':'var(--lite)')+'">'+( fol.has(c.pr)?'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>' )+'</button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div>'+(_isVisio?'':'<div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>')+'<div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
@@ -1726,9 +1723,11 @@ function confF(){
   var pid=folPr;
   var p=P[pid]||{};
   fol.add(pid);
+  _syncFollowBtns(pid,true);
   closeM('bdF');
   toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours');
   folPr=null;
+  updateFavBadge();
   // Sauvegarder le follow en base
   if(user&&user.id){
     fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
