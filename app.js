@@ -310,7 +310,8 @@ async function loadData(page){
         prof_photo:c.prof_photo||null,
         description:c.description||'',
         prive:c.prive||false,
-        code:c.code_acces||''
+        code:c.code_acces||'',
+        niveau:c.niveau||''
       };
     });
     if(page===1){C=mapped;}else{C=C.concat(mapped);}
@@ -1309,7 +1310,7 @@ function renderPage(){
     var d=document.createElement('div');
     d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.dataset.coursId=c.id;d.style.animationDelay=(i*.04)+'s';
     d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
-    var nivBadge=c.niveau?'<span style="display:inline-flex;align-items:center;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px;letter-spacing:.02em">'+c.niveau+'</span>':'';
+    var nivBadge=c.niveau?'<span style="display:inline-flex;align-items:center;background:rgba(0,0,0,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:3px 9px;font-size:9.5px;font-weight:700;color:#fff;margin-left:4px;letter-spacing:.03em;text-transform:uppercase">'+c.niveau+'</span>':'';
     var isNew=c.created_at&&(Date.now()-new Date(c.created_at).getTime()<86400000);
     var newBadge=isNew?'<span style="display:inline-flex;align-items:center;background:#FF6B2B;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:800;color:#fff;margin-left:6px;letter-spacing:.04em;animation:pulse 1.5s infinite">NOUVEAU</span>':'';
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
