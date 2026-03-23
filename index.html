@@ -472,8 +472,8 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   justify-content: space-around;
   /* Espace au-dessus des icônes : 12px fixes */
   padding-top: 12px;
-  /* Espace en dessous : home indicator iPhone + 8px de marge supplémentaire */
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  /* Espace en dessous : home indicator + 20px de marge pour bien soulever les icônes */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
 }
 .bnav.on { display: flex; }
 
@@ -957,8 +957,8 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 
 /* ── NAV — MOBILE padding only ── */
 @media (max-width: 640px) {
-  #app .cnt         { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
-  .acc-body         { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  #app .cnt         { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  .acc-body         { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ── NAV — CONVERSATION MODE (only back arrow) ── */
