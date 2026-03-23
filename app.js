@@ -85,6 +85,18 @@ var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
 function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function fmtDt(dt){
+  if(!dt)return'';
+  if(dt.indexOf('T')<0)return dt;
+  try{
+    var d=new Date(dt);
+    if(isNaN(d.getTime()))return dt;
+    var days=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+    var months=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+    var h=('0'+d.getHours()).slice(-2),m=('0'+d.getMinutes()).slice(-2);
+    return days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()]+' · '+h+':'+m;
+  }catch(e){return dt;}
+}
 
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
@@ -1310,7 +1322,7 @@ function renderPage(){
       var isSaved=favCours.has(c.id);
       heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="'+(isSaved?'#E01060':'none')+'" stroke="'+(isSaved?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#E01060':'var(--lite)')+'"><svg viewBox="0 0 24 24" fill="'+(fol.has(c.pr)?'#E01060':'none')+'" stroke="'+(fol.has(c.pr)?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(c.dt)+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#E01060':'var(--lite)')+'"><svg viewBox="0 0 24 24" fill="'+(fol.has(c.pr)?'#E01060':'none')+'" stroke="'+(fol.has(c.pr)?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -1529,7 +1541,7 @@ function openR(id){haptic(4);
       if(subEl)subEl.style.color=isDark?'#555':'';
     }
   }
-  g('rDt').textContent=c.dt;g('rLc').textContent=c.lc;
+  g('rDt').textContent=fmtDt(c.dt);g('rLc').textContent=c.lc;
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
@@ -1726,39 +1738,78 @@ function confF(){
 // PROFIL PROF
 function openPr(pid){
   curProf=pid;
-  // Trouver le cours le plus récent de ce prof pour avoir les bonnes infos
   var cours=C.filter(function(x){return x.pr===pid;});
   var dernierCours=cours[0]||null;
-  var p=P[pid];
-  // Toujours prioriser les données du cours le plus récent
+  var p=P[pid]||{};
+  var pCache=P[pid]||{};
+  var STATUT={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
+  // Données immédiates depuis C[] (toujours dispo)
   if(dernierCours){
-    if(!p)p={};
     p.nm=dernierCours.prof_nm||p.nm||'Professeur';
     p.i=dernierCours.prof_ini||p.i||'?';
     p.col=dernierCours.prof_col||p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
     p.photo=dernierCours.prof_photo||p.photo||null;
-    p.rl=p.rl||'';p.bd=p.bd||'';p.c=p.c||0;p.n=p.n||'—';p.e=p.e||0;p.bio=p.bio||'';p.tags=p.tags||[];
   }
-  if(!p||!p.nm){toast('Profil introuvable','');return;}
+  if(!p.nm){toast('Profil introuvable','');return;}
+
+  // Sujets uniques extraits des cours (dispo immédiatement)
+  var subjSet={};cours.forEach(function(c){if(c.subj)subjSet[c.subj]=true;});
+  var immediateTags=Object.keys(subjSet);
+
+  // ── Remplissage immédiat (0 latence) ──
   var av=g('mpav');
-  setAvatar(av,p.photo,p.i,p.col||'linear-gradient(135deg,#FF8C55,#E04E10)');
-  // Coloriser le hero avec la couleur du prof
-  var hero=g('mpHero');
-  if(hero)hero.style.background=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
-  g('mpnm').textContent=p.nm;g('mprl').textContent=p.rl||'';g('mpbd').textContent=p.bd||'';
+  setAvatar(av,p.photo,p.i,p.col);
+  var hero=g('mpHero');if(hero)hero.style.background=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  g('mpnm').textContent=p.nm;
+  g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:'Professeur';
+  g('mpbd').textContent=pCache.niveau||'';
   g('mpC').textContent=cours.length;
-  var noteDisplay=p.n&&p.n!=='—'?'★ '+p.n:'Aucun avis';
-  g('mpN').textContent=noteDisplay;
+  g('mpN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
   g('mpE').textContent=p.e||0;
-  g('mpBio').textContent=p.bio||'';
-  g('mpTags').innerHTML=(p.tags||[]).map(function(t){return'<span class="tag">'+esc(t)+'</span>';}).join('');
+
+  // Bio : cache ou placeholder discret
+  var bioEl=g('mpBio');
+  if(bioEl)bioEl.textContent=pCache.bio||'';
+
+  // Matières : depuis cache P[] ou depuis les cours en attente API
+  var tagsEl=g('mpTags');
+  function _renderTags(list){
+    if(!tagsEl||!list.length)return;
+    tagsEl.innerHTML=list.map(function(m){
+      var mat=findMatiere(m);
+      var col=mat?mat.color:'var(--or)';var bg=mat?mat.bg.split(',')[1]||'var(--orp)':'var(--orp)';
+      return'<span style="background:var(--orp);color:'+col+';border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;border:1.5px solid '+col+'22">'+esc(m)+'</span>';
+    }).join('');
+  }
+  if(pCache.matieres){_renderTags(pCache.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
+  else if(immediateTags.length){_renderTags(immediateTags);}
+  else if(tagsEl){tagsEl.innerHTML='';}
+
+  // Prochains cours — belle carte avec date formatée
   var prochains=cours.filter(function(c){return c.fl<c.sp;});
-  g('mpCrs').innerHTML=prochains.length?prochains.map(function(c){return'<div class="pcrow"><div style="font-size:13px">'+esc(c.title)+' · '+esc(c.dt)+'</div><button class="btnr" style="font-size:12px;padding:6px 11px" onclick="closePr();openR(\''+c.id+'\')">Réserver</button></div>';}).join(''):'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
-  // Charger les 3 derniers avis
+  var mpCrs=g('mpCrs');
+  if(mpCrs){
+    mpCrs.innerHTML=prochains.length
+      ?prochains.map(function(c){
+        var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+        var mat=findMatiere(c.subj||'')||{color:'var(--or)',bg:'var(--orp)'};
+        return'<div onclick="closePr();openR(\''+escH(c.id)+'\')" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:14px;margin-bottom:8px;cursor:pointer;transition:opacity .15s" onmouseenter="this.style.opacity=\'.75\'" onmouseleave="this.style.opacity=\'1\'">'
+          +'<div style="width:40px;height:40px;border-radius:10px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mat.color+'"></div></div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
+          +'<div style="font-size:11.5px;color:var(--mid);margin-top:2px">'+esc(fmtDt(c.dt))+'</div>'
+          +'</div>'
+          +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
+          +'</div>';
+      }).join('')
+      :'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
+  }
+
+  // Avis
   var avisBlock=g('mpAvisBlock'),avisContainer=g('mpAvis');
   if(avisBlock)avisBlock.style.display='none';
   fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
-    if(!notes||!notes.length){return;}
+    if(!notes||!notes.length)return;
     if(avisBlock)avisBlock.style.display='block';
     var stars=function(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;};
     if(avisContainer)avisContainer.innerHTML=notes.slice(0,3).map(function(a){
@@ -1771,58 +1822,21 @@ function openPr(pid){
         +'</div>';
     }).join('');
   }).catch(function(){});
-  var fb=g('bFP'),ft=g('bFPt');
-  var isSelf=user&&pid===user.id;
-  fb.style.display=isSelf?'none':'flex';
+
+  var fb=g('bFP');
+  fb.style.display=(user&&pid===user.id)?'none':'flex';
   _setFollowBtn(fol.has(pid));
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
-  // Appliquer les données du cache P[] immédiatement si disponibles
-  var pCache=P[pid];
-  if(pCache){
-    var bioEl0=g('mpBio');if(bioEl0&&pCache.bio)bioEl0.textContent=pCache.bio;
-    var tagsEl0=g('mpTags');
-    if(tagsEl0&&pCache.matieres){
-      var mats0=pCache.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
-      tagsEl0.innerHTML=mats0.map(function(m){return'<span style="background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600">'+m+'</span>';}).join('');
-    }
-    if(pCache.niveau&&g('mpbd'))g('mpbd').textContent=pCache.niveau;
-  }
-  // Charger les vraies données du profil (bio, matières, niveau) — mise à jour silencieuse
+
+  // Mise à jour silencieuse depuis l'API (bio, matières, niveau, statut)
   fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
-    // Mettre à jour le cache P[]
     if(!P[pid])P[pid]={};
-    if(prof.bio!==undefined)P[pid].bio=prof.bio;
-    if(prof.matieres!==undefined)P[pid].matieres=prof.matieres;
-    if(prof.niveau!==undefined)P[pid].niveau=prof.niveau;
-    // Bio
-    var bioEl=g('mpBio');
-    if(bioEl)bioEl.textContent=prof.bio||'';
-    // Matières en chips
-    var tagsEl=g('mpTags');
-    if(tagsEl&&prof.matieres){
-      var mats=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
-      tagsEl.innerHTML=mats.map(function(m){
-        var mat=findMatiere(m);
-        var col=mat?mat.color:'var(--or)';
-        var bg=mat?(mat.bg.replace('linear-gradient(135deg,','').split(',')[1]||'var(--orp)'):'var(--orp)';
-        return'<span style="background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600">'+esc(m)+'</span>';
-      }).join('');
-    }
-    // Niveau
-    if(prof.niveau&&prof.niveau!==''){
-      var niv=document.createElement('div');
-      niv.style.cssText='font-size:12px;color:rgba(255,255,255,.7);margin-top:4px';
-      niv.textContent=prof.niveau;
-      var mpbd=g('mpbd');
-      if(mpbd)mpbd.textContent=prof.niveau;
-    }
-    // Statut
-    var mprl=g('mprl');
-    if(mprl&&prof.statut){
-      var statutLabels={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
-      mprl.textContent=statutLabels[prof.statut]||prof.statut;
-    }
+    ['bio','matieres','niveau','statut'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    if(bioEl&&prof.bio)bioEl.textContent=prof.bio;
+    if(prof.matieres){_renderTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
+    if(prof.niveau&&g('mpbd'))g('mpbd').textContent=prof.niveau;
+    if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
   }).catch(function(){});
 }
 function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
@@ -4758,7 +4772,7 @@ async function subCrStep(){
     setTimeout(function(){
       var c=C.find(function(x){return x.id===id;});if(!c)return;
       var rmb=g('rModeBadge');
-      if(rmb){rmb.innerHTML='';if(c.mode==='visio'){var sp=document.createElement('span');sp.className='mode-badge visio';sp.textContent='Visio';rmb.appendChild(sp);}}
+      if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?'Visio':'Présentiel')+'</span>';}
       var rvj=g('rVisioJoin');
       if(rvj){var show=c.mode==='visio'&&c.visio_url&&(res[c.id]||(user&&c.pr===user.id));rvj.style.display=show?'flex':'none';if(show)rvj.href=c.visio_url;}
     },50);
