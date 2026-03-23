@@ -42,8 +42,7 @@
 <meta name="twitter:image" content="https://courspool.vercel.app/og-image.png">
 <!-- Lib paiement sécurisé -->
 <script src="https://js.stripe.com/v3/"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -70,7 +69,8 @@
 <script>
 (function(){
   function checkDesktop(){
-    var isDesktop=window.innerWidth>900&&!/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var isCapacitor=!!(window.Capacitor||window.capacitorExports||navigator.userAgent.includes('Capacitor'));
+    var isDesktop=window.innerWidth>900&&!isCapacitor&&!/Mobi|Android|iPhone|iPad|iPod|wv\)/i.test(navigator.userAgent);
     var el=document.getElementById('desktopBlock');
     if(el)el.style.display=isDesktop?'flex':'none';
   }
