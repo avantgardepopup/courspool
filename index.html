@@ -455,79 +455,95 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   
 }
 /* ═══════════════════════════════════════════
-   NAV BAR — refait de zéro, style natif
+   NAV BAR — Style Airbnb / iOS natif premium
    ═══════════════════════════════════════════ */
 .bnav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   background: rgba(255,255,255,0.97);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  backdrop-filter: blur(24px) saturate(1.6);
-  border-top: 1px solid rgba(0,0,0,0.1);
-  box-shadow: 0 -2px 16px rgba(0,0,0,0.06);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  backdrop-filter: blur(20px) saturate(1.8);
+  border-top: 0.5px solid rgba(0,0,0,0.12);
   display: none;
   z-index: 100;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-around;
-  /* Espace au-dessus des icônes : 12px fixes */
-  padding-top: 12px;
-  /* Espace en dessous : home indicator + 20px de marge pour bien soulever les icônes */
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  padding: 8px 4px 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .bnav.on { display: flex; }
 
-/* Chaque item */
+/* Item standard */
 .bni {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 5px;
-  padding: 0 6px 12px;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 2px 12px;
   cursor: pointer;
-  color: #9A9A9A;
+  color: #B0B0B0;
   position: relative;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   border: none;
   background: none;
   outline: none;
-  transition: color 0.14s;
+  min-width: 44px;
 }
-/* Feedback tap immédiat */
-.bni:active {
-  opacity: 0.4;
-  transition: opacity 0.05s;
-}
-.bni svg {
-  width: 28px; height: 28px;
-  flex-shrink: 0;
-  stroke: currentColor;
-  display: block;
-}
-.bni-lbl {
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1;
-  color: inherit;
-  white-space: nowrap;
-}
+.bni:active { opacity: 0.45; transition: opacity 0.05s; }
+.bni svg { width: 26px; height: 26px; stroke: currentColor; display: block; flex-shrink: 0; }
+.bni-lbl { font-size: 10px; font-weight: 500; line-height: 1; color: inherit; white-space: nowrap; letter-spacing: 0; }
 
-/* État actif */
-.bni.on {
-  color: #FF6B2B;
-}
-.bni.on .bni-lbl {
-  font-weight: 700;
-}
+/* Actif */
+.bni.on { color: #FF6B2B; }
+.bni.on .bni-lbl { font-weight: 600; }
 
-/* Favoris actif */
-#bniFav.on { color: #E0005E; }
+/* Favoris — masqué par défaut (élèves seulement) */
 #bniFav { display: none; }
+#bniFav.on { color: #E0005E; }
 
-/* ico on/off */
+/* Bouton Créer central — style Airbnb surélevé */
+.bni-create {
+  flex: 1;
+  display: none; /* affiché JS pour profs */
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 2px 10px;
+  cursor: pointer;
+  color: #B0B0B0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  border: none;
+  background: none;
+  outline: none;
+  /* Bouton surélevé au-dessus de la barre */
+  margin-top: -20px;
+}
+.bni-create:active .bni-create-btn { transform: scale(0.93); }
+.bni-create-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #FF7D42, #FF4500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(255, 107, 43, 0.45);
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s;
+  flex-shrink: 0;
+}
+.bni-create:active .bni-create-btn {
+  box-shadow: 0 3px 10px rgba(255,107,43,0.35);
+}
+.bni-create .bni-lbl { font-size: 10px; font-weight: 500; color: #B0B0B0; }
+
+/* ico on/off states */
 .bni .bni-ico-off { display: block; }
 .bni .bni-ico-on  { display: none; }
 .bni.on .bni-ico-off { display: none; }
@@ -536,34 +552,28 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 /* Badge */
 .bni-badge {
   position: absolute;
-  top: 8px;
-  right: calc(50% - 20px);
-  background: #FF3B30;
-  color: #fff;
+  top: 0; right: calc(50% - 22px);
+  background: #FF3B30; color: #fff;
   border-radius: 8px;
-  min-width: 16px;
-  height: 16px;
+  min-width: 16px; height: 16px;
   padding: 0 4px;
-  font-size: 10px;
-  font-weight: 700;
-  display: none;
-  align-items: center;
-  justify-content: center;
+  font-size: 10px; font-weight: 700;
+  display: none; align-items: center; justify-content: center;
   border: 2px solid rgba(255,255,255,0.97);
 }
 .bni-badge.on { display: flex; }
 .bni-sep { display: none; }
+.bni-back { display: none; }
 
 /* Dark mode */
 html.dk .bnav {
-  background: rgba(18,17,16,0.97);
-  border-top-color: rgba(255,255,255,0.1);
-  box-shadow: 0 -2px 16px rgba(0,0,0,0.3);
+  background: rgba(16,15,14,0.97);
+  border-top-color: rgba(255,255,255,0.09);
 }
-html.dk .bni { color: #6B6B6B; }
+html.dk .bni { color: #666; }
 html.dk .bni.on { color: #FF6B2B; }
 html.dk #bniFav.on { color: #FF375F; }
-html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
+html.dk .bni-badge { border-color: rgba(16,15,14,0.97); }
 
 /* Desktop ≥ 769px : pill flottante */
 @media (min-width: 769px) {
@@ -571,7 +581,6 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
     bottom: max(24px, env(safe-area-inset-bottom, 24px));
     left: 50%; right: auto;
     width: auto;
-    min-height: auto;
     transform: translateX(-50%);
     border-radius: 50px;
     border-top: none;
@@ -586,37 +595,56 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
   }
   .bni {
     flex: none;
-    min-height: auto;
     padding: 9px 16px;
     border-radius: 40px;
     min-width: 56px;
     gap: 3px;
-    transition: background .2s, box-shadow .2s, color .15s;
+    justify-content: center;
+    transition: background .18s, box-shadow .18s;
   }
   .bni:active { opacity: 1; }
-  .bni:hover:not(.on) { background: rgba(0,0,0,0.05); color: #555; }
+  .bni:hover:not(.on) { background: rgba(0,0,0,0.05); }
   .bni svg { width: 22px; height: 22px; }
   .bni-lbl { font-size: 11px; }
   .bni.on {
     background: linear-gradient(145deg, #FF7D42, #FF4500);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(255,69,0,0.35);
+    box-shadow: 0 4px 14px rgba(255,69,0,0.38);
   }
   .bni.on .bni-lbl { color: #fff; font-weight: 600; }
   .bni.on svg { stroke: #fff; }
   #bniFav.on {
     background: linear-gradient(145deg, #FF5B8D, #E0005E);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(224,0,94,0.35);
+    box-shadow: 0 4px 14px rgba(224,0,94,0.38);
   }
-  #bniFav.on .bni-lbl { color: #fff; }
-  #bniFav.on svg { stroke: #fff; }
+  /* Bouton créer desktop — comme les autres avec gradient */
+  .bni-create {
+    flex: none;
+    margin-top: 0;
+    padding: 9px 16px;
+    border-radius: 40px;
+    min-width: 56px;
+    gap: 3px;
+    justify-content: center;
+    color: #fff;
+    background: linear-gradient(145deg, #FF7D42, #FF4500);
+    box-shadow: 0 4px 14px rgba(255,69,0,0.38);
+  }
+  .bni-create-btn { display: none; }
+  .bni-create .bni-lbl { color: #fff; font-weight: 600; font-size: 11px; }
+  .bni-create::before {
+    content: '+';
+    font-size: 20px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1;
+  }
   html.dk .bnav {
     background: rgba(14,12,10,0.95);
     box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07);
   }
   html.dk .bni:hover:not(.on) { background: rgba(255,255,255,0.07); }
-  html.dk .bni.on { background: linear-gradient(145deg, #FF7D42, #FF4500); }
 }
 
 
@@ -1044,21 +1072,21 @@ body, input, textarea, button, select {
 /* bni-mes : identique à .bni — même padding, même alignement */
 .bni-mes {
   flex: 1; display: none; flex-direction: column; align-items: center;
-  justify-content: flex-start; gap: 5px;
-  padding: 0 6px 12px;
-  cursor: pointer; color: #9A9A9A; position: relative;
+  justify-content: flex-end; gap: 4px;
+  padding: 0 2px 12px;
+  cursor: pointer; color: #B0B0B0; position: relative;
   background: none; border: none; outline: none;
+  min-width: 44px;
   -webkit-tap-highlight-color: transparent; user-select: none;
-  transition: color 0.14s;
 }
-.bni-mes:active { opacity: 0.4; transition: opacity 0.05s; }
-.bni-mes svg { width: 28px; height: 28px; stroke: currentColor; display: block; flex-shrink: 0; }
-.bni-mes .bni-lbl { font-size: 11px; font-weight: 500; line-height: 1; color: inherit; white-space: nowrap; }
+.bni-mes:active { opacity: 0.45; transition: opacity 0.05s; }
+.bni-mes svg { width: 26px; height: 26px; stroke: currentColor; display: block; flex-shrink: 0; }
+.bni-mes .bni-lbl { font-size: 10px; font-weight: 500; line-height: 1; color: inherit; white-space: nowrap; }
 .bni-mes.on { color: #FF6B2B; }
-.bni-mes.on .bni-lbl { font-weight: 700; }
+.bni-mes.on .bni-lbl { font-weight: 600; }
 .bni-mes.show { display: flex !important; }
 @media(min-width:769px){
-  .bni-mes { flex:none; padding:9px 16px; border-radius:40px; justify-content:center; gap:3px; }
+  .bni-mes { flex:none; padding:9px 16px; border-radius:40px; justify-content:center; gap:3px; min-width:56px; }
   .bni-mes:active { opacity:1; }
   .bni-mes svg { width:22px; height:22px; }
   .bni-mes .bni-lbl { font-size:11px; }
@@ -1406,10 +1434,6 @@ html.dk .settings-chevron { color:var(--bdr); }
 
 
 
-/* bniMes — explicit show/hide */
-.bni-mes { display: none; flex-direction: column; align-items: center; gap: 3px; }
-.bni-mes.show { display: flex !important; }
-
 
 
 
@@ -1506,62 +1530,8 @@ html.dk .settings-chevron { color:var(--bdr); }
   .filter-bar-wrap { padding:12px 40px 8px; }
   #pgAcc .acc-body { max-width:720px; margin:0 auto; }
 
-  /* Messagerie 2 colonnes */
-  #pgMsg {
-    flex-direction:row !important;
-    height:100vh !important;
-  }
-  #msgListPane {
-    width:340px !important;
-    max-width:340px !important;
-    border-right:1px solid var(--bdr) !important;
-    height:100% !important;
-  }
-  #msgConvPane {
-    position:relative !important;
-    display:flex !important;
-    flex:1 !important;
-    inset:auto !important;
-    z-index:1 !important;
-    height:100% !important;
-  }
-  #msgBackBtn { display:none !important; }
 
-  /* Nav desktop — plus grande, draggable */
-  .bnav {
-    padding:10px 16px !important;
-    gap:8px !important;
-    cursor:grab !important;
-    border-radius:60px !important;
-  }
-  .bnav:active { cursor:grabbing !important; }
-
-  .bni {
-    padding:10px 16px !important;
-    min-width:52px !important;
-    gap:6px !important;
-  }
-  .bni svg { width:24px !important; height:24px !important; }
-  #bniAdd > div { width:48px !important; height:28px !important; }
-}
-
-/* ── Mobile (<769px) ── */
-@media(max-width:768px){
-  .topbar { display:none !important; }
-  #msgListPane { width:100% !important; max-width:100% !important; border-right:none !important; }
-}
-
-
-
-
-
-
-
-/* ════════════════════════════════════
-   MESSAGERIE — CSS propre et complet
-   ════════════════════════════════════ */
-
-/* Page messages */
+/* Page Messages — prend toute la hauteur */
 #pgMsg {
   display: none;
   overflow: hidden;
@@ -1569,7 +1539,7 @@ html.dk .settings-chevron { color:var(--bdr); }
 #pgMsg.on {
   display: flex !important;
   flex-direction: column;
-  height: calc(100dvh - 70px);
+  height: 100dvh;
 }
 
 /* Liste conversations */
@@ -1580,359 +1550,222 @@ html.dk .settings-chevron { color:var(--bdr); }
   overflow: hidden;
   flex-shrink: 0;
   width: 100%;
+  height: 100%;
 }
 .msg-list-header {
-  padding: max(20px,env(safe-area-inset-top,0px)) 20px 14px;
-  border-bottom: 1px solid var(--bdr);
-  position: relative;
+  padding: max(16px,env(safe-area-inset-top,16px)) 20px 0;
+  background: rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  position: sticky; top: 0; z-index: 10;
   flex-shrink: 0;
 }
 .msg-list-title {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -.03em;
-  color: var(--ink);
+  font-size: 28px; font-weight: 800;
+  letter-spacing: -.04em; color: var(--ink);
+  padding-bottom: 10px;
 }
 #msgBadge {
   display: none;
-  position: absolute;
-  top: 20px; right: 20px;
-  background: #EF4444;
-  color: #fff;
-  border-radius: 50px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  font-size: 11px;
-  font-weight: 700;
-  align-items: center;
-  justify-content: center;
+  background: #FF3B30; color: #fff;
+  border-radius: 50px; min-width: 20px; height: 20px;
+  padding: 0 6px; font-size: 11px; font-weight: 700;
+  align-items: center; justify-content: center;
+  margin-left: 8px; vertical-align: middle;
 }
-#msgBadge.on { display: flex; }
+#msgBadge.on { display: inline-flex; }
 .msg-list-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 16px 6px;
-  background: var(--bg);
-  border-radius: 12px;
-  padding: 9px 14px;
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 8px;
+  background: rgba(118,118,128,0.12);
+  border-radius: 12px; padding: 8px 12px;
   flex-shrink: 0;
 }
-.msg-list-search svg { color: var(--lite); flex-shrink: 0; }
+.msg-list-search svg { color: #8E8E93; flex-shrink: 0; }
 .msg-list-search input {
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 14px;
-  color: var(--ink);
-  outline: none;
-  width: 100%;
+  border: none; background: transparent;
+  font-family: inherit; font-size: 15px;
+  color: var(--ink); outline: none; width: 100%;
 }
-.msg-list-search input::placeholder { color: var(--lite); }
+.msg-list-search input::placeholder { color: #8E8E93; }
 #listM {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px 10px;
+  flex: 1; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0;
 }
-
-/* Rows conversations */
+/* Ligne conversation */
 .msg-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 10px;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: background .15s;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 20px; cursor: pointer;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07);
+  -webkit-tap-highlight-color: transparent;
+  transition: background .1s;
 }
-.msg-row:hover { background: var(--bg); }
-.msg-row.active { background: var(--orp); }
+.msg-row:active { background: rgba(0,0,0,0.04); }
+.msg-row:last-child { border-bottom: none; }
 .msg-av {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
+  width: 50px; height: 50px; border-radius: 50%;
   background: linear-gradient(135deg,#FF8C55,var(--ord));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #fff;
+  flex-shrink: 0; overflow: hidden;
 }
 .msg-info { flex: 1; min-width: 0; }
 .msg-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 15px; font-weight: 600; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
 }
 .msg-preview {
-  font-size: 12px;
-  color: var(--lite);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
+  font-size: 13px; color: #8E8E93;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.msg-unread .msg-preview { color: var(--ink); font-weight: 600; }
-
+.msg-unread .msg-name { font-weight: 700; }
+.msg-unread .msg-preview { color: var(--ink); }
 /* Panneau conversation */
 #msgConvPane {
-  display: none;
-  flex-direction: column;
-  position: fixed;
-  inset: 0;
-  background: var(--wh);
-  z-index: 200;
-  overflow: hidden;
+  display: none; flex-direction: column;
+  position: fixed; inset: 0;
+  background: var(--wh); z-index: 200; overflow: hidden;
 }
 .msg-conv-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: max(16px,env(safe-area-inset-top,0px)) 16px 14px;
-  border-bottom: 1px solid var(--bdr);
-  background: var(--wh);
+  display: flex; align-items: center; gap: 10px;
+  padding: max(14px,env(safe-area-inset-top,14px)) 16px 12px;
+  background: rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(0,0,0,0.1);
   flex-shrink: 0;
 }
 #msgBackBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--or);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background .15s;
+  background: none; border: none; cursor: pointer;
+  color: var(--or); width: 36px; height: 36px;
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
-#msgBackBtn:hover { background: var(--orp); }
+#msgBackBtn:active { opacity: 0.5; }
 .msg-conv-av {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   background: linear-gradient(135deg,#FF8C55,var(--ord));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  color: #fff;
-  flex-shrink: 0;
-  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: #fff;
+  flex-shrink: 0; overflow: hidden;
 }
-.msg-conv-info { flex: 1; min-width: 0; }
+.msg-conv-info { flex: 1; min-width: 0; text-align: center; }
 .msg-conv-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 16px; font-weight: 700; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .msg-share-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--orp);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--or);
-  flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--orp); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--or); flex-shrink: 0;
 }
-
 /* Zone messages */
 #msgMessages {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px 16px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  padding: 12px 16px 8px;
+  display: flex; flex-direction: column; gap: 2px;
   background: var(--bg);
   -webkit-overflow-scrolling: touch;
 }
-
 /* Bulles */
-.msg-bubble-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  margin-bottom: 2px;
-}
+.msg-bubble-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 2px; }
 .msg-bubble-row.me { justify-content: flex-end; }
 .msg-bubble-row.them { justify-content: flex-start; }
 .msg-bubble-av {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+  width: 24px; height: 24px; border-radius: 50%;
   background: linear-gradient(135deg,#FF8C55,var(--ord));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-  overflow: hidden;
-  align-self: flex-end;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 700; color: #fff;
+  flex-shrink: 0; overflow: hidden; align-self: flex-end;
 }
 .msg-bubble {
-  max-width: min(68%, 320px);
-  min-width: 0;
-  border-radius: 18px;
-  padding: 9px 14px;
-  font-size: 14px;
-  line-height: 1.5;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  max-width: min(72%,300px); min-width: 0;
+  border-radius: 18px; padding: 10px 14px;
+  font-size: 15px; line-height: 1.4;
+  word-break: break-word; overflow-wrap: anywhere;
 }
 .msg-bubble.me {
-  background: linear-gradient(135deg,var(--or),var(--ord));
-  color: #fff;
+  background: #FF6B2B; color: #fff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(255,107,43,.25);
 }
 .msg-bubble.them {
-  background: var(--wh);
-  color: var(--ink);
+  background: var(--wh); color: var(--ink);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
-.msg-bubble-time {
-  font-size: 10px;
-  opacity: .5;
-  margin-top: 3px;
-}
+.msg-bubble-time { font-size: 11px; opacity: .45; margin-top: 2px; }
 .msg-bubble-time.me { text-align: right; }
-
-/* Card cours dans messages */
-.msg-card-wrap {
-  max-width: min(260px, 72vw);
-  min-width: 0;
+.msg-date-sep { text-align: center; margin: 10px 0 6px; }
+.msg-date-sep span {
+  background: var(--bg); color: #8E8E93;
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 50px;
 }
-.msg-card-wrap .chat-cours-card {
-  display: block;
-  width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  border: 1.5px solid var(--bdr);
-  background: var(--wh);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
-}
-.msg-card-time {
-  font-size: 10px;
-  color: var(--lite);
-  margin-top: 4px;
-}
-
-/* Barre de saisie */
+/* Barre saisie */
 #msgInputBar {
   flex-shrink: 0;
-  background: var(--wh);
-  border-top: 1px solid var(--bdr);
-  padding: 10px 14px;
-  padding-bottom: max(12px,env(safe-area-inset-bottom,12px));
+  background: rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-top: 0.5px solid rgba(0,0,0,0.1);
+  padding: 8px 16px;
+  padding-bottom: max(14px,env(safe-area-inset-bottom,14px));
 }
 .msg-input-wrap {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  background: var(--bg);
-  border-radius: 24px;
+  display: flex; gap: 10px; align-items: flex-end;
+  background: var(--bg); border-radius: 22px;
   padding: 8px 8px 8px 16px;
   border: 1.5px solid var(--bdr);
   transition: border-color .18s;
 }
 .msg-input-wrap:focus-within { border-color: var(--or); }
 #msgInput {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 15px;
-  outline: none;
-  resize: none;
-  max-height: 120px;
-  line-height: 1.45;
-  padding: 2px 0;
-  overflow-y: auto;
-  color: var(--ink);
+  flex: 1; border: none; background: transparent;
+  font-family: inherit; font-size: 15px; outline: none;
+  resize: none; max-height: 100px; line-height: 1.4;
+  padding: 2px 0; overflow-y: auto; color: var(--ink);
 }
 .msg-send-btn {
-  background: var(--or);
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 3px 10px rgba(255,107,43,.4);
-  transition: transform .15s;
+  background: var(--or); border: none; border-radius: 50%;
+  width: 34px; height: 34px; min-width: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(255,107,43,.35);
+  -webkit-tap-highlight-color: transparent;
 }
-.msg-send-btn:active { transform: scale(.92); }
-
-/* Séparateur date */
-.msg-date-sep {
-  text-align: center;
-  margin: 12px 0 6px;
+.msg-send-btn:active { opacity: 0.7; }
+.msg-card-wrap { max-width: min(260px,72vw); min-width: 0; }
+.msg-card-wrap .chat-cours-card {
+  display: block; width: 100%; border-radius: 14px;
+  overflow: hidden; cursor: pointer;
+  border: 1px solid var(--bdr); background: var(--wh);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
-.msg-date-sep span {
-  background: var(--bg);
-  color: var(--lite);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 50px;
-}
-
-/* DESKTOP */
+.msg-card-time { font-size: 10px; color: #8E8E93; margin-top: 3px; }
+/* Desktop */
 @media(min-width:769px){
-  #pgMsg.on {
-    flex-direction: row !important;
-    height: 100vh !important;
-  }
-  #msgListPane {
-    width: 340px !important;
-    height: 100% !important;
-    border-right: 1px solid var(--bdr);
-  }
-  #msgConvPane {
-    position: relative !important;
-    display: flex !important;
-    flex: 1 !important;
-    inset: auto !important;
-    z-index: 1 !important;
-    height: 100% !important;
-  }
-  #msgBackBtn { display: none !important; }
-  #msgMessages { padding: 20px 32px 12px !important; }
-  #msgInputBar { padding: 12px 32px 16px !important; }
-  .msg-bubble { max-width: min(55%, 420px) !important; }
+  #pgMsg.on { flex-direction: row !important; }
+  #msgListPane { width:340px !important; height:100% !important; border-right:0.5px solid var(--bdr); flex-shrink:0; }
+  #msgConvPane { position:relative !important; display:flex !important; flex:1 !important; inset:auto !important; z-index:1 !important; height:100% !important; }
+  #msgBackBtn { display:none !important; }
+  .msg-conv-info { text-align:left; }
+  #msgMessages { padding:16px 24px 8px !important; }
+  #msgInputBar { padding:10px 24px 14px !important; }
+  .msg-bubble { max-width:min(60%,400px) !important; }
 }
+@media(max-width:768px){ #msgListPane { height:100%; } }
+/* Dark mode */
+html.dk .msg-list-header,.msg-conv-header { background:rgba(16,15,14,.95); }
+html.dk #msgInputBar { background:rgba(16,15,14,.95); border-top-color:rgba(255,255,255,.08); }
+html.dk .msg-bubble.them { background:#2C2C2E; }
+html.dk .msg-list-search { background:rgba(118,118,128,.24); }
+html.dk .msg-row { border-bottom-color:rgba(255,255,255,.06); }
+html.dk .msg-row:active { background:rgba(255,255,255,.05); }
 
-/* MOBILE */
-@media(max-width:768px){
-  #msgListPane { height: 100%; }
-}
 
 /* ════ SEARCH BAR PREMIUM ════ */
 .mob-search-wrap {
@@ -2507,12 +2340,12 @@ html.dk .filter-pill-btn { background:var(--wh); }
   <div class="pg" id="pgFav">
     <!-- Cours sauvegardés -->
     <div id="favCoursSection">
-      <div class="fav-section-title">❤️ Cours sauvegardés</div>
+      <div class="fav-section-title">Cours sauvegardés</div>
       <div id="favCoursCarousel" class="fav-carousel"></div>
     </div>
     <!-- Profs suivis -->
     <div id="favProfsSection">
-      <div class="fav-section-title">👤 Professeurs suivis</div>
+      <div class="fav-section-title">Professeurs suivis</div>
       <div id="favProfsCarousel" class="fav-carousel"></div>
     </div>
     <!-- Empty global -->
@@ -2521,7 +2354,7 @@ html.dk .filter-pill-btn { background:var(--wh); }
         <svg viewBox="0 0 24 24" fill="none" stroke="#E01060" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
       </div>
       <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Aucun favori encore</div>
-      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px">Appuyez sur le ❤️ d'un cours ou suivez<br>un professeur pour les retrouver ici.</div>
+      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px">Appuyez sur le cœur d'un cours ou suivez<br>un professeur pour les retrouver ici.</div>
       <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Explorer les cours →</button>
     </div>
   </div>
@@ -3496,38 +3329,46 @@ html.dk .filter-pill-btn { background:var(--wh); }
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
 
+  <!-- Explorer — commun -->
   <div class="bni on" id="bniExp" onclick="navTo('exp')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="26" height="26"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span class="bni-lbl">Explorer</span>
   </div>
 
+  <!-- ÉLÈVE : Favoris -->
   <div class="bni" id="bniFav" onclick="navTo('fav')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-    <div class="bni-badge" id="bnavFavBadge" style="background:#E01060"></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <div class="bni-badge" id="bnavFavBadge"></div>
     <span class="bni-lbl">Favoris</span>
   </div>
 
-  <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
-    <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
-    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  <!-- PROF : Créer — bouton central surélevé -->
+  <div class="bni bni-create" id="bniAdd" onclick="openCr()">
+    <div class="bni-create-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="24" height="24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <span class="bni-lbl">Créer</span>
+  </div>
+
+  <!-- Messages — commun -->
+  <div class="bni" id="bniMsg" onclick="navTo('msg')">
+    <div class="bni-back" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="26" height="26"><polyline points="15 18 9 12 15 6"/></svg>
+    </div>
+    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
     <span class="bni-lbl bni-msg-lbl">Messages</span>
   </div>
 
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;min-height:58px;padding:10px 6px;-webkit-tap-highlight-color:transparent;user-select:none;">
-    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,107,43,.38)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </div>
-    <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1">Créer</span>
-  </div>
-
+  <!-- ÉLÈVE : Mes cours -->
   <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="26" height="26"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
     <span class="bni-lbl">Mes cours</span>
   </div>
 
+  <!-- Profil — commun -->
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <span class="bni-lbl">Profil</span>
   </div>
 
@@ -4032,14 +3873,9 @@ function applyUser(){
   if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
   else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
-  // Banner géré par updateVerifBand() uniquement
-  // Bottom nav — restaurer tous les items avant d'appliquer le rôle
-  var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc'),bniFav2=g('bniFav');
-  if(bniMsg2)bniMsg2.style.display=(user&&!user.guest)?'flex':'none';
-  if(bniAcc2)bniAcc2.style.display='flex';
-  if(bniFav2)bniFav2.style.display=(user&&!user.guest)?'flex':'none';
+  // Bottom nav — utiliser restoreNav pour toute la logique prof/élève
   g('bnav').classList.add('on');
-  var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
+  restoreNav();
   // Sync mobile header
   var tavMob=g('tavMob');
   if(tavMob){
@@ -4217,29 +4053,40 @@ function _springIcon(el){
 
 function restoreNav(){
   var nav=g('bnav');
-  if(nav&&user)nav.style.display='flex';
+  if(!nav||!user)return;
+  nav.style.display='flex';
 
-  // Restaurer le bouton Explorer
+  var isProf=user.role==='professeur';
+  var isGuest=user.guest;
+
+  // Explorer — toujours visible
   var bniExp=g('bniExp');
   if(bniExp){
-    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="24" height="24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="bni-lbl">Explorer</span>';
+    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="26" height="26"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="bni-lbl">Explorer</span>';
     bniExp.onclick=function(){navTo('exp');};
   }
-  // Favoris — visible pour les utilisateurs connectés non-invités
+
+  // ÉLÈVE : Favoris + Mes cours | PROF : Créer
   var bniFavEl=g('bniFav');
-  if(bniFavEl)bniFavEl.style.display=(user&&!user.guest)?'flex':'none';
-  // Messages
-  var bniMsg=g('bniMsg');
-  if(bniMsg)bniMsg.style.display=(user&&!user.guest)?'flex':'none';
-  // Profil
-  var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='flex';
-  // Mes cours — élèves seulement
-  var bniMesR=g('bniMes');
-  if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
-  // Créer — profs seulement
-  if(user&&user.role==='professeur'){
-    var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display='flex';
+  var bniAddEl=g('bniAdd');
+  var bniMesEl=g('bniMes');
+
+  if(isProf){
+    if(bniFavEl)bniFavEl.style.display='none';
+    if(bniAddEl)bniAddEl.style.display='flex';
+    if(bniMesEl)bniMesEl.style.display='none';
+  } else {
+    if(bniFavEl)bniFavEl.style.display=isGuest?'none':'flex';
+    if(bniAddEl)bniAddEl.style.display='none';
+    if(bniMesEl)bniMesEl.style.display=isGuest?'none':'flex';
   }
+
+  // Messages — connectés seulement
+  var bniMsg=g('bniMsg');
+  if(bniMsg)bniMsg.style.display=isGuest?'none':'flex';
+
+  // Profil — toujours
+  var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='flex';
 }
 
 function goExplore(){
@@ -8258,8 +8105,8 @@ async function subCrStep(){
   var _au=applyUser;
   applyUser=function(){
     _au();
-    // Show "Mes cours" nav for students
-    var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
+    // restoreNav gère toute la logique prof/élève
+    restoreNav();
     // Show share button for profs
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -8524,7 +8371,7 @@ function showAccHome(){
     _au2();
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
-    var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
+    restoreNav();
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
