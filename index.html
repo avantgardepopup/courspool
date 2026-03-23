@@ -265,7 +265,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
-  .pg{min-height:calc(100dvh - 130px);}
+  .pg{min-height:calc(100dvh - 70px);}
   
   
 }
@@ -451,45 +451,113 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   
   
 }
+/* ═══════════════════════════════════════════════
+   NAVIGATION — pleine largeur mobile, pill desktop
+   ═══════════════════════════════════════════════ */
 .bnav{
-  position:fixed;bottom:max(22px,env(safe-area-inset-bottom,22px));
-  left:50%;transform:translateX(-50%);
-  background:rgba(255,255,255,0.92);
-  backdrop-filter:blur(40px) saturate(2.2);-webkit-backdrop-filter:blur(40px) saturate(2.2);
-  border-radius:56px;display:none;z-index:60;
-  padding:8px 10px;align-items:center;
-  box-shadow:0 10px 44px rgba(0,0,0,.16),0 1px 0 rgba(255,255,255,.95) inset,0 0 0 1px rgba(0,0,0,.08);
-  gap:2px;
-  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  /* MOBILE default: full-width bottom bar */
+  position:fixed;
+  bottom:0;left:0;right:0;
+  background:rgba(255,255,255,0.96);
+  backdrop-filter:blur(40px) saturate(2.2);
+  -webkit-backdrop-filter:blur(40px) saturate(2.2);
+  border-top:1px solid rgba(0,0,0,.07);
+  border-radius:0;
+  display:none;z-index:60;
+  padding:8px 4px max(10px,env(safe-area-inset-bottom,10px));
+  align-items:center;justify-content:space-around;
+  box-shadow:0 -1px 0 rgba(0,0,0,.06),0 -8px 32px rgba(0,0,0,.07);
+  gap:0;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;
+  transform:translateY(0);
 }
 .bnav.on{display:flex;}
+.bnav.hidden-bar{transform:translateY(100%);opacity:0;}
+
+/* Items — full width bar */
 .bni{
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;padding:10px 14px;border-radius:44px;
+  cursor:pointer;padding:6px 4px 4px;border-radius:14px;
   flex:1;min-width:0;
-  color:var(--lite);transition:all .25s cubic-bezier(.34,1.56,.64,1);
-  position:relative;min-width:54px;
+  color:var(--lite);
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
   -webkit-tap-highlight-color:transparent;
 }
-.bni-lbl{font-size:10px;font-weight:700;letter-spacing:-.01em;line-height:1;transition:all .25s;}
-.bni.on .bni-lbl{color:#fff;}
-.bni:not(.on) .bni-lbl{color:var(--lite);}
-.bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 5px 20px rgba(255,69,0,.42);}
-.bni:not(.on):hover{color:var(--or);background:rgba(255,107,43,.08);}
-.bni svg{width:23px;height:23px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
-.bni.on svg{transform:scale(1.1);}
+.bni-lbl{font-size:10px;font-weight:600;letter-spacing:-.01em;line-height:1.1;transition:all .2s;color:var(--lite);}
+.bni.on .bni-lbl{color:var(--or);font-weight:700;}
+.bni svg{width:24px;height:24px;transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+.bni.on svg{transform:scale(1.08);}
+/* Active: just tint the icon+label, no pill background on mobile */
+.bni.on{color:var(--or);background:none;box-shadow:none;}
+.bni:not(.on):hover{color:var(--mid);}
+/* Active indicator dot under icon */
+.bni.on::after{
+  content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--or);
+}
+#bniFav.on{color:#E01060;}
+#bniFav.on .bni-lbl{color:#E01060;}
+#bniFav.on::after{background:#E01060;}
+#bniFav.on svg{stroke:#E01060;}
+
+/* bni-lbl color states */
 .bni .bni-ico-off{display:block;}
 .bni .bni-ico-on{display:none;}
 .bni.on .bni-ico-off{display:none;}
 .bni.on .bni-ico-on{display:block;}
-/* Favorites heart button — special pink active state */
-#bniFav.on{background:linear-gradient(148deg,#FF5B8D,#E01060);box-shadow:0 5px 20px rgba(224,16,96,.4);}
-#bniFav{display:none;}/* shown by JS for logged-in users */
-html.dk .bnav{background:rgba(16,14,12,.95);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 44px rgba(0,0,0,.5);}
-.bni-badge{position:absolute;top:6px;right:8px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.92);}
+
+/* FAV button default hidden — JS shows it */
+#bniFav{display:none;}
+
+/* Dark mode bar */
+html.dk .bnav{
+  background:rgba(13,11,10,.96);
+  border-top-color:rgba(255,255,255,.07);
+  box-shadow:0 -1px 0 rgba(255,255,255,.05);
+}
+html.dk .bni-lbl{color:#6A6560;}
+html.dk .bni.on .bni-lbl{color:var(--or);}
+html.dk .bni.on{color:var(--or);}
+
+/* ── DESKTOP: pill flottante ── */
+@media(min-width:641px){
+  .bnav{
+    bottom:max(22px,env(safe-area-inset-bottom,22px));
+    left:50%;right:auto;
+    transform:translateX(-50%);
+    border-radius:56px;
+    border-top:none;
+    padding:8px 10px;
+    background:rgba(255,255,255,0.92);
+    box-shadow:0 10px 44px rgba(0,0,0,.16),0 1px 0 rgba(255,255,255,.95) inset,0 0 0 1px rgba(0,0,0,.08);
+    justify-content:flex-start;
+    gap:2px;
+    width:auto;
+  }
+  .bnav.hidden-bar{transform:translateX(-50%) translateY(120%);opacity:0;}
+  /* Desktop: restore pill active state */
+  .bni{padding:10px 14px;border-radius:44px;min-width:54px;}
+  .bni.on{background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 5px 20px rgba(255,69,0,.42);}
+  .bni.on svg{stroke:#fff;}
+  .bni.on .bni-lbl{color:#fff;}
+  .bni.on::after{display:none;}
+  #bniFav.on{background:linear-gradient(148deg,#FF5B8D,#E01060);color:#fff;box-shadow:0 5px 20px rgba(224,16,96,.4);}
+  #bniFav.on .bni-lbl{color:#fff;}
+  #bniFav.on svg{stroke:#fff;}
+  html.dk .bnav{background:rgba(16,14,12,.95);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 44px rgba(0,0,0,.5);}
+}
+
+.bni-badge{
+  position:absolute;top:4px;right:6px;
+  background:#EF4444;color:#fff;border-radius:50%;
+  width:14px;height:14px;font-size:9px;font-weight:700;
+  display:none;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.96);
+}
 .bni-badge.on{display:flex;animation:badgePulse 2s ease infinite;}
 @keyframes badgePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 4px rgba(239,68,68,0)}}
-.bni-sep{width:1px;height:24px;background:rgba(0,0,0,.07);margin:0 2px;}
+.bni-sep{display:none;}
 
 /* ── FAVORITES PAGE ── */
 #pgFav{padding-bottom:120px;}
@@ -567,22 +635,22 @@ html.dk .bnav{background:rgba(16,14,12,.95);box-shadow:0 0 0 1px rgba(255,255,25
   -webkit-tap-highlight-color:transparent;
 }
 .fav-remove-btn:hover{background:rgba(239,68,68,.8);}
-/* Heart button on course cards */
+/* Heart button on course cards — en bas à gauche pour ne pas masquer l'avatar prof */
 .card-heart-btn{
-  position:absolute;top:10px;right:10px;
-  width:32px;height:32px;border-radius:50%;
-  background:rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  border:1.5px solid rgba(255,255,255,.35);
+  position:absolute;bottom:8px;left:10px;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(0,0,0,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1.5px solid rgba(255,255,255,.25);
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.85);
+  color:rgba(255,255,255,.9);
   transition:all .22s cubic-bezier(.34,1.56,.64,1);
   z-index:2;
   -webkit-tap-highlight-color:transparent;
 }
-.card-heart-btn:hover{transform:scale(1.12);background:rgba(255,255,255,.4);}
-.card-heart-btn.saved{background:rgba(255,60,100,.85);border-color:rgba(255,60,100,.5);color:#fff;}
+.card-heart-btn:hover{transform:scale(1.14);background:rgba(0,0,0,.42);}
+.card-heart-btn.saved{background:rgba(220,38,95,.88);border-color:rgba(255,60,100,.6);color:#fff;}
 .card-heart-btn.saved svg{fill:#fff;stroke:#fff;}
-@keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.4)}70%{transform:scale(.88)}100%{transform:scale(1)}}
+@keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.45)}70%{transform:scale(.88)}100%{transform:scale(1)}}
 .card-heart-btn.popping{animation:heartPop .35s cubic-bezier(.34,1.56,.64,1);}
 /* Dark mode */
 html.dk .fav-cours-card,html.dk .fav-prof-card{background:var(--wh);}
@@ -811,31 +879,15 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
    CoursPool — Design System Premium
    ============================================================ */
 
-/* ── NAVIGATION BAR — visual polish only (positioning in original CSS) ── */
-.bnav {
-  background: rgba(255,255,255,.94);
-  backdrop-filter: saturate(2) blur(40px);
-  -webkit-backdrop-filter: saturate(2) blur(40px);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,1);
-}
-html.dk .bnav {
-  background: rgba(16,14,12,.93);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 8px 32px rgba(0,0,0,.4);
-}
+/* ── NAVIGATION BAR — kept for backdrop only, layout handled by main CSS ── */
+/* No overrides here — main .bnav CSS block handles everything */
 
-/* Active nav item */
-.bni.on {
-  background: linear-gradient(148deg,#FF7D42,#FF4500);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(255,69,0,.35);
-}
+/* Active nav item — mobile uses tint, desktop uses pill (handled in main block) */
 
-/* ── NAV — MOBILE: keep floating pill ── */
+/* ── NAV — MOBILE padding only ── */
 @media (max-width: 640px) {
-  .bni-mes          { padding: 8px 12px; min-width: 48px; border-radius: 40px; }
-  .bni-mes.on       { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; }
-  #app .cnt         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
-  .acc-body         { padding-bottom: max(110px, calc(90px + env(safe-area-inset-bottom,0px))); }
+  #app .cnt         { padding-bottom: max(90px, calc(70px + env(safe-area-inset-bottom,0px))); }
+  .acc-body         { padding-bottom: max(90px, calc(70px + env(safe-area-inset-bottom,0px))); }
 }
 
 /* ── NAV — CONVERSATION MODE (only back arrow) ── */
@@ -918,15 +970,31 @@ body, input, textarea, button, select {
 .cnt { overflow: visible; }
 .pills { overflow: visible; }
 
-/* Mes cours nav item */
+/* Mes cours nav item — same style as .bni for tab bar */
 .bni-mes {
   display: none; flex-direction: column; align-items: center;
-  gap: 3px; cursor: pointer; padding: 8px 14px; border-radius: 40px;
-  color: var(--lite); transition: color .2s, background .3s cubic-bezier(.34,1.56,.64,1);
-  min-width: 52px;
+  gap: 3px; cursor: pointer; padding: 6px 4px 4px; border-radius: 14px;
+  flex: 1; min-width: 0;
+  color: var(--lite); transition: color .2s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
-.bni-mes.on  { background: linear-gradient(148deg,#FF7D42,#FF4500); color: #fff; box-shadow: 0 4px 14px rgba(255,69,0,.35); }
-.bni-mes svg { width: 22px; height: 22px; }
+.bni-mes .bni-lbl { font-size:10px;font-weight:600;color:var(--lite);line-height:1.1;transition:color .2s; }
+.bni-mes.on { color: var(--or); background: none; box-shadow: none; }
+.bni-mes.on .bni-lbl { color: var(--or); font-weight: 700; }
+.bni-mes.on::after {
+  content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%);
+  width:4px; height:4px; border-radius:50%; background:var(--or);
+}
+.bni-mes svg { width: 24px; height: 24px; }
+.bni-mes.show { display: flex !important; }
+/* Desktop pill override */
+@media(min-width:641px){
+  .bni-mes { padding:10px 14px; border-radius:44px; min-width:54px; }
+  .bni-mes.on { background:linear-gradient(148deg,#FF7D42,#FF4500); color:#fff; box-shadow:0 5px 20px rgba(255,69,0,.42); }
+  .bni-mes.on .bni-lbl { color:#fff; }
+  .bni-mes.on::after { display:none; }
+}
 
 
 /* ── TOAST ── */
@@ -1430,7 +1498,7 @@ html.dk .settings-chevron { color:var(--bdr); }
 #pgMsg.on {
   display: flex !important;
   flex-direction: column;
-  height: calc(100dvh - 56px);
+  height: calc(100dvh - 70px);
 }
 
 /* Liste conversations */
@@ -3388,11 +3456,11 @@ html.dk .filter-pill-btn { background:var(--wh); }
     <span class="bni-lbl bni-msg-lbl">Messages</span>
   </div>
 
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex:1;min-width:0;justify-content:center">
-    <div style="width:44px;height:28px;border-radius:14px;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.45)">
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex:1;min-width:0;justify-content:center;padding:6px 4px 4px;border-radius:14px;-webkit-tap-highlight-color:transparent">
+    <div style="width:40px;height:26px;border-radius:13px;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.4)">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
-    <span style="font-size:10px;font-weight:700;color:var(--lite)">Créer</span>
+    <span style="font-size:10px;font-weight:600;color:var(--lite);line-height:1.1">Créer</span>
   </div>
 
   <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
@@ -3870,6 +3938,7 @@ function doGuest(){
   if(bniAcc)bniAcc.style.display='flex';
   if(bniAdd)bniAdd.style.display='none';
   if(bniFavG)bniFavG.style.display='none';
+  var bniMesG=g('bniMes');if(bniMesG)bniMesG.style.display='flex';
   // Header invité
   var mobT=g('mobTitle'),mobS=g('mobSub');
   if(mobT)mobT.textContent='Explorer';
@@ -3908,9 +3977,9 @@ function applyUser(){
   // Banner géré par updateVerifBand() uniquement
   // Bottom nav — restaurer tous les items avant d'appliquer le rôle
   var bniMsg2=g('bniMsg'),bniAcc2=g('bniAcc'),bniFav2=g('bniFav');
-  if(bniMsg2)bniMsg2.style.display=(user&&!user.guest)?'':'none';
-  if(bniAcc2)bniAcc2.style.display='';
-  if(bniFav2)bniFav2.style.display=(user&&!user.guest)?'':'none';
+  if(bniMsg2)bniMsg2.style.display=(user&&!user.guest)?'flex':'none';
+  if(bniAcc2)bniAcc2.style.display='flex';
+  if(bniFav2)bniFav2.style.display=(user&&!user.guest)?'flex':'none';
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
   // Sync mobile header
@@ -4089,27 +4158,29 @@ function _springIcon(el){
 
 function restoreNav(){
   var nav=g('bnav');
-  if(nav){
-    var isMobile=window.innerWidth<=640;
-    if(isMobile){
-      nav.style.left='';nav.style.transform='';nav.style.padding='';
-    } else {
-      nav.style.left='50%';nav.style.transform='translateX(-50%)';nav.style.padding='8px 12px';
-    }
-    if(user)nav.style.display='flex';
-  }
+  if(nav&&user)nav.style.display='flex';
+
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
   if(bniExp){
-    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="bni-lbl">Explorer</span>';
+    bniExp.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="24" height="24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="bni-lbl">Explorer</span>';
     bniExp.onclick=function(){navTo('exp');};
   }
-  // Réafficher tous les items
-  var bniFavEl=g('bniFav');if(bniFavEl)bniFavEl.style.display=(user&&!user.guest)?'':'none';
-  var bniMsg=g('bniMsg');if(bniMsg)bniMsg.style.display=(user&&user.guest)?'none':'';
-  var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='';
-  var bniMesR=g('bniMes');if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
-  if(user&&user.role==='professeur'){var bniAdd=g('bniAdd');if(bniAdd){bniAdd.style.display='flex';var sep=g('bniSepAdd');if(sep)sep.style.display='';}}
+  // Favoris — visible pour les utilisateurs connectés non-invités
+  var bniFavEl=g('bniFav');
+  if(bniFavEl)bniFavEl.style.display=(user&&!user.guest)?'flex':'none';
+  // Messages
+  var bniMsg=g('bniMsg');
+  if(bniMsg)bniMsg.style.display=(user&&!user.guest)?'flex':'none';
+  // Profil
+  var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='flex';
+  // Mes cours — élèves seulement
+  var bniMesR=g('bniMes');
+  if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
+  // Créer — profs seulement
+  if(user&&user.role==='professeur'){
+    var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display='flex';
+  }
 }
 
 function goExplore(){
