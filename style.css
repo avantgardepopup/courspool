@@ -1629,7 +1629,7 @@ html.dk .settings-chevron { color:var(--bdr); }
   flex-direction: column;
   position: fixed;
   inset: 0;
-  background: #F2F2F7;
+  background: var(--wh);
   z-index: 200;
   overflow: hidden;
 }
@@ -1724,6 +1724,7 @@ html.dk .msg-conv-header {
   gap: 1px;
   background: #F2F2F7;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 html.dk #msgMessages { background: #1C1C1E; }
 
