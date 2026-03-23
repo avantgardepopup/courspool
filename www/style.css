@@ -1516,9 +1516,11 @@ html.dk .settings-chevron { color:var(--bdr); }
 #pgMsg.on {
   display: flex !important;
   flex-direction: column;
-  min-height: calc(100dvh - 70px);
-  height: calc(100dvh - 70px);
+  min-height: 100dvh;
+  height: 100dvh;
   background: var(--wh);
+  position: relative;
+  z-index: 1;
 }
 
 /* Liste conversations */
@@ -1528,8 +1530,9 @@ html.dk .settings-chevron { color:var(--bdr); }
   background: var(--wh);
   overflow: hidden;
   flex: 1;
-  min-height: 100%;
+  min-height: 0;
   width: 100%;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
 }
 .msg-list-header {
   padding: max(20px,env(safe-area-inset-top,0px)) 20px 14px;
