@@ -514,6 +514,7 @@ html.dk .bnav {
   box-shadow: 0 -2px 16px rgba(0,0,0,0.3);
 }
 html.dk .bni { color: #6B6B6B; }
+html.dk #bniAdd .bni-add-circle { background: #2A2A2A !important; box-shadow: 0 2px 8px rgba(0,0,0,.3), 0 0 0 1.5px rgba(255,255,255,.08) !important; }
 html.dk .bni.on { color: #FF6B2B; }
 html.dk #bniFav.on { color: #FF375F; }
 html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }

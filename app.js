@@ -158,7 +158,7 @@ function buildFavPage(){
   var coursSection=g('favCoursSection');
   var profsSection=g('favProfsSection');
   if(!hasAny){
-    if(emptyAll)emptyAll.style.display='block';
+    if(emptyAll){emptyAll.style.display='flex';emptyAll.style.flexDirection='column';emptyAll.style.alignItems='center';emptyAll.style.justifyContent='center';emptyAll.style.minHeight='60vh';}
     if(coursSection)coursSection.style.display='none';
     if(profsSection)profsSection.style.display='none';
     return;
@@ -207,11 +207,22 @@ function buildFavPage(){
         var cours=C.filter(function(x){return x.pr===pid;});
         if(cours.length&&!p.nm){
           p={nm:cours[0].prof_nm||'Professeur',i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
+          P[pid]=p;
+        }
+        // Si toujours pas de photo, fetch le profil en arrière-plan
+        if(!p.photo){
+          fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
+            if(prof&&prof.photo_url){
+              if(P[pid])P[pid].photo=prof.photo_url;
+              var avEl=document.querySelector('[data-fav-pid="'+pid+'"] .fav-prof-av');
+              if(avEl){avEl.style.background='none';avEl.innerHTML='<img src="'+prof.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+            }
+          }).catch(function(){});
         }
         var nm=p.nm||'Professeur';
         var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
         var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
-        return'<div class="fav-prof-card">'
+        return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();unfollowProf(\''+pid+'\');buildFavPage();" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
           +'<div class="fav-prof-name">'+nm+'</div>'
@@ -226,7 +237,7 @@ function buildFavPage(){
 function unfollowProf(pid){
   fol.delete(pid);
   if(user&&user.id){
-    fetch(API+'/follows/'+user.id+'/'+pid,{method:'DELETE'}).catch(function(){});
+    fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
   }
   toast('Professeur retiré des suivis','');
   haptic(4);
