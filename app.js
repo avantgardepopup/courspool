@@ -1297,7 +1297,10 @@ function renderPage(){
     var nivBadge=c.niveau?'<span style="display:inline-flex;align-items:center;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px;letter-spacing:.02em">'+c.niveau+'</span>':'';
     var isNew=c.created_at&&(Date.now()-new Date(c.created_at).getTime()<86400000);
     var newBadge=isNew?'<span style="display:inline-flex;align-items:center;background:#FF6B2B;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:800;color:#fff;margin-left:6px;letter-spacing:.04em;animation:pulse 1.5s infinite">NOUVEAU</span>':'';
-    var modeBadge=(c.mode&&c.mode!=='presentiel')?'<span class="card-mode-badge visio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio</span>':'';
+    var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+    var modeBadge=_isVisio
+      ?'<span class="card-mode-badge visio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio</span>'
+      :'<span class="card-mode-badge presentiel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Présentiel</span>';
     var descLine=c.description?'<div style="font-size:12px;color:var(--lite);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4">'+esc(c.description)+'</div>':'';
     var profData=P[c.pr]||{};
     var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
@@ -4938,12 +4941,13 @@ async function sendCoursCardMsg(c){
   var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
   var pp=Math.ceil(c.tot/c.sp);
   // Build native HTML card
+  var _cIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   var cardHtml='<div class="chat-cours-card" onclick="openR(\''+escH(c.id)+'\')" style="max-width:260px">'
     +'<div class="chat-cours-card-header" style="background:'+mf.bg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
     +'<span style="margin-left:auto;font-size:15px;font-weight:800;color:#fff">'+pp+'&euro;</span></div>'
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
-    +'<div class="chat-cours-card-meta">'+escH(c.dt)+(c.mode==='visio'?' &middot; Visio':'')+'</div>'
-    +'<div style="margin-top:6px"><span class="mode-badge '+(c.mode==='visio'?'visio':'presentiel')+'">'+(c.mode==='visio'?'Visio':'Pr\u00e9sentiel')+'</span></div>'
+    +'<div class="chat-cours-card-meta">'+escH(c.dt)+(_cIsVisio?' &middot; Visio':'')+'</div>'
+    +'<div style="margin-top:6px"><span class="mode-badge '+(_cIsVisio?'visio':'presentiel')+'">'+(_cIsVisio?'Visio':'Pr\u00e9sentiel')+'</span></div>'
     +'</div></div>';
   try{
     await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:user.id,destinataire_id:msgDestId,contenu:cardHtml,type:'cours_card'})});
