@@ -451,30 +451,26 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   
   
 }
-
-/* ════════════════════════════════════════
-   BARRE DE NAVIGATION — rebuild from scratch
-   Mobile : tab bar pleine largeur
-   Desktop : pill flottante
-   ════════════════════════════════════════ */
-
-/* Conteneur */
+/* ═══════════════════════════════════════════
+   NAV BAR — refait de zéro, style natif
+   ═══════════════════════════════════════════ */
 .bnav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  z-index: 100;
+  background: rgba(255,255,255,0.97);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  border-top: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.06);
   display: none;
+  z-index: 100;
   flex-direction: row;
   align-items: stretch;
-  background: rgba(252,252,252,.96);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-top: 0.5px solid rgba(0,0,0,.13);
-  /* Hauteur : 49px zone active + home indicator */
-  padding-top: 8px;
+  justify-content: space-around;
+  /* Hauteur : 58px de zone active + safe area (home indicator iPhone) */
+  padding-top: 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  padding-left: 0;
-  padding-right: 0;
+  min-height: calc(58px + env(safe-area-inset-bottom, 0px));
 }
 .bnav.on { display: flex; }
 
@@ -484,141 +480,144 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 3px;
-  padding: 0 2px 8px;
-  min-width: 44px;
+  justify-content: center;
+  gap: 5px;
+  /* Zone de tap généreuse — au moins 58px de haut */
+  padding: 10px 6px 10px;
+  min-height: 58px;
   cursor: pointer;
-  color: #8E8E93;
+  color: #9A9A9A;
+  position: relative;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  position: relative;
   border: none;
   background: none;
-  text-decoration: none;
-  /* Feedback instantané au tap */
-  transition: none;
+  outline: none;
+  transition: color 0.14s;
 }
-.bni:active { opacity: 0.35; }
-
-/* Icône */
+/* Feedback tap immédiat */
+.bni:active {
+  opacity: 0.4;
+  transition: opacity 0.05s;
+}
 .bni svg {
-  width: 25px;
-  height: 25px;
+  width: 28px; height: 28px;
   flex-shrink: 0;
+  stroke: currentColor;
   display: block;
 }
-
-/* Label */
 .bni-lbl {
-  font-size: 10px;
-  font-weight: 400;
+  font-size: 11px;
+  font-weight: 500;
   line-height: 1;
-  color: #8E8E93;
+  color: inherit;
   white-space: nowrap;
-  letter-spacing: 0;
 }
 
 /* État actif */
-.bni.on { color: var(--or); }
-.bni.on svg { color: var(--or); stroke: var(--or); }
-.bni.on .bni-lbl { color: var(--or); font-weight: 600; }
+.bni.on {
+  color: #FF6B2B;
+}
+.bni.on .bni-lbl {
+  font-weight: 700;
+}
 
-/* Favoris actif = rose */
+/* Favoris actif */
 #bniFav.on { color: #E0005E; }
-#bniFav.on svg { color: #E0005E; stroke: #E0005E; }
-#bniFav.on .bni-lbl { color: #E0005E; font-weight: 600; }
-
-/* Caché par défaut (JS l'affiche) */
 #bniFav { display: none; }
 
-/* ico on/off states */
+/* ico on/off */
 .bni .bni-ico-off { display: block; }
 .bni .bni-ico-on  { display: none; }
 .bni.on .bni-ico-off { display: none; }
 .bni.on .bni-ico-on  { display: block; }
 
-/* Badge notification */
+/* Badge */
 .bni-badge {
   position: absolute;
-  top: 0; right: 18%;
-  min-width: 16px; height: 16px;
-  padding: 0 4px;
+  top: 8px;
+  right: calc(50% - 20px);
   background: #FF3B30;
   color: #fff;
   border-radius: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   font-size: 10px;
   font-weight: 700;
   display: none;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid rgba(252,252,252,.96);
+  border: 2px solid rgba(255,255,255,0.97);
 }
 .bni-badge.on { display: flex; }
 .bni-sep { display: none; }
 
 /* Dark mode */
 html.dk .bnav {
-  background: rgba(18,16,14,.97);
-  border-top-color: rgba(255,255,255,.09);
+  background: rgba(18,17,16,0.97);
+  border-top-color: rgba(255,255,255,0.1);
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.3);
 }
-html.dk .bni { color: #636366; }
-html.dk .bni-lbl { color: #636366; }
-html.dk .bni-badge { border-color: rgba(18,16,14,.97); }
+html.dk .bni { color: #6B6B6B; }
+html.dk .bni.on { color: #FF6B2B; }
+html.dk #bniFav.on { color: #FF375F; }
+html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 
 /* Desktop ≥ 769px : pill flottante */
 @media (min-width: 769px) {
   .bnav {
-    bottom: 28px;
+    bottom: max(24px, env(safe-area-inset-bottom, 24px));
     left: 50%; right: auto;
     width: auto;
+    min-height: auto;
     transform: translateX(-50%);
-    border-radius: 48px;
+    border-radius: 50px;
     border-top: none;
-    padding: 7px 8px;
-    background: rgba(255,255,255,.92);
+    padding: 6px 8px;
+    background: rgba(255,255,255,0.93);
     -webkit-backdrop-filter: blur(40px) saturate(2);
     backdrop-filter: blur(40px) saturate(2);
-    box-shadow: 0 8px 40px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.07);
-    flex-direction: row;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.07);
     align-items: center;
+    justify-content: flex-start;
     gap: 2px;
   }
   .bni {
     flex: none;
-    flex-direction: column;
-    padding: 8px 16px;
+    min-height: auto;
+    padding: 9px 16px;
     border-radius: 40px;
-    min-width: 0;
+    min-width: 56px;
     gap: 3px;
-    transition: background .2s, box-shadow .2s;
+    transition: background .2s, box-shadow .2s, color .15s;
   }
   .bni:active { opacity: 1; }
-  .bni:hover:not(.on) { background: rgba(0,0,0,.05); }
+  .bni:hover:not(.on) { background: rgba(0,0,0,0.05); color: #555; }
   .bni svg { width: 22px; height: 22px; }
   .bni-lbl { font-size: 11px; }
-  /* Pill colorée sur l'actif */
   .bni.on {
     background: linear-gradient(145deg, #FF7D42, #FF4500);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(255,69,0,.38);
-    border-radius: 40px;
+    box-shadow: 0 4px 14px rgba(255,69,0,0.35);
   }
-  .bni.on svg { color: #fff; stroke: #fff; }
   .bni.on .bni-lbl { color: #fff; font-weight: 600; }
+  .bni.on svg { stroke: #fff; }
   #bniFav.on {
     background: linear-gradient(145deg, #FF5B8D, #E0005E);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(224,0,94,.38);
+    box-shadow: 0 4px 14px rgba(224,0,94,0.35);
   }
-  #bniFav.on svg { color: #fff; stroke: #fff; }
   #bniFav.on .bni-lbl { color: #fff; }
+  #bniFav.on svg { stroke: #fff; }
   html.dk .bnav {
-    background: rgba(14,12,10,.94);
-    box-shadow: 0 8px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.07);
+    background: rgba(14,12,10,0.95);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07);
   }
-  html.dk .bni:hover:not(.on) { background: rgba(255,255,255,.06); }
+  html.dk .bni:hover:not(.on) { background: rgba(255,255,255,0.07); }
+  html.dk .bni.on { background: linear-gradient(145deg, #FF7D42, #FF4500); }
 }
+
 
 /* ── FAVORITES PAGE ── */
 #pgFav{padding-bottom:120px;}
@@ -957,8 +956,8 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 
 /* ── NAV — MOBILE padding only ── */
 @media (max-width: 640px) {
-  #app .cnt         { padding-bottom: max(90px, calc(70px + env(safe-area-inset-bottom,0px))); }
-  .acc-body         { padding-bottom: max(90px, calc(70px + env(safe-area-inset-bottom,0px))); }
+  #app .cnt         { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .acc-body         { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ── NAV — CONVERSATION MODE (only back arrow) ── */
@@ -1041,18 +1040,24 @@ body, input, textarea, button, select {
 .cnt { overflow: visible; }
 .pills { overflow: visible; }
 
-/* bni-mes hérite de .bni — aucun style propre, juste affiché/masqué par JS */
-.bni-mes { display: none; }
+/* bni-mes : exactement comme .bni */
+.bni-mes {
+  flex: 1; display: none; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; padding: 8px 4px 6px; min-height: 49px;
+  cursor: pointer; color: #8E8E93; position: relative; border-radius: 0;
+  background: none; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.bni-mes:active { opacity: 0.3; }
+.bni-mes svg { width: 24px; height: 24px; stroke: currentColor; }
+.bni-mes .bni-lbl { font-size: 10px; font-weight: 500; line-height: 1.1; color: inherit; white-space: nowrap; }
+.bni-mes.on { color: #FF6B2B; }
 .bni-mes.show { display: flex !important; }
-/* Desktop pill : aligné avec les autres .bni.on */
-@media (min-width: 769px) {
-  .bni-mes.on {
-    background: linear-gradient(145deg, #FF7D42, #FF4500);
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(255,69,0,.38);
-  }
-  .bni-mes.on svg { color: #fff; stroke: #fff; }
-  .bni-mes.on .bni-lbl { color: #fff; font-weight: 600; }
+@media(min-width:769px){
+  .bni-mes { flex:none; padding:9px 16px; border-radius:40px; min-height:auto; min-width:52px; }
+  .bni-mes:active { opacity:1; }
+  .bni-mes svg { width:22px; height:22px; }
+  .bni-mes .bni-lbl { font-size:11px; font-weight:600; }
+  .bni-mes.on { background:linear-gradient(148deg,#FF7D42,#FF4500); color:#fff; box-shadow:0 4px 14px rgba(255,69,0,.38); }
 }
 
 
@@ -1392,6 +1397,11 @@ html.dk .settings-chevron { color:var(--bdr); }
 
 
 
+
+
+/* bniMes — explicit show/hide */
+.bni-mes { display: none; flex-direction: column; align-items: center; gap: 3px; }
+.bni-mes.show { display: flex !important; }
 
 
 
@@ -2659,19 +2669,7 @@ html.dk .filter-pill-btn { background:var(--wh); }
         <div class="asec" id="asecF" style="overflow:visible">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Professeurs suivis</div>
           <div id="listF">
-            <div id="listFEmpty" style="text-align:center;padding:48px 24px">
-              <div style="position:relative;width:80px;height:80px;margin:0 auto 20px">
-                <div style="width:80px;height:80px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:emptyFloat 3s ease-in-out infinite">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.6" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                </div>
-                <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--bg)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                </div>
-              </div>
-              <div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>
-              <div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs pr&eacute;f&eacute;r&eacute;s pour &ecirc;tre alert&eacute; d&egrave;s qu'un nouveau cours est publi&eacute;.</div>
-              <button onclick="navTo('exp')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours &#8594;</button>
-            </div>
+            <!-- Contenu rempli dynamiquement par buildAccLists() -->
           </div>
         </div>
 
@@ -3508,11 +3506,11 @@ html.dk .filter-pill-btn { background:var(--wh); }
     <span class="bni-lbl bni-msg-lbl">Messages</span>
   </div>
 
-  <div id="bniAdd" onclick="openCr()" style="display:none;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex:1;min-width:0;justify-content:center;padding:6px 4px 4px;border-radius:14px;-webkit-tap-highlight-color:transparent">
-    <div style="width:40px;height:26px;border-radius:13px;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(255,107,43,.4)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <div id="bniAdd" onclick="openCr()" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;min-height:58px;padding:10px 6px;-webkit-tap-highlight-color:transparent;user-select:none;">
+    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,107,43,.38)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
-    <span style="font-size:10px;font-weight:600;color:var(--lite);line-height:1.1">Créer</span>
+    <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1">Créer</span>
   </div>
 
   <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
@@ -4433,7 +4431,8 @@ function switchATab(s,el){
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
   if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
   if(s==='H'){buildHistorique();}
-  if(s==='R'||s==='F'){ buildAccLists(); }
+  if(s==='R'){ buildAccLists(); }
+  if(s==='F'){ buildAccLists(); }
 }
 
 function buildAccLists(){
@@ -4554,8 +4553,15 @@ function buildAccLists(){
         +'</div>';
     }).join('');
     if(!folRows.trim()){
-      // Tous les P[id] sont null — afficher empty state
-      g('listFEmpty').style.display='block';
+      // Tous les P[id] sont null — afficher empty state via innerHTML
+      lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
+        +'<div style="width:80px;height:80px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.6" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
+        +'</div>'
+        +'<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
+        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+        +'</div>';
     } else {
       lf.innerHTML='<div style="background:var(--wh);border-radius:16px;overflow:hidden">'+folRows+'</div>';
     }
