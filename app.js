@@ -2308,25 +2308,38 @@ async function loadConversations(){
       var col=p?p.col:'linear-gradient(135deg,#FF8C55,#E04E10)';
       var photo=p?p.photo:null;
       var ini=p?p.i:'';
-      // Si pas de profil en cache, charger depuis l'API en arrière-plan
+      // Si pas de profil en cache, chercher dans les cours d'abord puis charger l'API
       if(!p){
+        var _cByProf=C.find(function(x){return x.pr===otherId;});
+        if(_cByProf){
+          nm=_cByProf.prof_nm||'';
+          ini=_cByProf.prof_ini||'';
+          col=_cByProf.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+          photo=_cByProf.prof_photo||null;
+        }
         (function(uid){
           fetch(API+'/profiles/'+uid).then(function(r){return r.json();}).then(function(prof){
             if(prof&&prof.id){
               var pr=prof.prenom||'';var no=prof.nom||'';
-              var nm2=(pr+(no?' '+no:'')).trim()||'Utilisateur';
-              P[uid]={nm:nm2,i:((pr[0]||'')+(no[0]||'')).toUpperCase()||'U',col:'linear-gradient(135deg,#FF8C55,#E04E10)',photo:prof.photo_url||null,rl:'',e:0};
-              // Mettre à jour uniquement le nom dans la row déjà affichée
+              var nm2=(pr+(no?' '+no:'')).trim()||nm||'';
+              if(!nm2)return;
+              P[uid]={nm:nm2,i:((pr[0]||'')+(no[0]||'')).toUpperCase()||'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',photo:prof.photo_url||null,rl:'',e:0};
+              // Mettre à jour la row dans la liste
               var row=document.querySelector('[data-uid="'+uid+'"] .msg-name');
-              if(row)row.textContent=nm2;
+              if(row&&row.textContent!==nm2)row.textContent=nm2;
               var av=document.querySelector('[data-uid="'+uid+'"] .msg-av');
-              if(av){if(prof.photo_url){av.innerHTML='<img src="'+prof.photo_url+'" style="width:100%;height:100%;object-fit:cover">';}else{av.textContent=P[uid].i;}}
+              if(av){if(prof.photo_url){av.innerHTML='<img src="'+prof.photo_url+'" style="width:100%;height:100%;object-fit:cover">';}else if(av.textContent!==P[uid].i){av.textContent=P[uid].i;}}
+              // Mettre à jour le header de conv si c'est l'interlocuteur actif
+              if(uid===msgDestId){
+                var hn=g('msgConvName');if(hn&&(hn.textContent==='·\u200B·\u200B·'||hn.textContent==='Contact'))hn.textContent=nm2;
+                var hav=g('msgConvAv');if(hav&&prof.photo_url&&!hav.querySelector('img')){hav.style.background='none';hav.innerHTML='<img src="'+prof.photo_url+'" style="width:100%;height:100%;object-fit:cover">';}
+              }
             }
           }).catch(function(){});
         })(otherId);
       }
-      if(!nm)nm='Utilisateur';
-      if(!ini)ini=nm[0]?nm[0].toUpperCase():'U';
+      if(!nm)nm='·\u200B·\u200B·';
+      if(!ini)ini=nm[0]&&nm[0]!=='·'?nm[0].toUpperCase():'?';
       var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var _pc=m.contenu||'';
