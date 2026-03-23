@@ -1793,11 +1793,19 @@ function openPr(pid){
   var p=P[pid]||{};
   var pCache=P[pid]||{};
   var STATUT={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
-  // Données immédiates depuis C[] — uniquement en fallback, sans écraser le cache P[]
-  var displayNm=p.nm||(dernierCours&&dernierCours.prof_nm)||'Professeur';
-  var displayIni=p.i||(dernierCours&&dernierCours.prof_ini)||'?';
-  var displayCol=p.col||(dernierCours&&dernierCours.prof_col)||'linear-gradient(135deg,#FF8C55,#E04E10)';
-  var displayPhoto=p.photo||(dernierCours&&dernierCours.prof_photo)||null;
+  // Alimenter P[pid] depuis les cours si champs manquants (sans écraser les données fraîches)
+  if(dernierCours){
+    if(!P[pid])P[pid]={n:'—',e:0};
+    p=P[pid];
+    if(!p.nm&&dernierCours.prof_nm)p.nm=dernierCours.prof_nm;
+    if(!p.i)p.i=dernierCours.prof_ini||'?';
+    if(!p.col)p.col=dernierCours.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+    if(!p.photo&&dernierCours.prof_photo)p.photo=dernierCours.prof_photo;
+  }
+  var displayNm=p.nm||'Professeur';
+  var displayIni=p.i||'?';
+  var displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var displayPhoto=p.photo||null;
   if(!displayNm){toast('Profil introuvable','');return;}
 
   // Sujets uniques extraits des cours (dispo immédiatement)
@@ -1906,12 +1914,16 @@ function openPr(pid){
   _setFollowBtn(fol.has(pid));
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
 
-  // Mise à jour silencieuse depuis l'API (bio, matières, niveau, statut)
+  // Mise à jour silencieuse depuis l'API (tous les champs)
   fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
     if(!P[pid])P[pid]={};
     ['bio','matieres','niveau','statut'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
-    if(bioEl&&prof.bio)bioEl.textContent=prof.bio;
+    // Mettre à jour nom + photo dans P (propagation des changements de profil)
+    var _apiNm=((prof.prenom||'')+(prof.nom?' '+prof.nom:'')).trim();
+    if(_apiNm){P[pid].nm=_apiNm;if(g('mpnm'))g('mpnm').textContent=_apiNm;}
+    if(prof.photo_url){P[pid].photo=prof.photo_url;}
+    if(bioEl&&prof.bio!==undefined)bioEl.textContent=prof.bio;
     if(prof.matieres){_renderTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
     if(prof.niveau&&g('mpbd'))g('mpbd').textContent=prof.niveau;
     if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
@@ -2452,8 +2464,8 @@ async function loadConversations(){
       var col=p?p.col:'linear-gradient(135deg,#FF8C55,#E04E10)';
       var photo=p?p.photo:null;
       var ini=p?p.i:'';
-      // Si pas de profil en cache, chercher dans les cours d'abord puis charger l'API
-      if(!p){
+      // Si pas de profil ou nm manquant, chercher dans les cours d'abord puis charger l'API
+      if(!p||!p.nm){
         var _cByProf=C.find(function(x){return x.pr===otherId;});
         if(_cByProf){
           nm=_cByProf.prof_nm||'';
