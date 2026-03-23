@@ -567,6 +567,7 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
   -webkit-overflow-scrolling:touch;scrollbar-width:none;
   padding:10px 20px 28px;
   scroll-snap-type:x mandatory;
+  scroll-padding-left:20px;
 }
 .fav-carousel::-webkit-scrollbar{display:none;}
 /* Card cours dans carrousel */
@@ -1506,6 +1507,7 @@ html.dk .settings-chevron { color:var(--bdr); }
   display: flex !important;
   flex-direction: column;
   height: calc(100dvh - 70px);
+  background: var(--wh);
 }
 
 /* Liste conversations */
