@@ -141,7 +141,7 @@ function toggleFavCours(coursId,btn){
     toast('Retiré des favoris','');
   } else {
     favCours.add(coursId);
-    toast('Cours sauvegardé ❤️','Retrouvez-le dans vos favoris');
+    toast('Cours sauvegardé','Retrouvez-le dans vos favoris');
   }
   saveFavCours();
   haptic(wasSaved?4:12);
@@ -256,6 +256,7 @@ function buildFavPage(){
 
 function unfollowProf(pid){
   fol.delete(pid);
+  _syncFollowBtns(pid,false);
   if(user&&user.id){
     fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
   }
@@ -1255,24 +1256,14 @@ function toggleFollowCard(pid,btn){
   var isFollowing=fol.has(pid);
   if(isFollowing){
     fol.delete(pid);
-    btn.setAttribute('data-fol','0');
-    btn.title='Suivre ce professeur';
-    btn.querySelector('svg').setAttribute('fill','none');
-    btn.querySelector('svg').setAttribute('stroke','currentColor');
-    btn.style.background='rgba(255,255,255,0.85)';
-    btn.style.color='var(--lite)';
+    _syncFollowBtns(pid,false);
     fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
     toast('Retiré des suivis','');
   } else {
     fol.add(pid);
-    btn.setAttribute('data-fol','1');
-    btn.title='Ne plus suivre';
-    btn.querySelector('svg').setAttribute('fill','#E01060');
-    btn.querySelector('svg').setAttribute('stroke','#E01060');
-    btn.style.background='rgba(255,255,255,0.95)';
-    btn.style.color='#E01060';
+    _syncFollowBtns(pid,true);
     fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
-    toast('Vous suivez ce professeur','Notifié dès son prochain cours 🔔');
+    toast('Vous suivez ce professeur','Notifié dès son prochain cours');
   }
   updateFavBadge();
   haptic(8);
@@ -1331,7 +1322,7 @@ function renderPage(){
       var isSaved=favCours.has(c.id);
       heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="'+(isSaved?'#E01060':'none')+'" stroke="'+(isSaved?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#E01060':'var(--lite)')+'"><svg viewBox="0 0 24 24" fill="'+(fol.has(c.pr)?'#E01060':'none')+'" stroke="'+(fol.has(c.pr)?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div>'+(_isVisio?'':'<div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>')+'<div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-pid="'+c.pr+'" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#FF6B2B':'var(--lite)')+'">'+( fol.has(c.pr)?'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>' )+'</button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div>'+(_isVisio?'':'<div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>')+'<div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -1736,7 +1727,7 @@ function confF(){
   var p=P[pid]||{};
   fol.add(pid);
   closeM('bdF');
-  toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours 🔔');
+  toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours');
   folPr=null;
   // Sauvegarder le follow en base
   if(user&&user.id){
@@ -1857,20 +1848,32 @@ function contPr(){
   closePr();
   openMsg(p.nm||'le professeur',pid,p.photo||null);
 }
+/* ── sync tous les card-follow-btn d'un prof sur les cards explorer ── */
+function _syncFollowBtns(pid,isFollowing){
+  var svgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
+  var svgOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
+  document.querySelectorAll('.card-follow-btn[data-pid="'+pid+'"]').forEach(function(btn){
+    btn.setAttribute('data-fol',isFollowing?'1':'0');
+    btn.title=isFollowing?'Ne plus suivre':'Suivre ce professeur';
+    btn.innerHTML=isFollowing?svgOn:svgOff;
+    btn.style.background=isFollowing?'rgba(255,107,43,0.12)':'rgba(255,255,255,0.85)';
+    btn.style.color=isFollowing?'#FF6B2B':'var(--lite)';
+  });
+}
 /* ── helper pour l'état du bouton Suivre/Suivi — UN SEUL endroit ── */
 function _setFollowBtn(isFollowed){
   var fb=g('bFP'),ft=g('bFPt');
   if(!fb||!ft)return;
   if(isFollowed){
-    fb.style.background='#FFF0F5';
-    fb.style.borderColor='#FFB3CB';
-    fb.style.color='#E01060';
-    ft.textContent='❤️ Suivi';
+    fb.style.background='rgba(255,107,43,0.1)';
+    fb.style.borderColor='rgba(255,107,43,0.3)';
+    fb.style.color='#FF6B2B';
+    ft.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg> Suivi';
   }else{
     fb.style.background='';
     fb.style.borderColor='';
     fb.style.color='';
-    ft.textContent='+ Suivre';
+    ft.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> Suivre';
   }
 }
 
@@ -1881,6 +1884,7 @@ function togFP(){
   if(fol.has(id)){
     fol.delete(id);
     _setFollowBtn(false);
+    _syncFollowBtns(id,false);
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
     if(user&&user.id){
@@ -1895,7 +1899,8 @@ function togFP(){
   } else {
     fol.add(id);
     _setFollowBtn(true);
-    toast('Vous suivez '+p.nm,'Notifié dès son prochain cours 🔔');
+    _syncFollowBtns(id,true);
+    toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
     if(P[id])P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
