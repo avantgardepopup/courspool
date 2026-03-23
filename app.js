@@ -886,7 +886,7 @@ function buildAccLists(){
   if(rp)rp.textContent=isProf?'👨‍🏫 Professeur':'👤 Élève';
   var lr=g('listR');
   if(!rIds.length){lr.innerHTML='<div style="text-align:center;padding:40px 20px">'
-    +'<div style="width:64px;height:64px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+    +'<div style="width:64px;height:64px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:emptyFloat 3s ease-in-out infinite">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
     +'</div>'
     +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours à venir</div>'
@@ -1305,7 +1305,7 @@ function renderPage(){
       var isSaved=favCours.has(c.id);
       heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="'+(isSaved?'#E01060':'none')+'" stroke="'+(isSaved?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#E01060':'var(--lite)')+'"><svg viewBox="0 0 24 24" fill="'+(fol.has(c.pr)?'#E01060':'none')+'" stroke="'+(fol.has(c.pr)?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(c.dt)+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#E01060':'var(--lite)')+'"><svg viewBox="0 0 24 24" fill="'+(fol.has(c.pr)?'#E01060':'none')+'" stroke="'+(fol.has(c.pr)?'#E01060':'currentColor')+'" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(c.dt)+'</div></div><div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div><div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
@@ -4067,7 +4067,7 @@ function buildHistorique(){
   var rIds=Object.keys(res);
   if(!rIds.length){
     lr.innerHTML='<div style="text-align:center;padding:40px 20px">'
-      +'<div style="width:64px;height:64px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+      +'<div style="width:64px;height:64px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:emptyFloat 3s ease-in-out infinite">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
       +'</div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours pass\u00e9</div>'
       +'<div style="font-size:14px;color:var(--lite)">Vos cours termin\u00e9s apparaissent ici</div></div>';
@@ -4385,7 +4385,7 @@ var STEP_DEFS=[
   {id:'matiere',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="9" width="14" height="30" rx="2" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><rect x="18" y="12" width="18" height="26" rx="2" fill="#FFF4EE" stroke="#FF6B2B" stroke-width="2"/><line x1="22" y1="18" x2="32" y2="18" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round"/><line x1="22" y1="22" x2="32" y2="22" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><line x1="22" y1="26" x2="28" y2="26" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".3"/></svg>',q:'Quelle mati\u00e8re\u00a0?',h:'Choisissez la discipline'},
   {id:'niveau',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><path d="M24 9l4 8.5 9 1.3-6.5 6.4 1.5 9L24 29.7 16 34.2l1.5-9L11 18.8l9-1.3L24 9z" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2" stroke-linejoin="round"/></svg>',q:'Niveau vis\u00e9',h:'Quel public ciblez-vous\u00a0?'},
   {id:'datetime',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="8" y="13" width="32" height="28" rx="3" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="8" y1="22" x2="40" y2="22" stroke="#FF6B2B" stroke-width="2"/><line x1="16" y1="9" x2="16" y2="17" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round"/><line x1="32" y1="9" x2="32" y2="17" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="32" r="5" fill="#FF6B2B"/></svg>',q:'Quand\u00a0?',h:'Date et heure du cours'},
-  {id:'lieu',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><path d="M24 40s-14-10.5-14-21a14 14 0 0128 0c0 10.5-14 21-14 21z" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><circle cx="24" cy="19" r="5" fill="#FF6B2B"/></svg>',q:'O\u00f9\u00a0?',h:'Lieu physique \u2014 ou lien visio (ajout possible apr\u00e8s)'},
+  {id:'lieu',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><path d="M24 40s-14-10.5-14-21a14 14 0 0128 0c0 10.5-14 21-14 21z" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><circle cx="24" cy="19" r="5" fill="#FF6B2B"/></svg>',q:'O\u00f9\u00a0?',h:'Ville, adresse \u2014 ou lien g\u00e9n\u00e9r\u00e9 pour la visio'},
   {id:'prix',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><circle cx="24" cy="24" r="15" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="24" y1="14" x2="24" y2="16" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/><line x1="24" y1="32" x2="24" y2="34" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/><path d="M20 20.5c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5c0 4-8 4-8 7.5 0 2.2 1.8 3.5 4 3.5s4-1.3 4-3.5" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/></svg>',q:'Prix &amp; places',h:'Prix total que vous souhaitez recevoir'},
   {id:'desc',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="10" width="28" height="32" rx="3" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="16" y1="18" x2="32" y2="18" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="23" x2="32" y2="23" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="16" y1="28" x2="28" y2="28" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".4"/></svg>',q:'Description',h:'D\u00e9tails sur votre cours (optionnel)'},
 ];
@@ -4428,7 +4428,10 @@ function buildStepDOM(){
 function stepRender(idx){
   _sc=idx;
   var step=STEP_DEFS[idx];
-  var fill=g('stepFill');if(fill)fill.style.width=Math.round(idx/STEP_DEFS.length*100)+'%';
+  var _totalSteps=_sd.mode==='visio'?STEP_DEFS.length-1:STEP_DEFS.length;
+  var _visioOffset=(_sd.mode==='visio'&&idx>STEP_DEFS.findIndex(function(s){return s.id==='lieu';}))&&idx>0?1:0;
+  var _dispIdx=idx-_visioOffset;
+  var fill=g('stepFill');if(fill)fill.style.width=Math.round(_dispIdx/_totalSteps*100)+'%';
   var backBtn=g('stepBackBtn');if(backBtn)backBtn.style.opacity=idx===0?'0.3':'1';
   var cta=g('stepCta');if(cta){cta.textContent=idx===STEP_DEFS.length-1?'Publier':'Continuer';cta.disabled=false;}
   var body=g('stepBody');if(!body)return;
@@ -4486,12 +4489,19 @@ function stepRender(idx){
       +'</div>';
 
   }else if(step.id==='lieu'){
-    var ph=_sd.mode==='visio'?'Optionnel — lien généré automatiquement':'Ville ou adresse...';
-    html+='<div style="width:100%">'
-      +'<input id="stepLieu" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="'+ph+'" value="'+escH(_sd.lieu)+'">'
-      +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>';
-    if(_sd.mode==='visio')html+='<div style="margin-top:14px;background:var(--orp);border-radius:14px;padding:14px;font-size:13px;color:var(--mid);display:flex;gap:8px"><span>&#x1F4CC;</span><div><strong>Optionnel</strong> &mdash; Ajoutez votre lien Zoom/Meet/Jitsi maintenant ou plus tard depuis Mes cours.</div></div>';
-    html+='</div>';
+    if(_sd.mode==='visio'){
+      html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
+        +'<div style="background:var(--orp);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">'
+        +'<div style="width:52px;height:52px;background:rgba(0,113,227,.12);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
+        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Lien généré automatiquement</div>'
+        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">Un lien Jitsi sera créé pour votre cours. Vous pourrez le modifier depuis <strong>Mes cours</strong> après publication.</div></div>'
+        +'</div></div>';
+    }else{
+      html+='<div style="width:100%">'
+        +'<input id="stepLieu" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ville ou adresse..." value="'+escH(_sd.lieu)+'">'
+        +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+        +'</div>';
+    }
 
   }else if(step.id==='prix'){
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:18px">'
@@ -4624,11 +4634,20 @@ function stepNext(){
     if(!_sd.prix){toast('Prix manquant','Entrez le prix');return;}
   }
   if(step.id==='desc'&&g('stepDesc'))_sd.desc=g('stepDesc').value.trim();
-  if(_sc<STEP_DEFS.length-1){_sc++;stepRender(_sc);haptic(8);}
-  else subCrStep();
+  var total=STEP_DEFS.length;
+  if(_sc<total-1){
+    _sc++;
+    if(STEP_DEFS[_sc]&&STEP_DEFS[_sc].id==='lieu'&&_sd.mode==='visio')_sc++;
+    stepRender(_sc);haptic(8);
+  }else subCrStep();
 }
 
-function stepBack(){if(_sc===0){closeCrStep();return;}_sc--;stepRender(_sc);haptic(6);}
+function stepBack(){
+  if(_sc===0){closeCrStep();return;}
+  _sc--;
+  if(STEP_DEFS[_sc]&&STEP_DEFS[_sc].id==='lieu'&&_sd.mode==='visio')_sc--;
+  stepRender(_sc);haptic(6);
+}
 
 async function subCrStep(){
   var cta=g('stepCta');if(cta){cta.disabled=true;cta.textContent='Publication...';}
@@ -4641,12 +4660,12 @@ async function subCrStep(){
     var _bg=_mat?_mat.bg:'linear-gradient(135deg,#F5F3FF,#DDD6FE)';
     var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
       date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
-      lieu:_sd.mode==='visio'?('Visio - '+_sd.lieu):_sd.lieu,
+      lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
       prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
       description:_sd.desc||'',
       prof_id:user.id,professeur_id:user.id,
       mode:_sd.mode||'presentiel',
-      visio_url:_sd.mode==='visio'?(_sd.lieu||('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase())):'',
+      visio_url:_sd.mode==='visio'?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'',
       prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
       couleur_sujet:_sc2,background:_bg,
       emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
@@ -4721,7 +4740,7 @@ async function subCrStep(){
     setTimeout(function(){
       var c=C.find(function(x){return x.id===id;});if(!c)return;
       var rmb=g('rModeBadge');
-      if(rmb){rmb.innerHTML='';var sp=document.createElement('span');sp.className='mode-badge '+(c.mode==='visio'?'visio':'presentiel');sp.textContent=c.mode==='visio'?'Visio':'Pr\u00e9sentiel';rmb.appendChild(sp);}
+      if(rmb){rmb.innerHTML='';if(c.mode==='visio'){var sp=document.createElement('span');sp.className='mode-badge visio';sp.textContent='Visio';rmb.appendChild(sp);}}
       var rvj=g('rVisioJoin');
       if(rvj){var show=c.mode==='visio'&&c.visio_url&&(res[c.id]||(user&&c.pr===user.id));rvj.style.display=show?'flex':'none';if(show)rvj.href=c.visio_url;}
     },50);
@@ -4809,6 +4828,7 @@ function buildMesCours(){
   el.querySelectorAll('.mes-card').forEach(function(card){card.onclick=function(){openR(card.dataset.cid);};});
   el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast('Copi\u00e9\u00a0!','');});};});
   el.querySelectorAll('.mes-visio-add').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();openAddVisioLink(btn.dataset.cid);};});
+  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('Lien copi\u00e9\u00a0!','');});}else{toast('Lien copi\u00e9\u00a0!','');}};});
 }
 
 function buildMesCard(c,isPast,isProf){
@@ -4824,6 +4844,8 @@ function buildMesCard(c,isPast,isProf){
   }
   var code='';
   if(isProf&&c.prive&&c.code){code='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Code d&#39;acc\u00e8s</div><div style="font-size:18px;font-weight:800;letter-spacing:.18em;color:var(--ink)">'+escH(c.code)+'</div></div><button class="mes-code-copy" data-code="'+escH(c.code)+'" style="background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer">Copier</button></div>';}
+  var shareLink='';
+  if(isProf){var sUrl='https://courspool.vercel.app/?cours='+escH(c.id);shareLink='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="min-width:0"><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Lien partageable</div><div style="font-size:12px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">courspool.vercel.app/?cours='+escH(c.id)+'</div></div><button class="mes-link-copy" data-link="'+sUrl+'" style="flex-shrink:0;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>Copier</button></div>';}
   var heartBtn='';
   if(!isProf){
     var isFavMes=favCours.has(c.id);
@@ -4840,7 +4862,7 @@ function buildMesCard(c,isPast,isProf){
     +'<div style="display:flex;align-items:center;gap:8px">'
     +'<span class="mode-badge '+mC+'">'+mL+'</span>'
     +(c.prive?'<span style="background:var(--bg);border:1px solid var(--bdr);border-radius:50px;padding:3px 8px;font-size:10.5px;font-weight:600;color:var(--mid)">Priv\u00e9</span>':'')
-    +'</div>'+code+visio+'</div>';
+    +'</div>'+code+shareLink+visio+'</div>';
 }
 
 function openAddVisioLink(coursId){
