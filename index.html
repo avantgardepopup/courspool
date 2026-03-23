@@ -1041,24 +1041,30 @@ body, input, textarea, button, select {
 .cnt { overflow: visible; }
 .pills { overflow: visible; }
 
-/* bni-mes : exactement comme .bni */
+/* bni-mes : identique à .bni — même padding, même alignement */
 .bni-mes {
   flex: 1; display: none; flex-direction: column; align-items: center;
-  justify-content: center; gap: 3px; padding: 8px 4px 6px; min-height: 49px;
-  cursor: pointer; color: #8E8E93; position: relative; border-radius: 0;
-  background: none; -webkit-tap-highlight-color: transparent; user-select: none;
+  justify-content: flex-start; gap: 5px;
+  padding: 0 6px 12px;
+  cursor: pointer; color: #9A9A9A; position: relative;
+  background: none; border: none; outline: none;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+  transition: color 0.14s;
 }
-.bni-mes:active { opacity: 0.3; }
-.bni-mes svg { width: 24px; height: 24px; stroke: currentColor; }
-.bni-mes .bni-lbl { font-size: 10px; font-weight: 500; line-height: 1.1; color: inherit; white-space: nowrap; }
+.bni-mes:active { opacity: 0.4; transition: opacity 0.05s; }
+.bni-mes svg { width: 28px; height: 28px; stroke: currentColor; display: block; flex-shrink: 0; }
+.bni-mes .bni-lbl { font-size: 11px; font-weight: 500; line-height: 1; color: inherit; white-space: nowrap; }
 .bni-mes.on { color: #FF6B2B; }
+.bni-mes.on .bni-lbl { font-weight: 700; }
 .bni-mes.show { display: flex !important; }
 @media(min-width:769px){
-  .bni-mes { flex:none; padding:9px 16px; border-radius:40px; min-height:auto; min-width:52px; }
+  .bni-mes { flex:none; padding:9px 16px; border-radius:40px; justify-content:center; gap:3px; }
   .bni-mes:active { opacity:1; }
   .bni-mes svg { width:22px; height:22px; }
-  .bni-mes .bni-lbl { font-size:11px; font-weight:600; }
-  .bni-mes.on { background:linear-gradient(148deg,#FF7D42,#FF4500); color:#fff; box-shadow:0 4px 14px rgba(255,69,0,.38); }
+  .bni-mes .bni-lbl { font-size:11px; }
+  .bni-mes.on { background:linear-gradient(145deg,#FF7D42,#FF4500); color:#fff; box-shadow:0 4px 14px rgba(255,69,0,.38); }
+  .bni-mes.on svg { stroke:#fff; }
+  .bni-mes.on .bni-lbl { color:#fff; font-weight:600; }
 }
 
 
@@ -4078,6 +4084,7 @@ function applyUser(){
 var MOB_TITLES={
   exp:{title:'Accueil',sub:'Cours près de vous'},
   fav:{title:'Mes favoris',sub:'Cours & professeurs sauvegardés'},
+  mes:{title:'Mes cours',sub:'Réservations & historique'},
   msg:{title:'Messages',sub:'Vos conversations'},
   acc:{title:'Mon profil',sub:'Paramètres & réservations'}
 };
@@ -8220,16 +8227,30 @@ async function subCrStep(){
   // navTo — add 'mes' tab
   var _nt=navTo;
   navTo=function(tab){
-    var pm=g('pgMes'),bm=g('bniMes');
     if(tab==='mes'){
-      ['pgExp','pgMsg','pgAcc'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+      // Masquer toutes les pages
+      ['pgExp','pgMsg','pgAcc','pgFav','pgMes'].forEach(function(id){
+        var el=g(id);if(el)el.classList.remove('on');
+      });
+      // Activer pgMes
       var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.add('on');
-      ['bniExp','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+      // Désactiver tous les items nav
+      ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){
+        var b=g(id);if(b)b.classList.remove('on');
+      });
+      // Activer bniMes
       var bm=g('bniMes');if(bm)bm.classList.add('on');
+      // Header : titre correct, pas de barre de recherche, header visible
+      updateMobHeader('mes');
+      // Refresh nav
+      restoreNav();
       buildMesCours();
       return;
     }
-    if(pm)pm.classList.remove('on');if(bm)bm.classList.remove('on');
+    // Pour tous les autres tabs, enlever pgMes et bniMes
+    var pm=g('pgMes'),bm=g('bniMes');
+    if(pm)pm.classList.remove('on');
+    if(bm)bm.classList.remove('on');
     _nt(tab);
   };
 
