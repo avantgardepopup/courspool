@@ -258,9 +258,9 @@ async function loadData(page){
     _totalCours=json.total||cours.length;
     _allLoaded=cours.length<20||(_currentPage*20)>=_totalCours;
     if(!cours.length&&page===1){
-      // Retry après 4s si vide (serveur qui se réveille)
-      setTimeout(function(){loadData(1).then(function(){buildCards();});},4000);
-      C=[];return;
+      // Serveur qui se réveille : garder les skeletons et réessayer après 5s
+      setTimeout(function(){loadData(1).then(function(){buildCards();});},5000);
+      return; // ne pas appeler buildCards, laisser les skeletons visibles
     }
     var mapped=cours.map(function(c){
       return{
@@ -301,7 +301,10 @@ async function loadData(page){
         else if(c.prof_photo&&!P[c.pr].photo)P[c.pr].photo=c.prof_photo;
       }
     });
-  }catch(e){console.log('loadData err',e);}
+  }catch(e){
+    console.log('loadData err',e);
+    if(page===1)showNetworkError();
+  }
 }
 
 // AUTH

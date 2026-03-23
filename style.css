@@ -423,10 +423,10 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-around;
-  /* Espace au-dessus des icônes : 12px fixes */
-  padding-top: 12px;
-  /* Espace en dessous : home indicator + 20px de marge pour bien soulever les icônes */
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  /* Espace au-dessus des icônes */
+  padding-top: 8px;
+  /* Espace en dessous : home indicator + marge */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 .bnav.on { display: flex; }
 
@@ -438,7 +438,7 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
   align-items: center;
   justify-content: flex-start;
   gap: 5px;
-  padding: 0 6px 12px;
+  padding: 0 6px 6px;
   cursor: pointer;
   color: #9A9A9A;
   position: relative;
