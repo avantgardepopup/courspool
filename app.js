@@ -81,6 +81,12 @@ window.addEventListener('DOMContentLoaded',function(){
   }, 800);
 });
 
+// Bouton retour Android / browser — naviguer à l'onglet précédent
+window.addEventListener('popstate',function(e){
+  var tab=(e.state&&e.state.tab)||'exp';
+  navTo(tab,true);
+});
+
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
@@ -109,6 +115,8 @@ function setAvatar(el,photo,ini,col){
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
 // Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
 loadFavCours();
+// Pré-charger les réservations depuis localStorage pour éviter le flash "Réserver" au rendu initial
+(function(){try{var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');_sr.forEach(function(id){res[id]=true;});}catch(e){}})();
 // Pré-peupler P[] avec les profils mis en cache pour éviter le flash au chargement
 // NE PAS mettre _fresh=true ici : _fetchProf doit toujours tourner pour vérifier les données
 (function(){
@@ -412,7 +420,7 @@ async function doLogin(){
         fetch(API+'/follows/'+uid).then(function(r){return r.json();}).catch(function(){return [];})
       ]).then(function(results){
         var resData=results[0],folData=results[1];
-        if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+        if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
         if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
         loadData().then(function(){restoreFilters();buildCards();});
       }).catch(function(){loadData().then(function(){buildCards();});});
@@ -606,7 +614,9 @@ function updateMobHeader(tab){
   if(mh)mh.style.display=tab==='msg'?'none':'block';
 }
 
-function navTo(tab){
+function navTo(tab,_skipHistory){
+  // Mettre à jour l'historique du navigateur pour le bouton retour Android/browser
+  if(!_skipHistory){try{history.pushState({tab:tab},'',' ');}catch(e){}}
   // Toujours fermer la conv active et s'assurer que la nav est visible
   var convPane=g('msgConvPane');
   if(convPane&&tab!=='msg')convPane.style.display='none';
@@ -749,7 +759,7 @@ function goExplore(){
         ]).then(function(results){
           var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
-          if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});}
+          if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
           fol.clear();
           favCours.clear();try{localStorage.removeItem('cp_fav_cours');}catch(e){};
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
@@ -1329,7 +1339,7 @@ function applyFilter(){
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
     // Si la recherche ne matche pas un cours, chercher aussi les profs par nom
     if(!matchSearch&&q.length>1){
-      var profFull=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      var profFull=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       matchSearch=profFull.includes(q);
     }
     // Filtre localisation
@@ -1468,7 +1478,7 @@ var MATIERES = [
 ];
 
 // Fonction pour normaliser une chaîne
-function normStr(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+function normStr(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
 
 // Trouver la matière standardisée depuis un texte libre
 function findMatiere(txt){
@@ -2370,7 +2380,7 @@ function closeMsgConv(){
 async function loadMessages(){
   if(!user||!msgDestId)return;
   try{
-    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId);
+    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId+'?limit=50');
     var msgs=await r.json();
     if(!Array.isArray(msgs))return;
     var box=g('msgMessages');
@@ -2631,7 +2641,7 @@ function requestGeoloc(){
           var ville=d.address.city||d.address.town||d.address.village||'';
           var inp2=g('locInput');
           if(inp2&&ville)inp2.value='📍 '+ville;
-          actLoc=ville.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+          actLoc=ville.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
         }).catch(function(){});
     },
     function(err){
@@ -3058,6 +3068,7 @@ async function submitCni(){
     if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
     toast('Document manquant','Choisissez votre CNI ou passeport');return;
   }
+  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
   var btn=g('cniSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent='Envoi...';}
   try{
@@ -3759,6 +3770,10 @@ var noteVal=0,noteCours=null;
 var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 😊','Excellent ! 🌟'];
 
 function openNote(cours){
+  if(!cours||!user||user.role==='professeur')return;
+  if(!res[cours.id]){toast('Réservation requise','Vous devez avoir réservé ce cours pour le noter');return;}
+  var isPastNow=false;try{var diffMs2=Date.now()-new Date(cours.created_at||0);isPastNow=diffMs2>24*60*60*1000;}catch(e){}
+  if(!isPastNow){toast('Cours à venir','Vous pourrez noter ce cours une fois qu\'il est terminé');return;}
   noteCours=cours;noteVal=0;
   updateStars(0);
   var np=g('noteProf');
