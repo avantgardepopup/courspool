@@ -501,6 +501,8 @@ var adminToken=null;
 var allProfs=[],allEleves=[],allCours=[],allRes=[];
 var profFilter='all';
 
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
 function adminHeaders(){
   return{'Content-Type':'application/json','Authorization':'Bearer '+adminToken};
 }
@@ -903,7 +905,7 @@ async function renderSupport(){
         +'</div>'
         +'<span style="font-size:11px;color:var(--lite)">'+date+'</span>'
         +'</div>'
-        +'<div style="font-size:13px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.message||c.sujet||'')+'</div>'
+        +'<div style="font-size:13px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(c.message||c.sujet||'')+'</div>'
         +'</div>';
     }).join('');
     list.querySelectorAll('.crow').forEach(function(el){
@@ -931,12 +933,12 @@ async function openSupportMsg(id){
   document.getElementById('modalBody').innerHTML =
     '<div style="margin-bottom:16px">'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">'
-    +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">De : '+(c.nom||'Anonyme')+'</span>'
-    +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">'+c.email+'</span>'
-    +'<span style="background:var(--orp);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--or)">'+c.sujet+'</span>'
+    +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">De : '+escHtml(c.nom||'Anonyme')+'</span>'
+    +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">'+escHtml(c.email)+'</span>'
+    +'<span style="background:var(--orp);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--or)">'+escHtml(c.sujet)+'</span>'
     +'</div>'
     +'<div style="font-size:11px;color:var(--lite);margin-bottom:16px">'+date+'</div>'
-    +'<div style="background:var(--bg);border-radius:14px;padding:16px;font-size:14px;color:var(--ink);line-height:1.7;white-space:pre-wrap">'+c.message+'</div>'
+    +'<div style="background:var(--bg);border-radius:14px;padding:16px;font-size:14px;color:var(--ink);line-height:1.7;white-space:pre-wrap">'+escHtml(c.message)+'</div>'
     +'</div>'
     +'<div style="display:flex;gap:10px;margin-top:16px">'
     +'<a href="mailto:'+c.email+'?subject=Re: '+encodeURIComponent(c.sujet||'Votre message CoursPool')+'" style="flex:1;background:var(--or);color:#fff;border-radius:12px;padding:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px">Répondre par email</a>'

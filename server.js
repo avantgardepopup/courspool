@@ -54,6 +54,25 @@ app.use(function(req, res, next) {
   next();
 });
 
+// Rate limiting strict pour les routes auth — 5 req/min par IP
+const authRateLimitMap = new Map();
+setInterval(function() {
+  const cutoff = Date.now() - 60 * 60 * 1000;
+  authRateLimitMap.forEach(function(data, ip) { if (data.start < cutoff) authRateLimitMap.delete(ip); });
+}, 10 * 60 * 1000);
+function authRateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxRequests = 5;
+  if (!authRateLimitMap.has(ip)) { authRateLimitMap.set(ip, { count: 1, start: now }); return next(); }
+  const data = authRateLimitMap.get(ip);
+  if (now - data.start > windowMs) { authRateLimitMap.set(ip, { count: 1, start: now }); return next(); }
+  if (data.count >= maxRequests) return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans une minute.' });
+  data.count++;
+  next();
+}
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SECRET_KEY
@@ -364,7 +383,7 @@ app.get('/', (req, res) => {
 });
 
 // AUTH — inscription
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', authRateLimit, async (req, res) => {
   const { email, password, prenom, nom, role } = req.body;
   if (!email || !password || !prenom || !role) {
     return res.status(400).json({ error: 'Champs manquants' });
@@ -401,7 +420,7 @@ app.post('/auth/refresh', async (req, res) => {
 });
 
 // AUTH — connexion
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', authRateLimit, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -440,6 +459,12 @@ app.post('/cours', async (req, res) => {
   const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total) {
     return res.status(400).json({ error: 'Champs manquants' });
+  }
+  if (!places_max || parseInt(places_max) < 1 || parseInt(places_max) > 50) {
+    return res.status(400).json({ error: 'places_max doit être entre 1 et 50' });
+  }
+  if (parseFloat(prix_total) < 1) {
+    return res.status(400).json({ error: 'prix_total doit être >= 1' });
   }
   const { data, error } = await supabase.from('cours')
     .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau: niveau || null }])
@@ -696,7 +721,13 @@ app.get('/stripe/success', async (req, res) => {
 
     if (!cours_id || !user_id) return res.redirect(baseRedirect);
 
-    // Vérifier si déjà réservé (sauf pour ami) — idempotence
+    // Idempotence par session_id (couvre les deux cas : normal et pour_ami)
+    const { data: existingBySession } = await supabase.from('reservations')
+      .select('id').eq('stripe_session_id', session_id).maybeSingle();
+    if (existingBySession) {
+      return res.redirect(baseRedirect + '?paid=1&cours_id=' + cours_id);
+    }
+    // Vérifier si déjà réservé par cours+user (sauf pour ami)
     if (pour_ami_meta !== '1') {
       const { data: existing } = await supabase.from('reservations')
         .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
@@ -709,6 +740,7 @@ app.get('/stripe/success', async (req, res) => {
     await supabase.from('reservations').insert([{
       cours_id, user_id,
       montant_paye: parseFloat(montant) || 0,
+      stripe_session_id: session_id,
       type_paiement: pour_ami_meta === '1' ? 'stripe_ami' : 'stripe'
     }]);
 
@@ -1073,13 +1105,16 @@ app.get('/reservations/cours/:cours_id', async (req, res) => {
 
 // RESERVATIONS — annuler une réservation élève
 app.post('/reservations/:id/cancel', async (req, res) => {
-  const {user_id,cours_id,montant}=req.body;
+  const {cours_id}=req.body;
   try{
     const {data:reservation}=await supabase.from('reservations').select('*').eq('id',req.params.id).single();
+    if (!reservation) return res.status(404).json({ error: 'Réservation introuvable' });
+    if (reservation.user_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
+    const resolvedCours = reservation.cours_id;
     await supabase.from('reservations').delete().eq('id',req.params.id);
-    const {count:resCountCancel}=await supabase.from('reservations').select('*',{count:'exact',head:true}).eq('cours_id',cours_id);
-    await supabase.from('cours').update({places_prises:resCountCancel||0}).eq('id',cours_id);
-    io.emit('reservation_update',{cours_id,places_prises:resCountCancel||0});
+    const {count:resCountCancel}=await supabase.from('reservations').select('*',{count:'exact',head:true}).eq('cours_id',resolvedCours);
+    await supabase.from('cours').update({places_prises:resCountCancel||0}).eq('id',resolvedCours);
+    io.emit('reservation_update',{cours_id:resolvedCours,places_prises:resCountCancel||0});
     let rembourse=false;
     if(reservation?.stripe_payment_intent_id){
       try{await stripe.refunds.create({payment_intent:reservation.stripe_payment_intent_id});rembourse=true;}catch(e){console.log('Refund error:',e.message);}
@@ -1125,27 +1160,19 @@ app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
 
 // GROUPE — envoyer un message à plusieurs élèves d'un cours
 app.post('/messages/groupe', async (req, res) => {
-  const { cours_id, expediteur_id, expediteur_nom, contenu, cours_titre } = req.body;
-  if (!cours_id || !expediteur_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
+  const expediteur_id = req.user.id; // toujours l'utilisateur connecté
+  const { cours_id, contenu, cours_titre } = req.body;
+  if (!cours_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
   try {
     // Récupérer tous les inscrits au cours
     const { data: reservations, error } = await supabase
       .from('reservations').select('user_id').eq('cours_id', cours_id);
     if (error) return res.status(500).json({ error: error.message });
     const eleves = [...new Set(reservations.map(r => r.user_id).filter(id => id && id !== expediteur_id))];
-    // Inclure le prof lui-même pour qu'il voit ses propres messages dans le groupe
-    const allReceivers = eleves.length ? eleves : [];
-    if (!allReceivers.length && expediteur_id) {
-      // Pas d'élèves, mais on crée quand même un message "broadcast" pour l'historique
-    }
-    if (!allReceivers.length) return res.json({ success: true, sent: 0 });
-    // Créer un message pour chaque élève avec un tag groupe
-    // Récupérer le nom de l'expéditeur si pas fourni
-    let senderNom = expediteur_nom || '';
-    if (!senderNom) {
-      const { data: senderProfile } = await supabase.from('profiles').select('prenom, nom').eq('id', expediteur_id).single();
-      if (senderProfile) senderNom = ((senderProfile.prenom || '') + ' ' + (senderProfile.nom || '')).trim();
-    }
+    if (!eleves.length) return res.json({ success: true, sent: 0 });
+    // Récupérer le nom de l'expéditeur depuis les profiles (source de vérité)
+    const { data: senderProfile } = await supabase.from('profiles').select('prenom, nom').eq('id', expediteur_id).single();
+    const senderNom = senderProfile ? ((senderProfile.prenom || '') + ' ' + (senderProfile.nom || '')).trim() : '';
     const msgs = eleves.map(dest => ({
       sender_id: expediteur_id,
       receiver_id: dest,
@@ -1207,6 +1234,7 @@ app.patch('/cours/:id/groupe', async (req, res) => {
 app.post('/stripe/connect/create', async (req, res) => {
   const {prof_id,email}=req.body;
   if(!prof_id||!email)return res.status(400).json({error:'Données manquantes'});
+  if(prof_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({error:'Non autorisé'});
   try{
     const {data:prof}=await supabase.from('profiles').select('stripe_account_id').eq('id',prof_id).single();
     if(prof?.stripe_account_id)return res.json({account_id:prof.stripe_account_id,already_exists:true});
@@ -1230,6 +1258,7 @@ app.post('/stripe/connect/setup-intent', async (req, res) => {
 app.post('/stripe/connect/iban-saved', async (req, res) => {
   const {prof_id,stripe_account_id}=req.body;
   if(!prof_id)return res.status(400).json({error:'prof_id manquant'});
+  if(prof_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({error:'Non autorisé'});
   try{
     await supabase.from('profiles').update({stripe_account_id,iban_configured:true}).eq('id',prof_id);
     res.json({success:true});
@@ -1249,7 +1278,8 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
 // PROFILES — récupérer profil par ID
 app.get('/profiles/:id', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const {data,error}=await supabase.from('profiles').select('*').eq('id',req.params.id).single();
+  const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,iban_configured,created_at';
+  const {data,error}=await supabase.from('profiles').select(PUBLIC_COLS).eq('id',req.params.id).single();
   if(error)return res.status(404).json({});
   // Compter les vrais followers depuis la table follows (source de vérité)
   const {count}=await supabase.from('follows').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id);
@@ -1404,6 +1434,7 @@ app.post('/notations', async (req, res) => {
   const eleve_id = req.user.id; // toujours l'utilisateur connecté
   const { professeur_id, cours_id, note, commentaire } = req.body;
   if (!professeur_id || !cours_id || !note) return res.status(400).json({ error: 'Données manquantes' });
+  if (parseInt(note) < 1 || parseInt(note) > 5) return res.status(400).json({ error: 'La note doit être entre 1 et 5' });
   const { data, error } = await supabase.from('notations')
     .upsert([{ eleve_id, professeur_id, cours_id, note, commentaire }], { onConflict: 'eleve_id,cours_id' })
     .select();
@@ -1494,14 +1525,15 @@ app.post('/push/subscribe', async (req, res) => {
 app.delete('/push/subscribe', async (req, res) => {
   const { user_id } = req.body;
   if (!user_id) return res.status(400).json({ error: 'user_id manquant' });
+  if (user_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   try {
     await supabase.from('push_subscriptions').delete().eq('user_id', user_id);
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// PUSH — notif prof : un élève a réservé son cours (appelé dans stripe/success)
-app.post('/push/prof-new-eleve', async (req, res) => {
+// PUSH — notif prof : un élève a réservé son cours (admin seulement — l'appel interne est direct via pushToUser)
+app.post('/push/prof-new-eleve', requireAdmin, async (req, res) => {
   const { prof_id, eleve_nom, cours_titre, montant } = req.body;
   if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
   await pushToUser(prof_id, {
@@ -1514,10 +1546,11 @@ app.post('/push/prof-new-eleve', async (req, res) => {
   res.json({ success: true });
 });
 
-// PUSH — notif élève : un prof suivi publie un cours
+// PUSH — notif élève : un prof suivi publie un cours (prof concerné ou admin)
 app.post('/push/new-cours', async (req, res) => {
   const { prof_id, cours_titre, cours_id } = req.body;
   if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
+  if (prof_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   try {
     // Récupérer tous les élèves qui suivent ce prof
     const { data: follows } = await supabase.from('follows').select('user_id').eq('professeur_id', prof_id);

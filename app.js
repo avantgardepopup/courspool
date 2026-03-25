@@ -267,13 +267,13 @@ function buildFavPage(){
         var bg=mat?mat.bg:'linear-gradient(135deg,var(--orp),#FFE8DC)';
         return'<div class="fav-cours-card" onclick="openR(\''+c.id+'\')">'
           +'<div class="fav-cours-card-top" style="background:'+bg+'">'
-          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+c.subj+'</span>'
+          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',null);buildFavPage();" title="Retirer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'</div>'
           +'<div class="fav-cours-card-body">'
-          +'<div class="fav-cours-card-title">'+c.title+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+c.dt+'</div>'
-          +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+c.lc+'</div>'
+          +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
+          +'<div class="fav-cours-card-meta">📅 '+esc(c.dt)+'</div>'
+          +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+esc(c.lc)+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'</div>'
           +'</div>';
@@ -299,13 +299,13 @@ function buildFavPage(){
         // Fetch frais du profil si pas encore fait cette session
         _fetchProf(pid);
         var nm=p.nm||'Professeur';
-        var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
+        var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
         var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
-          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nm+'</div>'
-          +'<div class="fav-prof-role">'+(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
+          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+esc(nm)+'</div>'
+          +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
           +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
           +'</div>';
       }).join('');
