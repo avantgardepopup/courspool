@@ -975,26 +975,24 @@ function buildAccLists(){
         +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Créer un cours →</button>'
         +'</div>';
     } else {
-      profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">';
+      profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-left:2px;padding-right:2px">';
       myC.forEach(function(c){
         var mat=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
         var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
         var isFull=c.fl>=c.sp;
-        profCoursHtml+='<div onclick="openR(\''+esc(c.id)+'\')" style="flex:0 0 200px;background:var(--wh);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid var(--bdr);transition:opacity .15s" onmouseenter="this.style.opacity=\'.8\'" onmouseleave="this.style.opacity=\'1\'">'
-          +'<div style="height:6px;background:'+mat.bg+'"></div>'
-          +'<div style="padding:12px 14px">'
-          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+mat.color+';margin-bottom:6px">'+esc(c.subj)+'</div>'
-          +'<div style="font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
-          +'<div style="font-size:11px;color:var(--lite);margin-bottom:8px">'+esc(c.dt)+'</div>'
-          +'<div style="display:flex;align-items:center;justify-content:space-between">'
-          +'<div style="font-size:11px;color:var(--mid);font-weight:600">'+c.fl+'/'+c.sp+' élèves</div>'
-          +'<div style="font-size:12px;font-weight:800;color:var(--or)">'+pp+'€</div>'
+        profCoursHtml+='<div class="fav-cours-card" onclick="openR(\''+esc(c.id)+'\')">'
+          +'<div class="fav-cours-card-top" style="background:'+mat.bg+'">'
+          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
+          +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">Complet</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
           +'</div>'
+          +'<div class="fav-cours-card-body">'
+          +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
+          +'<div class="fav-cours-card-meta">📅 '+esc(c.dt)+'</div>'
+          +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
-          +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px;transition:width .3s"></div>'
+          +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
           +'</div>'
-          +(isFull?'<div style="font-size:10px;font-weight:700;color:#22C069;margin-top:5px">Complet</div>':'')
           +'</div>'
           +'</div>';
       });
