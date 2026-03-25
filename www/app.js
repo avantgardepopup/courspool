@@ -1337,7 +1337,8 @@ function _fetchProf(pid){
       var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');
       _pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};
       localStorage.setItem('cp_profs',JSON.stringify(_pc));
-      _saveFollowCount(pid,P[pid].e||0);
+      // Ne pas écraser cp_follow_counts depuis _fetchProf (seules les actions explicites le font)
+      // _saveFollowCount ici pourrait écraser une valeur positive avec 0
     }catch(ex){}
     // Mettre à jour le header de conversation si c'est l'interlocuteur actif
     if(pid===msgDestId){
@@ -2113,14 +2114,14 @@ function openPr(pid){
     if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
     // Nombre d'élèves/abonnés depuis l'API si disponible
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-    if(_nbE!==undefined){
-      // Toujours prendre le max entre la valeur API et la valeur locale
-      // (l'API peut retourner une valeur obsolète si le follow vient d'être posté)
+    if(_nbE!==undefined && _nbE>0){
+      // L'API retourne parfois 0 (délai backend) — ignorer si 0, sinon prendre le max
       _nbE=Math.max(_nbE,P[pid].e||0);
       P[pid].e=_nbE;if(g('mpE'))g('mpE').textContent=_nbE;
     }
-    // Sauvegarder en cache pour le prochain chargement (y compris le compteur abonnés)
-    try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);
+    // Sauvegarder en cache (sans écraser cp_follow_counts — seules les actions explicites le font)
+    var _eSave=P[pid].e||0;
+    try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:_eSave};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
   }).catch(function(){});
 }
 function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
@@ -2841,7 +2842,7 @@ function addFilterQuick(val){
   var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(customFilters.find(function(f){return f.key===key;}))return;
   customFilters.push({label:val,key:key});
-  // Ajouter la pill dans la barre
+  // Ajouter la pill dans la barre (non active — l'utilisateur clique dessus pour l'activer)
   var bar=g('pillsBar');
   var addBtn=g('pillAdd');
   var pill=document.createElement('div');
@@ -2853,8 +2854,7 @@ function addFilterQuick(val){
   // Ajouter le filtre dans FM
   FM['custom_'+key]=function(t){return t.includes(key);};
   closeAddFilter();
-  setPill(pill);
-  renderCustomPills();
+  // PAS de setPill() ici — le filtre est ajouté mais pas activé automatiquement
 }
 
 function removeCustomFilter(key){
@@ -2865,16 +2865,18 @@ function removeCustomFilter(key){
     pill.remove();
   }
   delete FM['custom_'+key];
+  applyFilter();
+  renderCustomPills();
 }
 
 function renderCustomPills(){
   var box=g('customPillsList');
   if(!box)return;
   if(!customFilters.length){box.innerHTML='';return;}
-  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Filtres actifs</div>'
+  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Filtres ajoutés</div>'
     +customFilters.map(function(f){
-      return'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:50px;padding:5px 12px;font-size:13px;font-weight:500;margin:0 6px 6px 0">'+f.label
-        +'<span onclick="removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.6;font-size:11px">✕</span></span>';
+      return'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:13px;font-weight:600;margin:0 6px 6px 0;border:1.5px solid var(--or)">'+esc(f.label)
+        +'<span onclick="removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.7;font-size:12px;font-weight:700;line-height:1">✕</span></span>';
     }).join('');
 }
 
