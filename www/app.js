@@ -295,6 +295,22 @@ var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
 var _searchTimer=null;
+var _autoRefreshTimer=null;
+
+function _startAutoRefresh(){
+  _stopAutoRefresh();
+  _autoRefreshTimer=setInterval(function(){
+    if(document.hidden)return; // pause si app en arrière-plan
+    if(!user||user.guest)return;
+    loadData(1,true).then(function(){
+      // Réappliquer le filtre actif sans changer la page ni réinitialiser le scroll
+      applyFilter();
+    }).catch(function(){});
+  },30000);
+}
+function _stopAutoRefresh(){
+  if(_autoRefreshTimer){clearInterval(_autoRefreshTimer);_autoRefreshTimer=null;}
+}
 
 // LOAD DATA
 function showSkeletons(){
@@ -307,9 +323,9 @@ function showSkeletons(){
 
 var _allLoaded=false,_totalCours=0,_currentPage=1,_loadingMore=false;
 
-async function loadData(page){
+async function loadData(page,silent){
   page=page||1;
-  if(page===1)showSkeletonsV2();
+  if(page===1&&!silent)showSkeletonsV2();
   try{
     var r=await fetch(API+'/cours?page='+page+'&limit=20');
     var json=await r.json();
@@ -436,10 +452,10 @@ async function doLogin(){
         var resData=results[0],folData=results[1];
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
         if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-        loadData().then(function(){restoreFilters();buildCards();});
-      }).catch(function(){loadData().then(function(){buildCards();});});
+        loadData().then(function(){restoreFilters();buildCards();_startAutoRefresh();});
+      }).catch(function(){loadData().then(function(){buildCards();_startAutoRefresh();});});
     } else {
-      loadData().then(function(){buildCards();});
+      loadData().then(function(){buildCards();_startAutoRefresh();});
     }
     toast('Bienvenue '+pr+' !','Connecté à CoursPool');
     // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
@@ -786,7 +802,7 @@ function goExplore(){
           setTimeout(function(){
             if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           },200);
-          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();});
+          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();_startAutoRefresh();});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
@@ -1218,6 +1234,7 @@ function saveProf(){
 function doLogout(){
   user=null;
   clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;
+  _stopAutoRefresh();
   try{localStorage.removeItem('cp_user');}catch(e){}
   try{localStorage.removeItem('cp_res');}catch(e){}
   try{localStorage.removeItem('cp_fav_cours');}catch(e){}
