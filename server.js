@@ -7,6 +7,12 @@ const { Resend } = require('resend');
 const http = require('http');
 const { Server } = require('socket.io');
 
+// Twilio SMS — optionnel si TWILIO_ACCOUNT_SID est configuré
+let twilioClient = null;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+  try { twilioClient = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN); } catch(e) { console.warn('[Twilio] SDK non installé:', e.message); }
+}
+
 const app = express();
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = ['https://courspool.vercel.app', 'capacitor://localhost'];
@@ -367,6 +373,8 @@ app.use(function(req, res, next) {
   if (req.method === 'POST' && req.path === '/auth/register') return next();
   if (req.method === 'POST' && req.path === '/auth/login') return next();
   if (req.method === 'POST' && req.path === '/auth/refresh') return next();
+  if (req.method === 'POST' && req.path === '/auth/send-sms') return next();
+  if (req.method === 'POST' && req.path === '/auth/verify-sms') return next();
   if (req.method === 'GET'  && req.path === '/cours') return next();
   if (req.method === 'GET'  && req.path.startsWith('/cours/code/')) return next();
   if (req.method === 'GET'  && req.path.startsWith('/profiles/')) return next();
@@ -380,6 +388,41 @@ app.use(function(req, res, next) {
 // TEST
 app.get('/', (req, res) => {
   res.json({ message: 'CoursPool API fonctionne !' });
+});
+
+// AUTH — envoyer code SMS
+app.post('/auth/send-sms', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ error: 'Numéro requis' });
+    const clean = phone.replace(/\s/g, '');
+    if (!/^\+?[0-9]{8,15}$/.test(clean)) return res.status(400).json({ error: 'Numéro invalide' });
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    if (!global._smsCodes) global._smsCodes = new Map();
+    global._smsCodes.set(clean, { code, expires: Date.now() + 10 * 60 * 1000 });
+    // Nettoyer les vieux codes
+    for (const [k, v] of global._smsCodes.entries()) { if (v.expires < Date.now()) global._smsCodes.delete(k); }
+    if (twilioClient) {
+      await twilioClient.messages.create({ body: 'CoursPool : votre code de vérification est ' + code, from: process.env.TWILIO_PHONE_NUMBER, to: clean });
+    } else {
+      console.log('[SMS dev] code pour', clean, ':', code);
+    }
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Erreur envoi SMS : ' + e.message }); }
+});
+
+// AUTH — vérifier code SMS
+app.post('/auth/verify-sms', async (req, res) => {
+  try {
+    const { phone, code } = req.body;
+    if (!phone || !code) return res.status(400).json({ error: 'Données manquantes' });
+    const clean = phone.replace(/\s/g, '');
+    const stored = global._smsCodes && global._smsCodes.get(clean);
+    if (!stored || stored.expires < Date.now()) return res.status(400).json({ error: 'Code expiré. Renvoyez un SMS.' });
+    if (stored.code !== String(code)) return res.status(400).json({ error: 'Code incorrect' });
+    global._smsCodes.delete(clean);
+    res.json({ success: true, verified: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // AUTH — inscription
@@ -398,7 +441,9 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
     statut: req.body.statut || null,
     niveau: req.body.niveau || null,
     matieres: req.body.matieres || null,
-    verified: role === 'eleve' ? true : false
+    verified: role === 'eleve' ? true : false,
+    phone: req.body.phone || null,
+    phone_verified: req.body.phone_verified === true
   }]);
   // Email de bienvenue
   const userName = (prenom + ' ' + (nom||'')).trim();
@@ -911,14 +956,29 @@ app.get('/follows/:user_id', async (req, res) => {
 // EMAIL — vérification prof
 // CONTACT — formulaire utilisateur → dashboard admin + email
 app.post('/contact', async (req, res) => {
-  const { email, sujet, message, nom, role, userId } = req.body;
+  const { email, nom, role, sujet, message, photo_base64 } = req.body;
   if (!email || !message) return res.status(400).json({ error: 'Données manquantes' });
+  let photo_url = null;
+  if (photo_base64 && photo_base64.startsWith('data:image/')) {
+    try {
+      const base64Data = photo_base64.split(',')[1];
+      const buffer = Buffer.from(base64Data, 'base64');
+      const ext = photo_base64.split(';')[0].split('/')[1] || 'jpg';
+      const filename = 'support-' + Date.now() + '.' + ext;
+      const { error: uploadErr } = await supabase.storage.from('support').upload(filename, buffer, { contentType: 'image/' + ext, upsert: false });
+      if (!uploadErr) {
+        const { data: pubData } = supabase.storage.from('support').getPublicUrl(filename);
+        photo_url = pubData?.publicUrl || null;
+      }
+    } catch(e) { /* ignore photo error, still send message */ }
+  }
   try {
     // 1. Stocker en base Supabase
     const { error: dbErr } = await supabase.from('contacts').insert([{
       email, sujet: sujet || 'Question générale', message,
       nom: nom || '', role: role || 'inconnu',
-      user_id: userId || null,
+      user_id: req.body.user_id || null,
+      photo_url: photo_url,
       lu: false,
       created_at: new Date().toISOString()
     }]);
@@ -1329,8 +1389,10 @@ app.get('/profiles/:id', async (req, res) => {
   if(error){const status=error.code==='PGRST116'?404:500;return res.status(status).json({error:error.message});}
   // Compter les vrais followers depuis la table follows (source de vérité)
   const {count}=await supabase.from('follows').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id);
+  const {count:coursDonnes}=await supabase.from('cours').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id).lt('date_heure',new Date().toISOString());
   const profile = data || {};
   profile.nb_eleves = count || 0;
+  profile.cours_donnes = coursDonnes || 0;
   res.json(profile);
 });
 
