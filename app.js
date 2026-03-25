@@ -219,7 +219,7 @@ function buildFavPage(){
     } else {
       if(coursSection)coursSection.style.display='block';
       carousel.innerHTML=favIds.map(function(id){
-        var c=C.find(function(x){return x.id===id;});
+        var c=C.find(function(x){return x.id==id;});
         if(!c){
           // Si C[] pas encore chargé, ne rien afficher (skeleton) pour éviter les faux positifs
           if(!C.length)return'<div class="fav-cours-card skeleton" style="min-height:140px"></div>';
@@ -1015,7 +1015,7 @@ function buildAccLists(){
   else{
     var now=new Date();
     lr.innerHTML+=rIds.map(function(id){
-      var c=C.find(function(x){return x.id===id});if(!c)return'';
+      var c=C.find(function(x){return x.id==id});if(!c)return'';
       var isPast=false;
       try{
         var _dtParsed=new Date(c.dt_iso||c.dt);
@@ -1762,7 +1762,7 @@ function openR(id){haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
   var _rBtn=document.querySelector('[data-id="'+id+'"] .btnr');
   if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);}
-  var c=C.find(function(x){return x.id===id});
+  var c=C.find(function(x){return x.id==id});
   if(!c)return;
   var isOwner=user&&c.pr===user.id;
   // Si c'est le prof qui consulte son propre cours, ne pas bloquer
@@ -1820,7 +1820,7 @@ function openR(id){haptic(4);
 function closeR(){closeM('bdR');}
 
 async function openEleves(id){
-  var c=C.find(function(x){return x.id===id;});
+  var c=C.find(function(x){return x.id==id;});
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' inscrit'+(c.fl>1?'s':'');
   var list=g('elevesList');
@@ -1868,7 +1868,7 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
 async function confR(){haptic(15);
   var id=curId;
   if(!id){toast('Erreur','Veuillez réessayer');return;}
-  var c=C.find(function(x){return x.id===id});
+  var c=C.find(function(x){return x.id==id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
@@ -1903,14 +1903,15 @@ function contR(){
 
 // AUTRE PERSONNE
 function openO(id){
-  curId=id;var c=C.find(function(x){return x.id===id});
+  curId=id;var c=C.find(function(x){return x.id==id});
+  if(!c)return;
   g('oTit').textContent=c.title;g('oPrc').textContent=(c.sp>0?Math.ceil(c.tot/c.sp):0)+'€';
   openM('bdO');
 }
 function closeO(){closeM('bdO');}
 function confO(){
   var id=curId;closeM('bdO');
-  var c=C.find(function(x){return x.id===id});
+  var c=C.find(function(x){return x.id==id});
   if(!c||c.fl>=c.sp){if(c)openF(c.pr,c.title);return;}
   // Afficher la modal de paiement pour une autre personne
   curId=id;
@@ -1934,7 +1935,7 @@ function confO(){
 }
 
 async function confAmi(id){
-  var c=C.find(function(x){return x.id===id});
+  var c=C.find(function(x){return x.id==id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   var btn=document.querySelector('#bdR .pb.pri');
@@ -2345,7 +2346,7 @@ function togglePw(id,btn){
 
 // SUPPRIMER SON COURS avec confirmation
 function dupCours(id){
-  var c=C.find(function(x){return x.id===id;});
+  var c=C.find(function(x){return x.id==id;});
   if(!c)return;
   // Pré-remplir le formulaire avec les données du cours
   closeR();
@@ -2387,7 +2388,7 @@ async function deleteCours(id){
 }
 
 function openConfirmDelete(id){
-  var c=C.find(function(x){return x.id===id;});
+  var c=C.find(function(x){return x.id==id;});
   if(!c)return;
   window._deleteId=id;
   g('confirmDelTitre').textContent=c.title;
@@ -2912,7 +2913,7 @@ function removeCustomFilter(key){
   try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
   var pill=document.querySelector('[data-f="custom_'+key+'"]');
   if(pill){
-    if(pill.classList.contains('on'))setPill(document.querySelector('[data-f="tous"]'));
+    if(pill.classList.contains('on')){var _tous=g('pillTous')||document.querySelector('[data-f="tous"]');if(_tous)setPill(_tous);}
     pill.remove();
   }
   delete FM['custom_'+key];
@@ -4543,7 +4544,7 @@ function buildHistorique(){
     return;
   }
   var now=new Date();
-  var past=rIds.map(function(id){return C.find(function(x){return x.id===id;});}).filter(function(c){
+  var past=rIds.map(function(id){return C.find(function(x){return x.id==id;});}).filter(function(c){
     if(!c||!c.created_at)return false;
     return(now-new Date(c.created_at))>3*60*60*1000;
   });
@@ -4668,7 +4669,7 @@ function checkCoursANoter(){
   if(!user||!user.id||user.role==='professeur')return;
   var now=new Date();
   // Cours passés depuis plus de 1h et pas encore notés (pas de notation dans localStorage)
-  var aNoter=Object.keys(res).map(function(id){return C.find(function(x){return x.id===id;});}).filter(function(c){
+  var aNoter=Object.keys(res).map(function(id){return C.find(function(x){return x.id==id;});}).filter(function(c){
     if(!c||!c.created_at)return false;
     var diff=now-new Date(c.created_at);
     if(diff<3600000)return false; // moins d'1h
@@ -4686,7 +4687,7 @@ function checkCoursANoter(){
 function checkUpcomingReminder(){
   if(!user||!Object.keys(res).length)return;
   var now=new Date();
-  var upcoming=Object.keys(res).map(function(id){return C.find(function(x){return x.id===id;});}).filter(Boolean).filter(function(c){
+  var upcoming=Object.keys(res).map(function(id){return C.find(function(x){return x.id==id;});}).filter(Boolean).filter(function(c){
     try{var d=new Date(c.created_at||now);var diff=(d.getTime()+24*3600000)-now.getTime();return diff>0&&diff<3*3600000;}catch(e){return false;}
   });
   var rb=g('reminderBand');
@@ -5207,7 +5208,7 @@ async function subCrStep(){
   openR=function(id){
     _or(id);
     setTimeout(function(){
-      var c=C.find(function(x){return x.id===id;});if(!c)return;
+      var c=C.find(function(x){return x.id==id;});if(!c)return;
       var rmb=g('rModeBadge');
       if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?'Visio':'Présentiel')+'</span>';}
       var rvj=g('rVisioJoin');
@@ -5231,7 +5232,7 @@ async function subCrStep(){
   buildCards=function(){
     _bc.apply(this,arguments);
     document.querySelectorAll('.card').forEach(function(card){
-      var id=card.dataset.id;var c=C.find(function(x){return x.id===id;});
+      var id=card.dataset.id;var c=C.find(function(x){return x.id==id;});
       if(!c||c.mode!=='visio')return;
       var ctopDiv=card.querySelector('.ctop>div');
       if(ctopDiv&&!ctopDiv.querySelector('.mode-badge')){
