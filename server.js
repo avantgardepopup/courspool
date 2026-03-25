@@ -510,7 +510,7 @@ app.get('/cours/code/:code', async (req, res) => {
 });
 
 // COURS — export calendrier .ics
-app.get('/cours/:id/ics', async (req, res) => {
+app.get('/cours/:id/ics', requireAuth, async (req, res) => {
   try {
     const { data: cours, error } = await supabase.from('cours')
       .select('id,titre,sujet,date_heure,lieu,description,professeur_id,prof_nom')
@@ -919,7 +919,8 @@ app.post('/contact', async (req, res) => {
     try {
       const base64Data = photo_base64.split(',')[1];
       const buffer = Buffer.from(base64Data, 'base64');
-      const ext = photo_base64.split(';')[0].split('/')[1] || 'jpg';
+      const rawExt = photo_base64.split(';')[0].split('/')[1] || 'jpg';
+      const ext = ['jpg','jpeg','png','webp'].includes(rawExt) ? rawExt : 'jpg';
       const filename = 'support-' + Date.now() + '.' + ext;
       const { error: uploadErr } = await supabase.storage.from('support').upload(filename, buffer, { contentType: 'image/' + ext, upsert: false });
       if (!uploadErr) {

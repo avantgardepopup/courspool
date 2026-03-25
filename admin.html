@@ -934,6 +934,7 @@ async function openSupportMsg(id){
     '<div style="margin-bottom:16px">'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">'
     +'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">De : '+escHtml(c.nom||'Anonyme')+'</span>'
+    +(c.email?'<span style="background:var(--bg);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--mid)">'+escHtml(c.email)+'</span>':'')
     +'<span style="background:var(--orp);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--or)">'+escHtml(c.sujet)+'</span>'
     +'</div>'
     +'<div style="font-size:11px;color:var(--lite);margin-bottom:16px">'+date+'</div>'
