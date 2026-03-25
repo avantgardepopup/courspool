@@ -150,7 +150,7 @@ function saveFavCours(){
 }
 
 function updateFavBadge(){
-  var total=favCours.size+fol.size;
+  var total=favCours.size;
   var badge=g('bnavFavBadge');
   if(!badge)return;
   if(total>0){badge.style.display='flex';badge.textContent=total>9?'9+':String(total);}
@@ -953,7 +953,50 @@ function buildAccLists(){
   var rp=g('accRolePill');
   if(rp)rp.textContent=isProf?'👨‍🏫 Professeur':'👤 Élève';
   var lr=g('listR');
-  if(!rIds.length){lr.innerHTML='<div style="text-align:center;padding:40px 20px">'
+  // ── Section "Mes cours créés" pour les professeurs ──
+  var profCoursHtml='';
+  if(isProf){
+    var myC=C.filter(function(c){return c.pr===user.id;});
+    profCoursHtml='<div style="padding:20px 20px 0">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Mes cours créés</div>';
+    if(!myC.length){
+      profCoursHtml+='<div style="background:var(--bg);border-radius:16px;padding:20px;text-align:center">'
+        +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">Vous n\'avez pas encore créé de cours</div>'
+        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Créer un cours →</button>'
+        +'</div>';
+    } else {
+      profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">';
+      myC.forEach(function(c){
+        var mat=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
+        var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+        var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
+        var isFull=c.fl>=c.sp;
+        profCoursHtml+='<div onclick="openR(\''+esc(c.id)+'\')" style="flex:0 0 200px;background:var(--wh);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid var(--bdr);transition:opacity .15s" onmouseenter="this.style.opacity=\'.8\'" onmouseleave="this.style.opacity=\'1\'">'
+          +'<div style="height:6px;background:'+mat.bg+'"></div>'
+          +'<div style="padding:12px 14px">'
+          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+mat.color+';margin-bottom:6px">'+esc(c.subj)+'</div>'
+          +'<div style="font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
+          +'<div style="font-size:11px;color:var(--lite);margin-bottom:8px">'+esc(c.dt)+'</div>'
+          +'<div style="display:flex;align-items:center;justify-content:space-between">'
+          +'<div style="font-size:11px;color:var(--mid);font-weight:600">'+c.fl+'/'+c.sp+' élèves</div>'
+          +'<div style="font-size:12px;font-weight:800;color:var(--or)">'+pp+'€</div>'
+          +'</div>'
+          +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
+          +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px;transition:width .3s"></div>'
+          +'</div>'
+          +(isFull?'<div style="font-size:10px;font-weight:700;color:#22C069;margin-top:5px">Complet</div>':'')
+          +'</div>'
+          +'</div>';
+      });
+      profCoursHtml+='</div>';
+    }
+    profCoursHtml+='</div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Mes réservations</div>';
+  }
+  lr.innerHTML=profCoursHtml;
+  if(!rIds.length){lr.innerHTML+=isProf
+    ?'<div style="padding:0 20px 20px;font-size:13px;color:var(--lite)">Aucune réservation à venir</div>'
+    :'<div style="text-align:center;padding:40px 20px">'
     +'<div style="width:72px;height:72px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
     +'</div>'
@@ -963,22 +1006,12 @@ function buildAccLists(){
     +'</div>';}
   else{
     var now=new Date();
-    lr.innerHTML=rIds.map(function(id){
+    lr.innerHTML+=rIds.map(function(id){
       var c=C.find(function(x){return x.id===id});if(!c)return'';
-      // Le cours est passé si created_at + durée est dépassé
-      // On compare simplement avec la date stockée dans c.dt
-      // Format: "dim. 15 mars · 04:30" - on considère passé si la date du cours < maintenant
       var isPast=false;
       try{
-        // Extraire l'heure
         var heureMatch=c.dt.match(/(\d{1,2}):(\d{2})$/);
-        if(heureMatch){
-          var today=new Date();
-          var coursDate=new Date(c.created_at||now);
-          // Si cours créé il y a plus de 24h et heure passée = cours terminé
-          var diffMs=now-new Date(c.created_at||now);
-          isPast=diffMs>24*60*60*1000;
-        }
+        if(heureMatch){var diffMs=now-new Date(c.created_at||now);isPast=diffMs>24*60*60*1000;}
       }catch(e){}
       var noteBtn=isPast&&user&&user.role!=='professeur'?
         '<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;margin-left:6px">⭐ Noter</button>':'';
