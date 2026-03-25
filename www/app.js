@@ -1020,30 +1020,43 @@ function buildAccLists(){
       var c=C.find(function(x){return x.id===id});if(!c)return'';
       var isPast=false;
       try{
-        var heureMatch=c.dt.match(/(\d{1,2}):(\d{2})$/);
-        if(heureMatch){var diffMs=now-new Date(c.created_at||now);isPast=diffMs>24*60*60*1000;}
+        var _dtParsed=new Date(c.dt_iso||c.dt);
+        if(!isNaN(_dtParsed))isPast=_dtParsed<now;
+        else{var diffMs=now-new Date(c.created_at||now);isPast=diffMs>24*60*60*1000;}
       }catch(e){}
       var noteBtn=isPast&&user&&user.role!=='professeur'?
-        '<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;margin-left:6px">⭐ Noter</button>':'';
-      var _mf=findMatiere(c.subj||'');
-      var _dc=_mf?_mf.color:'var(--or)';
+        '<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">⭐ Noter</button>':'';
+      var _mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
+      var _isDk=document.documentElement.classList.contains('dk');
+      var _bg=_isDk?_mf.bgDark:_mf.bg;
+      var _color=_mf.color;
       var _ph=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
-      var _phHtml=_ph?'<img src="'+_ph+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<span style="font-size:10px;font-weight:700;color:var(--or)">'+( c.prof_ini||'?')+'</span>';
-      return'<div class="rrow" onclick="openR(\''+c.id+'\')" style="cursor:pointer;align-items:flex-start">'
-        +'<div style="width:44px;height:44px;border-radius:12px;background:'+( _mf?_mf.bg:'var(--orp)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+_dc+'"></div></div>'
-        +'<div class="ri" style="flex:1;min-width:0">'
-        +'<div class="rt" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+c.title+'</div>'
-        +'<div style="display:flex;align-items:center;gap:5px;margin-top:3px">'
-        +'<div style="width:16px;height:16px;border-radius:50%;background:'+( _ph?'none':'linear-gradient(135deg,#FF8C55,var(--ord))')+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0" data-prof="'+c.pr+'">'+_phHtml+'</div>'
-        +'<span data-profnm="'+c.pr+'" style="font-size:12px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+((P[c.pr]&&P[c.pr].nm)||c.prof_nm)+'</span>'
+      var _ini=c.prof_ini||(c.prof_nm?c.prof_nm[0]:'?');
+      var _phHtml=_ph?'<img src="'+esc(_ph)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<span style="font-size:9px;font-weight:700;color:#fff">'+esc(_ini)+'</span>';
+      var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+      var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+      return'<div onclick="openR(\''+c.id+'\')" style="background:var(--wh);border-radius:18px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid var(--bdr);margin:0 20px 12px;cursor:pointer;transition:opacity .15s;active:opacity:.8" onmousedown="this.style.opacity=\'.85\'" onmouseup="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'1\'">'
+        // Bande colorée + matière + titre
+        +'<div style="background:'+_bg+';padding:14px 16px 12px">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+        +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(c.subj)+'</span>'
+        +(isPast?'<span class="rbadge bdone" style="font-size:10px">Terminé</span>':'<span class="rbadge bup" style="font-size:10px">À venir</span>')
         +'</div>'
-        +'<div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap">'
-        +'<span style="display:flex;align-items:center;gap:3px;font-size:11.5px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+c.dt+'</span>'
-        +'<span style="display:flex;align-items:center;gap:3px;font-size:11.5px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+c.lc+'</span>'
+        +'<div style="font-size:15px;font-weight:800;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
+        +'</div>'
+        // Corps : date + lieu + prof + prix
+        +'<div style="padding:10px 16px 14px">'
+        +'<div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">'
+        +'<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(c.dt)+'</span>'
+        +(_isVisio?'<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio</span>':'<span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</span>')
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0" data-prof="'+c.pr+'">'+_phHtml+'</div>'
+        +'<span data-profnm="'+c.pr+'" style="font-size:12px;color:var(--mid);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur')+'</span>'
+        +(pp?'<span style="font-size:13px;font-weight:800;color:var(--or)">'+pp+'€<span style="font-size:10px;font-weight:500;color:var(--lite)"> / élève</span></span>':'')
+        +(noteBtn?'<span>'+noteBtn+'</span>':'')
         +'</div>'
         +'</div>'
-        +(isPast?'<span class="rbadge bdone">Terminé</span>':'<span class="rbadge bup">À venir</span>')
-        +noteBtn
         +'</div>';
     }).join('');
   }
@@ -1428,6 +1441,19 @@ function toggleFollowCard(pid,btn){
   if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
   updateFavBadge();
   haptic(8);
+  // Fetch différé du vrai compteur depuis l'API (1.5s pour laisser le backend traiter)
+  setTimeout(function(){
+    fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
+      if(!prof||!prof.id)return;
+      var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
+      if(_nbE!==undefined&&_nbE>0){
+        P[pid]=P[pid]||{};
+        P[pid].e=Math.max(_nbE,P[pid].e||0);
+        if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
+        _saveFollowCount(pid,P[pid].e);
+      }
+    }).catch(function(){});
+  },1500);
 }
 
 function renderPage(){
@@ -2842,15 +2868,14 @@ function addFilterQuick(val){
   var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(customFilters.find(function(f){return f.key===key;}))return;
   customFilters.push({label:val,key:key});
-  // Ajouter la pill dans la barre (non active — l'utilisateur clique dessus pour l'activer)
-  var bar=g('pillsBar');
+  // Insérer la pill dans la barre avant le bouton + (addBtn.parentNode = #filterBar)
   var addBtn=g('pillAdd');
-  var pill=document.createElement('div');
-  pill.className='pill';
+  var pill=document.createElement('button');
+  pill.className='filter-pill-btn pill';
   pill.dataset.f='custom_'+key;
-  pill.innerHTML=val+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
+  pill.innerHTML=esc(val)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
   pill.onclick=function(){setPill(pill);};
-  bar.insertBefore(pill,addBtn);
+  addBtn.parentNode.insertBefore(pill,addBtn);
   // Ajouter le filtre dans FM
   FM['custom_'+key]=function(t){return t.includes(key);};
   closeAddFilter();
