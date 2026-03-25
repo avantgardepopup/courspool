@@ -96,6 +96,32 @@ function apiH(extra){
   return h;
 }
 
+// ── Refresh token automatique ──────────────────────────────
+var _refreshTimer=null;
+function _scheduleTokenRefresh(){
+  if(_refreshTimer){clearTimeout(_refreshTimer);_refreshTimer=null;}
+  if(!user||!user.refresh_token||!user.token_exp)return;
+  var msLeft=(user.token_exp-Math.floor(Date.now()/1000)-120)*1000; // 2 min avant expiry
+  if(msLeft<0)msLeft=0;
+  _refreshTimer=setTimeout(_refreshToken,msLeft);
+}
+async function _refreshToken(){
+  if(!user||!user.refresh_token)return;
+  try{
+    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:user.refresh_token})});
+    if(!r.ok)return;
+    var d=await r.json();
+    if(d.access_token){
+      user.token=d.access_token;
+      if(d.refresh_token)user.refresh_token=d.refresh_token;
+      if(d.expires_at)user.token_exp=d.expires_at;
+      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+      _scheduleTokenRefresh();
+      console.log('[Auth] token rafraîchi, expire à',new Date(user.token_exp*1000).toLocaleTimeString());
+    }
+  }catch(e){console.warn('[Auth] refresh échoué:',e.message);}
+}
+
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
 function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function fmtDt(dt){
@@ -441,9 +467,12 @@ async function doLogin(){
       niveau:p.niveau||'',
       matieres:p.matieres||'',
       bio:p.bio||'',
-      token:data.session&&data.session.access_token?data.session.access_token:undefined
+      token:data.session&&data.session.access_token?data.session.access_token:undefined,
+      refresh_token:data.session&&data.session.refresh_token?data.session.refresh_token:undefined,
+      token_exp:data.session&&data.session.expires_at?data.session.expires_at:undefined
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+    _scheduleTokenRefresh();
     applyUser();
     // Vider toute la session précédente (profils, follows, résa, favoris)
     Object.keys(P).forEach(function(k){delete P[k]});
@@ -491,13 +520,15 @@ async function doReg(){
     // Auto-login pour obtenir le token JWT
     var loginR=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
     var loginData=await loginR.json();
-    var token=loginData.session&&loginData.session.access_token?loginData.session.access_token:undefined;
+    var sess=loginData.session||{};
+    var token=sess.access_token||undefined;
+    var rtok=sess.refresh_token||undefined;
+    var texp=sess.expires_at||undefined;
     if(role==='professeur'){
       var uid=data.user.id;
-      // Connecter directement sans message intermédiaire
-      go(pr,nm,em,role,uid,null,token);
+      go(pr,nm,em,role,uid,null,token,rtok,texp);
       setTimeout(tutoStart,1200);
-    }else{go(pr,nm,em,role,data.user.id,null,token);setTimeout(tutoStart,1200);}
+    }else{go(pr,nm,em,role,data.user.id,null,token,rtok,texp);setTimeout(tutoStart,1200);}
   }catch(e){toast('Erreur','Impossible de créer le compte');}
 }
 
@@ -529,9 +560,10 @@ function doGuest(){
   setTimeout(obShow, 500);
 }
 
-function go(pr,nm,em,role,uid,photoUrl,token){
-  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined};
+function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined,refresh_token:refreshToken||undefined,token_exp:tokenExp||undefined};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+  _scheduleTokenRefresh();
   applyUser();
   loadData().then(function(){buildCards();});
   toast('Bienvenue '+pr+' !','Connecté à CoursPool');
@@ -786,13 +818,18 @@ function goExplore(){
       // Guest = pas de session persistante → ramener à l'écran login
       if(parsedUser.guest){
         localStorage.removeItem('cp_user');
-        // Charger les cours en arrière-plan pour que l'app soit prête
         loadData().then(function(){buildCards();});
-        // Rester sur l'écran login — l'utilisateur devra cliquer "Continuer sans compte"
+        return;
+      }
+      // Session sans token JWT (avant mise à jour sécurité) → forcer reconnexion
+      if(!parsedUser.token){
+        localStorage.removeItem('cp_user');
+        loadData().then(function(){buildCards();});
         return;
       }
       // Utilisateur connecté → restaurer la session
       user=parsedUser;
+      _scheduleTokenRefresh();
       applyUser();
       if(user.id){
         Promise.all([

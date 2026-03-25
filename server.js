@@ -336,6 +336,7 @@ app.use(function(req, res, next) {
   if (req.method === 'GET'  && req.path === '/') return next();
   if (req.method === 'POST' && req.path === '/auth/register') return next();
   if (req.method === 'POST' && req.path === '/auth/login') return next();
+  if (req.method === 'POST' && req.path === '/auth/refresh') return next();
   if (req.method === 'GET'  && req.path === '/cours') return next();
   if (req.method === 'GET'  && req.path.startsWith('/cours/code/')) return next();
   if (req.method === 'GET'  && req.path.startsWith('/profiles/')) return next();
@@ -372,6 +373,19 @@ app.post('/auth/register', async (req, res) => {
   const userName = (prenom + ' ' + (nom||'')).trim();
   sendEmailWelcome(email, prenom || userName, role).catch(() => {});
   res.json({ user: data.user });
+});
+
+// AUTH — refresh token
+app.post('/auth/refresh', async (req, res) => {
+  const { refresh_token } = req.body;
+  if (!refresh_token) return res.status(400).json({ error: 'refresh_token manquant' });
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token });
+  if (error || !data.session) return res.status(401).json({ error: 'Token invalide ou expiré' });
+  res.json({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    expires_at: data.session.expires_at
+  });
 });
 
 // AUTH — connexion
