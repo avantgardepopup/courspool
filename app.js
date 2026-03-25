@@ -920,6 +920,9 @@ async function checkStripeReturn(){
       var p=document.getElementById('popupPaid');
       var msg=document.getElementById('popupPaidMsg');
       if(msg)msg.textContent=pourAmi?'La place supplémentaire a été réservée. Un email de confirmation a été envoyé.':'Votre place est réservée. Un email de confirmation vous a été envoyé.';
+      window._paidCoursId=coursId;
+      var calBtn=document.getElementById('popupPaidCalBtn');
+      if(calBtn)calBtn.style.display=pourAmi?'none':'flex';
       if(p){p.style.display='flex';haptic(40);}
       var icon=p?p.querySelector('div[style*="F0FDF4"]'):null;
       if(icon){icon.style.transform='scale(0)';icon.style.transition='transform .5s cubic-bezier(.34,1.56,.64,1)';requestAnimationFrame(function(){requestAnimationFrame(function(){icon.style.transform='scale(1)';});});}
@@ -5535,7 +5538,9 @@ function buildMesCard(c,isPast,isProf){
     +'<div style="display:flex;align-items:center;gap:8px">'
     +'<span class="mode-badge '+mC+'">'+mL+'</span>'
     +(c.prive?'<span style="background:var(--bg);border:1px solid var(--bdr);border-radius:50px;padding:3px 8px;font-size:10.5px;font-weight:600;color:var(--mid)">Priv\u00e9</span>':'')
-    +'</div>'+code+shareLink+visio+'</div>';
+    +'</div>'+code+shareLink+visio
+    +'<button class="mes-cal-btn" data-cid="'+escH(c.id)+'" onclick="event.stopPropagation();addToCalendar(\''+escH(c.id)+'\')" style="margin-top:10px;width:100%;padding:9px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Ajouter au calendrier</button>'
+    +'</div>';
 }
 
 function openAddVisioLink(coursId){
@@ -5559,6 +5564,20 @@ function openAddVisioLink(coursId){
   var btnC=document.createElement('button');btnC.style.cssText='width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:6px';btnC.textContent='Annuler';btnC.onclick=function(){bd.remove();};sheet.appendChild(btnC);
   bd.appendChild(sheet);document.body.appendChild(bd);
   setTimeout(function(){inp.focus();},200);
+}
+
+// ---- Ajouter au calendrier ----
+async function addToCalendar(coursId){
+  try{
+    var r=await fetch(API+'/cours/'+coursId+'/ics',{headers:apiH()});
+    if(!r.ok){toast('Erreur','Impossible de générer le calendrier');return;}
+    var blob=await r.blob();
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='cours.ics';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  }catch(e){toast('Erreur réseau','');}
 }
 
 // ---- Share cours in messagerie ----

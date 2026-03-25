@@ -1626,6 +1626,7 @@
     </div>
     <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement confirmé !</div>
     <div id="popupPaidMsg" style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5">Votre place est réservée. Un email de confirmation vous a été envoyé.</div>
+    <button id="popupPaidCalBtn" onclick="if(window._paidCoursId)addToCalendar(window._paidCoursId)" style="width:100%;background:none;color:#FF6B2B;border:1.5px solid #FF6B2B;border-radius:14px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Ajouter au calendrier</button>
     <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Super ! 🎉</button>
   </div>
 </div>

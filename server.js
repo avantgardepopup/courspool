@@ -508,6 +508,52 @@ app.get('/cours/code/:code', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// COURS — export calendrier .ics
+app.get('/cours/:id/ics', async (req, res) => {
+  try {
+    const { data: cours, error } = await supabase.from('cours')
+      .select('id,titre,sujet,date_heure,lieu,description,professeur_id,prof_nom')
+      .eq('id', req.params.id).single();
+    if (error || !cours) return res.status(404).json({ error: 'Cours introuvable' });
+    // Vérifier accès : professeur du cours OU a une réservation
+    const isProf = cours.professeur_id === req.user.id;
+    if (!isProf) {
+      const { data: resa } = await supabase.from('reservations')
+        .select('id').eq('cours_id', req.params.id).eq('user_id', req.user.id).maybeSingle();
+      if (!resa) return res.status(403).json({ error: 'Accès refusé' });
+    }
+    // Générer le .ics (RFC 5545)
+    const dtStart = new Date(cours.date_heure);
+    const dtEnd = new Date(dtStart.getTime() + 60 * 60 * 1000); // +1h
+    function toIcsDate(d) {
+      return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    }
+    const esc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+    const uid = 'cours-' + cours.id + '@courspool.app';
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//CoursPool//CoursPool//FR',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTART:' + toIcsDate(dtStart),
+      'DTEND:' + toIcsDate(dtEnd),
+      'SUMMARY:' + esc(cours.titre || cours.sujet),
+      'LOCATION:' + esc(cours.lieu),
+      'DESCRIPTION:' + esc(cours.description || ('Cours avec ' + (cours.prof_nom || ''))),
+      'ORGANIZER;CN=' + esc(cours.prof_nom || 'Professeur') + ':mailto:noreply@courspool.app',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+    const filename = encodeURIComponent((cours.titre || 'cours').replace(/[^a-zA-Z0-9\-_]/g, '_')) + '.ics';
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
+    res.send(ics);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // COURS — supprimer
 app.delete('/cours/:id', async (req, res) => {
   try {
