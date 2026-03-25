@@ -1325,7 +1325,7 @@ function _fetchProf(pid){
     // Persister dans localStorage pour que le prochain chargement démarre avec des données fraîches
     try{
       var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');
-      _pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};
+      _pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};
       localStorage.setItem('cp_profs',JSON.stringify(_pc));
     }catch(ex){}
     // Mettre à jour le header de conversation si c'est l'interlocuteur actif
@@ -2147,6 +2147,8 @@ function togFP(){
     }
   }
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
+  // Persister le nouveau compteur dans le cache localStorage
+  if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(_pc2[id])_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
   updateFavBadge();
 }
@@ -2587,7 +2589,9 @@ async function loadConversations(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length){
-      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px;font-weight:600">Aucune conversation</div><div style="font-size:12px;margin-top:6px">Contactez un professeur depuis un cours</div></div>';
+      var _isProf=user&&user.role==='professeur';
+      var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
+      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px;font-weight:600">Aucune conversation</div><div style="font-size:12px;margin-top:6px">'+_emptyDesc+'</div></div>';
       _convLoading=false;return;
     }
     // Grouper par interlocuteur
