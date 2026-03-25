@@ -2864,22 +2864,32 @@ function addCustomFilter(){
   g('filterInput').value='';
 }
 
+// Ajoute la matière dans le popup (liste de sélection) — PAS dans la barre
 function addFilterQuick(val){
   var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(customFilters.find(function(f){return f.key===key;}))return;
   customFilters.push({label:val,key:key});
-  // Insérer la pill dans la barre avant le bouton + (addBtn.parentNode = #filterBar)
-  var addBtn=g('pillAdd');
-  var pill=document.createElement('button');
-  pill.className='filter-pill-btn pill';
-  pill.dataset.f='custom_'+key;
-  pill.innerHTML=esc(val)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
-  pill.onclick=function(){setPill(pill);};
-  addBtn.parentNode.insertBefore(pill,addBtn);
-  // Ajouter le filtre dans FM
-  FM['custom_'+key]=function(t){return t.includes(key);};
+  renderCustomPills();
+}
+
+// Appelé quand l'user clique sur un chip dans le popup → ajoute à la barre et active
+function selectCustomFilter(key){
+  var f=customFilters.find(function(cf){return cf.key===key;});
+  if(!f)return;
+  var existing=document.querySelector('[data-f="custom_'+key+'"]');
+  if(!existing){
+    var addBtn=g('pillAdd');
+    var pill=document.createElement('button');
+    pill.className='filter-pill-btn pill';
+    pill.dataset.f='custom_'+key;
+    pill.innerHTML=esc(f.label)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
+    pill.onclick=function(){setPill(pill);};
+    addBtn.parentNode.insertBefore(pill,addBtn);
+    FM['custom_'+key]=function(t){return t.includes(key);};
+    existing=pill;
+  }
   closeAddFilter();
-  // PAS de setPill() ici — le filtre est ajouté mais pas activé automatiquement
+  setPill(existing);
 }
 
 function removeCustomFilter(key){
@@ -2898,11 +2908,16 @@ function renderCustomPills(){
   var box=g('customPillsList');
   if(!box)return;
   if(!customFilters.length){box.innerHTML='';return;}
-  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Filtres ajoutés</div>'
+  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mes matières — appuie pour filtrer</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
     +customFilters.map(function(f){
-      return'<span style="display:inline-flex;align-items:center;gap:6px;background:var(--orp);color:var(--or);border-radius:50px;padding:5px 12px;font-size:13px;font-weight:600;margin:0 6px 6px 0;border:1.5px solid var(--or)">'+esc(f.label)
-        +'<span onclick="removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.7;font-size:12px;font-weight:700;line-height:1">✕</span></span>';
-    }).join('');
+      var isActive=!!document.querySelector('[data-f="custom_'+f.key+'"].on');
+      return'<span onclick="selectCustomFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:6px;'
+        +(isActive?'background:var(--or);color:#fff;border:1.5px solid var(--or)':'background:var(--orp);color:var(--or);border:1.5px solid var(--or)')
+        +';border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">'+esc(f.label)
+        +'<span onclick="event.stopPropagation();removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.6;font-size:12px;font-weight:700;line-height:1;margin-left:2px">✕</span></span>';
+    }).join('')
+    +'</div>';
 }
 
 // ============================================================
