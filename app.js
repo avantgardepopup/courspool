@@ -1665,10 +1665,24 @@ function doFilter(){
 function setPill(el){haptic(4);document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
 function restoreFilters(){
   try{
+    // Réinjecter dans la barre tous les filtres custom sauvegardés
+    var _addBtn=g('pillAdd');
+    if(_addBtn){
+      customFilters.forEach(function(f){
+        if(!document.querySelector('[data-f="custom_'+f.key+'"]')){
+          var pill=document.createElement('button');
+          pill.className='filter-pill-btn pill';
+          pill.dataset.f='custom_'+f.key;
+          pill.innerHTML=esc(f.label)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+f.key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
+          pill.onclick=function(){setPill(pill);};
+          _addBtn.parentNode.insertBefore(pill,_addBtn);
+        }
+      });
+    }
     var f=sessionStorage.getItem('cp_filter');
     if(f&&f!=='tous'){
-      var el=document.querySelector('.pill[data-f="'+f+'"]');
-      if(el){el.classList.add('on');document.querySelector('.pill[data-f="tous"]').classList.remove('on');actF=f;}
+      var el=document.querySelector('[data-f="'+f+'"]');
+      if(el){el.classList.add('on');var tous=g('pillTous');if(tous)tous.classList.remove('on','active');actF=f;}
     }
     var niv=sessionStorage.getItem('cp_niv');
     if(niv){actNiv=niv;var lbl=g('pillNivLabel');if(lbl)lbl.textContent=niv;var pn=g('pillNiv');if(pn)pn.classList.add('on');}
@@ -4359,7 +4373,7 @@ function resetFilters(){
   var cb=g('locClearBtn');if(cb)cb.style.display='none';
   var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
   document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
-  var first=document.querySelector('.pill[data-f="tous"]');if(first)first.classList.add('on');
+  var tous=g('pillTous');if(tous)tous.classList.add('on');
   document.querySelectorAll('#nivFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   var fn=document.querySelector('#nivFilterList .niv-fchip');if(fn)fn.classList.add('on');
   var lbl=g('pillNivLabel');if(lbl)lbl.textContent='Niveau';
@@ -5392,16 +5406,20 @@ async function sendCoursCardMsg(c){
   }catch(e){toast('Erreur','Envoi impossible');}
 }
 
-// ---- Visual viewport keyboard ----
+// ---- Visual viewport keyboard — colle la barre de saisie au-dessus du clavier ----
 (function(){
   if(!window.visualViewport)return;
-  window.visualViewport.addEventListener('resize',function(){
+  function _onVpResize(){
     var conv=g('msgConvPane');if(!conv||conv.style.display==='none')return;
-    var bar=g('msgInputBar');if(!bar)return;
-    var kbH=window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop;
-    bar.style.paddingBottom=kbH>50?(kbH+10)+'px':'max(12px,env(safe-area-inset-bottom))';
-    var msgs=g('msgMessages');if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},50);
-  },{passive:true});
+    var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    // Réduire la hauteur du panneau depuis le bas pour que la barre remonte avec le clavier
+    conv.style.bottom=kbH>50?kbH+'px':'0';
+    // Scroll vers le bas après l'animation clavier
+    var msgs=g('msgMessages');
+    if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},100);
+  }
+  window.visualViewport.addEventListener('resize',_onVpResize,{passive:true});
+  window.visualViewport.addEventListener('scroll',_onVpResize,{passive:true});
 })();
 
 // ============================================================
