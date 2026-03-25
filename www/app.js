@@ -96,6 +96,32 @@ function apiH(extra){
   return h;
 }
 
+// ── Refresh token automatique ──────────────────────────────
+var _refreshTimer=null;
+function _scheduleTokenRefresh(){
+  if(_refreshTimer){clearTimeout(_refreshTimer);_refreshTimer=null;}
+  if(!user||!user.refresh_token||!user.token_exp)return;
+  var msLeft=(user.token_exp-Math.floor(Date.now()/1000)-120)*1000; // 2 min avant expiry
+  if(msLeft<0)msLeft=0;
+  _refreshTimer=setTimeout(_refreshToken,msLeft);
+}
+async function _refreshToken(){
+  if(!user||!user.refresh_token)return;
+  try{
+    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:user.refresh_token})});
+    if(!r.ok)return;
+    var d=await r.json();
+    if(d.access_token){
+      user.token=d.access_token;
+      if(d.refresh_token)user.refresh_token=d.refresh_token;
+      if(d.expires_at)user.token_exp=d.expires_at;
+      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+      _scheduleTokenRefresh();
+      console.log('[Auth] token rafraîchi, expire à',new Date(user.token_exp*1000).toLocaleTimeString());
+    }
+  }catch(e){console.warn('[Auth] refresh échoué:',e.message);}
+}
+
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
 function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function fmtDt(dt){
@@ -441,9 +467,12 @@ async function doLogin(){
       niveau:p.niveau||'',
       matieres:p.matieres||'',
       bio:p.bio||'',
-      token:data.session&&data.session.access_token?data.session.access_token:undefined
+      token:data.session&&data.session.access_token?data.session.access_token:undefined,
+      refresh_token:data.session&&data.session.refresh_token?data.session.refresh_token:undefined,
+      token_exp:data.session&&data.session.expires_at?data.session.expires_at:undefined
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+    _scheduleTokenRefresh();
     applyUser();
     // Vider toute la session précédente (profils, follows, résa, favoris)
     Object.keys(P).forEach(function(k){delete P[k]});
@@ -491,13 +520,15 @@ async function doReg(){
     // Auto-login pour obtenir le token JWT
     var loginR=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
     var loginData=await loginR.json();
-    var token=loginData.session&&loginData.session.access_token?loginData.session.access_token:undefined;
+    var sess=loginData.session||{};
+    var token=sess.access_token||undefined;
+    var rtok=sess.refresh_token||undefined;
+    var texp=sess.expires_at||undefined;
     if(role==='professeur'){
       var uid=data.user.id;
-      // Connecter directement sans message intermédiaire
-      go(pr,nm,em,role,uid,null,token);
+      go(pr,nm,em,role,uid,null,token,rtok,texp);
       setTimeout(tutoStart,1200);
-    }else{go(pr,nm,em,role,data.user.id,null,token);setTimeout(tutoStart,1200);}
+    }else{go(pr,nm,em,role,data.user.id,null,token,rtok,texp);setTimeout(tutoStart,1200);}
   }catch(e){toast('Erreur','Impossible de créer le compte');}
 }
 
@@ -529,9 +560,10 @@ function doGuest(){
   setTimeout(obShow, 500);
 }
 
-function go(pr,nm,em,role,uid,photoUrl,token){
-  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined};
+function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined,refresh_token:refreshToken||undefined,token_exp:tokenExp||undefined};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+  _scheduleTokenRefresh();
   applyUser();
   loadData().then(function(){buildCards();});
   toast('Bienvenue '+pr+' !','Connecté à CoursPool');
@@ -786,13 +818,18 @@ function goExplore(){
       // Guest = pas de session persistante → ramener à l'écran login
       if(parsedUser.guest){
         localStorage.removeItem('cp_user');
-        // Charger les cours en arrière-plan pour que l'app soit prête
         loadData().then(function(){buildCards();});
-        // Rester sur l'écran login — l'utilisateur devra cliquer "Continuer sans compte"
+        return;
+      }
+      // Session sans token JWT (avant mise à jour sécurité) → forcer reconnexion
+      if(!parsedUser.token){
+        localStorage.removeItem('cp_user');
+        loadData().then(function(){buildCards();});
         return;
       }
       // Utilisateur connecté → restaurer la session
       user=parsedUser;
+      _scheduleTokenRefresh();
       applyUser();
       if(user.id){
         Promise.all([
@@ -1622,7 +1659,7 @@ function renderPage(){
       var isSaved=favCours.has(c.id);
       heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-pid="'+c.pr+'" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#FF6B2B':'var(--lite)')+'">'+( fol.has(c.pr)?'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>' )+'</button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+c.title+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div>'+(_isVisio?'':'<div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>')+'<div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
+    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-pid="'+c.pr+'" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#FF6B2B':'var(--lite)')+'">'+( fol.has(c.pr)?'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>' )+'</button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+esc(c.title)+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div>'+(_isVisio?'':'<div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>')+'<div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
     grid.appendChild(d);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
