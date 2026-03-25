@@ -833,7 +833,7 @@ async function checkStripeReturn(){
       window.history.replaceState({},'',window.location.pathname);
       // Attendre que les cours soient chargés
       function tryOpenCours(){
-        var c=C.find(function(x){return x.id===directCours;});
+        var c=C.find(function(x){return x.id==directCours;});
         if(c){openR(c.id);}
         else{toast('Cours introuvable','Ce lien n\'est plus valide');}
       }
@@ -3016,7 +3016,7 @@ function toggleGroupePerm(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({eleves_peuvent_ecrire:_groupeElevesPermis})
     }).catch(function(){});
-    var c = C.find(function(x){return x.id===_groupeCoursId;});
+    var c = C.find(function(x){return x.id==_groupeCoursId;});
     if(c) c.eleves_peuvent_ecrire = _groupeElevesPermis;
   }
   toast(_groupeElevesPermis ? 'Élèves peuvent écrire' : 'Élèves mis en lecture seule', '');
@@ -3078,7 +3078,7 @@ async function sendGroupeMsg(){
   var btn = g('groupeSubmitBtn'); if(btn) btn.disabled = true;
   inp.value = ''; inp.style.height = 'auto';
   try{
-    var c = C.find(function(x){return x.id===_groupeCoursId;});
+    var c = C.find(function(x){return x.id==_groupeCoursId;});
     await fetch(API+'/messages/groupe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
