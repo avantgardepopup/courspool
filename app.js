@@ -1083,7 +1083,10 @@ function buildAccLists(){
   if(isProf){
     var myC=C.filter(function(c){return c.pr===user.id;});
     profCoursHtml='<div style="padding:20px 20px 0">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Mes cours créés</div>';
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
+      +'<div style="width:28px;height:28px;background:rgba(255,107,43,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes cours créés</div>'
+      +'</div>';
     if(!myC.length){
       profCoursHtml+='<div style="background:var(--bg);border-radius:16px;padding:20px;text-align:center">'
         +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">Vous n\'avez pas encore créé de cours</div>'
@@ -1108,13 +1111,17 @@ function buildAccLists(){
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
           +'</div>'
+          +'<button onclick="event.stopPropagation();addToCalendar(\''+esc(c.id)+'\')" style="margin-top:10px;width:100%;padding:7px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Calendrier</button>'
           +'</div>'
           +'</div>';
       });
       profCoursHtml+='</div>';
     }
     profCoursHtml+='</div>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Mes réservations</div>';
+      +'<div style="display:flex;align-items:center;gap:8px;padding:20px 20px 10px">'
+      +'<div style="width:28px;height:28px;background:rgba(59,130,246,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes réservations</div>'
+      +'</div>';
   }
   lr.innerHTML=profCoursHtml;
   if(!rIds.length){lr.innerHTML+=isProf
