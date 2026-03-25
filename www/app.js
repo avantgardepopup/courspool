@@ -1906,6 +1906,8 @@ function confF(){
     // Incrémenter le compteur d'élèves du prof
     if(P[pid])P[pid].e=(P[pid].e||0)+1;
   }
+  if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+  if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}}
 }
 
 // PROFIL PROF
@@ -2068,7 +2070,12 @@ function openPr(pid){
     if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
     // Nombre d'élèves/abonnés depuis l'API si disponible
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-    if(_nbE!==undefined){P[pid].e=_nbE;if(g('mpE'))g('mpE').textContent=_nbE;}
+    if(_nbE!==undefined){
+      // Si l'user suit déjà ce prof, prendre le max entre API et local
+      // (race condition : le follow vient d'être posté, l'API peut retourner une valeur obsolète)
+      if(fol.has(pid))_nbE=Math.max(_nbE,P[pid].e||0);
+      P[pid].e=_nbE;if(g('mpE'))g('mpE').textContent=_nbE;
+    }
     // Sauvegarder en cache pour le prochain chargement (y compris le compteur abonnés)
     try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
   }).catch(function(){});
