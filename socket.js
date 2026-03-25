@@ -115,21 +115,54 @@ function initSocket() {
     }
   });
 
-  // ── new_message : message instantané + badge non lu ─────────────────────
+  // ── new_message : injection DOM directe ou badge non lu ─────────────────
   _socket.on('new_message', function(data) {
     console.log('[Socket] new_message reçu:', data.expediteur_id, '→', data.destinataire_id);
     if (!user || !user.id) return;
     var isForMe = data.destinataire_id === user.id;
     var isFromMe = data.expediteur_id === user.id;
     if (!isForMe && !isFromMe) return;
-    if (typeof msgDestId !== 'undefined' && msgDestId &&
-        (data.expediteur_id === msgDestId || data.destinataire_id === msgDestId)) {
-      if (typeof loadMessages === 'function') loadMessages();
+
+    var pgMsg = document.getElementById('pgMsg');
+    var convOpen = pgMsg && pgMsg.classList.contains('on');
+    var otherId = isFromMe ? data.destinataire_id : data.expediteur_id;
+    var inCurrentConv = typeof msgDestId !== 'undefined' && msgDestId === otherId;
+
+    // Injection directe dans le DOM si la conversation est ouverte et le payload est complet
+    if (convOpen && inCurrentConv && data.id && data.contenu && data.created_at) {
+      var box = document.getElementById('msgMessages');
+      if (box) {
+        var wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+        var isMe = data.expediteur_id === user.id;
+        var d = new Date(data.created_at);
+        var time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        var txt = data.contenu || '';
+        var safe = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        var avHtml = '';
+        if (!isMe) {
+          var op = (typeof P !== 'undefined' && P[msgDestId]) || {};
+          var oPhoto = op.photo || null;
+          var oIni = op.i || (typeof msgDestinataire !== 'undefined' && msgDestinataire && msgDestinataire[0]) || '?';
+          var oCol = op.col || 'linear-gradient(135deg,#FF8C55,var(--ord))';
+          avHtml = '<div class="msg-bubble-av" style="background:' + oCol + '">'
+            + (oPhoto ? '<img src="' + oPhoto + '" style="width:100%;height:100%;object-fit:cover">' : oIni)
+            + '</div>';
+        }
+        var bubble = '<div class="msg-bubble-row ' + (isMe ? 'me' : 'them') + '">'
+          + (isMe ? '' : avHtml)
+          + '<div class="msg-bubble ' + (isMe ? 'me' : 'them') + '">'
+          + '<div style="white-space:pre-wrap">' + safe + '</div>'
+          + '<div class="msg-bubble-time ' + (isMe ? 'me' : 'them') + '">' + time + '</div>'
+          + '</div>'
+          + '</div>';
+        box.insertAdjacentHTML('beforeend', bubble);
+        if (wasAtBottom) box.scrollTop = box.scrollHeight;
+        return; // badge inutile, message visible
+      }
     }
+
+    // Fallback : badge si la conversation n'est pas ouverte
     if (isForMe) {
-      var pgMsg = document.getElementById('pgMsg');
-      var convOpen = pgMsg && pgMsg.classList.contains('on');
-      var inCurrentConv = typeof msgDestId !== 'undefined' && msgDestId === data.expediteur_id;
       if (!convOpen || !inCurrentConv) {
         var badge = document.getElementById('bnavBadge');
         if (badge) { badge.classList.add('on'); badge.textContent = ''; }

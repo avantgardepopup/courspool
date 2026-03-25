@@ -418,7 +418,8 @@ app.get('/cours', async (req, res) => {
   const sujet = req.query.sujet || null;
   const search = req.query.search || null;
 
-  let query = supabase.from('cours').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+  const COURS_COLS = 'id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,mode,created_at';
+  let query = supabase.from('cours').select(COURS_COLS, { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
   const niveau_filter = req.query.niveau || null;
   if (sujet && sujet !== 'tous') query = query.ilike('sujet', '%' + sujet + '%');
@@ -473,7 +474,7 @@ app.get('/cours/code/:code', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('cours')
-      .select('*')
+      .select('id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,mode,created_at')
       .eq('code_acces', code.toUpperCase())
       .eq('prive', true)
       .single();
@@ -551,7 +552,7 @@ app.post('/stripe/checkout', async (req, res) => {
     const montant = Math.ceil(cours.prix_total / (cours.places_max || 1));
 
     const baseUrl = 'https://courspool.vercel.app';
-    const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
+    const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?session_id={CHECKOUT_SESSION_ID}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
     const cancelUrl = baseUrl + '?cancelled=1';
 
     const session = await stripe.checkout.sessions.create({
@@ -567,7 +568,7 @@ app.post('/stripe/checkout', async (req, res) => {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: { cours_id, user_id, montant: montant.toString() },
+      metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0' },
     });
     res.json({ url: session.url });
   } catch (e) {
@@ -677,16 +678,30 @@ app.post('/stripe/confirm-payment', async (req, res) => {
 
 // STRIPE — page de succès qui crée la réservation et redirige
 app.get('/stripe/success', async (req, res) => {
-  const { cours_id, user_id, montant, pour_ami, redirect } = req.query;
-  if (!cours_id || !user_id) return res.redirect(redirect || 'https://courspool.vercel.app');
+  const { session_id, pour_ami, redirect } = req.query;
+  const baseRedirect = redirect || 'https://courspool.vercel.app';
+  if (!session_id) return res.redirect(baseRedirect);
 
   try {
-    // Vérifier si déjà réservé (sauf pour ami)
-    if (pour_ami !== '1') {
+    // Récupérer et vérifier la session Stripe
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (!session || session.payment_status !== 'paid') {
+      return res.redirect(baseRedirect + '?error=payment_failed');
+    }
+
+    const cours_id = session.metadata?.cours_id;
+    const user_id = session.metadata?.user_id;
+    const montant = session.metadata?.montant;
+    const pour_ami_meta = session.metadata?.pour_ami || pour_ami;
+
+    if (!cours_id || !user_id) return res.redirect(baseRedirect);
+
+    // Vérifier si déjà réservé (sauf pour ami) — idempotence
+    if (pour_ami_meta !== '1') {
       const { data: existing } = await supabase.from('reservations')
         .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
       if (existing) {
-        return res.redirect((redirect || 'https://courspool.vercel.app') + '?paid=1&cours_id=' + cours_id);
+        return res.redirect(baseRedirect + '?paid=1&cours_id=' + cours_id);
       }
     }
 
@@ -694,7 +709,7 @@ app.get('/stripe/success', async (req, res) => {
     await supabase.from('reservations').insert([{
       cours_id, user_id,
       montant_paye: parseFloat(montant) || 0,
-      type_paiement: pour_ami === '1' ? 'stripe_ami' : 'stripe'
+      type_paiement: pour_ami_meta === '1' ? 'stripe_ami' : 'stripe'
     }]);
 
     // Recalculer places_prises depuis la source de vérité
@@ -722,7 +737,7 @@ app.get('/stripe/success', async (req, res) => {
     }
 
     // Rediriger vers le site avec paramètre de succès
-    res.redirect((redirect || 'https://courspool.vercel.app') + '?paid=1&cours_id=' + cours_id + (pour_ami==='1'?'&ami=1':''));
+    res.redirect(baseRedirect + '?paid=1&cours_id=' + cours_id + (pour_ami_meta==='1'?'&ami=1':''));
   } catch (e) {
     console.log('Stripe success error:', e.message);
     res.redirect(redirect || 'https://courspool.vercel.app');
@@ -782,7 +797,6 @@ app.post('/follows', async (req, res) => {
   // Compter depuis la source de vérité (évite les race conditions du +1 manuel)
   const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
   const nb_eleves = count || 0;
-  await supabase.from('profiles').update({ eleves_count: nb_eleves }).eq('id', professeur_id);
   io.emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
   res.json({ success: true, nb_eleves });
 });
@@ -797,7 +811,6 @@ app.delete('/follows', async (req, res) => {
   // Compter depuis la source de vérité (évite les race conditions du -1 manuel)
   const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
   const nb_eleves = count || 0;
-  await supabase.from('profiles').update({ eleves_count: nb_eleves }).eq('id', professeur_id);
   io.emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
   res.json({ success: true, nb_eleves });
 });
@@ -1254,8 +1267,15 @@ app.post('/messages', async (req, res) => {
     .insert([{ sender_id: expediteur_id, receiver_id: destinataire_id, contenu }])
     .select();
   if (error) return res.status(500).json({ error: error.message });
-  io.emit('new_message', { expediteur_id, destinataire_id });
-  res.json(data[0]);
+  const msg = data[0];
+  io.emit('new_message', {
+    expediteur_id,
+    destinataire_id,
+    id: msg.id,
+    contenu: msg.contenu,
+    created_at: msg.created_at
+  });
+  res.json(msg);
 });
 
 // MESSAGES — récupérer conversation
