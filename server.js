@@ -437,7 +437,7 @@ app.get('/cours', async (req, res) => {
   const sujet = req.query.sujet || null;
   const search = req.query.search || null;
 
-  const COURS_COLS = 'id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,mode,created_at';
+  const COURS_COLS = 'id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,"mode",created_at';
   let query = supabase.from('cours').select(COURS_COLS, { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
   const niveau_filter = req.query.niveau || null;
@@ -499,7 +499,7 @@ app.get('/cours/code/:code', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('cours')
-      .select('id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,mode,created_at')
+      .select('id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,"mode",created_at')
       .eq('code_acces', code.toUpperCase())
       .eq('prive', true)
       .single();
