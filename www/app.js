@@ -781,7 +781,7 @@ function goExplore(){
           setTimeout(function(){
             if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           },200);
-          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);});
+          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
@@ -1084,7 +1084,18 @@ function buildAccLists(){
       +'</div>';
   } else {
     var folRows=fIds.map(function(id,i){
-      var p=P[id];if(!p)return'';
+      var p=P[id];
+      if(!p){
+        // Construire un profil minimal depuis les cours pour éviter les "fantômes"
+        var _cc=C.filter(function(x){return x.pr===id;});
+        if(_cc.length){
+          p={nm:_cc[0].prof_nm||'Professeur',i:_cc[0].prof_ini||'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',e:0,photo:_cc[0].prof_photo||null};
+        } else {
+          p={nm:'Professeur',i:'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',e:0};
+        }
+        P[id]=p;
+        _fetchProf(id);
+      }
       var cours=C.filter(function(c){return c.pr===id;});
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
       var prochainCours=cours.filter(function(c){return c.fl<c.sp;}).length;
@@ -1357,6 +1368,8 @@ function _fetchProf(pid){
       var _hav=g('msgConvAv');
       if(_hav&&prof.photo_url&&!_hav.querySelector('img')){_hav.style.background='none';_hav.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover">';}
     }
+    // Rafraîchir la liste des suivis si l'onglet est visible (profs fantômes)
+    if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
   }).catch(function(){});
 }
 function buildCards(){
@@ -2160,8 +2173,10 @@ function openPr(pid){
       // L'API retourne parfois 0 (délai backend) — ignorer si 0, sinon prendre le max
       _nbE=Math.max(_nbE,P[pid].e||0);
       P[pid].e=_nbE;if(g('mpE'))g('mpE').textContent=_nbE;
+      // Persister le compteur frais dans cp_follow_counts (valeur API confirmée > 0)
+      _saveFollowCount(pid,_nbE);
     }
-    // Sauvegarder en cache (sans écraser cp_follow_counts — seules les actions explicites le font)
+    // Sauvegarder en cache
     var _eSave=P[pid].e||0;
     try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:_eSave};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
   }).catch(function(){});
@@ -2250,6 +2265,19 @@ function togFP(){
   if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}_saveFollowCount(id,P[id].e||0);}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
   updateFavBadge();
+  // Fetch différé du vrai compteur depuis l'API (1.5s pour laisser le backend traiter)
+  setTimeout(function(){
+    fetch(API+'/profiles/'+id).then(function(r){return r.json();}).then(function(prof){
+      if(!prof||!prof.id)return;
+      var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
+      if(_nbE!==undefined&&_nbE>0){
+        P[id]=P[id]||{};
+        P[id].e=Math.max(_nbE,P[id].e||0);
+        if(g('mpE')&&curProf===id)g('mpE').textContent=P[id].e;
+        _saveFollowCount(id,P[id].e);
+      }
+    }).catch(function(){});
+  },1500);
 }
 
 // CRÉER COURS
