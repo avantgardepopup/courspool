@@ -5615,17 +5615,77 @@ function openAddVisioLink(coursId){
 }
 
 // ---- Ajouter au calendrier ----
-async function addToCalendar(coursId){
-  try{
-    var r=await fetch(API+'/cours/'+coursId+'/ics',{headers:apiH()});
-    if(!r.ok){toast('Erreur','Impossible de générer le calendrier');return;}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='cours.ics';
-    document.body.appendChild(a);a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
-  }catch(e){toast('Erreur réseau','');}
+function addToCalendar(coursId){
+  var c=C.find(function(x){return x.id==coursId;});
+  if(!c){toast('Erreur','Cours introuvable');return;}
+
+  function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+  function toIcsDate(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');}
+  var dtStart=new Date(c.dt);
+  if(isNaN(dtStart)){toast('Erreur','Date du cours introuvable');return;}
+  var dtEnd=new Date(dtStart.getTime()+60*60*1000);
+  var icsText=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CoursPool//CoursPool//FR',
+    'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+    'UID:cours-'+c.id+'@courspool.app',
+    'DTSTART:'+toIcsDate(dtStart),'DTEND:'+toIcsDate(dtEnd),
+    'SUMMARY:'+icsEsc(c.title),'LOCATION:'+icsEsc(c.lc),
+    'DESCRIPTION:'+icsEsc(c.description||('Cours avec '+c.prof_nm)),
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+
+  var gcUrl='https://calendar.google.com/calendar/render?action=TEMPLATE'
+    +'&text='+encodeURIComponent(c.title)
+    +'&dates='+toIcsDate(dtStart)+'/'+toIcsDate(dtEnd)
+    +'&details='+encodeURIComponent(c.description||('Cours avec '+c.prof_nm))
+    +'&location='+encodeURIComponent(c.lc);
+
+  var isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(window.Capacitor&&window.Capacitor.getPlatform()==='ios');
+  var isCap=!!(window.Capacitor);
+
+  var bd=document.createElement('div');
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1200;display:flex;align-items:flex-end;justify-content:center';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:16px">Ajouter au calendrier</div>';
+
+  function addBtn(iconSvg,label,action){
+    var btn=document.createElement('button');
+    btn.style.cssText='width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:10px;text-align:left';
+    btn.innerHTML=iconSvg+'<span>'+label+'</span>';
+    btn.onclick=function(){bd.remove();action();};
+    sheet.appendChild(btn);
+  }
+
+  var calIco='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>';
+  var gcIco='<svg viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>';
+  var dlIco='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+  if(isIOS){
+    addBtn(calIco,'Calendrier Apple',function(){
+      var dataUrl='data:text/calendar;charset=utf-8,'+encodeURIComponent(icsText);
+      if(isCap){window.open(dataUrl,'_system');}else{window.location.href=dataUrl;}
+    });
+  }
+  addBtn(gcIco,'Google Agenda',function(){
+    if(isCap){window.open(gcUrl,'_system');}else{window.open(gcUrl,'_blank');}
+  });
+  if(!isIOS){
+    addBtn(dlIco,'Télécharger .ics (Outlook, Apple…)',function(){
+      var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');a.href=url;a.download='cours.ics';
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+    });
+  }
+
+  var btnC=document.createElement('button');
+  btnC.style.cssText='width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px;margin-top:4px';
+  btnC.textContent='Annuler';btnC.onclick=function(){bd.remove();};
+  sheet.appendChild(btnC);
+  bd.appendChild(sheet);document.body.appendChild(bd);
+  haptic(10);
 }
 
 // ---- Share cours in messagerie ----
