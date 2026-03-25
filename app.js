@@ -1023,7 +1023,7 @@ function buildAccLists(){
         else{var diffMs=now-new Date(c.created_at||now);isPast=diffMs>24*60*60*1000;}
       }catch(e){}
       var noteBtn=isPast&&user&&user.role!=='professeur'?
-        '<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id===\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">⭐ Noter</button>':'';
+        '<button onclick="event.stopPropagation();openNote(C.find(function(x){return x.id==\''+c.id+'\'}))" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">⭐ Noter</button>':'';
       var _mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
       var _isDk=document.documentElement.classList.contains('dk');
       var _bg=_isDk?_mf.bgDark:_mf.bg;
@@ -1285,7 +1285,7 @@ function _applyPhotoPartout(url){
   if(mpav&&curProf===user.id){mpav.style.background='none';mpav.innerHTML=imgSquare;}
   // 5. Avatar dans le modal réservation si c'est le prof du cours courant
   var rAv=g('rProfAv');
-  if(rAv&&curId){var cc=C.find(function(x){return x.id===curId;});if(cc&&cc.pr===user.id){rAv.style.background='none';rAv.innerHTML=imgSquare;}}
+  if(rAv&&curId){var cc=C.find(function(x){return x.id==curId;});if(cc&&cc.pr===user.id){rAv.style.background='none';rAv.innerHTML=imgSquare;}}
   // 6. Avatars dans la liste de conversations
   document.querySelectorAll('[data-uid="'+user.id+'"] .msg-av').forEach(function(el){
     el.style.background='none';el.innerHTML=imgSquare;
@@ -1876,7 +1876,7 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
     if(data.error){toast('Erreur',data.error);return;}
     toast('Annulé','L\'élève a été remboursé automatiquement ✓');
     openEleves(coursId);
-    var c=C.find(function(x){return x.id===coursId;});
+    var c=C.find(function(x){return x.id==coursId;});
     if(c&&c.fl>0)c.fl--;
     buildCards();
   }catch(e){toast('Erreur réseau','Impossible d\'annuler');}
@@ -1974,7 +1974,7 @@ async function confAmi(id){
 }
 
 function shareCoursLink(){
-  var co=C.find(function(x){return x.id===curId});
+  var co=C.find(function(x){return x.id==curId});
   if(!co)return;
   var base='https://courspool.vercel.app';
   var url=base+(co.prive&&co.code?'?code='+co.code:'?cours='+curId);
@@ -2995,7 +2995,7 @@ var _groupeIsProf = false;
 
 function openGroupeMsg(coursId){
   _groupeCoursId = coursId;
-  var c = C.find(function(x){return x.id===coursId;});
+  var c = C.find(function(x){return x.id==coursId;});
   if(!c) return;
   _groupeIsProf = user && user.id === c.pr;
   _groupeElevesPermis = c.eleves_peuvent_ecrire || false;
@@ -4703,9 +4703,9 @@ function checkCoursANoter(){
   var now=new Date();
   // Cours passés depuis plus de 1h et pas encore notés (pas de notation dans localStorage)
   var aNoter=Object.keys(res).map(function(id){return C.find(function(x){return x.id==id;});}).filter(function(c){
-    if(!c||!c.created_at)return false;
-    var diff=now-new Date(c.created_at);
-    if(diff<3600000)return false; // moins d'1h
+    if(!c||!c.dt)return false;
+    var diff=now-new Date(c.dt);
+    if(diff<3600000)return false; // moins d'1h après la date du cours
     try{if(localStorage.getItem('cp_noted_'+c.id))return false;}catch(e){}
     return true;
   });
@@ -4721,7 +4721,7 @@ function checkUpcomingReminder(){
   if(!user||!Object.keys(res).length)return;
   var now=new Date();
   var upcoming=Object.keys(res).map(function(id){return C.find(function(x){return x.id==id;});}).filter(Boolean).filter(function(c){
-    try{var d=new Date(c.created_at||now);var diff=(d.getTime()+24*3600000)-now.getTime();return diff>0&&diff<3*3600000;}catch(e){return false;}
+    try{var d=new Date(c.dt||now);var diff=d.getTime()-now.getTime();return diff>0&&diff<3*3600000;}catch(e){return false;}
   });
   var rb=g('reminderBand');
   if(!upcoming.length){if(rb)rb.style.display='none';return;}
@@ -4730,7 +4730,7 @@ function checkUpcomingReminder(){
   rb.style.display='flex';
   var rt=g('reminderTitle');if(rt)rt.textContent=c.title;
   var rs=g('reminderSub');
-  if(rs){try{var d=new Date(c.created_at||now);var diff=Math.round(((d.getTime()+24*3600000)-now.getTime())/60000);rs.textContent='Dans '+diff+' min \u00b7 '+c.lc;}catch(e){rs.textContent=c.dt;}}
+  if(rs){try{var d=new Date(c.dt||now);var diff=Math.round((d.getTime()-now.getTime())/60000);rs.textContent='Dans '+diff+' min \u00b7 '+c.lc;}catch(e){rs.textContent=c.dt;}}
 }
 function openReminderCours(){if(_reminderCoursId)openR(_reminderCoursId);}
 
@@ -4878,7 +4878,7 @@ if('serviceWorker' in navigator){
 // ============================================================
 // COURSPOOL — Feature additions (safe, non-destructive)
 // ============================================================
-var escH=function(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+var escH=function(s){return (s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
 
 // Step form with SVG illustrations
 var STEP_DEFS=[
@@ -5369,7 +5369,7 @@ function buildMesCard(c,isPast,isProf){
 }
 
 function openAddVisioLink(coursId){
-  var c=C.find(function(x){return x.id===coursId;});if(!c)return;
+  var c=C.find(function(x){return x.id==coursId;});if(!c)return;
   var bd=document.createElement('div');
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
