@@ -1466,14 +1466,30 @@ function toggleFollowCard(pid,btn){
     fol.delete(pid);
     _syncFollowBtns(pid,false);
     if(P[pid])P[pid].e=Math.max(0,(P[pid].e||1)-1);
-    fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
     toast('Retiré des suivis','');
+    fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+      .then(function(r){if(!r.ok)throw new Error();})
+      .catch(function(){
+        fol.add(pid);_syncFollowBtns(pid,true);
+        if(P[pid])P[pid].e=(P[pid].e||0)+1;
+        if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+        _saveFollowCount(pid,P[pid].e||0);
+        toast('Erreur réseau','Impossible de modifier le suivi');
+      });
   } else {
     fol.add(pid);
     _syncFollowBtns(pid,true);
     if(P[pid])P[pid].e=(P[pid].e||0)+1;
-    fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
+    fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+      .then(function(r){if(!r.ok)throw new Error();})
+      .catch(function(){
+        fol.delete(pid);_syncFollowBtns(pid,false);
+        if(P[pid])P[pid].e=Math.max(0,(P[pid].e||1)-1);
+        if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+        _saveFollowCount(pid,P[pid].e||0);
+        toast('Erreur réseau','Impossible de modifier le suivi');
+      });
   }
   // Mettre à jour mpE si le modal profil est ouvert sur ce prof
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -2268,14 +2284,22 @@ function togFP(){
     _syncFollowBtns(id,false);
     toast('Désabonné','Vous ne suivez plus '+p.nm);
     if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
-    if(user&&user.id){
-      fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
-    }
     var row=document.querySelector('#listF [data-prof-id="'+id+'"]');
     if(row){
       row.style.transition='all .35s cubic-bezier(.4,0,.2,1)';
       row.style.opacity='0';row.style.transform='translateX(60px)';row.style.maxHeight=row.offsetHeight+'px';
       setTimeout(function(){row.style.maxHeight='0';row.style.padding='0';row.style.margin='0';row.style.overflow='hidden';setTimeout(function(){row.remove();},200);},300);
+    }
+    if(user&&user.id){
+      fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
+        .then(function(r){if(!r.ok)throw new Error();})
+        .catch(function(){
+          fol.add(id);_setFollowBtn(true);_syncFollowBtns(id,true);
+          if(P[id])P[id].e=(P[id].e||0)+1;
+          if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
+          _saveFollowCount(id,P[id].e||0);
+          toast('Erreur réseau','Impossible de modifier le suivi');
+        });
     }
   } else {
     fol.add(id);
@@ -2284,7 +2308,15 @@ function togFP(){
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
     if(P[id])P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
-      fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})}).catch(function(){});
+      fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
+        .then(function(r){if(!r.ok)throw new Error();})
+        .catch(function(){
+          fol.delete(id);_setFollowBtn(false);_syncFollowBtns(id,false);
+          if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
+          if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
+          _saveFollowCount(id,P[id].e||0);
+          toast('Erreur réseau','Impossible de modifier le suivi');
+        });
     }
   }
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
@@ -2659,7 +2691,9 @@ async function loadMessages(){
 
 async function sendMsg(){
   var txt=(g('msgInput').value||'').trim();
-  if(!txt||!user)return;
+  if(!txt)return;
+  if(!user){toast('Connexion requise','Reconnectez-vous pour envoyer des messages');return;}
+  if(user.role==='professeur'&&!user.verified){toast('Compte non vérifié','Votre compte doit être vérifié pour envoyer des messages');return;}
   if(!msgDestId){toast('Erreur','Aucun destinataire sélectionné');return;}
   var inp=g('msgInput');
   inp.value='';inp.style.height='auto';
