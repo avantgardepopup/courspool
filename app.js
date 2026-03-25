@@ -695,7 +695,11 @@ function navTo(tab,_skipHistory){
   var convPane=g('msgConvPane');
   if(convPane&&tab!=='msg')convPane.style.display='none';
   var pgMsgEl=g('pgMsg');
-  if(pgMsgEl&&tab!=='msg')pgMsgEl.classList.remove('conv-open');
+  if(pgMsgEl&&tab!=='msg'){
+    pgMsgEl.classList.remove('conv-open');
+    var _bnavEl=g('bnav');if(_bnavEl)_bnavEl.classList.remove('ipad-back');
+    var _bbEl=g('bnavIpadBack');if(_bbEl)_bbEl.classList.remove('visible');
+  }
   clearInterval(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
   ['bniExp','bniFav','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
@@ -2698,13 +2702,19 @@ function openMsg(profNm,destId,avatar){
   var _mm=g('msgMessages');if(_mm)_mm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
   var inp=g('msgInput');if(inp){inp.value='';inp.style.height='auto';}
 
-  // Show conv pane + add conv-mode to collapse nav
+  // Show conv pane + collapse nav (iPad: animation → bouton rond ; mobile: cacher)
   var convPane=g('msgConvPane');
   if(convPane)convPane.style.display='flex';
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
-  if(bnav)bnav.classList.add('conv-mode');
+  var _isIpad=window.innerWidth>=768&&document.documentElement.classList.contains('cap-ios');
+  if(_isIpad){
+    if(bnav)bnav.classList.add('ipad-back');
+    var _bb=g('bnavIpadBack');if(_bb)_bb.classList.add('visible');
+  }else{
+    if(bnav)bnav.classList.add('conv-mode');
+  }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
   var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
 
@@ -2732,9 +2742,10 @@ function closeMsgConv(){
   if(convPane)convPane.style.display='none';
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
-  // Remove conv-mode from nav
+  // Restaurer la nav (iPad: retirer ipad-back + cacher bouton rond ; mobile: retirer conv-mode)
   var bnav=g('bnav');
-  if(bnav)bnav.classList.remove('conv-mode');
+  if(bnav){bnav.classList.remove('conv-mode');bnav.classList.remove('ipad-back');}
+  var _bb=g('bnavIpadBack');if(_bb)_bb.classList.remove('visible');
   // Restore normal nav state for messages page (bniMsg highlighted)
   restoreNav();
   var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');

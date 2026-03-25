@@ -1691,6 +1691,11 @@
 
 </nav>
 
+<!-- Bouton retour messagerie iPad (conversation ouverte, ≥768px uniquement) -->
+<button id="bnavIpadBack" onclick="closeMsgConv()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+
 <!-- MODAL CONTACT -->
 <div class="bd" id="bdContact" onclick="if(event.target===this)closeContact();" style="display:none;z-index:600;align-items:flex-end">
   <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px 0;padding-bottom:max(28px,env(safe-area-inset-bottom,28px));animation:mi .25s ease;max-height:92vh;overflow-y:auto">

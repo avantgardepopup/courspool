@@ -2052,5 +2052,44 @@ html.dk .filter-pill-btn { background:var(--wh); }
 .card-follow-btn:active { transform: scale(0.85); }
 
 /* ── CAPACITOR iOS — overrides iPad/iPhone ── */
-/* Bouton retour messagerie : visible uniquement quand une conversation est ouverte */
+/* Bouton retour messagerie header : visible uniquement quand une conversation est ouverte */
 html.cap-ios #pgMsg.conv-open #msgBackBtn { display: flex !important; }
+
+/* ── IPAD — Bouton retour messagerie animé (≥768px, cap-ios uniquement) ── */
+#bnavIpadBack {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom, 24px));
+  left: max(20px, env(safe-area-inset-left, 20px));
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #F4622A;
+  border: none;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(244,98,42,0.4);
+  z-index: 100;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: scale(0.5) translateX(-16px);
+  pointer-events: none;
+  transition: opacity 300ms ease-in-out, transform 300ms cubic-bezier(.22,.61,.36,1);
+}
+@media (min-width: 768px) {
+  html.cap-ios #bnavIpadBack { display: flex; }
+  html.cap-ios .bnav {
+    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+  }
+  html.cap-ios .bnav.ipad-back {
+    opacity: 0 !important;
+    transform: translateX(calc(-50% - 100px)) scale(0.75) !important;
+    pointer-events: none !important;
+  }
+}
+html.cap-ios #bnavIpadBack.visible {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+  pointer-events: auto;
+}
