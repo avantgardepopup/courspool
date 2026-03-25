@@ -74,7 +74,13 @@ function obDone(){
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
-  // Masquer le splash après chargement
+  // Cacher immédiatement le splash Capacitor (iOS) — sinon il reste visible indéfiniment
+  try{
+    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SplashScreen){
+      window.Capacitor.Plugins.SplashScreen.hide({fadeOutDuration:0});
+    }
+  }catch(e){}
+  // Masquer le splash HTML après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
     if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
@@ -267,13 +273,13 @@ function buildFavPage(){
         var bg=mat?mat.bg:'linear-gradient(135deg,var(--orp),#FFE8DC)';
         return'<div class="fav-cours-card" onclick="openR(\''+c.id+'\')">'
           +'<div class="fav-cours-card-top" style="background:'+bg+'">'
-          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+c.subj+'</span>'
+          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',null);buildFavPage();" title="Retirer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'</div>'
           +'<div class="fav-cours-card-body">'
-          +'<div class="fav-cours-card-title">'+c.title+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+c.dt+'</div>'
-          +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+c.lc+'</div>'
+          +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
+          +'<div class="fav-cours-card-meta">📅 '+esc(c.dt)+'</div>'
+          +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+esc(c.lc)+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'</div>'
           +'</div>';
@@ -299,13 +305,13 @@ function buildFavPage(){
         // Fetch frais du profil si pas encore fait cette session
         _fetchProf(pid);
         var nm=p.nm||'Professeur';
-        var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
+        var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
         var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
-          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nm+'</div>'
-          +'<div class="fav-prof-role">'+(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
+          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+esc(nm)+'</div>'
+          +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
           +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
           +'</div>';
       }).join('');
@@ -1083,7 +1089,10 @@ function buildAccLists(){
   if(isProf){
     var myC=C.filter(function(c){return c.pr===user.id;});
     profCoursHtml='<div style="padding:20px 20px 0">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Mes cours créés</div>';
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
+      +'<div style="width:28px;height:28px;background:rgba(255,107,43,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes cours créés</div>'
+      +'</div>';
     if(!myC.length){
       profCoursHtml+='<div style="background:var(--bg);border-radius:16px;padding:20px;text-align:center">'
         +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">Vous n\'avez pas encore créé de cours</div>'
@@ -1108,13 +1117,17 @@ function buildAccLists(){
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
           +'</div>'
+          +'<button onclick="event.stopPropagation();addToCalendar(\''+esc(c.id)+'\')" style="margin-top:10px;width:100%;padding:7px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Calendrier</button>'
           +'</div>'
           +'</div>';
       });
       profCoursHtml+='</div>';
     }
     profCoursHtml+='</div>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 20px 10px">Mes réservations</div>';
+      +'<div style="display:flex;align-items:center;gap:8px;padding:20px 20px 10px">'
+      +'<div style="width:28px;height:28px;background:rgba(59,130,246,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes réservations</div>'
+      +'</div>';
   }
   lr.innerHTML=profCoursHtml;
   if(!rIds.length){lr.innerHTML+=isProf
@@ -2186,9 +2199,11 @@ function openPr(pid){
   g('mpnm').textContent=displayNm;
   g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:'Professeur';
   g('mpbd').textContent=pCache.niveau||'';
+  var vBadge=g('mpVerifiedBadge');if(vBadge)vBadge.style.display=(pCache.verified===true||pCache.verified==='true')?'block':'none';
   g('mpC').textContent=cours.length;
   g('mpN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
   g('mpE').textContent=p.e||0;
+  var mpD=g('mpD');if(mpD)mpD.textContent=pCache.cours_donnes||0;
 
   // Bio : cache ou placeholder discret
   var bioEl=g('mpBio');
@@ -2318,6 +2333,8 @@ function openPr(pid){
       // Persister le compteur frais dans cp_follow_counts (valeur API confirmée > 0)
       _saveFollowCount(pid,_nbE);
     }
+    // Cours donnés
+    if(prof.cours_donnes!==undefined){pCache.cours_donnes=prof.cours_donnes;var mpD=g('mpD');if(mpD)mpD.textContent=prof.cours_donnes;}
     // Sauvegarder en cache
     var _eSave=P[pid].e||0;
     try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:_eSave};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
@@ -4514,6 +4531,24 @@ function pickSubj(el){
   el.style.color='var(--or)';
   haptic(4);
 }
+// ---- Comment ça marche ----
+function openHow(){
+  var pg=g('pgHow');if(!pg)return;
+  pg.style.display='block';
+  requestAnimationFrame(function(){pg.style.opacity='1';});
+}
+function closeHow(){
+  var pg=g('pgHow');if(!pg)return;
+  pg.style.display='none';
+}
+function toggleFaq(btn){
+  var item=btn.parentElement;
+  var body=item.querySelector('.faq-body');
+  var chevron=btn.querySelector('.faq-chevron');
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(chevron)chevron.style.transform=isOpen?'':'rotate(180deg)';
+}
 async function submitContact(){
   var email=g('contactEmail').value.trim();
   var msg=g('contactMsg').value.trim();
@@ -4522,6 +4557,15 @@ async function submitContact(){
   var btn=g('contactSubmitBtn');
   btn.disabled=true;btn.textContent='Envoi…';
   try{
+    var photoFile=g('contactPhoto')&&g('contactPhoto').files&&g('contactPhoto').files[0];
+    var photoB64=null;
+    if(photoFile&&photoFile.size<5*1024*1024){
+      photoB64=await new Promise(function(resolve){
+        var reader=new FileReader();
+        reader.onload=function(e){resolve(e.target.result);};
+        reader.readAsDataURL(photoFile);
+      });
+    }
     var r=await fetch(API+'/contact',{
       method:'POST',headers:apiH(),
       body:JSON.stringify({
@@ -4530,12 +4574,15 @@ async function submitContact(){
         message:msg,
         nom:user?(user.pr+' '+user.nm).trim():'',
         role:user?user.role:'visiteur',
-        user_id:user?user.id:null
+        user_id:user?user.id:null,
+        photo_base64:photoB64
       })
     });
     if(r.ok){
       closeContact();
       g('contactMsg').value='';
+      if(g('contactPhoto'))g('contactPhoto').value='';
+      var lbl=g('contactPhotoTxt');if(lbl)lbl.textContent='Ajouter une capture d\'écran…';
       document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
       toast('Message envoyé ✓','On vous répond sous 24h');
     } else {
@@ -4543,6 +4590,11 @@ async function submitContact(){
     }
   }catch(e){toast('Erreur',"Impossible d'envoyer",true);}
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer le message';}
+}
+function previewContactPhoto(input){
+  var f=input.files&&input.files[0];
+  var lbl=g('contactPhotoTxt');
+  if(f&&lbl)lbl.textContent=f.name;
 }
 
 // ============================================================
@@ -5006,11 +5058,13 @@ function startAccountCheck(){
     if(!user||!user.id)return;
     try{
       var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
+      if(r.status>=500)return; // erreur serveur temporaire — ne pas déconnecter
       var p=await r.json();
-      if(!r.ok||!p||!p.id){
+      if(r.status===404&&p&&p.error){
         toast('Votre compte a été désactivé','Vous allez être déconnecté');
         setTimeout(doLogout,2000);return;
       }
+      if(!p||!p.id)return; // réponse inattendue — ignorer
       if(p.statut_compte==='bloqué'&&user.statut_compte!=='bloqué'){
         toast('Votre compte a été bloqué','Vous allez être déconnecté');
         setTimeout(doLogout,2000);return;
@@ -5567,17 +5621,78 @@ function openAddVisioLink(coursId){
 }
 
 // ---- Ajouter au calendrier ----
-async function addToCalendar(coursId){
-  try{
-    var r=await fetch(API+'/cours/'+coursId+'/ics',{headers:apiH()});
-    if(!r.ok){toast('Erreur','Impossible de générer le calendrier');return;}
-    var blob=await r.blob();
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.href=url;a.download='cours.ics';
-    document.body.appendChild(a);a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
-  }catch(e){toast('Erreur réseau','');}
+function addToCalendar(coursId){
+  var c=C.find(function(x){return x.id==coursId;});
+  if(!c){toast('Erreur','Cours introuvable');return;}
+
+  function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+  function toIcsDate(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');}
+  var dtStart=new Date(c.dt);
+  if(isNaN(dtStart)){toast('Erreur','Date du cours introuvable');return;}
+  var dtEnd=new Date(dtStart.getTime()+60*60*1000);
+  var icsText=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CoursPool//CoursPool//FR',
+    'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+    'UID:cours-'+c.id+'@courspool.app',
+    'DTSTART:'+toIcsDate(dtStart),'DTEND:'+toIcsDate(dtEnd),
+    'SUMMARY:'+icsEsc(c.title),'LOCATION:'+icsEsc(c.lc),
+    'DESCRIPTION:'+icsEsc(c.description||('Cours avec '+c.prof_nm)),
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+
+  var gcUrl='https://calendar.google.com/calendar/render?action=TEMPLATE'
+    +'&text='+encodeURIComponent(c.title)
+    +'&dates='+toIcsDate(dtStart)+'/'+toIcsDate(dtEnd)
+    +'&details='+encodeURIComponent(c.description||('Cours avec '+c.prof_nm))
+    +'&location='+encodeURIComponent(c.lc);
+
+  var isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(window.Capacitor&&window.Capacitor.getPlatform()==='ios');
+  var isAndroid=/Android/.test(navigator.userAgent)||(window.Capacitor&&window.Capacitor.getPlatform()==='android');
+  var isCap=!!(window.Capacitor);
+
+  var bd=document.createElement('div');
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1200;display:flex;align-items:flex-end;justify-content:center';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:16px">Ajouter au calendrier</div>';
+
+  function addBtn(iconSvg,label,action){
+    var btn=document.createElement('button');
+    btn.style.cssText='width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:10px;text-align:left';
+    btn.innerHTML=iconSvg+'<span>'+label+'</span>';
+    btn.onclick=function(){bd.remove();action();};
+    sheet.appendChild(btn);
+  }
+
+  var calIco='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>';
+  var gcIco='<svg viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>';
+  var dlIco='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+  if(isIOS){
+    addBtn(calIco,'Calendrier Apple',function(){
+      var dataUrl='data:text/calendar;charset=utf-8,'+encodeURIComponent(icsText);
+      if(isCap){window.open(dataUrl,'_system');}else{window.location.href=dataUrl;}
+    });
+  }
+  addBtn(gcIco,'Google Agenda',function(){
+    if(isCap){window.open(gcUrl,'_system');}else{window.open(gcUrl,'_blank');}
+  });
+  if(!isIOS&&!isAndroid){
+    addBtn(dlIco,'Télécharger .ics (Outlook, Apple…)',function(){
+      var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');a.href=url;a.download='cours.ics';
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+    });
+  }
+
+  var btnC=document.createElement('button');
+  btnC.style.cssText='width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px;margin-top:4px';
+  btnC.textContent='Annuler';btnC.onclick=function(){bd.remove();};
+  sheet.appendChild(btnC);
+  bd.appendChild(sheet);document.body.appendChild(bd);
+  haptic(10);
 }
 
 // ---- Share cours in messagerie ----
@@ -5666,7 +5781,16 @@ function showAccHome(){
 // Override switchATab to show detail view + update topbar title + animate icon
 (function(){
   var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
-  var _animTabs={R:true,H:true};
+  var _animTabs={R:true,H:true,F:true,P:true,Rev:true};
+  // Animer toutes les icônes à l'ouverture de la page profil
+  function animAllAccIcons(){
+    var icons=document.querySelectorAll('#accHome .acc-card div[style*="border-radius:14px"]');
+    icons.forEach(function(ico,i){
+      setTimeout(function(){
+        ico.classList.remove('acc-card-icon-anim');void ico.offsetWidth;ico.classList.add('acc-card-icon-anim');
+      },i*70);
+    });
+  }
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
@@ -5695,7 +5819,7 @@ function showAccHome(){
   var _nt2=navTo;
   navTo=function(tab){
     _nt2(tab);
-    if(tab==='acc'){setTimeout(showAccHome,20);}
+    if(tab==='acc'){setTimeout(showAccHome,20);setTimeout(animAllAccIcons,80);}
   };
 })();
 

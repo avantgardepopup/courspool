@@ -74,7 +74,13 @@ function obDone(){
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
-  // Masquer le splash après chargement
+  // Cacher immédiatement le splash Capacitor (iOS) — sinon il reste visible indéfiniment
+  try{
+    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SplashScreen){
+      window.Capacitor.Plugins.SplashScreen.hide({fadeOutDuration:0});
+    }
+  }catch(e){}
+  // Masquer le splash HTML après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
     if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
