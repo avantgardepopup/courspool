@@ -501,36 +501,6 @@ async function doLogin(){
   finally{g('lEm').disabled=false;g('lPw').disabled=false;}
 }
 
-var _smsVerified=false;
-async function sendSmsCode(){
-  var phone=g('rPhone')&&g('rPhone').value.trim();
-  if(!phone){toast('Numéro requis','Entrez votre numéro de téléphone');return;}
-  var btn=g('smsSendBtn');if(btn){btn.disabled=true;btn.textContent='Envoi...';}
-  try{
-    var r=await fetch(API+'/auth/send-sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
-    var d=await r.json();
-    if(!r.ok||d.error){toast('Erreur',d.error||'Impossible d\'envoyer le SMS');if(btn){btn.disabled=false;btn.textContent='Envoyer';}return;}
-    var f=g('smsCodeField');if(f)f.style.display='block';
-    toast('SMS envoyé','Entrez le code reçu par SMS');
-    if(btn){btn.disabled=false;btn.textContent='Renvoyer';}
-  }catch(e){toast('Erreur réseau','');if(btn){btn.disabled=false;btn.textContent='Envoyer';}}
-}
-async function verifySmsCode(){
-  var phone=g('rPhone')&&g('rPhone').value.trim();
-  var code=g('rSmsCode')&&g('rSmsCode').value.trim();
-  if(!phone||!code){toast('Code requis','');return;}
-  var btn=g('smsVerifyBtn');if(btn){btn.disabled=true;btn.textContent='...';}
-  try{
-    var r=await fetch(API+'/auth/verify-sms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,code})});
-    var d=await r.json();
-    if(!r.ok||d.error){toast('Code incorrect',d.error||'');if(btn){btn.disabled=false;btn.textContent='Vérifier';}return;}
-    _smsVerified=true;
-    var vm=g('smsVerifiedMsg');if(vm)vm.style.display='flex';
-    var sf=g('smsCodeField');
-    if(sf)sf.innerHTML='<div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#16A34A;padding:8px 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>Numéro vérifié</div>';
-    toast('Numéro vérifié','');
-  }catch(e){toast('Erreur réseau','');if(btn){btn.disabled=false;btn.textContent='Vérifier';}}
-}
 async function doReg(){
   var pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;
   var role=g('rPf').classList.contains('on')?'professeur':'eleve';
@@ -543,7 +513,7 @@ async function doReg(){
     extra.statut=statut;extra.niveau=g('rNiveau').value||'';extra.matieres=g('rMatiere').value||'';
   }
   try{
-    var body=Object.assign({email:em,password:pw,prenom:pr,nom:nm,role:role,phone:g('rPhone')&&g('rPhone').value.trim()||null,phone_verified:_smsVerified},extra);
+    var body=Object.assign({email:em,password:pw,prenom:pr,nom:nm,role:role},extra);
     var r=await fetch(API+'/auth/register',{method:'POST',headers:apiH(),body:JSON.stringify(body)});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);shake('lfI');return;}
