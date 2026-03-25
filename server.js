@@ -665,13 +665,14 @@ app.post('/stripe/confirm', async (req, res) => {
 });
 app.post('/follows', async (req, res) => {
   const { user_id, professeur_id } = req.body;
-  const { data, error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
+  if (!user_id || !professeur_id) return res.status(400).json({ error: 'Données manquantes' });
+  const { error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
   if (error) return res.status(500).json({ error });
-  // Incrémenter le compteur d'élèves du prof
-  const { data: profData } = await supabase.from('profiles').select('eleves_count').eq('id', professeur_id).single();
-  const newCount = (profData?.eleves_count || 0) + 1;
-  await supabase.from('profiles').update({ eleves_count: newCount }).eq('id', professeur_id);
-  res.json({ success: true });
+  // Compter depuis la source de vérité (évite les race conditions du +1 manuel)
+  const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
+  const nb_eleves = count || 0;
+  await supabase.from('profiles').update({ eleves_count: nb_eleves }).eq('id', professeur_id);
+  res.json({ success: true, nb_eleves });
 });
 
 // FOLLOWS — supprimer (désabonnement)
@@ -680,14 +681,22 @@ app.delete('/follows', async (req, res) => {
   if (!user_id || !professeur_id) return res.status(400).json({ error: 'Données manquantes' });
   const { error } = await supabase.from('follows').delete().eq('user_id', user_id).eq('professeur_id', professeur_id);
   if (error) return res.status(500).json({ error });
-  // Décrémenter le compteur d'élèves du prof
-  const { data: profData } = await supabase.from('profiles').select('eleves_count').eq('id', professeur_id).single();
-  const newCount = Math.max(0, (profData?.eleves_count || 1) - 1);
-  await supabase.from('profiles').update({ eleves_count: newCount }).eq('id', professeur_id);
-  res.json({ success: true });
+  // Compter depuis la source de vérité (évite les race conditions du -1 manuel)
+  const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
+  const nb_eleves = count || 0;
+  await supabase.from('profiles').update({ eleves_count: nb_eleves }).eq('id', professeur_id);
+  res.json({ success: true, nb_eleves });
 });
 
-// FOLLOWS — récupérer
+// FOLLOWS — vérifier si un élève suit un prof (doit être avant /:user_id)
+app.get('/follows/check', async (req, res) => {
+  const { professeur_id, eleve_id } = req.query;
+  if (!professeur_id || !eleve_id) return res.status(400).json({ error: 'Données manquantes' });
+  const { data } = await supabase.from('follows').select('id').eq('user_id', eleve_id).eq('professeur_id', professeur_id).maybeSingle();
+  res.json({ isFollowing: !!data });
+});
+
+// FOLLOWS — récupérer tous les follows d'un user
 app.get('/follows/:user_id', async (req, res) => {
   const { data, error } = await supabase.from('follows').select('*').eq('user_id', req.params.user_id);
   if (error) return res.status(500).json({ error });
@@ -1020,7 +1029,11 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
 app.get('/profiles/:id', async (req, res) => {
   const {data,error}=await supabase.from('profiles').select('*').eq('id',req.params.id).single();
   if(error)return res.status(404).json({});
-  res.json(data||{});
+  // Compter les vrais followers depuis la table follows (source de vérité)
+  const {count}=await supabase.from('follows').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id);
+  const profile = data || {};
+  profile.nb_eleves = count || 0;
+  res.json(profile);
 });
 
 // MESSAGES — envoyer

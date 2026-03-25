@@ -1468,7 +1468,14 @@ function toggleFollowCard(pid,btn){
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
     fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){if(!r.ok)throw new Error();})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.nb_eleves!==undefined){
+          P[pid].e=data.nb_eleves;
+          if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
+          _saveFollowCount(pid,P[pid].e);
+        }
+      })
       .catch(function(){
         fol.add(pid);_syncFollowBtns(pid,true);
         P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
@@ -1482,7 +1489,15 @@ function toggleFollowCard(pid,btn){
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
     fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){if(!r.ok)throw new Error();})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        // Utiliser le vrai count serveur (source de vérité)
+        if(data&&data.nb_eleves!==undefined){
+          P[pid].e=data.nb_eleves;
+          if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
+          _saveFollowCount(pid,P[pid].e);
+        }
+      })
       .catch(function(){
         fol.delete(pid);_syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
@@ -1491,25 +1506,12 @@ function toggleFollowCard(pid,btn){
         toast('Erreur réseau','Impossible de modifier le suivi');
       });
   }
-  // Mettre à jour mpE si le modal profil est ouvert sur ce prof
+  // Mettre à jour mpE immédiatement (valeur optimiste)
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   // Persister le compteur dans le cache localStorage
   if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
   updateFavBadge();
   haptic(8);
-  // Fetch différé du vrai compteur depuis l'API (1.5s pour laisser le backend traiter)
-  setTimeout(function(){
-    fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
-      if(!prof||!prof.id)return;
-      var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-      if(_nbE!==undefined&&_nbE>0){
-        P[pid]=P[pid]||{};
-        P[pid].e=Math.max(_nbE,P[pid].e||0);
-        if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
-        _saveFollowCount(pid,P[pid].e);
-      }
-    }).catch(function(){});
-  },1500);
 }
 
 function renderPage(){
@@ -2295,7 +2297,14 @@ function togFP(){
     }
     if(user&&user.id){
       fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
-        .then(function(r){if(!r.ok)throw new Error();})
+        .then(function(r){return r.json();})
+        .then(function(data){
+          if(data&&data.nb_eleves!==undefined){
+            P[id].e=data.nb_eleves;
+            if(g('mpE'))g('mpE').textContent=P[id].e;
+            _saveFollowCount(id,P[id].e);
+          }
+        })
         .catch(function(){
           fol.add(id);_setFollowBtn(true);_syncFollowBtns(id,true);
           if(P[id])P[id].e=(P[id].e||0)+1;
@@ -2312,7 +2321,14 @@ function togFP(){
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
-        .then(function(r){if(!r.ok)throw new Error();})
+        .then(function(r){return r.json();})
+        .then(function(data){
+          if(data&&data.nb_eleves!==undefined){
+            P[id].e=data.nb_eleves;
+            if(g('mpE'))g('mpE').textContent=P[id].e;
+            _saveFollowCount(id,P[id].e);
+          }
+        })
         .catch(function(){
           fol.delete(id);_setFollowBtn(false);_syncFollowBtns(id,false);
           if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
@@ -2323,11 +2339,10 @@ function togFP(){
     }
   }
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
-  // Persister le nouveau compteur dans le cache localStorage
   if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}_saveFollowCount(id,P[id].e||0);}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
   updateFavBadge();
-  // Fetch différé du vrai compteur depuis l'API (1.5s pour laisser le backend traiter)
+  // Fetch différé supprimé — le count serveur est maintenant retourné directement par POST/DELETE /follows
   setTimeout(function(){
     fetch(API+'/profiles/'+id).then(function(r){return r.json();}).then(function(prof){
       if(!prof||!prof.id)return;
