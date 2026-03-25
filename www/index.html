@@ -11,6 +11,11 @@
     else if(s===null&&window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
       document.documentElement.classList.add('dk');
   }catch(e){}
+  // Capacitor iOS — classe pour overrides CSS spécifiques iPad/iPhone
+  if(/iPhone|iPad|iPod/.test(navigator.userAgent)||
+     (window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')){
+    document.documentElement.classList.add('cap-ios');
+  }
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -81,10 +86,7 @@
 
 <div id="splash" style="position:fixed;inset:0;background:#FF6B2B;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s">
   <div style="display:flex;flex-direction:column;align-items:center;gap:20px">
-    <div style="width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:20px;display:flex;align-items:center;justify-content:center;animation:splashPulse 1.5s ease-in-out infinite">
-      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-    </div>
-    <div style="color:#fff;font-size:26px;font-weight:800;letter-spacing:-.03em">CoursPool</div><div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:-8px">Bêta</div>
+    <div style="color:#fff;font-size:32px;font-weight:800;letter-spacing:-.03em">CoursPool</div><div style="color:rgba(255,255,255,.7);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:-8px">Bêta</div>
     <div style="width:48px;height:3px;background:rgba(255,255,255,.3);border-radius:3px;overflow:hidden;position:relative">
       <div style="position:absolute;top:0;left:0;height:100%;background:#fff;border-radius:3px;animation:splashBar 1s ease-in-out infinite"></div>
     </div>
@@ -954,6 +956,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
               Paramètres
             </button>
+            <button onclick="openHow()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Comment ça marche</button>
             <button onclick="doLogout()" style="width:100%;background:var(--wh);color:#EF4444;border:1.5px solid #FECACA;border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
               <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Se déconnecter
@@ -980,8 +983,10 @@
         <div class="br tot"><span class="l">Votre part</span><span class="v" id="rFin"></span></div>
       </div>
       <div style="margin-bottom:10px"><span id="rModeBadge"></span></div>
+      <div style="display:flex;align-items:center;gap:8px;background:#F0FDF4;border-radius:12px;padding:10px 14px;margin-bottom:14px"><svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="font-size:13px;font-weight:600;color:#16A34A">Remboursé si le cours est annulé.</span></div>
       <a id="rVisioJoin" class="btn-visio" target="_blank" rel="noopener" style="display:none;width:100%;justify-content:center;margin-bottom:14px;text-decoration:none">Rejoindre en visio</a>
       <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;padding:10px;background:var(--bg);border-radius:12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span style="font-size:12px;color:var(--mid);font-weight:600">Paiement 100% sécurisé</span></div>
       <button class="pb pri" style="width:100%;margin-bottom:10px" onclick="confR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong></button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="contR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Contacter le professeur</button>
       <button class="pb sec" style="width:100%;margin-bottom:10px" onclick="shareCoursLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager ce cours</button>
@@ -1058,6 +1063,7 @@
       <div id="mpnm" style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:4px;line-height:1.2"></div>
       <div id="mprl" style="font-size:13px;color:rgba(255,255,255,.75);font-weight:500;margin-bottom:4px"></div>
       <div id="mpbd" style="font-size:12px;color:rgba(255,255,255,.6)"></div>
+      <div id="mpVerifiedBadge" style="display:none;margin-top:8px"><span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Identité vérifiée</span></div>
     </div>
 
     <!-- Stats row -->
@@ -1073,6 +1079,10 @@
       <div style="flex:1;background:var(--bg);border-radius:14px;padding:14px;text-align:center">
         <div id="mpE" style="font-size:22px;font-weight:800;color:var(--ink)">0</div>
         <div style="font-size:11px;color:var(--lite);font-weight:500;margin-top:2px">Élèves</div>
+      </div>
+      <div style="flex:1;background:var(--bg);border-radius:14px;padding:14px;text-align:center">
+        <div id="mpD" style="font-size:22px;font-weight:800;color:var(--ink)">0</div>
+        <div style="font-size:11px;color:var(--lite);font-weight:500;margin-top:2px">Donnés</div>
       </div>
     </div>
 
@@ -1533,6 +1543,116 @@
   </div>
 </div>
 
+<!-- PAGE COMMENT ÇA MARCHE -->
+<div class="pg" id="pgHow" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="max-width:480px;margin:0 auto;padding:0 0 max(120px,env(safe-area-inset-bottom,120px))">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;padding:max(56px,env(safe-area-inset-top,56px)) 20px 0">
+      <button onclick="closeHow()" style="width:36px;height:36px;border-radius:50%;background:var(--wh);border:1.5px solid var(--bdr);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div style="flex:1;text-align:center;font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Comment ça marche</div>
+      <div style="width:36px"></div>
+    </div>
+
+    <!-- Hero -->
+    <div style="margin:24px 20px 0;background:linear-gradient(135deg,#FF8C55,#E04E10);border-radius:24px;padding:32px 24px;text-align:center;position:relative;overflow:hidden">
+      <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);top:-80px;right:-60px"></div>
+      <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:8px">Apprendre ensemble,<br>c'est plus simple</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.8);line-height:1.6">CoursPool réunit les élèves pour partager le coût d'un cours particulier</div>
+    </div>
+
+    <!-- Étapes -->
+    <div style="margin:28px 20px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:20px">En 3 étapes simples</div>
+
+      <!-- Étape 1 -->
+      <div style="display:flex;gap:16px;margin-bottom:24px">
+        <div style="flex-shrink:0;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:4px">Trouve un cours près de chez toi</div>
+          <div style="font-size:13.5px;color:var(--mid);line-height:1.6">Parcours les cours disponibles par matière, niveau ou lieu. Filtre selon tes besoins.</div>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div style="display:flex;gap:16px;margin-bottom:24px">
+        <div style="flex-shrink:0;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#F0FDF4,#BBF7D0);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:4px">Réserve et paye en sécurité</div>
+          <div style="font-size:13.5px;color:var(--mid);line-height:1.6">Le paiement est sécurisé par Stripe. Tu es remboursé si le cours est annulé.</div>
+        </div>
+      </div>
+
+      <!-- Étape 3 -->
+      <div style="display:flex;gap:16px;margin-bottom:28px">
+        <div style="flex-shrink:0;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#EFF6FF,#BFDBFE);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:4px">Apprends avec d'autres élèves</div>
+          <div style="font-size:13.5px;color:var(--mid);line-height:1.6">Rejoins le groupe, échange avec le professeur et progresse à plusieurs.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="margin:0 20px">
+      <button onclick="closeHow();navTo('exp')" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.3)">Explorer les cours</button>
+    </div>
+
+    <!-- FAQ Parents -->
+    <div style="margin:32px 20px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px">Questions fréquentes — Parents</div>
+      <div id="faqList" style="display:flex;flex-direction:column;gap:8px">
+
+        <div class="faq-item" style="background:var(--wh);border-radius:16px;overflow:hidden;border:1.5px solid var(--bdr)">
+          <button onclick="toggleFaq(this)" style="width:100%;padding:16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;text-align:left">
+            <span style="font-size:14px;font-weight:700;color:var(--ink)">Qui sont les professeurs ?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-body" style="display:none;padding:0 16px 16px;font-size:13.5px;color:var(--mid);line-height:1.65">Les professeurs sont des particuliers vérifiés : enseignants, étudiants avancés ou professionnels. Chaque profil est soumis à une vérification d'identité avant d'être validé sur la plateforme.</div>
+        </div>
+
+        <div class="faq-item" style="background:var(--wh);border-radius:16px;overflow:hidden;border:1.5px solid var(--bdr)">
+          <button onclick="toggleFaq(this)" style="width:100%;padding:16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;text-align:left">
+            <span style="font-size:14px;font-weight:700;color:var(--ink)">Comment sont-ils sélectionnés ?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-body" style="display:none;padding:0 16px 16px;font-size:13.5px;color:var(--mid);line-height:1.65">Chaque professeur soumet une pièce d'identité qui est vérifiée manuellement par notre équipe. Seuls les profils validés peuvent publier des cours. Les avis des élèves permettent aussi d'évaluer la qualité.</div>
+        </div>
+
+        <div class="faq-item" style="background:var(--wh);border-radius:16px;overflow:hidden;border:1.5px solid var(--bdr)">
+          <button onclick="toggleFaq(this)" style="width:100%;padding:16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;text-align:left">
+            <span style="font-size:14px;font-weight:700;color:var(--ink)">Que se passe-t-il si mon enfant n'est pas satisfait ?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-body" style="display:none;padding:0 16px 16px;font-size:13.5px;color:var(--mid);line-height:1.65">Contactez notre support via l'application. Nous examinons chaque situation au cas par cas et pouvons proposer un remboursement si le cours ne correspond pas à ce qui était annoncé.</div>
+        </div>
+
+        <div class="faq-item" style="background:var(--wh);border-radius:16px;overflow:hidden;border:1.5px solid var(--bdr)">
+          <button onclick="toggleFaq(this)" style="width:100%;padding:16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;text-align:left">
+            <span style="font-size:14px;font-weight:700;color:var(--ink)">Comment fonctionne le remboursement ?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-body" style="display:none;padding:0 16px 16px;font-size:13.5px;color:var(--mid);line-height:1.65">Si le professeur annule son cours, vous êtes remboursé automatiquement sur votre moyen de paiement sous 5 à 10 jours ouvrés. Le remboursement est géré par Stripe, notre prestataire de paiement.</div>
+        </div>
+
+        <div class="faq-item" style="background:var(--wh);border-radius:16px;overflow:hidden;border:1.5px solid var(--bdr)">
+          <button onclick="toggleFaq(this)" style="width:100%;padding:16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:inherit;text-align:left">
+            <span style="font-size:14px;font-weight:700;color:var(--ink)">Le paiement est-il sécurisé ?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2.5" stroke-linecap="round" width="16" height="16" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-body" style="display:none;padding:0 16px 16px;font-size:13.5px;color:var(--mid);line-height:1.65">Oui. Toutes les transactions passent par Stripe, certifié PCI DSS niveau 1. CoursPool ne stocke jamais vos coordonnées bancaires. Vos données sont chiffrées de bout en bout.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
 
@@ -1608,6 +1728,16 @@
     <div style="margin-bottom:18px">
       <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Message</label>
       <textarea id="contactMsg" rows="4" placeholder="Décrivez votre question ou problème…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:15px;outline:none;background:var(--bg);color:var(--ink);resize:none;line-height:1.5;transition:border .18s;box-sizing:border-box" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+    </div>
+
+    <!-- Photo optionnelle -->
+    <div style="margin-bottom:18px">
+      <label style="font-size:12px;font-weight:600;color:var(--mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Photo (optionnel)</label>
+      <label for="contactPhoto" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px dashed var(--bdr);border-radius:12px;cursor:pointer;background:var(--bg);transition:border .18s" id="contactPhotoLabel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span id="contactPhotoTxt" style="font-size:13.5px;color:var(--lite)">Ajouter une capture d'écran…</span>
+      </label>
+      <input id="contactPhoto" type="file" accept="image/*" style="display:none" onchange="previewContactPhoto(this)">
     </div>
 
     <!-- Bouton -->
