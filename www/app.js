@@ -135,9 +135,19 @@ loadFavCours();
       }
     });
   }catch(ex){}
+  // Restaurer les compteurs de suivis (clé sans TTL — persiste même si cp_profs expire)
+  try{
+    var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');
+    Object.keys(_fc).forEach(function(pid){
+      if(_fc[pid]>0){P[pid]=P[pid]||{n:'—',e:0};if(!P[pid].e||P[pid].e<_fc[pid])P[pid].e=_fc[pid];}
+    });
+  }catch(ex){}
 })();
 
 // ── FAVORIS COURS — persistance localStorage ──
+// Sauvegarder le compteur de suivis d'un prof — clé sans TTL pour persister même après expiration de cp_profs
+function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]=n||0;localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
+
 function loadFavCours(){
   try{
     var saved=localStorage.getItem('cp_fav_cours');
@@ -1327,6 +1337,7 @@ function _fetchProf(pid){
       var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');
       _pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};
       localStorage.setItem('cp_profs',JSON.stringify(_pc));
+      _saveFollowCount(pid,P[pid].e||0);
     }catch(ex){}
     // Mettre à jour le header de conversation si c'est l'interlocuteur actif
     if(pid===msgDestId){
@@ -1413,7 +1424,7 @@ function toggleFollowCard(pid,btn){
   // Mettre à jour mpE si le modal profil est ouvert sur ce prof
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   // Persister le compteur dans le cache localStorage
-  if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}}
+  if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
   updateFavBadge();
   haptic(8);
 }
@@ -1663,9 +1674,17 @@ function scrollToLogin(){
 function viewCoursCard(id){
   haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
-  var c=C.find(function(x){return x.id===id});
-  if(!c){toast('Cours introuvable','Ce cours n\'est plus disponible');return;}
-  curId=id;
+  // Comparaison loose pour gérer string vs number
+  var c=C.find(function(x){return x.id==id});
+  if(!c){
+    // Cours absent du cache local — le charger depuis l'API
+    fetch(API+'/cours/'+id).then(function(r){return r.json();}).then(function(cd){
+      if(!cd||!cd.id){toast('Cours introuvable','Ce cours n\'est plus disponible');return;}
+      C.push(cd);viewCoursCard(cd.id);
+    }).catch(function(){toast('Cours introuvable','Ce cours n\'est plus disponible');});
+    return;
+  }
+  curId=c.id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;
   var rAv=g('rProfAv'),rNm=g('rProfNm');
@@ -1673,6 +1692,30 @@ function viewCoursCard(id){
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
   var rHeader=document.querySelector('#bdR .modal>div:first-child');
   if(rHeader&&c.bg){rHeader.style.background=c.bg;rHeader.style.borderRadius='20px 20px 0 0';}
+  var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+  g('rDt').textContent=fmtDt(c.dt);
+  var rLcEl=g('rLc');if(rLcEl){rLcEl.textContent=_isVisio?'':c.lc;rLcEl.style.display=_isVisio?'none':'';}
+  var rDescEl=g('rDesc');
+  if(rDescEl){if(c.description){rDescEl.textContent=c.description;rDescEl.style.display='block';}else{rDescEl.style.display='none';}}
+  g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
+  g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
+  g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
+  var isOwner=user&&c.pr===user.id;
+  var btnConf=document.querySelector('#bdR .pb.pri');
+  var btnContact=document.querySelector('#bdR .pb.sec');
+  var btnDel=g('btnDelCours');
+  var btnEleves=g('btnVoirEleves');
+  if(isOwner){
+    if(btnConf)btnConf.style.display='none';
+    if(btnContact)btnContact.style.display='none';
+    if(btnDel)btnDel.style.display='flex';
+    if(btnEleves)btnEleves.style.display='flex';
+  }else{
+    if(btnConf){btnConf.style.display='flex';btnConf.onclick=confR;}
+    if(btnContact)btnContact.style.display='flex';
+    if(btnDel)btnDel.style.display='none';
+    if(btnEleves)btnEleves.style.display='none';
+  }
   openM('bdR');
 }
 
@@ -1907,7 +1950,7 @@ function confF(){
     if(P[pid])P[pid].e=(P[pid].e||0)+1;
   }
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
-  if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}}
+  if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
 }
 
 // PROFIL PROF
@@ -2071,13 +2114,13 @@ function openPr(pid){
     // Nombre d'élèves/abonnés depuis l'API si disponible
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined){
-      // Si l'user suit déjà ce prof, prendre le max entre API et local
-      // (race condition : le follow vient d'être posté, l'API peut retourner une valeur obsolète)
-      if(fol.has(pid))_nbE=Math.max(_nbE,P[pid].e||0);
+      // Toujours prendre le max entre la valeur API et la valeur locale
+      // (l'API peut retourner une valeur obsolète si le follow vient d'être posté)
+      _nbE=Math.max(_nbE,P[pid].e||0);
       P[pid].e=_nbE;if(g('mpE'))g('mpE').textContent=_nbE;
     }
     // Sauvegarder en cache pour le prochain chargement (y compris le compteur abonnés)
-    try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
+    try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);
   }).catch(function(){});
 }
 function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
@@ -2161,7 +2204,7 @@ function togFP(){
   }
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
   // Persister le nouveau compteur dans le cache localStorage
-  if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}}
+  if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}_saveFollowCount(id,P[id].e||0);}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
   updateFavBadge();
 }
