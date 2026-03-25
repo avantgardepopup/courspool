@@ -421,7 +421,10 @@ async function doLogin(){
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
     applyUser();
-    // Vider les réservations, follows et favoris précédents, recharger depuis la DB
+    // Vider toute la session précédente (profils, follows, résa, favoris)
+    Object.keys(P).forEach(function(k){delete P[k]});
+    try{localStorage.removeItem('cp_follow_counts');}catch(e){}
+    try{localStorage.removeItem('cp_profs');}catch(e){}
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
     favCours.clear();try{localStorage.removeItem('cp_fav_cours');}catch(e){};
@@ -771,6 +774,8 @@ function goExplore(){
           var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
+          // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
+          Object.keys(P).forEach(function(k){delete P[k]});
           fol.clear();
           favCours.clear();try{localStorage.removeItem('cp_fav_cours');}catch(e){};
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
@@ -1217,7 +1222,8 @@ function doLogout(){
   try{localStorage.removeItem('cp_res');}catch(e){}
   try{localStorage.removeItem('cp_fav_cours');}catch(e){}
   try{localStorage.removeItem('cp_profs');}catch(e){}
-  Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();
+  try{localStorage.removeItem('cp_follow_counts');}catch(e){}
+  Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
   // Restaurer les items bnav pour la prochaine connexion
