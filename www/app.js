@@ -2837,7 +2837,9 @@ function locInputClear(){
 // ============================================================
 // FILTRES CUSTOM
 // ============================================================
-var customFilters=[];
+var customFilters=(function(){try{return JSON.parse(localStorage.getItem('cp_custom_filters')||'[]');}catch(e){return[];}})();
+// Reconstruire FM pour les filtres restaurés depuis localStorage
+customFilters.forEach(function(f){FM['custom_'+f.key]=function(t){return t.includes(f.key);};});
 
 function openAddFilter(){
   var bd=g('bdFilter');
@@ -2867,6 +2869,7 @@ function addFilterQuick(val){
   var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(customFilters.find(function(f){return f.key===key;}))return;
   customFilters.push({label:val,key:key});
+  try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
   renderCustomPills();
 }
 
@@ -2892,6 +2895,7 @@ function selectCustomFilter(key){
 
 function removeCustomFilter(key){
   customFilters=customFilters.filter(function(f){return f.key!==key;});
+  try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
   var pill=document.querySelector('[data-f="custom_'+key+'"]');
   if(pill){
     if(pill.classList.contains('on'))setPill(document.querySelector('[data-f="tous"]'));
