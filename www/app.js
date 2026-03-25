@@ -2513,8 +2513,8 @@ function openMsg(profNm,destId,avatar){
       }).catch(function(){});
     })(destId);
   }
-  g('msgMessages').innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
-  var inp=g('msgInput');inp.value='';inp.style.height='auto';
+  var _mm=g('msgMessages');if(_mm)_mm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Chargement…</div>';
+  var inp=g('msgInput');if(inp){inp.value='';inp.style.height='auto';}
 
   // Show conv pane + add conv-mode to collapse nav
   var convPane=g('msgConvPane');
@@ -2567,6 +2567,7 @@ async function loadMessages(){
     var msgs=await r.json();
     if(!Array.isArray(msgs))return;
     var box=g('msgMessages');
+    if(!box)return;
     // Mémoriser si l'utilisateur était en bas pour décider du scroll après rendu
     var _wasAtBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;
     if(!msgs.length){
@@ -2686,6 +2687,7 @@ async function sendModalMsg(){
       fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
     }
     var container=g('modalMsgMessages');
+    if(!container)return;
     var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length)return;
@@ -4576,8 +4578,8 @@ function buildHistorique(){
   }
   var now=new Date();
   var past=rIds.map(function(id){return C.find(function(x){return x.id==id;});}).filter(function(c){
-    if(!c||!c.created_at)return false;
-    return(now-new Date(c.created_at))>3*60*60*1000;
+    if(!c||!c.dt)return false;
+    try{return(now-new Date(c.dt))>3*60*60*1000;}catch(e){return false;}
   });
   if(!past.length){
     lr.innerHTML='<div style="text-align:center;padding:32px;font-size:14px;color:var(--lite)">Aucun cours pass\u00e9 pour le moment</div>';
