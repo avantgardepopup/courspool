@@ -411,12 +411,13 @@ input::placeholder,textarea::placeholder{color:#BBBBBB;opacity:1;}
 .bnav::after {
   content: '';
   position: absolute;
-  bottom: -40px;
+  bottom: -80px;
   left: 0; right: 0;
-  height: 40px;
-  background: inherit;
+  height: 80px;
+  background: rgba(255,255,255,0.97);
   pointer-events: none;
 }
+html.dk .bnav::after { background: rgba(18,17,16,0.97); }
 
 /* Chaque item */
 .bni {
@@ -558,6 +559,8 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
   }
   html.dk .bni:hover:not(.on) { background: rgba(255,255,255,0.07); }
   html.dk .bni.on { background: linear-gradient(145deg, #FF7D42, #FF4500); }
+  /* Pill flottante : pas besoin d'extension vers le bas */
+  .bnav::after { display: none; }
 }
 
 
@@ -2049,5 +2052,5 @@ html.dk .filter-pill-btn { background:var(--wh); }
 .card-follow-btn:active { transform: scale(0.85); }
 
 /* ── CAPACITOR iOS — overrides iPad/iPhone ── */
-/* Bouton retour messagerie visible sur iOS natif */
-html.cap-ios #msgBackBtn { display: flex !important; }
+/* Bouton retour messagerie : visible uniquement quand une conversation est ouverte */
+html.cap-ios #pgMsg.conv-open #msgBackBtn { display: flex !important; }
