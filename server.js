@@ -437,8 +437,7 @@ app.get('/cours', async (req, res) => {
   const sujet = req.query.sujet || null;
   const search = req.query.search || null;
 
-  const COURS_COLS = 'id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,"mode",created_at';
-  let query = supabase.from('cours').select(COURS_COLS, { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+  let query = supabase.from('cours').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
   const niveau_filter = req.query.niveau || null;
   if (sujet && sujet !== 'tous') query = query.ilike('sujet', '%' + sujet + '%');
@@ -450,7 +449,8 @@ app.get('/cours', async (req, res) => {
 
   const { data, error, count } = await query;
   if (error) return res.status(500).json({ error });
-  res.json({ cours: data, total: count, page, limit, pages: Math.ceil(count / limit) });
+  const cours = (data || []).map(function(c) { const r = Object.assign({}, c); delete r.code_acces; return r; });
+  res.json({ cours, total: count, page, limit, pages: Math.ceil(count / limit) });
 });
 
 // COURS — créer
@@ -499,7 +499,7 @@ app.get('/cours/code/:code', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('cours')
-      .select('id,titre,sujet,couleur_sujet,background,date_heure,lieu,prix_total,places_max,places_prises,professeur_id,emoji,prof_nom,prof_photo,prof_initiales,prof_couleur,description,niveau,prive,"mode",created_at')
+      .select('*')
       .eq('code_acces', code.toUpperCase())
       .eq('prive', true)
       .single();
