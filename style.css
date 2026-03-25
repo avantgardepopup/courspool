@@ -2049,12 +2049,5 @@ html.dk .filter-pill-btn { background:var(--wh); }
 .card-follow-btn:active { transform: scale(0.85); }
 
 /* ── CAPACITOR iOS — overrides iPad/iPhone ── */
-/* BUG 1 : bouton retour messagerie visible sur iPad natif */
+/* Bouton retour messagerie visible sur iOS natif */
 html.cap-ios #msgBackBtn { display: flex !important; }
-/* BUG 2 : barre de navigation — safe area bottom sur iPad */
-html.cap-ios .bnav {
-  border-radius: 0 !important;
-  left: 0 !important; right: 0 !important; bottom: 0 !important;
-  width: 100% !important;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
-}
