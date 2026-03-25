@@ -1361,17 +1361,19 @@ function _fetchProf(pid){
 }
 function buildCards(){
   currentPage=1;
+  var nc=g('nocard'),lmw=g('loadMoreWrap'),gr=g('grid');
   if(!C.length){
     // Éviter de re-render si nocard est déjà affiché (évite les sauts visuels)
-    if(g('nocard').style.display==='block')return;
-    g('nocard').style.display='block';
-    g('nocardTitle').textContent='Aucun cours disponible';
-    g('nocardSub').textContent='Soyez le premier à proposer un cours !';
-    g('loadMoreWrap').style.display='none';
-    g('grid').innerHTML='';
+    if(nc&&nc.style.display==='block')return;
+    if(nc)nc.style.display='block';
+    var nt=g('nocardTitle'),ns=g('nocardSub');
+    if(nt)nt.textContent='Aucun cours disponible';
+    if(ns)ns.textContent='Soyez le premier à proposer un cours !';
+    if(lmw)lmw.style.display='none';
+    if(gr)gr.innerHTML='';
     return;
   }
-  g('nocard').style.display='none';
+  if(nc)nc.style.display='none';
   applyFilter();
 }
 
@@ -1459,17 +1461,18 @@ function renderPage(){
   var sorted=sortCourses(filteredCards);
   var toShow=sorted.slice(0,currentPage*PAGE_SIZE);
   var sc=g('sortResultCount');if(sc)sc.textContent=filteredCards.length+' cours';
+  var _nc=g('nocard'),_lmw=g('loadMoreWrap');
   if(!toShow.length){
-    g('nocard').style.display='block';
-    g('nocardTitle').textContent='Aucun cours trouvé';
-    g('nocardSub').textContent='Essayez un autre filtre ou une autre ville';
-    g('loadMoreWrap').style.display='none';
-
+    if(_nc)_nc.style.display='block';
+    var _nt=g('nocardTitle'),_ns=g('nocardSub');
+    if(_nt)_nt.textContent='Aucun cours trouvé';
+    if(_ns)_ns.textContent='Essayez un autre filtre ou une autre ville';
+    if(_lmw)_lmw.style.display='none';
     return;
   }
   // Compteur de résultats dans le sous-titre du header
   // result count removed
-  g('nocard').style.display='none';
+  if(_nc)_nc.style.display='none';
   toShow.forEach(function(c,i){
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
