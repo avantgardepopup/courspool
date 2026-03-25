@@ -5639,6 +5639,7 @@ function addToCalendar(coursId){
     +'&location='+encodeURIComponent(c.lc);
 
   var isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(window.Capacitor&&window.Capacitor.getPlatform()==='ios');
+  var isAndroid=/Android/.test(navigator.userAgent)||(window.Capacitor&&window.Capacitor.getPlatform()==='android');
   var isCap=!!(window.Capacitor);
 
   var bd=document.createElement('div');
@@ -5670,7 +5671,7 @@ function addToCalendar(coursId){
   addBtn(gcIco,'Google Agenda',function(){
     if(isCap){window.open(gcUrl,'_system');}else{window.open(gcUrl,'_blank');}
   });
-  if(!isIOS){
+  if(!isIOS&&!isAndroid){
     addBtn(dlIco,'Télécharger .ics (Outlook, Apple…)',function(){
       var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
       var url=URL.createObjectURL(blob);
