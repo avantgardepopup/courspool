@@ -5775,7 +5775,7 @@ function showAccHome(){
 // Override switchATab to show detail view + update topbar title + animate icon
 (function(){
   var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
-  var _animTabs={R:true,H:true};
+  var _animTabs={R:true,H:true,F:true,P:true,Rev:true};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
