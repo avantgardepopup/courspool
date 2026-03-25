@@ -1413,7 +1413,7 @@ function toggleFollowCard(pid,btn){
   // Mettre à jour mpE si le modal profil est ouvert sur ce prof
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   // Persister le compteur dans le cache localStorage
-  if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(_pc3[pid])_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}}
+  if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}}
   updateFavBadge();
   haptic(8);
 }
@@ -2154,7 +2154,7 @@ function togFP(){
   }
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
   // Persister le nouveau compteur dans le cache localStorage
-  if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(_pc2[id])_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}}
+  if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
   updateFavBadge();
 }
@@ -4046,11 +4046,14 @@ function updateResetBtn(){
 
 function openNivFilter(){
   var el=g('bdNivFilter');
-  if(el){el.style.display='flex';}
+  if(!el)return;
+  if(el.parentNode!==document.body)document.body.appendChild(el);
+  el.style.display='flex';
+  document.body.style.overflow='hidden';
 }
 function closeNivFilter(){
   var el=g('bdNivFilter');
-  if(el){el.style.display='none';}
+  if(el){el.style.display='none';document.body.style.overflow='';}
 }
 function setNivFilter(niv, el){
   actNiv=niv;try{sessionStorage.setItem('cp_niv',niv);}catch(e){}
@@ -4065,10 +4068,15 @@ function setNivFilter(niv, el){
 }
 
 function openModeFilter(){
-  var el=g('bdModeFilter');if(el)el.style.display='flex';
+  var el=g('bdModeFilter');
+  if(!el)return;
+  if(el.parentNode!==document.body)document.body.appendChild(el);
+  el.style.display='flex';
+  document.body.style.overflow='hidden';
 }
 function closeModeFilter(){
-  var el=g('bdModeFilter');if(el)el.style.display='none';
+  var el=g('bdModeFilter');
+  if(el){el.style.display='none';document.body.style.overflow='';}
 }
 function setModeFilter(mode, el){
   actMode=mode;
