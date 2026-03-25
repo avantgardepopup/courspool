@@ -975,7 +975,7 @@ function buildAccLists(){
         +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Créer un cours →</button>'
         +'</div>';
     } else {
-      profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-left:2px;padding-right:2px">';
+      profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding:8px 10px 18px;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:-8px -10px -18px;">';
       myC.forEach(function(c){
         var mat=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
@@ -1354,13 +1354,17 @@ function _fetchProf(pid){
         el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       });
     }
+    // Mettre à jour le compteur d'abonnés depuis l'API (synchronisation inter-comptes)
+    var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
+    if(_nbE!==undefined&&_nbE>0){
+      P[pid].e=Math.max(_nbE,P[pid].e||0);
+      _saveFollowCount(pid,P[pid].e);
+    }
     // Persister dans localStorage pour que le prochain chargement démarre avec des données fraîches
     try{
       var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');
       _pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};
       localStorage.setItem('cp_profs',JSON.stringify(_pc));
-      // Ne pas écraser cp_follow_counts depuis _fetchProf (seules les actions explicites le font)
-      // _saveFollowCount ici pourrait écraser une valeur positive avec 0
     }catch(ex){}
     // Mettre à jour le header de conversation si c'est l'interlocuteur actif
     if(pid===msgDestId){
