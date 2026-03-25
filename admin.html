@@ -186,6 +186,7 @@ tr:hover td{background:#FAFAF9;}
     </div>
     <h2>Dashboard Admin</h2>
     <p>Accès réservé aux administrateurs</p>
+    <div class="login-field"><label>Email</label><input id="adminEmail" type="email" placeholder="admin@courspool.com"></div>
     <div class="login-field"><label>Mot de passe</label><input id="adminPw" type="password" placeholder="••••••••"></div>
     <button class="login-btn" onclick="doAdminLogin()">Accéder au dashboard</button>
     <div class="login-error" id="loginError">Mot de passe incorrect</div>
@@ -496,30 +497,51 @@ tr:hover td{background:#FAFAF9;}
 
 <script>
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
-var SUPABASE_URL='https://bpyqjfylukbdarjwapsm.supabase.co';
-var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweXFqZnlsdWtiZGFyandhcHNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTcwOTUsImV4cCI6MjA4OTA5MzA5NX0.ZO3ezBLSy3R2bv1AjN0ik7o4h4J3gcBiLBqUBQ537gg';
-var SUPABASE_SERVICE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweXFqZnlsdWtiZGFyandhcHNtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzUxNzA5NSwiZXhwIjoyMDg5MDkzMDk1fQ.-XtLMM8V9oF9snaYDUaA_VP5k1mUSaIjNRtZkxjKXVw'; // ← colle ici ta service_role key Supabase
-var ADMIN_PW='ABDALLAH8788z.';
+var adminToken=null;
 var allProfs=[],allEleves=[],allCours=[],allRes=[];
 var profFilter='all';
 
+function adminHeaders(){
+  return{'Content-Type':'application/json','Authorization':'Bearer '+adminToken};
+}
+
 // AUTH
-function doAdminLogin(){
+async function doAdminLogin(){
+  var email=document.getElementById('adminEmail').value;
   var pw=document.getElementById('adminPw').value;
-  if(pw===ADMIN_PW){
+  if(!email||!pw)return;
+  try{
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+    var d=await r.json();
+    if(!r.ok||!d.session){
+      document.getElementById('loginError').style.display='block';
+      document.getElementById('adminPw').value='';
+      return;
+    }
+    // Vérifier que c'est bien un admin
+    var testR=await fetch(API+'/admin/users',{headers:{'Authorization':'Bearer '+d.session.access_token}});
+    if(!testR.ok){
+      document.getElementById('loginError').style.display='block';
+      document.getElementById('loginError').textContent='Accès admin refusé.';
+      document.getElementById('adminPw').value='';
+      return;
+    }
+    adminToken=d.session.access_token;
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
     loadAll();
-  } else {
+  }catch(e){
     document.getElementById('loginError').style.display='block';
-    document.getElementById('adminPw').value='';
+    document.getElementById('loginError').textContent='Erreur réseau.';
   }
 }
 document.getElementById('adminPw').addEventListener('keydown',function(e){if(e.key==='Enter')doAdminLogin();});
 function doLogout(){
+  adminToken=null;
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('adminPw').value='';
+  if(document.getElementById('loginError')){document.getElementById('loginError').style.display='none';document.getElementById('loginError').textContent='Mot de passe incorrect';}
 }
 
 // SIDEBAR MOBILE
@@ -555,32 +577,33 @@ function goPage(page,el){
 }
 
 // DATA
-async function supabaseQuery(path){
+async function adminGet(path){
   try{
-    var r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'}
-    });
+    var r=await fetch(API+path,{headers:{'Authorization':'Bearer '+adminToken}});
+    if(!r.ok)return[];
     return await r.json();
   }catch(e){return[];}
 }
-async function supabaseUpdate(table,id,data){
+async function adminPatch(path,data){
   try{
-    var r=await fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id,{
-      method:'PATCH',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify(data)
-    });
+    var r=await fetch(API+path,{method:'PATCH',headers:adminHeaders(),body:JSON.stringify(data)});
+    return r.ok;
+  }catch(e){return false;}
+}
+async function adminDelete(path){
+  try{
+    var r=await fetch(API+path,{method:'DELETE',headers:adminHeaders()});
     return r.ok;
   }catch(e){return false;}
 }
 
 async function loadAll(){
   try{
-    var profData=await supabaseQuery('profiles?select=*&order=created_at.desc');
-    var coursData=await fetch(API+'/cours').then(function(r){return r.json();}).catch(function(){return[];});
-    var resData=await supabaseQuery('reservations?select=*&order=created_at.desc');
+    var profData=await adminGet('/admin/users');
+    var coursData=await fetch(API+'/cours?limit=1000').then(function(r){return r.json();}).catch(function(){return{cours:[]};});
+    var resData=await adminGet('/admin/reservations');
     var all=Array.isArray(profData)?profData:[];
-    allCours=Array.isArray(coursData)?coursData:[];
+    allCours=Array.isArray(coursData.cours)?coursData.cours:[];
     allRes=Array.isArray(resData)?resData:[];
     allEleves=all.filter(function(p){return p.role==='eleve';});
     allProfs=all.filter(function(p){return p.role==='professeur';});
@@ -695,7 +718,7 @@ async function renderPaiements(){
   var tbody=document.getElementById('paiementsTable');
   tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--lite)">Chargement…</td></tr>';
   try{
-    var r=await fetch(API+'/stripe/payments');
+    var r=await fetch(API+'/stripe/payments',{headers:{'Authorization':'Bearer '+adminToken}});
     var payments=await r.json();
     if(!Array.isArray(payments)||!payments.length){
       // Fallback sur données Supabase
@@ -788,7 +811,7 @@ async function submitReject(type) {
   // L'API /email/verification met aussi à jour le profil
   try {
     var r = await fetch(API+'/email/verification', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:adminHeaders(),
       body: JSON.stringify({ prof_id: id, status, raison })
     });
     if (r.ok) {
@@ -805,12 +828,12 @@ async function verifyProf(id,action){
   var data={};
   if(action==='verify') data={verified:true,statut_compte:'actif'};
   else if(action==='block') data={verified:false,statut_compte:'bloqué'};
-  var ok=await supabaseUpdate('profiles',id,data);
+  var ok=await adminPatch('/admin/users/'+id,data);
   if(ok){
     var p=allProfs.find(function(x){return x.id===id;});
     if(p){p.verified=data.verified;p.statut_compte=data.statut_compte;}
     if(action==='verify'){
-      fetch(API+'/email/verification',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prof_id:id,status:'approved'})}).catch(function(){});
+      fetch(API+'/email/verification',{method:'POST',headers:adminHeaders(),body:JSON.stringify({prof_id:id,status:'approved'})}).catch(function(){});
     }
     closeModal();renderDashboard();renderProfs();
     var msgs={verify:'Professeur validé ! Email de confirmation envoyé.',block:'Compte bloqué.'};
@@ -821,17 +844,16 @@ async function verifyProf(id,action){
 async function clearTestData(){
   if(!confirm('Supprimer TOUTES les réservations et remettre les places à 0 ?'))return;
   try{
-    await fetch(SUPABASE_URL+'/rest/v1/reservations?id=neq.00000000-0000-0000-0000-000000000000',{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
-    await fetch(SUPABASE_URL+'/rest/v1/cours?id=neq.00000000-0000-0000-0000-000000000000',{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({places_prises:0})});
-    allRes=[];renderDashboard();renderPaiements();
-    toast('Données de test effacées');
+    var r=await fetch(API+'/admin/reset-test-data',{method:'POST',headers:adminHeaders()});
+    if(r.ok){allRes=[];renderDashboard();renderPaiements();toast('Données de test effacées');}
+    else toast('Erreur lors du nettoyage');
   }catch(e){toast('Erreur lors du nettoyage');}
 }
 
 async function deleteCours(id){
   if(!confirm('Supprimer ce cours définitivement ?'))return;
   try{
-    await fetch(API+'/cours/'+id+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({professeur_id:'admin'})});
+    await fetch(API+'/cours/'+id+'/cancel',{method:'POST',headers:adminHeaders(),body:JSON.stringify({professeur_id:'admin'})});
     allCours=allCours.filter(function(c){return c.id!==id;});
     renderCours();renderDashboard();
     toast('Cours supprimé');
@@ -856,7 +878,7 @@ async function renderSupport(){
   if(!list) return;
   list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Chargement…</div>';
   try{
-    var data = await supabaseQuery('contacts?select=*&order=created_at.desc');
+    var data = await adminGet('/admin/contacts');
     allContacts = Array.isArray(data) ? data : [];
     var nonLus = allContacts.filter(function(c){return !c.lu;}).length;
     if(count) count.textContent = allContacts.length + ' message' + (allContacts.length>1?'s':'');
@@ -899,7 +921,7 @@ async function openSupportMsg(id){
   if(!c) return;
   // Marquer comme lu
   if(!c.lu){
-    await supabaseUpdate('contacts',id,{lu:true});
+    await adminPatch('/admin/contacts/'+id,{lu:true});
     c.lu = true;
     renderSupport();
   }
@@ -930,17 +952,16 @@ async function openSupportMsg(id){
 async function deleteSupportMsg(id){
   if(!confirm('Supprimer ce message ?')) return;
   try{
-    await fetch(SUPABASE_URL+'/rest/v1/contacts?id=eq.'+id,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
-    closeModal();
-    renderSupport();
-    toast('Message supprimé');
+    var ok=await adminDelete('/admin/contacts/'+id);
+    if(ok){closeModal();renderSupport();toast('Message supprimé');}
+    else toast('Erreur lors de la suppression');
   }catch(e){toast('Erreur lors de la suppression');}
 }
 
 async function markAllSupportRead(){
   try{
     var unread = allContacts.filter(function(c){return !c.lu;});
-    await Promise.all(unread.map(function(c){return supabaseUpdate('contacts',c.id,{lu:true});}));
+    await Promise.all(unread.map(function(c){return adminPatch('/admin/contacts/'+c.id,{lu:true});}));
     allContacts.forEach(function(c){c.lu=true;});
     renderSupport();
     toast('Tous les messages marqués comme lus');
@@ -955,7 +976,7 @@ var notifHistory = [];
 
 async function loadPushStats(){
   try{
-    var data = await supabaseQuery('push_subscriptions?select=role');
+    var data = await adminGet('/admin/push-stats');
     if(!Array.isArray(data)) return;
     var profs = data.filter(function(s){return s.role==='professeur';}).length;
     var eleves = data.filter(function(s){return s.role==='eleve';}).length;
@@ -989,14 +1010,14 @@ async function sendBroadcastNotif(){
   try{
     if(notifTarget==='all'){
       // Envoyer aux deux groupes
-      var r1=await fetch(API+'/push/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'professeur',title,body,url})});
-      var r2=await fetch(API+'/push/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:'eleve',title,body,url})});
+      var r1=await fetch(API+'/push/broadcast',{method:'POST',headers:adminHeaders(),body:JSON.stringify({role:'professeur',title,body,url})});
+      var r2=await fetch(API+'/push/broadcast',{method:'POST',headers:adminHeaders(),body:JSON.stringify({role:'eleve',title,body,url})});
       var d1=await r1.json(),d2=await r2.json();
       var total=(d1.sent||0)+(d2.sent||0);
       addNotifHistory(title,body,'Tout le monde',total);
       toast('Envoyé !',''+total+' notification'+(total>1?'s':'')+' envoyée'+(total>1?'s':''));
     }else{
-      var r=await fetch(API+'/push/broadcast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:notifTarget,title,body,url})});
+      var r=await fetch(API+'/push/broadcast',{method:'POST',headers:adminHeaders(),body:JSON.stringify({role:notifTarget,title,body,url})});
       var d=await r.json();
       addNotifHistory(title,body,notifTarget==='professeur'?'Profs':'Élèves',d.sent||0);
       toast('Envoyé !',''+(d.sent||0)+' notification'+(d.sent>1?'s':'')+' envoyée'+(d.sent>1?'s':''));
@@ -1009,8 +1030,8 @@ async function sendBroadcastNotif(){
 async function sendRelance(){
   if(!confirm('Envoyer les relances automatiques aux profs ET élèves inactifs ?'))return;
   try{
-    var r1=await fetch(API+'/push/relance-profs',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
-    var r2=await fetch(API+'/push/relance-eleves',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    var r1=await fetch(API+'/push/relance-profs',{method:'POST',headers:adminHeaders(),body:'{}'});
+    var r2=await fetch(API+'/push/relance-eleves',{method:'POST',headers:adminHeaders(),body:'{}'});
     var d1=await r1.json(),d2=await r2.json();
     var total=(d1.sent||0)+(d2.sent||0);
     addNotifHistory('Relance auto','Profs et élèves inactifs relancés','Auto',total);
@@ -1038,35 +1059,8 @@ function addNotifHistory(title,body,cible,sent){
 async function deleteUser(id, nom){
   if(!confirm('Supprimer définitivement le compte de '+nom+' ?\n\nCette action supprime le profil et les données associées. Irréversible.'))return;
   try{
-    var h={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
-    var base=SUPABASE_URL+'/rest/v1/';
-    // Supprimer toutes les données liées directement via Supabase
-    await fetch(base+'reservations?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'follows?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'follows?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'notations?eleve_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'notations?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'messages?expediteur_id=eq.'+id,{method:'DELETE',headers:h}).then(()=>{}).catch(()=>{});
-    await fetch(base+'messages?destinataire_id=eq.'+id,{method:'DELETE',headers:h}).then(()=>{}).catch(()=>{});
-    await fetch(base+'cours?professeur_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    await fetch(base+'push_subscriptions?user_id=eq.'+id,{method:'DELETE',headers:h}).catch(()=>{});
-    // Supprimer le profil
-    var rp=await fetch(base+'profiles?id=eq.'+id,{method:'DELETE',headers:h});
-    if(!rp.ok){toast('Erreur suppression profil');return;}
-    // Supprimer le compte Auth directement avec la service role key
-    if(SUPABASE_SERVICE_KEY){
-      await fetch(SUPABASE_URL+'/auth/v1/admin/users/'+id,{
-        method:'DELETE',
-        headers:{
-          'apikey':SUPABASE_SERVICE_KEY,
-          'Authorization':'Bearer '+SUPABASE_SERVICE_KEY
-        }
-      }).catch(function(e){console.log('Auth delete:',e.message);});
-    } else {
-      // Fallback : tenter via Railway
-      fetch(API+'/users/'+id,{method:'DELETE',headers:{'Content-Type':'application/json'}}).catch(()=>{});
-    }
-    // Mettre à jour les listes locales
+    var r=await fetch(API+'/users/'+id,{method:'DELETE',headers:adminHeaders()});
+    if(!r.ok){toast('Erreur suppression compte');return;}
     allProfs=allProfs.filter(function(p){return p.id!==id;});
     allEleves=allEleves.filter(function(e){return e.id!==id;});
     closeModal();

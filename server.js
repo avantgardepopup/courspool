@@ -4,8 +4,13 @@ const { createClient } = require('@supabase/supabase-js');
 const Stripe = require('stripe');
 const compression = require('compression');
 const { Resend } = require('resend');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+app.set('io', io);
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -47,6 +52,31 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SECRET_KEY
 );
+
+// ── MIDDLEWARES AUTH ──────────────────────────────────────────
+async function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Token manquant' });
+  const token = auth.slice(7);
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return res.status(401).json({ error: 'Token invalide' });
+    const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', user.id).single();
+    if (profile?.statut_compte === 'bloqué') return res.status(403).json({ error: 'Compte bloqué' });
+    req.user = user;
+    next();
+  } catch(e) {
+    res.status(401).json({ error: 'Erreur d\'authentification' });
+  }
+}
+
+function requireAdmin(req, res, next) {
+  const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!adminIds.length || !adminIds.includes(req.user.id)) return res.status(403).json({ error: 'Accès admin requis' });
+  next();
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ============================================================
 // EMAILS — domaine vérifié Resend
@@ -300,6 +330,21 @@ async function sendEmailProfVerification(profEmail, profName, status, raison = '
 }
 
 
+// ── CONTRÔLE D'ACCÈS GLOBAL ──────────────────────────────────
+// Routes publiques — pas de token requis
+app.use(function(req, res, next) {
+  if (req.method === 'GET'  && req.path === '/') return next();
+  if (req.method === 'POST' && req.path === '/auth/register') return next();
+  if (req.method === 'POST' && req.path === '/auth/login') return next();
+  if (req.method === 'GET'  && req.path === '/cours') return next();
+  if (req.method === 'GET'  && req.path.startsWith('/cours/code/')) return next();
+  if (req.method === 'GET'  && req.path.startsWith('/profiles/')) return next();
+  if (req.method === 'GET'  && req.path.startsWith('/notations/')) return next();
+  if (req.method === 'GET'  && req.path === '/stripe/success') return next();
+  if (req.method === 'POST' && req.path === '/contact') return next();
+  return requireAuth(req, res, next);
+});
+
 // TEST
 app.get('/', (req, res) => {
   res.json({ message: 'CoursPool API fonctionne !' });
@@ -351,7 +396,10 @@ app.get('/cours', async (req, res) => {
 
   const niveau_filter = req.query.niveau || null;
   if (sujet && sujet !== 'tous') query = query.ilike('sujet', '%' + sujet + '%');
-  if (search) query = query.or('titre.ilike.%' + search + '%,sujet.ilike.%' + search + '%,lieu.ilike.%' + search + '%,prof_nom.ilike.%' + search + '%');
+  if (search) {
+    const s = search.slice(0, 100).replace(/[%_\\]/g, c => '\\' + c);
+    query = query.or(`titre.ilike.%${s}%,sujet.ilike.%${s}%,lieu.ilike.%${s}%,prof_nom.ilike.%${s}%`);
+  }
   if (niveau_filter) query = query.eq('niveau', niveau_filter);
 
   const { data, error, count } = await query;
@@ -387,6 +435,7 @@ app.post('/cours', async (req, res) => {
       } catch(e) {}
     })();
   }
+  io.emit('cours_update', { action: 'create', cours: data[0] });
   res.json(data);
 });
 
@@ -410,6 +459,7 @@ app.get('/cours/code/:code', async (req, res) => {
 app.delete('/cours/:id', async (req, res) => {
   const { error } = await supabase.from('cours').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ error });
+  io.emit('cours_update', { action: 'delete', cours_id: req.params.id });
   res.json({ success: true });
 });
 
@@ -429,10 +479,10 @@ app.post('/reservations', async (req, res) => {
     .select();
   if (error) return res.status(500).json({ error: error.message });
 
-  // Incrémenter places_prises
-  const { data: coursData } = await supabase.from('cours').select('places_prises').eq('id', cours_id).single();
-  const newCount = (coursData?.places_prises || 0) + 1;
-  await supabase.from('cours').update({ places_prises: newCount }).eq('id', cours_id);
+  // Recalculer places_prises depuis la source de vérité
+  const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+  await supabase.from('cours').update({ places_prises: resCount || 0 }).eq('id', cours_id);
+  io.emit('reservation_update', { cours_id, places_prises: resCount || 0 });
 
   res.json(data[0]);
 });
@@ -441,9 +491,8 @@ app.post('/reservations', async (req, res) => {
 app.post('/reservations/ami', async (req, res) => {
   const { cours_id, user_id } = req.body;
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
-  const { data: coursData } = await supabase.from('cours').select('places_prises').eq('id', cours_id).single();
-  const newCount = (coursData?.places_prises || 0) + 1;
-  await supabase.from('cours').update({ places_prises: newCount }).eq('id', cours_id);
+  const { count: resCountAmi } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+  await supabase.from('cours').update({ places_prises: resCountAmi || 0 }).eq('id', cours_id);
   res.json({ success: true });
 });
 
@@ -458,10 +507,15 @@ app.get('/reservations/:user_id', async (req, res) => {
 
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', async (req, res) => {
-  const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
-  if (!cours_id || !user_id || !montant) return res.status(400).json({ error: 'Données manquantes' });
+  const { cours_id, user_id, cours_titre, pour_ami } = req.body;
+  if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
 
   try {
+    // Prix depuis la BDD — ne jamais faire confiance au client
+    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,titre').eq('id', cours_id).single();
+    if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
+    const montant = Math.ceil(cours.prix_total / (cours.places_max || 1));
+
     const baseUrl = 'https://courspool.vercel.app';
     const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?cours_id=${cours_id}&user_id=${user_id}&montant=${montant}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
     const cancelUrl = baseUrl + '?cancelled=1';
@@ -471,7 +525,7 @@ app.post('/stripe/checkout', async (req, res) => {
       line_items: [{
         price_data: {
           currency: 'eur',
-          product_data: { name: cours_titre || 'Réservation CoursPool' },
+          product_data: { name: cours.titre || cours_titre || 'Réservation CoursPool' },
           unit_amount: Math.round(montant * 100),
         },
         quantity: 1,
@@ -490,9 +544,13 @@ app.post('/stripe/checkout', async (req, res) => {
 
 // STRIPE — PaymentIntent in-app (Stripe Elements)
 app.post('/stripe/payment-intent', async (req, res) => {
-  const { cours_id, user_id, montant, cours_titre, pour_ami } = req.body;
-  if (!cours_id || !user_id || !montant) return res.status(400).json({ error: 'Données manquantes' });
+  const { cours_id, user_id, cours_titre, pour_ami } = req.body;
+  if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
+    // Prix depuis la BDD — ne jamais faire confiance au client
+    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,titre').eq('id', cours_id).single();
+    if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
+    const montant = Math.ceil(cours.prix_total / (cours.places_max || 1));
     // Vérifier si déjà réservé
     if (!pour_ami) {
       const { data: existing } = await supabase.from('reservations')
@@ -502,11 +560,11 @@ app.post('/stripe/payment-intent', async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(montant * 100),
       currency: 'eur',
-      description: cours_titre || 'Réservation CoursPool',
+      description: cours.titre || cours_titre || 'Réservation CoursPool',
       metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0' },
       automatic_payment_methods: { enabled: true },
     });
-    res.json({ client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id });
+    res.json({ client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id, montant });
   } catch (e) {
     console.log('PaymentIntent error:', e.message);
     res.status(500).json({ error: e.message });
@@ -537,10 +595,12 @@ app.post('/stripe/confirm-payment', async (req, res) => {
       type_paiement: pour_ami ? 'stripe_ami' : 'stripe'
     }]);
 
-    // Incrémenter places
+    // Recalculer places_prises depuis la source de vérité
     const { data: coursData } = await supabase.from('cours')
-      .select('places_prises,titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
-    await supabase.from('cours').update({ places_prises: (coursData?.places_prises || 0) + 1 }).eq('id', cours_id);
+      .select('titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
+    const { count: resCountPI } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+    await supabase.from('cours').update({ places_prises: resCountPI || 0 }).eq('id', cours_id);
+    io.emit('reservation_update', { cours_id, places_prises: resCountPI || 0 });
 
     // Emails
     try {
@@ -590,9 +650,11 @@ app.get('/stripe/success', async (req, res) => {
       type_paiement: pour_ami === '1' ? 'stripe_ami' : 'stripe'
     }]);
 
-    // Incrémenter places
-    const { data: coursData } = await supabase.from('cours').select('places_prises,titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
-    await supabase.from('cours').update({ places_prises: (coursData?.places_prises || 0) + 1 }).eq('id', cours_id);
+    // Recalculer places_prises depuis la source de vérité
+    const { data: coursData } = await supabase.from('cours').select('titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
+    const { count: resCountSuc } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+    await supabase.from('cours').update({ places_prises: resCountSuc || 0 }).eq('id', cours_id);
+    io.emit('reservation_update', { cours_id, places_prises: resCountSuc || 0 });
 
     // Envoyer emails
     try {
@@ -643,10 +705,11 @@ app.post('/stripe/confirm', async (req, res) => {
       .insert([{ cours_id, user_id, montant_paye: montant, type_paiement: pour_ami ? 'stripe_ami' : 'stripe' }]);
     if (error) return res.status(500).json({ error: error.message });
 
-    // Incrémenter places_prises
-    const { data: coursData2 } = await supabase.from('cours').select('places_prises,titre,date_heure,lieu,professeur_id,prof_nom').eq('id', cours_id).single();
-    const newCount = (coursData2?.places_prises || 0) + 1;
-    await supabase.from('cours').update({ places_prises: newCount }).eq('id', cours_id);
+    // Recalculer places_prises depuis la source de vérité
+    const { data: coursData2 } = await supabase.from('cours').select('titre,date_heure,lieu,professeur_id,prof_nom').eq('id', cours_id).single();
+    const { count: resCountConf } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+    await supabase.from('cours').update({ places_prises: resCountConf || 0 }).eq('id', cours_id);
+    io.emit('reservation_update', { cours_id, places_prises: resCountConf || 0 });
 
     // Envoyer emails
     try {
@@ -672,6 +735,7 @@ app.post('/follows', async (req, res) => {
   const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
   const nb_eleves = count || 0;
   await supabase.from('profiles').update({ eleves_count: nb_eleves }).eq('id', professeur_id);
+  io.emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
   res.json({ success: true, nb_eleves });
 });
 
@@ -685,6 +749,7 @@ app.delete('/follows', async (req, res) => {
   const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
   const nb_eleves = count || 0;
   await supabase.from('profiles').update({ eleves_count: nb_eleves }).eq('id', professeur_id);
+  io.emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
   res.json({ success: true, nb_eleves });
 });
 
@@ -765,7 +830,7 @@ app.post('/contact', async (req, res) => {
 });
 
 // DELETE user — suppression complète (profil + auth)
-app.delete('/users/:id', async (req, res) => {
+app.delete('/users/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     // Supprimer toutes les données liées (non bloquant)
@@ -796,12 +861,15 @@ app.delete('/users/:id', async (req, res) => {
   }
 });
 
-// PATCH profil — mise à jour verified / statut_compte (appelé depuis admin)
+// PATCH profil — mise à jour par l'utilisateur lui-même (champs autorisés uniquement)
 app.patch('/profiles/:id', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const { id } = req.params;
-  const allowedFields = ['verified', 'statut_compte', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'cni_uploaded', 'bio', 'ville', 'photo_url', 'rejection_reason', 'can_retry_cni'];
+  // Seul l'utilisateur lui-même peut modifier son profil
+  if (req.user.id !== id) return res.status(403).json({ error: 'Non autorisé' });
+  const userFields = ['prenom', 'nom', 'matieres', 'niveau', 'statut', 'cni_uploaded', 'bio', 'ville', 'photo_url'];
   const updates = {};
-  allowedFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  userFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
   try {
     const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().single();
@@ -810,7 +878,7 @@ app.patch('/profiles/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/email/verification', async (req, res) => {
+app.post('/email/verification', requireAdmin, async (req, res) => {
   const { prof_id, status, raison } = req.body;
   if (!prof_id || !status) return res.status(400).json({ error: 'Données manquantes' });
   try {
@@ -829,7 +897,7 @@ app.post('/email/verification', async (req, res) => {
 });
 
 // STRIPE — récupérer les paiements réels
-app.get('/stripe/payments', async (req, res) => {
+app.get('/stripe/payments', requireAdmin, async (req, res) => {
   try {
     const payments = await stripe.paymentIntents.list({ limit: 100 });
     const result = payments.data.map(p => ({
@@ -865,8 +933,9 @@ app.post('/reservations/:id/cancel', async (req, res) => {
   try{
     const {data:reservation}=await supabase.from('reservations').select('*').eq('id',req.params.id).single();
     await supabase.from('reservations').delete().eq('id',req.params.id);
-    const {data:cours}=await supabase.from('cours').select('places_prises').eq('id',cours_id).single();
-    if(cours)await supabase.from('cours').update({places_prises:Math.max(0,(cours.places_prises||1)-1)}).eq('id',cours_id);
+    const {count:resCountCancel}=await supabase.from('reservations').select('*',{count:'exact',head:true}).eq('cours_id',cours_id);
+    await supabase.from('cours').update({places_prises:resCountCancel||0}).eq('id',cours_id);
+    io.emit('reservation_update',{cours_id,places_prises:resCountCancel||0});
     let rembourse=false;
     if(reservation?.stripe_payment_intent_id){
       try{await stripe.refunds.create({payment_intent:reservation.stripe_payment_intent_id});rembourse=true;}catch(e){console.log('Refund error:',e.message);}
@@ -887,6 +956,7 @@ app.post('/cours/:id/cancel', async (req, res) => {
       }else{remboursements++;}
     }
     await supabase.from('cours').delete().eq('id',req.params.id);
+    io.emit('cours_update', { action: 'cancel', cours_id: req.params.id });
     res.json({success:true,remboursements});
   }catch(e){res.status(500).json({error:e.message});}
 });
@@ -1027,6 +1097,7 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
 
 // PROFILES — récupérer profil par ID
 app.get('/profiles/:id', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
   const {data,error}=await supabase.from('profiles').select('*').eq('id',req.params.id).single();
   if(error)return res.status(404).json({});
   // Compter les vrais followers depuis la table follows (source de vérité)
@@ -1044,12 +1115,14 @@ app.post('/messages', async (req, res) => {
     .insert([{ sender_id: expediteur_id, receiver_id: destinataire_id, contenu }])
     .select();
   if (error) return res.status(500).json({ error: error.message });
+  io.emit('new_message', { expediteur_id, destinataire_id });
   res.json(data[0]);
 });
 
 // MESSAGES — récupérer conversation
 app.get('/messages/:user1/:user2', async (req, res) => {
   const { user1, user2 } = req.params;
+  if (!UUID_RE.test(user1) || !UUID_RE.test(user2)) return res.status(400).json({ error: 'ID invalide' });
   const { data, error } = await supabase.from('messages')
     .select('*')
     .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
@@ -1060,6 +1133,7 @@ app.get('/messages/:user1/:user2', async (req, res) => {
 
 // MESSAGES — toutes conversations d'un user
 app.get('/conversations/:user_id', async (req, res) => {
+  if (!UUID_RE.test(req.params.user_id)) return res.status(400).json({ error: 'ID invalide' });
   const { data, error } = await supabase.from('messages')
     .select('*')
     .or(`sender_id.eq.${req.params.user_id},receiver_id.eq.${req.params.user_id}`)
@@ -1090,6 +1164,7 @@ app.put('/messages/lu/:user_id', async (req, res) => {
 app.post('/upload/cni', async (req, res) => {
   const { base64, userId, filename } = req.body;
   if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   try {
     const buffer = Buffer.from(base64.split(',')[1], 'base64');
     const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
@@ -1133,6 +1208,7 @@ app.post('/upload/cni', async (req, res) => {
 app.post('/upload/photo', async (req, res) => {
   const { base64, userId, filename } = req.body;
   if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   try {
     const buffer = Buffer.from(base64.split(',')[1], 'base64');
     const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
@@ -1175,6 +1251,7 @@ app.post('/notations', async (req, res) => {
   if (notes && notes.length > 0) {
     const moyenne = (notes.reduce((a, b) => a + b.note, 0) / notes.length).toFixed(1);
     await supabase.from('profiles').update({ note_moyenne: moyenne }).eq('id', professeur_id);
+    io.emit('note_update', { professeur_id, note_moyenne: moyenne });
   }
   res.json(data[0]);
 });
@@ -1302,7 +1379,7 @@ app.post('/push/new-cours', async (req, res) => {
 });
 
 // PUSH — broadcast admin → tous les profs ou tous les élèves
-app.post('/push/broadcast', async (req, res) => {
+app.post('/push/broadcast', requireAdmin, async (req, res) => {
   const { role, title, body, url } = req.body;
   if (!role || !title || !body) return res.status(400).json({ error: 'Données manquantes' });
   try {
@@ -1319,7 +1396,7 @@ app.post('/push/broadcast', async (req, res) => {
 });
 
 // PUSH — relance profs inactifs (cron ou manuel via admin)
-app.post('/push/relance-profs', async (req, res) => {
+app.post('/push/relance-profs', requireAdmin, async (req, res) => {
   try {
     // Profs vérifiés qui n'ont pas publié de cours depuis 14 jours
     const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -1344,7 +1421,7 @@ app.post('/push/relance-profs', async (req, res) => {
 });
 
 // PUSH — relance élèves inactifs
-app.post('/push/relance-eleves', async (req, res) => {
+app.post('/push/relance-eleves', requireAdmin, async (req, res) => {
   try {
     const cutoff = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
     const { data: eleves } = await supabase.from('profiles').select('id').eq('role', 'eleve');
@@ -1367,6 +1444,78 @@ app.post('/push/relance-eleves', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ============================================================
+// ROUTES ADMIN — accès restreint (requireAuth + requireAdmin)
+// ============================================================
+
+// ADMIN — liste de tous les utilisateurs
+app.get('/admin/users', requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ADMIN — liste de toutes les réservations
+app.get('/admin/reservations', requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ADMIN — liste des contacts / messages de support
+app.get('/admin/contacts', requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+// ADMIN — marquer un contact comme lu / mettre à jour
+app.patch('/admin/contacts/:id', requireAdmin, async (req, res) => {
+  const allowed = ['lu'];
+  const updates = {};
+  allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
+  const { error } = await supabase.from('contacts').update(updates).eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+// ADMIN — supprimer un contact
+app.delete('/admin/contacts/:id', requireAdmin, async (req, res) => {
+  const { error } = await supabase.from('contacts').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+// ADMIN — mettre à jour un profil (champs admin uniquement)
+app.patch('/admin/users/:id', requireAdmin, async (req, res) => {
+  const adminFields = ['verified', 'statut_compte', 'rejection_reason', 'can_retry_cni', 'cni_uploaded', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
+  const updates = {};
+  adminFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
+  try {
+    const { data, error } = await supabase.from('profiles').update(updates).eq('id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true, profile: data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ADMIN — statistiques push subscriptions
+app.get('/admin/push-stats', requireAdmin, async (req, res) => {
+  const { data, error } = await supabase.from('push_subscriptions').select('role');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data || []);
+});
+
+// ADMIN — réinitialiser les données de test
+app.post('/admin/reset-test-data', requireAdmin, async (req, res) => {
+  try {
+    await supabase.from('reservations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('cours').update({ places_prises: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 const PORT = process.env.PORT || 3000;
 // ── KEEP-ALIVE anti-cold-start Railway ──
 const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
@@ -1376,7 +1525,6 @@ if (SELF_URL) {
   setInterval(async () => {
     try {
       const https = require('https');
-      const http = require('http');
       const lib = SELF_URL.startsWith('https') ? https : http;
       lib.get(SELF_URL + '/', () => {}).on('error', () => {});
     } catch(e) {}
@@ -1384,4 +1532,4 @@ if (SELF_URL) {
   console.log('Keep-alive actif:', SELF_URL);
 }
 
-app.listen(PORT, () => console.log('CoursPool API sur le port ' + PORT));
+server.listen(PORT, () => console.log('CoursPool API + Socket.io sur le port ' + PORT));

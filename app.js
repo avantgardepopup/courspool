@@ -89,6 +89,13 @@ window.addEventListener('popstate',function(e){
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
+// En-têtes API — injecte le token Bearer si l'utilisateur est connecté
+function apiH(extra){
+  var h=Object.assign({'Content-Type':'application/json'},extra||{});
+  if(user&&user.token)h['Authorization']='Bearer '+user.token;
+  return h;
+}
+
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
 function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function fmtDt(dt){
@@ -284,7 +291,7 @@ function unfollowProf(pid){
   fol.delete(pid);
   _syncFollowBtns(pid,false);
   if(user&&user.id){
-    fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
+    fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
   }
   toast('Professeur retiré des suivis','');
   haptic(4);
@@ -411,7 +418,7 @@ async function doLogin(){
   if(!em||!pw){shake('lfC');return;}
   g('lEm').disabled=true;g('lPw').disabled=true;
   try{
-    var r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,password:pw})});
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);shake('lfC');return;}
     var p=data.profile||{};
@@ -433,7 +440,8 @@ async function doLogin(){
       statut:p.statut||'',
       niveau:p.niveau||'',
       matieres:p.matieres||'',
-      bio:p.bio||''
+      bio:p.bio||'',
+      token:data.session&&data.session.access_token?data.session.access_token:undefined
     };
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
     applyUser();
@@ -446,16 +454,16 @@ async function doLogin(){
     favCours.clear();try{localStorage.removeItem('cp_fav_cours');}catch(e){};
     if(uid){
       Promise.all([
-        fetch(API+'/reservations/'+uid).then(function(r){return r.json();}).catch(function(){return [];}),
-        fetch(API+'/follows/'+uid).then(function(r){return r.json();}).catch(function(){return [];})
+        fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
       ]).then(function(results){
         var resData=results[0],folData=results[1];
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
         if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-        loadData().then(function(){restoreFilters();buildCards();_startAutoRefresh();});
-      }).catch(function(){loadData().then(function(){buildCards();_startAutoRefresh();});});
+        loadData().then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      }).catch(function(){loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});});
     } else {
-      loadData().then(function(){buildCards();_startAutoRefresh();});
+      loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     }
     toast('Bienvenue '+pr+' !','Connecté à CoursPool');
     // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
@@ -477,15 +485,19 @@ async function doReg(){
   }
   try{
     var body=Object.assign({email:em,password:pw,prenom:pr,nom:nm,role:role},extra);
-    var r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var r=await fetch(API+'/auth/register',{method:'POST',headers:apiH(),body:JSON.stringify(body)});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);shake('lfI');return;}
+    // Auto-login pour obtenir le token JWT
+    var loginR=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
+    var loginData=await loginR.json();
+    var token=loginData.session&&loginData.session.access_token?loginData.session.access_token:undefined;
     if(role==='professeur'){
       var uid=data.user.id;
       // Connecter directement sans message intermédiaire
-      go(pr,nm,em,role,uid);
+      go(pr,nm,em,role,uid,null,token);
       setTimeout(tutoStart,1200);
-    }else{go(pr,nm,em,role,data.user.id);setTimeout(tutoStart,1200);}
+    }else{go(pr,nm,em,role,data.user.id,null,token);setTimeout(tutoStart,1200);}
   }catch(e){toast('Erreur','Impossible de créer le compte');}
 }
 
@@ -517,8 +529,8 @@ function doGuest(){
   setTimeout(obShow, 500);
 }
 
-function go(pr,nm,em,role,uid,photoUrl){
-  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null};
+function go(pr,nm,em,role,uid,photoUrl,token){
+  user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   applyUser();
   loadData().then(function(){buildCards();});
@@ -568,7 +580,7 @@ function applyUser(){
     clearInterval(msgBadgePollTimer);
     msgBadgePollTimer=setInterval(function(){
       if(!user||!user.id)return;
-      fetch(API+'/conversations/'+user.id).then(function(r){return r.json();}).then(function(msgs){
+      fetch(API+'/conversations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(msgs){
         if(!Array.isArray(msgs))return;
         var convs={},nonLus=0;
         msgs.forEach(function(m){var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;if(!otherId||otherId===user.id)return;if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;});
@@ -784,8 +796,8 @@ function goExplore(){
       applyUser();
       if(user.id){
         Promise.all([
-          fetch(API+'/reservations/'+user.id).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id).then(function(r){return r.json();}).catch(function(){return [];})
+          fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
         ]).then(function(results){
           var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
@@ -802,7 +814,7 @@ function goExplore(){
           setTimeout(function(){
             if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           },200);
-          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();_startAutoRefresh();});
+          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
         }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
@@ -918,6 +930,48 @@ function goAccount(){
     if(pfProfExtra)pfProfExtra.style.display='none';
   }
   buildAccLists();
+  // Refresh stats depuis le serveur (background) — données fraîches à chaque visite
+  if(user&&user.id&&!user.guest){
+    Promise.all([
+      fetch(API+'/profiles/'+user.id+'?t='+Date.now(),{cache:'no-store',headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}),
+      fetch(API+'/reservations/'+user.id,{cache:'no-store',headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}),
+      fetch(API+'/follows/'+user.id,{cache:'no-store',headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;})
+    ]).then(function(results){
+      var prof=results[0],resData=results[1],folData=results[2];
+      if(prof&&prof.id){
+        // Sync TOUS les champs (fix : données stales depuis localStorage sur autre appareil)
+        if(prof.prenom)user.pr=prof.prenom;
+        if(prof.nom!==undefined)user.nm=prof.nom||'';
+        if(prof.photo_url)user.photo=prof.photo_url;
+        if(prof.bio!==undefined)user.bio=prof.bio||'';
+        if(prof.ville!==undefined)user.ville=prof.ville||'';
+        if(prof.statut!==undefined)user.statut=prof.statut||'';
+        if(prof.niveau!==undefined)user.niveau=prof.niveau||'';
+        if(prof.matieres!==undefined)user.matieres=prof.matieres||'';
+        user.nbEleves=prof.nb_eleves||0;
+        user.noteMoyenne=prof.note_moyenne?parseFloat(prof.note_moyenne).toFixed(1):null;
+        user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
+        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+        // Re-rendre le header avatar + nom (maintenant à jour depuis BDD)
+        var _accName=g('accName');if(_accName)_accName.textContent=user.pr+(user.nm?' '+user.nm:'');
+        var _accAv=g('accAv');
+        if(_accAv){
+          if(user.photo){_accAv.style.background='none';_accAv.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+          else{_accAv.style.background='rgba(255,255,255,.25)';_accAv.textContent=user.ini;}
+        }
+      }
+      if(Array.isArray(resData)){
+        Object.keys(res).forEach(function(k){delete res[k];});
+        resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});
+        try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}
+      }
+      if(Array.isArray(folData)){
+        fol.clear();
+        folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});
+      }
+      buildAccLists();
+    }).catch(function(){});
+  }
   // Onglet et carte Revenus visibles uniquement pour les profs
   var tabRev = g('aTabRev');
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -970,9 +1024,9 @@ function buildAccLists(){
     var nbCours=isProf?C.filter(function(c){return c.pr===user.id;}).length:0;
     if(isProf){
       stats.innerHTML=
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
-        '<div style="background:var(--wh);padding:12px 6px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--or)">—</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!==undefined?user.nbEleves:0)+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
     } else {
       stats.innerHTML=
         '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
@@ -1200,7 +1254,7 @@ function saveProf(){
     }
     fetch(API+'/profiles/'+user.id,{
       method:'PATCH',
-      headers:{'Content-Type':'application/json'},
+      headers:apiH(),
       body:JSON.stringify(payload)
     }).then(function(r){return r.json();}).then(function(data){
       // Resync user depuis la réponse serveur pour éviter désync
@@ -1334,7 +1388,7 @@ function previewPhoto(input){
       if(user&&user.id){
         fetch(API+'/upload/photo',{
           method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:apiH(),
           body:JSON.stringify({base64:src,userId:user.id,filename:file.name})
         }).then(function(r){return r.json();}).then(function(data){
           if(data.url){
@@ -1357,7 +1411,7 @@ function previewPhoto(input){
 function _fetchProf(pid){
   if(!pid)return;
   if(P[pid]&&P[pid]._fresh)return;
-  fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
+  fetch(API+'/profiles/'+pid+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
     var pr2=prof.prenom||'';var no2=prof.nom||'';
     var nm2=(pr2+(no2?' '+no2:'')).trim();
@@ -1467,7 +1521,7 @@ function toggleFollowCard(pid,btn){
     _syncFollowBtns(pid,false);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
-    fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+    fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){return r.json();})
       .then(function(data){
         if(data&&data.nb_eleves!==undefined){
@@ -1488,7 +1542,7 @@ function toggleFollowCard(pid,btn){
     _syncFollowBtns(pid,true);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
-    fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+    fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){return r.json();})
       .then(function(data){
         // Utiliser le vrai count serveur (source de vérité)
@@ -1889,7 +1943,7 @@ async function openEleves(id){
   openM('bdEleves');
   if(c.fl===0){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
   try{
-    var r=await fetch(API+'/reservations/cours/'+id);
+    var r=await fetch(API+'/reservations/cours/'+id,{headers:apiH()});
     var data=await r.json();
     if(!Array.isArray(data)||!data.length){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
     list.innerHTML='<div style="margin-bottom:12px;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--mid)">📋 <strong>'+data.length+' élève'+(data.length>1?'s':'')+' inscrit'+(data.length>1?'s':'')+'</strong> sur '+c.sp+' places</div>'
@@ -1916,7 +1970,7 @@ async function openEleves(id){
 async function cancelEleveReservation(reservationId,userId,coursId,montant){
   if(!confirm('Annuler et rembourser cet élève ?'))return;
   try{
-    var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
+    var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
     toast('Annulé','L\'élève a été remboursé automatiquement ✓');
@@ -1940,7 +1994,7 @@ async function confR(){haptic(15);
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     // Sauvegarder les infos avant paiement
     try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:false}));}catch(e){}
-    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:apiH(),body:JSON.stringify({
       cours_id:id,
       user_id:user.id,
       montant:pp,
@@ -2004,7 +2058,7 @@ async function confAmi(id){
   try{
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:true}));}catch(e){}
-    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:apiH(),body:JSON.stringify({
       cours_id:id,
       user_id:user.id,
       montant:pp,
@@ -2046,7 +2100,7 @@ function confF(){
   updateFavBadge();
   // Sauvegarder le follow en base
   if(user&&user.id){
-    fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
+    fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
     // Incrémenter le compteur d'élèves du prof (toujours créer P[pid] d'abord)
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
     P[pid].e=(P[pid].e||0)+1;
@@ -2188,7 +2242,7 @@ function openPr(pid){
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
 
   // Mise à jour silencieuse depuis l'API (tous les champs du modal)
-  fetch(API+'/profiles/'+pid).then(function(r){return r.json();}).then(function(prof){
+  fetch(API+'/profiles/'+pid+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;
@@ -2296,7 +2350,7 @@ function togFP(){
       setTimeout(function(){row.style.maxHeight='0';row.style.padding='0';row.style.margin='0';row.style.overflow='hidden';setTimeout(function(){row.remove();},200);},300);
     }
     if(user&&user.id){
-      fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
+      fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
         .then(function(r){return r.json();})
         .then(function(data){
           if(data&&data.nb_eleves!==undefined){
@@ -2320,7 +2374,7 @@ function togFP(){
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
-      fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
+      fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
         .then(function(r){return r.json();})
         .then(function(data){
           if(data&&data.nb_eleves!==undefined){
@@ -2420,7 +2474,7 @@ async function subCr(){
   };
   if(user.photo)payload.prof_photo=user.photo;
   try{
-    var r=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(payload)});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error.message||'Impossible de publier');return;}
     g('crTitre').value='';
@@ -2435,7 +2489,7 @@ async function subCr(){
     isCoursPrivé=false;codePrivé='';
     var tog=g('togglePrive');var knob=g('togglePriveKnob');var box=g('codePriveBox');
     if(tog)tog.style.background='var(--bdr)';if(knob)knob.style.transform='translateX(0)';if(box)box.style.display='none';
-    closeM('bdCr');await loadData();buildCards();
+    closeM('bdCr');await loadData();buildCards();buildAccLists();
     var isFirstCours=C.filter(function(c){return c.pr===user.id;}).length<=1;
     toast(isFirstCours?'Premier cours publié 🎉':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
   }catch(e){toast('Erreur réseau','Vérifiez votre connexion');}
@@ -2510,10 +2564,10 @@ async function confirmDeleteCours(){
   closeM('bdConfirmDel');
   closeM('bdR');
   try{
-    var r=await fetch(API+'/cours/'+id+'/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({professeur_id:user.id})});
+    var r=await fetch(API+'/cours/'+id+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({professeur_id:user.id})});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    await loadData();buildCards();
+    await loadData();buildCards();buildAccLists();
     var nb=data.remboursements||0;
     toast('Cours annul\u00e9',nb>0?nb+' \u00e9l\u00e8ve'+(nb>1?'s':'')+' rembours\u00e9'+(nb>1?'s':'')+' automatiquement \u2713':'Cours supprim\u00e9');
   }catch(e){toast('Erreur réseau','Impossible d\'annuler ce cours');}
@@ -2640,7 +2694,7 @@ function closeMsgConv(){
 async function loadMessages(){
   if(!user||!msgDestId)return;
   try{
-    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId+'?limit=50');
+    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId+'?limit=50',{headers:apiH()});
     var msgs=await r.json();
     if(!Array.isArray(msgs))return;
     var box=g('msgMessages');
@@ -2703,7 +2757,7 @@ async function loadMessages(){
     });
     box.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
     if(_wasAtBottom)box.scrollTop=box.scrollHeight;
-    if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
+    if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:apiH(),body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
   }catch(e){console.log('loadMessages err',e);}
 }
 
@@ -2718,7 +2772,7 @@ async function sendMsg(){
   var btn=document.querySelector('#msgConvPane button[onclick*="sendMsg"]');
   if(btn)btn.disabled=true;
   try{
-    var r=await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    var r=await fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({
       expediteur_id:user.id,
       destinataire_id:msgDestId,
       contenu:txt
@@ -2732,7 +2786,7 @@ async function sendMsg(){
     var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
     // Appeler l'API pour marquer comme lu en base
     if(user&&msgDestId){
-      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:apiH(),body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
     }
 
     loadMessages();
@@ -2755,7 +2809,7 @@ async function sendModalMsg(){
   }
   g('modalMsgInput').value='';
   try{
-    await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    await fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({
       expediteur_id:user.id,
       destinataire_id:msgDestId,
       contenu:txt
@@ -2763,11 +2817,11 @@ async function sendModalMsg(){
     var badge=g('bnavBadge');if(badge)badge.classList.remove('on');
     var msgBadge=g('msgBadge');if(msgBadge)msgBadge.style.display='none';
     if(user&&msgDestId){
-      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
+      fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:apiH(),body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
     }
     var container=g('modalMsgMessages');
     if(!container)return;
-    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId);
+    var r=await fetch(API+'/messages/'+user.id+'/'+msgDestId,{headers:apiH()});
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length)return;
     var html='';
@@ -2793,7 +2847,7 @@ async function loadConversations(){
   if(!lm){_convLoading=false;return;}
   lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
   try{
-    var r=await fetch(API+'/conversations/'+user.id);
+    var r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length){
@@ -3125,7 +3179,7 @@ function toggleGroupePerm(){
   if(_groupeCoursId){
     fetch(API+'/cours/'+_groupeCoursId+'/groupe',{
       method:'PATCH',
-      headers:{'Content-Type':'application/json'},
+      headers:apiH(),
       body:JSON.stringify({eleves_peuvent_ecrire:_groupeElevesPermis})
     }).catch(function(){});
     var c = C.find(function(x){return x.id==_groupeCoursId;});
@@ -3137,7 +3191,7 @@ function toggleGroupePerm(){
 async function _loadGroupeMsgs(){
   if(!_groupeCoursId) return;
   try{
-    var r = await fetch(API+'/messages/groupe/'+_groupeCoursId);
+    var r = await fetch(API+'/messages/groupe/'+_groupeCoursId,{headers:apiH()});
     var msgs = await r.json();
     var container = g('groupeMsgList');
     if(!container) return;
@@ -3193,7 +3247,7 @@ async function sendGroupeMsg(){
     var c = C.find(function(x){return x.id==_groupeCoursId;});
     await fetch(API+'/messages/groupe',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:apiH(),
       body:JSON.stringify({
         cours_id:_groupeCoursId,
         expediteur_id:user.id,
@@ -3371,7 +3425,7 @@ async function submitCni(){
   try{
     var reader=new FileReader();
     reader.onload=async function(e){
-      try{await fetch(API+'/upload/cni',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
+      try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
       user.cni_uploaded=true;
       cniGoStep3();
       if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
@@ -3388,7 +3442,7 @@ async function checkFirstProfLogin(){
   var status=getCniStatus();
   if(status!=='none')return;
   try{
-    var r=await fetch(API+'/profiles/'+user.id);
+    var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
     var p=await r.json();
     if(p&&p.verified){user.verified=true;return;}
     if(p&&p.cni_uploaded){user.cni_uploaded=true;return;}
@@ -3789,7 +3843,7 @@ async function loadRevenues() {
 
   // Récupérer les paiements depuis le serveur
   try {
-    var r = await fetch(API + '/stripe/payments/prof/' + user.id);
+    var r = await fetch(API + '/stripe/payments/prof/' + user.id, {headers:apiH()});
     var data = await r.json();
     if (!Array.isArray(data)) throw new Error('Format invalide');
 
@@ -3922,7 +3976,7 @@ async function loadStripeConnectStatus() {
   var connected = g('stripeConnected');
 
   try {
-    var r = await fetch(API + '/stripe/connect/status-prof/' + user.id);
+    var r = await fetch(API + '/stripe/connect/status-prof/' + user.id, {headers:apiH()});
     var data = await r.json();
 
     if (!data.stripe_account_id) {
@@ -3967,7 +4021,7 @@ async function saveIban() {
     if (!accountId) {
       var r1 = await fetch(API + '/stripe/connect/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: apiH(),
         body: JSON.stringify({ prof_id: user.id, email: user.em })
       });
       var d1 = await r1.json();
@@ -3980,7 +4034,7 @@ async function saveIban() {
     // 2. Récupérer le client_secret pour enregistrer l'IBAN
     var r2 = await fetch(API + '/stripe/connect/setup-intent', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: apiH(),
       body: JSON.stringify({ stripe_account_id: accountId })
     });
     var d2 = await r2.json();
@@ -4002,7 +4056,7 @@ async function saveIban() {
     // 4. Notifier notre serveur que l'IBAN est enregistré
     await fetch(API + '/stripe/connect/iban-saved', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: apiH(),
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
@@ -4101,7 +4155,7 @@ async function submitNote(){
   if(!noteCours||!user){return;}
   var comment=g('noteComment').value.trim();
   try{
-    var r=await fetch(API+'/notations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    var r=await fetch(API+'/notations',{method:'POST',headers:apiH(),body:JSON.stringify({
       eleve_id:user.id,professeur_id:noteCours.pr,cours_id:noteCours.id,note:noteVal,commentaire:comment
     })});
     var data=await r.json();
@@ -4429,7 +4483,7 @@ async function submitContact(){
   btn.disabled=true;btn.textContent='Envoi…';
   try{
     var r=await fetch(API+'/contact',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',headers:apiH(),
       body:JSON.stringify({
         email:email,
         sujet:sujet?sujet.dataset.s:'Question générale',
@@ -4605,7 +4659,7 @@ async function subscribePush(){
     _pushSubscription=sub;
     var key=sub.getKey('p256dh'),auth=sub.getKey('auth');
     await fetch(API+'/push/subscribe',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',headers:apiH(),
       body:JSON.stringify({
         endpoint:sub.endpoint,
         p256dh:btoa(String.fromCharCode.apply(null,new Uint8Array(key))),
@@ -4624,7 +4678,7 @@ async function unsubscribePush(){
   try{
     if(_pushSubscription){
       await _pushSubscription.unsubscribe();
-      if(user)await fetch(API+'/push/subscribe',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id})});
+      if(user)await fetch(API+'/push/subscribe',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id})});
       _pushSubscription=null;
     }
     renderNotifStatus();
@@ -4911,7 +4965,7 @@ function startAccountCheck(){
   setInterval(async function(){
     if(!user||!user.id)return;
     try{
-      var r=await fetch(API+'/profiles/'+user.id);
+      var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
       var p=await r.json();
       if(!r.ok||!p||!p.id){
         toast('Votre compte a été désactivé','Vous allez être déconnecté');
@@ -5255,12 +5309,12 @@ async function subCrStep(){
       prof_couleur:user.col||'linear-gradient(135deg,#FF8C55,#E04E10)',
       prof_nom:(user.pr+(user.nm?' '+user.nm:'')).trim()};
     if(user.photo)p.prof_photo=user.photo;
-    var r=await fetch(API+'/cours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
     var data=await r.json();
     if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
     haptic([10,50,100,50,10]);closeCrStep();
     toast('Cours publi\u00e9\u00a0!','Votre cours est maintenant visible');
-    await loadData();buildCards();
+    await loadData();buildCards();buildAccLists();
   }catch(e){toast('Erreur',e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
 }
 
@@ -5461,10 +5515,10 @@ function openAddVisioLink(coursId){
   var btnS=document.createElement('button');btnS.style.cssText='width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px';btnS.textContent='Enregistrer';
   btnS.onclick=async function(){
     var url=inp.value.trim();btnS.disabled=true;btnS.textContent='Enregistrement...';
-    try{var r=await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({visio_url:url})});var d=await r.json();if(!r.ok||d.error){toast('Erreur',d.error||'Impossible');btnS.disabled=false;btnS.textContent='Enregistrer';return;}if(c)c.visio_url=url;bd.remove();toast(url?'Lien enregistr\u00e9':'Lien supprim\u00e9','');buildMesCours();}catch(e){toast('Erreur r\u00e9seau','');btnS.disabled=false;btnS.textContent='Enregistrer';}
+    try{var r=await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:apiH(),body:JSON.stringify({visio_url:url})});var d=await r.json();if(!r.ok||d.error){toast('Erreur',d.error||'Impossible');btnS.disabled=false;btnS.textContent='Enregistrer';return;}if(c)c.visio_url=url;bd.remove();toast(url?'Lien enregistr\u00e9':'Lien supprim\u00e9','');buildMesCours();}catch(e){toast('Erreur r\u00e9seau','');btnS.disabled=false;btnS.textContent='Enregistrer';}
   };
   sheet.appendChild(btnS);
-  if(c.visio_url){var btnCl=document.createElement('button');btnCl.style.cssText='width:100%;background:none;border:none;color:#EF4444;font-family:inherit;font-size:14px;cursor:pointer;padding:6px;margin-bottom:4px';btnCl.textContent='Supprimer le lien';btnCl.onclick=async function(){if(!confirm('Supprimer\u00a0?'))return;try{await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({visio_url:''})});if(c)c.visio_url='';bd.remove();buildMesCours();}catch(e){}};sheet.appendChild(btnCl);}
+  if(c.visio_url){var btnCl=document.createElement('button');btnCl.style.cssText='width:100%;background:none;border:none;color:#EF4444;font-family:inherit;font-size:14px;cursor:pointer;padding:6px;margin-bottom:4px';btnCl.textContent='Supprimer le lien';btnCl.onclick=async function(){if(!confirm('Supprimer\u00a0?'))return;try{await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:apiH(),body:JSON.stringify({visio_url:''})});if(c)c.visio_url='';bd.remove();buildMesCours();}catch(e){}};sheet.appendChild(btnCl);}
   var btnC=document.createElement('button');btnC.style.cssText='width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:6px';btnC.textContent='Annuler';btnC.onclick=function(){bd.remove();};sheet.appendChild(btnC);
   bd.appendChild(sheet);document.body.appendChild(bd);
   setTimeout(function(){inp.focus();},200);
@@ -5514,7 +5568,7 @@ async function sendCoursCardMsg(c){
     +'<div style="margin-top:6px"><span class="mode-badge '+(_cIsVisio?'visio':'presentiel')+'">'+(_cIsVisio?'Visio':'Pr\u00e9sentiel')+'</span></div>'
     +'</div></div>';
   try{
-    await fetch(API+'/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:user.id,destinataire_id:msgDestId,contenu:cardHtml,type:'cours_card'})});
+    await fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({expediteur_id:user.id,destinataire_id:msgDestId,contenu:cardHtml,type:'cours_card'})});
     loadMessages();toast('Cours partag\u00e9\u00a0!','La carte est dans la conversation');
   }catch(e){toast('Erreur','Envoi impossible');}
 }
@@ -5681,7 +5735,7 @@ async function submitEditMsg(msgId, btn){
   var newText=inp.value.trim();if(!newText)return;
   btn.disabled=true;btn.textContent='...';
   try{
-    var r=await fetch(API+'/messages/'+msgId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({contenu:newText,user_id:user.id})});
+    var r=await fetch(API+'/messages/'+msgId,{method:'PATCH',headers:apiH(),body:JSON.stringify({contenu:newText,user_id:user.id})});
     if(r.ok){
       var contentEl=wrap.querySelector('.msg-content[data-id="'+msgId+'"]');
       if(contentEl)contentEl.textContent=newText;
@@ -5697,7 +5751,7 @@ async function submitEditMsg(msgId, btn){
 async function deleteMsg(msgId){
   if(!confirm('Supprimer ce message ?'))return;
   try{
-    var r=await fetch(API+'/messages/'+msgId,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id})});
+    var r=await fetch(API+'/messages/'+msgId,{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id})});
     if(r.ok){
       var el=document.querySelector('.msg-content[data-id="'+msgId+'"]');
       if(el){
