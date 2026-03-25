@@ -1400,14 +1400,20 @@ function toggleFollowCard(pid,btn){
   if(isFollowing){
     fol.delete(pid);
     _syncFollowBtns(pid,false);
+    if(P[pid])P[pid].e=Math.max(0,(P[pid].e||1)-1);
     fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
     toast('Retiré des suivis','');
   } else {
     fol.add(pid);
     _syncFollowBtns(pid,true);
+    if(P[pid])P[pid].e=(P[pid].e||0)+1;
     fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
   }
+  // Mettre à jour mpE si le modal profil est ouvert sur ce prof
+  if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+  // Persister le compteur dans le cache localStorage
+  if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(_pc3[pid])_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}}
   updateFavBadge();
   haptic(8);
 }
@@ -2759,11 +2765,20 @@ function locInputClear(){
 var customFilters=[];
 
 function openAddFilter(){
+  var bd=g('bdFilter');
+  if(!bd)return;
+  // Déplacer dans body pour éviter le clipping par overflow:hidden du parent
+  if(bd.parentNode!==document.body)document.body.appendChild(bd);
   g('filterInput').value='';
   renderCustomPills();
-  g('bdFilter').style.display='flex';
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
 }
-function closeAddFilter(){g('bdFilter').style.display='none';}
+function closeAddFilter(){
+  var bd=g('bdFilter');
+  if(bd)bd.style.display='none';
+  document.body.style.overflow='';
+}
 
 function addCustomFilter(){
   var val=g('filterInput').value.trim();
