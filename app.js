@@ -74,12 +74,6 @@ function obDone(){
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
-  // Cacher immédiatement le splash Capacitor (iOS) — sinon il reste visible indéfiniment
-  try{
-    if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SplashScreen){
-      window.Capacitor.Plugins.SplashScreen.hide({fadeOutDuration:0});
-    }
-  }catch(e){}
   // Masquer le splash HTML après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');

@@ -1,11 +1,5 @@
 {
   "appId": "com.courspool.app",
   "appName": "CoursPool",
-  "webDir": "www",
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 0,
-      "launchAutoHide": true
-    }
-  }
+  "webDir": "www"
 }
