@@ -1326,7 +1326,7 @@ app.get('/profiles/:id', async (req, res) => {
   res.set('Cache-Control', 'no-store');
   const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,iban_configured,created_at';
   const {data,error}=await supabase.from('profiles').select(PUBLIC_COLS).eq('id',req.params.id).single();
-  if(error)return res.status(404).json({});
+  if(error){const status=error.code==='PGRST116'?404:500;return res.status(status).json({error:error.message});}
   // Compter les vrais followers depuis la table follows (source de vérité)
   const {count}=await supabase.from('follows').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id);
   const profile = data || {};

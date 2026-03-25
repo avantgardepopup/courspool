@@ -5006,11 +5006,13 @@ function startAccountCheck(){
     if(!user||!user.id)return;
     try{
       var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
+      if(r.status>=500)return; // erreur serveur temporaire — ne pas déconnecter
       var p=await r.json();
-      if(!r.ok||!p||!p.id){
+      if(r.status===404&&p&&p.error){
         toast('Votre compte a été désactivé','Vous allez être déconnecté');
         setTimeout(doLogout,2000);return;
       }
+      if(!p||!p.id)return; // réponse inattendue — ignorer
       if(p.statut_compte==='bloqué'&&user.statut_compte!=='bloqué'){
         toast('Votre compte a été bloqué','Vous allez être déconnecté');
         setTimeout(doLogout,2000);return;
