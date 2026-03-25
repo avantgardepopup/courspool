@@ -1465,13 +1465,13 @@ function toggleFollowCard(pid,btn){
   if(isFollowing){
     fol.delete(pid);
     _syncFollowBtns(pid,false);
-    if(P[pid])P[pid].e=Math.max(0,(P[pid].e||1)-1);
+    P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
     fetch(API+'/follows',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){if(!r.ok)throw new Error();})
       .catch(function(){
         fol.add(pid);_syncFollowBtns(pid,true);
-        if(P[pid])P[pid].e=(P[pid].e||0)+1;
+        P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
         toast('Erreur réseau','Impossible de modifier le suivi');
@@ -1479,13 +1479,13 @@ function toggleFollowCard(pid,btn){
   } else {
     fol.add(pid);
     _syncFollowBtns(pid,true);
-    if(P[pid])P[pid].e=(P[pid].e||0)+1;
+    P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
     fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){if(!r.ok)throw new Error();})
       .catch(function(){
         fol.delete(pid);_syncFollowBtns(pid,false);
-        if(P[pid])P[pid].e=Math.max(0,(P[pid].e||1)-1);
+        P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
         toast('Erreur réseau','Impossible de modifier le suivi');
@@ -2045,8 +2045,9 @@ function confF(){
   // Sauvegarder le follow en base
   if(user&&user.id){
     fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
-    // Incrémenter le compteur d'élèves du prof
-    if(P[pid])P[pid].e=(P[pid].e||0)+1;
+    // Incrémenter le compteur d'élèves du prof (toujours créer P[pid] d'abord)
+    P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
+    P[pid].e=(P[pid].e||0)+1;
   }
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
@@ -2058,8 +2059,10 @@ function openPr(pid){
   var _ts=g('mpTagsSection');if(_ts)_ts.style.display='none';
   var cours=C.filter(function(x){return x.pr===pid;});
   var dernierCours=cours[0]||null;
-  var p=P[pid]||{};
-  var pCache=P[pid]||{};
+  // Toujours créer P[pid] pour que togFP/toggleFollowCard puissent l'incrémenter
+  if(!P[pid])P[pid]={n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
+  var p=P[pid];
+  var pCache=P[pid];
   var STATUT={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
   // Alimenter P[pid] depuis les cours si champs manquants (sans écraser les données fraîches)
   if(dernierCours){
@@ -2283,7 +2286,7 @@ function togFP(){
     _setFollowBtn(false);
     _syncFollowBtns(id,false);
     toast('Désabonné','Vous ne suivez plus '+p.nm);
-    if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
+    P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=Math.max(0,(P[id].e||1)-1);
     var row=document.querySelector('#listF [data-prof-id="'+id+'"]');
     if(row){
       row.style.transition='all .35s cubic-bezier(.4,0,.2,1)';
@@ -2306,7 +2309,7 @@ function togFP(){
     _setFollowBtn(true);
     _syncFollowBtns(id,true);
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
-    if(P[id])P[id].e=(P[id].e||0)+1;
+    P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.id,professeur_id:id})})
         .then(function(r){if(!r.ok)throw new Error();})
