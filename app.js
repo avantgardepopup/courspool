@@ -507,7 +507,7 @@ function go(pr,nm,em,role,uid,photoUrl){
 }
 
 function applyUser(){
-  var _l=g('login');_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';g('app').style.display='block';
+  var _l=g('login');if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}g('app').style.display='block';
   // Greeting dynamique
   try{
     var h=new Date().getHours();
@@ -1455,7 +1455,7 @@ function toggleFollowCard(pid,btn){
 }
 
 function renderPage(){
-  var grid=g('grid');grid.innerHTML='';
+  var grid=g('grid');if(!grid)return;grid.innerHTML='';
   var sorted=sortCourses(filteredCards);
   var toShow=sorted.slice(0,currentPage*PAGE_SIZE);
   var sc=g('sortResultCount');if(sc)sc.textContent=filteredCards.length+' cours';
@@ -1893,7 +1893,7 @@ async function confR(){haptic(15);
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
 function contR(){
-  var c=C.find(function(x){return x.id===curId});
+  var c=C.find(function(x){return x.id==curId});
   var pid=c?c.pr:null;
   var nm=c?((P[pid]&&P[pid].nm)||c.prof_nm):'le professeur';
   var photo=c?(P[pid]&&P[pid].photo)||c.prof_photo:null;
@@ -4125,14 +4125,14 @@ function previewCni(input){
 
 // UTILS
 function g(id){return document.getElementById(id);}
-function openM(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
-function closeM(id){g(id).classList.remove('on');document.body.style.overflow='';}
+function openM(id){var _m=g(id);if(_m)_m.classList.add('on');document.body.style.overflow='hidden';}
+function closeM(id){var _m=g(id);if(_m)_m.classList.remove('on');document.body.style.overflow='';}
 function setR(el){document.querySelectorAll('.ro').forEach(function(r){r.classList.remove('on')});el.classList.add('on');}
 function toast(t,s,isError){
   if(isError&&navigator.vibrate)navigator.vibrate([10,50,10]);
   var e=g('toast');
   if(e){e.classList.remove('on');}
-  g('tT').textContent=t;g('tS').textContent=s;e=g('toast');e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}
+  var _tT=g('tT'),_tS=g('tS');if(_tT)_tT.textContent=t;if(_tS)_tS.textContent=s;e=g('toast');if(e){e.classList.add('on');setTimeout(function(){e.classList.remove('on')},3200);}}
 
 // Niveau cours
 function pickNiveau(el){
