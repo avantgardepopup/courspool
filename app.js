@@ -5776,6 +5776,15 @@ function showAccHome(){
 (function(){
   var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
   var _animTabs={R:true,H:true,F:true,P:true,Rev:true};
+  // Animer toutes les icônes à l'ouverture de la page profil
+  function animAllAccIcons(){
+    var icons=document.querySelectorAll('#accHome .acc-card div[style*="border-radius:14px"]');
+    icons.forEach(function(ico,i){
+      setTimeout(function(){
+        ico.classList.remove('acc-card-icon-anim');void ico.offsetWidth;ico.classList.add('acc-card-icon-anim');
+      },i*70);
+    });
+  }
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
@@ -5804,7 +5813,7 @@ function showAccHome(){
   var _nt2=navTo;
   navTo=function(tab){
     _nt2(tab);
-    if(tab==='acc'){setTimeout(showAccHome,20);}
+    if(tab==='acc'){setTimeout(showAccHome,20);setTimeout(animAllAccIcons,80);}
   };
 })();
 
