@@ -130,6 +130,7 @@ loadFavCours();
         if(e.nm)P[pid].nm=e.nm;
         if(e.i)P[pid].i=e.i;
         if(e.photo)P[pid].photo=e.photo;
+        if(e.e)P[pid].e=e.e;
         // _fresh intentionnellement absent : _fetchProf vérifiera et mettra à jour si besoin
       }
     });
@@ -1619,6 +1620,23 @@ function scrollToLogin(){
   var ltC=g('ltC');if(ltC&&!ltC.classList.contains('on'))switchLT('C');
 }
 
+// Ouvrir la fiche complète d'un cours depuis un message — sans redirection bdO/bdF
+function viewCoursCard(id){
+  haptic(4);
+  if(!user||!user.id){showLoginPrompt();return;}
+  var c=C.find(function(x){return x.id===id});
+  if(!c){toast('Cours introuvable','Ce cours n\'est plus disponible');return;}
+  curId=id;
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+  g('rTit').textContent=c.title;g('rSbj').textContent=c.subj;
+  var rAv=g('rProfAv'),rNm=g('rProfNm');
+  if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
+  if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
+  var rHeader=document.querySelector('#bdR .modal>div:first-child');
+  if(rHeader&&c.bg){rHeader.style.background=c.bg;rHeader.style.borderRadius='20px 20px 0 0';}
+  openM('bdR');
+}
+
 function openR(id){haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
   var _rBtn=document.querySelector('[data-id="'+id+'"] .btnr');
@@ -2009,8 +2027,11 @@ function openPr(pid){
     if(prof.matieres){_renderTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
     if(prof.niveau&&g('mpbd'))g('mpbd').textContent=prof.niveau;
     if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
-    // Sauvegarder en cache pour le prochain chargement
-    try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
+    // Nombre d'élèves/abonnés depuis l'API si disponible
+    var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
+    if(_nbE!==undefined){P[pid].e=_nbE;if(g('mpE'))g('mpE').textContent=_nbE;}
+    // Sauvegarder en cache pour le prochain chargement (y compris le compteur abonnés)
+    try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:P[pid].e||0};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
   }).catch(function(){});
 }
 function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
@@ -2384,6 +2405,8 @@ async function loadMessages(){
     var msgs=await r.json();
     if(!Array.isArray(msgs))return;
     var box=g('msgMessages');
+    // Mémoriser si l'utilisateur était en bas pour décider du scroll après rendu
+    var _wasAtBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;
     if(!msgs.length){
       box.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour !</div>';
       return;
@@ -2406,7 +2429,8 @@ async function loadMessages(){
       var txt=m.contenu||'';
       // Masquer JSON brut
       if(txt.includes('"mode":"presentiel"')||txt.includes('prof_couleur'))return;
-      // Détecter card cours
+      // Détecter card cours — normaliser l'ancien openR vers viewCoursCard
+      if(txt.includes('class="chat-cours-card"'))txt=txt.replace(/onclick="openR\(/g,'onclick="viewCoursCard(');
       var isCard=txt.trimStart().startsWith('<');
       var op=P[msgDestId]||{};
       var oPhoto=op.photo||null;
@@ -2438,7 +2462,7 @@ async function loadMessages(){
       }
     });
     box.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
-    box.scrollTop=box.scrollHeight;
+    if(_wasAtBottom)box.scrollTop=box.scrollHeight;
     if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
   }catch(e){console.log('loadMessages err',e);}
 }
@@ -5201,7 +5225,7 @@ async function sendCoursCardMsg(c){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   // Build native HTML card
   var _cIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
-  var cardHtml='<div class="chat-cours-card" onclick="openR(\''+escH(c.id)+'\')" style="max-width:260px">'
+  var cardHtml='<div class="chat-cours-card" onclick="viewCoursCard(\''+escH(c.id)+'\')" style="max-width:260px">'
     +'<div class="chat-cours-card-header" style="background:'+mf.bg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
     +'<span style="margin-left:auto;font-size:15px;font-weight:800;color:#fff">'+pp+'&euro;</span></div>'
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
