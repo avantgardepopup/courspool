@@ -832,31 +832,47 @@ app.post('/contact', async (req, res) => {
 // DELETE user — suppression complète (profil + auth)
 app.delete('/users/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
+  console.log('[DELETE /users] début suppression:', id);
   try {
-    // Supprimer toutes les données liées (non bloquant)
+    // 1. Données liées — colonnes réelles en BDD
     const tables = [
-      ['reservations', 'user_id'],
-      ['follows', 'user_id'],
-      ['follows', 'professeur_id'],
-      ['push_subscriptions', 'user_id'],
-      ['contacts', 'user_id'],
-      ['notations', 'eleve_id'],
-      ['notations', 'professeur_id'],
-      ['messages', 'expediteur_id'],
-      ['messages', 'destinataire_id'],
-      ['cours', 'professeur_id'],
+      ['reservations',      'user_id'],
+      ['follows',           'user_id'],
+      ['follows',           'professeur_id'],
+      ['push_subscriptions','user_id'],
+      ['contacts',          'user_id'],
+      ['notations',         'eleve_id'],
+      ['notations',         'professeur_id'],
+      ['messages',          'sender_id'],    // colonne réelle (pas expediteur_id)
+      ['messages',          'receiver_id'],  // colonne réelle (pas destinataire_id)
+      ['cours',             'professeur_id'],
     ];
     for (const [table, col] of tables) {
-      await supabase.from(table).delete().eq(col, id).catch(() => {});
+      const { error } = await supabase.from(table).delete().eq(col, id);
+      if (error) console.log(`[DELETE /users] ${table}.${col} error:`, error.message);
+      else console.log(`[DELETE /users] ${table}.${col} OK`);
     }
-    // Supprimer le profil
-    await supabase.from('profiles').delete().eq('id', id).catch(e => console.log('profile del:', e.message));
-    // Tenter de supprimer le compte Auth (nécessite service_role key)
-    // Si ça échoue, on retourne quand même succès — le profil est supprimé
-    supabase.auth.admin.deleteUser(id).catch(e => console.log('auth del (ignoré):', e.message));
+
+    // 2. Profil
+    const { error: profErr } = await supabase.from('profiles').delete().eq('id', id);
+    if (profErr) {
+      console.log('[DELETE /users] profiles error:', profErr.message);
+      return res.status(500).json({ error: 'Échec suppression profil: ' + profErr.message });
+    }
+    console.log('[DELETE /users] profile OK');
+
+    // 3. Compte Auth Supabase
+    const { error: authErr } = await supabase.auth.admin.deleteUser(id);
+    if (authErr) {
+      // Non bloquant — le profil est déjà supprimé
+      console.log('[DELETE /users] auth.admin.deleteUser error (ignoré):', authErr.message);
+    } else {
+      console.log('[DELETE /users] auth user OK');
+    }
+
     res.json({ success: true });
   } catch(e) {
-    console.log('DELETE /users error:', e.message);
+    console.log('[DELETE /users] exception:', e.message);
     res.status(500).json({ error: e.message });
   }
 });

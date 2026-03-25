@@ -1060,13 +1060,22 @@ async function deleteUser(id, nom){
   if(!confirm('Supprimer définitivement le compte de '+nom+' ?\n\nCette action supprime le profil et les données associées. Irréversible.'))return;
   try{
     var r=await fetch(API+'/users/'+id,{method:'DELETE',headers:adminHeaders()});
-    if(!r.ok){toast('Erreur suppression compte');return;}
+    var d=await r.json().catch(function(){return{};});
+    if(!r.ok){
+      var msg=d.error||('HTTP '+r.status);
+      console.error('[deleteUser] erreur:', msg);
+      toast('Erreur: '+msg);
+      return;
+    }
     allProfs=allProfs.filter(function(p){return p.id!==id;});
     allEleves=allEleves.filter(function(e){return e.id!==id;});
     closeModal();
     renderDashboard();renderProfs();renderEleves();
     toast('Compte de '+nom+' supprimé ✓');
-  }catch(e){toast('Erreur: '+e.message);}
+  }catch(e){
+    console.error('[deleteUser] exception:', e);
+    toast('Erreur: '+e.message);
+  }
 }
 
 </script>
