@@ -91,8 +91,12 @@ html.dk div[style*="background:#F0FDF4"]{background:#0A2016!important;color:#4AD
 html.dk div[style*="background:#FEF3C7"]{background:#2A1800!important;color:#FCD34D!important;}
 html.dk div[style*="background:#FEF2F2"]{background:#2A0E0E!important;color:#F87171!important;}
 html.dk div[style*="background:#EFF6FF"]{background:#0F1A2A!important;color:#60A5FA!important;}
+html.dk div[style*="background:#F0F9FF"]{background:#0F1A2A!important;color:#60A5FA!important;}
 html.dk div[style*="background:#FEE2E2"]{background:#2A0E0E!important;color:#F87171!important;}
+html.dk div[style*="background:#FFF0F0"]{background:#2A0E0E!important;color:#F87171!important;}
 html.dk div[style*="background:#F5F3FF"]{background:#180F2A!important;color:#A78BFA!important;}
+html.dk div[style*="background:#FFF4EE"]{background:#2A1500!important;color:#FB923C!important;}
+html.dk div[style*="background:#F8FAFC"]{background:#1A1F2A!important;color:#94A3B8!important;}
 html.dk div[style*="background:var(--orp)"]{background:#2A1A0F!important;}
 /* Hero profil — laisser le dégradé orange */
 html.dk #pgAcc .ptab{background:var(--wh);color:var(--mid);}

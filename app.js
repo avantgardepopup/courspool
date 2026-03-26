@@ -620,6 +620,7 @@ async function _handleOAuthSignIn(session){
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
       _scheduleTokenRefresh();
+      favCours.clear();loadFavCours();
       applyUser();
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
       toast('Bienvenue '+pr+' !','Connecté à CoursPool');
@@ -954,7 +955,7 @@ async function doLogin(){
     try{localStorage.removeItem('cp_profs');}catch(e){}
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
-    favCours.clear();
+    favCours.clear();loadFavCours();
     if(uid){
       Promise.all([
         fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
@@ -1310,7 +1311,7 @@ function goExplore(){
           // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
           Object.keys(P).forEach(function(k){delete P[k]});
           fol.clear();
-          favCours.clear();
+          favCours.clear();loadFavCours();
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           updateFavBadge();
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
