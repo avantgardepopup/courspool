@@ -71,12 +71,14 @@ function obDone(){
 }
 
 var _isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+// Détection synchrone du retour OAuth (avant tout init async)
+var _isOAuthReturn=window.location.hash.indexOf('access_token')!==-1||window.location.search.indexOf('code=')!==-1;
 
 // Lancer l'onboarding au chargement
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
-  _initSupabase();
+  if(!_isOAuthReturn)_initSupabase(); // déjà appelé dans le IIFE si retour OAuth
   // Masquer le splash HTML après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
@@ -508,6 +510,20 @@ async function _initSupabase(){
 
 function _setupAuthStateChange(){
   if(!window._supabase)return;
+  // Fallback : si la session OAuth n'est pas détectée après 8s, ré-afficher le login
+  if(_isOAuthReturn){
+    setTimeout(function(){
+      if(!user){
+        var spinner=document.getElementById('oauthLoading');
+        if(spinner){
+          spinner.remove();
+          var lsLogin=document.getElementById('lsLogin');
+          if(lsLogin)lsLogin.style.display='';
+        }
+        window.history.replaceState({},'',window.location.pathname);
+      }
+    },8000);
+  }
   // Vérifier s'il y a déjà une session (retour OAuth — hash traité avant la subscription)
   window._supabase.auth.getSession().then(function(result){
     var session=result&&result.data&&result.data.session;
@@ -526,6 +542,9 @@ function _setupAuthStateChange(){
 }
 
 async function _handleOAuthSignIn(session){
+  // Retirer le spinner de chargement OAuth si présent
+  var spinner=document.getElementById('oauthLoading');
+  if(spinner)spinner.remove();
   // Masquer l'écran login
   var loginEl=g('login');
   if(loginEl){loginEl.style.display='none';loginEl.style.zIndex='-1';}
@@ -1231,7 +1250,21 @@ function goExplore(){
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
       }
     } else {
-      // Pas de session → écran login, charger les cours en arrière-plan
+      // Pas de session → si retour OAuth attendre la session; sinon écran login
+      if(_isOAuthReturn){
+        // Masquer login, afficher spinner pendant le traitement OAuth
+        var _lel=document.getElementById('login');
+        if(_lel){
+          var _lsL=document.getElementById('lsLogin'),_lsR=document.getElementById('lsReg');
+          if(_lsL)_lsL.style.display='none';
+          if(_lsR)_lsR.style.display='none';
+          var _sp=document.createElement('div');
+          _sp.id='oauthLoading';
+          _sp.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px"><div style="width:36px;height:36px;border:3px solid #eee;border-top-color:#FF6B2B;border-radius:50%;animation:cpSpin .8s linear infinite"></div><p style="font-size:14px;color:#888;font-family:inherit;margin:0">Connexion en cours...</p></div>';
+          _lel.appendChild(_sp);
+        }
+        _initSupabase(); // lancer immédiatement sans attendre DOMContentLoaded
+      }
       loadData().then(function(){buildCards();});
     }
   }catch(e){loadData().then(function(){buildCards();});}
