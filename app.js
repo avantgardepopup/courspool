@@ -2318,7 +2318,7 @@ function doFilter(){
     if(mobInp)mobInp.value=val;
   }
   val=val.trim();
-  if(checkCodeInSearch(val))return;
+  checkCodeInSearch(val);
   if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);
   _searchTimer=setTimeout(function(){currentPage=1;applyFilter();},250);
@@ -4225,14 +4225,30 @@ function openPrivateCours(code){
 }
 
 // Taper un code dans la recherche
+var _pendingCode=null;
 function checkCodeInSearch(val){
+  // Charset réel des codes (I, O, 0, 1 exclus pour éviter les confusions visuelles)
   var clean=val.trim().toUpperCase();
-  // Format code: 6 caractères alphanumériques sans espace
-  if(/^[A-Z0-9]{6}$/.test(clean)){
-    openPrivateCours(clean);
-    return true;
+  var isCode=/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(clean);
+  var box=g('searchCodeSuggestion');
+  if(isCode){
+    _pendingCode=clean;
+    if(box){var lbl=box.querySelector('.code-label');if(lbl)lbl.textContent='🔒 Rejoindre le cours privé "'+clean+'" ?';box.style.display='flex';}
+  } else {
+    _pendingCode=null;
+    if(box)box.style.display='none';
   }
   return false;
+}
+function acceptCodeSearch(){
+  if(!_pendingCode)return;
+  var code=_pendingCode;_pendingCode=null;
+  var box=g('searchCodeSuggestion');if(box)box.style.display='none';
+  openPrivateCours(code);
+}
+function denyCodeSearch(){
+  _pendingCode=null;
+  var box=g('searchCodeSuggestion');if(box)box.style.display='none';
 }
 
 
@@ -6593,7 +6609,8 @@ function clearSearch(){
   if(inp)inp.value='';if(srch)srch.value='';
   if(btn)btn.style.display='none';
   var _sas=g('searchAliasSuggestion');if(_sas)_sas.style.display='none';
-  _pendingAlias=null;
+  var _scs=g('searchCodeSuggestion');if(_scs)_scs.style.display='none';
+  _pendingAlias=null;_pendingCode=null;
   doFilter();if(inp)inp.focus();
 }
 (function(){
