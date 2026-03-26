@@ -287,7 +287,7 @@ function buildFavPage(){
           +'</div>'
           +'<div class="fav-cours-card-body">'
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+esc(c.dt)+'</div>'
+          +'<div class="fav-cours-card-meta">📅 '+esc(fmtDt(c.dt))+'</div>'
           +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+esc(c.lc)+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'</div>'
@@ -3388,9 +3388,10 @@ async function loadMessages(){
         txt=txt.replace(/onclick="openR\(/g,'onclick="viewCoursCard(');
         // En dark mode : remplacer le fond clair par le bgDark de la matière (comme les cards Explore)
         if(document.documentElement.classList.contains('dk')){
-          var _idM=txt.match(/viewCoursCard\('([^']+)'\)/);
+          // Les IDs sont encodés via escH/esc : apostrophes → &#39;
+          var _idM=txt.match(/viewCoursCard\((?:&#39;|')([^'&#<>]+)(?:&#39;|')\)/);
           if(_idM){
-            var _mc=C.find(function(x){return x.id==_idM[1];});
+            var _mc=C.find(function(x){return String(x.id)==String(_idM[1]);});
             if(_mc){var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');}
           }
         }
