@@ -516,8 +516,22 @@ async function _initSupabase(){
   }catch(e){console.warn('[OAuth] Erreur init Supabase:',e);}
 }
 
+function _setupCapacitorDeepLink(){
+  if(!_isIOS||!window.Capacitor||!window.Capacitor.Plugins||!window.Capacitor.Plugins.App)return;
+  window.Capacitor.Plugins.App.addListener('appUrlOpen',function(event){
+    var url=event&&event.url||'';
+    if(!url.startsWith('com.courspool.app://'))return;
+    if(window.Capacitor.Plugins.Browser)window.Capacitor.Plugins.Browser.close();
+    if(!window._supabase)return;
+    window._supabase.auth.exchangeCodeForSession(url).then(function(result){
+      if(result&&result.data&&result.data.session)_handleOAuthSignIn(result.data.session);
+    }).catch(function(err){console.warn('[OAuth] exchangeCodeForSession:',err);});
+  });
+}
+
 function _setupAuthStateChange(){
   if(!window._supabase)return;
+  _setupCapacitorDeepLink();
   // Fallback : si la session OAuth n'est pas détectée après 8s, ré-afficher le login
   if(_isOAuthReturn){
     setTimeout(function(){
@@ -593,22 +607,40 @@ async function _handleOAuthSignIn(session){
 
 async function doOAuthGoogle(){
   if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
-  var redirectTo=_isIOS?'com.courspool.app://login-callback':'https://courspool.vercel.app';
+  var isCap=_isIOS&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+  var redirectTo=isCap?'com.courspool.app://login-callback':'https://courspool.vercel.app';
   try{
-    await window._supabase.auth.signInWithOAuth({
-      provider:'google',
-      options:{redirectTo:redirectTo,queryParams:{access_type:'offline',prompt:'consent'}}
-    });
+    if(isCap){
+      var res=await window._supabase.auth.signInWithOAuth({
+        provider:'google',
+        options:{redirectTo:redirectTo,skipBrowserRedirect:true,queryParams:{access_type:'offline',prompt:'consent'}}
+      });
+      if(res.data&&res.data.url)await window.Capacitor.Plugins.Browser.open({url:res.data.url});
+    }else{
+      await window._supabase.auth.signInWithOAuth({
+        provider:'google',
+        options:{redirectTo:redirectTo,queryParams:{access_type:'offline',prompt:'consent'}}
+      });
+    }
   }catch(e){toast('Erreur','Impossible de continuer avec Google');}
 }
 async function doOAuthApple(){
   if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
-  var redirectTo=_isIOS?'com.courspool.app://login-callback':'https://courspool.vercel.app';
+  var isCap=_isIOS&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+  var redirectTo=isCap?'com.courspool.app://login-callback':'https://courspool.vercel.app';
   try{
-    await window._supabase.auth.signInWithOAuth({
-      provider:'apple',
-      options:{redirectTo:redirectTo}
-    });
+    if(isCap){
+      var res=await window._supabase.auth.signInWithOAuth({
+        provider:'apple',
+        options:{redirectTo:redirectTo,skipBrowserRedirect:true}
+      });
+      if(res.data&&res.data.url)await window.Capacitor.Plugins.Browser.open({url:res.data.url});
+    }else{
+      await window._supabase.auth.signInWithOAuth({
+        provider:'apple',
+        options:{redirectTo:redirectTo}
+      });
+    }
   }catch(e){toast('Erreur','Impossible de continuer avec Apple');}
 }
 
