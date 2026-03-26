@@ -383,6 +383,49 @@ app.get('/', (req, res) => {
   res.json({ message: 'CoursPool API fonctionne !' });
 });
 
+// AUTH — config publique (URL + clé anon pour le client Supabase)
+app.get('/auth/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+  });
+});
+
+// AUTH — créer/compléter profil OAuth (token Supabase OAuth requis)
+app.post('/auth/oauth-profile', requireAuth, async (req, res) => {
+  const { role, prenom, nom } = req.body;
+  if (!role || !['eleve', 'professeur'].includes(role)) {
+    return res.status(400).json({ error: 'Rôle invalide' });
+  }
+  try {
+    const userId = req.user.id;
+    const email = req.user.email || '';
+    const meta = req.user.user_metadata || {};
+    const finalPrenom = prenom || meta.given_name || meta.full_name || email.split('@')[0];
+    const finalNom = nom || meta.family_name || '';
+    // Upsert du profil (crée si n'existe pas, ignore les champs déjà définis)
+    const { data: existing } = await supabase.from('profiles').select('id,role').eq('id', userId).single();
+    let profile;
+    if (!existing) {
+      const { data, error } = await supabase.from('profiles')
+        .insert({ id: userId, email, prenom: finalPrenom, nom: finalNom, role })
+        .select().single();
+      if (error) return res.status(500).json({ error: error.message });
+      profile = data;
+    } else if (!existing.role) {
+      const { data, error } = await supabase.from('profiles')
+        .update({ role, prenom: finalPrenom, nom: finalNom })
+        .eq('id', userId).select().single();
+      if (error) return res.status(500).json({ error: error.message });
+      profile = data;
+    } else {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      profile = data || existing;
+    }
+    res.json({ success: true, profile });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // AUTH — inscription
 app.post('/auth/register', authRateLimit, async (req, res) => {
   const { email, password, prenom, nom, role } = req.body;
@@ -1056,7 +1099,14 @@ app.patch('/profiles/:id', async (req, res) => {
   const { id } = req.params;
   // Seul l'utilisateur lui-même peut modifier son profil
   if (req.user.id !== id) return res.status(403).json({ error: 'Non autorisé' });
-  const userFields = ['prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
+  // Nouvelles colonnes Supabase requises :
+  // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pour_enfant BOOLEAN DEFAULT false;
+  // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_enfant TEXT;
+  // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS age_enfant INTEGER;
+  // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_mineur BOOLEAN DEFAULT false;
+  // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS mode_cours TEXT;
+  const userFields = ['prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url',
+    'pour_enfant', 'niveau_enfant', 'age_enfant', 'is_mineur', 'mode_cours'];
   const updates = {};
   userFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
