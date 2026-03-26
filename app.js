@@ -6736,10 +6736,19 @@ function _stepOptClick(el){
 function initSwipeNav(){
   var appEl=g('app');
   if(!appEl)return;
-  var sx=0,sy=0,st=0;
+  var sx=0,sy=0,st=0,_touchTarget=null;
   var THRESH=60;   // px horizontal minimum pour déclencher
   var MAXVERT=70;  // px vertical max (sinon c'est un scroll)
   var MAXMS=380;   // durée max du geste (ms)
+
+  function _isInsideHScroll(el){
+    while(el&&el!==appEl){
+      var ox=window.getComputedStyle(el).overflowX;
+      if((ox==='scroll'||ox==='auto')&&el.scrollWidth>el.clientWidth+2)return true;
+      el=el.parentElement;
+    }
+    return false;
+  }
 
   function _tabOrder(){
     var t=['exp','fav','msg'];
@@ -6775,6 +6784,7 @@ function initSwipeNav(){
     sx=e.touches[0].clientX;
     sy=e.touches[0].clientY;
     st=Date.now();
+    _touchTarget=e.target;
   },{passive:true});
 
   appEl.addEventListener('touchend',function(e){
@@ -6786,6 +6796,8 @@ function initSwipeNav(){
 
     // Ignorer si trop court, trop vertical ou trop lent
     if(Math.abs(dx)<THRESH||dy>MAXVERT||dt>MAXMS)return;
+    // Ignorer si le touch vient d'une zone scrollable horizontalement (ex: barre de filtres)
+    if(_touchTarget&&_isInsideHScroll(_touchTarget))return;
 
     // Ignorer si focus sur un input
     var tag=document.activeElement&&document.activeElement.tagName;

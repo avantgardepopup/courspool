@@ -98,7 +98,127 @@ var ALIASES = {
   "prepa": "Prépa", "cpge": "Prépa",
   "licence": "Licence",
   "master": "Master",
-  "these": "Doctorat"
+  "these": "Doctorat",
+
+  /* ── Langues supplémentaires ── */
+  "coreen": "Coréen", "korean": "Coréen", "kpop": "Coréen",
+  "turc": "Turc", "turkish": "Turc",
+  "hebreu": "Hébreu", "hebrew": "Hébreu",
+  "neerlandais": "Néerlandais", "hollandais": "Néerlandais", "dutch": "Néerlandais",
+  "polonais": "Polonais", "polish": "Polonais",
+  "suedois": "Suédois", "danois": "Danois", "norvegien": "Norvégien",
+  "vietnamien": "Vietnamien", "thai": "Thaï",
+  "persan": "Persan", "farsi": "Persan",
+  "hindi": "Hindi", "urdu": "Ourdou",
+  "swahili": "Swahili",
+  "fle": "Français Langue Étrangère", "fra": "Français Langue Étrangère",
+
+  /* ── Sport ── */
+  "boxe": "Boxe", "muay": "Boxe Thaïlandaise",
+  "judo": "Judo", "karate": "Karaté", "jujitsu": "Jiu-Jitsu",
+  "mma": "Arts Martiaux", "martial": "Arts Martiaux",
+  "rugby": "Rugby", "handball": "Handball", "volley": "Volleyball",
+  "badminton": "Badminton", "ping": "Tennis de Table", "pongpong": "Tennis de Table",
+  "escalade": "Escalade", "velo": "Cyclisme", "cyclisme": "Cyclisme",
+  "musculation": "Musculation", "muscu": "Musculation",
+  "course": "Running", "running": "Running", "marathon": "Running",
+  "equitation": "Équitation", "cheval": "Équitation",
+  "golf": "Golf", "ski": "Ski", "snowboard": "Ski",
+  "surf": "Surf", "natation": "Natation", "plongee": "Plongée",
+  "gym": "Gymnastique", "gymnastique": "Gymnastique",
+  "stretching": "Stretching", "crossfit": "CrossFit",
+
+  /* ── Musique ── */
+  "guitare electrique": "Guitare", "ukulele": "Ukulélé",
+  "basse": "Basse", "batterie": "Batterie",
+  "saxophone": "Saxophone", "sax": "Saxophone",
+  "trompette": "Trompette", "flute": "Flûte",
+  "chant": "Chant", "chorale": "Chant", "vocal": "Chant",
+  "harmonie": "Harmonie Musicale", "composition": "Composition Musicale",
+  "dj": "DJ / Musique Électronique", "beatmaking": "Beatmaking",
+  "prod": "Production Musicale", "production musicale": "Production Musicale",
+
+  /* ── Arts visuels & créatifs ── */
+  "aquarelle": "Aquarelle", "acrylique": "Peinture Acrylique",
+  "huile": "Peinture à l'Huile",
+  "illustration": "Illustration", "illus": "Illustration",
+  "manga": "Manga / BD", "bd": "Manga / BD", "bande dessinee": "Manga / BD",
+  "calligraphie": "Calligraphie",
+  "ceramique": "Céramique", "poterie": "Céramique",
+  "gravure": "Gravure", "encre": "Dessin à l'Encre",
+
+  /* ── Design & digital ── */
+  "figma": "Design UI/UX", "uxui": "Design UI/UX", "ux": "Design UI/UX",
+  "design": "Design", "webdesign": "Web Design",
+  "photoshop": "Retouche Photo", "lightroom": "Retouche Photo",
+  "illustrator": "Illustration Digitale", "indesign": "PAO",
+  "premiere": "Montage Vidéo", "montage": "Montage Vidéo",
+  "aftereffects": "Motion Design", "motion": "Motion Design",
+  "blender": "Modélisation 3D", "3d": "Modélisation 3D",
+
+  /* ── Développement / Tech ── */
+  "html": "Développement Web", "css": "Développement Web",
+  "typescript": "Développement Web", "ts": "Développement Web",
+  "nodejs": "Développement Web", "node": "Développement Web",
+  "swift": "Développement Mobile", "kotlin": "Développement Mobile",
+  "flutter": "Développement Mobile", "dart": "Développement Mobile",
+  "android": "Développement Mobile", "ios": "Développement Mobile",
+  "cplus": "C / C++", "cpp": "C / C++",
+  "sql": "Base de Données", "bdd": "Base de Données", "mysql": "Base de Données",
+  "git": "Git / GitHub", "github": "Git / GitHub",
+  "devops": "DevOps", "docker": "DevOps", "cloud": "Cloud Computing",
+  "aws": "Cloud Computing", "azure": "Cloud Computing",
+  "data": "Data Science", "datascience": "Data Science",
+  "excel avance": "Excel Avancé", "vba": "VBA / Macros",
+  "powerbi": "Power BI", "tableau": "Data Visualisation",
+  "seo": "SEO / Marketing Digital", "sem": "SEO / Marketing Digital",
+  "reseaux sociaux": "Réseaux Sociaux", "instagram": "Réseaux Sociaux",
+
+  /* ── Business / Entrepreneuriat ── */
+  "entrepr": "Entrepreneuriat", "startup": "Entrepreneuriat",
+  "pitch": "Pitch / Prise de Parole", "prise de parole": "Pitch / Prise de Parole",
+  "business plan": "Business Plan", "bplan": "Business Plan",
+  "rh": "Ressources Humaines", "recrutement": "Ressources Humaines",
+  "negociation": "Négociation", "vente": "Techniques de Vente",
+  "commercial": "Techniques de Vente",
+  "immobilier": "Immobilier", "immo": "Immobilier",
+  "assurance": "Assurance", "banque": "Banque",
+  "fiscalite": "Fiscalité", "impots": "Fiscalité",
+  "audit": "Audit", "controle de gestion": "Contrôle de Gestion",
+
+  /* ── Bien-être & développement personnel ── */
+  "meditation": "Méditation", "mindfulness": "Méditation",
+  "sophrologie": "Sophrologie",
+  "coaching": "Coaching Personnel", "coach": "Coaching Personnel",
+  "confiance": "Développement Personnel", "confiance en soi": "Développement Personnel",
+  "memoire": "Techniques de Mémorisation", "memorisation": "Techniques de Mémorisation",
+  "speed reading": "Lecture Rapide", "lecture rapide": "Lecture Rapide",
+
+  /* ── Sciences spécialisées ── */
+  "astro": "Astronomie", "astronomie": "Astronomie",
+  "geologie": "Géologie", "geo sol": "Géologie",
+  "biologie moleculaire": "Biologie Moléculaire",
+  "genetique": "Génétique",
+  "optique": "Optique", "acoustique": "Acoustique",
+  "thermodynamique": "Thermodynamique",
+  "electromagnetisme": "Électromagnétisme",
+
+  /* ── Aide scolaire générale ── */
+  "soutien": "Soutien Scolaire", "aide": "Soutien Scolaire",
+  "devoirs": "Aide aux Devoirs", "tutorat": "Soutien Scolaire",
+  "methodologie": "Méthodologie", "methode": "Méthodologie",
+  "dissertation": "Méthodologie", "oral": "Expression Orale",
+  "bac": "Préparation Bac", "brevet": "Préparation Brevet",
+  "concours": "Préparation Concours",
+  "parcours sup": "Parcoursup", "parcoursup": "Parcoursup",
+  "grande ecole": "Grandes Écoles", "hec": "Grandes Écoles",
+
+  /* ── Diplômes / niveaux ── */
+  "cap": "CAP", "bep": "BEP",
+  "but": "BUT", "dut": "DUT",
+  "dcg": "DCG", "dscg": "DSCG",
+  "grmat": "Grammaire", "ortho": "Orthographe",
+  "conjugaison": "Conjugaison", "conjugaison francaise": "Conjugaison"
 };
 
 function normalizeText(str) {
