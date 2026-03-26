@@ -218,7 +218,91 @@ var ALIASES = {
   "but": "BUT", "dut": "DUT",
   "dcg": "DCG", "dscg": "DSCG",
   "grmat": "Grammaire", "ortho": "Orthographe",
-  "conjugaison": "Conjugaison", "conjugaison francaise": "Conjugaison"
+  "conjugaison": "Conjugaison", "conjugaison francaise": "Conjugaison",
+
+  /* ── Jardinage & nature ── */
+  "jardinage": "Jardinage", "jardin": "Jardinage", "jardinage potager": "Jardinage",
+  "potager": "Jardinage", "fleurs": "Jardinage", "horticulture": "Horticulture",
+  "permaculture": "Permaculture", "permac": "Permaculture",
+  "apiculture": "Apiculture", "abeilles": "Apiculture",
+  "compostage": "Compostage", "compost": "Compostage",
+  "botanique": "Botanique", "plantes": "Botanique",
+  "peche": "Pêche", "aquaponie": "Aquaponie",
+  "mycologie": "Mycologie", "champignons": "Mycologie",
+
+  /* ── Bricolage & artisanat ── */
+  "bricolage": "Bricolage", "brico": "Bricolage",
+  "menuiserie": "Menuiserie", "charpente": "Charpente",
+  "plomberie": "Plomberie",
+  "electricite maison": "Électricité Domestique",
+  "maconnerie": "Maçonnerie",
+  "peinture maison": "Peinture Intérieure",
+  "carrelage": "Carrelage",
+  "mecanique": "Mécanique Auto", "mecanique auto": "Mécanique Auto",
+  "soudure": "Soudure",
+  "impression 3d": "Impression 3D", "imprimante 3d": "Impression 3D",
+  "robotique": "Robotique", "robot": "Robotique",
+  "electronique": "Électronique", "arduino": "Électronique",
+  "raspberry": "Électronique",
+
+  /* ── Couture & textile ── */
+  "tricot": "Tricot", "crochet": "Crochet",
+  "broderie": "Broderie", "broder": "Broderie",
+  "couture": "Couture", "patron": "Couture",
+  "tapisserie": "Tapisserie", "tissage": "Tissage",
+  "teinture": "Teinture Textile",
+  "macrame": "Macramé",
+
+  /* ── Gastronomie & boissons ── */
+  "oenologie": "Œnologie", "vin": "Œnologie", "degustation": "Œnologie",
+  "cocktail": "Mixologie", "mixologie": "Mixologie", "bartending": "Mixologie",
+  "boulangerie": "Boulangerie", "pain": "Boulangerie", "boulange": "Boulangerie",
+  "patisserie": "Pâtisserie", "gateau": "Pâtisserie",
+  "chocolat": "Chocolaterie", "confiserie": "Confiserie",
+  "charcuterie": "Charcuterie", "fromage": "Fromagerie",
+  "sushi": "Cuisine Japonaise", "wok": "Cuisine Asiatique",
+  "vegan": "Cuisine Vegan", "vegetarien": "Cuisine Végétarienne",
+
+  /* ── Beauté & bien-être ── */
+  "maquillage": "Maquillage", "makeup": "Maquillage",
+  "coiffure": "Coiffure", "coupe": "Coiffure",
+  "esthétique": "Esthétique", "soin": "Esthétique",
+  "massage": "Massage", "reflexologie": "Réflexologie",
+  "aromatherapie": "Aromathérapie", "huiles essentielles": "Aromathérapie",
+  "reiki": "Reiki", "naturopathie": "Naturopathie",
+  "acupuncture": "Acupuncture",
+
+  /* ── Jeux & loisirs créatifs ── */
+  "echecs": "Échecs", "chess": "Échecs",
+  "go": "Go (Jeu)", "shogi": "Shogi",
+  "poker": "Poker", "bridge": "Bridge",
+  "scrabble": "Scrabble", "mots croises": "Mots Croisés",
+  "jeux de societe": "Jeux de Société",
+  "origami": "Origami", "papier": "Origami",
+  "magie": "Magie / Prestidigitation", "prestidigitation": "Magie / Prestidigitation",
+  "escape": "Escape Game", "puzzle": "Puzzles",
+  "jeux video": "Développement Jeux Vidéo", "game design": "Développement Jeux Vidéo",
+  "unity": "Développement Jeux Vidéo", "unreal": "Développement Jeux Vidéo",
+  "streaming": "Streaming / Contenu", "youtube": "Streaming / Contenu",
+  "twitch": "Streaming / Contenu", "podcast": "Podcast",
+
+  /* ── Écriture & expression ── */
+  "ecriture": "Écriture Créative", "creative writing": "Écriture Créative",
+  "roman": "Écriture Créative", "scenario": "Scénario",
+  "journalisme": "Journalisme", "redaction": "Rédaction",
+  "blog": "Rédaction Web", "copywriting": "Copywriting",
+  "slam": "Slam / Poésie", "poesie": "Slam / Poésie",
+
+  /* ── Collection & patrimoine ── */
+  "genealogie": "Généalogie", "famille": "Généalogie",
+  "numismatique": "Numismatique", "philatelie": "Philatélie",
+  "antiquites": "Antiquités", "brocante": "Brocante",
+
+  /* ── Spiritualité & pratiques ── */
+  "tarot": "Tarot", "astrologie": "Astrologie",
+  "feng shui": "Feng Shui",
+  "qi gong": "Qi Gong", "qigong": "Qi Gong",
+  "tai chi": "Tai Chi", "taichi": "Tai Chi"
 };
 
 function normalizeText(str) {
