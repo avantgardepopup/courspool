@@ -375,6 +375,7 @@ app.use(function(req, res, next) {
   if (req.method === 'GET'  && req.path === '/stripe/success') return next();
   if (req.method === 'POST' && req.path === '/stripe/webhook') return next();
   if (req.method === 'POST' && req.path === '/contact') return next();
+  if (req.method === 'GET'  && req.path === '/auth/config') return next();
   return requireAuth(req, res, next);
 });
 
