@@ -3550,8 +3550,19 @@ var actLoc='';
 var _geoActive=false;
 var _geoCoords=null;
 var _geoDist=10;
+var _geoPermDenied=false;
+
+function openAppSettings(){
+  try{
+    var isCap=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
+    if(isCap){window.open('app-settings:','_system');return;}
+  }catch(e){}
+  toast('Localisation désactivée','Activez-la dans Réglages > CoursPool > Localisation');
+}
 
 function requestGeoloc(){
+  // Permission déjà refusée → ouvrir les réglages directement
+  if(_geoPermDenied){openAppSettings();return;}
   // Toggle : si déjà actif → désactiver
   if(_geoActive){
     _geoActive=false;_geoCoords=null;
@@ -3561,7 +3572,7 @@ function requestGeoloc(){
     if(distBtn)distBtn.style.display='none';
     var inp=g('locInput');if(inp)inp.value='';
     var cb=g('locClearBtn');if(cb)cb.style.display='none';
-    actLoc='';geoMode=false;userCoords=null;
+    actLoc='';geoMode=false;userCoords=null;_geoPermDenied=false;
     applyFilter();
     return;
   }
@@ -3595,8 +3606,14 @@ function requestGeoloc(){
     function(err){
       if(btn){btn.style.opacity='1';}
       if(lbl)lbl.textContent='Autour de moi';
-      if(err.code===1)toast('Refusé','Activez la localisation dans vos réglages');
-      else toast('Erreur','Impossible de détecter la position');
+      if(err.code===1){
+        _geoPermDenied=true;
+        // Changer l'icône du bouton pour indiquer l'état "refusé → réglages"
+        if(btn){btn.style.background='#FEF2F2';btn.style.color='#EF4444';}
+        toast('Localisation refusée','Appuie à nouveau pour ouvrir les Réglages');
+      } else {
+        toast('Erreur','Impossible de détecter la position');
+      }
     },
     {enableHighAccuracy:false,timeout:5000,maximumAge:30000}
   );
@@ -5227,7 +5244,7 @@ function sortCourses(arr){
 
 function resetFilters(){
   actF='tous';actLoc='';actNiv='';actMode='';
-  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;
+  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;
   var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
   if(_rlbl){_rlbl.textContent='Autour de moi';_rlbl.style.display='';}
   if(_rdist)_rdist.style.display='none';
