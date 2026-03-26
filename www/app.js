@@ -1014,7 +1014,7 @@ function doGuest(){
   if(bniAcc)bniAcc.style.display='flex';
   if(bniAdd)bniAdd.style.display='none';
   if(bniFavG)bniFavG.style.display='none';
-  var bniMesG=g('bniMes');if(bniMesG)bniMesG.style.display='flex';
+  var bniMesG=g('bniMes');if(bniMesG)bniMesG.style.display='none';
   // Header invité
   var mobT=g('mobTitle'),mobS=g('mobSub');
   if(mobT)mobT.textContent='Explorer';
@@ -1143,9 +1143,39 @@ function updateMobHeader(tab){
 }
 
 function navTo(tab,_skipHistory){
-  // Mettre à jour l'historique du navigateur pour le bouton retour Android/browser
+  // ── Gardes : vérification avant tout changement DOM ─────────────────────
+  if(tab==='fav'&&(!user||user.guest)){
+    toast('Connectez-vous pour accéder à vos favoris','');
+    setTimeout(scrollToLogin,800);
+    return;
+  }
+  if(tab==='msg'){
+    if(!user){navTo('exp');return;}
+    if(user.guest){
+      toast('Connectez-vous pour accéder aux messages','');
+      setTimeout(scrollToLogin,800);
+      return;
+    }
+  }
+  if(tab==='acc'){
+    if(!user){navTo('exp');return;}
+    if(user.guest){
+      var bd=g('bdLoginPrompt');
+      if(bd){
+        var t=bd.querySelector('[style*="font-size:21px"]');
+        var s=bd.querySelector('[style*="font-size:14px"][style*="color:var(--lite)"]');
+        if(t)t.textContent='Créez votre compte gratuit';
+        if(s)s.innerHTML='Rejoignez CoursPool pour réserver des cours,<br>suivre des professeurs et gérer votre profil.';
+        bd.style.display='flex';
+      }else{
+        toast('Connectez-vous pour accéder à votre profil','');
+        setTimeout(scrollToLogin,800);
+      }
+      return;
+    }
+  }
+  // ── Mise à jour historique + nettoyage DOM ───────────────────────────────
   if(!_skipHistory){try{history.pushState({tab:tab},'',' ');}catch(e){}}
-  // Toujours fermer la conv active et s'assurer que la nav est visible
   var convPane=g('msgConvPane');
   if(convPane&&tab!=='msg')convPane.style.display='none';
   var pgMsgEl=g('pgMsg');
@@ -1156,13 +1186,14 @@ function navTo(tab,_skipHistory){
   }
   clearInterval(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
-  ['bniExp','bniFav','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var appEl=g('app');if(appEl)appEl.scrollTop=0;
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes');
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
   if(pgFav)pgFav.classList.remove('on');
+  if(pgMes)pgMes.classList.remove('on');
   updateMobHeader(tab);
   updateTopbarNav(tab);
 
@@ -1173,44 +1204,18 @@ function navTo(tab,_skipHistory){
     restoreNav();
     _syncAllFollowBtns();
   } else if(tab==='fav'){
-    if(!user||user.guest){
-      toast('Connectez-vous pour accéder à vos favoris','');
-      setTimeout(scrollToLogin,800);
-      return;
-    }
     if(pgFav)pgFav.classList.add('on');
     var bFav=g('bniFav');if(bFav){bFav.classList.add('on');_springIcon(bFav);}
     var brF=g('btnRefresh');if(brF)brF.style.display='none';
     restoreNav();
     buildFavPage();
   } else if(tab==='msg'){
-    if(!user){navTo('exp');return;}
-    if(user.guest){
-      toast('Connectez-vous pour accéder aux messages','');
-      setTimeout(scrollToLogin, 800);
-      return;
-    }
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     loadConversations();
   } else if(tab==='acc'){
-    if(!user){navTo('exp');return;}
-    if(user.guest){
-      var bd=g('bdLoginPrompt');
-      if(bd){
-        var t=bd.querySelector('[style*="font-size:21px"]');
-        var s=bd.querySelector('[style*="font-size:14px"][style*="color:var(--lite)"]');
-        if(t)t.textContent='Créez votre compte gratuit';
-        if(s)s.innerHTML='Rejoignez CoursPool pour réserver des cours,<br>suivre des professeurs et gérer votre profil.';
-        bd.style.display='flex';
-      } else {
-        toast('Connectez-vous pour accéder à votre profil','');
-        setTimeout(scrollToLogin, 800);
-      }
-      return;
-    }
     if(pgAcc)pgAcc.classList.add('on');
     var bAcc=g('bniAcc');if(bAcc){bAcc.classList.add('on');_springIcon(bAcc);}
     var br2=g('btnRefresh');if(br2)br2.style.display='none';
@@ -1257,12 +1262,13 @@ function restoreNav(){
 }
 
 function goExplore(){
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes');
   if(pgExp)pgExp.classList.add('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
   if(pgFav)pgFav.classList.remove('on');
-  ['bniExp','bniFav','bniMsg','bniAcc'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  if(pgMes)pgMes.classList.remove('on');
+  ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var b=g('bniExp');if(b)b.classList.add('on');
   restoreNav();
 }
@@ -1813,6 +1819,9 @@ function doLogout(){
   if(bniMsg)bniMsg.style.display='';
   if(bniAcc)bniAcc.style.display='';
   if(bniAdd)bniAdd.style.display='none';
+  // Nettoyer les badges (évite badges fantômes pour la prochaine session)
+  var _bb=g('bnavBadge');if(_bb){_bb.classList.remove('on');_bb.textContent='';}
+  var _bf=g('bnavFavBadge');if(_bf){_bf.style.display='none';_bf.textContent='';}
   // Reset avatar
   var tav=g('tav');if(tav){tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';}
   var tavM=g('tavMob');if(tavM){tavM.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavM.textContent='?';}
@@ -6766,12 +6775,18 @@ function initSwipeNav(){
     var idx=tabs.indexOf(cur);
     if(idx===-1)return;
 
+    // Filtrer les onglets inaccessibles pour l'invité
+    var _restricted=['fav','msg','mes','acc'];
+    var isGuest=!user||(user&&user.guest);
+
     if(dx<0&&idx<tabs.length-1){
-      navTo(tabs[idx+1]);
-      haptic([8]);
+      var next=tabs[idx+1];
+      if(isGuest&&_restricted.indexOf(next)!==-1)return;
+      navTo(next);haptic([8]);
     }else if(dx>0&&idx>0){
-      navTo(tabs[idx-1]);
-      haptic([8]);
+      var prev=tabs[idx-1];
+      if(isGuest&&_restricted.indexOf(prev)!==-1)return;
+      navTo(prev);haptic([8]);
     }
   },{passive:true});
 }
