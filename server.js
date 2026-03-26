@@ -1252,6 +1252,16 @@ app.post('/messages/groupe', async (req, res) => {
       }));
       await supabase.from('messages').insert(msgsFallback);
     }
+    // Notifier chaque élève en temps réel
+    eleves.forEach(eleveId => {
+      io.emit('new_message', {
+        expediteur_id,
+        destinataire_id: eleveId,
+        contenu,
+        groupe: true,
+        cours_id
+      });
+    });
     res.json({ success: true, sent: eleves.length });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -1260,6 +1270,16 @@ app.post('/messages/groupe', async (req, res) => {
 app.get('/messages/groupe/:cours_id', async (req, res) => {
   const { cours_id } = req.params;
   try {
+    // Vérifier accès : prof du cours, inscrit, ou admin
+    if (!isAdmin(req.user.id)) {
+      const { data: coursData } = await supabase.from('cours').select('professeur_id').eq('id', cours_id).single();
+      if (!coursData) return res.status(404).json({ error: 'Cours introuvable' });
+      if (coursData.professeur_id !== req.user.id) {
+        const { data: inscrit } = await supabase.from('reservations')
+          .select('id').eq('cours_id', cours_id).eq('user_id', req.user.id).maybeSingle();
+        if (!inscrit) return res.status(403).json({ error: 'Non autorisé' });
+      }
+    }
     const { data, error } = await supabase
       .from('messages')
       .select('*')
@@ -1373,10 +1393,24 @@ app.post('/messages', async (req, res) => {
   res.json(msg);
 });
 
+// MESSAGES — compteur non lus (léger, pour le badge)
+app.get('/messages/unread-count', async (req, res) => {
+  const { count, error } = await supabase
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('receiver_id', req.user.id)
+    .eq('lu', false);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ count: count || 0 });
+});
+
 // MESSAGES — récupérer conversation
 app.get('/messages/:user1/:user2', async (req, res) => {
   const { user1, user2 } = req.params;
   if (!UUID_RE.test(user1) || !UUID_RE.test(user2)) return res.status(400).json({ error: 'ID invalide' });
+  if (req.user.id !== user1 && req.user.id !== user2 && !isAdmin(req.user.id)) {
+    return res.status(403).json({ error: 'Non autorisé' });
+  }
   const { data, error } = await supabase.from('messages')
     .select('*')
     .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
@@ -1385,16 +1419,31 @@ app.get('/messages/:user1/:user2', async (req, res) => {
   res.json(data);
 });
 
-// MESSAGES — toutes conversations d'un user
+// MESSAGES — toutes conversations d'un user (limité + enrichi avec profils)
 app.get('/conversations/:user_id', async (req, res) => {
   if (!UUID_RE.test(req.params.user_id)) return res.status(400).json({ error: 'ID invalide' });
   if (req.user.id !== req.params.user_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   const { data, error } = await supabase.from('messages')
     .select('*')
     .or(`sender_id.eq.${req.params.user_id},receiver_id.eq.${req.params.user_id}`)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(100);
   if (error) return res.status(500).json({ error });
-  res.json(data);
+  // Enrichir avec prenom/nom/photo des interlocuteurs
+  const otherIds = [...new Set((data || []).map(m =>
+    m.sender_id === req.params.user_id ? m.receiver_id : m.sender_id
+  ).filter(Boolean))];
+  const { data: profiles } = otherIds.length
+    ? await supabase.from('profiles').select('id, prenom, nom, photo_url').in('id', otherIds)
+    : { data: [] };
+  const profileMap = {};
+  (profiles || []).forEach(p => { profileMap[p.id] = p; });
+  const enriched = (data || []).map(m => {
+    const otherId = m.sender_id === req.params.user_id ? m.receiver_id : m.sender_id;
+    const p = profileMap[otherId] || {};
+    return { ...m, other_nom: ((p.prenom || '') + ' ' + (p.nom || '')).trim() || null, other_photo: p.photo_url || null };
+  });
+  res.json(enriched);
 });
 
 // MESSAGES — marquer comme lu

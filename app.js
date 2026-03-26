@@ -612,12 +612,8 @@ function applyUser(){
     clearInterval(msgBadgePollTimer);
     msgBadgePollTimer=setInterval(function(){
       if(!user||!user.id)return;
-      fetch(API+'/conversations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(msgs){
-        if(!Array.isArray(msgs))return;
-        var convs={},nonLus=0;
-        msgs.forEach(function(m){var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;if(!otherId||otherId===user.id)return;if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;});
-        Object.keys(convs).forEach(function(id){if(!convs[id].lu&&convs[id].sender_id!==user.id)nonLus++;});
-        updateMsgBadge(nonLus);
+      fetch(API+'/messages/unread-count',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+        if(data&&typeof data.count==='number')updateMsgBadge(data.count);
       }).catch(function(){});
     },30000);
   }
@@ -2992,25 +2988,28 @@ async function loadConversations(){
       var isMe=m.sender_id===user.id;
       var nonLu=!isMe&&!m.lu;
       if(nonLu)nonLus++;
-      // Chercher le profil dans P ou fallback
+      // Source 1 : données enrichies renvoyées directement par le backend
+      if(!P[otherId])P[otherId]={n:'—',e:0};
+      if(m.other_nom&&!P[otherId].nm){P[otherId].nm=m.other_nom;}
+      if(m.other_photo&&!P[otherId].photo){P[otherId].photo=m.other_photo;}
+      // Source 2 : cache P[]
       var p=P[otherId];
       var nm=p?p.nm:'';
       var col=p?p.col:'linear-gradient(135deg,#FF8C55,#E04E10)';
       var photo=p?p.photo:null;
       var ini=p?p.i:'';
-      // Fallback cours si P manque ou incomplet — stocker dans P aussi
-      if(!p||!p.nm||!p.photo){
+      // Source 3 : fallback cours C[] si P encore incomplet
+      if(!nm||!photo){
         var _cByProf=C.find(function(x){return x.pr===otherId;});
         if(_cByProf){
-          if(!P[otherId])P[otherId]={n:'—',e:0};
           if(!nm){nm=_cByProf.prof_nm||'';if(nm)P[otherId].nm=nm;}
           if(!ini){ini=_cByProf.prof_ini||'';if(ini)P[otherId].i=ini;}
           if(!col||col==='linear-gradient(135deg,#FF8C55,#E04E10)'){col=_cByProf.prof_col||col;if(col)P[otherId].col=col;}
           if(!photo){photo=_cByProf.prof_photo||null;if(photo)P[otherId].photo=photo;}
         }
       }
-      // Fetch frais via fonction centrale (met à jour P[], C[], et tous les [data-prof]/[data-profnm])
-      _fetchProf(otherId);
+      // Fetch profil en arrière-plan uniquement si encore incomplet
+      if(!nm||!photo)_fetchProf(otherId);
       if(!nm)nm='·\u200B·\u200B·';
       if(!ini)ini=nm[0]&&nm[0]!=='·'?nm[0].toUpperCase():'?';
       var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
@@ -3374,7 +3373,7 @@ async function sendGroupeMsg(){
       body:JSON.stringify({
         cours_id:_groupeCoursId,
         expediteur_id:user.id,
-        expediteur_nom:(user.pr+(user.nm?' '+user.nm:'')).trim(),
+        expediteur_nom:((user.pr||'')+(user.nm?' '+user.nm:'')).trim()||'Utilisateur',
         contenu:contenu,
         cours_titre:c?c.title:'Cours'
       })
