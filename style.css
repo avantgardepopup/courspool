@@ -291,9 +291,7 @@ html.dk .lreg-back{background:#1C1917;border-color:var(--bdr);}
 @keyframes checkDraw{from{stroke-dashoffset:40}to{stroke-dashoffset:0}}
 @keyframes priceFlip{0%{transform:translateY(0);opacity:1}40%{transform:translateY(-8px);opacity:0}60%{transform:translateY(8px);opacity:0}100%{transform:translateY(0);opacity:1}}
 @keyframes emptyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes mi{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes lineGrow{0%,100%{opacity:.3}50%{opacity:1}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 
 /* Sur mobile : pages prennent toute la hauteur sous le mob-header */
 @media(max-width:640px){
@@ -803,7 +801,7 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
 @media(max-width:640px){.toast{left:50%;right:auto;transform:translateX(-50%) translateY(-8px) scale(.96);}
 .toast.on{transform:translateX(-50%) translateY(0) scale(1);}}
-.toast.on{opacity:1;transform:translateY(0);}
+
 .tico{width:26px;height:26px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .tico svg{width:13px;height:13px;color:#fff;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
