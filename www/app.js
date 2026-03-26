@@ -523,6 +523,20 @@ function _setupCapacitorDeepLink(){
     if(!url.startsWith('com.courspool.app://'))return;
     if(window.Capacitor.Plugins.Browser)window.Capacitor.Plugins.Browser.close();
     if(!window._supabase)return;
+    // Flow implicite : #access_token= dans le hash
+    var hashPart=url.split('#')[1]||'';
+    if(hashPart.indexOf('access_token=')!==-1){
+      var p=new URLSearchParams(hashPart);
+      var at=p.get('access_token'),rt=p.get('refresh_token')||'';
+      if(at){
+        window._supabase.auth.setSession({access_token:at,refresh_token:rt}).then(function(result){
+          if(result&&result.data&&result.data.session)_handleOAuthSignIn(result.data.session);
+          else toast('Erreur connexion','Réessaie ou utilise email/mot de passe');
+        }).catch(function(err){console.warn('[OAuth] setSession:',err);toast('Erreur connexion','Réessaie ou utilise email/mot de passe');});
+        return;
+      }
+    }
+    // Flow PKCE : ?code= dans la query
     window._supabase.auth.exchangeCodeForSession(url).then(function(result){
       if(result&&result.data&&result.data.session){
         _handleOAuthSignIn(result.data.session);
