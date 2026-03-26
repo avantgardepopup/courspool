@@ -195,14 +195,17 @@ loadFavCours();
 // Sauvegarder le compteur de suivis d'un prof — clé sans TTL pour persister même après expiration de cp_profs
 function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]=n||0;localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
 
+function _favKey(){return(user&&user.id)?'cp_fav_cours_'+user.id:'cp_fav_cours';}
 function loadFavCours(){
   try{
-    var saved=localStorage.getItem('cp_fav_cours');
+    var saved=localStorage.getItem(_favKey());
+    // Migration : fallback sur la clé générique si rien trouvé avec la clé user
+    if(!saved&&user&&user.id)saved=localStorage.getItem('cp_fav_cours');
     if(saved){JSON.parse(saved).forEach(function(id){favCours.add(id);});}
   }catch(e){}
 }
 function saveFavCours(){
-  try{localStorage.setItem('cp_fav_cours',JSON.stringify(Array.from(favCours)));}catch(e){}
+  try{localStorage.setItem(_favKey(),JSON.stringify(Array.from(favCours)));}catch(e){}
   updateFavBadge();
 }
 
@@ -951,7 +954,7 @@ async function doLogin(){
     try{localStorage.removeItem('cp_profs');}catch(e){}
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
-    favCours.clear();try{localStorage.removeItem('cp_fav_cours');}catch(e){};
+    favCours.clear();
     if(uid){
       Promise.all([
         fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
@@ -1033,6 +1036,7 @@ function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
   user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined,refresh_token:refreshToken||undefined,token_exp:tokenExp||undefined};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   _scheduleTokenRefresh();
+  favCours.clear();loadFavCours();
   applyUser();
   loadData().then(function(){buildCards();});
   toast('Bienvenue '+pr+' !','Connecté à CoursPool');
@@ -1306,7 +1310,7 @@ function goExplore(){
           // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
           Object.keys(P).forEach(function(k){delete P[k]});
           fol.clear();
-          favCours.clear();try{localStorage.removeItem('cp_fav_cours');}catch(e){};
+          favCours.clear();
           if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           updateFavBadge();
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
@@ -1814,7 +1818,6 @@ function doLogout(){
   _stopAutoRefresh();
   try{localStorage.removeItem('cp_user');}catch(e){}
   try{localStorage.removeItem('cp_res');}catch(e){}
-  try{localStorage.removeItem('cp_fav_cours');}catch(e){}
   try{localStorage.removeItem('cp_profs');}catch(e){}
   try{localStorage.removeItem('cp_follow_counts');}catch(e){}
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
