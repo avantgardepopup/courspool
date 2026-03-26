@@ -1741,6 +1741,7 @@ function saveProf(){
 
 function doLogout(){
   user=null;
+  _tutoLaunched=false;
   clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;
   _stopAutoRefresh();
   try{localStorage.removeItem('cp_user');}catch(e){}
@@ -4248,6 +4249,7 @@ var TUTO_PROF = [
 // TUTORIEL INTERACTIF — SPOTLIGHT sur les vrais éléments
 // ============================================================
 var _tutoSteps=[], _tutoIdx=0;
+var _tutoLaunched=false;
 
 // Définir les étapes avec sélecteur CSS de l'élément ciblé
 var _TUTO_SVG={
@@ -4277,7 +4279,9 @@ var TUTO_PROF_STEPS=[
 
 function tutoStart(){
   if(!user)return;
+  if(_tutoLaunched)return;
   try{if(localStorage.getItem('cp_tuto_done_'+user.id))return;}catch(e){}
+  _tutoLaunched=true;
   _tutoSteps=user.role==='professeur'?TUTO_PROF_STEPS:TUTO_ELEVE_STEPS;
   // Reprendre au step sauvegardé si existe
   try{
