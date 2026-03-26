@@ -468,11 +468,11 @@ tr:hover td{background:#FAFAF9;}
   </div>
 </div>
 
-<!-- MODAL PROF -->
+<!-- MODAL PROF / ELEVE -->
 <div class="modal-overlay" id="modalProf">
   <div class="modal">
     <div class="modal-header">
-      <h3>Profil professeur</h3>
+      <h3 id="modalTitle">Profil utilisateur</h3>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -480,13 +480,35 @@ tr:hover td{background:#FAFAF9;}
         <div id="modalAvatar" style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden"></div>
         <div><div style="font-size:16px;font-weight:800" id="modalName"></div><div style="font-size:12.5px;color:var(--mid)" id="modalEmail"></div><div style="margin-top:5px" id="modalStatus"></div></div>
       </div>
+      <!-- Champs communs -->
       <div class="info-grid">
-        <div class="info-item"><label>Statut</label><span id="modalStatut">—</span></div>
-        <div class="info-item"><label>Matières</label><span id="modalMatieres">—</span></div>
-        <div class="info-item"><label>CNI uploadée</label><span id="modalCniStatus">—</span></div>
         <div class="info-item"><label>Inscrit le</label><span id="modalDate">—</span></div>
+        <div class="info-item"><label>Ville</label><span id="modalVille">—</span></div>
       </div>
-      <div id="modalCniBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;text-align:center;color:var(--lite);font-size:13px"></div>
+      <!-- Champs PROFESSEUR -->
+      <div id="modalProfSection">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mid);margin:14px 0 8px">Profil enseignant</div>
+        <div class="info-grid">
+          <div class="info-item"><label>Niveau études</label><span id="modalStatut">—</span></div>
+          <div class="info-item"><label>Mode de cours</label><span id="modalMode">—</span></div>
+          <div class="info-item" style="grid-column:1/-1"><label>Matières enseignées</label><span id="modalMatieres">—</span></div>
+          <div class="info-item" style="grid-column:1/-1"><label>Bio</label><span id="modalBio">—</span></div>
+        </div>
+        <div class="info-grid" style="margin-top:8px">
+          <div class="info-item"><label>CNI uploadée</label><span id="modalCniStatus">—</span></div>
+        </div>
+        <div id="modalCniBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;text-align:center;color:var(--lite);font-size:13px"></div>
+      </div>
+      <!-- Champs ÉLÈVE -->
+      <div id="modalEleveSection" style="display:none">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mid);margin:14px 0 8px">Profil élève</div>
+        <div class="info-grid">
+          <div class="info-item"><label>Cours pour</label><span id="modalPourEnfant">—</span></div>
+          <div class="info-item"><label>Niveau élève</label><span id="modalNiveau">—</span></div>
+          <div class="info-item"><label>Niveau enfant</label><span id="modalNiveauEnfant">—</span></div>
+          <div class="info-item"><label>Âge enfant</label><span id="modalAgeEnfant">—</span></div>
+        </div>
+      </div>
       <div class="modal-actions" id="modalActions"></div>
     </div>
   </div>
@@ -690,7 +712,7 @@ function renderEleves(search){
     var ini=((e.prenom&&e.prenom[0]||'')+(e.nom&&e.nom[0]||'')).toUpperCase()||'?';
     var nbRes=allRes.filter(function(r){return r.user_id===e.id;}).length;
     var date=e.created_at?new Date(e.created_at).toLocaleDateString('fr-FR'):'—';
-    return'<tr><td><div class="user-cell"><div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+'</div><div class="email">'+(e.email||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+'</span></td><td>'+date+'</td><td><button class="btn btn-red" onclick="deleteUser(\''+e.id+'\',\''+(((e.prenom||'')+' '+(e.nom||'')).trim())+'\')" style="font-size:11px;padding:4px 8px">Supprimer</button></td></tr>';
+    return'<tr><td><div class="user-cell"><div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+'</div><div class="email">'+(e.email||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+'</span></td><td>'+date+'</td><td style="display:flex;gap:6px"><button class="btn btn-blue" onclick="openEleveModal(\''+e.id+'\')" style="font-size:11px;padding:4px 8px">Voir</button><button class="btn btn-red" onclick="deleteUser(\''+e.id+'\',\''+(((e.prenom||'')+' '+(e.nom||'')).trim())+'\')" style="font-size:11px;padding:4px 8px">Supprimer</button></td></tr>';
   }).join('');
 }
 function searchEleves(q){renderEleves(q);}
@@ -751,24 +773,44 @@ async function renderPaiements(){
 }
 
 // MODAL PROF
-function openProfModal(id){
-  var p=allProfs.find(function(x){return x.id===id;});
-  if(!p)return;
+var _modeLabels={presentiel:'Présentiel',visio:'Visio',les_deux:'Présentiel + Visio'};
+var _niveauLabels={
+  college_6:'6e',college_5:'5e',college_4:'4e',college_3:'3e',
+  seconde:'Seconde',premiere:'Première',terminale:'Terminale',
+  bts:'BTS / BUT',licence_l1:'Licence L1',licence_l2:'Licence L2',licence_l3:'Licence L3',
+  master_m1:'Master M1',master_m2:'Master M2',autre:'Autre',no_answer:'Non renseigné',
+  primaire_cp:'CP',primaire_ce1:'CE1',primaire_ce2:'CE2',primaire_cm1:'CM1',primaire_cm2:'CM2',
+  bac:'Baccalauréat',licence:'Licence',master:'Master',doctorat:'Doctorat'
+};
+
+function _fillModalCommon(p){
   var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
   var av=document.getElementById('modalAvatar');
-  if(p.photo_url){av.style.background='none';av.innerHTML='<img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover">';}
+  if(p.photo_url){av.style.background='none';av.innerHTML='<img src="'+escHtml(p.photo_url)+'" style="width:100%;height:100%;object-fit:cover">';}
   else{av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';av.textContent=ini;}
   document.getElementById('modalName').textContent=(p.prenom||'')+' '+(p.nom||'');
   document.getElementById('modalEmail').textContent=p.email||'';
-  document.getElementById('modalStatus').innerHTML=p.verified?'<span class="badge green">Compte vérifié</span>':p.statut_compte==='rejeté'?'<span class="badge red">Rejeté</span>':p.statut_compte==='bloqué'?'<span class="badge red">Bloqué</span>':'<span class="badge orange">En attente de vérification</span>';
-  document.getElementById('modalStatut').textContent=p.statut||'—';
-  document.getElementById('modalMatieres').textContent=p.matieres||'—';
-  document.getElementById('modalCniStatus').innerHTML=p.cni_uploaded?'<span class="badge green">Uploadée</span>':'<span class="badge gray">Non uploadée</span>';
   document.getElementById('modalDate').textContent=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'—';
+  document.getElementById('modalVille').textContent=p.ville||'—';
+}
+
+function openProfModal(id){
+  var p=allProfs.find(function(x){return x.id===id;});
+  if(!p)return;
+  document.getElementById('modalTitle').textContent='Profil professeur';
+  document.getElementById('modalProfSection').style.display='block';
+  document.getElementById('modalEleveSection').style.display='none';
+  _fillModalCommon(p);
+  document.getElementById('modalStatus').innerHTML=p.verified?'<span class="badge green">Compte vérifié</span>':p.statut_compte==='rejeté'?'<span class="badge red">Rejeté</span>':p.statut_compte==='bloqué'?'<span class="badge red">Bloqué</span>':'<span class="badge orange">En attente de vérification</span>';
+  document.getElementById('modalStatut').textContent=(_niveauLabels[p.statut]||p.statut||'—');
+  document.getElementById('modalMode').textContent=(_modeLabels[p.mode_cours]||p.mode_cours||'—');
+  document.getElementById('modalMatieres').textContent=p.matieres||'—';
+  document.getElementById('modalBio').textContent=p.bio||'—';
+  document.getElementById('modalCniStatus').innerHTML=p.cni_uploaded?'<span class="badge green">Uploadée</span>':'<span class="badge gray">Non uploadée</span>';
   // CNI
   var cniBox=document.getElementById('modalCniBox');
   if(p.cni_url){
-    cniBox.innerHTML='<img src="'+p.cni_url+'" style="width:100%;border-radius:10px;cursor:pointer" onclick="window.open(\''+p.cni_url+'\',\'_blank\')" alt="CNI"><div style="font-size:11px;color:var(--lite);margin-top:6px">Cliquer pour agrandir</div>';
+    cniBox.innerHTML='<img src="'+escHtml(p.cni_url)+'" style="width:100%;border-radius:10px;cursor:pointer" onclick="window.open(\''+escHtml(p.cni_url)+'\',\'_blank\')" alt="CNI"><div style="font-size:11px;color:var(--lite);margin-top:6px">Cliquer pour agrandir</div>';
   } else if(p.cni_uploaded){
     cniBox.innerHTML='<div style="font-size:13px;color:var(--green)">Pièce d\'identité reçue (stockée de manière sécurisée)</div>';
   } else {
@@ -785,6 +827,24 @@ function openProfModal(id){
   }
   document.getElementById('modalProf').classList.add('on');
 }
+
+function openEleveModal(id){
+  var p=allEleves.find(function(x){return x.id===id;});
+  if(!p)return;
+  document.getElementById('modalTitle').textContent='Profil élève';
+  document.getElementById('modalProfSection').style.display='none';
+  document.getElementById('modalEleveSection').style.display='block';
+  _fillModalCommon(p);
+  document.getElementById('modalStatus').innerHTML='<span class="badge blue">Élève</span>';
+  document.getElementById('modalPourEnfant').textContent=p.pour_enfant?'Pour son enfant':'Pour lui-même';
+  document.getElementById('modalNiveau').textContent=_niveauLabels[p.niveau]||p.niveau||'—';
+  document.getElementById('modalNiveauEnfant').textContent=p.pour_enfant?(_niveauLabels[p.niveau_enfant]||p.niveau_enfant||'—'):'—';
+  document.getElementById('modalAgeEnfant').textContent=p.pour_enfant?(p.age_enfant?p.age_enfant+' ans'+(p.is_mineur?' (mineur)':''):'—'):'—';
+  var actions=document.getElementById('modalActions');
+  actions.innerHTML='<button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;width:100%;justify-content:center">Supprimer le compte</button>';
+  document.getElementById('modalProf').classList.add('on');
+}
+
 function closeModal(){document.getElementById('modalProf').classList.remove('on');}
 
 var _rejectProfId = null;
