@@ -2946,7 +2946,8 @@ function togFP(){
 function openCr(){
   if(!user||user.role!=='professeur'){toast('Accès refusé','Seuls les professeurs peuvent proposer des cours');return;}
   if(user.verified===false){
-    toast('Compte non vérifié','Votre compte est en cours de vérification par notre équipe. Vous pourrez publier des cours dès validation (sous 24h).');
+    if(getCniStatus()==='none'){toast('Pièce d\'identité requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+    else{toast('Vérification en cours','Votre identité est en cours de vérification. Vous pourrez publier des cours sous 24h.');}
     return;
   }
   var today=new Date().toLocaleDateString('fr-CA',{timeZone:'Europe/Paris'});
@@ -3996,7 +3997,19 @@ function updateVerifStatusBlock(){
   if(!block)return;
   if(!user||user.role!=='professeur'){block.style.display='none';return;}
   var status=getCniStatus();
-  if(status==='none'){block.style.display='none';return;}
+  if(status==='none'){
+    var html='<div style="background:var(--orp);border-radius:12px;padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="13" y2="14"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:var(--or)">Vérification d\'identité requise</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez votre pièce d\'identité pour activer votre compte et publier des cours.</div>'
+      +'<button onclick="openCniSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer ma pièce d\'identité</button>'
+      +'</div>';
+    block.style.display='block';
+    block.innerHTML=html;
+    return;
+  }
   var html='';
   if(status==='verified'){
     html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F0FDF4;border-radius:12px">'
@@ -5349,7 +5362,15 @@ function updateVerifBand(){
   // Pas prof = caché
   if(!user||user.role!=='professeur'){band.style.display='none';return;}
   var status=getCniStatus();
-  if(status==='none'){band.style.display='none';return;}
+  if(status==='none'){
+    band.style.display='flex';
+    var t=g('verifBandTitle'),s=g('verifBandSub');
+    if(t)t.textContent='Vérification d\'identité requise';
+    if(s)s.textContent='Appuyez pour envoyer votre document';
+    band.style.background='var(--orp)';
+    band.style.borderColor='#FED7AA';
+    return;
+  }
   if(status==='verified'){band.style.display='none';return;}
   if(status==='pending'||status==='rejected_retry'){
     band.style.display='flex';
@@ -5610,7 +5631,11 @@ var _sc=0;
 function openCrStep(){
   if(!user||!user.id){showLoginPrompt();return;}
   if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
-  if(user.verified===false){toast('Compte non v\u00e9rifi\u00e9','V\u00e9rification en cours (sous 24h)');return;}
+  if(user.verified===false){
+    if(getCniStatus()==='none'){toast('Pi\u00e8ce d\'identit\u00e9 requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+    else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
+    return;
+  }
   _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',desc:''};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
@@ -5902,7 +5927,11 @@ async function subCrStep(){
   openCr=function(){
     if(!user||!user.id){showLoginPrompt();return;}
     if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
-    if(user.verified===false){toast('Compte non v\u00e9rifi\u00e9','V\u00e9rification en cours (sous 24h)');return;}
+    if(user.verified===false){
+      if(getCniStatus()==='none'){toast('Pi\u00e8ce d\'identit\u00e9 requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+      else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
+      return;
+    }
     openCrStep();
   };
 
