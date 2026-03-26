@@ -1571,8 +1571,10 @@ function buildAccLists(){
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
         var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
         var isFull=c.fl>=c.sp;
+        var _isDkFav=document.documentElement.classList.contains('dk');
+        var _favBg=_isDkFav?(mat.bgDark||mat.bg):mat.bg;
         profCoursHtml+='<div class="fav-cours-card" onclick="openR(\''+esc(c.id)+'\')">'
-          +'<div class="fav-cours-card-top" style="background:'+mat.bg+'">'
+          +'<div class="fav-cours-card-top" style="background:'+_favBg+'">'
           +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
           +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">Complet</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
           +'</div>'
@@ -2186,27 +2188,62 @@ function loadMore(){
 // RÉFÉRENTIEL MATIÈRES — partagé formulaire + filtres
 // ============================================================
 var MATIERES = [
-  {label:'Maths',          key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',         bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
-  {label:'Physique',       key:'physique',      color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',         bgDark:'linear-gradient(135deg,#1A1035,#2D1F5E)'},
-  {label:'Chimie',         key:'chimie',        color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',         bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
-  {label:'SVT / Biologie', key:'svt',           color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',         bgDark:'linear-gradient(135deg,#052E16,#0F4A24)'},
-  {label:'Informatique',   key:'informatique',  color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
-  {label:'Python',         key:'python',        color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
-  {label:'Anglais',        key:'anglais',       color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Espagnol',       key:'espagnol',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Français',       key:'francais',      color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',         bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Histoire-Géo',   key:'histoire',      color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
-  {label:'Philosophie',    key:'philo',         color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',         bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
-  {label:'Économie',       key:'economie',      color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',         bgDark:'linear-gradient(135deg,#062318,#0A3D25)'},
-  {label:'Droit',          key:'droit',         color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Musique',        key:'musique',       color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
-  {label:'Arts plastiques',key:'arts',          color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',         bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Sport / EPS',    key:'sport',         color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',         bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
-  {label:'Architecture',   key:'architecture',  color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',         bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
-  {label:'Comptabilité',   key:'compta',        color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',         bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
-  {label:'Marketing',      key:'marketing',     color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',         bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Statistiques',   key:'stats',         color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',         bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
-  {label:'Autre',          key:'autre',         color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',         bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
+  // --- Sciences exactes (bleu) ---
+  {label:'Maths',             key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',  bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Statistiques',      key:'stats',        color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',  bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
+  {label:'Physique',          key:'physique',     color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'Chimie',            key:'chimie',       color:'#6EE7B7', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',  bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'SVT / Biologie',    key:'svt',          color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0F4A24)'},
+  // --- Tech & Numérique (ambre/jaune) ---
+  {label:'Informatique',      key:'informatique', color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Python',            key:'python',       color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Data Science',      key:'data',         color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#452A00)'},
+  {label:'Électronique',      key:'electronique', color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Design / UI',       key:'design',       color:'#FB7185', bg:'linear-gradient(135deg,#FFF1F2,#FFE4E6)',  bgDark:'linear-gradient(135deg,#2D0A10,#4A1520)'},
+  // --- Langues (rouge/corail) ---
+  {label:'Anglais',           key:'anglais',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Espagnol',          key:'espagnol',     color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Allemand',          key:'allemand',     color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Italien',           key:'italien',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Arabe',             key:'arabe',        color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Chinois',           key:'chinois',      color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Japonais',          key:'japonais',     color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Portugais',         key:'portugais',    color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  // --- Lettres & Arts (rose) ---
+  {label:'Français',          key:'francais',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Écriture créative', key:'ecriture',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Arts plastiques',   key:'arts',         color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Dessin',            key:'dessin',       color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)',  bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
+  {label:'Musique',           key:'musique',      color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Chant',             key:'chant',        color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Photographie',      key:'photo',        color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)',  bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
+  // --- Sciences humaines & sociales (violet/indigo) ---
+  {label:'Philosophie',       key:'philo',        color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  {label:'Histoire-Géo',      key:'histoire',     color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Psychologie',       key:'psycho',       color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Sociologie',        key:'socio',        color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Architecture',      key:'architecture', color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Jeux de société',   key:'jeux',         color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  // --- Business & Finance (cyan/teal) ---
+  {label:'Économie',          key:'economie',     color:'#2DD4BF', bg:'linear-gradient(135deg,#F0FDFA,#CCFBF1)',  bgDark:'linear-gradient(135deg,#052825,#084035)'},
+  {label:'Comptabilité',      key:'compta',       color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',  bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Finance',           key:'finance',      color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',  bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Marketing',         key:'marketing',    color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Droit',             key:'droit',        color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  // --- Sport & Bien-être (vert) ---
+  {label:'Sport / EPS',       key:'sport',        color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Yoga / Méditation', key:'yoga',         color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',  bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Fitness',           key:'fitness',      color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Arts martiaux',     key:'martial',      color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Danse',             key:'danse',        color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  // --- Nature & Artisanat (vert foncé / ambre) ---
+  {label:'Jardinage',         key:'jardinage',    color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
+  {label:'Bricolage',         key:'bricolage',    color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Cuisine / Gastronomie',key:'cuisine',   color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Couture / Tricot',  key:'couture',      color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Poterie / Céramique',key:'poterie',     color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  // --- Autre ---
+  {label:'Autre',             key:'autre',        color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',  bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
 
 // Fonction pour normaliser une chaîne

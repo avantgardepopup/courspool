@@ -67,7 +67,7 @@ html.dk #locGeoBtn{background:#2A1A0F;}
 /* Cards */
 html.dk .card,html.dk .rrow,html.dk .fol-row{background:var(--wh);}
 /* Cards couleurs — atténuer les dégradés trop flashy */
-html.dk .ctop{filter:saturate(.7) brightness(.75);}
+html.dk .ctop,html.dk .fav-cours-card-top{filter:saturate(.7) brightness(.75);}
 html.dk .cbody{background:var(--wh);}
 html.dk .ctitle{color:var(--ink) !important;}
 html.dk .mi{color:var(--mid) !important;}
