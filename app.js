@@ -1489,11 +1489,9 @@ function goAccount(){
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   var cr=g('accCardRev');
   if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
-  // Onglet et carte Remboursements visibles uniquement pour les élèves
+  // Onglet Remboursements — caché mais utilisable via paramètres (élèves seulement)
   var tabRmb=g('aTabRmb');
-  if(tabRmb)tabRmb.style.display=(user&&user.role!=='professeur')?'flex':'none';
-  var crRmb=g('accCardRmb');
-  if(crRmb)crRmb.style.display=(user&&user.role!=='professeur')?'block':'none';
+  if(tabRmb)tabRmb.style.display='none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Statut vérification
@@ -2540,18 +2538,17 @@ function openR(id){haptic(4);
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
   // Coloriser le header de la fiche selon la matière
   var rHeader=document.querySelector('#bdR .modal>div:first-child');
-  if(rHeader&&c.bg){
-    rHeader.style.background=c.bg;
-    rHeader.style.borderRadius='20px 20px 0 0';
-    // En dark mode le fond pastel clair rend le texte illisible → forcer couleur sombre
-    var isDark=document.documentElement.classList.contains('dk');
-    var rTitEl=g('rTit');
-    if(rTitEl)rTitEl.style.color=isDark?'#111':'var(--ink)';
-    var mhdEl=rHeader.querySelector('.mhd');
-    if(mhdEl){
-      mhdEl.style.color=isDark?'#111':'';
-      var subEl=mhdEl.querySelector('[style*="color:var(--lite)"]');
-      if(subEl)subEl.style.color=isDark?'#555':'';
+  if(rHeader){
+    var _rIsDk=document.documentElement.classList.contains('dk');
+    var _mat=findMatiere(c.subj||'');
+    var _rBg=_rIsDk?(_mat&&_mat.bgDark?_mat.bgDark:(c.bgDark||c.bg)):(_mat&&_mat.bg?_mat.bg:c.bg);
+    if(_rBg){
+      rHeader.style.background=_rBg;
+      rHeader.style.borderRadius='20px 20px 0 0';
+      // Réinitialiser les couleurs de texte — les variables CSS gèrent le dark mode
+      var rTitEl=g('rTit');if(rTitEl)rTitEl.style.color='';
+      var mhdEl=rHeader.querySelector('.mhd');
+      if(mhdEl){mhdEl.style.color='';var subEl=mhdEl.querySelector('[style*="color:var(--lite)"]');if(subEl)subEl.style.color='';}
     }
   }
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
@@ -6472,8 +6469,10 @@ async function sendCoursCardMsg(c){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   // Build native HTML card
   var _cIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+  var _cIsDk=document.documentElement.classList.contains('dk');
+  var _chatHdrBg=_cIsDk?(mf.bgDark||mf.bg):mf.bg;
   var cardHtml='<div class="chat-cours-card" onclick="viewCoursCard(\''+escH(c.id)+'\')" style="max-width:260px">'
-    +'<div class="chat-cours-card-header" style="background:'+mf.bg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
+    +'<div class="chat-cours-card-header" style="background:'+_chatHdrBg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
     +'<span style="margin-left:auto;font-size:15px;font-weight:800;color:#fff">'+pp+'&euro;</span></div>'
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
     +'<div class="chat-cours-card-meta">'+escH(c.dt)+(_cIsVisio?' &middot; Visio':'')+'</div>'
@@ -6711,8 +6710,19 @@ document.addEventListener('click',function(e){
 function openSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.add('on');document.body.style.overflow='hidden';}
+  // Afficher la ligne Remboursements seulement pour les élèves
+  var rmbRow=g('settingsRmbRow');
+  if(rmbRow)rmbRow.style.display=(user&&user.role!=='professeur')?'':'none';
   updateDarkBtn();
   haptic(6);
+}
+function openRemboursements(){
+  closeSettings();
+  goAccount();
+  setTimeout(function(){
+    var t=g('aTabRmb');
+    if(t)switchATab('Rmb',t);
+  },200);
 }
 function closeSettings(){
   var bd=document.getElementById('bdSettings');
