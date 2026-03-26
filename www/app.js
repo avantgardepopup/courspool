@@ -1256,9 +1256,8 @@ function restoreNav(){
   var bniMesR=g('bniMes');
   if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
   // Créer — profs seulement
-  if(user&&user.role==='professeur'){
-    var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display='flex';
-  }
+  var bniAdd=g('bniAdd');
+  if(bniAdd)bniAdd.style.display=(user&&user.role==='professeur')?'flex':'none';
 }
 
 function goExplore(){
@@ -1826,10 +1825,12 @@ function doLogout(){
   var tav=g('tav');if(tav){tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent='?';}
   var tavM=g('tavMob');if(tavM){tavM.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavM.textContent='?';}
   // Reset état nav
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgMes=g('pgMes'),pgFav=g('pgFav');
   if(pgExp)pgExp.classList.add('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
+  if(pgMes)pgMes.classList.remove('on');
+  if(pgFav)pgFav.classList.remove('on');
   // Afficher login, cacher app
   g('app').style.display='none';
   var login=g('login');
@@ -6012,6 +6013,7 @@ async function subCrStep(){
   var _nt=navTo;
   navTo=function(tab){
     if(tab==='mes'){
+      if(!user||user.guest||user.role==='professeur'){navTo('exp');return;}
       // Masquer toutes les pages
       ['pgExp','pgMsg','pgAcc','pgFav','pgMes'].forEach(function(id){
         var el=g(id);if(el)el.classList.remove('on');
