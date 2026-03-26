@@ -712,7 +712,10 @@ function renderEleves(search){
     var ini=((e.prenom&&e.prenom[0]||'')+(e.nom&&e.nom[0]||'')).toUpperCase()||'?';
     var nbRes=allRes.filter(function(r){return r.user_id===e.id;}).length;
     var date=e.created_at?new Date(e.created_at).toLocaleDateString('fr-FR'):'—';
-    return'<tr><td><div class="user-cell"><div class="avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8)">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+'</div><div class="email">'+(e.email||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+'</span></td><td>'+date+'</td><td style="display:flex;gap:6px"><button class="btn btn-blue" onclick="openEleveModal(\''+e.id+'\')" style="font-size:11px;padding:4px 8px">Voir</button><button class="btn btn-red" onclick="deleteUser(\''+e.id+'\',\''+(((e.prenom||'')+' '+(e.nom||'')).trim())+'\')" style="font-size:11px;padding:4px 8px">Supprimer</button></td></tr>';
+    var isBlocked=e.statut_compte==='bloqué';
+    var avatarBg=isBlocked?'background:#9CA3AF':'background:linear-gradient(135deg,#3B82F6,#1D4ED8)';
+    var blockedBadge=isBlocked?' <span class="badge red" style="font-size:10px">Bloqué</span>':'';
+    return'<tr style="'+(isBlocked?'opacity:.65':'')+'"><td><div class="user-cell"><div class="avatar" style="'+avatarBg+'">'+ini+'</div><div class="user-info"><div class="name">'+(e.prenom||'')+' '+(e.nom||'')+blockedBadge+'</div><div class="email">'+(e.email||'')+'</div></div></div></td><td>'+(e.email||'—')+'</td><td><span class="badge blue">'+nbRes+'</span></td><td>'+date+'</td><td style="display:flex;gap:6px"><button class="btn btn-blue" onclick="openEleveModal(\''+e.id+'\')" style="font-size:11px;padding:4px 8px">Voir</button><button class="btn btn-red" onclick="deleteUser(\''+e.id+'\',\''+(((e.prenom||'')+' '+(e.nom||'')).trim())+'\')" style="font-size:11px;padding:4px 8px">Supprimer</button></td></tr>';
   }).join('');
 }
 function searchEleves(q){renderEleves(q);}
@@ -835,14 +838,41 @@ function openEleveModal(id){
   document.getElementById('modalProfSection').style.display='none';
   document.getElementById('modalEleveSection').style.display='block';
   _fillModalCommon(p);
-  document.getElementById('modalStatus').innerHTML='<span class="badge blue">Élève</span>';
+  var isBlocked=p.statut_compte==='bloqué';
+  document.getElementById('modalStatus').innerHTML=isBlocked
+    ?'<span class="badge red">Bloqué</span>'
+    :'<span class="badge blue">Élève</span>';
   document.getElementById('modalPourEnfant').textContent=p.pour_enfant?'Pour son enfant':'Pour lui-même';
   document.getElementById('modalNiveau').textContent=_niveauLabels[p.niveau]||p.niveau||'—';
   document.getElementById('modalNiveauEnfant').textContent=p.pour_enfant?(_niveauLabels[p.niveau_enfant]||p.niveau_enfant||'—'):'—';
   document.getElementById('modalAgeEnfant').textContent=p.pour_enfant?(p.age_enfant?p.age_enfant+' ans'+(p.is_mineur?' (mineur)':''):'—'):'—';
   var actions=document.getElementById('modalActions');
-  actions.innerHTML='<button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;width:100%;justify-content:center">Supprimer le compte</button>';
+  var blockBtn=isBlocked
+    ?'<button class="btn" onclick="unblockEleve(\''+p.id+'\')" style="background:#F0FDF4;color:#22C069;border:1px solid #BBF7D0;flex:1;justify-content:center">Débloquer</button>'
+    :'<button class="btn" onclick="blockEleve(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FFF7ED;color:#F97316;border:1px solid #FED7AA;flex:1;justify-content:center">Bloquer définitivement</button>';
+  actions.innerHTML='<div style="display:flex;gap:8px;width:100%">'+blockBtn+'<button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;flex:1;justify-content:center">Supprimer</button></div>';
   document.getElementById('modalProf').classList.add('on');
+}
+
+async function blockEleve(id, name){
+  if(!confirm('Bloquer définitivement '+name+' ?\nCe compte ne pourra plus se connecter.'))return;
+  var ok=await adminPatch('/admin/users/'+id,{statut_compte:'bloqué'});
+  if(ok){
+    var p=allEleves.find(function(x){return x.id===id;});
+    if(p)p.statut_compte='bloqué';
+    closeModal();renderEleves();
+    toast('Compte bloqué — '+name+' ne peut plus se connecter.');
+  }else{toast('Erreur lors du blocage');}
+}
+
+async function unblockEleve(id){
+  var ok=await adminPatch('/admin/users/'+id,{statut_compte:'actif'});
+  if(ok){
+    var p=allEleves.find(function(x){return x.id===id;});
+    if(p)p.statut_compte='actif';
+    closeModal();renderEleves();
+    toast('Compte débloqué.');
+  }else{toast('Erreur lors du déblocage');}
 }
 
 function closeModal(){document.getElementById('modalProf').classList.remove('on');}
