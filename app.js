@@ -1766,7 +1766,19 @@ function doLogout(){
   if(pgMsg)pgMsg.classList.remove('on');
   // Afficher login, cacher app
   g('app').style.display='none';
-  var login=g('login');if(login){login.style.display='flex';login.style.zIndex='999';login.style.pointerEvents='';}
+  var login=g('login');
+  if(login){login.style.display='flex';login.style.zIndex='999';login.style.pointerEvents='';}
+  // Supprimer le spinner OAuth si présent (connexion OAuth précédente)
+  var oauthSpinner=document.getElementById('oauthLoading');
+  if(oauthSpinner)oauthSpinner.remove();
+  // S'assurer que l'écran de connexion est visible (peut être caché après un OAuth)
+  showLogin();
+  // Sign out Supabase si OAuth actif
+  if(window._supabase)window._supabase.auth.signOut().catch(function(){});
+  // Nettoyer l'URL si retour OAuth
+  if(window.location.search||window.location.hash){
+    window.history.replaceState({},'',window.location.pathname);
+  }
   toast('Déconnecté','À bientôt !');
 }
 
