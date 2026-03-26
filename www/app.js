@@ -82,6 +82,7 @@ function _hideSplash(){
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
+  initSwipeNav();
   if(!_isOAuthReturn)_initSupabase(); // déjà appelé dans le IIFE si retour OAuth
   // Masquer le splash après loadData (ou max 3s pour éviter blocage)
   var _splashTimer=setTimeout(_hideSplash,3000);
@@ -6682,3 +6683,95 @@ function _stepOptClick(el){
     setTimeout(initNavDrag, 500);
   }
 })();
+
+// ── Swipe gauche/droite pour navigation entre onglets ──────────────────────
+function initSwipeNav(){
+  var appEl=g('app');
+  if(!appEl)return;
+  var sx=0,sy=0,st=0;
+  var THRESH=60;   // px horizontal minimum pour déclencher
+  var MAXVERT=70;  // px vertical max (sinon c'est un scroll)
+  var MAXMS=380;   // durée max du geste (ms)
+
+  function _tabOrder(){
+    var t=['exp','fav'];
+    // Onglet "Mes cours" visible uniquement pour les élèves
+    var bniMes=g('bniMes');
+    if(bniMes&&bniMes.style.display!=='none')t.push('mes');
+    t.push('msg','acc');
+    return t;
+  }
+
+  function _curTab(){
+    var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc'};
+    for(var id in map){var el=g(id);if(el&&el.classList.contains('on'))return map[id];}
+    return'exp';
+  }
+
+  function _anyOverlayOpen(){
+    // Backdrop / sheet visible
+    var bds=document.querySelectorAll('.bd');
+    for(var i=0;i<bds.length;i++){
+      var cs=window.getComputedStyle(bds[i]);
+      if(cs.display!=='none'&&cs.visibility!=='hidden')return true;
+    }
+    // Modal avec classe .on
+    if(document.querySelector('.modal.on'))return true;
+    // pgHow visible
+    var pgHow=g('pgHow');
+    if(pgHow&&pgHow.style.display==='block')return true;
+    return false;
+  }
+
+  appEl.addEventListener('touchstart',function(e){
+    sx=e.touches[0].clientX;
+    sy=e.touches[0].clientY;
+    st=Date.now();
+  },{passive:true});
+
+  appEl.addEventListener('touchend',function(e){
+    if(!sx)return;
+    var dx=e.changedTouches[0].clientX-sx;
+    var dy=Math.abs(e.changedTouches[0].clientY-sy);
+    var dt=Date.now()-st;
+    sx=0;
+
+    // Ignorer si trop court, trop vertical ou trop lent
+    if(Math.abs(dx)<THRESH||dy>MAXVERT||dt>MAXMS)return;
+
+    // Ignorer si focus sur un input
+    var tag=document.activeElement&&document.activeElement.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+
+    // pgHow ouvert → swipe droite = fermer
+    var pgHow=g('pgHow');
+    if(pgHow&&pgHow.style.display==='block'){
+      if(dx>0){closeHow();haptic([10]);}
+      return;
+    }
+
+    // Overlay/modal ouvert → ne pas naviguer
+    if(_anyOverlayOpen())return;
+
+    // Conversation messages ouverte → swipe droite = retour liste
+    var pgMsgEl=g('pgMsg');
+    if(pgMsgEl&&pgMsgEl.classList.contains('conv-open')){
+      if(dx>0){closeMsgConv();haptic([10]);}
+      return;
+    }
+
+    // Navigation entre onglets principaux
+    var tabs=_tabOrder();
+    var cur=_curTab();
+    var idx=tabs.indexOf(cur);
+    if(idx===-1)return;
+
+    if(dx<0&&idx<tabs.length-1){
+      navTo(tabs[idx+1]);
+      haptic([8]);
+    }else if(dx>0&&idx>0){
+      navTo(tabs[idx-1]);
+      haptic([8]);
+    }
+  },{passive:true});
+}
