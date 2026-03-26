@@ -277,8 +277,9 @@ function buildFavPage(){
             +'</div>';
         }
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-        var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);})||MATIERES[MATIERES.length-1];
-        var bg=mat?mat.bg:'linear-gradient(135deg,var(--orp),#FFE8DC)';
+        var mat=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
+        var _isDkFp=document.documentElement.classList.contains('dk');
+        var bg=_isDkFp?(mat.bgDark||mat.bg):mat.bg;
         return'<div class="fav-cours-card" onclick="openR(\''+c.id+'\')">'
           +'<div class="fav-cours-card-top" style="background:'+bg+'">'
           +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'

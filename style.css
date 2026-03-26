@@ -68,7 +68,6 @@ html.dk #locGeoBtn{background:#2A1A0F;}
 html.dk .card,html.dk .rrow,html.dk .fol-row{background:var(--wh);}
 /* Cards couleurs — atténuer les dégradés trop flashy */
 html.dk .ctop,html.dk .fav-cours-card-top{filter:saturate(.7) brightness(.75);}
-html.dk .chat-cours-card-header{filter:saturate(.7) brightness(.75);}
 html.dk .settings-icon{filter:brightness(.55) saturate(.7);}
 html.dk .acc-card>div:first-child{filter:brightness(.55) saturate(.7);}
 html.dk .cbody{background:var(--wh);}
