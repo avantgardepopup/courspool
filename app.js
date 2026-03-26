@@ -70,10 +70,13 @@ function obDone(){
   },700);
 }
 
+var _isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
 // Lancer l'onboarding au chargement
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
+  _initSupabase();
   // Masquer le splash HTML après chargement
   setTimeout(function(){
     var sp=document.getElementById('splash');
@@ -435,13 +438,386 @@ async function loadData(page,silent){
   }
 }
 
-// AUTH
-function switchLT(t){g('ltC').classList.toggle('on',t==='C');g('ltI').classList.toggle('on',t==='I');g('lfC').classList.toggle('on',t==='C');g('lfI').classList.toggle('on',t==='I');}
-function pickRole(r){g('rEl').classList.toggle('on',r==='El');g('rPf').classList.toggle('on',r==='Pf');g('profFields').style.display=r==='Pf'?'block':'none';}
+// ═══════════════════════════════════════════════════════
+// AUTH — INSCRIPTION + COMPLÉTION PROFIL
+// ═══════════════════════════════════════════════════════
+var _regRole='eleve'; // 'eleve'|'professeur'
+
+// ── Navigation login/register ──
+function showLogin(){
+  var s=g('lsReg');if(s)s.style.display='none';
+  var l=g('lsLogin');if(l){l.style.display='flex';l.scrollTop=0;}
+}
+function showReg(){
+  var l=g('lsLogin');if(l)l.style.display='none';
+  var r=g('lsReg');if(r){r.style.display='flex';r.scrollTop=0;}
+  _checkRegBtn();
+}
+
+// ── Rôle cards ──
+function pickRegRole(r){
+  _regRole=r;
+  ['rcEl','rcPf'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+  var map={eleve:'rcEl',professeur:'rcPf'};
+  var el=g(map[r]);if(el)el.classList.add('on');
+  _checkRegBtn();
+}
+
+// ── Bouton "Créer mon compte" — actif seulement si tout est rempli ──
+function _checkRegBtn(){
+  var btn=g('regCreateBtn');if(!btn)return;
+  var pr=(g('rPr')&&g('rPr').value||'').trim();
+  var em=(g('rEm')&&g('rEm').value||'').trim();
+  var pw=(g('rPw')&&g('rPw').value||'');
+  var ok=pr.length>0&&em.indexOf('@')>0&&pw.length>=6&&_regRole!=='';
+  btn.disabled=!ok;
+}
+
+// ── Indicateur force mot de passe ──
+function updatePwStrength(pw){
+  var score=0;
+  if(pw.length>=6)score++;if(pw.length>=10)score++;
+  if(/[A-Z]/.test(pw)||/[0-9]/.test(pw))score++;
+  if(/[^a-zA-Z0-9]/.test(pw))score++;
+  var colors=['var(--bdr)','#EF4444','#F97316','#22C55E','#22C55E'];
+  var labels=['','Trop court','Faible','Correct','Fort'];
+  for(var i=1;i<=4;i++){var b=g('pwBar'+i);if(b)b.style.background=i<=score?colors[score]:'var(--bdr)';}
+  var lbl=g('pwStrengthLabel');if(lbl){lbl.textContent=labels[score]||'';lbl.style.color=colors[score]||'';}
+}
+
+// ── Supabase client init + OAuth ──
+var _oauthSession=null;
+var _pcIsOAuth=false;
+
+async function _initSupabase(){
+  try{
+    var r=await fetch(API+'/auth/config');
+    var data=await r.json();
+    if(!data.supabaseUrl||!data.supabaseAnonKey){
+      console.warn('[OAuth] SUPABASE_ANON_KEY manquant sur le serveur — OAuth désactivé');
+      return;
+    }
+    if(!window.supabase){
+      console.warn('[OAuth] Supabase CDN non chargé');
+      return;
+    }
+    window._supabase=window.supabase.createClient(data.supabaseUrl,data.supabaseAnonKey);
+    _setupAuthStateChange();
+  }catch(e){console.warn('[OAuth] Erreur init Supabase:',e);}
+}
+
+function _setupAuthStateChange(){
+  if(!window._supabase)return;
+  // Vérifier s'il y a déjà une session (retour OAuth — hash traité avant la subscription)
+  window._supabase.auth.getSession().then(function(result){
+    var session=result&&result.data&&result.data.session;
+    if(session&&!user){
+      var provider=session.user&&session.user.app_metadata&&session.user.app_metadata.provider;
+      if(provider&&provider!=='email')_handleOAuthSignIn(session);
+    }
+  });
+  // Écouter les changements futurs (SIGNED_IN + INITIAL_SESSION pour Supabase v2)
+  window._supabase.auth.onAuthStateChange(function(event,session){
+    if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session&&!user){
+      var provider=session.user&&session.user.app_metadata&&session.user.app_metadata.provider;
+      if(provider&&provider!=='email')_handleOAuthSignIn(session);
+    }
+  });
+}
+
+async function _handleOAuthSignIn(session){
+  // Masquer l'écran login
+  var loginEl=g('login');
+  if(loginEl){loginEl.style.display='none';loginEl.style.zIndex='-1';}
+  var token=session.access_token;
+  var sbUser=session.user||{};
+  var meta=sbUser.user_metadata||{};
+  // Vérifier si profil existant avec rôle
+  try{
+    var r=await fetch(API+'/profiles/'+sbUser.id);
+    var data=await r.json();
+    if(data&&data.role){
+      // Utilisateur existant — connexion directe
+      var p=data;
+      var pr=p.prenom||(meta.given_name||meta.name||(sbUser.email||'').split('@')[0]);
+      var nm=p.nom||(meta.family_name||'');
+      user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role,id:sbUser.id,
+        ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
+        photo:p.photo_url||null,verified:p.verified,
+        statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
+        token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
+      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+      _scheduleTokenRefresh();
+      applyUser();
+      loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      toast('Bienvenue '+pr+' !','Connecté à CoursPool');
+      return;
+    }
+  }catch(e){}
+  // Nouvel utilisateur OAuth — afficher sélection du rôle
+  _pcIsOAuth=true;
+  _oauthSession=session;
+  _regRole='eleve';
+  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcMatieres=[];_pcMode='';
+  _pcHistory=[];
+  var pc=g('profCompletion');if(pc){pc.style.display='block';pc.scrollTop=0;}
+  _pcShowSlide('pcOAuthRole',false);
+}
+
+async function doOAuthGoogle(){
+  if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
+  var redirectTo=_isIOS?'com.courspool.app://login-callback':'https://courspool.vercel.app';
+  try{
+    await window._supabase.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:redirectTo,queryParams:{access_type:'offline',prompt:'consent'}}
+    });
+  }catch(e){toast('Erreur','Impossible de continuer avec Google');}
+}
+async function doOAuthApple(){
+  if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
+  var redirectTo=_isIOS?'com.courspool.app://login-callback':'https://courspool.vercel.app';
+  try{
+    await window._supabase.auth.signInWithOAuth({
+      provider:'apple',
+      options:{redirectTo:redirectTo}
+    });
+  }catch(e){toast('Erreur','Impossible de continuer avec Apple');}
+}
+
+function pickOAuthRole(r){
+  _regRole=r;
+  ['oauthRcEl','oauthRcPf'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+  var map={eleve:'oauthRcEl',professeur:'oauthRcPf'};
+  var el=g(map[r]);if(el)el.classList.add('on');
+  var btn=g('oauthRoleNextBtn');if(btn)btn.disabled=false;
+}
+
+async function pcOAuthRoleNext(){
+  if(!_pcIsOAuth||!_oauthSession)return;
+  var btn=g('oauthRoleNextBtn');if(btn){btn.disabled=true;btn.textContent='Chargement...';}
+  var session=_oauthSession;
+  var sbUser=session.user||{};
+  var meta=sbUser.user_metadata||{};
+  try{
+    var r=await fetch(API+'/auth/oauth-profile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body:JSON.stringify({
+        role:_regRole,
+        prenom:meta.given_name||meta.name||(sbUser.email||'').split('@')[0],
+        nom:meta.family_name||''
+      })
+    });
+    var data=await r.json();
+    if(data.error){toast('Erreur',data.error);if(btn){btn.disabled=false;btn.textContent='Continuer';}return;}
+    var p=data.profile||{};
+    var pr=p.prenom||(meta.given_name||(sbUser.email||'').split('@')[0]);
+    var nm=p.nom||meta.family_name||'';
+    user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role||_regRole,id:sbUser.id,
+      ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
+      photo:p.photo_url||null,verified:p.verified,
+      statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
+      token:session.access_token,refresh_token:session.refresh_token,token_exp:session.expires_at};
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+    _scheduleTokenRefresh();
+    applyUser();
+    loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+    // Avancer vers les slides spécifiques au rôle
+    _pcHistory.push('pcOAuthRole');
+    var nextSlide=(user.role==='professeur')?'pcPfA':'pcElA';
+    _pcShowSlide(nextSlide,false);
+  }catch(e){
+    toast('Erreur','Problème de connexion');
+    if(btn){btn.disabled=false;btn.textContent='Continuer';}
+  }
+}
+
+// ── Legacy stubs ──
+function switchLT(t){}
+function pickRole(r){}
+function updateNiveaux(v){}
+function showRegSlide(n){showReg();}
+function regNext(){}
+function regBack(){showLogin();}
+
+// ═══════════════════════════════════════════════════════
+// PROFILE COMPLETION (après inscription, avant tutoriel)
+// ═══════════════════════════════════════════════════════
+var _pcPour='moi';
+var _pcNivEleve='';
+var _pcNivEtudes='';
+var _pcMatieres=[];
+var _pcMode='';
+var _pcCurrentSlide='';
+var _pcHistory=[];
+
+function showProfCompletion(){
+  var pc=g('profCompletion');if(!pc)return;
+  pc.style.display='block';
+  _pcIsOAuth=false;_oauthSession=null;
+  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcMatieres=[];_pcMode='';
+  _pcHistory=[];
+  var first=(user&&user.role==='professeur')?'pcPfA':'pcElA';
+  _pcShowSlide(first,false);
+}
+
+function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPfA','pcPfB','pcPfC'];}
+
+function _pcOrderedSlides(){
+  if(_pcIsOAuth){
+    if(!user)return['pcOAuthRole'];
+    if(user.role==='professeur')return['pcOAuthRole','pcPfA','pcPfB','pcPfC'];
+    return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf']:['pcOAuthRole','pcElA','pcElBmoi'];
+  }
+  if(user&&user.role==='professeur')return['pcPfA','pcPfB','pcPfC'];
+  return _pcPour==='enfant'?['pcElA','pcElBenf']:['pcElA','pcElBmoi'];
+}
+
+function _pcShowSlide(id,isBack){
+  _pcAllSlides().forEach(function(sid){var el=g(sid);if(el){el.style.display='none';el.classList.remove('pc-back');}});
+  var el=g(id);if(!el)return;
+  el.style.display='block';
+  if(isBack)el.classList.add('pc-back');
+  _pcCurrentSlide=id;
+  var pc=g('profCompletion');if(pc)pc.scrollTop=0;
+  _pcUpdateProgress();
+}
+
+function _pcUpdateProgress(){
+  var slides=_pcOrderedSlides();
+  var idx=slides.indexOf(_pcCurrentSlide);if(idx<0)idx=0;
+  var total=slides.length;
+  var pct=Math.round(((idx+1)/total)*100);
+  var bar=g('pcBar');if(bar)bar.style.width=pct+'%';
+  var lbl=g('pcStepLabel');if(lbl)lbl.textContent=(idx+1)+' / '+total;
+  var back=g('pcBackBtn');if(back)back.style.visibility=_pcHistory.length>0?'visible':'hidden';
+}
+
+function pcNext(){
+  var slides=_pcOrderedSlides();
+  var idx=slides.indexOf(_pcCurrentSlide);
+  if(idx<0||idx>=slides.length-1)return;
+  _pcHistory.push(_pcCurrentSlide);
+  _pcShowSlide(slides[idx+1],false);
+}
+
+function pcBack(){
+  if(_pcHistory.length===0)return;
+  var prev=_pcHistory.pop();
+  _pcShowSlide(prev,true);
+}
+
+// ── Sélections ──
+function pickPour(v){
+  _pcPour=v;
+  ['pcMoi','pcEnfant'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+  var el=g(v==='moi'?'pcMoi':'pcEnfant');if(el)el.classList.add('on');
+}
+
+function pickPcNiv(el,v){
+  _pcNivEleve=v;
+  var grid=el.parentNode;
+  [].forEach.call(grid.querySelectorAll('.lniv-chip'),function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
+
+function pickPcNivEtudes(el,v){
+  _pcNivEtudes=v;
+  var grid=el.parentNode;
+  [].forEach.call(grid.querySelectorAll('.lniv-chip'),function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
+
+function pcToggleMat(el,mat){
+  var idx=_pcMatieres.indexOf(mat);
+  if(idx>=0){_pcMatieres.splice(idx,1);el.classList.remove('on');}
+  else{_pcMatieres.push(mat);el.classList.add('on');}
+  _pcUpdateMatSelected();
+}
+
+function _pcUpdateMatSelected(){
+  var wrap=g('pcMatSelected');var chips=g('pcMatSelectedChips');
+  if(!wrap||!chips)return;
+  if(_pcMatieres.length===0){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  chips.innerHTML=_pcMatieres.map(function(m){
+    return '<span class="pc-mat-chip-tag" onclick="pcRemoveMat(\''+m.replace(/'/g,"\\'")+'\')">'
+      +m+' \u00d7</span>';
+  }).join('');
+}
+
+function pcRemoveMat(mat){
+  var idx=_pcMatieres.indexOf(mat);if(idx>=0)_pcMatieres.splice(idx,1);
+  var pb=g('pcPfB');
+  if(pb){[].forEach.call(pb.querySelectorAll('.lniv-chip'),function(c){
+    if((c.getAttribute('onclick')||'').indexOf("'"+mat+"'")>=0||(c.getAttribute('onclick')||'').indexOf('"'+mat+'"')>=0)c.classList.remove('on');
+  });}
+  _pcUpdateMatSelected();
+}
+
+function pcMatSearchInput(val){
+  var sug=g('pcMatAlias');if(!sug)return;
+  if(typeof resolveAlias==='function'&&val.length>=2){
+    var alias=resolveAlias(val);
+    if(alias&&alias.toLowerCase()!==val.toLowerCase()){sug.style.display='block';sug.textContent='Vous cherchez : '+alias+' ?';sug._val=alias;}
+    else{sug.style.display='none';}
+  }else{sug.style.display='none';}
+}
+
+function pcMatAliasAccept(){
+  var sug=g('pcMatAlias');var inp=g('pcMatSearch');
+  if(!sug||!inp||!sug._val)return;
+  var mat=sug._val;inp.value='';sug.style.display='none';
+  if(_pcMatieres.indexOf(mat)<0){_pcMatieres.push(mat);_pcUpdateMatSelected();}
+}
+
+function pickPcMode(v){
+  _pcMode=v;
+  ['pcModePres','pcModeVis','pcModeBoth'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+  var map={presentiel:'pcModePres',visio:'pcModeVis',les_deux:'pcModeBoth'};
+  var el=g(map[v]);if(el)el.classList.add('on');
+}
+
+async function saveProfCompletion(){
+  var payload={};
+  if(!user||!user.id||user.guest){_hideProfCompletion();return;}
+  if(user.role==='professeur'){
+    if(_pcNivEtudes)payload.statut=_pcNivEtudes;
+    if(_pcMatieres.length>0)payload.matieres=_pcMatieres.join(', ');
+    var ville=(g('pcVille')&&g('pcVille').value||'').trim();
+    if(ville)payload.ville=ville;
+    if(_pcMode)payload.mode_cours=_pcMode;
+  }else{
+    payload.pour_enfant=(_pcPour==='enfant');
+    if(_pcNivEleve&&_pcNivEleve!=='no_answer'){
+      if(_pcPour==='enfant')payload.niveau_enfant=_pcNivEleve;
+      else payload.niveau=_pcNivEleve;
+    }
+    var age=parseInt((g('pcEnfantAge')&&g('pcEnfantAge').value)||'0')||0;
+    if(age>0){payload.age_enfant=age;if(age<13)payload.is_mineur=true;}
+  }
+  if(Object.keys(payload).length>0){
+    try{
+      await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify(payload)});
+    }catch(e){}
+  }
+  try{localStorage.setItem('cp_profile_done_'+user.id,'1');}catch(e){}
+  _hideProfCompletion();
+}
+
+function _hideProfCompletion(){
+  var pc=g('profCompletion');
+  if(pc){
+    pc.style.opacity='0';pc.style.transition='opacity .25s';
+    setTimeout(function(){pc.style.display='none';pc.style.opacity='';pc.style.transition='';},260);
+  }
+  setTimeout(tutoStart,350);
+}
 
 async function doLogin(){
   var em=g('lEm').value.trim(),pw=g('lPw').value;
-  if(!em||!pw){shake('lfC');return;}
+  if(!em||!pw){shake('lsLogin');return;}
   g('lEm').disabled=true;g('lPw').disabled=true;
   try{
     var r=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
@@ -502,34 +878,32 @@ async function doLogin(){
 }
 
 async function doReg(){
-  var pr=g('rPr').value.trim(),nm=g('rNm').value.trim(),em=g('rEm').value.trim(),pw=g('rPw').value;
-  var role=g('rPf').classList.contains('on')?'professeur':'eleve';
-  if(!pr||!em||!pw){shake('lfI');return;}
+  var pr=(g('rPr')&&g('rPr').value||'').trim();
+  var nm=(g('rNm')&&g('rNm').value||'').trim();
+  var em=(g('rEm')&&g('rEm').value||'').trim();
+  var pw=(g('rPw')&&g('rPw').value||'');
+  var role=_regRole||'eleve';
+  if(!pr||!em||!pw){toast('Champs manquants','Prénom, email et mot de passe requis');return;}
   if(pw.length<6){toast('Erreur','Mot de passe trop court (6 min)');return;}
-  var extra={};
-  if(role==='professeur'){
-    var statut=g('rStatut').value;
-    if(!statut){toast('Statut manquant','Choisissez votre statut');return;}
-    extra.statut=statut;extra.niveau=g('rNiveau').value||'';extra.matieres=g('rMatiere').value||'';
-  }
+  var btn=g('regCreateBtn');if(btn){btn.disabled=true;btn.textContent='Création...';}
   try{
-    var body=Object.assign({email:em,password:pw,prenom:pr,nom:nm,role:role},extra);
+    var body={email:em,password:pw,prenom:pr,nom:nm,role:role};
     var r=await fetch(API+'/auth/register',{method:'POST',headers:apiH(),body:JSON.stringify(body)});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);shake('lfI');return;}
-    // Auto-login pour obtenir le token JWT
+    if(data.error){toast('Erreur',data.error);return;}
+    // Auto-login
     var loginR=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
     var loginData=await loginR.json();
     var sess=loginData.session||{};
     var token=sess.access_token||undefined;
     var rtok=sess.refresh_token||undefined;
     var texp=sess.expires_at||undefined;
-    if(role==='professeur'){
-      var uid=data.user.id;
-      go(pr,nm,em,role,uid,null,token,rtok,texp);
-      setTimeout(tutoStart,1200);
-    }else{go(pr,nm,em,role,data.user.id,null,token,rtok,texp);setTimeout(tutoStart,1200);}
+    // Afficher l'app (cache le login overlay)
+    go(pr,nm,em,role,data.user.id,null,token,rtok,texp);
+    // Lancer la complétion de profil (avant tutoriel)
+    setTimeout(showProfCompletion,300);
   }catch(e){toast('Erreur','Impossible de créer le compte');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Créer mon compte';}}
 }
 
 function doGuest(){
