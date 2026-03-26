@@ -524,8 +524,16 @@ function _setupCapacitorDeepLink(){
     if(window.Capacitor.Plugins.Browser)window.Capacitor.Plugins.Browser.close();
     if(!window._supabase)return;
     window._supabase.auth.exchangeCodeForSession(url).then(function(result){
-      if(result&&result.data&&result.data.session)_handleOAuthSignIn(result.data.session);
-    }).catch(function(err){console.warn('[OAuth] exchangeCodeForSession:',err);});
+      if(result&&result.data&&result.data.session){
+        _handleOAuthSignIn(result.data.session);
+      }else{
+        console.warn('[OAuth] exchangeCodeForSession: pas de session',result);
+        toast('Erreur connexion','Réessaie ou utilise email/mot de passe');
+      }
+    }).catch(function(err){
+      console.warn('[OAuth] exchangeCodeForSession:',err);
+      toast('Erreur connexion','Réessaie ou utilise email/mot de passe');
+    });
   });
 }
 
