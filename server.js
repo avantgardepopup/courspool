@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const Stripe = require('stripe');
 const compression = require('compression');
@@ -13,6 +14,23 @@ const server = http.createServer(app);
 const ALLOWED_ORIGINS = ['https://courspool.vercel.app', 'capacitor://localhost'];
 const io = new Server(server, { cors: { origin: ALLOWED_ORIGINS } });
 app.set('io', io);
+
+// ── Auth middleware Socket.io ─────────────────────────────────
+io.use(async (socket, next) => {
+  const token = socket.handshake.auth && socket.handshake.auth.token;
+  if (!token) return next(new Error('unauthorized'));
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) return next(new Error('unauthorized'));
+    socket.userId = data.user.id;
+    next();
+  } catch(e) { next(new Error('unauthorized')); }
+});
+
+// ── Chaque client rejoint sa propre room ─────────────────────
+io.on('connection', (socket) => {
+  socket.join(socket.userId);
+});
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -361,6 +379,18 @@ async function sendEmailProfVerification(profEmail, profName, status, raison = '
 }
 
 
+// ── ADMIN HTML — protégé par requireAdmin ───────────────────
+// Bloquer accès direct à admin.html avant le middleware static
+app.use((req, res, next) => {
+  if (req.path === '/admin.html' || req.path === '/admin.html/') {
+    return res.redirect(301, '/admin');
+  }
+  next();
+});
+app.get('/admin', requireAuth, requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // ── CONTRÔLE D'ACCÈS GLOBAL ──────────────────────────────────
 // Routes publiques — pas de token requis
 app.use(function(req, res, next) {
@@ -533,7 +563,7 @@ app.post('/cours', async (req, res) => {
       } catch(e) {}
     })();
   }
-  io.emit('cours_update', { action: 'create', cours: data[0] });
+  io.emit('cours_update', { action: 'create', cours: data[0] }); // broadcast public
   res.json(data);
 });
 
@@ -920,7 +950,7 @@ app.post('/follows', async (req, res) => {
   // Compter depuis la source de vérité (évite les race conditions du +1 manuel)
   const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
   const nb_eleves = count || 0;
-  io.emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
+  io.to(professeur_id).emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
   res.json({ success: true, nb_eleves });
 });
 
@@ -934,7 +964,7 @@ app.delete('/follows', async (req, res) => {
   // Compter depuis la source de vérité (évite les race conditions du -1 manuel)
   const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
   const nb_eleves = count || 0;
-  io.emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
+  io.to(professeur_id).emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
   res.json({ success: true, nb_eleves });
 });
 
@@ -1305,7 +1335,7 @@ app.post('/messages/groupe', async (req, res) => {
     }
     // Notifier chaque élève en temps réel
     eleves.forEach(eleveId => {
-      io.emit('new_message', {
+      io.to(eleveId).emit('new_message', {
         expediteur_id,
         destinataire_id: eleveId,
         contenu,
@@ -1434,7 +1464,7 @@ app.post('/messages', async (req, res) => {
     .select();
   if (error) return res.status(500).json({ error: error.message });
   const msg = data[0];
-  io.emit('new_message', {
+  io.to(destinataire_id).emit('new_message', {
     expediteur_id,
     destinataire_id,
     id: msg.id,
@@ -1608,7 +1638,7 @@ app.post('/notations', async (req, res) => {
   if (notes && notes.length > 0) {
     const moyenne = (notes.reduce((a, b) => a + b.note, 0) / notes.length).toFixed(1);
     await supabase.from('profiles').update({ note_moyenne: moyenne }).eq('id', professeur_id);
-    io.emit('note_update', { professeur_id, note_moyenne: moyenne });
+    io.to(professeur_id).emit('note_update', { professeur_id, note_moyenne: moyenne });
   }
   res.json(data[0]);
 });
@@ -1669,16 +1699,17 @@ async function pushToUser(userId, payload) {
   }, payload)));
 }
 
-// PUSH — s'abonner
+// PUSH — s'abonner (requireAuth via middleware global)
 app.post('/push/subscribe', async (req, res) => {
-  const { subscription, user_id, role } = req.body;
+  const { subscription, role } = req.body;
+  const user_id = req.user.id; // toujours l'utilisateur connecté
   if (!subscription || !subscription.endpoint) return res.status(400).json({ error: 'Abonnement invalide' });
   try {
     await supabase.from('push_subscriptions').upsert([{
       endpoint: subscription.endpoint,
       auth: subscription.keys?.auth,
       p256dh: subscription.keys?.p256dh,
-      user_id: user_id || null,
+      user_id,
       role: role || 'inconnu',
       updated_at: new Date().toISOString()
     }], { onConflict: 'endpoint' });

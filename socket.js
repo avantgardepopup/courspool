@@ -21,7 +21,8 @@ function initSocket() {
     reconnection: true,
     reconnectionDelay: 2000,
     reconnectionAttempts: Infinity,
-    timeout: 10000
+    timeout: 10000,
+    auth: { token: (typeof user !== 'undefined' && user && user.token) ? user.token : '' }
   });
 
   _socket.on('connect', function() {
