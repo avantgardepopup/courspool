@@ -22,6 +22,8 @@ io.use(async (socket, next) => {
   try {
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data.user) return next(new Error('unauthorized'));
+    const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', data.user.id).single();
+    if (profile?.statut_compte === 'bloqué') return next(new Error('blocked'));
     socket.userId = data.user.id;
     next();
   } catch(e) { next(new Error('unauthorized')); }
@@ -437,6 +439,8 @@ app.post('/auth/oauth-profile', requireAuth, async (req, res) => {
   if (!role || !['eleve', 'professeur'].includes(role)) {
     return res.status(400).json({ error: 'Rôle invalide' });
   }
+  if (prenom && prenom.length > 50) return res.status(400).json({ error: 'Prénom trop long' });
+  if (nom && nom.length > 50) return res.status(400).json({ error: 'Nom trop long' });
   try {
     const userId = req.user.id;
     const email = req.user.email || '';
@@ -512,6 +516,7 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return res.status(400).json({ error: error.message });
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+  if (profile?.statut_compte === 'bloqué') return res.status(403).json({ error: 'Compte bloqué' });
   res.json({ user: data.user, session: data.session, profile });
 });
 
@@ -1910,8 +1915,12 @@ app.delete('/admin/contacts/:id', requireAdmin, async (req, res) => {
 // ADMIN — mettre à jour un profil (champs admin uniquement)
 app.patch('/admin/users/:id', requireAdmin, async (req, res) => {
   const adminFields = ['verified', 'statut_compte', 'rejection_reason', 'can_retry_cni', 'cni_uploaded', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
+  const validStatuts = ['actif', 'bloqué', 'rejeté', 'en_attente_verification'];
   const updates = {};
   adminFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  if (updates.statut_compte && !validStatuts.includes(updates.statut_compte)) {
+    return res.status(400).json({ error: 'statut_compte invalide' });
+  }
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
   try {
     const { data, error } = await supabase.from('profiles').update(updates).eq('id', req.params.id).select().single();

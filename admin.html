@@ -866,9 +866,11 @@ async function blockEleve(id, name){
 }
 
 async function unblockEleve(id){
+  var p=allEleves.find(function(x){return x.id===id;});
+  var name=p?((p.prenom||'')+' '+(p.nom||'')).trim():'ce compte';
+  if(!confirm('Débloquer '+name+' ?'))return;
   var ok=await adminPatch('/admin/users/'+id,{statut_compte:'actif'});
   if(ok){
-    var p=allEleves.find(function(x){return x.id===id;});
     if(p)p.statut_compte='actif';
     closeModal();renderEleves();
     toast('Compte débloqué.');

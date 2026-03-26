@@ -498,6 +498,7 @@ function updatePwStrength(pw){
 // ── Supabase client init + OAuth ──
 var _oauthSession=null;
 var _pcIsOAuth=false;
+var _oauthProcessing=false;
 
 async function _initSupabase(){
   try{
@@ -586,6 +587,8 @@ function _setupAuthStateChange(){
 }
 
 async function _handleOAuthSignIn(session){
+  if(_oauthProcessing)return;
+  _oauthProcessing=true;
   // Retirer le spinner de chargement OAuth si présent
   var spinner=document.getElementById('oauthLoading');
   if(spinner)spinner.remove();
@@ -598,6 +601,7 @@ async function _handleOAuthSignIn(session){
   // Vérifier si profil existant avec rôle
   try{
     var r=await fetch(API+'/profiles/'+sbUser.id);
+    if(!r.ok&&r.status!==404){_oauthProcessing=false;toast('Erreur serveur','Réessaie dans quelques instants');return;}
     var data=await r.json();
     if(data&&data.role){
       // Utilisateur existant — connexion directe
@@ -614,9 +618,10 @@ async function _handleOAuthSignIn(session){
       applyUser();
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
       toast('Bienvenue '+pr+' !','Connecté à CoursPool');
+      _oauthProcessing=false;
       return;
     }
-  }catch(e){}
+  }catch(e){_oauthProcessing=false;}
   // Nouvel utilisateur OAuth — afficher sélection du rôle
   _pcIsOAuth=true;
   _oauthSession=session;
@@ -625,6 +630,7 @@ async function _handleOAuthSignIn(session){
   _pcHistory=[];
   var pc=g('profCompletion');if(pc){pc.style.display='block';pc.scrollTop=0;}
   _pcShowSlide('pcOAuthRole',false);
+  _oauthProcessing=false;
 }
 
 async function doOAuthGoogle(){
@@ -637,7 +643,10 @@ async function doOAuthGoogle(){
         provider:'google',
         options:{redirectTo:redirectTo,skipBrowserRedirect:true,queryParams:{access_type:'offline',prompt:'consent'}}
       });
-      if(res.data&&res.data.url)await window.Capacitor.Plugins.Browser.open({url:res.data.url});
+      if(res.data&&res.data.url){
+        try{await window.Capacitor.Plugins.Browser.open({url:res.data.url});}
+        catch(be){window.location.href=res.data.url;}
+      }
     }else{
       await window._supabase.auth.signInWithOAuth({
         provider:'google',
@@ -656,7 +665,10 @@ async function doOAuthApple(){
         provider:'apple',
         options:{redirectTo:redirectTo,skipBrowserRedirect:true}
       });
-      if(res.data&&res.data.url)await window.Capacitor.Plugins.Browser.open({url:res.data.url});
+      if(res.data&&res.data.url){
+        try{await window.Capacitor.Plugins.Browser.open({url:res.data.url});}
+        catch(be){window.location.href=res.data.url;}
+      }
     }else{
       await window._supabase.auth.signInWithOAuth({
         provider:'apple',
