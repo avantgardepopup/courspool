@@ -2,6 +2,7 @@
 var ALIASES = {
   "math": "Mathématiques", "maths": "Mathématiques",
   "mat": "Mathématiques", "matsh": "Mathématiques",
+  "mathematique": "Mathématiques", "mathematiques": "Mathématiques",
   "info": "Informatique", "informatique": "Informatique",
   "code": "Informatique", "dev": "Informatique",
   "compu": "Informatique", "computer": "Informatique",
@@ -140,6 +141,16 @@ function resolveAlias(input) {
     for (key in ALIASES) {
       if (ALIASES.hasOwnProperty(key)) {
         if (normalizeText(key).indexOf(normalized) === 0) return ALIASES[key];
+      }
+    }
+  }
+
+  // Match partiel inverse : l'input commence par la clé (ex: "mathematique" → key "math")
+  if (normalized.length >= 4) {
+    for (key in ALIASES) {
+      if (ALIASES.hasOwnProperty(key)) {
+        var normKey = normalizeText(key);
+        if (normKey.length >= 4 && normalized.startsWith(normKey)) return ALIASES[key];
       }
     }
   }

@@ -2012,6 +2012,12 @@ function applyFilter(){
   else if(srchInp)raw=srchInp.value;
   raw=raw.trim();
   var q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var qAlias='';
+  if(typeof resolveAlias==='function'&&raw.length>=2){
+    var _alR=resolveAlias(raw);
+    if(_alR)qAlias=_alR.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  }
+  var fmAlias=qAlias?(_ALIAS_FM[qAlias]||(FM[qAlias]?qAlias:null)):null;
   filteredCards=C.filter(function(c){
     // Cours privés cachés sauf si propriétaire ou déjà réservé
     if(c.prive&&!(user&&c.pr===user.id)&&!res[c.id])return false;
@@ -2022,11 +2028,13 @@ function applyFilter(){
     var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
     // Recherche dans le nom du prof + toutes les données du cours
-    var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q));
+    var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q)||
+      (qAlias&&(title.includes(qAlias)||subj.includes(qAlias)||prof.includes(qAlias)))||
+      (fmAlias&&FM[fmAlias]&&FM[fmAlias](c.t||'')));
     // Si la recherche ne matche pas un cours, chercher aussi les profs par nom
     if(!matchSearch&&q.length>1){
       var profFull=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      matchSearch=profFull.includes(q);
+      matchSearch=profFull.includes(q)||(qAlias&&profFull.includes(qAlias));
     }
     // Filtre localisation
     var matchLoc=true;
@@ -2283,6 +2291,9 @@ document.addEventListener('click',function(e){
     if(!d.closest('[style*=relative]').contains(e.target))d.style.display='none';
   });
 });
+
+// Mapping alias normalisé → clé FM (pour les cas où ils ne correspondent pas directement)
+var _ALIAS_FM={'mathematiques':'maths','mathematique':'maths'};
 
 var FM={
   tous:function(){return true;},
@@ -5200,9 +5211,13 @@ function sortCourses(arr){
 
 function resetFilters(){
   actF='tous';actLoc='';actNiv='';actMode='';
+  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;
+  var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
+  if(_rlbl){_rlbl.textContent='Autour de moi';_rlbl.style.display='';}
+  if(_rdist)_rdist.style.display='none';
   var inp=g('locInput');if(inp)inp.value='';
   var cb=g('locClearBtn');if(cb)cb.style.display='none';
-  var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';}
+  var gb=g('locGeoBtn');if(gb){gb.style.background='';gb.style.color='';gb.style.padding='';}
   document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
   var tous=g('pillTous');if(tous)tous.classList.add('on');
   document.querySelectorAll('#nivFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
