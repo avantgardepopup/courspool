@@ -268,9 +268,6 @@ var ALIASES = {
   "coiffure": "Coiffure", "coupe": "Coiffure",
   "esthétique": "Esthétique", "soin": "Esthétique",
   "massage": "Massage", "reflexologie": "Réflexologie",
-  "aromatherapie": "Aromathérapie", "huiles essentielles": "Aromathérapie",
-  "reiki": "Reiki", "naturopathie": "Naturopathie",
-  "acupuncture": "Acupuncture",
 
   /* ── Jeux & loisirs créatifs ── */
   "echecs": "Échecs", "chess": "Échecs",
@@ -298,9 +295,7 @@ var ALIASES = {
   "numismatique": "Numismatique", "philatelie": "Philatélie",
   "antiquites": "Antiquités", "brocante": "Brocante",
 
-  /* ── Spiritualité & pratiques ── */
-  "tarot": "Tarot", "astrologie": "Astrologie",
-  "feng shui": "Feng Shui",
+  /* ── Arts martiaux & disciplines corporelles ── */
   "qi gong": "Qi Gong", "qigong": "Qi Gong",
   "tai chi": "Tai Chi", "taichi": "Tai Chi"
 };
