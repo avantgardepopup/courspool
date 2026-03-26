@@ -1825,8 +1825,69 @@ function doFilter(){
   }
   val=val.trim();
   if(checkCodeInSearch(val))return;
+  if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);
   _searchTimer=setTimeout(function(){currentPage=1;applyFilter();},250);
+}
+
+// ── Alias recherche ──
+var _pendingAlias=null;
+
+function showAliasSuggestion(val){
+  var box=g('searchAliasSuggestion');
+  if(!box)return;
+  if(!val||val.length<2){box.style.display='none';_pendingAlias=null;return;}
+  var resolved=resolveAlias(val);
+  if(!resolved||normalizeText(resolved)===normalizeText(val)){box.style.display='none';_pendingAlias=null;return;}
+  _pendingAlias=resolved;
+  var lbl=box.querySelector('.alias-label');
+  if(lbl)lbl.innerHTML='Vous cherchez : <strong style="color:var(--ink)">'+esc(resolved)+'</strong>\u202f?';
+  box.style.display='flex';
+}
+
+function acceptAlias(){
+  if(!_pendingAlias)return;
+  var box=g('searchAliasSuggestion');if(box)box.style.display='none';
+  var mobInp=g('mobSearchInput');if(mobInp){mobInp.value=_pendingAlias;var cb=g('searchClearBtn');if(cb)cb.style.display='flex';}
+  var srch=g('srch');if(srch)srch.value=_pendingAlias;
+  _pendingAlias=null;
+  currentPage=1;applyFilter();
+}
+
+function denyAlias(){
+  _pendingAlias=null;
+  var box=g('searchAliasSuggestion');if(box)box.style.display='none';
+}
+
+// ── Alias filtre personnalisé ──
+var _pendingFilterAlias=null;
+
+function previewCustomFilter(val){
+  var box=g('filterAliasSuggestion');
+  if(!box)return;
+  if(!val||val.length<2){box.style.display='none';_pendingFilterAlias=null;return;}
+  if(typeof resolveAlias!=='function'){box.style.display='none';return;}
+  var resolved=resolveAlias(val);
+  if(!resolved||normalizeText(resolved)===normalizeText(val)){box.style.display='none';_pendingFilterAlias=null;return;}
+  _pendingFilterAlias=resolved;
+  var lbl=box.querySelector('.filter-alias-label');
+  if(lbl)lbl.innerHTML='→ <strong style="color:var(--ink)">'+esc(resolved)+'</strong>\u202f?';
+  box.style.display='flex';
+}
+
+function acceptFilterAlias(){
+  if(!_pendingFilterAlias)return;
+  var box=g('filterAliasSuggestion');if(box)box.style.display='none';
+  var inp=g('filterInput');if(inp)inp.value=_pendingFilterAlias;
+  addFilterQuick(_pendingFilterAlias);
+  var key=_pendingFilterAlias.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  _pendingFilterAlias=null;
+  selectCustomFilter(key);
+}
+
+function denyFilterAlias(){
+  _pendingFilterAlias=null;
+  var box=g('filterAliasSuggestion');if(box)box.style.display='none';
 }
 function setPill(el){haptic(4);document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
 function restoreFilters(){
@@ -5989,6 +6050,8 @@ function clearSearch(){
   var btn=document.getElementById('searchClearBtn');
   if(inp)inp.value='';if(srch)srch.value='';
   if(btn)btn.style.display='none';
+  var _sas=g('searchAliasSuggestion');if(_sas)_sas.style.display='none';
+  _pendingAlias=null;
   doFilter();if(inp)inp.focus();
 }
 (function(){

@@ -329,6 +329,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
+      <!-- Suggestion alias recherche -->
+      <div id="searchAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin:4px 4px 0;border:1px solid rgba(255,107,43,.2)">
+        <span class="alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="acceptAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Oui</button>
+          <button onclick="denyAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Non</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -497,9 +505,17 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:82vh;overflow-y:auto;padding:24px;padding-bottom:max(100px,calc(env(safe-area-inset-bottom,0px) + 88px));animation:mi .25s ease">
           <div style="font-size:17px;font-weight:800;margin-bottom:6px">Ajouter un filtre</div>
           <div style="font-size:13px;color:var(--lite);margin-bottom:16px">Tapez une matière ou choisissez-en une</div>
-          <div style="display:flex;gap:8px;margin-bottom:16px">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
             <input id="filterInput" class="fi3" style="flex:1" placeholder="Ex: chimie, droit, musique…" oninput="previewCustomFilter(this.value)">
             <button class="pb pri" style="padding:10px 16px;flex-shrink:0" onclick="addCustomFilter()">Ajouter</button>
+          </div>
+          <!-- Suggestion alias filtre -->
+          <div id="filterAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin-bottom:12px;border:1px solid rgba(255,107,43,.2)">
+            <span class="filter-alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Oui</button>
+              <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Non</button>
+            </div>
           </div>
           <div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Suggestions</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px" id="filterSuggestions">
@@ -1778,6 +1794,7 @@
 
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
+<script src="/search-aliases.js" defer></script>
 <script src="/app.js" defer></script>
 <!-- SETTINGS SHEET -->
 <div id="bdSettings" onclick="if(event.target===this)closeSettings()">
