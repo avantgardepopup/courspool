@@ -905,6 +905,15 @@
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Paiements reçus</div>
           </div>
 
+          <!-- Remboursements (élève seulement) -->
+          <div class="acc-card" id="accCardRmb" onclick="switchATab('Rmb',document.getElementById('aTabRmb'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Remboursements</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Annulations &amp; retours</div>
+          </div>
+
           <!-- Paramètres -->
           <div class="acc-card" id="accCardParams" onclick="openSettings()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
             <div style="width:44px;height:44px;border-radius:14px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -926,6 +935,7 @@
         <button class="ptab" id="aTabH" onclick="switchATab('H',this)">Historique</button>
         <button class="ptab" id="aTabP" onclick="switchATab('P',this)">Profil</button>
         <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">Revenus</button>
+        <button class="ptab" id="aTabRmb" onclick="switchATab('Rmb',this)" style="display:none">Remboursements</button>
       </div>
 
       <div class="acc-body">
@@ -1045,6 +1055,14 @@
         <div class="asec" id="asecH">
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Cours passés</div>
           <div id="listH"></div>
+        </div>
+
+        <!-- REMBOURSEMENTS -->
+        <div class="asec" id="asecRmb" style="padding:0 16px 16px">
+          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 10px">Remboursements</div>
+          <div id="listRmb">
+            <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span></div>
+          </div>
         </div>
 
         <!-- PROFIL -->
@@ -1941,10 +1959,15 @@
     <div style="font-size:12px;font-weight:600;color:var(--mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Objet</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
       <div class="contact-subj" onclick="pickSubj(this)" data-s="Question générale" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Question générale</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Remboursement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Remboursement</div>
       <div class="contact-subj" onclick="pickSubj(this)" data-s="Paiement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Paiement</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Réservation" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Réservation</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Annulation de cours" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Annulation de cours</div>
       <div class="contact-subj" onclick="pickSubj(this)" data-s="Problème technique" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Problème technique</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Bug / Crash" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Bug / Crash</div>
       <div class="contact-subj" onclick="pickSubj(this)" data-s="Vérification de compte" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Vérification de compte</div>
       <div class="contact-subj" onclick="pickSubj(this)" data-s="Signalement" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Signalement</div>
+      <div class="contact-subj" onclick="pickSubj(this)" data-s="Sécurité & Confidentialité" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Sécurité &amp; Confidentialité</div>
       <div class="contact-subj" onclick="pickSubj(this)" data-s="Autre" style="padding:8px 14px;border-radius:50px;border:1.5px solid var(--bdr);font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;background:var(--bg);transition:all .15s;-webkit-tap-highlight-color:transparent">Autre</div>
     </div>
 

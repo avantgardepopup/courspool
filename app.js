@@ -1489,6 +1489,11 @@ function goAccount(){
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   var cr=g('accCardRev');
   if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+  // Onglet et carte Remboursements visibles uniquement pour les élèves
+  var tabRmb=g('aTabRmb');
+  if(tabRmb)tabRmb.style.display=(user&&user.role!=='professeur')?'flex':'none';
+  var crRmb=g('accCardRmb');
+  if(crRmb)crRmb.style.display=(user&&user.role!=='professeur')?'block':'none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Statut vérification
@@ -1504,7 +1509,7 @@ function goAccount(){
 }
 
 function switchATab(s,el){
-  ['R','F','H','P','Rev'].forEach(function(x){
+  ['R','F','H','P','Rev','Rmb'].forEach(function(x){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');
     if(tab)tab.classList.remove('on');
@@ -1525,6 +1530,7 @@ function switchATab(s,el){
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
   if(s==='F'){ buildAccLists(); }
+  if(s==='Rmb'){loadRemboursements();}
 }
 
 function buildAccLists(){
@@ -4543,6 +4549,63 @@ function tutoDone(){
 // REVENUS PROF — lié à Stripe via /stripe/payments
 // ============================================================
 var _revLoaded = false;
+
+async function loadRemboursements(){
+  var el=g('listRmb');
+  if(!el||!user)return;
+  el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span> Chargement…</div>';
+  try{
+    var r=await fetch(API+'/reservations/'+user.id,{cache:'no-store',headers:apiH()});
+    var data=await r.json();
+    var refunds=Array.isArray(data)?data.filter(function(r){
+      return r.status==='cancelled'||r.status==='refunded'||r.annule||r.cancelled;
+    }):[];
+    if(!refunds.length){
+      el.innerHTML='<div style="text-align:center;padding:40px 20px">'
+        +'<div style="width:64px;height:64px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="20 6 9 17 4 12"/></svg></div>'
+        +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun remboursement</div>'
+        +'<div style="font-size:13px;color:var(--lite);line-height:1.6">Si un cours est annulé par le professeur,<br>votre remboursement apparaît ici.</div>'
+        +'</div>';
+      return;
+    }
+    var html='<div style="background:var(--wh);border-radius:16px;overflow:hidden;border:1px solid var(--bdr)">';
+    refunds.forEach(function(r,i){
+      var cours=C.find(function(c){return c.id===r.cours_id;});
+      var titre=cours?esc(cours.title||cours.subj||'Cours'):(r.cours_titre?esc(r.cours_titre):'Cours annulé');
+      var montant=r.montant||r.amount||0;
+      var montantStr=montant?montant+'€':'—';
+      var dateStr=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+      var st=r.status||'';
+      var pill,pillBg,pillColor;
+      if(st==='refunded'||r.rembourse){
+        pill='Remboursé'; pillBg='#DCFCE7'; pillColor='#15803D';
+      } else if(st==='cancelled'||r.annule||r.cancelled){
+        pill='En cours'; pillBg='#FEF3C7'; pillColor='#92400E';
+      } else {
+        pill='Annulé'; pillBg='#FEE2E2'; pillColor='#B91C1C';
+      }
+      var border=i<refunds.length-1?'border-bottom:1px solid var(--bdr)':'';
+      html+='<div style="padding:14px 16px;'+border+';display:flex;align-items:center;gap:12px">'
+        +'<div style="width:40px;height:40px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+titre+'</div>'
+        +(dateStr?'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+dateStr+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'
+        +'<div style="font-size:14px;font-weight:800;color:var(--ink)">'+montantStr+'</div>'
+        +'<span style="background:'+pillBg+';color:'+pillColor+';border-radius:50px;padding:3px 9px;font-size:11px;font-weight:700">'+pill+'</span>'
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+    html+='<div style="padding:14px 4px;font-size:12px;color:var(--lite);line-height:1.6;text-align:center">Les remboursements sont traités par Stripe sous 5 à 10 jours ouvrés.</div>';
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les remboursements</div>';
+  }
+}
 
 async function loadRevenues() {
   if (!user || user.role !== 'professeur') return;
