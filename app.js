@@ -1184,7 +1184,7 @@ function navTo(tab,_skipHistory){
     var _bnavEl=g('bnav');if(_bnavEl)_bnavEl.classList.remove('ipad-back');
     var _bbEl=g('bnavIpadBack');if(_bbEl)_bbEl.classList.remove('visible');
   }
-  clearInterval(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
+  clearTimeout(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
   ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var appEl=g('app');if(appEl)appEl.scrollTop=0;
@@ -2304,6 +2304,7 @@ function doFilter(){
     if(srchInp)srchInp.value=val;
   } else if(srchInp){
     val=srchInp.value;
+    if(mobInp)mobInp.value=val;
   }
   val=val.trim();
   if(checkCodeInSearch(val))return;
@@ -3198,7 +3199,7 @@ function toggleMoreMat(){
 function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});el.classList.add('on');}
 
 // MESSAGERIE
-var msgDestinataire=null,msgDestId=null,msgPollTimer=null;
+var msgDestinataire=null,msgDestId=null,msgPollTimer=null,_msgLoadFailed=false;
 
 function openMsg(profNm,destId,avatar){
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour envoyer des messages');return;}
@@ -3267,8 +3268,9 @@ function openMsg(profNm,destId,avatar){
   var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
   if(activeRow)activeRow.classList.add('active');
 
+  _msgLoadFailed=false;
   loadMessages();
-  clearInterval(msgPollTimer);
+  clearTimeout(msgPollTimer);
   var pollDelay=3000;
   function schedulePoll(){
     msgPollTimer=setTimeout(function(){
@@ -3293,7 +3295,7 @@ function closeMsgConv(){
   // Restore normal nav state for messages page (bniMsg highlighted)
   restoreNav();
   var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
-  clearInterval(msgPollTimer);msgPollTimer=null;msgDestId=null;
+  clearTimeout(msgPollTimer);msgPollTimer=null;msgDestId=null;
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
 }
 
@@ -3364,7 +3366,10 @@ async function loadMessages(){
     box.innerHTML=h||'<div style="text-align:center;padding:40px;color:var(--lite)">Aucun message</div>';
     if(_wasAtBottom)box.scrollTop=box.scrollHeight;
     if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:apiH(),body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
-  }catch(e){console.log('loadMessages err',e);}
+  }catch(e){
+    console.log('loadMessages err',e);
+    if(!_msgLoadFailed){_msgLoadFailed=true;toast('Erreur réseau','Impossible de charger les messages');}
+  }
 }
 
 async function sendMsg(){
@@ -3401,7 +3406,7 @@ async function sendMsg(){
 }
 
 function closeMsg(){
-  clearInterval(msgPollTimer);msgPollTimer=null;
+  clearTimeout(msgPollTimer);msgPollTimer=null;
   msgDestId=null;
   closeM('bdMsg');
 }
