@@ -47,6 +47,8 @@ function initSocket() {
     console.log('[Socket] follow_update reçu:', data);
     var pid = data.professeur_id;
     if (!pid) return;
+    // Invalider le cache profil pour forcer un re-fetch
+    if (typeof P !== 'undefined' && P[pid]) delete P[pid];
     if (!P[pid]) P[pid] = { n: '—', e: 0, col: 'linear-gradient(135deg,#FF8C55,#E04E10)' };
     P[pid].e = data.nb_eleves;
     // Modal profil prof ouverte sur ce prof (affichage visiteur)
@@ -177,6 +179,8 @@ function initSocket() {
   _socket.on('note_update', function(data) {
     console.log('[Socket] note_update reçu:', data.professeur_id, '→', data.note_moyenne);
     var pid = data.professeur_id;
+    // Invalider le cache profil
+    if (typeof P !== 'undefined' && P[pid]) delete P[pid];
     var nm = data.note_moyenne ? parseFloat(data.note_moyenne).toFixed(1) : null;
     if (!pid || !nm) return;
     // Modal profil prof ouverte (visiteur)

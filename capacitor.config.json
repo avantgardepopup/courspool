@@ -1,5 +1,12 @@
 {
   "appId": "com.courspool.app",
   "appName": "CoursPool",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    }
+  }
 }

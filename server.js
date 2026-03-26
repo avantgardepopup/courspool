@@ -124,6 +124,15 @@ function isAdmin(userId) {
   return adminIds.length > 0 && adminIds.includes(userId);
 }
 
+// ── Audit log actions admin ───────────────────────────────────
+async function logAdminAction(adminId, action, targetId, details = {}) {
+  try {
+    await supabase.from('admin_logs').insert({
+      admin_id: adminId, action, target_id: targetId, details
+    });
+  } catch(e) { console.error('[AdminLog]', e.message); }
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ============================================================
@@ -1120,6 +1129,7 @@ app.delete('/users/:id', requireAdmin, async (req, res) => {
       console.log('[DELETE /users] auth user OK');
     }
 
+    await logAdminAction(req.user.id, 'delete_user', id, {});
     res.json({ success: true });
   } catch(e) {
     console.log('[DELETE /users] exception:', e.message);
@@ -1166,8 +1176,10 @@ app.post('/email/verification', requireAdmin, async (req, res) => {
     // Mettre à jour le statut + raison en base selon le type de refus
     if (status === 'rejected_retry') {
       await supabase.from('profiles').update({ statut_compte: 'rejeté', cni_uploaded: false, rejection_reason: raison||'', can_retry_cni: true }).eq('id', prof_id);
+      await logAdminAction(req.user.id, 'reject_cni_retry', prof_id, { raison });
     } else if (status === 'rejected_final') {
       await supabase.from('profiles').update({ statut_compte: 'bloqué', rejection_reason: raison||'', can_retry_cni: false }).eq('id', prof_id);
+      await logAdminAction(req.user.id, 'reject_cni_final', prof_id, { raison });
     }
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
@@ -1904,6 +1916,12 @@ app.patch('/admin/users/:id', requireAdmin, async (req, res) => {
   try {
     const { data, error } = await supabase.from('profiles').update(updates).eq('id', req.params.id).select().single();
     if (error) return res.status(500).json({ error: error.message });
+    // Audit log
+    const action = updates.verified === true ? 'verify_cni'
+      : updates.statut_compte === 'bloqué' ? 'block_user'
+      : updates.statut_compte === 'rejeté' ? 'reject_cni'
+      : 'update_profile';
+    await logAdminAction(req.user.id, action, req.params.id, updates);
     res.json({ success: true, profile: data });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });

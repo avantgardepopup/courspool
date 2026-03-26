@@ -75,15 +75,23 @@ var _isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='
 var _isOAuthReturn=window.location.hash.indexOf('access_token')!==-1||window.location.search.indexOf('code=')!==-1;
 
 // Lancer l'onboarding au chargement
+function _hideSplash(){
+  var sp=document.getElementById('splash');
+  if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
+}
 window.addEventListener('DOMContentLoaded',function(){
   initDarkMode();
   initLargeTitle();
   if(!_isOAuthReturn)_initSupabase(); // déjà appelé dans le IIFE si retour OAuth
-  // Masquer le splash HTML après chargement
-  setTimeout(function(){
-    var sp=document.getElementById('splash');
-    if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
-  }, 800);
+  // Masquer le splash après loadData (ou max 3s pour éviter blocage)
+  var _splashTimer=setTimeout(_hideSplash,3000);
+  var _origLoadData=loadData;
+  loadData=function(){
+    return _origLoadData.apply(this,arguments).finally(function(){
+      clearTimeout(_splashTimer);_hideSplash();
+      loadData=_origLoadData; // restaurer après premier appel
+    });
+  };
 });
 
 // Bouton retour Android / browser — naviguer à l'onglet précédent
@@ -5387,6 +5395,10 @@ function initLargeTitle(){
     if(header){if(y>40){header.classList.add('scrolled');}else{header.classList.remove('scrolled');}}
     var tm=document.getElementById('themeColorMeta');
     if(tm)tm.content=_darkMode?'#131110':'#ffffff';
+    // Infinite scroll — charger la page suivante si on approche du bas
+    if(!_allLoaded&&!_loadingMore&&(app.scrollTop+app.clientHeight>=app.scrollHeight-200)){
+      if(typeof loadMore==='function')loadMore();
+    }
   },{passive:true});
 }
 
