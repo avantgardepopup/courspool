@@ -1489,6 +1489,9 @@ function goAccount(){
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   var cr=g('accCardRev');
   if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+  // Onglet Remboursements — caché mais utilisable via paramètres (élèves seulement)
+  var tabRmb=g('aTabRmb');
+  if(tabRmb)tabRmb.style.display='none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Statut vérification
@@ -1504,7 +1507,7 @@ function goAccount(){
 }
 
 function switchATab(s,el){
-  ['R','F','H','P','Rev'].forEach(function(x){
+  ['R','F','H','P','Rev','Rmb'].forEach(function(x){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');
     if(tab)tab.classList.remove('on');
@@ -1525,6 +1528,7 @@ function switchATab(s,el){
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
   if(s==='F'){ buildAccLists(); }
+  if(s==='Rmb'){loadRemboursements();}
 }
 
 function buildAccLists(){
@@ -1571,8 +1575,10 @@ function buildAccLists(){
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
         var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
         var isFull=c.fl>=c.sp;
+        var _isDkFav=document.documentElement.classList.contains('dk');
+        var _favBg=_isDkFav?(mat.bgDark||mat.bg):mat.bg;
         profCoursHtml+='<div class="fav-cours-card" onclick="openR(\''+esc(c.id)+'\')">'
-          +'<div class="fav-cours-card-top" style="background:'+mat.bg+'">'
+          +'<div class="fav-cours-card-top" style="background:'+_favBg+'">'
           +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
           +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">Complet</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
           +'</div>'
@@ -2186,27 +2192,62 @@ function loadMore(){
 // RÉFÉRENTIEL MATIÈRES — partagé formulaire + filtres
 // ============================================================
 var MATIERES = [
-  {label:'Maths',          key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',         bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
-  {label:'Physique',       key:'physique',      color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',         bgDark:'linear-gradient(135deg,#1A1035,#2D1F5E)'},
-  {label:'Chimie',         key:'chimie',        color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',         bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
-  {label:'SVT / Biologie', key:'svt',           color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',         bgDark:'linear-gradient(135deg,#052E16,#0F4A24)'},
-  {label:'Informatique',   key:'informatique',  color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
-  {label:'Python',         key:'python',        color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
-  {label:'Anglais',        key:'anglais',       color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Espagnol',       key:'espagnol',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Français',       key:'francais',      color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',         bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Histoire-Géo',   key:'histoire',      color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
-  {label:'Philosophie',    key:'philo',         color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',         bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
-  {label:'Économie',       key:'economie',      color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',         bgDark:'linear-gradient(135deg,#062318,#0A3D25)'},
-  {label:'Droit',          key:'droit',         color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',         bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Musique',        key:'musique',       color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',         bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
-  {label:'Arts plastiques',key:'arts',          color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',         bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Sport / EPS',    key:'sport',         color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',         bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
-  {label:'Architecture',   key:'architecture',  color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',         bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
-  {label:'Comptabilité',   key:'compta',        color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',         bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
-  {label:'Marketing',      key:'marketing',     color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',         bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Statistiques',   key:'stats',         color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',         bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
-  {label:'Autre',          key:'autre',         color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',         bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
+  // --- Sciences exactes (bleu) ---
+  {label:'Maths',             key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',  bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Statistiques',      key:'stats',        color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',  bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
+  {label:'Physique',          key:'physique',     color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'Chimie',            key:'chimie',       color:'#6EE7B7', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',  bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'SVT / Biologie',    key:'svt',          color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0F4A24)'},
+  // --- Tech & Numérique (ambre/jaune) ---
+  {label:'Informatique',      key:'informatique', color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Python',            key:'python',       color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Data Science',      key:'data',         color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#452A00)'},
+  {label:'Électronique',      key:'electronique', color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Design / UI',       key:'design',       color:'#FB7185', bg:'linear-gradient(135deg,#FFF1F2,#FFE4E6)',  bgDark:'linear-gradient(135deg,#2D0A10,#4A1520)'},
+  // --- Langues (rouge/corail) ---
+  {label:'Anglais',           key:'anglais',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Espagnol',          key:'espagnol',     color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Allemand',          key:'allemand',     color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Italien',           key:'italien',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Arabe',             key:'arabe',        color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Chinois',           key:'chinois',      color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Japonais',          key:'japonais',     color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Portugais',         key:'portugais',    color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  // --- Lettres & Arts (rose) ---
+  {label:'Français',          key:'francais',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Écriture créative', key:'ecriture',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Arts plastiques',   key:'arts',         color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Dessin',            key:'dessin',       color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)',  bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
+  {label:'Musique',           key:'musique',      color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Chant',             key:'chant',        color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Photographie',      key:'photo',        color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)',  bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
+  // --- Sciences humaines & sociales (violet/indigo) ---
+  {label:'Philosophie',       key:'philo',        color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  {label:'Histoire-Géo',      key:'histoire',     color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Psychologie',       key:'psycho',       color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Sociologie',        key:'socio',        color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Architecture',      key:'architecture', color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Jeux de société',   key:'jeux',         color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  // --- Business & Finance (cyan/teal) ---
+  {label:'Économie',          key:'economie',     color:'#2DD4BF', bg:'linear-gradient(135deg,#F0FDFA,#CCFBF1)',  bgDark:'linear-gradient(135deg,#052825,#084035)'},
+  {label:'Comptabilité',      key:'compta',       color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',  bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Finance',           key:'finance',      color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',  bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Marketing',         key:'marketing',    color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Droit',             key:'droit',        color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  // --- Sport & Bien-être (vert) ---
+  {label:'Sport / EPS',       key:'sport',        color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Yoga / Méditation', key:'yoga',         color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',  bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Fitness',           key:'fitness',      color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Arts martiaux',     key:'martial',      color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Danse',             key:'danse',        color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  // --- Nature & Artisanat (vert foncé / ambre) ---
+  {label:'Jardinage',         key:'jardinage',    color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
+  {label:'Bricolage',         key:'bricolage',    color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Cuisine / Gastronomie',key:'cuisine',   color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Couture / Tricot',  key:'couture',      color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Poterie / Céramique',key:'poterie',     color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  // --- Autre ---
+  {label:'Autre',             key:'autre',        color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',  bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
 
 // Fonction pour normaliser une chaîne
@@ -2318,7 +2359,7 @@ function doFilter(){
     if(mobInp)mobInp.value=val;
   }
   val=val.trim();
-  if(checkCodeInSearch(val))return;
+  checkCodeInSearch(val);
   if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);
   _searchTimer=setTimeout(function(){currentPage=1;applyFilter();},250);
@@ -2497,18 +2538,17 @@ function openR(id){haptic(4);
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
   // Coloriser le header de la fiche selon la matière
   var rHeader=document.querySelector('#bdR .modal>div:first-child');
-  if(rHeader&&c.bg){
-    rHeader.style.background=c.bg;
-    rHeader.style.borderRadius='20px 20px 0 0';
-    // En dark mode le fond pastel clair rend le texte illisible → forcer couleur sombre
-    var isDark=document.documentElement.classList.contains('dk');
-    var rTitEl=g('rTit');
-    if(rTitEl)rTitEl.style.color=isDark?'#111':'var(--ink)';
-    var mhdEl=rHeader.querySelector('.mhd');
-    if(mhdEl){
-      mhdEl.style.color=isDark?'#111':'';
-      var subEl=mhdEl.querySelector('[style*="color:var(--lite)"]');
-      if(subEl)subEl.style.color=isDark?'#555':'';
+  if(rHeader){
+    var _rIsDk=document.documentElement.classList.contains('dk');
+    var _mat=findMatiere(c.subj||'');
+    var _rBg=_rIsDk?(_mat&&_mat.bgDark?_mat.bgDark:(c.bgDark||c.bg)):(_mat&&_mat.bg?_mat.bg:c.bg);
+    if(_rBg){
+      rHeader.style.background=_rBg;
+      rHeader.style.borderRadius='20px 20px 0 0';
+      // Réinitialiser les couleurs de texte — les variables CSS gèrent le dark mode
+      var rTitEl=g('rTit');if(rTitEl)rTitEl.style.color='';
+      var mhdEl=rHeader.querySelector('.mhd');
+      if(mhdEl){mhdEl.style.color='';var subEl=mhdEl.querySelector('[style*="color:var(--lite)"]');if(subEl)subEl.style.color='';}
     }
   }
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
@@ -3550,8 +3590,19 @@ var actLoc='';
 var _geoActive=false;
 var _geoCoords=null;
 var _geoDist=10;
+var _geoPermDenied=false;
+
+function openAppSettings(){
+  try{
+    var isCap=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
+    if(isCap){window.open('app-settings:','_system');return;}
+  }catch(e){}
+  toast('Localisation désactivée','Activez-la dans Réglages > CoursPool > Localisation');
+}
 
 function requestGeoloc(){
+  // Permission déjà refusée → ouvrir les réglages directement
+  if(_geoPermDenied){openAppSettings();return;}
   // Toggle : si déjà actif → désactiver
   if(_geoActive){
     _geoActive=false;_geoCoords=null;
@@ -3561,7 +3612,7 @@ function requestGeoloc(){
     if(distBtn)distBtn.style.display='none';
     var inp=g('locInput');if(inp)inp.value='';
     var cb=g('locClearBtn');if(cb)cb.style.display='none';
-    actLoc='';geoMode=false;userCoords=null;
+    actLoc='';geoMode=false;userCoords=null;_geoPermDenied=false;
     applyFilter();
     return;
   }
@@ -3595,8 +3646,14 @@ function requestGeoloc(){
     function(err){
       if(btn){btn.style.opacity='1';}
       if(lbl)lbl.textContent='Autour de moi';
-      if(err.code===1)toast('Refusé','Activez la localisation dans vos réglages');
-      else toast('Erreur','Impossible de détecter la position');
+      if(err.code===1){
+        _geoPermDenied=true;
+        // Changer l'icône du bouton pour indiquer l'état "refusé → réglages"
+        if(btn){btn.style.background='#FEF2F2';btn.style.color='#EF4444';}
+        toast('Localisation refusée','Appuie à nouveau pour ouvrir les Réglages');
+      } else {
+        toast('Erreur','Impossible de détecter la position');
+      }
     },
     {enableHighAccuracy:false,timeout:5000,maximumAge:30000}
   );
@@ -4225,14 +4282,30 @@ function openPrivateCours(code){
 }
 
 // Taper un code dans la recherche
+var _pendingCode=null;
 function checkCodeInSearch(val){
+  // Charset réel des codes (I, O, 0, 1 exclus pour éviter les confusions visuelles)
   var clean=val.trim().toUpperCase();
-  // Format code: 6 caractères alphanumériques sans espace
-  if(/^[A-Z0-9]{6}$/.test(clean)){
-    openPrivateCours(clean);
-    return true;
+  var isCode=/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(clean);
+  var box=g('searchCodeSuggestion');
+  if(isCode){
+    _pendingCode=clean;
+    if(box){var lbl=box.querySelector('.code-label');if(lbl)lbl.textContent='🔒 Rejoindre le cours privé "'+clean+'" ?';box.style.display='flex';}
+  } else {
+    _pendingCode=null;
+    if(box)box.style.display='none';
   }
   return false;
+}
+function acceptCodeSearch(){
+  if(!_pendingCode)return;
+  var code=_pendingCode;_pendingCode=null;
+  var box=g('searchCodeSuggestion');if(box)box.style.display='none';
+  openPrivateCours(code);
+}
+function denyCodeSearch(){
+  _pendingCode=null;
+  var box=g('searchCodeSuggestion');if(box)box.style.display='none';
 }
 
 
@@ -4473,6 +4546,63 @@ function tutoDone(){
 // REVENUS PROF — lié à Stripe via /stripe/payments
 // ============================================================
 var _revLoaded = false;
+
+async function loadRemboursements(){
+  var el=g('listRmb');
+  if(!el||!user)return;
+  el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span> Chargement…</div>';
+  try{
+    var r=await fetch(API+'/reservations/'+user.id,{cache:'no-store',headers:apiH()});
+    var data=await r.json();
+    var refunds=Array.isArray(data)?data.filter(function(r){
+      return r.status==='cancelled'||r.status==='refunded'||r.annule||r.cancelled;
+    }):[];
+    if(!refunds.length){
+      el.innerHTML='<div style="text-align:center;padding:40px 20px">'
+        +'<div style="width:64px;height:64px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="20 6 9 17 4 12"/></svg></div>'
+        +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun remboursement</div>'
+        +'<div style="font-size:13px;color:var(--lite);line-height:1.6">Si un cours est annulé par le professeur,<br>votre remboursement apparaît ici.</div>'
+        +'</div>';
+      return;
+    }
+    var html='<div style="background:var(--wh);border-radius:16px;overflow:hidden;border:1px solid var(--bdr)">';
+    refunds.forEach(function(r,i){
+      var cours=C.find(function(c){return c.id===r.cours_id;});
+      var titre=cours?esc(cours.title||cours.subj||'Cours'):(r.cours_titre?esc(r.cours_titre):'Cours annulé');
+      var montant=r.montant||r.amount||0;
+      var montantStr=montant?montant+'€':'—';
+      var dateStr=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+      var st=r.status||'';
+      var pill,pillBg,pillColor;
+      if(st==='refunded'||r.rembourse){
+        pill='Remboursé'; pillBg='#DCFCE7'; pillColor='#15803D';
+      } else if(st==='cancelled'||r.annule||r.cancelled){
+        pill='En cours'; pillBg='#FEF3C7'; pillColor='#92400E';
+      } else {
+        pill='Annulé'; pillBg='#FEE2E2'; pillColor='#B91C1C';
+      }
+      var border=i<refunds.length-1?'border-bottom:1px solid var(--bdr)':'';
+      html+='<div style="padding:14px 16px;'+border+';display:flex;align-items:center;gap:12px">'
+        +'<div style="width:40px;height:40px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+titre+'</div>'
+        +(dateStr?'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+dateStr+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'
+        +'<div style="font-size:14px;font-weight:800;color:var(--ink)">'+montantStr+'</div>'
+        +'<span style="background:'+pillBg+';color:'+pillColor+';border-radius:50px;padding:3px 9px;font-size:11px;font-weight:700">'+pill+'</span>'
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+    html+='<div style="padding:14px 4px;font-size:12px;color:var(--lite);line-height:1.6;text-align:center">Les remboursements sont traités par Stripe sous 5 à 10 jours ouvrés.</div>';
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les remboursements</div>';
+  }
+}
 
 async function loadRevenues() {
   if (!user || user.role !== 'professeur') return;
@@ -5211,7 +5341,7 @@ function sortCourses(arr){
 
 function resetFilters(){
   actF='tous';actLoc='';actNiv='';actMode='';
-  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;
+  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;
   var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
   if(_rlbl){_rlbl.textContent='Autour de moi';_rlbl.style.display='';}
   if(_rdist)_rdist.style.display='none';
@@ -6339,8 +6469,10 @@ async function sendCoursCardMsg(c){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   // Build native HTML card
   var _cIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+  var _cIsDk=document.documentElement.classList.contains('dk');
+  var _chatHdrBg=_cIsDk?(mf.bgDark||mf.bg):mf.bg;
   var cardHtml='<div class="chat-cours-card" onclick="viewCoursCard(\''+escH(c.id)+'\')" style="max-width:260px">'
-    +'<div class="chat-cours-card-header" style="background:'+mf.bg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
+    +'<div class="chat-cours-card-header" style="background:'+_chatHdrBg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
     +'<span style="margin-left:auto;font-size:15px;font-weight:800;color:#fff">'+pp+'&euro;</span></div>'
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
     +'<div class="chat-cours-card-meta">'+escH(c.dt)+(_cIsVisio?' &middot; Visio':'')+'</div>'
@@ -6578,8 +6710,19 @@ document.addEventListener('click',function(e){
 function openSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.add('on');document.body.style.overflow='hidden';}
+  // Afficher la ligne Remboursements seulement pour les élèves
+  var rmbRow=g('settingsRmbRow');
+  if(rmbRow)rmbRow.style.display=(user&&user.role!=='professeur')?'':'none';
   updateDarkBtn();
   haptic(6);
+}
+function openRemboursements(){
+  closeSettings();
+  goAccount();
+  setTimeout(function(){
+    var t=g('aTabRmb');
+    if(t)switchATab('Rmb',t);
+  },200);
 }
 function closeSettings(){
   var bd=document.getElementById('bdSettings');
@@ -6593,7 +6736,8 @@ function clearSearch(){
   if(inp)inp.value='';if(srch)srch.value='';
   if(btn)btn.style.display='none';
   var _sas=g('searchAliasSuggestion');if(_sas)_sas.style.display='none';
-  _pendingAlias=null;
+  var _scs=g('searchCodeSuggestion');if(_scs)_scs.style.display='none';
+  _pendingAlias=null;_pendingCode=null;
   doFilter();if(inp)inp.focus();
 }
 (function(){
@@ -6719,10 +6863,19 @@ function _stepOptClick(el){
 function initSwipeNav(){
   var appEl=g('app');
   if(!appEl)return;
-  var sx=0,sy=0,st=0;
+  var sx=0,sy=0,st=0,_touchTarget=null;
   var THRESH=60;   // px horizontal minimum pour déclencher
   var MAXVERT=70;  // px vertical max (sinon c'est un scroll)
   var MAXMS=380;   // durée max du geste (ms)
+
+  function _isInsideHScroll(el){
+    while(el&&el!==appEl){
+      var ox=window.getComputedStyle(el).overflowX;
+      if((ox==='scroll'||ox==='auto')&&el.scrollWidth>el.clientWidth+2)return true;
+      el=el.parentElement;
+    }
+    return false;
+  }
 
   function _tabOrder(){
     var t=['exp','fav','msg'];
@@ -6758,6 +6911,7 @@ function initSwipeNav(){
     sx=e.touches[0].clientX;
     sy=e.touches[0].clientY;
     st=Date.now();
+    _touchTarget=e.target;
   },{passive:true});
 
   appEl.addEventListener('touchend',function(e){
@@ -6769,6 +6923,8 @@ function initSwipeNav(){
 
     // Ignorer si trop court, trop vertical ou trop lent
     if(Math.abs(dx)<THRESH||dy>MAXVERT||dt>MAXMS)return;
+    // Ignorer si le touch vient d'une zone scrollable horizontalement (ex: barre de filtres)
+    if(_touchTarget&&_isInsideHScroll(_touchTarget))return;
 
     // Ignorer si focus sur un input
     var tag=document.activeElement&&document.activeElement.tagName;

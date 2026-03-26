@@ -3383,7 +3383,17 @@ async function loadMessages(){
       // Masquer JSON brut
       if(txt.includes('"mode":"presentiel"')||txt.includes('prof_couleur'))return;
       // Détecter card cours — normaliser l'ancien openR vers viewCoursCard
-      if(txt.includes('class="chat-cours-card"'))txt=txt.replace(/onclick="openR\(/g,'onclick="viewCoursCard(');
+      if(txt.includes('class="chat-cours-card"')){
+        txt=txt.replace(/onclick="openR\(/g,'onclick="viewCoursCard(');
+        // En dark mode : remplacer le fond clair par le bgDark de la matière (comme les cards Explore)
+        if(document.documentElement.classList.contains('dk')){
+          var _idM=txt.match(/viewCoursCard\('([^']+)'\)/);
+          if(_idM){
+            var _mc=C.find(function(x){return x.id==_idM[1];});
+            if(_mc){var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');}
+          }
+        }
+      }
       var isCard=txt.trimStart().startsWith('<');
       var op=P[msgDestId]||{};
       var oPhoto=op.photo||null;
