@@ -2109,6 +2109,7 @@ html.dk .msg-bubble-time.them { color: #fff; }
 
 /* Dark mode */
 html.dk .search-bar-premium { background:var(--wh); border-color:var(--bdr); }
+html.dk .search-input-premium { background:transparent; -webkit-text-fill-color:var(--ink); }
 html.dk .filter-pill-btn { background:var(--wh); }
 
 @keyframes accIconPop {

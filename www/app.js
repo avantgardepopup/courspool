@@ -6694,11 +6694,11 @@ function initSwipeNav(){
   var MAXMS=380;   // durée max du geste (ms)
 
   function _tabOrder(){
-    var t=['exp','fav'];
-    // Onglet "Mes cours" visible uniquement pour les élèves
+    var t=['exp','fav','msg'];
+    // Onglet "Mes cours" visible uniquement pour les élèves (après Messages dans la nav)
     var bniMes=g('bniMes');
     if(bniMes&&bniMes.style.display!=='none')t.push('mes');
-    t.push('msg','acc');
+    t.push('acc');
     return t;
   }
 
