@@ -463,6 +463,8 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
   if (!email || !password || !prenom || !role) {
     return res.status(400).json({ error: 'Champs manquants' });
   }
+  if (prenom && prenom.length > 50) return res.status(400).json({ error: 'Prénom trop long (50 max)' });
+  if (nom && nom.length > 50) return res.status(400).json({ error: 'Nom trop long (50 max)' });
   const { data, error } = await supabase.auth.admin.createUser({
     email, password, email_confirm: true,
     user_metadata: { prenom, nom, role }
@@ -669,8 +671,9 @@ app.post('/reservations', async (req, res) => {
 
 // RESERVATIONS — réserver pour un ami
 app.post('/reservations/ami', async (req, res) => {
-  const { cours_id, user_id } = req.body;
-  if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
+  const { cours_id } = req.body;
+  const user_id = req.user.id; // toujours l'utilisateur connecté — ignorer body.user_id
+  if (!cours_id) return res.status(400).json({ error: 'Données manquantes' });
   const { count: resCountAmi } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
   await supabase.from('cours').update({ places_prises: resCountAmi || 0 }).eq('id', cours_id);
   res.json({ success: true });
@@ -695,7 +698,7 @@ app.post('/stripe/checkout', async (req, res) => {
     // Prix depuis la BDD — ne jamais faire confiance au client
     const { data: cours } = await supabase.from('cours').select('prix_total,places_max,titre').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
-    const montant = Math.ceil(cours.prix_total / (cours.places_max || 1));
+    const montant = Math.round((cours.prix_total / (cours.places_max || 1)) * 100) / 100;
 
     const baseUrl = 'https://courspool.vercel.app';
     const successUrl = `https://devoted-achievement-production-fdfa.up.railway.app/stripe/success?session_id={CHECKOUT_SESSION_ID}&pour_ami=${pour_ami?'1':'0'}&redirect=${encodeURIComponent(baseUrl)}`;
@@ -731,7 +734,7 @@ app.post('/stripe/payment-intent', async (req, res) => {
     // Prix depuis la BDD — ne jamais faire confiance au client
     const { data: cours } = await supabase.from('cours').select('prix_total,places_max,titre').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
-    const montant = Math.ceil(cours.prix_total / (cours.places_max || 1));
+    const montant = Math.round((cours.prix_total / (cours.places_max || 1)) * 100) / 100;
     // Vérifier si déjà réservé
     if (!pour_ami) {
       const { data: existing } = await supabase.from('reservations')
@@ -1141,6 +1144,10 @@ app.patch('/profiles/:id', async (req, res) => {
   const updates = {};
   userFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });
+  if (updates.bio && updates.bio.length > 500) return res.status(400).json({ error: 'Bio trop longue (500 max)' });
+  if (updates.ville && updates.ville.length > 100) return res.status(400).json({ error: 'Ville trop longue (100 max)' });
+  if (updates.prenom && updates.prenom.length > 50) return res.status(400).json({ error: 'Prénom trop long (50 max)' });
+  if (updates.nom && updates.nom.length > 50) return res.status(400).json({ error: 'Nom trop long (50 max)' });
   try {
     const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().single();
     if (error) return res.status(500).json({ error: error.message });
@@ -1307,7 +1314,16 @@ app.post('/messages/groupe', async (req, res) => {
   const expediteur_id = req.user.id; // toujours l'utilisateur connecté
   const { cours_id, contenu, cours_titre } = req.body;
   if (!cours_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
+  if (contenu.length > 2000) return res.status(400).json({ error: 'Message trop long (2000 caractères max)' });
   try {
+    // Vérifier droits d'écriture si l'expéditeur est un élève
+    const { data: coursInfo } = await supabase.from('cours').select('professeur_id,eleves_peuvent_ecrire').eq('id', cours_id).single();
+    if (!coursInfo) return res.status(404).json({ error: 'Cours introuvable' });
+    if (coursInfo.professeur_id !== expediteur_id) {
+      if (!coursInfo.eleves_peuvent_ecrire) {
+        return res.status(403).json({ error: 'Les élèves ne peuvent pas écrire dans ce groupe' });
+      }
+    }
     // Récupérer tous les inscrits au cours
     const { data: reservations, error } = await supabase
       .from('reservations').select('user_id').eq('cours_id', cours_id);
@@ -1459,6 +1475,7 @@ app.post('/messages', async (req, res) => {
   const expediteur_id = req.user.id; // toujours l'utilisateur connecté
   const { destinataire_id, contenu } = req.body;
   if (!destinataire_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
+  if (contenu.length > 2000) return res.status(400).json({ error: 'Message trop long (2000 caractères max)' });
   const { data, error } = await supabase.from('messages')
     .insert([{ sender_id: expediteur_id, receiver_id: destinataire_id, contenu }])
     .select();
@@ -1531,6 +1548,7 @@ app.get('/conversations/:user_id', async (req, res) => {
 app.put('/messages/lu/:user_id', async (req, res) => {
   const { expediteur_id } = req.body;
   if (!expediteur_id) return res.status(400).json({ error: 'expediteur_id manquant' });
+  if (req.params.user_id !== req.user.id) return res.status(403).json({ error: 'Non autorisé' });
   const { error } = await supabase
     .from('messages')
     .update({ lu: true })

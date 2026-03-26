@@ -972,9 +972,7 @@ function applyUser(){
     if(mobT)mobT.textContent=user&&user.pr?greet+' '+user.pr+' 👋':greet+' 👋';
     if(mobS){var msgs=['Cours près de vous','Que voulez-vous apprendre ?','Trouvez votre prochain cours'];if(msgs&&msgs.length)mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
   }catch(e){}
-  var tav=g('tav');
-  if(user.photo){tav.style.background='none';tav.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{tav.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav.textContent=user.ini;}
+  setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
   // Banner géré par updateVerifBand() uniquement
   // Bottom nav — restaurer tous les items avant d'appliquer le rôle
@@ -985,11 +983,7 @@ function applyUser(){
   g('bnav').classList.add('on');
   var bniAdd=g('bniAdd');if(bniAdd)bniAdd.style.display=user.role==='professeur'?'flex':'none';
   // Sync mobile header
-  var tavMob=g('tavMob');
-  if(tavMob){
-    if(user.photo){tavMob.style.background='none';tavMob.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-    else{tavMob.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavMob.textContent=user.ini||'?';}
-  }
+  setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
   var bp=g('btnProposerMob');
   if(bp)bp.style.display=user.role==='professeur'?'flex':'none';
   updateMobHeader('exp');
@@ -1067,11 +1061,7 @@ function updateMobHeader(tab){
   var bp=g('btnProposerMob');
   if(bp)bp.style.display=(tab==='exp'&&user&&user.role==='professeur')?'flex':'none';
   // Avatar mobile sync
-  var tavMob=g('tavMob');
-  if(tavMob&&user){
-    if(user.photo){tavMob.style.background='none';tavMob.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-    else{tavMob.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavMob.textContent=user.ini||'?';}
-  }
+  if(user)setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
   // Cacher mob-header sur la page messages (la conv a son propre header)
   var mh=g('mobHeader');
   if(mh)mh.style.display=tab==='msg'?'none':'block';
@@ -1346,9 +1336,7 @@ function goAccount(){
   g('pgMsg').classList.remove('on');
   var pgFavEl=g('pgFav');if(pgFavEl)pgFavEl.classList.remove('on');
   g('pgAcc').classList.add('on');
-  var av=g('accAv');
-  if(av){if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{av.style.background='rgba(255,255,255,.25)';av.textContent=user.ini;}}
+  setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.25)');
   var accName=g('accName'); if(accName)accName.textContent=user.pr+(user.nm?' '+user.nm:'');
   var accEmail=g('accEmail'); if(accEmail)accEmail.textContent=user.em;
   var pfPr=g('pfPr'),pfNm=g('pfNm'),pfEm=g('pfEm'),pfVille=g('pfVille'),pfBio=g('pfBio');
@@ -1402,10 +1390,7 @@ function goAccount(){
         // Re-rendre le header avatar + nom (maintenant à jour depuis BDD)
         var _accName=g('accName');if(_accName)_accName.textContent=user.pr+(user.nm?' '+user.nm:'');
         var _accAv=g('accAv');
-        if(_accAv){
-          if(user.photo){_accAv.style.background='none';_accAv.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-          else{_accAv.style.background='rgba(255,255,255,.25)';_accAv.textContent=user.ini;}
-        }
+        setAvatar(_accAv,user.photo,user.ini,'rgba(255,255,255,.25)');
       }
       if(Array.isArray(resData)){
         Object.keys(res).forEach(function(k){delete res[k];});
@@ -1725,15 +1710,11 @@ function saveProf(){
     }).catch(function(){toast('Erreur réseau','Profil non sauvegardé sur le serveur');});
   }
   // Mettre à jour UI sans quitter la page profil
-  var tav2=g('tav');
-  if(tav2){if(user.photo){tav2.style.background='none';tav2.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}else{tav2.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tav2.textContent=user.ini;}}
-  var tavM2=g('tavMob');
-  if(tavM2){if(user.photo){tavM2.style.background='none';tavM2.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}else{tavM2.style.background='linear-gradient(135deg,#FF8C55,var(--ord))';tavM2.textContent=user.ini;}}
+  setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
+  setAvatar(g('tavMob'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
   var an=g('accName');if(an)an.textContent=user.pr+(user.nm?' '+user.nm:'');
   var ae=g('accEmail');if(ae)ae.textContent=user.em;
-  var av=g('accAv');
-  if(user.photo){av.style.background='none';av.innerHTML='<img src="'+user.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{av.style.background='rgba(255,255,255,.2)';av.textContent=user.ini;}
+  setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.2)');
   toast('Profil sauvegardé ✓','');
   // Sync photo partout si présente
   if(user&&user.photo) _applyPhotoPartout(user.photo);
