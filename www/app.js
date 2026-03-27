@@ -166,7 +166,7 @@ function getCourseState(id){
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
   if(!el)return;
-  if(photo){el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+  if(photo){el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s" onload="this.style.opacity=\'1\'">';}
   else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
 }
 
@@ -174,8 +174,18 @@ function setAvatar(el,photo,ini,col){
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
 // Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
 loadFavCours();
-// Pré-charger les réservations depuis localStorage pour éviter le flash "Réserver" au rendu initial
-(function(){try{var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');_sr.forEach(function(id){res[id]=true;});}catch(e){}})();
+// Pré-charger les réservations uniquement si le token est encore valide (session fraîche)
+(function(){
+  try{
+    var _cu=JSON.parse(localStorage.getItem('cp_user')||'null');
+    // token_exp est en secondes (Unix timestamp Supabase)
+    var _tokenOk=_cu&&_cu.token_exp&&(_cu.token_exp*1000)>Date.now();
+    if(_tokenOk){
+      var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');
+      _sr.forEach(function(id){res[id]=true;});
+    }
+  }catch(e){}
+})();
 // Pré-peupler P[] avec les profils mis en cache pour éviter le flash au chargement
 // NE PAS mettre _fresh=true ici : _fetchProf doit toujours tourner pour vérifier les données
 (function(){
@@ -184,7 +194,7 @@ loadFavCours();
     var _now=Date.now();
     Object.keys(_pc).forEach(function(pid){
       var e=_pc[pid];
-      if(_now-e.ts<3600000){
+      if(_now-e.ts<900000){ // 15 min — au-delà, données trop stale
         P[pid]=P[pid]||{n:'—',e:0};
         if(e.nm)P[pid].nm=e.nm;
         if(e.i)P[pid].i=e.i;
@@ -194,24 +204,28 @@ loadFavCours();
       }
     });
   }catch(ex){}
-  // Restaurer les compteurs de suivis (clé sans TTL — persiste même si cp_profs expire)
+  // Restaurer les compteurs de suivis (TTL 24h)
   try{
     var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');
+    var _fcNow=Date.now();
     Object.keys(_fc).forEach(function(pid){
-      if(_fc[pid]>0){P[pid]=P[pid]||{n:'—',e:0};if(!P[pid].e||P[pid].e<_fc[pid])P[pid].e=_fc[pid];}
+      var entry=_fc[pid];
+      var count=typeof entry==='object'?entry.n:entry;
+      var ts=typeof entry==='object'?entry.ts:0;
+      if(ts&&(_fcNow-ts>86400000))return; // expirer après 24h
+      if(count>0){P[pid]=P[pid]||{n:'—',e:0};if(!P[pid].e||P[pid].e<count)P[pid].e=count;}
     });
   }catch(ex){}
 })();
 
 // ── FAVORIS COURS — persistance localStorage ──
 // Sauvegarder le compteur de suivis d'un prof — clé sans TTL pour persister même après expiration de cp_profs
-function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]=n||0;localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
+function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]={n:n||0,ts:Date.now()};localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
 
 function _favKey(){return(user&&user.id)?'cp_fav_cours_'+user.id:'cp_fav_cours';}
 function loadFavCours(){
   try{
     var saved=localStorage.getItem(_favKey());
-    // Migration : fallback sur la clé générique si rien trouvé avec la clé user
     if(!saved&&user&&user.id)saved=localStorage.getItem('cp_fav_cours');
     if(saved){JSON.parse(saved).forEach(function(id){favCours.add(id);});}
   }catch(e){}
@@ -219,6 +233,19 @@ function loadFavCours(){
 function saveFavCours(){
   try{localStorage.setItem(_favKey(),JSON.stringify(Array.from(favCours)));}catch(e){}
   updateFavBadge();
+}
+
+// ── Persistance des profils suivis (fol) ──────────────────────────────────
+function _folKey(){return(user&&user.id)?'cp_fol_'+user.id:null;}
+function _loadFol(){
+  try{
+    var k=_folKey();if(!k)return;
+    var saved=localStorage.getItem(k);
+    if(saved){JSON.parse(saved).forEach(function(id){fol.add(id);});}
+  }catch(e){}
+}
+function _saveFol(){
+  try{var k=_folKey();if(k)localStorage.setItem(k,JSON.stringify(Array.from(fol)));}catch(e){}
 }
 
 function updateFavBadge(){
@@ -230,8 +257,8 @@ function updateFavBadge(){
       return c&&!_isCoursPass(c);
     }).length;
   } else {
-    // C[] pas encore chargé : fallback sur le total brut
-    total=favCours.size;
+    // C[] pas encore chargé : masquer le badge (évite les counts stale)
+    total=0;
   }
   var badge=g('bnavFavBadge');
   if(!badge)return;
@@ -344,15 +371,23 @@ function buildFavPage(){
           p={nm:cours[0].prof_nm||'Professeur',i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
           P[pid]=p;
         }
-        // Fetch frais du profil si pas encore fait cette session
+        // Fetch frais du profil — toujours, si pas encore confirmé cette session
         _fetchProf(pid);
-        var nm=p.nm||'Professeur';
-        var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
+        // Si données non confirmées cette session : afficher initiales + skeleton nom
+        // pour éviter le flash d'un ancien nom/avatar qui sera corrigé par _fetchProf
+        var _fresh=p._fresh===true;
+        var col=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+        var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
+        // Photo : seulement si données fraîches (évite le flash d'ancienne photo)
+        var av=(_fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
+        var avBg=(_fresh&&p.photo)?'none':col;
+        // Nom : données fraîches → afficher, sinon skeleton animé
+        var nmHtml=_fresh?('<span>'+esc(p.nm||'Professeur')+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
         var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-          +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
-          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+esc(nm)+'</div>'
+          +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
+          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
           +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
           +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
           +'</div>';
@@ -362,7 +397,7 @@ function buildFavPage(){
 }
 
 function unfollowProf(pid){
-  fol.delete(pid);
+  fol.delete(pid);_saveFol();
   _syncFollowBtns(pid,false);
   if(user&&user.id){
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
@@ -403,6 +438,25 @@ function showSkeletons(){
 }
 
 var _allLoaded=false,_totalCours=0,_currentPage=1,_loadingMore=false;
+
+// ── Cache cours (stale-while-revalidate) ──────────────────────────────────
+var _COURS_CACHE_KEY='cp_cours_v1';
+var _COURS_CACHE_TTL=5*60*1000; // 5 minutes
+function _saveCoursCache(){
+  try{localStorage.setItem(_COURS_CACHE_KEY,JSON.stringify({ts:Date.now(),data:C}));}catch(e){}
+}
+function _loadCoursCache(){
+  // Retourne true si un cache valide a été chargé dans C[] et affiché
+  try{
+    var raw=localStorage.getItem(_COURS_CACHE_KEY);
+    if(!raw)return false;
+    var parsed=JSON.parse(raw);
+    if(!parsed||!Array.isArray(parsed.data)||!parsed.data.length)return false;
+    if(Date.now()-parsed.ts>_COURS_CACHE_TTL)return false; // expiré
+    C=parsed.data;
+    return true;
+  }catch(e){return false;}
+}
 
 async function loadData(page,silent){
   page=page||1;
@@ -460,9 +514,8 @@ async function loadData(page,silent){
         else if(c.prof_photo&&!P[c.pr].photo&&!P[c.pr]._fresh)P[c.pr].photo=c.prof_photo;
       }
     });
-    // Lancer les fetches de profils frais dès maintenant (avant renderPage)
-    // Quand ils reviennent ils patchent P[], C[], et le DOM via _fetchProf
-    if(page===1){var _fpSeen={};mapped.forEach(function(c){if(c.pr&&user&&c.pr!==user.id&&!_fpSeen[c.pr]){_fpSeen[c.pr]=true;_fetchProf(c.pr);}});}
+    // _fetchProf différé : ne pas saturer la connexion au démarrage
+    // Les profils sont chargés à la demande (openPr) ou via _fetchProf dans buildFavPage
     // Après traitement des cours, écraser P[user.id] avec les données fraîches du user connecté
     // (bio/statut/niveau/matieres/nom ne viennent pas des cours)
     if(user&&user.id&&page===1){
@@ -477,6 +530,8 @@ async function loadData(page,silent){
       if(user.niveau)_pu.niveau=user.niveau;
       if(user.matieres)_pu.matieres=user.matieres;
     }
+    // Sauvegarder le cache après chaque chargement page 1 réussi
+    if(page===1)_saveCoursCache();
   }catch(e){
     console.log('loadData err',e);
     if(page===1)showNetworkError();
@@ -986,16 +1041,29 @@ async function doLogin(){
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
     favCours.clear();loadFavCours();
+    _convCache='';
     if(uid){
-      Promise.all([
+      // loadData ET res+follows EN PARALLÈLE
+      var _dataP2=loadData();
+      var _rfP2=Promise.all([
         fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
         fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
-      ]).then(function(results){
+      ]);
+      // Afficher les cours dès qu'ils arrivent
+      _dataP2.then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      // Appliquer res+follows quand ils arrivent, puis reconstruire
+      _rfP2.then(function(results){
         var resData=results[0],folData=results[1];
+        Object.keys(res).forEach(function(k){delete res[k];});
+        Object.keys(P).forEach(function(k){delete P[k];});
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-        if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
-        loadData().then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
-      }).catch(function(){loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});});
+        var _newFol2=new Set();
+        if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});}
+        fol=_newFol2;
+        _saveFol();
+        if(C.length)buildCards();
+        updateFavBadge();
+      }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     }
@@ -1330,28 +1398,38 @@ function goExplore(){
       user=parsedUser;
       _scheduleTokenRefresh();
       applyUser();
+      // Affichage instantané depuis le cache si disponible
+      var _hadCache=_loadCoursCache();
+      _loadFol(); // restaurer les profils suivis depuis localStorage (affichage immédiat dans fav)
+      if(_hadCache)buildCards();
       if(user.id){
-        Promise.all([
+        // Lancer loadData ET res+follows EN PARALLÈLE — ne pas attendre l'un pour l'autre
+        // silent=true si cache déjà affiché (évite de remplacer le contenu par des skeletons)
+        var _dataP=loadData(1,_hadCache);
+        var _rfP=Promise.all([
           fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
           fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
-        ]).then(function(results){
+        ]);
+        // Afficher les cours dès qu'ils arrivent (sans attendre res+follows)
+        // loadData(1) avec silent=true si cache déjà affiché pour éviter les skeletons
+        _dataP.then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();}).catch(function(){});
+        // Appliquer res+follows quand ils arrivent, puis reconstruire
+        _rfP.then(function(results){
           var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-          // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
-          Object.keys(P).forEach(function(k){delete P[k]});
-          fol.clear();
+          Object.keys(P).forEach(function(k){delete P[k];});
+          // Ne pas vider fol avant d'avoir les nouvelles données (évite flash vide)
+          var _newFol=new Set();
+          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)_newFol.add(f.professeur_id);});}
+          fol=_newFol;
+          _saveFol(); // persister pour le prochain démarrage
           favCours.clear();loadFavCours();
-          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           updateFavBadge();
-          // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
+          if(C.length)buildCards();
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
-          // Toujours re-render après chargement (peu importe l'onglet actif)
-          setTimeout(function(){
-            if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
-          },200);
-          loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
-        }).catch(function(){loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});});
+          var _pfav2=g('pgFav');if(_pfav2&&_pfav2.classList.contains('on'))buildFavPage();
+        }).catch(function(){});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
       }
@@ -1849,6 +1927,9 @@ function doLogout(){
   try{localStorage.removeItem('cp_profs');}catch(e){}
   try{localStorage.removeItem('cp_follow_counts');}catch(e){}
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
+  _convCache='';
+  try{localStorage.removeItem(_COURS_CACHE_KEY);}catch(e){}
+  try{var _fk=_folKey();if(_fk)localStorage.removeItem(_fk);}catch(e){}
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
   // Restaurer les items bnav pour la prochaine connexion
@@ -1999,7 +2080,7 @@ function _fetchProf(pid){
       C.forEach(function(c){if(c.pr===pid)c.prof_photo=prof.photo_url;});
       document.querySelectorAll('[data-prof="'+pid+'"]').forEach(function(el){
         el.style.background='none';
-        el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">';
       });
     }
     // Mettre à jour le compteur d'abonnés depuis l'API (synchronisation inter-comptes)
@@ -2040,7 +2121,21 @@ function buildCards(){
   }
   if(nc)nc.style.display='none';
   applyFilter();
+  // Nettoyer les favoris obsolètes : cours supprimés du serveur (plus dans C[])
+  // Seulement quand _allLoaded=true pour éviter de supprimer des cours en page 2+
+  if(_allLoaded&&favCours.size){
+    var _changed=false;
+    favCours.forEach(function(id){
+      var inC=C.find(function(x){return String(x.id)===String(id);});
+      var inHist=_histCache&&_histCache[String(id)];
+      // Pas dans C[] ni dans l'historique → cours supprimé côté serveur → purger
+      if(!inC&&!inHist){favCours.delete(id);_changed=true;}
+    });
+    if(_changed)saveFavCours();
+  }
   updateFavBadge(); // recalcule le badge avec C[] chargé pour exclure les cours passés
+  // Rafraîchir la page favoris si elle est active (les skeletons deviendraient sinon permanents)
+  var _pfav=g('pgFav');if(_pfav&&_pfav.classList.contains('on'))buildFavPage();
 }
 
 function applyFilter(){
@@ -2835,9 +2930,19 @@ function openPr(pid){
   var _crsD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
   var mpD=g('mpD');if(mpD)mpD.textContent=_crsD;
 
-  // Bio : cache ou placeholder discret
+  // Bio : cache ou skeleton si profil complet pas encore chargé (_fullFetched)
   var bioEl=g('mpBio');
-  if(bioEl)bioEl.textContent=pCache.bio||'';
+  if(bioEl){
+    if(pCache.bio){
+      bioEl.style.opacity='1';
+      bioEl.textContent=pCache.bio;
+    } else if(!pCache._fullFetched){
+      bioEl.innerHTML='<span class="skeleton" style="display:block;height:13px;border-radius:6px;width:88%;margin-bottom:8px"></span>'
+        +'<span class="skeleton" style="display:block;height:13px;border-radius:6px;width:62%"></span>';
+    } else {
+      bioEl.textContent='';
+    }
+  }
 
   // Matières : depuis cache P[] ou depuis les cours en attente API
   var tagsEl=g('mpTags');
@@ -2881,7 +2986,15 @@ function openPr(pid){
   }
   if(pCache.matieres){_renderTags(pCache.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
   else if(immediateTags.length){_renderTags(immediateTags);}
-  else{if(tagsSect)tagsSect.style.display='none';}
+  else if(!pCache._fullFetched){
+    // Skeleton pills uniquement si profil complet pas encore chargé
+    if(tagsSect)tagsSect.style.display='block';
+    if(tagsEl)tagsEl.innerHTML='<div class="skeleton" style="height:30px;width:76px;border-radius:50px"></div>'
+      +'<div class="skeleton" style="height:30px;width:98px;border-radius:50px;animation-delay:.18s"></div>'
+      +'<div class="skeleton" style="height:30px;width:64px;border-radius:50px;animation-delay:.36s"></div>';
+  } else {
+    if(tagsSect)tagsSect.style.display='none';
+  }
 
   // Prochains cours — belle carte avec date formatée
   var prochains=cours.filter(function(c){return c.fl<c.sp;});
@@ -2903,15 +3016,21 @@ function openPr(pid){
       :'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
   }
 
-  // Avis
+  // Avis : skeleton uniquement si profil complet pas encore chargé
   var avisBlock=g('mpAvisBlock'),avisContainer=g('mpAvis');
-  if(avisBlock)avisBlock.style.display='none';
-  fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
-    if(!notes||!notes.length)return;
+  if(!pCache._fullFetched){
     if(avisBlock)avisBlock.style.display='block';
+    if(avisContainer)avisContainer.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px"></div>'
+      +'<div class="skeleton" style="height:62px;border-radius:12px;animation-delay:.15s"></div>';
+  } else {
+    if(avisBlock)avisBlock.style.display='none';
+  }
+  fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
+    if(curProf!==pid)return;
+    if(!notes||!notes.length){if(avisBlock)avisBlock.style.display='none';return;}
     var stars=function(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;};
-    if(avisContainer)avisContainer.innerHTML=notes.slice(0,3).map(function(a){
-      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px">'
+    var html=notes.slice(0,3).map(function(a){
+      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;opacity:0;transition:opacity .3s">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(a.commentaire?'6':'0')+'px">'
         +'<span style="font-size:13px;color:#F59E0B;letter-spacing:2px">'+stars(a.note)+'</span>'
         +'<span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'')+'</span>'
@@ -2919,18 +3038,26 @@ function openPr(pid){
         +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+esc(a.commentaire)+'</div>':'')
         +'</div>';
     }).join('');
-  }).catch(function(){});
+    if(avisBlock)avisBlock.style.display='block';
+    if(avisContainer){avisContainer.innerHTML=html;requestAnimationFrame(function(){avisContainer.querySelectorAll('div[style*="opacity:0"]').forEach(function(el,i){setTimeout(function(){el.style.opacity='1';},i*80);});});}
+  }).catch(function(){if(avisBlock)avisBlock.style.display='none';});
 
   var fb=g('bFP');
   fb.style.display=(user&&pid===user.id)?'none':'flex';
   _setFollowBtn(fol.has(pid));
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
 
+  // Niveau/statut : placeholder discret dans le hero si profil complet pas encore chargé
+  if(!pCache.statut&&!pCache._fullFetched){var _rlEl=g('mprl');if(_rlEl){_rlEl.innerHTML='<span style="display:inline-block;height:10px;width:80px;border-radius:4px;background:rgba(255,255,255,.25);animation:shimmer 1.4s infinite;background-size:200% 100%"></span>';}}
+  if(!pCache.niveau&&!pCache._fullFetched){var _bdEl2=g('mpbd');if(_bdEl2){_bdEl2.innerHTML='<span style="display:inline-block;height:9px;width:60px;border-radius:4px;background:rgba(255,255,255,.18);animation:shimmer 1.4s infinite;background-size:200% 100%;animation-delay:.2s"></span>';}}
+
   // Mise à jour silencieuse depuis l'API (tous les champs du modal)
   fetch(API+'/profiles/'+pid+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
+    if(curProf!==pid)return;
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;
+    P[pid]._fullFetched=true;
     ['bio','matieres','niveau','statut'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';
     var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
@@ -2950,10 +3077,18 @@ function openPr(pid){
         el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       });
     }
-    if(bioEl&&prof.bio!==undefined)bioEl.textContent=prof.bio;
-    if(prof.matieres){_renderTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
-    if(prof.niveau&&g('mpbd'))g('mpbd').textContent=prof.niveau;
-    if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
+    if(bioEl&&prof.bio!==undefined){
+      var _newBio=prof.bio||'';
+      bioEl.style.transition='opacity .2s';bioEl.style.opacity='0';
+      setTimeout(function(){bioEl.textContent=_newBio;bioEl.style.opacity='1';},180);
+    }
+    if(prof.matieres){
+      var _mt=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
+      if(tagsEl){tagsEl.style.transition='opacity .2s';tagsEl.style.opacity='0';setTimeout(function(){_renderTags(_mt);tagsEl.style.opacity='1';},180);}
+      else{_renderTags(_mt);}
+    }
+    if(prof.niveau!==undefined&&g('mpbd')){var _bdEl=g('mpbd');_bdEl.style.transition='opacity .2s';_bdEl.style.opacity='0';setTimeout(function(){_bdEl.textContent=prof.niveau||'';_bdEl.style.opacity='1';},180);}
+    if(prof.statut&&g('mprl')){var _rlEl2=g('mprl');_rlEl2.style.transition='opacity .2s';_rlEl2.style.opacity='0';setTimeout(function(){_rlEl2.textContent=STATUT[prof.statut]||prof.statut;_rlEl2.style.opacity='1';},180);}
     // Nombre d'élèves/abonnés depuis l'API si disponible
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined && _nbE>0){
@@ -3026,7 +3161,7 @@ function togFP(){
   var id=curProf,p=P[id]||{nm:'ce prof'};
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
   if(fol.has(id)){
-    fol.delete(id);
+    fol.delete(id);_saveFol();
     _setFollowBtn(false);
     _syncFollowBtns(id,false);
     toast('Désabonné','Vous ne suivez plus '+p.nm);
@@ -3056,7 +3191,7 @@ function togFP(){
         });
     }
   } else {
-    fol.add(id);
+    fol.add(id);_saveFol();
     _setFollowBtn(true);
     _syncFollowBtns(id,true);
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
@@ -3559,15 +3694,18 @@ async function sendModalMsg(){
 }
 
 var _convLoading=false;
+var _convCache=''; // cache HTML de la liste pour affichage immédiat
 async function loadConversations(){
   if(!user)return;
-  if(_convLoading)return;
-  _convLoading=true;
-  // Timeout de sécurité : libérer après 8s max
-  var _convTimeout=setTimeout(function(){_convLoading=false;},8000);
   var lm=g('listM');
-  if(!lm){_convLoading=false;return;}
-  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  if(!lm)return;
+  // Afficher le cache immédiatement si disponible, sinon spinner
+  if(_convCache){lm.innerHTML=_convCache;}
+  else{lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';}
+  if(_convLoading)return; // refresh déjà en cours, cache affiché suffit
+  _convLoading=true;
+  // Timeout de sécurité : libérer après 10s max
+  var _convTimeout=setTimeout(function(){_convLoading=false;},10000);
   try{
     var r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});
     if(!r.ok)throw new Error('HTTP '+r.status);
@@ -3622,7 +3760,9 @@ async function loadConversations(){
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
       return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" style="animation-delay:'+(_idx*0.055)+'s" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
-    lm.innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
+    var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
+    lm.innerHTML=_convHtml;
+    _convCache=_convHtml; // mémoriser pour affichage instantané au prochain onglet
     var badge=g('msgBadge');
     if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
     var bnavBadge=g('bnavBadge');
