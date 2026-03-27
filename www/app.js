@@ -103,6 +103,10 @@ window.addEventListener('popstate',function(e){
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
+// Prefetch cours dès le chargement du script — endpoint public, pas besoin d'auth
+// Le fetch démarre pendant que le JS vérifie la session, économise ~300-500ms
+var _prefetchP=fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();}).catch(function(){return null;});
+
 // En-têtes API — injecte le token Bearer si l'utilisateur est connecté
 function apiH(extra){
   var h=Object.assign({'Content-Type':'application/json'},extra||{});
@@ -462,12 +466,19 @@ async function loadData(page,silent){
   page=page||1;
   if(page===1&&!silent)showSkeletonsV2();
   try{
-    var r=await fetch(API+'/cours?page='+page+'&limit=20');
-    var json=await r.json();
+    // Page 1 : utiliser le prefetch déjà en vol si disponible (évite un aller-retour réseau)
+    var json;
+    if(page===1&&_prefetchP){
+      json=await _prefetchP;
+      _prefetchP=null; // consommer une seule fois
+      if(!json)json=await fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();});
+    } else {
+      json=await fetch(API+'/cours?page='+page+'&limit=12').then(function(r){return r.json();});
+    }
     // Support ancien format (array) et nouveau (objet paginé)
     var cours=Array.isArray(json)?json:(json.cours||[]);
     _totalCours=json.total||cours.length;
-    _allLoaded=cours.length<20||(_currentPage*20)>=_totalCours;
+    _allLoaded=cours.length<12||(_currentPage*12)>=_totalCours;
     if(!cours.length&&page===1){
       // Serveur qui se réveille : garder les skeletons et réessayer après 5s
       setTimeout(function(){loadData(1).then(function(){buildCards();});},5000);
