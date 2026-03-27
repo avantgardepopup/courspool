@@ -155,6 +155,13 @@ function _isCoursPass(c){
   if(!c||!c.dt)return false;
   try{return new Date(c.dt)<new Date();}catch(e){return false;}
 }
+// Retourne l'état d'un cours par son ID : 'active', 'past', ou 'deleted'
+function getCourseState(id){
+  var c=C.find(function(x){return String(x.id)===String(id);});
+  if(c)return _isCoursPass(c)?'past':'active';
+  if(_histCache&&_histCache[String(id)])return'past';
+  return'deleted';
+}
 
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
@@ -283,16 +290,26 @@ function buildFavPage(){
       if(coursSection)coursSection.style.display='none';
     } else {
       if(coursSection)coursSection.style.display='block';
-      var _favActive=favIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return!c||!_isCoursPass(c);});
+      // Exclure uniquement les cours actifs encore dans C[] mais passés ; garder les inconnus (supprimés/passés à afficher avec état)
+      var _favActive=favIds.filter(function(id){
+        var c=C.find(function(x){return x.id==id;});
+        return!c||!_isCoursPass(c); // si pas dans C[], on l'affiche (avec badge état)
+      });
       if(!_favActive.length&&C.length){if(coursSection)coursSection.style.display='none';}
       carousel.innerHTML=_favActive.map(function(id){
         var c=C.find(function(x){return x.id==id;});
         if(!c){
-          // Si C[] pas encore chargé, ne rien afficher (skeleton) pour éviter les faux positifs
+          // Si C[] pas encore chargé, skeleton
           if(!C.length)return'<div class="fav-cours-card skeleton" style="min-height:140px"></div>';
-          return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);padding:24px 16px;text-align:center">'
-            +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2" stroke-linecap="round" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-            +'<div style="font-size:12px;color:var(--mid);font-weight:600;line-height:1.4">Cours supprimé</div>'
+          var _state=getCourseState(id);
+          var _isPastFav=_state==='past';
+          var _label=_isPastFav?'Cours terminé':'Cours supprimé';
+          var _icon=_isPastFav
+            ?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="32" height="32"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+            :'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2" stroke-linecap="round" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>';
+          return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);padding:24px 16px;text-align:center;opacity:'+(_isPastFav?'.7':'1')+'">'
+            +_icon
+            +'<div style="font-size:12px;color:var(--mid);font-weight:600;line-height:1.4">'+_label+'</div>'
             +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Retirer</button>'
             +'</div>';
         }
@@ -3407,13 +3424,22 @@ async function loadMessages(){
       // Détecter card cours — normaliser l'ancien openR vers viewCoursCard
       if(txt.includes('class="chat-cours-card"')){
         txt=txt.replace(/onclick="openR\(/g,'onclick="viewCoursCard(');
-        // En dark mode : remplacer le fond clair par le bgDark de la matière (comme les cards Explore)
-        if(document.documentElement.classList.contains('dk')){
-          // Les IDs sont encodés via escH/esc : apostrophes → &#39;
-          var _idM=txt.match(/viewCoursCard\((?:&#39;|')([^'&#<>]+)(?:&#39;|')\)/);
-          if(_idM){
-            var _mc=C.find(function(x){return String(x.id)==String(_idM[1]);});
-            if(_mc){var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');}
+        var _idM=txt.match(/viewCoursCard\((?:&#39;|')([^'&#<>]+)(?:&#39;|')\)/);
+        if(_idM){
+          var _cid=_idM[1];
+          var _mc=C.find(function(x){return String(x.id)==String(_cid);});
+          // Dark mode : remplacer le fond clair par bgDark
+          if(document.documentElement.classList.contains('dk')&&_mc){
+            var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];
+            txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');
+          }
+          // Badge état : "Cours terminé" ou "Cours supprimé" si le cours n'est plus actif
+          var _st=getCourseState(_cid);
+          if(_st==='past'||_st==='deleted'){
+            var _badgeTxt=_st==='past'?'Cours terminé':'Cours supprimé';
+            var _badgeStyle='display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 10px;font-size:11px;font-weight:600;color:'+(_st==='past'?'var(--lite)':'#EF4444')+';background:'+(_st==='past'?'var(--bg)':'#FEE2E2')+';border-top:1px solid var(--bdr);border-radius:0 0 12px 12px';
+            // Injecter le badge avant la fermeture de la card
+            txt=txt.replace('</div></div>','<div style="'+_badgeStyle+'">'+(_st==='past'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>')+_badgeTxt+'</div></div></div>');
           }
         }
       }
@@ -6345,15 +6371,9 @@ function buildMesCours(){
     el.innerHTML='<div style="text-align:center;padding:60px 24px"><div class="bempty-icon" style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.22)"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="36" height="36"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div><div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px">'+eL+'</div><div style="font-size:14px;color:var(--lite);margin-bottom:20px">'+eS+'</div><button onclick="navTo(\'exp\')" class="pb pri" style="margin:0 auto">Explorer</button></div>';
     return;
   }
-  var now=new Date(),upcoming=[],past=[];
+  var upcoming=[],past=[];
   myCours.forEach(function(c){
-    // c.dt is French string "dim. 22 mars · 14:00" — unparseable
-    // Use created_at to distinguish old from new (>7 days = past)
-    var isPast=false;
-    try{
-      if(c.created_at){var d=new Date(c.created_at);isPast=(now-d)>7*24*3600*1000;}
-    }catch(e){}
-    (isPast?past:upcoming).push(c);
+    (_isCoursPass(c)?past:upcoming).push(c);
   });
   var h='<div style="padding-bottom:120px">';
   if(upcoming.length){h+='<div class="mes-section-title">A venir &middot; '+upcoming.length+'</div>';upcoming.forEach(function(c){h+=buildMesCard(c,false,isProf);});}
@@ -6542,7 +6562,7 @@ async function sendCoursCardMsg(c){
     +'<div class="chat-cours-card-header" style="background:'+_chatHdrBg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
     +'<span style="margin-left:auto;font-size:15px;font-weight:800;color:#fff">'+pp+'&euro;</span></div>'
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
-    +'<div class="chat-cours-card-meta">'+escH(c.dt)+(_cIsVisio?' &middot; Visio':'')+'</div>'
+    +'<div class="chat-cours-card-meta">'+escH(fmtDt(c.dt))+(_cIsVisio?' &middot; Visio':'')+'</div>'
     +'<div style="margin-top:6px"><span class="mode-badge '+(_cIsVisio?'visio':'presentiel')+'">'+(_cIsVisio?'Visio':'Pr\u00e9sentiel')+'</span></div>'
     +'</div></div>';
   try{
