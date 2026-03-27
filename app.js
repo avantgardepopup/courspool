@@ -2831,11 +2831,9 @@ function openPr(pid){
   g('mpC').textContent=cours.length;
   g('mpN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
   g('mpE').textContent=p.e||0;
-  // Cours donnés : passés + au moins 1 élève réservé (recalcul depuis C[])
+  // Cours donnés : passés + au moins 1 élève réservé — uniquement ce qu'on peut vérifier depuis C[]
   var _crsD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
-  // Si C[] a des cours pour ce prof, on prend le max (l'API peut connaître d'anciens cours absents de C[])
-  var _displayD=_crsD>0?Math.max(_crsD,pCache.cours_donnes||0):(pCache.cours_donnes||0);
-  var mpD=g('mpD');if(mpD)mpD.textContent=_displayD;
+  var mpD=g('mpD');if(mpD)mpD.textContent=_crsD;
 
   // Bio : cache ou placeholder discret
   var bioEl=g('mpBio');
@@ -2965,13 +2963,9 @@ function openPr(pid){
       // Persister le compteur frais dans cp_follow_counts (valeur API confirmée > 0)
       _saveFollowCount(pid,_nbE);
     }
-    // Cours donnés : recalcul avec règle passé + au moins 1 élève
-    if(prof.cours_donnes!==undefined){
-      pCache.cours_donnes=prof.cours_donnes;
-      var _crsD2=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
-      var _displayD2=_crsD2>0?Math.max(_crsD2,prof.cours_donnes||0):(prof.cours_donnes||0);
-      var mpD=g('mpD');if(mpD)mpD.textContent=_displayD2;
-    }
+    // Cours donnés : recalcul avec règle passé + au moins 1 élève (ignore la valeur API)
+    var _crsD2=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
+    var mpD=g('mpD');if(mpD)mpD.textContent=_crsD2;
     // Sauvegarder en cache
     var _eSave=P[pid].e||0;
     try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:_eSave};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
