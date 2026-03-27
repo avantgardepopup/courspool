@@ -215,7 +215,17 @@ function saveFavCours(){
 }
 
 function updateFavBadge(){
-  var total=favCours.size;
+  var total;
+  if(C.length){
+    // C[] chargé : ne compter que les cours à venir
+    total=Array.from(favCours).filter(function(id){
+      var c=C.find(function(x){return String(x.id)===String(id);});
+      return c&&!_isCoursPass(c);
+    }).length;
+  } else {
+    // C[] pas encore chargé : fallback sur le total brut
+    total=favCours.size;
+  }
   var badge=g('bnavFavBadge');
   if(!badge)return;
   if(total>0){badge.style.display='flex';badge.textContent=total>9?'9+':String(total);}
@@ -2017,6 +2027,7 @@ function buildCards(){
   }
   if(nc)nc.style.display='none';
   applyFilter();
+  updateFavBadge(); // recalcule le badge avec C[] chargé pour exclure les cours passés
 }
 
 function applyFilter(){
