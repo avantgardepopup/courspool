@@ -304,13 +304,9 @@ function buildFavPage(){
           var _state=getCourseState(id);
           var _isPastFav=_state==='past';
           var _label=_isPastFav?'Cours terminé':'Cours supprimé';
-          var _icon=_isPastFav
-            ?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="32" height="32"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
-            :'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2" stroke-linecap="round" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>';
-          return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);padding:24px 16px;text-align:center;opacity:'+(_isPastFav?'.7':'1')+'">'
-            +_icon
-            +'<div style="font-size:12px;color:var(--mid);font-weight:600;line-height:1.4">'+_label+'</div>'
-            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Retirer</button>'
+          return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--bg);padding:20px 14px;text-align:center;min-height:120px">'
+            +'<div style="font-size:12px;font-weight:600;color:var(--lite)">'+_label+'</div>'
+            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:5px 12px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">Retirer</button>'
             +'</div>';
         }
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
@@ -3433,13 +3429,15 @@ async function loadMessages(){
             var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];
             txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');
           }
-          // Badge état : "Cours terminé" ou "Cours supprimé" si le cours n'est plus actif
+          // Remplacer la card entière si le cours n'est plus actif
           var _st=getCourseState(_cid);
           if(_st==='past'||_st==='deleted'){
-            var _badgeTxt=_st==='past'?'Cours terminé':'Cours supprimé';
-            var _badgeStyle='display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 10px;font-size:11px;font-weight:600;color:'+(_st==='past'?'var(--lite)':'#EF4444')+';background:'+(_st==='past'?'var(--bg)':'#FEE2E2')+';border-top:1px solid var(--bdr);border-radius:0 0 12px 12px';
-            // Injecter le badge avant la fermeture de la card
-            txt=txt.replace('</div></div>','<div style="'+_badgeStyle+'">'+(_st==='past'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>')+_badgeTxt+'</div></div></div>');
+            var _isPastCard=_st==='past';
+            var _replaceLbl=_isPastCard?'Cours terminé':'Cours supprimé';
+            var _replaceIcon=_isPastCard
+              ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+              :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            txt='<div style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;color:var(--lite);max-width:220px">'+_replaceIcon+_replaceLbl+'</div>';
           }
         }
       }
