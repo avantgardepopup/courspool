@@ -106,6 +106,9 @@ var API='https://devoted-achievement-production-fdfa.up.railway.app';
 // Prefetch cours dès le chargement du script — endpoint public, pas besoin d'auth
 // Le fetch démarre pendant que le JS vérifie la session, économise ~300-500ms
 var _prefetchP=fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();}).catch(function(){return null;});
+// Ping warm-up séparé — réveille Railway sans bloquer le prefetch cours
+// (ignoré si serveur déjà chaud ; utile après une période d'inactivité)
+fetch(API+'/health',{method:'HEAD',cache:'no-store'}).catch(function(){});
 
 // En-têtes API — injecte le token Bearer si l'utilisateur est connecté
 function apiH(extra){
@@ -1074,6 +1077,7 @@ async function doLogin(){
         _saveFol();
         if(C.length)buildCards();
         updateFavBadge();
+        var _pfav3=g('pgFav');if(_pfav3&&_pfav3.classList.contains('on'))buildFavPage();
       }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
@@ -1352,6 +1356,9 @@ function _springIcon(el){
 function restoreNav(){
   var nav=g('bnav');
   if(nav&&user)nav.style.display='flex';
+  // Nettoyer les classes iPad messaging (sécurité si restoreNav appelé sans closeMsgConv)
+  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');}
+  var _bbR=g('bnavIpadBack');if(_bbR)_bbR.classList.remove('visible');
 
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
@@ -1409,9 +1416,31 @@ function goExplore(){
       user=parsedUser;
       _scheduleTokenRefresh();
       applyUser();
+      // Fetch profil en background dès le démarrage — corrige les données stales sans attendre goAccount()
+      if(user.id&&!user.guest){
+        fetch(API+'/profiles/'+user.id+'?t='+Date.now(),{cache:'no-store',headers:apiH()})
+          .then(function(r){return r.json();})
+          .then(function(prof){
+            if(!prof||!prof.id)return;
+            var _chg=false;
+            if(prof.prenom&&prof.prenom!==user.pr){user.pr=prof.prenom;_chg=true;}
+            if(prof.nom!==undefined&&(prof.nom||'')!==(user.nm||'')){user.nm=prof.nom||'';_chg=true;}
+            if(prof.photo_url&&prof.photo_url!==user.photo){user.photo=prof.photo_url;_chg=true;}
+            if(!_chg)return; // pas de changement, rien à faire
+            user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
+            try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+            // Mettre à jour tous les avatars + nom dans l'UI
+            setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
+            setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
+            var _mt=g('mobTitle');if(_mt&&g('pgExp')&&g('pgExp').classList.contains('on'))_mt.textContent=getGreeting()+' '+user.pr+' 👋';
+            var _accAv2=g('accAv');if(_accAv2)setAvatar(_accAv2,user.photo,user.ini,'rgba(255,255,255,.25)');
+            var _accNm2=g('accName');if(_accNm2)_accNm2.textContent=user.pr+(user.nm?' '+user.nm:'');
+          }).catch(function(){});
+      }
       // Affichage instantané depuis le cache si disponible
       var _hadCache=_loadCoursCache();
       _loadFol(); // restaurer les profils suivis depuis localStorage (affichage immédiat dans fav)
+      favCours.clear();loadFavCours(); // recharger avec user.id défini — évite page Favoris vide en cold start
       if(_hadCache)buildCards();
       if(user.id){
         // Lancer loadData ET res+follows EN PARALLÈLE — ne pas attendre l'un pour l'autre
@@ -1596,6 +1625,9 @@ function goAccount(){
         var _accName=g('accName');if(_accName)_accName.textContent=user.pr+(user.nm?' '+user.nm:'');
         var _accAv=g('accAv');
         setAvatar(_accAv,user.photo,user.ini,'rgba(255,255,255,.25)');
+        // Mettre à jour aussi les avatars topbar (fix : restaient stales après refresh profil)
+        setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
+        setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
       }
       if(Array.isArray(resData)){
         Object.keys(res).forEach(function(k){delete res[k];});
@@ -1941,6 +1973,7 @@ function doLogout(){
   _convCache='';
   try{localStorage.removeItem(_COURS_CACHE_KEY);}catch(e){}
   try{var _fk=_folKey();if(_fk)localStorage.removeItem(_fk);}catch(e){}
+  try{localStorage.removeItem('cp_fav_cours');}catch(e){} // nettoyer la clé fallback sans user.id
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
   // Restaurer les items bnav pour la prochaine connexion
@@ -2114,6 +2147,8 @@ function _fetchProf(pid){
     }
     // Rafraîchir la liste des suivis si l'onglet est visible (profs fantômes)
     if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+    // Invalider le cache conversations (photo/nom mis à jour → forcer re-rendu)
+    _convCache='';
   }).catch(function(){});
 }
 function buildCards(){
