@@ -1448,7 +1448,7 @@ function goExplore(){
         var _dataP=loadData(1,_hadCache);
         var _rfP=Promise.all([
           fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → on garde fol du localStorage
         ]);
         // Afficher les cours dès qu'ils arrivent (sans attendre res+follows)
         // loadData(1) avec silent=true si cache déjà affiché pour éviter les skeletons
@@ -1459,11 +1459,9 @@ function goExplore(){
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
           Object.keys(P).forEach(function(k){delete P[k];});
-          // Ne pas vider fol avant d'avoir les nouvelles données (évite flash vide)
-          var _newFol=new Set();
-          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)_newFol.add(f.professeur_id);});}
-          fol=_newFol;
-          _saveFol(); // persister pour le prochain démarrage
+          // Ne remplacer fol QUE si le fetch a réussi (folData=null = timeout/erreur réseau)
+          if(Array.isArray(folData)){var _newFol=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol.add(f.professeur_id);});fol=_newFol;_saveFol();}
+          // sinon on garde fol chargé depuis localStorage par _loadFol() au démarrage
           favCours.clear();loadFavCours();
           updateFavBadge();
           if(C.length)buildCards();
@@ -3741,6 +3739,7 @@ async function sendModalMsg(){
 
 var _convLoading=false;
 var _convCache=''; // cache HTML de la liste pour affichage immédiat
+var _convRetries=0; // compteur de tentatives auto (cold start / timeout iOS)
 async function loadConversations(){
   if(!user)return;
   var lm=g('listM');
@@ -3817,7 +3816,15 @@ async function loadConversations(){
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
   }catch(e){
     _convLoading=false;
-    if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    _convRetries++;
+    if(_convRetries<4){
+      // Retry silencieux (cold start Railway / timeout réseau iOS) — max 3 tentatives
+      if(lm&&!_convCache)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Reconnexion...</div>';
+      setTimeout(function(){loadConversations();},_convRetries*4000);
+    }else{
+      _convRetries=0;
+      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    }
   }finally{
     clearTimeout(_convTimeout);_convLoading=false;
     // Desktop : montrer placeholder si pas de conv active

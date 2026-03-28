@@ -1330,19 +1330,41 @@ function goExplore(){
       user=parsedUser;
       _scheduleTokenRefresh();
       applyUser();
+      favCours.clear();loadFavCours(); // charger les favoris avec le bon user.id dès maintenant
+      // Fetch profil en background — corrige avatar/pseudo stales sans attendre goAccount()
+      // /profiles/ est public (pas besoin de token valide) → fonctionne même en cold start
+      if(user.id&&!user.guest){
+        fetch(API+'/profiles/'+user.id+'?t='+Date.now(),{cache:'no-store'})
+          .then(function(r){return r.json();})
+          .then(function(prof){
+            if(!prof||!prof.id)return;
+            var _chg=false;
+            if(prof.prenom&&prof.prenom!==user.pr){user.pr=prof.prenom;_chg=true;}
+            if(prof.nom!==undefined&&(prof.nom||'')!==(user.nm||'')){user.nm=prof.nom||'';_chg=true;}
+            if(prof.photo_url&&prof.photo_url!==user.photo){user.photo=prof.photo_url;_chg=true;}
+            if(!_chg)return;
+            user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
+            try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+            setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
+            setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
+            var _mt=g('mobTitle');if(_mt&&g('pgExp')&&g('pgExp').classList.contains('on'))_mt.textContent=getGreeting()+' '+user.pr+' 👋';
+            var _accAv2=g('accAv');if(_accAv2)setAvatar(_accAv2,user.photo,user.ini,'rgba(255,255,255,.25)');
+            var _accNm2=g('accName');if(_accNm2)_accNm2.textContent=user.pr+(user.nm?' '+user.nm:'');
+          }).catch(function(){});
+      }
       if(user.id){
         Promise.all([
           fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = timeout/erreur → garder fol intact
         ]).then(function(results){
           var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
           // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
           Object.keys(P).forEach(function(k){delete P[k]});
-          fol.clear();
+          // Ne remplacer fol QUE si le fetch a réussi (null = erreur réseau → conserver)
+          if(Array.isArray(folData)){fol.clear();folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           favCours.clear();loadFavCours();
-          if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
           updateFavBadge();
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
@@ -1507,6 +1529,9 @@ function goAccount(){
         var _accName=g('accName');if(_accName)_accName.textContent=user.pr+(user.nm?' '+user.nm:'');
         var _accAv=g('accAv');
         setAvatar(_accAv,user.photo,user.ini,'rgba(255,255,255,.25)');
+        // Mettre à jour aussi les avatars topbar (fix : restaient stales après refresh profil)
+        setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
+        setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
       }
       if(Array.isArray(resData)){
         Object.keys(res).forEach(function(k){delete res[k];});
@@ -3559,6 +3584,7 @@ async function sendModalMsg(){
 }
 
 var _convLoading=false;
+var _convRetries=0; // compteur retry auto (cold start / timeout iOS)
 async function loadConversations(){
   if(!user)return;
   if(_convLoading)return;
@@ -3629,7 +3655,15 @@ async function loadConversations(){
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
   }catch(e){
     _convLoading=false;
-    if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    _convRetries++;
+    if(_convRetries<4){
+      // Retry silencieux (cold start Railway / timeout réseau iOS) — max 3 tentatives
+      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Reconnexion...</div>';
+      setTimeout(function(){loadConversations();},_convRetries*4000);
+    }else{
+      _convRetries=0;
+      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    }
   }finally{
     clearTimeout(_convTimeout);_convLoading=false;
     // Desktop : montrer placeholder si pas de conv active
