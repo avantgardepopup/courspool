@@ -406,6 +406,7 @@ app.get('/admin', requireAuth, requireAdmin, (req, res) => {
 // Routes publiques — pas de token requis
 app.use(function(req, res, next) {
   if (req.method === 'GET'  && req.path === '/') return next();
+  if (req.method === 'GET'  && req.path === '/health') return next();
   if (req.method === 'POST' && req.path === '/auth/register') return next();
   if (req.method === 'POST' && req.path === '/auth/login') return next();
   if (req.method === 'POST' && req.path === '/auth/refresh') return next();
@@ -423,6 +424,11 @@ app.use(function(req, res, next) {
 // TEST
 app.get('/', (req, res) => {
   res.json({ message: 'CoursPool API fonctionne !' });
+});
+
+// HEALTH CHECK — monitoring Railway
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // AUTH — config publique (URL + clé anon pour le client Supabase)
@@ -502,7 +508,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
 });
 
 // AUTH — refresh token
-app.post('/auth/refresh', async (req, res) => {
+app.post('/auth/refresh', authRateLimit, async (req, res) => {
   const { refresh_token } = req.body;
   if (!refresh_token) return res.status(400).json({ error: 'refresh_token manquant' });
   const { data, error } = await supabase.auth.refreshSession({ refresh_token });
@@ -562,8 +568,12 @@ app.post('/cours', async (req, res) => {
   if (parseFloat(prix_total) < 1) {
     return res.status(400).json({ error: 'prix_total doit être >= 1' });
   }
+  // Lire nom/photo depuis la DB — ne pas faire confiance au body (anti-spoofing)
+  const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
+  const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
+  const safeProfPhoto = profData?.photo_url || prof_photo || null;
   const { data, error } = await supabase.from('cours')
-    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau: niveau || null }])
+    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null }])
     .select();
   if (error) return res.status(500).json({ error });
   // Push aux élèves qui suivent ce prof
