@@ -590,19 +590,20 @@ function _setupCapacitorDeepLink(){
 function _setupAuthStateChange(){
   if(!window._supabase)return;
   _setupCapacitorDeepLink();
-  // Fallback : si la session OAuth n'est pas détectée après 8s, ré-afficher le login
+  // Fallback : si la session OAuth n'est pas détectée après 30s, ré-afficher le login
   if(_isOAuthReturn){
     setTimeout(function(){
       if(!user){
+        var loginEl=document.getElementById('login');
+        if(loginEl){loginEl.style.display='';loginEl.style.zIndex='';}
         var spinner=document.getElementById('oauthLoading');
-        if(spinner){
-          spinner.remove();
-          var lsLogin=document.getElementById('lsLogin');
-          if(lsLogin)lsLogin.style.display='';
-        }
+        if(spinner)spinner.remove();
+        var lsLogin=document.getElementById('lsLogin');
+        if(lsLogin)lsLogin.style.display='';
         window.history.replaceState({},'',window.location.pathname);
+        toast('Connexion échouée','Réessaie ou utilise email / mot de passe');
       }
-    },8000);
+    },30000);
   }
   // Vérifier s'il y a déjà une session (retour OAuth — hash traité avant la subscription)
   window._supabase.auth.getSession().then(function(result){
@@ -657,7 +658,16 @@ async function _handleOAuthSignIn(session){
       _oauthProcessing=false;
       return;
     }
-  }catch(e){_oauthProcessing=false;}
+  }catch(e){
+    _oauthProcessing=false;
+    var _lel=document.getElementById('login');
+    if(_lel){_lel.style.display='';_lel.style.zIndex='';}
+    var _sp2=document.getElementById('oauthLoading');if(_sp2)_sp2.remove();
+    var _lsL2=document.getElementById('lsLogin');if(_lsL2)_lsL2.style.display='';
+    window.history.replaceState({},'',window.location.pathname);
+    toast('Connexion échouée','Réessaie ou utilise email / mot de passe');
+    return;
+  }
   // Nouvel utilisateur OAuth — afficher sélection du rôle
   _pcIsOAuth=true;
   _oauthSession=session;
