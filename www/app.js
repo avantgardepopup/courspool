@@ -130,7 +130,11 @@ async function _refreshToken(){
   if(!user||!user.refresh_token)return;
   try{
     var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:user.refresh_token})});
-    if(!r.ok)return;
+    if(!r.ok){
+      console.warn('[Auth] refresh échoué: HTTP',r.status);
+      if(r.status===400||r.status===401){toast('Session expirée','Veuillez vous reconnecter');setTimeout(doLogout,2000);}
+      return;
+    }
     var d=await r.json();
     if(d.access_token){
       user.token=d.access_token;

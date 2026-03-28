@@ -678,7 +678,10 @@ app.post('/reservations', async (req, res) => {
   const { data, error } = await supabase.from('reservations')
     .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
     .select();
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    if (error.code === '23505') return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
+    return res.status(500).json({ error: error.message });
+  }
 
   // Recalculer places_prises depuis la source de vérité
   const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
@@ -1187,8 +1190,11 @@ app.post('/email/verification', requireAdmin, async (req, res) => {
     if (!prof) return res.status(404).json({ error: 'Prof introuvable' });
     const profName = ((prof.prenom||'') + ' ' + (prof.nom||'')).trim();
     await sendEmailProfVerification(prof.email, profName, status, raison || '');
-    // Mettre à jour le statut + raison en base selon le type de refus
-    if (status === 'rejected_retry') {
+    // Mettre à jour le statut + raison en base selon le résultat
+    if (status === 'approved') {
+      await supabase.from('profiles').update({ verified: true, statut_compte: 'actif', rejection_reason: '' }).eq('id', prof_id);
+      await logAdminAction(req.user.id, 'approve_cni', prof_id, {});
+    } else if (status === 'rejected_retry') {
       await supabase.from('profiles').update({ statut_compte: 'rejeté', cni_uploaded: false, rejection_reason: raison||'', can_retry_cni: true }).eq('id', prof_id);
       await logAdminAction(req.user.id, 'reject_cni_retry', prof_id, { raison });
     } else if (status === 'rejected_final') {
