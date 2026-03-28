@@ -1030,7 +1030,7 @@ app.get('/follows/:user_id', async (req, res) => {
 
 // EMAIL — vérification prof
 // CONTACT — formulaire utilisateur → dashboard admin + email
-app.post('/contact', async (req, res) => {
+app.post('/contact', authRateLimit, async (req, res) => {
   const { email, nom, role, sujet, message, photo_base64 } = req.body;
   if (!email || !message) return res.status(400).json({ error: 'Données manquantes' });
   let photo_url = null;
@@ -1520,76 +1520,68 @@ app.get('/profiles/:id', async (req, res) => {
 
 // MESSAGES — envoyer
 app.post('/messages', async (req, res) => {
-  const expediteur_id = req.user.id; // toujours l'utilisateur connecté
+  const expediteur_id = req.user.id;
   const { destinataire_id, contenu } = req.body;
   if (!destinataire_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
   if (contenu.length > 2000) return res.status(400).json({ error: 'Message trop long (2000 caractères max)' });
-  const { data, error } = await supabase.from('messages')
-    .insert([{ sender_id: expediteur_id, receiver_id: destinataire_id, contenu }])
-    .select();
-  if (error) return res.status(500).json({ error: error.message });
-  const msg = data[0];
-  io.to(destinataire_id).emit('new_message', {
-    expediteur_id,
-    destinataire_id,
-    id: msg.id,
-    contenu: msg.contenu,
-    created_at: msg.created_at
-  });
-  res.json(msg);
+  try {
+    const { data, error } = await supabase.from('messages')
+      .insert([{ sender_id: expediteur_id, receiver_id: destinataire_id, contenu }])
+      .select();
+    if (error) return res.status(500).json({ error: error.message });
+    const msg = data[0];
+    io.to(destinataire_id).emit('new_message', { expediteur_id, destinataire_id, id: msg.id, contenu: msg.contenu, created_at: msg.created_at });
+    res.json(msg);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — compteur non lus (léger, pour le badge)
 app.get('/messages/unread-count', async (req, res) => {
-  const { count, error } = await supabase
-    .from('messages')
-    .select('*', { count: 'exact', head: true })
-    .eq('receiver_id', req.user.id)
-    .eq('lu', false);
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ count: count || 0 });
+  try {
+    const { count, error } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', req.user.id).eq('lu', false);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ count: count || 0 });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — récupérer conversation
 app.get('/messages/:user1/:user2', async (req, res) => {
   const { user1, user2 } = req.params;
   if (!UUID_RE.test(user1) || !UUID_RE.test(user2)) return res.status(400).json({ error: 'ID invalide' });
-  if (req.user.id !== user1 && req.user.id !== user2 && !isAdmin(req.user.id)) {
-    return res.status(403).json({ error: 'Non autorisé' });
-  }
-  const { data, error } = await supabase.from('messages')
-    .select('*')
-    .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
-    .order('created_at', { ascending: true });
-  if (error) return res.status(500).json({ error });
-  res.json(data);
+  if (req.user.id !== user1 && req.user.id !== user2 && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
+  try {
+    const { data, error } = await supabase.from('messages').select('*')
+      .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
+      .order('created_at', { ascending: true });
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — toutes conversations d'un user (limité + enrichi avec profils)
 app.get('/conversations/:user_id', async (req, res) => {
   if (!UUID_RE.test(req.params.user_id)) return res.status(400).json({ error: 'ID invalide' });
   if (req.user.id !== req.params.user_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
-  const { data, error } = await supabase.from('messages')
-    .select('*')
-    .or(`sender_id.eq.${req.params.user_id},receiver_id.eq.${req.params.user_id}`)
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (error) return res.status(500).json({ error });
-  // Enrichir avec prenom/nom/photo des interlocuteurs
-  const otherIds = [...new Set((data || []).map(m =>
-    m.sender_id === req.params.user_id ? m.receiver_id : m.sender_id
-  ).filter(Boolean))];
-  const { data: profiles } = otherIds.length
-    ? await supabase.from('profiles').select('id, prenom, nom, photo_url').in('id', otherIds)
-    : { data: [] };
-  const profileMap = {};
-  (profiles || []).forEach(p => { profileMap[p.id] = p; });
-  const enriched = (data || []).map(m => {
-    const otherId = m.sender_id === req.params.user_id ? m.receiver_id : m.sender_id;
-    const p = profileMap[otherId] || {};
-    return { ...m, other_nom: ((p.prenom || '') + ' ' + (p.nom || '')).trim() || null, other_photo: p.photo_url || null };
-  });
-  res.json(enriched);
+  try {
+    const { data, error } = await supabase.from('messages').select('*')
+      .or(`sender_id.eq.${req.params.user_id},receiver_id.eq.${req.params.user_id}`)
+      .order('created_at', { ascending: false }).limit(100);
+    if (error) return res.status(500).json({ error });
+    const otherIds = [...new Set((data || []).map(m =>
+      m.sender_id === req.params.user_id ? m.receiver_id : m.sender_id
+    ).filter(Boolean))];
+    const { data: profiles } = otherIds.length
+      ? await supabase.from('profiles').select('id, prenom, nom, photo_url').in('id', otherIds)
+      : { data: [] };
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p; });
+    const enriched = (data || []).map(m => {
+      const otherId = m.sender_id === req.params.user_id ? m.receiver_id : m.sender_id;
+      const p = profileMap[otherId] || {};
+      return { ...m, other_nom: ((p.prenom || '') + ' ' + (p.nom || '')).trim() || null, other_photo: p.photo_url || null };
+    });
+    res.json(enriched);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — marquer comme lu
@@ -1597,17 +1589,12 @@ app.put('/messages/lu/:user_id', async (req, res) => {
   const { expediteur_id } = req.body;
   if (!expediteur_id) return res.status(400).json({ error: 'expediteur_id manquant' });
   if (req.params.user_id !== req.user.id) return res.status(403).json({ error: 'Non autorisé' });
-  const { error } = await supabase
-    .from('messages')
-    .update({ lu: true })
-    .eq('receiver_id', req.params.user_id)
-    .eq('sender_id', expediteur_id)
-    .eq('lu', false);
-  if (error) {
-    console.log('Erreur lu:', error);
-    return res.status(500).json({ error: error.message });
-  }
-  res.json({ success: true });
+  try {
+    const { error } = await supabase.from('messages').update({ lu: true })
+      .eq('receiver_id', req.params.user_id).eq('sender_id', expediteur_id).eq('lu', false);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // UPLOAD PHOTO PROFIL
@@ -1692,30 +1679,33 @@ app.post('/upload/photo', async (req, res) => {
 
 // NOTATIONS — noter un cours
 app.post('/notations', async (req, res) => {
-  const eleve_id = req.user.id; // toujours l'utilisateur connecté
+  const eleve_id = req.user.id;
   const { professeur_id, cours_id, note, commentaire } = req.body;
   if (!professeur_id || !cours_id || !note) return res.status(400).json({ error: 'Données manquantes' });
   if (parseInt(note) < 1 || parseInt(note) > 5) return res.status(400).json({ error: 'La note doit être entre 1 et 5' });
-  const { data, error } = await supabase.from('notations')
-    .upsert([{ eleve_id, professeur_id, cours_id, note, commentaire }], { onConflict: 'eleve_id,cours_id' })
-    .select();
-  if (error) return res.status(500).json({ error });
-  const { data: notes } = await supabase.from('notations').select('note').eq('professeur_id', professeur_id);
-  if (notes && notes.length > 0) {
-    const moyenne = (notes.reduce((a, b) => a + b.note, 0) / notes.length).toFixed(1);
-    await supabase.from('profiles').update({ note_moyenne: moyenne }).eq('id', professeur_id);
-    io.to(professeur_id).emit('note_update', { professeur_id, note_moyenne: moyenne });
-  }
-  res.json(data[0]);
+  try {
+    const { data, error } = await supabase.from('notations')
+      .upsert([{ eleve_id, professeur_id, cours_id, note, commentaire }], { onConflict: 'eleve_id,cours_id' })
+      .select();
+    if (error) return res.status(500).json({ error });
+    const { data: notes } = await supabase.from('notations').select('note').eq('professeur_id', professeur_id);
+    if (notes && notes.length > 0) {
+      const moyenne = (notes.reduce((a, b) => a + b.note, 0) / notes.length).toFixed(1);
+      await supabase.from('profiles').update({ note_moyenne: moyenne }).eq('id', professeur_id);
+      io.to(professeur_id).emit('note_update', { professeur_id, note_moyenne: moyenne });
+    }
+    res.json(data[0]);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // NOTATIONS — récupérer par prof
 app.get('/notations/:professeur_id', async (req, res) => {
-  const { data, error } = await supabase.from('notations')
-    .select('*').eq('professeur_id', req.params.professeur_id)
-    .order('created_at', { ascending: false });
-  if (error) return res.status(500).json({ error });
-  res.json(data);
+  try {
+    const { data, error } = await supabase.from('notations').select('*')
+      .eq('professeur_id', req.params.professeur_id).order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // ============================================================
