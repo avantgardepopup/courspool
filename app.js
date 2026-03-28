@@ -3619,8 +3619,8 @@ async function loadConversations(){
       if(nonLu)nonLus++;
       // Source 1 : données enrichies renvoyées directement par le backend
       if(!P[otherId])P[otherId]={n:'—',e:0};
-      if(m.other_nom&&!P[otherId].nm){P[otherId].nm=m.other_nom;}
-      if(m.other_photo&&!P[otherId].photo){P[otherId].photo=m.other_photo;}
+      if(m.other_nom){P[otherId].nm=m.other_nom;}
+      if(m.other_photo){P[otherId].photo=m.other_photo;}
       // Source 2 : cache P[]
       var p=P[otherId];
       var nm=p?p.nm:'';
