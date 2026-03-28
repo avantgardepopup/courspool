@@ -4429,27 +4429,27 @@ function updateVerifStatusBlock(){
       +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
       +'<span style="font-size:13px;font-weight:700;color:#92400E">Vérification en cours — Réponse sous 24h</span>'
       +'</div>';
-  } else if(status===’rejected_retry’){
-    var raison=esc(user.rejection_reason||’’);
-    html=’<div style="background:#FEF2F2;border-radius:12px;padding:14px 16px">’
-      +’<div style="display:flex;align-items:center;gap:10px;margin-bottom:’+(raison?’10’:’0’)+’px">’
-      +’<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>’
-      +’<span style="font-size:13px;font-weight:700;color:#991B1B">Vérification refusée — Vous pouvez renvoyer votre document</span>’
-      +’</div>’
-      +(raison?’<div style="font-size:12px;color:#B91C1C;background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5">’+raison+’</div>’:’’)
-      +’<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pièce d\’identité</button>’
-      +’</div>’;
+  } else if(status==='rejected_retry'){
+    var raison=esc(user.rejection_reason||'');
+    html='<div style="background:#FEF2F2;border-radius:12px;padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(raison?'10':'0')+'px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#991B1B">Vérification refusée — Vous pouvez renvoyer votre document</span>'
+      +'</div>'
+      +(raison?'<div style="font-size:12px;color:#B91C1C;background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5">'+raison+'</div>':'')
+      +'<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pièce d\'identité</button>'
+      +'</div>';
     // Réinitialiser le statut local pour permettre le renvoi
     if(user)user.cni_uploaded=false;
-  } else if(status===’rejected_final’){
-    var raison=esc(user.rejection_reason||’’);
-    html=’<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:14px 16px">’
-      +’<div style="display:flex;align-items:center;gap:10px;margin-bottom:’+(raison?’10’:’0’)+’px">’
-      +’<svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>’
-      +’<span style="font-size:13px;font-weight:700;color:#374151">Compte non éligible</span>’
-      +’</div>’
-      +(raison?’<div style="font-size:12px;color:#6B7280;line-height:1.5">’+raison+’</div>’:’’)
-      +’</div>’;
+  } else if(status==='rejected_final'){
+    var raison=esc(user.rejection_reason||'');
+    html='<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(raison?'10':'0')+'px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#374151">Compte non éligible</span>'
+      +'</div>'
+      +(raison?'<div style="font-size:12px;color:#6B7280;line-height:1.5">'+raison+'</div>':'')
+      +'</div>';
   }
   block.style.display='block';
   block.innerHTML=html;
@@ -4917,7 +4917,7 @@ async function loadRevenues() {
 
     // Liste des paiements
     if (!paid.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu’un élève réserve un cours.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu\'un élève réserve un cours.</div></div>';
       return;
     }
 
