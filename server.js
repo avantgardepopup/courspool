@@ -679,50 +679,46 @@ app.delete('/cours/:id', async (req, res) => {
 
 // RESERVATIONS — créer
 app.post('/reservations', async (req, res) => {
-  const user_id = req.user.id; // toujours l'utilisateur connecté
+  const user_id = req.user.id;
   const { cours_id, montant_paye, type_paiement } = req.body;
   if (!cours_id) return res.status(400).json({ error: 'Données manquantes' });
-
-  // Vérifier si déjà réservé
-  const { data: existing } = await supabase.from('reservations')
-    .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
-  if (existing) return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
-
-  // Créer la réservation
-  const { data, error } = await supabase.from('reservations')
-    .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
-    .select();
-  if (error) {
-    if (error.code === '23505') return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
-    return res.status(500).json({ error: error.message });
-  }
-
-  // Recalculer places_prises depuis la source de vérité
-  const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
-  await supabase.from('cours').update({ places_prises: resCount || 0 }).eq('id', cours_id);
-  io.emit('reservation_update', { cours_id, places_prises: resCount || 0 });
-
-  res.json(data[0]);
+  try {
+    const { data: existing } = await supabase.from('reservations')
+      .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
+    if (existing) return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
+    const { data, error } = await supabase.from('reservations')
+      .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
+      .select();
+    if (error) {
+      if (error.code === '23505') return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
+      return res.status(500).json({ error: error.message });
+    }
+    const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+    await supabase.from('cours').update({ places_prises: resCount || 0 }).eq('id', cours_id);
+    io.emit('reservation_update', { cours_id, places_prises: resCount || 0 });
+    res.json(data[0]);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // RESERVATIONS — réserver pour un ami
 app.post('/reservations/ami', async (req, res) => {
   const { cours_id } = req.body;
-  const user_id = req.user.id; // toujours l'utilisateur connecté — ignorer body.user_id
   if (!cours_id) return res.status(400).json({ error: 'Données manquantes' });
-  const { count: resCountAmi } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
-  await supabase.from('cours').update({ places_prises: resCountAmi || 0 }).eq('id', cours_id);
-  res.json({ success: true });
+  try {
+    const { count: resCountAmi } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+    await supabase.from('cours').update({ places_prises: resCountAmi || 0 }).eq('id', cours_id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // RESERVATIONS — récupérer par user
 app.get('/reservations/:user_id', async (req, res) => {
   if (req.user.id !== req.params.user_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
-  const { data, error } = await supabase.from('reservations')
-    .select('*, cours(*)')
-    .eq('user_id', req.params.user_id);
-  if (error) return res.status(500).json({ error });
-  res.json(data);
+  try {
+    const { data, error } = await supabase.from('reservations').select('*, cours(*)').eq('user_id', req.params.user_id);
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // STRIPE — créer une session de paiement
@@ -1023,9 +1019,11 @@ app.get('/follows/check', async (req, res) => {
 
 // FOLLOWS — récupérer tous les follows d'un user
 app.get('/follows/:user_id', async (req, res) => {
-  const { data, error } = await supabase.from('follows').select('*').eq('user_id', req.params.user_id);
-  if (error) return res.status(500).json({ error });
-  res.json(data);
+  try {
+    const { data, error } = await supabase.from('follows').select('*').eq('user_id', req.params.user_id);
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // EMAIL — vérification prof
@@ -1507,15 +1505,16 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
 app.get('/profiles/:id', async (req, res) => {
   res.set('Cache-Control', 'no-store');
   const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,created_at';
-  const {data,error}=await supabase.from('profiles').select(PUBLIC_COLS).eq('id',req.params.id).single();
-  if(error){const status=error.code==='PGRST116'?404:500;return res.status(status).json({error:error.message});}
-  // Compter les vrais followers depuis la table follows (source de vérité)
-  const {count}=await supabase.from('follows').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id);
-  const {count:coursDonnes}=await supabase.from('cours').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id).lt('date_heure',new Date().toISOString());
-  const profile = data || {};
-  profile.nb_eleves = count || 0;
-  profile.cours_donnes = coursDonnes || 0;
-  res.json(profile);
+  try {
+    const {data,error}=await supabase.from('profiles').select(PUBLIC_COLS).eq('id',req.params.id).single();
+    if(error){const status=error.code==='PGRST116'?404:500;return res.status(status).json({error:error.message});}
+    const {count}=await supabase.from('follows').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id);
+    const {count:coursDonnes}=await supabase.from('cours').select('*',{count:'exact',head:true}).eq('professeur_id',req.params.id).lt('date_heure',new Date().toISOString());
+    const profile = data || {};
+    profile.nb_eleves = count || 0;
+    profile.cours_donnes = coursDonnes || 0;
+    res.json(profile);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — envoyer
