@@ -562,7 +562,7 @@ app.get('/cours', async (req, res) => {
 // COURS — créer
 app.post('/cours', async (req, res) => {
   const professeur_id = req.user.id; // toujours l'utilisateur connecté
-  const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau } = req.body;
+  const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau, mode, prive, code_acces, visio_url } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total) {
     return res.status(400).json({ error: 'Champs manquants' });
   }
@@ -572,12 +572,16 @@ app.post('/cours', async (req, res) => {
   if (parseFloat(prix_total) < 1) {
     return res.status(400).json({ error: 'prix_total doit être >= 1' });
   }
+  if (visio_url && !/^https?:\/\//i.test(visio_url)) {
+    return res.status(400).json({ error: 'visio_url doit commencer par http:// ou https://' });
+  }
+  const safeMode = (mode === 'visio' || mode === 'presentiel') ? mode : 'presentiel';
   // Lire nom/photo depuis la DB — ne pas faire confiance au body (anti-spoofing)
   const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
   const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
   const safeProfPhoto = profData?.photo_url || prof_photo || null;
   const { data, error } = await supabase.from('cours')
-    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null }])
+    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
     .select();
   if (error) return res.status(500).json({ error });
   // Push aux élèves qui suivent ce prof
