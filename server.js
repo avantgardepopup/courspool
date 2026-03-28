@@ -842,7 +842,8 @@ app.post('/stripe/confirm-payment', async (req, res) => {
 // STRIPE — page de succès qui crée la réservation et redirige
 app.get('/stripe/success', async (req, res) => {
   const { session_id, pour_ami, redirect } = req.query;
-  const baseRedirect = redirect || 'https://courspool.vercel.app';
+  const _allowedRedirect = 'https://courspool.vercel.app';
+  const baseRedirect = (redirect && redirect.startsWith(_allowedRedirect)) ? redirect : _allowedRedirect;
   if (!session_id) return res.redirect(baseRedirect);
 
   try {
@@ -918,6 +919,7 @@ app.get('/stripe/success', async (req, res) => {
 app.post('/stripe/confirm', async (req, res) => {
   const { session_id, cours_id, user_id, pour_ami } = req.body;
   if (!session_id || !cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
+  if (req.user && user_id !== req.user.id) return res.status(403).json({ error: 'Accès refusé' });
 
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
