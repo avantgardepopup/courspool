@@ -181,16 +181,11 @@ function setAvatar(el,photo,ini,col){
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
 // Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
 loadFavCours();
-// Pré-charger les réservations uniquement si le token est encore valide (session fraîche)
+// Pré-charger les réservations depuis localStorage (toujours, pour éviter le flash à 0 dans le profil)
 (function(){
   try{
-    var _cu=JSON.parse(localStorage.getItem('cp_user')||'null');
-    // token_exp est en secondes (Unix timestamp Supabase)
-    var _tokenOk=_cu&&_cu.token_exp&&(_cu.token_exp*1000)>Date.now();
-    if(_tokenOk){
-      var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');
-      _sr.forEach(function(id){res[id]=true;});
-    }
+    var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');
+    _sr.forEach(function(id){res[id]=true;});
   }catch(e){}
 })();
 // Pré-peupler P[] avec les profils mis en cache pour éviter le flash au chargement
@@ -1696,7 +1691,7 @@ function buildAccLists(){
     if(isProf){
       stats.innerHTML=
         '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!==undefined?user.nbEleves:0)+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
         '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
     } else {
       stats.innerHTML=
