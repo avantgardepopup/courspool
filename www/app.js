@@ -3754,6 +3754,8 @@ async function loadConversations(){
   var _convTimeout=setTimeout(function(){_convLoading=false;},10000);
   try{
     var r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});
+    // Token expiré (cold start ou inactivité >1h) → refresh + réessai automatique
+    if(r.status===401){await _refreshToken();r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});}
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     if(!Array.isArray(msgs)||!msgs.length){
