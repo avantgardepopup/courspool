@@ -677,6 +677,28 @@ app.delete('/cours/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// COURS — modifier (champs autorisés uniquement)
+app.patch('/cours/:id', requireAuth, async (req, res) => {
+  try {
+    const { data: cours } = await supabase.from('cours').select('professeur_id').eq('id', req.params.id).single();
+    if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
+    if (cours.professeur_id !== req.user.id) return res.status(403).json({ error: 'Non autorisé' });
+    const allowed = ['visio_url', 'titre', 'description', 'lieu', 'date_heure', 'places_max', 'prix_total', 'niveau', 'mode', 'prive'];
+    const updates = {};
+    for (const key of allowed) {
+      if (key in req.body) updates[key] = req.body[key];
+    }
+    if ('visio_url' in updates) {
+      const u = updates.visio_url;
+      if (u && !/^https?:\/\//i.test(u)) return res.status(400).json({ error: 'visio_url doit commencer par http:// ou https://' });
+    }
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Aucun champ valide' });
+    const { data, error } = await supabase.from('cours').update(updates).eq('id', req.params.id).select();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data[0] || {});
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // RESERVATIONS — créer
 app.post('/reservations', async (req, res) => {
   const user_id = req.user.id;
