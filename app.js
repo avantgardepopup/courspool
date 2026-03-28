@@ -6640,19 +6640,9 @@ function showAccHome(){
   var pgEl=g('pgAcc');if(pgEl)pgEl.scrollTop=0;
 }
 
-// Override switchATab to show detail view + update topbar title + animate icon
+// Override switchATab to show detail view + update topbar title
 (function(){
   var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
-  var _animTabs={R:true,H:true,F:true,P:true,Rev:true};
-  // Animer toutes les icônes à l'ouverture de la page profil
-  function animAllAccIcons(){
-    var icons=document.querySelectorAll('#accHome .acc-card div[style*="border-radius:14px"]');
-    icons.forEach(function(ico,i){
-      setTimeout(function(){
-        ico.classList.remove('acc-card-icon-anim');void ico.offsetWidth;ico.classList.add('acc-card-icon-anim');
-      },i*70);
-    });
-  }
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
@@ -6661,16 +6651,6 @@ function showAccHome(){
     var mt=g('mobTitle');if(mt&&_tabTitles[s])mt.textContent=_tabTitles[s];
     var mh=g('mobHeader');if(mh)mh.style.display='block';
     var ms=g('mobSearch');if(ms)ms.style.display='none';
-    // Animer l'icône de la card cliquée (Mes cours + Historique)
-    if(_animTabs[s]){
-      var cards=document.querySelectorAll('#accHome .acc-card');
-      cards.forEach(function(card){
-        if(card.getAttribute('onclick')&&card.getAttribute('onclick').includes("'"+s+"'")){
-          var ico=card.querySelector('div[style*="border-radius:14px"]');
-          if(ico){ico.classList.remove('acc-card-icon-anim');void ico.offsetWidth;ico.classList.add('acc-card-icon-anim');}
-        }
-      });
-    }
     var body=document.querySelector('#pgAcc .acc-body');
     if(body)body.scrollTop=0;
   };
@@ -6681,7 +6661,7 @@ function showAccHome(){
   var _nt2=navTo;
   navTo=function(tab){
     _nt2(tab);
-    if(tab==='acc'){setTimeout(showAccHome,20);setTimeout(animAllAccIcons,80);}
+    if(tab==='acc'){setTimeout(showAccHome,20);}
   };
 })();
 
