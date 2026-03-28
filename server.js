@@ -478,22 +478,27 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
   }
   if (prenom && prenom.length > 50) return res.status(400).json({ error: 'Prénom trop long (50 max)' });
   if (nom && nom.length > 50) return res.status(400).json({ error: 'Nom trop long (50 max)' });
-  const { data, error } = await supabase.auth.admin.createUser({
-    email, password, email_confirm: true,
-    user_metadata: { prenom, nom, role }
-  });
-  if (error) return res.status(400).json({ error: error.message });
-  await supabase.from('profiles').insert([{
-    id: data.user.id, prenom, nom, email, role,
-    statut: req.body.statut || null,
-    niveau: req.body.niveau || null,
-    matieres: req.body.matieres || null,
-    verified: role === 'eleve' ? true : false
-  }]);
-  // Email de bienvenue
-  const userName = (prenom + ' ' + (nom||'')).trim();
-  sendEmailWelcome(email, prenom || userName, role).catch(() => {});
-  res.json({ user: data.user });
+  try {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email, password, email_confirm: true,
+      user_metadata: { prenom, nom, role }
+    });
+    if (error) return res.status(400).json({ error: error.message });
+    await supabase.from('profiles').insert([{
+      id: data.user.id, prenom, nom, email, role,
+      statut: req.body.statut || null,
+      niveau: req.body.niveau || null,
+      matieres: req.body.matieres || null,
+      verified: role === 'eleve' ? true : false
+    }]);
+    // Email de bienvenue
+    const userName = (prenom + ' ' + (nom||'')).trim();
+    sendEmailWelcome(email, prenom || userName, role).catch(() => {});
+    res.json({ user: data.user });
+  } catch (e) {
+    console.error('[register] error:', e.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // AUTH — refresh token
@@ -890,8 +895,10 @@ app.get('/stripe/success', async (req, res) => {
     io.emit('reservation_update', { cours_id, places_prises: resCountSuc || 0 });
 
     // Envoyer emails
+    let eleve = null;
     try {
-      const { data: eleve } = await supabase.from('profiles').select('email,prenom,nom').eq('id', user_id).single();
+      const { data: eleveData } = await supabase.from('profiles').select('email,prenom,nom').eq('id', user_id).single();
+      eleve = eleveData;
       const { data: prof } = await supabase.from('profiles').select('email,prenom,nom').eq('id', coursData?.professeur_id).single();
       if (eleve?.email) await sendEmailReservation(eleve.email, (eleve.prenom+' '+eleve.nom).trim(), coursData?.titre, coursData?.date_heure, coursData?.lieu, montant);
       if (prof?.email) await sendEmailProfNewEleve(prof.email, (prof.prenom+' '+prof.nom).trim(), (eleve?.prenom+' '+eleve?.nom||'').trim(), coursData?.titre, montant);
@@ -911,7 +918,7 @@ app.get('/stripe/success', async (req, res) => {
     res.redirect(baseRedirect + '?paid=1&cours_id=' + cours_id + (pour_ami_meta==='1'?'&ami=1':''));
   } catch (e) {
     console.log('Stripe success error:', e.message);
-    res.redirect(redirect || 'https://courspool.vercel.app');
+    res.redirect(baseRedirect);
   }
 });
 

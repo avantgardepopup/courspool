@@ -414,6 +414,7 @@ var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
 var _searchTimer=null;
 var _autoRefreshTimer=null;
+var _accountCheckTimer=null;
 
 function _startAutoRefresh(){
   _stopAutoRefresh();
@@ -1968,6 +1969,7 @@ function doLogout(){
   user=null;
   _tutoLaunched=false;
   clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;
+  clearInterval(_accountCheckTimer);_accountCheckTimer=null;
   _stopAutoRefresh();
   try{localStorage.removeItem('cp_user');}catch(e){}
   try{localStorage.removeItem('cp_res');}catch(e){}
@@ -6079,7 +6081,8 @@ function showEmptyAnimated(el,title,sub){
 // ============================================================
 function startAccountCheck(){
   if(!user||!user.id||user.guest)return;
-  setInterval(async function(){
+  if(_accountCheckTimer)return;
+  _accountCheckTimer=setInterval(async function(){
     if(!user||!user.id)return;
     try{
       var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
