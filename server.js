@@ -524,11 +524,13 @@ app.post('/auth/refresh', authRateLimit, async (req, res) => {
 app.post('/auth/login', authRateLimit, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return res.status(400).json({ error: error.message });
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-  if (profile?.statut_compte === 'bloqué') return res.status(403).json({ error: 'Compte bloqué' });
-  res.json({ user: data.user, session: data.session, profile });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return res.status(400).json({ error: error.message });
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+    if (profile?.statut_compte === 'bloqué') return res.status(403).json({ error: 'Compte bloqué' });
+    res.json({ user: data.user, session: data.session, profile });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // COURS — récupérer tous
@@ -549,10 +551,12 @@ app.get('/cours', async (req, res) => {
   }
   if (niveau_filter) query = query.eq('niveau', niveau_filter);
 
-  const { data, error, count } = await query;
-  if (error) return res.status(500).json({ error });
-  const cours = (data || []).map(function(c) { const r = Object.assign({}, c); delete r.code_acces; return r; });
-  res.json({ cours, total: count, page, limit, pages: Math.ceil(count / limit) });
+  try {
+    const { data, error, count } = await query;
+    if (error) return res.status(500).json({ error });
+    const cours = (data || []).map(function(c) { const r = Object.assign({}, c); delete r.code_acces; return r; });
+    res.json({ cours, total: count, page, limit, pages: Math.ceil(count / limit) });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // COURS — créer
@@ -981,30 +985,32 @@ app.post('/stripe/confirm', async (req, res) => {
   }
 });
 app.post('/follows', async (req, res) => {
-  const user_id = req.user.id; // toujours l'utilisateur connecté
+  const user_id = req.user.id;
   const { professeur_id } = req.body;
   if (!professeur_id) return res.status(400).json({ error: 'professeur_id manquant' });
-  const { error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
-  if (error) return res.status(500).json({ error });
-  // Compter depuis la source de vérité (évite les race conditions du +1 manuel)
-  const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
-  const nb_eleves = count || 0;
-  io.to(professeur_id).emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
-  res.json({ success: true, nb_eleves });
+  try {
+    const { error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
+    if (error) return res.status(500).json({ error });
+    const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
+    const nb_eleves = count || 0;
+    io.to(professeur_id).emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
+    res.json({ success: true, nb_eleves });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // FOLLOWS — supprimer (désabonnement)
 app.delete('/follows', async (req, res) => {
-  const user_id = req.user.id; // toujours l'utilisateur connecté
+  const user_id = req.user.id;
   const { professeur_id } = req.body;
   if (!professeur_id) return res.status(400).json({ error: 'professeur_id manquant' });
-  const { error } = await supabase.from('follows').delete().eq('user_id', user_id).eq('professeur_id', professeur_id);
-  if (error) return res.status(500).json({ error });
-  // Compter depuis la source de vérité (évite les race conditions du -1 manuel)
-  const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
-  const nb_eleves = count || 0;
-  io.to(professeur_id).emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
-  res.json({ success: true, nb_eleves });
+  try {
+    const { error } = await supabase.from('follows').delete().eq('user_id', user_id).eq('professeur_id', professeur_id);
+    if (error) return res.status(500).json({ error });
+    const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
+    const nb_eleves = count || 0;
+    io.to(professeur_id).emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
+    res.json({ success: true, nb_eleves });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // FOLLOWS — vérifier si un élève suit un prof (doit être avant /:user_id)
@@ -1974,6 +1980,17 @@ app.post('/admin/reset-test-data', requireAdmin, async (req, res) => {
     await supabase.from('cours').update({ places_prises: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Global error middleware — dernier recours pour les routes sans try/catch ──
+app.use((err, req, res, next) => {
+  console.error('[Express error]', err.message);
+  if (!res.headersSent) res.status(500).json({ error: 'Erreur serveur' });
+});
+
+// Empêcher Railway de redémarrer sur une rejection non gérée
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
 });
 
 const PORT = process.env.PORT || 3000;
