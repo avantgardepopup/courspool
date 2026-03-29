@@ -476,7 +476,8 @@ async function loadData(page,silent){
       _prefetchP=null; // consommer une seule fois
       if(!json)json=await fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();});
     } else {
-      json=await fetch(API+'/cours?page='+page+'&limit=12').then(function(r){return r.json();});
+      var _ldCtrl=new AbortController();var _ldTid=setTimeout(function(){_ldCtrl.abort();},15000);
+      json=await fetch(API+'/cours?page='+page+'&limit=12',{signal:_ldCtrl.signal}).then(function(r){clearTimeout(_ldTid);return r.json();});
     }
     // Support ancien format (array) et nouveau (objet paginé)
     var cours=Array.isArray(json)?json:(json.cours||[]);
@@ -547,8 +548,14 @@ async function loadData(page,silent){
     // Sauvegarder le cache après chaque chargement page 1 réussi
     if(page===1)_saveCoursCache();
   }catch(e){
-    console.log('loadData err',e);
-    if(page===1)showNetworkError();
+    if(e.name==='AbortError'){
+      var _gr=g('grid');if(_gr)_gr.innerHTML='';
+      var _nc=g('nocard');if(_nc){_nc.style.display='block';var _nt=g('nocardTitle');if(_nt)_nt.textContent='Chargement...';}
+      setTimeout(function(){loadData(1,true).then(function(){buildCards();});},5000);
+    } else {
+      console.log('loadData err',e);
+      if(page===1)showNetworkError();
+    }
   }
 }
 
@@ -1028,8 +1035,12 @@ async function doLogin(){
   var em=g('lEm').value.trim(),pw=g('lPw').value;
   if(!em||!pw){shake('lsLogin');return;}
   g('lEm').disabled=true;g('lPw').disabled=true;
+  var _lbtn=g('loginSubmitBtn');
+  if(_lbtn){_lbtn.disabled=true;_lbtn.innerHTML='<span style="display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:cpSpin .8s linear infinite;vertical-align:middle"></span>';}
   try{
-    var r=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
+    var _ctrl=new AbortController();var _tId=setTimeout(function(){_ctrl.abort();},20000);
+    var r=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw}),signal:_ctrl.signal});
+    clearTimeout(_tId);
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);shake('lfC');return;}
     var p=data.profile||{};
@@ -1096,8 +1107,14 @@ async function doLogin(){
     toast('Bienvenue '+pr+' !','Connecté à CoursPool');
     // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
     if(role!=='professeur'){setTimeout(tutoStart,1200);}
-  }catch(e){toast('Erreur','Impossible de se connecter');}
-  finally{g('lEm').disabled=false;g('lPw').disabled=false;}
+  }catch(e){
+    if(e.name==='AbortError'){toast('Délai dépassé','Le serveur met du temps à répondre, réessaie');}
+    else{toast('Erreur','Impossible de se connecter');}
+  }
+  finally{
+    g('lEm').disabled=false;g('lPw').disabled=false;
+    var _lb=g('loginSubmitBtn');if(_lb){_lb.disabled=false;_lb.textContent='Se connecter';}
+  }
 }
 
 async function doReg(){
