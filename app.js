@@ -549,21 +549,36 @@ var _oauthSession=null;
 var _pcIsOAuth=false;
 var _oauthProcessing=false;
 
+function _oauthRestoreLogin(msg){
+  var loginEl=document.getElementById('login');
+  if(loginEl){loginEl.style.display='';loginEl.style.zIndex='';}
+  var sp=document.getElementById('oauthLoading');if(sp)sp.remove();
+  var lsL=document.getElementById('lsLogin');if(lsL)lsL.style.display='';
+  window.history.replaceState({},'',window.location.pathname);
+  if(msg)toast('Connexion échouée',msg);
+}
 async function _initSupabase(){
   try{
-    var r=await fetch(API+'/auth/config');
+    var _cfCtrl=new AbortController();var _cfTid=setTimeout(function(){_cfCtrl.abort();},15000);
+    var r=await fetch(API+'/auth/config',{signal:_cfCtrl.signal});
+    clearTimeout(_cfTid);
     var data=await r.json();
     if(!data.supabaseUrl||!data.supabaseAnonKey){
       console.warn('[OAuth] SUPABASE_ANON_KEY manquant sur le serveur — OAuth désactivé');
+      if(_isOAuthReturn)_oauthRestoreLogin('OAuth non disponible');
       return;
     }
     if(!window.supabase){
       console.warn('[OAuth] Supabase CDN non chargé');
+      if(_isOAuthReturn)_oauthRestoreLogin('Réessaie dans quelques instants');
       return;
     }
     window._supabase=window.supabase.createClient(data.supabaseUrl,data.supabaseAnonKey);
     _setupAuthStateChange();
-  }catch(e){console.warn('[OAuth] Erreur init Supabase:',e);}
+  }catch(e){
+    console.warn('[OAuth] Erreur init Supabase:',e);
+    if(_isOAuthReturn)_oauthRestoreLogin('Réessaie ou utilise email / mot de passe');
+  }
 }
 
 function _setupCapacitorDeepLink(){
@@ -651,7 +666,7 @@ async function _handleOAuthSignIn(session){
   // Vérifier si profil existant avec rôle
   try{
     var r=await fetch(API+'/profiles/'+sbUser.id);
-    if(!r.ok&&r.status!==404){_oauthProcessing=false;toast('Erreur serveur','Réessaie dans quelques instants');return;}
+    if(!r.ok&&r.status!==404){_oauthProcessing=false;_oauthRestoreLogin('Erreur serveur — réessaie');return;}
     var data=await r.json();
     if(data&&data.role){
       // Utilisateur existant — connexion directe
