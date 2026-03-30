@@ -6583,19 +6583,6 @@ async function subCrStep(){
   // openMsg/closeMsgConv — handled directly in functions above
   var _om=openMsg; // keep reference for compatibility
 
-  // buildCards — mode badge on visio cards
-  var _bc=buildCards;
-  buildCards=function(){
-    _bc.apply(this,arguments);
-    document.querySelectorAll('.card').forEach(function(card){
-      var id=card.dataset.id;var c=C.find(function(x){return x.id==id;});
-      if(!c||c.mode!=='visio')return;
-      var ctopDiv=card.querySelector('.ctop>div');
-      if(ctopDiv&&!ctopDiv.querySelector('.mode-badge')){
-        var sp=document.createElement('span');sp.className='mode-badge visio';sp.textContent='Visio';sp.style.marginLeft='4px';ctopDiv.appendChild(sp);
-      }
-    });
-  };
 })();
 
 // ---- Retry payment ----
