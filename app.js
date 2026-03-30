@@ -1303,6 +1303,7 @@ function navTo(tab,_skipHistory){
     restoreNav();
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
+    clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
     loadConversations();
   } else if(tab==='acc'){
     if(pgAcc)pgAcc.classList.add('on');
@@ -1672,15 +1673,19 @@ function buildAccLists(){
   // ── Section "Mes cours créés" pour les professeurs ──
   var profCoursHtml='';
   if(isProf){
-    var myC=C.filter(function(c){return c.pr===user.id;});
+    var _allMyC=C.filter(function(c){return c.pr===user.id;});
+    var myC=_allMyC.filter(function(c){return !_isCoursPass(c);});
+    var _pastCnt=_allMyC.filter(function(c){return _isCoursPass(c);}).length;
     profCoursHtml='<div style="padding:20px 20px 0">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
       +'<div style="width:28px;height:28px;background:rgba(255,107,43,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>'
-      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes cours créés</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Prochains cours</div>'
+      +(_pastCnt>0?'<div style="margin-left:auto;font-size:11px;color:var(--lite)">'+_pastCnt+' passé'+((_pastCnt>1)?'s':'')+'</div>':'')
       +'</div>';
     if(!myC.length){
+      var _emptyMsg=_pastCnt>0?'Aucun cours à venir — créez-en un nouveau':'Vous n\'avez pas encore créé de cours';
       profCoursHtml+='<div style="background:var(--bg);border-radius:16px;padding:20px;text-align:center">'
-        +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">Vous n\'avez pas encore créé de cours</div>'
+        +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">'+_emptyMsg+'</div>'
         +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Créer un cours →</button>'
         +'</div>';
     } else {
@@ -2970,8 +2975,8 @@ function openPr(pid){
   else if(immediateTags.length){_renderTags(immediateTags);}
   else{if(tagsSect)tagsSect.style.display='none';}
 
-  // Prochains cours — belle carte avec date formatée
-  var prochains=cours.filter(function(c){return c.fl<c.sp;});
+  // Prochains cours — belle carte avec date formatée (à venir + places dispo)
+  var prochains=cours.filter(function(c){return !_isCoursPass(c)&&c.fl<c.sp;});
   var mpCrs=g('mpCrs');
   if(mpCrs){
     mpCrs.innerHTML=prochains.length
@@ -3649,7 +3654,9 @@ async function sendModalMsg(){
 }
 
 var _convLoading=false;
+var _convCache='';
 var _convRetries=0; // compteur retry auto (cold start / timeout iOS)
+var _convRetryTimer=null;
 async function loadConversations(){
   if(!user)return;
   if(_convLoading)return;
@@ -3724,7 +3731,8 @@ async function loadConversations(){
     if(_convRetries<4){
       // Retry silencieux (cold start Railway / timeout réseau iOS) — max 3 tentatives
       if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Reconnexion...</div>';
-      setTimeout(function(){loadConversations();},_convRetries*4000);
+      clearTimeout(_convRetryTimer);
+      _convRetryTimer=setTimeout(function(){_convRetryTimer=null;loadConversations();},_convRetries*4000);
     }else{
       _convRetries=0;
       if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
