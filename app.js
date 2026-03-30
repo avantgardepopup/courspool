@@ -112,6 +112,7 @@ function apiH(extra){
 
 // ── Refresh token automatique ──────────────────────────────
 var _refreshTimer=null;
+var _refreshPromise=null; // Promise partagée — évite les appels concurrents avec le même refresh_token
 function _scheduleTokenRefresh(){
   if(_refreshTimer){clearTimeout(_refreshTimer);_refreshTimer=null;}
   if(!user||!user.refresh_token||!user.token_exp)return;
@@ -119,25 +120,32 @@ function _scheduleTokenRefresh(){
   if(msLeft<0)msLeft=0;
   _refreshTimer=setTimeout(_refreshToken,msLeft);
 }
-async function _refreshToken(){
-  if(!user||!user.refresh_token)return;
-  try{
-    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:user.refresh_token})});
-    if(!r.ok){
-      console.warn('[Auth] refresh échoué: HTTP',r.status);
-      if(r.status===400||r.status===401){toast('Session expirée','Veuillez vous reconnecter');setTimeout(doLogout,2000);}
-      return;
-    }
-    var d=await r.json();
-    if(d.access_token){
-      user.token=d.access_token;
-      if(d.refresh_token)user.refresh_token=d.refresh_token;
-      if(d.expires_at)user.token_exp=d.expires_at;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
-      _scheduleTokenRefresh();
-      console.log('[Auth] token rafraîchi, expire à',new Date(user.token_exp*1000).toLocaleTimeString());
-    }
-  }catch(e){console.warn('[Auth] refresh échoué:',e.message);}
+function _refreshToken(){
+  if(!user||!user.refresh_token)return Promise.resolve();
+  // Si un refresh est déjà en cours, tous les appelants attendent le même résultat
+  // (le refresh_token Supabase est à usage unique — deux appels simultanés = logout)
+  if(_refreshPromise)return _refreshPromise;
+  _refreshPromise=(async function(){
+    try{
+      var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:user.refresh_token})});
+      if(!r.ok){
+        console.warn('[Auth] refresh échoué: HTTP',r.status);
+        if(r.status===400||r.status===401){toast('Session expirée','Veuillez vous reconnecter');setTimeout(doLogout,2000);}
+        return;
+      }
+      var d=await r.json();
+      if(d.access_token){
+        user.token=d.access_token;
+        if(d.refresh_token)user.refresh_token=d.refresh_token;
+        if(d.expires_at)user.token_exp=d.expires_at;
+        try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+        _scheduleTokenRefresh();
+        console.log('[Auth] token rafraîchi, expire à',new Date(user.token_exp*1000).toLocaleTimeString());
+      }
+    }catch(e){console.warn('[Auth] refresh échoué:',e.message);}
+    finally{_refreshPromise=null;}
+  })();
+  return _refreshPromise;
 }
 
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
@@ -3259,7 +3267,7 @@ async function subCr(){
   try{
     var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(payload)});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error.message||'Impossible de publier');return;}
+    if(data.error){toast('Impossible de publier',typeof data.error==='string'?data.error:data.error.message||data.error.details||'Vérifiez votre connexion et réessayez');return;}
     g('crTitre').value='';
   var crSH=g('crSubjHidden');if(crSH)crSH.value='';
   var crML=g('crMatLabel');if(crML){crML.textContent='Choisir une matière…';crML.style.color='var(--lite)';}
@@ -3657,10 +3665,12 @@ var _convLoading=false;
 var _convCache='';
 var _convRetries=0; // compteur retry auto (cold start / timeout iOS)
 var _convRetryTimer=null;
+var _convGen=0; // génération — écarte les résultats périmés (requêtes en retard)
 async function loadConversations(){
   if(!user)return;
   if(_convLoading)return;
   _convLoading=true;
+  var myGen=++_convGen; // marquer cette invocation
   // Timeout de sécurité : libérer après 8s max
   var _convTimeout=setTimeout(function(){_convLoading=false;},8000);
   var lm=g('listM');
@@ -3668,8 +3678,11 @@ async function loadConversations(){
   lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
   try{
     var r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});
+    // Requête périmée — une invocation plus récente a déjà pris le relais
+    if(myGen!==_convGen)return;
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
+    _convRetries=0; // succès — réinitialiser le compteur de tentatives
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
@@ -3726,6 +3739,8 @@ async function loadConversations(){
     var bnavBadge=g('bnavBadge');
     if(bnavBadge){if(nonLus>0){bnavBadge.classList.add('on');bnavBadge.textContent=nonLus;}else{bnavBadge.classList.remove('on');}}
   }catch(e){
+    // Requête périmée (une plus récente a déjà abouti) — ne pas toucher l'UI
+    if(myGen!==_convGen)return;
     _convLoading=false;
     _convRetries++;
     if(_convRetries<4){

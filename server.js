@@ -653,7 +653,10 @@ app.post('/cours', async (req, res) => {
     const { data, error } = await supabase.from('cours')
       .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
       .select();
-    if (error) return res.status(500).json({ error });
+    if (error) {
+      console.error('[POST /cours] Supabase error:', JSON.stringify(error));
+      return res.status(500).json({ error: error.message || error.details || 'Erreur base de données' });
+    }
     // Push aux élèves qui suivent ce prof
     if (data && data[0]) {
       const titreNotif = data[0].titre || titre;
