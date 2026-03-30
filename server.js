@@ -24,7 +24,7 @@ io.use(async (socket, next) => {
     const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
     let userId;
     if (SUPABASE_JWT_SECRET) {
-      const payload = jwt.verify(token, SUPABASE_JWT_SECRET);
+      const payload = jwt.verify(token, SUPABASE_JWT_SECRET.trim());
       if (!payload?.sub) return next(new Error('unauthorized'));
       userId = payload.sub;
     } else {
@@ -131,7 +131,12 @@ async function requireAuth(req, res, next) {
     const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
     let payload;
     if (SUPABASE_JWT_SECRET) {
-      payload = jwt.verify(token, SUPABASE_JWT_SECRET);
+      try {
+        payload = jwt.verify(token, SUPABASE_JWT_SECRET.trim());
+      } catch(jwtErr) {
+        console.error('[Auth] jwt.verify failed:', jwtErr.name, jwtErr.message);
+        return res.status(401).json({ error: 'Token invalide' });
+      }
     } else {
       // Fallback si secret absent : vérification via API Supabase
       const { data: { user: u }, error } = await supabase.auth.getUser(token);
