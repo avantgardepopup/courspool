@@ -45,8 +45,8 @@
 <meta name="twitter:title" content="CoursPool — Partagez les frais d'un cours">
 <meta name="twitter:description" content="Trouvez des cours près de chez vous et partagez les frais entre élèves.">
 <meta name="twitter:image" content="https://courspool.vercel.app/og-image.png">
-<!-- Lib paiement sécurisé -->
-<script src="https://js.stripe.com/v3/"></script>
+<!-- Lib paiement sécurisé — chargé en async pour ne pas bloquer le démarrage -->
+<script async src="https://js.stripe.com/v3/"></script>
 <link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/style.css">
 </head>
@@ -2078,7 +2078,7 @@
 
 <div class="toast" id="toast"><div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-weight:700" id="tT"></div><div style="font-size:12px;opacity:.65" id="tS"></div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/supabase.min.js"></script>
 <script src="/search-aliases.js" defer></script>
 <script src="/app.js" defer></script>
 <!-- SETTINGS SHEET -->
@@ -2193,8 +2193,8 @@
   </div>
 </div>
 
-<!-- Socket.io — temps réel (CDN officiel, indépendant du backend) -->
-<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<!-- Socket.io — temps réel (bundlé localement pour éviter les violations sandbox iOS) -->
+<script src="/socket.io.min.js"></script>
 <script src="/socket.js" defer></script>
 </body>
 </html>
