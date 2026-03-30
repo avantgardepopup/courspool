@@ -497,7 +497,8 @@ tr:hover td{background:#FAFAF9;}
         <div class="info-grid" style="margin-top:8px">
           <div class="info-item"><label>CNI uploadée</label><span id="modalCniStatus">—</span></div>
         </div>
-        <div id="modalCniBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;text-align:center;color:var(--lite);font-size:13px"></div>
+        <div id="modalCniBox" style="margin-bottom:12px;background:var(--bg);border-radius:12px;padding:16px;text-align:center;color:var(--lite);font-size:13px"></div>
+        <div id="modalDiplomeBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;color:var(--lite);font-size:13px"></div>
       </div>
       <!-- Champs ÉLÈVE -->
       <div id="modalEleveSection" style="display:none">
@@ -819,6 +820,22 @@ function openProfModal(id){
   } else {
     cniBox.innerHTML='<div style="font-size:13px;color:var(--lite)">Aucune pièce d\'identité uploadée</div>';
   }
+  // Diplôme
+  var diplomeBox=document.getElementById('modalDiplomeBox');
+  if(diplomeBox){
+    var diplomeStatusBadge=p.diplome_verifie?'<span class="badge green">Vérifié</span>':p.diplome_uploaded?'<span class="badge" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A">En attente</span>':'<span class="badge gray">Non uploadé</span>';
+    var diplomeActions='';
+    if(p.diplome_uploaded&&!p.diplome_verifie){
+      diplomeActions='<div style="display:flex;gap:8px;margin-top:10px">'
+        +'<button class="btn btn-green" style="flex:1;justify-content:center;font-size:12px;padding:8px" onclick="verifyDiplome(\''+p.id+'\',\'approved\')">Valider le diplôme</button>'
+        +'<button class="btn btn-red" style="flex:1;justify-content:center;font-size:12px;padding:8px" onclick="verifyDiplome(\''+p.id+'\',\'rejected\')">Rejeter le diplôme</button>'
+        +'</div>';
+    } else if(p.diplome_verifie){
+      diplomeActions='<div style="margin-top:8px"><button class="btn btn-red" style="font-size:12px;padding:8px" onclick="verifyDiplome(\''+p.id+'\',\'rejected\')">Révoquer le diplôme</button></div>';
+    }
+    var diplomeImg=p.diplome_url?'<img src="'+escHtml(p.diplome_url)+'" style="width:100%;border-radius:10px;cursor:pointer;margin-bottom:8px" onclick="window.open(\''+escHtml(p.diplome_url)+'\',\'_blank\')" alt="Diplôme"><div style="font-size:11px;color:var(--lite);margin-bottom:8px">Cliquer pour agrandir</div>':'';
+    diplomeBox.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:8px">Diplôme : '+diplomeStatusBadge+'</div>'+diplomeImg+diplomeActions;
+  }
   // Actions
   var actions=document.getElementById('modalActions');
   if(!p.verified&&p.statut_compte!=='bloqué'){
@@ -933,6 +950,22 @@ async function verifyProf(id,action){
     var msgs={verify:'Professeur validé ! Email de confirmation envoyé.',block:'Compte bloqué.'};
     toast(msgs[action]||'Mise à jour effectuée');
   } else {toast('Erreur lors de la mise à jour');}
+}
+
+async function verifyDiplome(id, action){
+  try{
+    var r=await fetch(API+'/email/diplome-verification',{method:'POST',headers:adminHeaders(),body:JSON.stringify({prof_id:id,status:action})});
+    var d=await r.json();
+    if(r.ok&&d.success){
+      var p=allProfs.find(function(x){return x.id===id;});
+      if(p){
+        p.diplome_verifie=(action==='approved');
+        if(action==='rejected')p.diplome_uploaded=false;
+      }
+      closeModal();renderDashboard();renderProfs();
+      toast(action==='approved'?'Diplôme validé ! Email envoyé au prof.':'Diplôme refusé. Email envoyé au prof.');
+    } else { toast('Erreur lors de la mise à jour'); }
+  } catch(e) { toast('Erreur réseau'); }
 }
 
 async function clearTestData(){

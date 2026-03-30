@@ -358,6 +358,27 @@ async function sendEmailProfNewEleve(profEmail, profName, eleveName, coursTitle,
   } catch(e) { console.log('Email prof error:', e.message); }
 }
 
+// ── Email 4b : Vérification diplôme ─────────────────────────
+// status: 'approved' | 'rejected'
+async function sendEmailDiplomeVerification(profEmail, profName, status) {
+  const isApproved = status === 'approved';
+  const headerBg = isApproved ? 'linear-gradient(135deg,#22C069,#16A34A)' : 'linear-gradient(135deg,#EF4444,#DC2626)';
+  const headerTitle = isApproved ? 'Diplôme vérifié !' : 'Vérification du diplôme refusée';
+  const headerSub = isApproved ? 'Badge "Diplôme vérifié" activé sur votre profil' : 'Le document soumis n\'a pas pu être validé';
+  const body = isApproved
+    ? `<p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
+       <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.7">Votre diplôme a été vérifié avec succès. Le badge <strong>Diplôme vérifié</strong> est maintenant affiché sur votre profil et sur vos cours, renforçant la confiance des élèves et des parents.</p>
+       <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#22C069,#16A34A);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Voir mon profil →</a>`
+    : `<p style="margin:0 0 16px;font-size:16px;color:#111;font-weight:600">Bonjour ${profName},</p>
+       <p style="margin:0 0 24px;font-size:14px;color:#555;line-height:1.7">Nous n'avons pas pu vérifier le document soumis. Assurez-vous que le fichier est lisible et correspond bien à un diplôme officiel, puis renvoyez votre document depuis l'application.</p>
+       <a href="https://courspool.vercel.app" style="display:block;background:linear-gradient(135deg,#FF8C55,#E04E10);color:#fff;padding:15px 28px;border-radius:14px;text-decoration:none;font-weight:700;font-size:15px;text-align:center">Renvoyer mon diplôme →</a>`;
+  const subject = isApproved ? `Votre diplôme est vérifié, ${profName} !` : `Vérification du diplôme — Action requise`;
+  const header = `<h1 style="margin:0;font-size:24px;font-weight:800;color:#fff;line-height:1.2">${headerTitle}</h1><p style="margin:10px 0 0;color:rgba(255,255,255,.8);font-size:14px">${headerSub}</p>`;
+  try {
+    await resend.emails.send({ from: FROM_EMAIL, to: profEmail, subject, html: emailBase(headerBg, header, body) });
+  } catch(e) { console.log('Email diplome verification error:', e.message); }
+}
+
 // ── Email 4 : Vérification compte prof ──────────────────────
 // status: 'approved' | 'rejected_retry' | 'rejected_final'
 async function sendEmailProfVerification(profEmail, profName, status, raison = '') {
@@ -1296,6 +1317,27 @@ app.post('/email/verification', requireAdmin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// DIPLÔME — vérification admin (email + update)
+app.post('/email/diplome-verification', requireAdmin, async (req, res) => {
+  const { prof_id, status } = req.body;
+  if (!prof_id || !status) return res.status(400).json({ error: 'Données manquantes' });
+  if (!['approved', 'rejected'].includes(status)) return res.status(400).json({ error: 'Statut invalide' });
+  try {
+    const { data: prof } = await supabase.from('profiles').select('email,prenom,nom').eq('id', prof_id).single();
+    if (!prof) return res.status(404).json({ error: 'Prof introuvable' });
+    const profName = ((prof.prenom||'') + ' ' + (prof.nom||'')).trim();
+    await sendEmailDiplomeVerification(prof.email, profName, status);
+    if (status === 'approved') {
+      await supabase.from('profiles').update({ diplome_verifie: true }).eq('id', prof_id);
+      await logAdminAction(req.user.id, 'approve_diplome', prof_id, {});
+    } else {
+      await supabase.from('profiles').update({ diplome_uploaded: false, diplome_verifie: false }).eq('id', prof_id);
+      await logAdminAction(req.user.id, 'reject_diplome', prof_id, {});
+    }
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // STRIPE — récupérer les paiements réels
 app.get('/stripe/payments', requireAdmin, async (req, res) => {
   try {
@@ -1590,7 +1632,7 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
 // PROFILES — récupérer profil par ID
 app.get('/profiles/:id', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,created_at';
+  const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,created_at,diplome_verifie';
   try {
     const {data,error}=await supabase.from('profiles').select(PUBLIC_COLS).eq('id',req.params.id).single();
     if(error){const status=error.code==='PGRST116'?404:500;return res.status(status).json({error:error.message});}
@@ -1724,6 +1766,41 @@ app.post('/upload/cni', async (req, res) => {
     console.log('CNI upload error:', e.message);
     // Même en cas d'erreur, marquer comme uploadé
     await supabase.from('profiles').update({ cni_uploaded: true }).eq('id', userId).catch(()=>{});
+    res.json({ success: true });
+  }
+});
+
+// DIPLÔME — upload diplôme
+app.post('/upload/diplome', async (req, res) => {
+  const { base64, userId, filename } = req.body;
+  if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
+  if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Réservé aux professeurs' });
+  try {
+    const buffer = Buffer.from(base64.split(',')[1], 'base64');
+    const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
+    const validExt = ['jpg','jpeg','png','pdf','webp'].includes(ext) ? ext : 'jpg';
+    const contentType = validExt === 'pdf' ? 'application/pdf' : 'image/' + (validExt === 'jpg' ? 'jpeg' : validExt);
+    const filePath = userId + '/diplome.' + validExt;
+    let diplomeUrl = null;
+    const { error: uploadError } = await supabase.storage.from('cni').upload(filePath, buffer, { contentType, upsert: true });
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from('cni').getPublicUrl(filePath);
+      diplomeUrl = urlData.publicUrl;
+    } else {
+      const { error: e2 } = await supabase.storage.from('photos').upload('diplomes/' + filePath, buffer, { contentType, upsert: true });
+      if (!e2) {
+        const { data: urlData2 } = supabase.storage.from('photos').getPublicUrl('diplomes/' + filePath);
+        diplomeUrl = urlData2.publicUrl;
+      } else {
+        diplomeUrl = base64;
+      }
+    }
+    await supabase.from('profiles').update({ diplome_uploaded: true, diplome_url: diplomeUrl, diplome_verifie: false }).eq('id', userId);
+    res.json({ success: true, url: diplomeUrl });
+  } catch(e) {
+    console.log('Diplome upload error:', e.message);
+    await supabase.from('profiles').update({ diplome_uploaded: true }).eq('id', userId).catch(()=>{});
     res.json({ success: true });
   }
 });
@@ -2020,7 +2097,7 @@ app.delete('/admin/contacts/:id', requireAdmin, async (req, res) => {
 
 // ADMIN — mettre à jour un profil (champs admin uniquement)
 app.patch('/admin/users/:id', requireAdmin, async (req, res) => {
-  const adminFields = ['verified', 'statut_compte', 'rejection_reason', 'can_retry_cni', 'cni_uploaded', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
+  const adminFields = ['verified', 'statut_compte', 'rejection_reason', 'can_retry_cni', 'cni_uploaded', 'diplome_verifie', 'diplome_uploaded', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
   const validStatuts = ['actif', 'bloqué', 'rejeté', 'en_attente_verification'];
   const updates = {};
   adminFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });

@@ -736,7 +736,7 @@ async function _handleOAuthSignIn(session){
       var nm=p.nom||(meta.family_name||'');
       user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role,id:sbUser.id,
         ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
-        photo:p.photo_url||null,verified:p.verified,
+        photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,
         statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
@@ -850,7 +850,7 @@ async function pcOAuthRoleNext(){
     var nm=p.nom||meta.family_name||'';
     user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role||_regRole,id:sbUser.id,
       ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
-      photo:p.photo_url||null,verified:p.verified,
+      photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,
       statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
       token:session.access_token,refresh_token:session.refresh_token,token_exp:session.expires_at};
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
@@ -1077,6 +1077,7 @@ async function doLogin(){
       ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
       photo:photo,
       verified:p.verified!=null?p.verified:undefined,
+      diplome_verifie:p.diplome_verifie!=null?p.diplome_verifie:undefined,
       statut:p.statut||'',
       niveau:p.niveau||'',
       matieres:p.matieres||'',
@@ -1697,6 +1698,7 @@ function goAccount(){
   setTimeout(renderNotifStatus, 100);
   // Statut vérification
   updateVerifStatusBlock();
+  updateDiplomeStatusBlock();
   // Afficher les préférences notif si push actif
   var notifTypes = g('notifTypes');
   if (notifTypes) notifTypes.style.display = (_pushSubscription) ? 'block' : 'none';
@@ -1725,7 +1727,7 @@ function switchATab(s,el){
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
-  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();}
+  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();updateDiplomeStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
   if(s==='F'){ buildAccLists(); }
@@ -2159,6 +2161,8 @@ function _fetchProf(pid){
     var nm2=(pr2+(no2?' '+no2:'')).trim();
     if(!P[pid])P[pid]={n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
     P[pid]._fresh=true;
+    if(prof.verified!==undefined)P[pid].verified=prof.verified;
+    if(prof.diplome_verifie!==undefined)P[pid].dv=prof.diplome_verifie;
     if(nm2){
       P[pid].nm=nm2;
       P[pid].i=((pr2[0]||'')+(no2[0]||'')).toUpperCase()||'?';
@@ -3018,6 +3022,7 @@ function openPr(pid){
   g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:'Professeur';
   g('mpbd').textContent=pCache.niveau||'';
   var vBadge=g('mpVerifiedBadge');if(vBadge)vBadge.style.display=(pCache.verified===true||pCache.verified==='true')?'block':'none';
+  var dvBadge=g('mpDiplomeBadge');if(dvBadge)dvBadge.style.display=(pCache.dv===true||pCache.dv==='true')?'block':'none';
   g('mpC').textContent=cours.length;
   g('mpN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
   g('mpE').textContent=p.e||0;
@@ -3153,7 +3158,9 @@ function openPr(pid){
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;
     P[pid]._fullFetched=true;
-    ['bio','matieres','niveau','statut'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    ['bio','matieres','niveau','statut','verified','diplome_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    if(prof.verified!==undefined){var _vB=g('mpVerifiedBadge');if(_vB)_vB.style.display=(prof.verified===true||prof.verified==='true')?'block':'none';}
+    if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;var _dvB=g('mpDiplomeBadge');if(_dvB)_dvB.style.display=(prof.diplome_verifie===true||prof.diplome_verifie==='true')?'block':'none';}
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';
     var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
     if(_apiNm){
@@ -4494,6 +4501,138 @@ function updateVerifStatusBlock(){
   block.innerHTML=html;
 }
 
+
+// ============================================================
+// DIPLÔME — upload et vérification
+// ============================================================
+function getDiplomeStatus(){
+  if(!user)return'none';
+  if(user.diplome_verifie===true||user.diplome_verifie==='true')return'verified';
+  if(user.diplome_uploaded===true||user.diplome_uploaded==='true')return'pending';
+  return'none';
+}
+
+function openDiplomeSheet(){
+  var bd=g('bdDiplome');if(!bd)return;
+  var status=getDiplomeStatus();
+  if(status==='pending'){
+    diplomeGoStep3(true);
+  } else if(status==='verified'){
+    bd.style.display='none';return;
+  } else {
+    diplomeGoStep1();
+  }
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+
+function diplomeGoStep1(){
+  var s1=g('diplomeStep1'),s2=g('diplomeStep2'),s3=g('diplomeStep3');
+  if(s1)s1.style.display='block';
+  if(s2)s2.style.display='none';
+  if(s3)s3.style.display='none';
+}
+function diplomeGoStep2(){
+  var s1=g('diplomeStep1'),s2=g('diplomeStep2'),s3=g('diplomeStep3');
+  if(s1)s1.style.display='none';
+  if(s2)s2.style.display='block';
+  if(s3)s3.style.display='none';
+}
+function diplomeGoStep3(isReturn){
+  var s1=g('diplomeStep1'),s2=g('diplomeStep2'),s3=g('diplomeStep3');
+  if(s1)s1.style.display='none';
+  if(s2)s2.style.display='none';
+  if(s3)s3.style.display='block';
+  var t=g('diplomeStep3Title'),sub=g('diplomeStep3Sub');
+  if(isReturn){
+    if(t)t.textContent='Vérification en cours ⏳';
+    if(sub)sub.innerHTML='Votre diplôme a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+  } else {
+    if(t)t.textContent='Diplôme envoyé ✓';
+    if(sub)sub.innerHTML='Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    haptic(20);
+  }
+}
+
+function diplomeLater(){
+  var bd=g('bdDiplome');if(bd)bd.style.display='none';
+  document.body.style.overflow='';
+}
+
+function diplomeDone(){
+  var bd=g('bdDiplome');if(bd)bd.style.display='none';
+  document.body.style.overflow='';
+  updateDiplomeStatusBlock();
+}
+
+function diplomePreview(input){
+  if(!input.files||!input.files[0])return;
+  var zone=g('diplomeDropZone'),lbl=g('diplomeUploadLabel'),icon=g('diplomeUploadIcon');
+  if(zone){zone.style.borderColor='#3B82F6';zone.style.background='#EFF6FF';}
+  if(lbl)lbl.textContent=input.files[0].name;
+  if(icon)icon.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><polyline points="20 6 9 17 4 12"/></svg>';
+}
+
+async function submitDiplome(){
+  var finput=g('diplomeFileInput');
+  var file=finput&&finput.files&&finput.files[0];
+  if(!file){
+    var zone=g('diplomeDropZone');
+    if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
+    toast('Document manquant','Choisissez une photo de votre diplôme');return;
+  }
+  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
+  var btn=g('diplomeSubmitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
+  try{
+    var reader=new FileReader();
+    reader.onload=async function(e){
+      try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
+      user.diplome_uploaded=true;
+      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+      diplomeGoStep3();
+      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+    };
+    reader.readAsDataURL(file);
+  }catch(e){
+    toast('Erreur',"Impossible d'envoyer le fichier");
+    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+  }
+}
+
+function updateDiplomeStatusBlock(){
+  var block=g('diplomeStatusBlock');
+  if(!block)return;
+  if(!user||user.role!=='professeur'){block.style.display='none';return;}
+  var status=getDiplomeStatus();
+  var html='';
+  if(status==='none'){
+    html='<div style="background:#EFF6FF;border-radius:12px;padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#1D4ED8">Badge Diplôme vérifié disponible</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez une photo de votre diplôme pour obtenir le badge et rassurer les parents.</div>'
+      +'<button onclick="openDiplomeSheet()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon diplôme</button>'
+      +'</div>';
+    block.style.display='block';
+  } else if(status==='verified'){
+    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#EFF6FF;border-radius:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#1D4ED8">Diplôme vérifié — Badge affiché sur votre profil</span>'
+      +'</div>';
+    block.style.display='block';
+  } else if(status==='pending'){
+    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFBEB;border-radius:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#92400E">Diplôme en cours de vérification — Réponse sous 24h</span>'
+      +'</div>';
+    block.style.display='block';
+  } else {
+    block.style.display='none';
+  }
+  if(html)block.innerHTML=html;
+}
 
 // ============================================================
 // COURS PRIVÉ
@@ -6141,20 +6280,28 @@ function startAccountCheck(){
         setTimeout(doLogout,2000);return;
       }
       // Mettre à jour le statut si changé (ex: vérifié par admin)
-      if(p.statut_compte!==user.statut_compte||p.verified!==user.verified){
+      if(p.statut_compte!==user.statut_compte||p.verified!==user.verified||p.diplome_verifie!==user.diplome_verifie){
         user.statut_compte=p.statut_compte;
         user.verified=p.verified;
         user.can_retry_cni=p.can_retry_cni;
         user.rejection_reason=p.rejection_reason;
+        var _dvChanged=p.diplome_verifie!==user.diplome_verifie;
+        user.diplome_verifie=p.diplome_verifie;
+        if(p.diplome_verifie===false&&user.diplome_uploaded)user.diplome_uploaded=false;
         try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
         // Mettre à jour la bannière de vérification
         updateVerifBand();
+        updateDiplomeStatusBlock();
         // Notifier si compte maintenant vérifié
         if(user.role==='professeur'&&(p.statut_compte==='verified'||p.verified)){
           toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
           haptic([10,50,100,50,10]);
         } else if(user.role==='professeur'&&p.statut_compte==='rejeté'){
           toast('Document refusé','Vérifiez votre email pour plus d\'informations');
+        }
+        if(_dvChanged&&p.diplome_verifie===true){
+          toast('Diplôme vérifié !','Le badge est maintenant visible sur votre profil');
+          haptic([10,50,100,50,10]);
         }
       }
     }catch(e){}

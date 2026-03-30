@@ -1176,6 +1176,9 @@
           <!-- Statut vérification (profs uniquement) -->
           <div id="verifStatusBlock" style="display:none;padding:4px 0 4px"></div>
 
+          <!-- Statut diplôme (profs uniquement) -->
+          <div id="diplomeStatusBlock" style="display:none;padding:4px 0 4px"></div>
+
           <!-- Partager profil (profs) -->
           <div id="shareProfBtn" style="display:none;padding:16px 0 4px">
             <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:50px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
@@ -1298,6 +1301,7 @@
       <div id="mprl" style="font-size:13px;color:rgba(255,255,255,.75);font-weight:500;margin-bottom:4px"></div>
       <div id="mpbd" style="font-size:12px;color:rgba(255,255,255,.6)"></div>
       <div id="mpVerifiedBadge" style="display:none;margin-top:8px"><span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Identité vérifiée</span></div>
+      <div id="mpDiplomeBadge" style="display:none;margin-top:6px"><span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Diplôme vérifié</span></div>
     </div>
 
     <!-- Stats row -->
@@ -1754,6 +1758,69 @@
       <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Compris, merci !</button>
     </div>
 
+  </div>
+</div>
+
+<!-- DIPLÔME — bottom sheet upload -->
+<div id="bdDiplome" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)diplomeLater()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .3s ease;overflow:hidden">
+    <div style="padding:12px 20px 0;text-align:center">
+      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto"></div>
+    </div>
+    <!-- Étape 1 : intro -->
+    <div id="diplomeStep1" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <div style="width:72px;height:72px;background:#EFF6FF;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px">🎓</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Obtenez le badge Diplôme vérifié</div>
+      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Rassurez les parents en prouvant votre qualification. Le badge apparaît sur votre profil et vos cours.</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:#3B82F6;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre diplôme</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Licence, Master, CAPES, agrégation…</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès validation</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Badge affiché sur votre profil</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves et parents</div></div>
+        </div>
+      </div>
+      <button onclick="diplomeGoStep2()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35);margin-bottom:12px">Envoyer mon diplôme</button>
+      <button onclick="diplomeLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
+    </div>
+    <!-- Étape 2 : upload -->
+    <div id="diplomeStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button onclick="diplomeGoStep1()" style="background:none;border:none;cursor:pointer;color:#3B82F6;padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div style="font-size:17px;font-weight:800">Votre diplôme</div>
+      </div>
+      <div id="diplomeDropZone" onclick="g('diplomeFileInput').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:var(--bg)">
+        <div id="diplomeUploadIcon" style="margin-bottom:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        </div>
+        <div id="diplomeUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">Licence, Master, CAPES, agrégation…</div>
+        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
+        <input type="file" id="diplomeFileInput" accept="image/*,.pdf" style="display:none" onchange="diplomePreview(this)">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Vos documents sont chiffrés et ne seront jamais partagés.
+      </div>
+      <button id="diplomeSubmitBtn" onclick="submitDiplome()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+        Envoyer pour vérification
+      </button>
+    </div>
+    <!-- Étape 3 : confirmation -->
+    <div id="diplomeStep3" style="display:none;padding:32px 24px 40px;padding-bottom:max(40px,env(safe-area-inset-bottom,40px));text-align:center">
+      <div style="width:72px;height:72px;background:#EFF6FF;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div id="diplomeStep3Title" style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em">Diplôme envoyé ✓</div>
+      <div id="diplomeStep3Sub" style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px">Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
+      <button onclick="diplomeDone()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35)">Compris, merci !</button>
+    </div>
   </div>
 </div>
 
