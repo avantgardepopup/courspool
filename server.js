@@ -650,9 +650,14 @@ app.post('/cours', async (req, res) => {
     const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
     const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
     const safeProfPhoto = profData?.photo_url || prof_photo || null;
-    const { data, error } = await supabase.from('cours')
-      .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
-      .select();
+    const insertPayload = { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description };
+    // Champs optionnels — ajoutés seulement s'ils ne causent pas d'erreur de schéma
+    const optionalFields = { niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null };
+    let { data, error } = await supabase.from('cours').insert([{ ...insertPayload, ...optionalFields }]).select();
+    if (error && error.message && error.message.includes('schema cache')) {
+      console.warn('[POST /cours] Schema cache miss, retry sans champs optionnels:', error.message);
+      ({ data, error } = await supabase.from('cours').insert([insertPayload]).select());
+    }
     if (error) {
       console.error('[POST /cours] Supabase error:', JSON.stringify(error));
       return res.status(500).json({ error: error.message || error.details || 'Erreur base de données' });
