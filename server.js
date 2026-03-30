@@ -7,6 +7,7 @@ const compression = require('compression');
 const { Resend } = require('resend');
 const http = require('http');
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 
 const app = express();
@@ -100,16 +101,39 @@ const supabase = createClient(
 );
 
 // ── MIDDLEWARES AUTH ──────────────────────────────────────────
+// Cache "bloqué" en mémoire — évite 1 requête Supabase par appel authentifié
+const _blockedCache = new Map(); // uid → { blocked: bool, ts: number }
+const BLOCKED_CACHE_TTL = 60000; // 1 minute
+
 async function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Token manquant' });
   const token = auth.slice(7);
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return res.status(401).json({ error: 'Token invalide' });
-    const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', user.id).single();
-    if (profile?.statut_compte === 'bloqué') return res.status(403).json({ error: 'Compte bloqué' });
-    req.user = user;
+    // Vérification JWT locale — pas d'aller-retour réseau
+    const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+    let payload;
+    if (SUPABASE_JWT_SECRET) {
+      payload = jwt.verify(token, SUPABASE_JWT_SECRET);
+    } else {
+      // Fallback si secret absent : vérification via API Supabase
+      const { data: { user: u }, error } = await supabase.auth.getUser(token);
+      if (error || !u) return res.status(401).json({ error: 'Token invalide' });
+      payload = { sub: u.id, email: u.email };
+    }
+    if (!payload?.sub) return res.status(401).json({ error: 'Token invalide' });
+    req.user = { id: payload.sub, email: payload.email };
+
+    // Vérification "bloqué" avec cache 1 minute
+    const cached = _blockedCache.get(payload.sub);
+    if (cached && Date.now() - cached.ts < BLOCKED_CACHE_TTL) {
+      if (cached.blocked) return res.status(403).json({ error: 'Compte bloqué' });
+      return next();
+    }
+    const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', payload.sub).single();
+    const blocked = profile?.statut_compte === 'bloqué';
+    _blockedCache.set(payload.sub, { blocked, ts: Date.now() });
+    if (blocked) return res.status(403).json({ error: 'Compte bloqué' });
     next();
   } catch(e) {
     res.status(401).json({ error: 'Erreur d\'authentification' });
