@@ -699,16 +699,14 @@ function _setupAuthStateChange(){
   // Vérifier s'il y a déjà une session (retour OAuth — hash traité avant la subscription)
   window._supabase.auth.getSession().then(function(result){
     var session=result&&result.data&&result.data.session;
-    if(session&&!user){
-      var provider=session.user&&session.user.app_metadata&&session.user.app_metadata.provider;
-      if(provider&&provider!=='email')_handleOAuthSignIn(session);
+    if(session&&!user&&_isOAuthReturn){
+      _handleOAuthSignIn(session);
     }
   });
   // Écouter les changements futurs (SIGNED_IN + INITIAL_SESSION pour Supabase v2)
   window._supabase.auth.onAuthStateChange(function(event,session){
-    if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session&&!user){
-      var provider=session.user&&session.user.app_metadata&&session.user.app_metadata.provider;
-      if(provider&&provider!=='email')_handleOAuthSignIn(session);
+    if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session&&!user&&_isOAuthReturn){
+      _handleOAuthSignIn(session);
     }
   });
 }
