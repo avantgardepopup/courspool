@@ -360,7 +360,8 @@ function buildFavPage(){
         _fetchProf(pid);
         var nm=p.nm||'Professeur';
         var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
-        var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
+        var _now=Date.now();
+        var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
@@ -1824,7 +1825,8 @@ function buildAccLists(){
       _fetchProf(id);
       var cours=C.filter(function(c){return c.pr===id;});
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
-      var prochainCours=cours.filter(function(c){return c.fl<c.sp;}).length;
+      var _now2=Date.now();
+      var prochainCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now2);}).length;
       var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
         '<span style="font-size:15px;font-weight:800;color:var(--or)">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
