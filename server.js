@@ -797,8 +797,12 @@ app.post('/stripe/checkout', async (req, res) => {
 
   try {
     // Prix depuis la BDD — ne jamais faire confiance au client
-    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,titre').eq('id', cours_id).single();
+    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
+    // Vérifier que le cours n'est pas complet
+    if (!pour_ami && cours.places_prises >= cours.places_max) {
+      return res.status(400).json({ error: 'Ce cours est complet' });
+    }
     const montant = Math.round((cours.prix_total / (cours.places_max || 1)) * 100) / 100;
 
     const baseUrl = 'https://courspool.vercel.app';
@@ -833,8 +837,12 @@ app.post('/stripe/payment-intent', async (req, res) => {
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
     // Prix depuis la BDD — ne jamais faire confiance au client
-    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,titre').eq('id', cours_id).single();
+    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
+    // Vérifier que le cours n'est pas complet
+    if (!pour_ami && cours.places_prises >= cours.places_max) {
+      return res.status(400).json({ error: 'Ce cours est complet' });
+    }
     const montant = Math.round((cours.prix_total / (cours.places_max || 1)) * 100) / 100;
     // Vérifier si déjà réservé
     if (!pour_ami) {
@@ -1356,6 +1364,11 @@ app.post('/stripe/webhook', async (req, res) => {
 // RESERVATIONS — liste élèves inscrits à un cours (une seule requête avec JOIN)
 app.get('/reservations/cours/:cours_id', async (req, res) => {
   try{
+    // Vérifier que le demandeur est le prof du cours ou admin
+    const {data:cours}=await supabase.from('cours').select('professeur_id').eq('id',req.params.cours_id).single();
+    if(!cours)return res.status(404).json({error:'Cours introuvable'});
+    if(cours.professeur_id!==req.user.id&&!isAdmin(req.user.id))return res.status(403).json({error:'Non autorisé'});
+
     const {data,error}=await supabase.from('reservations')
       .select('id,user_id,cours_id,montant_paye,created_at,profiles!user_id(prenom,nom,email)')
       .eq('cours_id',req.params.cours_id)
@@ -1435,6 +1448,10 @@ app.post('/messages/groupe', async (req, res) => {
     const { data: coursInfo } = await supabase.from('cours').select('professeur_id,eleves_peuvent_ecrire').eq('id', cours_id).single();
     if (!coursInfo) return res.status(404).json({ error: 'Cours introuvable' });
     if (coursInfo.professeur_id !== expediteur_id) {
+      // Vérifier que l'expéditeur est bien inscrit au cours
+      const { data: inscrit } = await supabase.from('reservations')
+        .select('id').eq('cours_id', cours_id).eq('user_id', expediteur_id).maybeSingle();
+      if (!inscrit) return res.status(403).json({ error: 'Non autorisé' });
       if (!coursInfo.eleves_peuvent_ecrire) {
         return res.status(403).json({ error: 'Les élèves ne peuvent pas écrire dans ce groupe' });
       }

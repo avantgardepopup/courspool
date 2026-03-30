@@ -2758,6 +2758,7 @@ async function confR(){haptic(15);
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
     // Rediriger vers paiement
+    if(!data.url||!data.url.startsWith('https://checkout.stripe.com/')){toast('Erreur','URL de paiement invalide');return;}
     window.location.href=data.url;
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
@@ -2809,6 +2810,7 @@ async function confAmi(id){
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   var btn=document.querySelector('#bdR .pb.pri');
+  var _btnHtml=btn?btn.innerHTML:null;
   if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
   try{
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
@@ -2822,9 +2824,10 @@ async function confAmi(id){
     })});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
+    if(!data.url||!data.url.startsWith('https://checkout.stripe.com/')){toast('Erreur','URL de paiement invalide');return;}
     window.location.href=data.url;
   }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
-  finally{if(btn){btn.disabled=false;btn.onclick=function(){confAmi(id);};}}
+  finally{if(btn){btn.disabled=false;if(_btnHtml)btn.innerHTML=_btnHtml;btn.onclick=function(){confAmi(id);};}}
 }
 
 function shareCoursLink(){
@@ -3382,7 +3385,7 @@ function openMsg(profNm,destId,avatar){
   var av=g('msgConvAv');
   if(avatar&&avatar!=='null'&&avatar!==''){
     av.style.background='none';
-    av.innerHTML='<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover">';
+    av.innerHTML='<img src="'+safeUrl(avatar)+'" style="width:100%;height:100%;object-fit:cover">';
   } else {
     av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';
     av.textContent=(profNm&&profNm[0])||'?';
