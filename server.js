@@ -21,11 +21,28 @@ io.use(async (socket, next) => {
   const token = socket.handshake.auth && socket.handshake.auth.token;
   if (!token) return next(new Error('unauthorized'));
   try {
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) return next(new Error('unauthorized'));
-    const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', data.user.id).single();
-    if (profile?.statut_compte === 'bloqué') return next(new Error('blocked'));
-    socket.userId = data.user.id;
+    const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+    let userId;
+    if (SUPABASE_JWT_SECRET) {
+      const payload = jwt.verify(token, SUPABASE_JWT_SECRET);
+      if (!payload?.sub) return next(new Error('unauthorized'));
+      userId = payload.sub;
+    } else {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error || !data.user) return next(new Error('unauthorized'));
+      userId = data.user.id;
+    }
+    // Vérification bloqué avec cache
+    const cached = _blockedCache.get(userId);
+    if (cached && Date.now() - cached.ts < BLOCKED_CACHE_TTL) {
+      if (cached.blocked) return next(new Error('blocked'));
+    } else {
+      const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', userId).single();
+      const blocked = profile?.statut_compte === 'bloqué';
+      _blockedCache.set(userId, { blocked, ts: Date.now() });
+      if (blocked) return next(new Error('blocked'));
+    }
+    socket.userId = userId;
     next();
   } catch(e) { next(new Error('unauthorized')); }
 });
@@ -600,34 +617,36 @@ app.post('/cours', async (req, res) => {
     return res.status(400).json({ error: 'visio_url doit commencer par http:// ou https://' });
   }
   const safeMode = (mode === 'visio' || mode === 'presentiel') ? mode : 'presentiel';
-  // Lire nom/photo depuis la DB — ne pas faire confiance au body (anti-spoofing)
-  const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
-  const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
-  const safeProfPhoto = profData?.photo_url || prof_photo || null;
-  const { data, error } = await supabase.from('cours')
-    .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
-    .select();
-  if (error) return res.status(500).json({ error });
-  // Push aux élèves qui suivent ce prof
-  if (data && data[0]) {
-    const titreNotif = data[0].titre || titre;
-    (async () => {
-      try {
-        const { data: follows } = await supabase.from('follows').select('user_id').eq('professeur_id', professeur_id);
-        if (!follows || !follows.length) return;
-        const { data: profP } = await supabase.from('profiles').select('prenom,nom').eq('id', professeur_id).single();
-        const profNom = profP ? (profP.prenom + ' ' + (profP.nom||'')).trim() : 'Un professeur';
-        await Promise.all(follows.map(f => pushToUser(f.user_id, {
-          title: `📚 Nouveau cours de ${profNom}`,
-          body: `"${titreNotif}" est disponible — réservez avant que les places partent !`,
-          tag: 'new-cours', icon: '/icon-192.png',
-          data: { url: 'https://courspool.vercel.app' }
-        })));
-      } catch(e) {}
-    })();
-  }
-  io.emit('cours_update', { action: 'create', cours: data[0] }); // broadcast public
-  res.json(data);
+  try {
+    // Lire nom/photo depuis la DB — ne pas faire confiance au body (anti-spoofing)
+    const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
+    const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
+    const safeProfPhoto = profData?.photo_url || prof_photo || null;
+    const { data, error } = await supabase.from('cours')
+      .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
+      .select();
+    if (error) return res.status(500).json({ error });
+    // Push aux élèves qui suivent ce prof
+    if (data && data[0]) {
+      const titreNotif = data[0].titre || titre;
+      (async () => {
+        try {
+          const { data: follows } = await supabase.from('follows').select('user_id').eq('professeur_id', professeur_id);
+          if (!follows || !follows.length) return;
+          const { data: profP } = await supabase.from('profiles').select('prenom,nom').eq('id', professeur_id).single();
+          const profNom = profP ? (profP.prenom + ' ' + (profP.nom||'')).trim() : 'Un professeur';
+          await Promise.all(follows.map(f => pushToUser(f.user_id, {
+            title: `📚 Nouveau cours de ${profNom}`,
+            body: `"${titreNotif}" est disponible — réservez avant que les places partent !`,
+            tag: 'new-cours', icon: '/icon-192.png',
+            data: { url: 'https://courspool.vercel.app' }
+          })));
+        } catch(e) {}
+      })();
+    }
+    io.emit('cours_update', { action: 'create', cours: data[0] }); // broadcast public
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // COURS — accès par code privé
