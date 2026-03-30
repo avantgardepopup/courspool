@@ -1335,9 +1335,11 @@ app.post('/email/diplome-verification', requireAdmin, async (req, res) => {
     if (status === 'approved') {
       await supabase.from('profiles').update({ diplome_verifie: true }).eq('id', prof_id);
       await logAdminAction(req.user.id, 'approve_diplome', prof_id, {});
+      req.app.get('io').to(prof_id).emit('diplome_update', { professeur_id: prof_id, diplome_verifie: true });
     } else {
       await supabase.from('profiles').update({ diplome_uploaded: false, diplome_verifie: false }).eq('id', prof_id);
       await logAdminAction(req.user.id, 'reject_diplome', prof_id, {});
+      req.app.get('io').to(prof_id).emit('diplome_update', { professeur_id: prof_id, diplome_verifie: false });
     }
     res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }

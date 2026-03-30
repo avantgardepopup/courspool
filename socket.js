@@ -1,6 +1,8 @@
 // ── Socket.io client — connexion unique ──────────────────────────────────────
 var _socket = null;
 var SOCKET_URL = 'https://devoted-achievement-production-fdfa.up.railway.app';
+var _socketRefreshing = false;    // guard : un seul refresh à la fois
+var _socketUnauthorized = 0;      // compteur d'échecs unauthorized consécutifs
 
 function initSocket() {
   // Déjà connecté ou en cours de connexion
@@ -16,26 +18,58 @@ function initSocket() {
   // Si ancien socket déconnecté, le nettoyer
   if (_socket) { _socket.removeAllListeners(); _socket.disconnect(); _socket = null; }
 
+  _socketUnauthorized = 0;
+  _socketRefreshing = false;
+
   _socket = io(SOCKET_URL, {
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionDelay: 2000,
-    reconnectionAttempts: Infinity,
+    reconnectionDelay: 3000,
+    reconnectionDelayMax: 15000,
+    reconnectionAttempts: 10,
     timeout: 10000,
-    auth: { token: (typeof user !== 'undefined' && user && user.token) ? user.token : '' }
+    // Fonction évaluée à chaque tentative → utilise toujours le token courant
+    auth: function(cb) {
+      cb({ token: (typeof user !== 'undefined' && user && user.token) ? user.token : '' });
+    }
   });
 
   _socket.on('connect', function() {
     console.log('[Socket] ✅ connecté — id:', _socket.id);
+    _socketUnauthorized = 0;
+    _socketRefreshing = false;
   });
 
   _socket.on('disconnect', function(reason) {
     console.log('[Socket] ❌ déconnecté — raison:', reason);
-    // socket.io se reconnecte automatiquement, pas besoin de rappeler initSocket()
+    // socket.io se reconnecte automatiquement selon reconnectionAttempts
   });
 
   _socket.on('connect_error', function(err) {
     console.warn('[Socket] ⚠️ erreur connexion:', err.message);
+    if (err.message === 'unauthorized') {
+      _socketUnauthorized++;
+      // Après 3 échecs consecutifs, arrêter définitivement pour éviter le flood
+      if (_socketUnauthorized >= 3) {
+        _socket.io.reconnection(false);
+        console.warn('[Socket] arrêt reconnexion — trop d\'échecs unauthorized');
+        return;
+      }
+      // Un seul refresh en cours à la fois — évite le flood de requêtes Supabase
+      if (_socketRefreshing) return;
+      _socketRefreshing = true;
+      if (typeof _refreshToken === 'function') {
+        _refreshToken().then(function() {
+          _socketRefreshing = false;
+          // Le socket.io retente automatiquement avec la fonction auth()
+          // qui retournera le nouveau token mis à jour par _refreshToken
+        }).catch(function() {
+          _socketRefreshing = false;
+        });
+      } else {
+        _socketRefreshing = false;
+      }
+    }
   });
 
   _socket.on('reconnect', function(attempt) {
@@ -172,6 +206,25 @@ function initSocket() {
         var msgBadge = document.getElementById('msgBadge');
         if (msgBadge) msgBadge.style.display = 'flex';
       }
+    }
+  });
+
+  // ── diplome_update : validation diplôme en temps réel ───────────────────
+  _socket.on('diplome_update', function(data) {
+    console.log('[Socket] diplome_update reçu:', data.professeur_id, '→', data.diplome_verifie);
+    if (!user || user.id !== data.professeur_id) return;
+    user.diplome_verifie = data.diplome_verifie;
+    if (!data.diplome_verifie) user.diplome_uploaded = false;
+    try { localStorage.setItem('cp_user', JSON.stringify(user)); } catch(e) {}
+    // Badge sur la page profil du prof
+    var dvB = document.getElementById('mpDiplomeBadge');
+    if (dvB) dvB.style.display = data.diplome_verifie ? 'block' : 'none';
+    // Bloc statut diplôme dans les paramètres
+    if (typeof updateDiplomeStatusBlock === 'function') updateDiplomeStatusBlock();
+    if (typeof updateVerifBand === 'function') updateVerifBand();
+    if (data.diplome_verifie) {
+      if (typeof toast === 'function') toast('Diplôme vérifié !', 'Le badge est maintenant visible sur votre profil');
+      if (typeof haptic === 'function') haptic([10, 50, 100, 50, 10]);
     }
   });
 
