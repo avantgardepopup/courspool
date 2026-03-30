@@ -631,7 +631,7 @@ app.get('/cours', async (req, res) => {
 // COURS — créer
 app.post('/cours', async (req, res) => {
   const professeur_id = req.user.id; // toujours l'utilisateur connecté
-  const { titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau, mode, prive, code_acces, visio_url } = req.body;
+  const { titre, sujet, couleur_sujet, background, date_heure, date_iso, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau, mode, prive, code_acces, visio_url } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total) {
     return res.status(400).json({ error: 'Champs manquants' });
   }
@@ -651,7 +651,7 @@ app.post('/cours', async (req, res) => {
     const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
     const safeProfPhoto = profData?.photo_url || prof_photo || null;
     const { data, error } = await supabase.from('cours')
-      .insert([{ titre, sujet, couleur_sujet, background, date_heure, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
+      .insert([{ titre, sujet, couleur_sujet, background, date_heure, date_iso: date_iso || null, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
       .select();
     if (error) {
       console.error('[POST /cours] Supabase error:', JSON.stringify(error));
@@ -2156,6 +2156,73 @@ app.use((err, req, res, next) => {
 process.on('unhandledRejection', (reason) => {
   console.error('[unhandledRejection]', reason);
 });
+
+// ── CRON VISIO NOTIFICATIONS ─────────────────────────────────
+const _visoNotifSent = new Set();
+setInterval(async () => {
+  try {
+    const now = Date.now();
+    const { data: visCours } = await supabase
+      .from('cours').select('id,titre,date_iso,professeur_id,visio_url')
+      .eq('mode', 'visio').not('date_iso', 'is', null)
+      .gte('date_iso', new Date(now - 2 * 60 * 60 * 1000).toISOString())
+      .lte('date_iso', new Date(now + 25 * 60 * 60 * 1000).toISOString());
+    if (!visCours || !visCours.length) return;
+    for (const c of visCours) {
+      const start = new Date(c.date_iso).getTime();
+      const diff = start - now;
+      const heure = new Date(c.date_iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+      const { data: resas } = await supabase.from('reservations').select('user_id').eq('cours_id', c.id);
+      const studentIds = (resas || []).map(r => r.user_id);
+      const allIds = [c.professeur_id, ...studentIds];
+      // H-24 : entre 23h50 et 24h10
+      if (diff > 23 * 60 * 60 * 1000 + 50 * 60 * 1000 && diff < 24 * 60 * 60 * 1000 + 10 * 60 * 1000) {
+        const key = `${c.id}:h24`;
+        if (!_visoNotifSent.has(key)) {
+          _visoNotifSent.add(key);
+          await Promise.all(allIds.map(id => pushToUser(id, {
+            title: '📅 Cours en visio demain', body: `"${c.titre}" commence demain à ${heure}`,
+            tag: `visio-h24-${c.id}`, icon: '/icon-192.png', data: { url: 'https://courspool.vercel.app' }
+          })));
+        }
+      }
+      // H-5 : entre 4m30 et 5m30
+      if (diff > 4 * 60 * 1000 + 30 * 1000 && diff < 5 * 60 * 1000 + 30 * 1000) {
+        const key = `${c.id}:h5`;
+        if (!_visoNotifSent.has(key)) {
+          _visoNotifSent.add(key);
+          await Promise.all(allIds.map(id => pushToUser(id, {
+            title: '🎥 Cours dans 5 minutes !', body: `"${c.titre}" commence dans 5 minutes`,
+            tag: `visio-h5-${c.id}`, icon: '/icon-192.png', data: { url: c.visio_url || 'https://courspool.vercel.app' }
+          })));
+          if (c.visio_url && studentIds.length > 0) {
+            const contenu = `🎥 Votre cours "${c.titre}" commence dans 5 minutes !\n\n👉 Rejoindre : ${c.visio_url}`;
+            for (const studentId of studentIds) {
+              const { data: msg } = await supabase.from('messages')
+                .insert({ expediteur_id: c.professeur_id, destinataire_id: studentId, contenu })
+                .select().single().catch(() => ({ data: null }));
+              if (msg) io.to(studentId).emit('new_message', {
+                expediteur_id: c.professeur_id, destinataire_id: studentId,
+                id: msg.id, contenu: msg.contenu, created_at: msg.created_at
+              });
+            }
+          }
+        }
+      }
+      // H+0 : entre -60s et +60s
+      if (diff > -60 * 1000 && diff < 60 * 1000) {
+        const key = `${c.id}:h0`;
+        if (!_visoNotifSent.has(key)) {
+          _visoNotifSent.add(key);
+          await Promise.all(allIds.map(id => pushToUser(id, {
+            title: '🎥 Le cours a commencé !', body: `"${c.titre}" est en cours — Rejoignez maintenant !`,
+            tag: `visio-h0-${c.id}`, icon: '/icon-192.png', data: { url: c.visio_url || 'https://courspool.vercel.app' }
+          })));
+        }
+      }
+    }
+  } catch(e) { console.error('[Visio cron]', e.message); }
+}, 60 * 1000);
 
 const PORT = process.env.PORT || 3000;
 // ── KEEP-ALIVE anti-cold-start Railway ──

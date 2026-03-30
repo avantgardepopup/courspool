@@ -504,7 +504,7 @@ async function loadData(page,silent){
         sc:(function(){var m=findMatiere(c.sujet||'');return m?m.color:(c.couleur_sujet||'#7C3AED');}()),
         bg:(function(){var m=findMatiere(c.sujet||'');return m?m.bg:(c.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)');}()),
         bgDark:(function(){var m=findMatiere(c.sujet||'');return m&&m.bgDark?m.bgDark:'linear-gradient(135deg,#1A1A2E,#16213E)';}()),
-        title:c.titre||'',dt:c.date_heure||'',lc:c.lieu||'',mode:c.mode||'presentiel',visio_url:c.visio_url||'',code:c.code_acces||'',prive:c.prive||false,
+        title:c.titre||'',dt:c.date_heure||'',dt_iso:c.date_iso||'',lc:c.lieu||'',mode:c.mode||'presentiel',visio_url:c.visio_url||'',code:c.code_acces||'',prive:c.prive||false,
         tot:c.prix_total||0,sp:c.places_max||5,fl:c.places_prises||0,
         pr:c.professeur_id,em:c.emoji||'📚',
         prof_ini:c.prof_initiales||'?',
@@ -3402,7 +3402,7 @@ async function subCr(){
   var sc=colors[sujet]||'#7C3AED',bg=bgs[sujet]||bgs['✨ Autre'];
   var payload={
     titre,sujet,couleur_sujet:sc,background:bg,
-    date_heure:dateFormatee,lieu,prix_total:prix,places_max:places,
+    date_heure:dateFormatee,date_iso:dateObj.toISOString(),lieu,prix_total:prix,places_max:places,
     professeur_id:user.id,emoji:isCoursPrivé?'🔒':'📚',
     prof_initiales:user.ini||'?',
     prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
@@ -6729,7 +6729,15 @@ async function subCrStep(){
       var rmb=g('rModeBadge');
       if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?'Visio':'Présentiel')+'</span>';}
       var rvj=g('rVisioJoin');
-      if(rvj){var show=c.mode==='visio'&&c.visio_url&&(res[c.id]||(user&&c.pr===user.id));rvj.style.display=show?'flex':'none';if(show)rvj.href=(/^https?:\/\//i.test(c.visio_url)?c.visio_url:'#');}
+      if(rvj){
+        var _isProf=user&&c.pr===user.id;
+        var _isEnrolled=!!res[c.id];
+        var _rStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
+        var _rInWin=!_rStart||(Date.now()>=_rStart-15*60*1000&&Date.now()<=_rStart+2*60*60*1000);
+        var show=c.mode==='visio'&&c.visio_url&&(_isProf||(_isEnrolled&&_rInWin));
+        rvj.style.display=show?'flex':'none';
+        if(show)rvj.href=(/^https?:\/\//i.test(c.visio_url)?c.visio_url:'#');
+      }
     },50);
   };
 
@@ -6819,9 +6827,18 @@ function buildMesCard(c,isPast,isProf){
   var mC=c.mode==='visio'?'visio':'presentiel';
   var visio='';
   if(c.mode==='visio'){
-    if(c.visio_url&&(isProf||!!res[c.id])){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a>';}
-    if(isProf&&!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
-    else if(isProf&&c.visio_url){visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
+    var _vNow=Date.now();
+    var _vStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
+    var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+    var _vNotYet=_vStart&&_vNow<_vStart-15*60*1000;
+    var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+    if(isProf){
+      if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
+      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
+    } else if(!!res[c.id]){
+      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre le cours en visio</a>';}
+      else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
+    }
   }
   var code='';
   if(isProf&&c.prive&&c.code){code='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Code d&#39;acc\u00e8s</div><div style="font-size:18px;font-weight:800;letter-spacing:.18em;color:var(--ink)">'+escH(c.code)+'</div></div><button class="mes-code-copy" data-code="'+escH(c.code)+'" style="background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer">Copier</button></div>';}

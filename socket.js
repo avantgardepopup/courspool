@@ -114,7 +114,7 @@ function initSocket() {
       if (!C.find(function(x) { return x.id == c.id; })) {
         C.unshift({
           id: c.id, subj: c.sujet || 'Autre', title: c.titre || '',
-          dt: c.date_heure || '', dt_iso: c.date_heure || '', lc: c.lieu || '',
+          dt: c.date_heure || '', dt_iso: c.date_iso || '', lc: c.lieu || '',
           tot: c.prix_total || 0, sp: c.places_max || 5, fl: 0,
           pr: c.professeur_id, prof_ini: c.prof_initiales || '?',
           prof_nm: c.prof_nom || '', prof_photo: c.prof_photo || null,
