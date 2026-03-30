@@ -1887,8 +1887,9 @@ function buildAccLists(){
           p={nm:'Professeur',i:'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',e:0};
         }
         P[id]=p;
-        _fetchProf(id);
       }
+      // Toujours vérifier les données fraîches — _fetchProf retourne immédiatement si déjà _fresh
+      _fetchProf(id);
       var cours=C.filter(function(c){return c.pr===id;});
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
       var prochainCours=cours.filter(function(c){return c.fl<c.sp;}).length;
