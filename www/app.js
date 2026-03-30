@@ -636,6 +636,7 @@ async function _initSupabase(){
       return;
     }
     window._supabase=window.supabase.createClient(data.supabaseUrl,data.supabaseAnonKey);
+    window._supabaseOrigin=data.supabaseUrl;
     _setupAuthStateChange();
   }catch(e){
     console.warn('[OAuth] Erreur init Supabase:',e);
@@ -780,8 +781,10 @@ async function doOAuthGoogle(){
         options:{redirectTo:redirectTo,skipBrowserRedirect:true,queryParams:{access_type:'offline',prompt:'consent'}}
       });
       if(res.data&&res.data.url){
-        try{await window.Capacitor.Plugins.Browser.open({url:res.data.url});}
-        catch(be){window.location.href=res.data.url;}
+        var _oauthUrl=res.data.url;
+        if(!window._supabaseOrigin||!_oauthUrl.startsWith(window._supabaseOrigin)){toast('Erreur','URL OAuth invalide');return;}
+        try{await window.Capacitor.Plugins.Browser.open({url:_oauthUrl});}
+        catch(be){window.location.href=_oauthUrl;}
       }
     }else{
       await window._supabase.auth.signInWithOAuth({
@@ -802,8 +805,10 @@ async function doOAuthApple(){
         options:{redirectTo:redirectTo,skipBrowserRedirect:true}
       });
       if(res.data&&res.data.url){
-        try{await window.Capacitor.Plugins.Browser.open({url:res.data.url});}
-        catch(be){window.location.href=res.data.url;}
+        var _oauthUrlA=res.data.url;
+        if(!window._supabaseOrigin||!_oauthUrlA.startsWith(window._supabaseOrigin)){toast('Erreur','URL OAuth invalide');return;}
+        try{await window.Capacitor.Plugins.Browser.open({url:_oauthUrlA});}
+        catch(be){window.location.href=_oauthUrlA;}
       }
     }else{
       await window._supabase.auth.signInWithOAuth({
