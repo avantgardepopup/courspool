@@ -296,6 +296,10 @@ tr:hover td{background:#FAFAF9;}
             <div class="card-header"><h3>Profs en attente</h3><span class="badge orange" id="pendingCount">0</span></div>
             <div id="pendingProfs" style="padding:12px"></div>
           </div>
+          <div class="card" id="diplomePendingCard" style="display:none">
+            <div class="card-header"><h3>Diplômes en attente</h3><span class="badge" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A" id="diplomePendingCount">0</span></div>
+            <div id="pendingDiplomes" style="padding:12px"></div>
+          </div>
         </div>
       </div>
 
@@ -307,6 +311,7 @@ tr:hover td{background:#FAFAF9;}
           <button class="filter-btn" onclick="filterProfs('pending',this)">En attente</button>
           <button class="filter-btn" onclick="filterProfs('verified',this)">Vérifiés</button>
           <button class="filter-btn" onclick="filterProfs('rejected',this)">Rejetés</button>
+          <button class="filter-btn" onclick="filterProfs('diplome_pending',this)" id="filterDiplomePending">Diplôme en attente <span id="filterDiplomeBadge" style="display:none;background:#B45309;color:#fff;border-radius:50px;padding:1px 6px;font-size:10px;margin-left:3px">0</span></button>
         </div>
         <div class="search-bar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -648,10 +653,17 @@ function renderDashboard(){
   document.getElementById('statRes').textContent=allRes.length;
   document.getElementById('statRevenu').textContent=commission+'€';
   document.getElementById('statPending').textContent=pending;
+  var diplomePending=allProfs.filter(function(p){return p.diplome_uploaded&&!p.diplome_verifie;}).length;
   if(pending>0){
     ['pendingBadge','mobPendingBadge'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='';el.textContent=pending;}});
     document.getElementById('pendingCount').textContent=pending;
   }
+  // Badge filtre diplôme en attente
+  var fdb=document.getElementById('filterDiplomeBadge');
+  if(fdb){fdb.style.display=diplomePending>0?'':'none';fdb.textContent=diplomePending;}
+  document.getElementById('diplomePendingCount').textContent=diplomePending;
+  var dc=document.getElementById('diplomePendingCard');
+  if(dc)dc.style.display=diplomePending>0?'block':'none';
   // Réservations récentes
   var rr=document.getElementById('recentRes');
   if(!allRes.length){rr.innerHTML='<div class="empty"><p>Aucune réservation</p></div>';return;}
@@ -666,11 +678,17 @@ function renderDashboard(){
   // Profs en attente
   var pp=document.getElementById('pendingProfs');
   var pendingList=allProfs.filter(function(p){return !p.verified&&p.statut_compte!=='rejeté'&&p.statut_compte!=='bloqué';});
-  if(!pendingList.length){pp.innerHTML='<div class="empty"><p>Aucun en attente</p></div>';return;}
-  pp.innerHTML=pendingList.slice(0,4).map(function(p){
+  pp.innerHTML=pendingList.length?pendingList.slice(0,4).map(function(p){
     var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
     return'<div class="pending-card"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+ini+'</div><div><div style="font-size:13px;font-weight:600">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div style="font-size:11px;color:var(--lite)">'+(p.matieres||p.statut||'—')+'</div></div></div><button class="btn btn-orange" onclick="openProfModal(\''+p.id+'\')">Vérifier</button></div>';
-  }).join('');
+  }).join(''):'<div class="empty"><p>Aucun en attente</p></div>';
+  // Diplômes en attente
+  var dp=document.getElementById('pendingDiplomes');
+  var diplomeList=allProfs.filter(function(p){return p.diplome_uploaded&&!p.diplome_verifie;});
+  if(dp)dp.innerHTML=diplomeList.length?diplomeList.slice(0,4).map(function(p){
+    var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
+    return'<div class="pending-card"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+ini+'</div><div><div style="font-size:13px;font-weight:600">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div style="font-size:11px;color:var(--lite)">'+(p.matieres||'—')+'</div></div></div><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Valider</button></div>';
+  }).join(''):'<div class="empty"><p>Aucun diplôme en attente</p></div>';
 }
 
 // PROFESSEURS
@@ -681,6 +699,7 @@ function renderProfs(filter,search){
     if(filter==='pending')return !p.verified&&p.statut_compte!=='rejeté'&&p.statut_compte!=='bloqué';
     if(filter==='verified')return p.verified;
     if(filter==='rejected')return p.statut_compte==='rejeté'||p.statut_compte==='bloqué';
+    if(filter==='diplome_pending')return p.diplome_uploaded&&!p.diplome_verifie;
     return true;
   }).filter(function(p){
     if(!search)return true;
@@ -694,7 +713,8 @@ function renderProfs(filter,search){
     var statusBadge=p.verified?'<span class="badge green">Vérifié</span>':p.statut_compte==='rejeté'?'<span class="badge red">Rejeté</span>':p.statut_compte==='bloqué'?'<span class="badge red">Bloqué</span>':'<span class="badge orange">En attente</span>';
     var date=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'—';
     var cni=p.cni_uploaded?'<span class="badge green">CNI ✓</span>':'<span class="badge gray">Sans CNI</span>';
-    return'<tr><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+' '+cni+'</td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Voir</button></td></tr>';
+    var diplBadge=p.diplome_verifie?'<span class="badge green">Diplôme ✓</span>':p.diplome_uploaded?'<span class="badge" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A">Diplôme ⏳</span>':'';
+    return'<tr><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+' '+cni+' '+diplBadge+'</td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Voir</button></td></tr>';
   }).join('');
 }
 function filterProfs(f,el){profFilter=f;document.querySelectorAll('#pageProfs .filter-btn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');renderProfs(f);}
