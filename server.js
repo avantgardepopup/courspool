@@ -37,9 +37,9 @@ io.use(async (socket, next) => {
     if (cached && Date.now() - cached.ts < BLOCKED_CACHE_TTL) {
       if (cached.blocked) return next(new Error('blocked'));
     } else {
-      const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', userId).single();
+      const { data: profile } = await supabase.from('profiles').select('statut_compte,role').eq('id', userId).single();
       const blocked = profile?.statut_compte === 'bloqué';
-      _blockedCache.set(userId, { blocked, ts: Date.now() });
+      _blockedCache.set(userId, { blocked, role: profile?.role, ts: Date.now() });
       if (blocked) return next(new Error('blocked'));
     }
     socket.userId = userId;
@@ -146,16 +146,18 @@ async function requireAuth(req, res, next) {
     if (!payload?.sub) return res.status(401).json({ error: 'Token invalide' });
     req.user = { id: payload.sub, email: payload.email };
 
-    // Vérification "bloqué" avec cache 1 minute
+    // Vérification "bloqué" avec cache 1 minute — on récupère aussi le role
     const cached = _blockedCache.get(payload.sub);
     if (cached && Date.now() - cached.ts < BLOCKED_CACHE_TTL) {
       if (cached.blocked) return res.status(403).json({ error: 'Compte bloqué' });
+      req.user.role = cached.role;
       return next();
     }
-    const { data: profile } = await supabase.from('profiles').select('statut_compte').eq('id', payload.sub).single();
+    const { data: profile } = await supabase.from('profiles').select('statut_compte,role').eq('id', payload.sub).single();
     const blocked = profile?.statut_compte === 'bloqué';
-    _blockedCache.set(payload.sub, { blocked, ts: Date.now() });
+    _blockedCache.set(payload.sub, { blocked, role: profile?.role, ts: Date.now() });
     if (blocked) return res.status(403).json({ error: 'Compte bloqué' });
+    req.user.role = profile?.role;
     next();
   } catch(e) {
     res.status(401).json({ error: 'Erreur d\'authentification' });
