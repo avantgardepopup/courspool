@@ -1061,8 +1061,8 @@ async function doLogin(){
       ]).then(function(results){
         var resData=results[0],folData=results[1];
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-        // Ne remplacer fol que si la réponse serveur est valide
-        if(Array.isArray(folData)){fol.clear();folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+        // Merge API → fol sans écraser (évite perte de follows si API retourne [] par erreur)
+        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
         loadData().then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
       }).catch(function(){loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});});
     } else {
@@ -1439,8 +1439,8 @@ function goExplore(){
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
           // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
           Object.keys(P).forEach(function(k){delete P[k]});
-          // Ne remplacer fol QUE si le fetch a réussi (null = erreur réseau → conserver)
-          if(Array.isArray(folData)){fol.clear();folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+          // Merge API → fol sans écraser (évite perte de follows si API retourne [] par erreur)
+          if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
           favCours.clear();loadFavCours();
           updateFavBadge();
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
@@ -1615,11 +1615,8 @@ function goAccount(){
         resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});
         try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}
       }
-      if(Array.isArray(folData)){
-        fol.clear();
-        folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});
-        _saveFol();
-      }
+      // Merge API → fol sans écraser (évite perte de follows si API retourne [] par erreur)
+      if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
       buildAccLists();
     }).catch(function(){});
   }
