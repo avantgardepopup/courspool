@@ -1171,7 +1171,7 @@ async function doLogin(){
       var _dataP2=loadData();
       var _rfP2=Promise.all([
         fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
       ]);
       // Afficher les cours dès qu'ils arrivent
       _dataP2.then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
@@ -1181,10 +1181,8 @@ async function doLogin(){
         Object.keys(res).forEach(function(k){delete res[k];});
         Object.keys(P).forEach(function(k){delete P[k];});
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-        var _newFol2=new Set();
-        if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});}
-        fol=_newFol2;
-        _saveFol();
+        // Ne remplacer fol QUE si le fetch a réussi (folData=null = échec réseau → garder fol du localStorage)
+        if(Array.isArray(folData)){var _newFol2=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});fol=_newFol2;_saveFol();}
         if(C.length)buildCards();
         updateFavBadge();
         var _pfav3=g('pgFav');if(_pfav3&&_pfav3.classList.contains('on'))buildFavPage();
@@ -3131,7 +3129,15 @@ function confF(){
           _saveFollowCount(pid,P[pid].e);
         }
       })
-      .catch(function(){});
+      .catch(function(){
+        // Rollback : le POST a échoué → annuler le suivi côté client
+        fol.delete(pid);_saveFol();
+        _syncFollowBtns(pid,false);
+        P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
+        if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+        _saveFollowCount(pid,P[pid].e||0);
+        toast('Erreur réseau','Impossible de suivre ce professeur');
+      });
   }
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}

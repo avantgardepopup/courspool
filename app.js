@@ -2881,14 +2881,30 @@ function confF(){
   folPr=null;
   updateFavBadge();
   // Sauvegarder le follow en base
-  if(user&&user.id){
-    fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
-    // Incrémenter le compteur d'élèves du prof (toujours créer P[pid] d'abord)
-    P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
-    P[pid].e=(P[pid].e||0)+1;
-  }
+  P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
+  P[pid].e=(P[pid].e||0)+1;
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
+  if(user&&user.id){
+    fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.nb_eleves!==undefined){
+          P[pid].e=data.nb_eleves;
+          if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
+          _saveFollowCount(pid,P[pid].e);
+        }
+      })
+      .catch(function(){
+        // Rollback : POST échoué → annuler le suivi côté client
+        fol.delete(pid);
+        _syncFollowBtns(pid,false);
+        P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
+        if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+        _saveFollowCount(pid,P[pid].e||0);
+        toast('Erreur réseau','Impossible de suivre ce professeur');
+      });
+  }
 }
 
 // PROFIL PROF
