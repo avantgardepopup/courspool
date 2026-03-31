@@ -22,6 +22,8 @@
     { "src": "/privacy.html", "dest": "/privacy.html" },
     { "src": "/cgu", "dest": "/cgu.html" },
     { "src": "/cgu.html", "dest": "/cgu.html" },
+    { "src": "/contact", "dest": "/contact.html" },
+    { "src": "/contact.html", "dest": "/contact.html" },
     { "src": "/sw.js", "dest": "/sw.js" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
     { "src": "/icon.svg", "dest": "/icon.svg" },
