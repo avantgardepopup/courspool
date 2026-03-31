@@ -1400,6 +1400,7 @@ function goExplore(){
       user=parsedUser;
       _scheduleTokenRefresh();
       applyUser();
+      _loadFol(); // restaurer les follows depuis localStorage (fallback si API échoue ci-dessous)
       favCours.clear();loadFavCours(); // charger les favoris avec le bon user.id dès maintenant
       // Fetch profil en background — corrige avatar/pseudo stales sans attendre goAccount()
       // /profiles/ est public (pas besoin de token valide) → fonctionne même en cold start
