@@ -1164,6 +1164,7 @@ async function doLogin(){
     try{localStorage.removeItem('cp_profs');}catch(e){}
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
+    _loadFol(); // fallback localStorage si GET /follows échoue plus bas
     favCours.clear();loadFavCours();
     _convCache='';
     if(uid){
@@ -1754,6 +1755,7 @@ function goAccount(){
       if(Array.isArray(folData)){
         fol.clear();
         folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});
+        _saveFol();
       }
       buildAccLists();
     }).catch(function(){});
@@ -2403,7 +2405,7 @@ function toggleFollowCard(pid,btn){
       })
       .catch(function(){
         _followInFlight.delete(pid);
-        fol.add(pid);_syncFollowBtns(pid,true);
+        fol.add(pid);_saveFol();_syncFollowBtns(pid,true);
         P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
@@ -2415,9 +2417,10 @@ function toggleFollowCard(pid,btn){
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){return r.json();})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
       .then(function(data){
         _followInFlight.delete(pid);
+        if(data&&data.error)throw new Error(data.error);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -2426,7 +2429,7 @@ function toggleFollowCard(pid,btn){
       })
       .catch(function(){
         _followInFlight.delete(pid);
-        fol.delete(pid);_syncFollowBtns(pid,false);
+        fol.delete(pid);_saveFol();_syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
@@ -3452,7 +3455,7 @@ function togFP(){
         })
         .catch(function(){
           _followInFlight.delete(id);
-          fol.add(id);_setFollowBtn(true);_syncFollowBtns(id,true);
+          fol.add(id);_saveFol();_setFollowBtn(true);_syncFollowBtns(id,true);
           if(P[id])P[id].e=(P[id].e||0)+1;
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
           _saveFollowCount(id,P[id].e||0);
@@ -3467,9 +3470,10 @@ function togFP(){
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
-        .then(function(r){return r.json();})
+        .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
         .then(function(data){
           _followInFlight.delete(id);
+          if(data&&data.error)throw new Error(data.error);
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
             if(g('mpE'))g('mpE').textContent=P[id].e;
@@ -3478,7 +3482,7 @@ function togFP(){
         })
         .catch(function(){
           _followInFlight.delete(id);
-          fol.delete(id);_setFollowBtn(false);_syncFollowBtns(id,false);
+          fol.delete(id);_saveFol();_setFollowBtn(false);_syncFollowBtns(id,false);
           if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
           _saveFollowCount(id,P[id].e||0);
