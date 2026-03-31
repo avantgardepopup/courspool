@@ -383,7 +383,13 @@ function unfollowProf(pid){
   fol.delete(pid);_saveFol();
   _syncFollowBtns(pid,false);
   if(user&&user.id){
-    fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
+    fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+      .catch(function(){
+        fol.add(pid);_saveFol();_syncFollowBtns(pid,true);
+        buildFavPage();
+        toast('Erreur réseau','Impossible de retirer le suivi');
+      });
   }
   toast('Professeur retiré des suivis','');
   haptic(4);
@@ -1953,7 +1959,7 @@ function doLogout(){
   try{localStorage.removeItem('cp_res');}catch(e){}
   try{localStorage.removeItem('cp_profs');}catch(e){}
   try{localStorage.removeItem('cp_follow_counts');}catch(e){}
-  try{var _fk=_folKey();if(_fk)localStorage.removeItem(_fk);}catch(e){}
+  // cp_fol_{userId} intentionnellement gardé : fallback si API Railway froide au prochain login
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
@@ -2212,7 +2218,7 @@ function toggleFollowCard(pid,btn){
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){return r.json();})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
       .then(function(data){
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
@@ -3182,7 +3188,7 @@ function togFP(){
     }
     if(user&&user.id){
       fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
-        .then(function(r){return r.json();})
+        .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
         .then(function(data){
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
