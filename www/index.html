@@ -404,7 +404,25 @@
     </div>
   </div>
 
-  <!-- ═══ PROF SLIDE 1 : Niveau d'études ═══ -->
+  <!-- ═══ PROF SLIDE 1 : Statut ═══ -->
+  <div id="pcPf0" class="pc-slide" style="display:none">
+    <div class="lreg-slide-inner">
+      <h2 class="lscreen-title">Quel est votre statut ?</h2>
+      <p class="lscreen-sub">Pour personaliser les prochaines questions</p>
+      <div class="lniv-grid">
+        <div class="lniv-chip" onclick="pickPcStatut(this,'etudiant')">Etudiant</div>
+        <div class="lniv-chip" onclick="pickPcStatut(this,'prof_ecole')">Prof des ecoles</div>
+        <div class="lniv-chip" onclick="pickPcStatut(this,'prof_college')">College / lycee</div>
+        <div class="lniv-chip" onclick="pickPcStatut(this,'prof_universite')">Enseignant-chercheur</div>
+        <div class="lniv-chip" onclick="pickPcStatut(this,'auto')">Auto-entrepreneur</div>
+        <div class="lniv-chip" onclick="pickPcStatut(this,'autre')">Autre</div>
+      </div>
+      <button class="lbtn" onclick="pcNext()">Continuer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="pcNext()">Plus tard</p>
+    </div>
+  </div>
+
+  <!-- ═══ PROF SLIDE 2 : Niveau d'études (étudiant seulement) ═══ -->
   <div id="pcPfA" class="pc-slide" style="display:none">
     <div class="lreg-slide-inner">
       <h2 class="lscreen-title">Quel est votre niveau d'etudes ?</h2>

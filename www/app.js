@@ -776,7 +776,7 @@ async function _handleOAuthSignIn(session){
   _pcIsOAuth=true;
   _oauthSession=session;
   _regRole='eleve';
-  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcMatieres=[];_pcMode='';
+  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcStatut='';_pcMatieres=[];_pcMode='';
   _pcHistory=[];
   var pc=g('profCompletion');if(pc){pc.style.display='block';pc.scrollTop=0;}
   _pcShowSlide('pcOAuthRole',false);
@@ -872,7 +872,7 @@ async function pcOAuthRoleNext(){
     loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     // Avancer vers les slides spécifiques au rôle
     _pcHistory.push('pcOAuthRole');
-    var nextSlide=(user.role==='professeur')?'pcPfA':'pcElA';
+    var nextSlide=(user.role==='professeur')?'pcPf0':'pcElA';
     _pcShowSlide(nextSlide,false);
   }catch(e){
     toast('Erreur','Problème de connexion');
@@ -894,6 +894,7 @@ function regBack(){showLogin();}
 var _pcPour='moi';
 var _pcNivEleve='';
 var _pcNivEtudes='';
+var _pcStatut='';
 var _pcMatieres=[];
 var _pcMode='';
 var _pcCurrentSlide='';
@@ -903,21 +904,27 @@ function showProfCompletion(){
   var pc=g('profCompletion');if(!pc)return;
   pc.style.display='block';
   _pcIsOAuth=false;_oauthSession=null;
-  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcMatieres=[];_pcMode='';
+  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcStatut='';_pcMatieres=[];_pcMode='';
   _pcHistory=[];
-  var first=(user&&user.role==='professeur')?'pcPfA':'pcElA';
+  var first=(user&&user.role==='professeur')?'pcPf0':'pcElA';
   _pcShowSlide(first,false);
 }
 
-function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPfA','pcPfB','pcPfC'];}
+function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPf0','pcPfA','pcPfB','pcPfC'];}
+
+function _pcProfSlides(){
+  // pcPfA (niveau d'études) uniquement si statut = étudiant ou non encore sélectionné
+  var inclNiv=(!_pcStatut||_pcStatut==='etudiant');
+  return inclNiv?['pcPf0','pcPfA','pcPfB','pcPfC']:['pcPf0','pcPfB','pcPfC'];
+}
 
 function _pcOrderedSlides(){
   if(_pcIsOAuth){
     if(!user)return['pcOAuthRole'];
-    if(user.role==='professeur')return['pcOAuthRole','pcPfA','pcPfB','pcPfC'];
+    if(user.role==='professeur')return['pcOAuthRole'].concat(_pcProfSlides());
     return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf']:['pcOAuthRole','pcElA','pcElBmoi'];
   }
-  if(user&&user.role==='professeur')return['pcPfA','pcPfB','pcPfC'];
+  if(user&&user.role==='professeur')return _pcProfSlides();
   return _pcPour==='enfant'?['pcElA','pcElBenf']:['pcElA','pcElBmoi'];
 }
 
@@ -931,10 +938,9 @@ function _pcShowSlide(id,isBack){
   if(id==='pcPfC'){
     var _villeTitle=g('pcVilleTitle');
     if(_villeTitle){
-      var _studying=['bac','licence','master','doctorat'];
-      if(_studying.indexOf(_pcNivEtudes)!==-1){
+      if(_pcStatut==='etudiant'){
         _villeTitle.textContent='Ou etudiez-vous ?';
-      } else if(_pcNivEtudes==='autre'){
+      } else if(_pcStatut==='auto'||_pcStatut==='autre'){
         _villeTitle.textContent='Ou travaillez-vous ?';
       } else {
         _villeTitle.textContent='Ou enseignez-vous ?';
@@ -978,6 +984,13 @@ function pickPour(v){
 
 function pickPcNiv(el,v){
   _pcNivEleve=v;
+  var grid=el.parentNode;
+  [].forEach.call(grid.querySelectorAll('.lniv-chip'),function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
+
+function pickPcStatut(el,v){
+  _pcStatut=v;
   var grid=el.parentNode;
   [].forEach.call(grid.querySelectorAll('.lniv-chip'),function(c){c.classList.remove('on');});
   el.classList.add('on');
@@ -1044,7 +1057,8 @@ async function saveProfCompletion(){
   var payload={};
   if(!user||!user.id||user.guest){_hideProfCompletion();return;}
   if(user.role==='professeur'){
-    if(_pcNivEtudes)payload.statut=_pcNivEtudes;
+    if(_pcStatut)payload.statut=_pcStatut;
+    if(_pcNivEtudes)payload.niveau_etudes=_pcNivEtudes;
     if(_pcMatieres.length>0)payload.matieres=_pcMatieres.join(', ');
     var ville=(g('pcVille')&&g('pcVille').value||'').trim();
     if(ville)payload.ville=ville;
@@ -1066,6 +1080,7 @@ async function saveProfCompletion(){
     if(user.role==='professeur'){
       if(payload.statut)user.statut=payload.statut;
       if(payload.matieres)user.matieres=payload.matieres;
+      if(payload.niveau_etudes)user.niveau_etudes=payload.niveau_etudes;
       if(payload.ville)user.ville=payload.ville;
       if(payload.mode_cours)user.mode_cours=payload.mode_cours;
     } else {
