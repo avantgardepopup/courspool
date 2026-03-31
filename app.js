@@ -219,6 +219,11 @@ loadFavCours();
 // Sauvegarder le compteur de suivis d'un prof — clé sans TTL pour persister même après expiration de cp_profs
 function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]=n||0;localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
 
+// ── Persistance localStorage des follows (Set d'IDs) ──
+function _folKey(){return(user&&user.id)?'cp_fol_'+user.id:null;}
+function _saveFol(){try{var k=_folKey();if(k)localStorage.setItem(k,JSON.stringify(Array.from(fol)));}catch(e){}}
+function _loadFol(){try{var k=_folKey();if(!k)return;var s=localStorage.getItem(k);if(s)JSON.parse(s).forEach(function(id){fol.add(id);});}catch(e){}}
+
 function _favKey(){return(user&&user.id)?'cp_fav_cours_'+user.id:'cp_fav_cours';}
 function loadFavCours(){
   try{
@@ -375,7 +380,7 @@ function buildFavPage(){
 }
 
 function unfollowProf(pid){
-  fol.delete(pid);
+  fol.delete(pid);_saveFol();
   _syncFollowBtns(pid,false);
   if(user&&user.id){
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
@@ -1041,15 +1046,17 @@ async function doLogin(){
     try{localStorage.removeItem('cp_profs');}catch(e){}
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
+    _loadFol(); // Restaurer les follows depuis localStorage comme fallback (si GET /follows échoue plus bas)
     favCours.clear();loadFavCours();
     if(uid){
       Promise.all([
         fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = réseau mort → garder fol du localStorage
       ]).then(function(results){
         var resData=results[0],folData=results[1];
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-        if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
+        // Ne remplacer fol que si la réponse serveur est valide
+        if(Array.isArray(folData)){fol.clear();folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
         loadData().then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
       }).catch(function(){loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});});
     } else {
@@ -1426,7 +1433,7 @@ function goExplore(){
           // Vider le cache P{} pour éviter les données fantômes d'une ancienne session
           Object.keys(P).forEach(function(k){delete P[k]});
           // Ne remplacer fol QUE si le fetch a réussi (null = erreur réseau → conserver)
-          if(Array.isArray(folData)){fol.clear();folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});}
+          if(Array.isArray(folData)){fol.clear();folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
           favCours.clear();loadFavCours();
           updateFavBadge();
           // Si l'onglet Suivis est actif, re-render maintenant que fol est chargé
@@ -1604,6 +1611,7 @@ function goAccount(){
       if(Array.isArray(folData)){
         fol.clear();
         folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});
+        _saveFol();
       }
       buildAccLists();
     }).catch(function(){});
@@ -1944,6 +1952,7 @@ function doLogout(){
   try{localStorage.removeItem('cp_res');}catch(e){}
   try{localStorage.removeItem('cp_profs');}catch(e){}
   try{localStorage.removeItem('cp_follow_counts');}catch(e){}
+  try{var _fk=_folKey();if(_fk)localStorage.removeItem(_fk);}catch(e){}
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
@@ -2197,7 +2206,7 @@ function toggleFollowCard(pid,btn){
   if(!pid)return;
   var isFollowing=fol.has(pid);
   if(isFollowing){
-    fol.delete(pid);
+    fol.delete(pid);_saveFol();
     _syncFollowBtns(pid,false);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
@@ -2211,14 +2220,14 @@ function toggleFollowCard(pid,btn){
         }
       })
       .catch(function(){
-        fol.add(pid);_syncFollowBtns(pid,true);
+        fol.add(pid);_saveFol();_syncFollowBtns(pid,true);
         P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
         toast('Erreur réseau','Impossible de modifier le suivi');
       });
   } else {
-    fol.add(pid);
+    fol.add(pid);_saveFol();
     _syncFollowBtns(pid,true);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
@@ -2233,7 +2242,7 @@ function toggleFollowCard(pid,btn){
         }
       })
       .catch(function(){
-        fol.delete(pid);_syncFollowBtns(pid,false);
+        fol.delete(pid);_saveFol();_syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
@@ -2874,7 +2883,7 @@ function confF(){
   if(!folPr)return;
   var pid=folPr;
   var p=P[pid]||{};
-  fol.add(pid);
+  fol.add(pid);_saveFol();
   _syncFollowBtns(pid,true);
   closeM('bdF');
   toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours');
@@ -2898,7 +2907,7 @@ function confF(){
       })
       .catch(function(){
         // Rollback : POST échoué → annuler le suivi côté client
-        fol.delete(pid);
+        fol.delete(pid);_saveFol();
         _syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -3159,7 +3168,7 @@ function togFP(){
   var id=curProf,p=P[id]||{nm:'ce prof'};
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
   if(fol.has(id)){
-    fol.delete(id);
+    fol.delete(id);_saveFol();
     _setFollowBtn(false);
     _syncFollowBtns(id,false);
     toast('Désabonné','Vous ne suivez plus '+p.nm);
@@ -3181,7 +3190,7 @@ function togFP(){
           }
         })
         .catch(function(){
-          fol.add(id);_setFollowBtn(true);_syncFollowBtns(id,true);
+          fol.add(id);_saveFol();_setFollowBtn(true);_syncFollowBtns(id,true);
           if(P[id])P[id].e=(P[id].e||0)+1;
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
           _saveFollowCount(id,P[id].e||0);
@@ -3189,7 +3198,7 @@ function togFP(){
         });
     }
   } else {
-    fol.add(id);
+    fol.add(id);_saveFol();
     _setFollowBtn(true);
     _syncFollowBtns(id,true);
     toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
@@ -3206,7 +3215,7 @@ function togFP(){
           }
         })
         .catch(function(){
-          fol.delete(id);_setFollowBtn(false);_syncFollowBtns(id,false);
+          fol.delete(id);_saveFol();_setFollowBtn(false);_syncFollowBtns(id,false);
           if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
           _saveFollowCount(id,P[id].e||0);

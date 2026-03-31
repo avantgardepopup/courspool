@@ -1122,7 +1122,7 @@ app.post('/follows', async (req, res) => {
   const { professeur_id } = req.body;
   if (!professeur_id) return res.status(400).json({ error: 'professeur_id manquant' });
   try {
-    const { error } = await supabase.from('follows').insert([{ user_id, professeur_id }]);
+    const { error } = await supabase.from('follows').upsert({ user_id, professeur_id }, { onConflict: 'user_id,professeur_id' });
     if (error) return res.status(500).json({ error });
     const { count } = await supabase.from('follows').select('*', { count: 'exact', head: true }).eq('professeur_id', professeur_id);
     const nb_eleves = count || 0;
