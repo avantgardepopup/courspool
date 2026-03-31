@@ -1693,6 +1693,7 @@ function goAccount(){
   if(pfVille)pfVille.value=user.ville||'';if(pfBio)pfBio.value=user.bio||'';
   var pfVilleVisEl=g('pfVilleVisible');
   if(pfVilleVisEl){if(user.ville_visible)pfVilleVisEl.classList.add('on');else pfVilleVisEl.classList.remove('on');}
+  _updatePfVilleLabel();
   var roleDisplay=g('pfRoleDisplay');
   if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 Professeur':'🎓 Élève';
   var pfProfExtra=g('pfProfExtra');
@@ -1732,7 +1733,7 @@ function goAccount(){
         if(prof.bio!==undefined)user.bio=prof.bio||'';
         if(prof.ville!==undefined){user.ville=prof.ville||'';var _pfVil=g('pfVille');if(_pfVil)_pfVil.value=user.ville;}
         if(prof.ville_visible!==undefined){user.ville_visible=prof.ville_visible;var _pvv=g('pfVilleVisible');if(_pvv){if(prof.ville_visible)_pvv.classList.add('on');else _pvv.classList.remove('on');}}
-        if(prof.statut!==undefined)user.statut=prof.statut||'';
+        if(prof.statut!==undefined){user.statut=prof.statut||'';_updatePfVilleLabel();}
         if(prof.niveau!==undefined)user.niveau=prof.niveau||'';
         if(prof.matieres!==undefined)user.matieres=prof.matieres||'';
         user.nbEleves=prof.nb_eleves||0;
@@ -2012,6 +2013,19 @@ function setPfRole(role){
   g('pfRolEl').classList.toggle('on',role==='eleve');
   g('pfRolPf').classList.toggle('on',role==='professeur');
   g('pfProfExtra').style.display=role==='professeur'?'block':'none';
+}
+
+function _updatePfVilleLabel(){
+  var lbl=g('pfVilleLabel');
+  if(!lbl||!user)return;
+  if(user.role==='eleve'){
+    lbl.textContent='Où étudiez-vous ?';
+  } else {
+    var st=user.statut||'';
+    if(st==='etudiant') lbl.textContent='Où étudiez-vous ?';
+    else if(st==='auto'||st==='autre') lbl.textContent='Où travaillez-vous ?';
+    else lbl.textContent='Où enseignez-vous ?';
+  }
 }
 
 function saveProf(){

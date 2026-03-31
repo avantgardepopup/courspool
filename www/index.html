@@ -1073,32 +1073,26 @@
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Mon compte</div>
           <div class="pref-group">
             <div class="pref-row">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="pref-label">Prénom</span>
-              <input id="pfPr" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
+              <input id="pfPr" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:160px" placeholder="—">
             </div>
             <div class="pref-row">
-              <div class="pref-icon" style="background:#EFF6FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
               <span class="pref-label">Nom</span>
-              <input id="pfNm" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px" placeholder="—">
+              <input id="pfNm" type="text" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:160px" placeholder="—">
             </div>
             <div class="pref-row">
-              <div class="pref-icon" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
               <span class="pref-label">Email</span>
-              <input id="pfEm" type="email" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:180px" placeholder="—">
+              <input id="pfEm" type="email" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:200px" placeholder="—">
             </div>
             <div class="pref-row">
-              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-              <span class="pref-label">Ville</span>
-              <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px">
+              <span class="pref-label" id="pfVilleLabel">Ville</span>
+              <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:160px">
             </div>
-            <div class="pref-row" style="cursor:default">
-              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
-              <div style="flex:1"><span class="pref-label">Afficher la ville</span><div style="font-size:12px;color:var(--lite);margin-top:1px">Visible sur votre profil public</div></div>
+            <div class="pref-row" style="cursor:default;padding:10px 16px;min-height:unset;background:var(--bg)">
+              <span style="flex:1;font-size:13px;color:var(--lite)">Visible sur mon profil public</span>
               <div class="ntog" id="pfVilleVisible" onclick="this.classList.toggle('on')"></div>
             </div>
             <div class="pref-row" style="cursor:default">
-              <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
               <span class="pref-label">Rôle</span>
               <div id="pfRoleDisplay" style="font-size:14px;color:var(--lite)"></div>
             </div>
