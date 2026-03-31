@@ -300,6 +300,10 @@ tr:hover td{background:#FAFAF9;}
             <div class="card-header"><h3>Diplômes en attente</h3><span class="badge" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A" id="diplomePendingCount">0</span></div>
             <div id="pendingDiplomes" style="padding:12px"></div>
           </div>
+          <div class="card" id="casierPendingCard" style="display:none">
+            <div class="card-header"><h3>Casiers judiciaires en attente</h3><span class="badge" style="background:#F0FDF4;color:#065F46;border:1px solid #6EE7B7" id="casierPendingCount">0</span></div>
+            <div id="pendingCasiers" style="padding:12px"></div>
+          </div>
         </div>
       </div>
 
@@ -312,6 +316,7 @@ tr:hover td{background:#FAFAF9;}
           <button class="filter-btn" onclick="filterProfs('verified',this)">Vérifiés</button>
           <button class="filter-btn" onclick="filterProfs('rejected',this)">Rejetés</button>
           <button class="filter-btn" onclick="filterProfs('diplome_pending',this)" id="filterDiplomePending">Diplôme en attente <span id="filterDiplomeBadge" style="display:none;background:#B45309;color:#fff;border-radius:50px;padding:1px 6px;font-size:10px;margin-left:3px">0</span></button>
+          <button class="filter-btn" onclick="filterProfs('casier_pending',this)" id="filterCasierPending">Casier en attente <span id="filterCasierBadge" style="display:none;background:#065F46;color:#fff;border-radius:50px;padding:1px 6px;font-size:10px;margin-left:3px">0</span></button>
         </div>
         <div class="search-bar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -503,7 +508,8 @@ tr:hover td{background:#FAFAF9;}
           <div class="info-item"><label>CNI uploadée</label><span id="modalCniStatus">—</span></div>
         </div>
         <div id="modalCniBox" style="margin-bottom:12px;background:var(--bg);border-radius:12px;padding:16px;text-align:center;color:var(--lite);font-size:13px"></div>
-        <div id="modalDiplomeBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;color:var(--lite);font-size:13px"></div>
+        <div id="modalDiplomeBox" style="margin-bottom:12px;background:var(--bg);border-radius:12px;padding:16px;color:var(--lite);font-size:13px"></div>
+        <div id="modalCasierBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;color:var(--lite);font-size:13px"></div>
       </div>
       <!-- Champs ÉLÈVE -->
       <div id="modalEleveSection" style="display:none">
@@ -684,11 +690,24 @@ function renderDashboard(){
   }).join(''):'<div class="empty"><p>Aucun en attente</p></div>';
   // Diplômes en attente
   var dp=document.getElementById('pendingDiplomes');
-  var diplomeList=allProfs.filter(function(p){return p.diplome_uploaded&&!p.diplome_verifie;});
-  if(dp)dp.innerHTML=diplomeList.length?diplomeList.slice(0,4).map(function(p){
+  var diplomePending2=allProfs.filter(function(p){return p.diplome_uploaded&&!p.diplome_verifie;});
+  if(dp)dp.innerHTML=diplomePending2.length?diplomePending2.slice(0,4).map(function(p){
     var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
     return'<div class="pending-card"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+ini+'</div><div><div style="font-size:13px;font-weight:600">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div style="font-size:11px;color:var(--lite)">'+(p.matieres||'—')+'</div></div></div><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Valider</button></div>';
   }).join(''):'<div class="empty"><p>Aucun diplôme en attente</p></div>';
+  // Casiers en attente
+  var casierPending=allProfs.filter(function(p){return p.casier_uploaded&&!p.casier_verifie;}).length;
+  var fcb=document.getElementById('filterCasierBadge');
+  if(fcb){fcb.style.display=casierPending>0?'':'none';fcb.textContent=casierPending;}
+  document.getElementById('casierPendingCount').textContent=casierPending;
+  var cc=document.getElementById('casierPendingCard');
+  if(cc)cc.style.display=casierPending>0?'block':'none';
+  var cp2=document.getElementById('pendingCasiers');
+  var casierList=allProfs.filter(function(p){return p.casier_uploaded&&!p.casier_verifie;});
+  if(cp2)cp2.innerHTML=casierList.length?casierList.slice(0,4).map(function(p){
+    var ini=((p.prenom&&p.prenom[0]||'')+(p.nom&&p.nom[0]||'')).toUpperCase()||'?';
+    return'<div class="pending-card"><div style="display:flex;align-items:center;gap:8px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#10B981,#065F46);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+ini+'</div><div><div style="font-size:13px;font-weight:600">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div style="font-size:11px;color:var(--lite)">'+(p.matieres||'—')+'</div></div></div><button class="btn btn-green" onclick="openProfModal(\''+p.id+'\')">Valider</button></div>';
+  }).join(''):'<div class="empty"><p>Aucun casier en attente</p></div>';
 }
 
 // PROFESSEURS
@@ -700,6 +719,7 @@ function renderProfs(filter,search){
     if(filter==='verified')return p.verified;
     if(filter==='rejected')return p.statut_compte==='rejeté'||p.statut_compte==='bloqué';
     if(filter==='diplome_pending')return p.diplome_uploaded&&!p.diplome_verifie;
+    if(filter==='casier_pending')return p.casier_uploaded&&!p.casier_verifie;
     return true;
   }).filter(function(p){
     if(!search)return true;
@@ -714,7 +734,8 @@ function renderProfs(filter,search){
     var date=p.created_at?new Date(p.created_at).toLocaleDateString('fr-FR'):'—';
     var cni=p.cni_uploaded?'<span class="badge green">CNI ✓</span>':'<span class="badge gray">Sans CNI</span>';
     var diplBadge=p.diplome_verifie?'<span class="badge green">Diplôme ✓</span>':p.diplome_uploaded?'<span class="badge" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A">Diplôme ⏳</span>':'';
-    return'<tr><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+' '+cni+' '+diplBadge+'</td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Voir</button></td></tr>';
+    var casierBadge=p.casier_verifie?'<span class="badge" style="background:#F0FDF4;color:#065F46;border:1px solid #6EE7B7">Casier ✓</span>':p.casier_uploaded?'<span class="badge" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0">Casier ⏳</span>':'';
+    return'<tr><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+' '+cni+' '+diplBadge+' '+casierBadge+'</td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Voir</button></td></tr>';
   }).join('');
 }
 function filterProfs(f,el){profFilter=f;document.querySelectorAll('#pageProfs .filter-btn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');renderProfs(f);}
@@ -856,6 +877,22 @@ function openProfModal(id){
     var diplomeImg=p.diplome_url?'<img src="'+escHtml(p.diplome_url)+'" style="width:100%;border-radius:10px;cursor:pointer;margin-bottom:8px" onclick="window.open(\''+escHtml(p.diplome_url)+'\',\'_blank\')" alt="Diplôme"><div style="font-size:11px;color:var(--lite);margin-bottom:8px">Cliquer pour agrandir</div>':'';
     diplomeBox.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:8px">Diplôme : '+diplomeStatusBadge+'</div>'+diplomeImg+diplomeActions;
   }
+  // Casier judiciaire
+  var casierBox=document.getElementById('modalCasierBox');
+  if(casierBox){
+    var casierStatusBadge=p.casier_verifie?'<span class="badge" style="background:#F0FDF4;color:#065F46;border:1px solid #6EE7B7">Vérifié</span>':p.casier_uploaded?'<span class="badge" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0">En attente</span>':'<span class="badge gray">Non uploadé</span>';
+    var casierActions='';
+    if(p.casier_uploaded&&!p.casier_verifie){
+      casierActions='<div style="display:flex;gap:8px;margin-top:10px">'
+        +'<button class="btn btn-green" style="flex:1;justify-content:center;font-size:12px;padding:8px" onclick="verifyCasier(\''+p.id+'\',\'approved\')">Valider le casier</button>'
+        +'<button class="btn btn-red" style="flex:1;justify-content:center;font-size:12px;padding:8px" onclick="verifyCasier(\''+p.id+'\',\'rejected\')">Rejeter le casier</button>'
+        +'</div>';
+    } else if(p.casier_verifie){
+      casierActions='<div style="margin-top:8px"><button class="btn btn-red" style="font-size:12px;padding:8px" onclick="verifyCasier(\''+p.id+'\',\'rejected\')">Révoquer le casier</button></div>';
+    }
+    var casierImg=p.casier_url?'<img src="'+escHtml(p.casier_url)+'" style="width:100%;border-radius:10px;cursor:pointer;margin-bottom:8px" onclick="window.open(\''+escHtml(p.casier_url)+'\',\'_blank\')" alt="Casier"><div style="font-size:11px;color:var(--lite);margin-bottom:8px">Cliquer pour agrandir</div>':'';
+    casierBox.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:8px">Profil de confiance (casier) : '+casierStatusBadge+'</div>'+casierImg+casierActions;
+  }
   // Actions
   var actions=document.getElementById('modalActions');
   if(!p.verified&&p.statut_compte!=='bloqué'){
@@ -984,6 +1021,22 @@ async function verifyDiplome(id, action){
       }
       closeModal();renderDashboard();renderProfs();
       toast(action==='approved'?'Diplôme validé ! Email envoyé au prof.':'Diplôme refusé. Email envoyé au prof.');
+    } else { toast('Erreur lors de la mise à jour'); }
+  } catch(e) { toast('Erreur réseau'); }
+}
+
+async function verifyCasier(id, action){
+  try{
+    var r=await fetch(API+'/email/casier-verification',{method:'POST',headers:adminHeaders(),body:JSON.stringify({prof_id:id,status:action})});
+    var d=await r.json();
+    if(r.ok&&d.success){
+      var p=allProfs.find(function(x){return x.id===id;});
+      if(p){
+        p.casier_verifie=(action==='approved');
+        if(action==='rejected')p.casier_uploaded=false;
+      }
+      closeModal();renderDashboard();renderProfs();
+      toast(action==='approved'?'Casier validé ! Badge "Profil de confiance" activé.':'Casier refusé. Email envoyé au prof.');
     } else { toast('Erreur lors de la mise à jour'); }
   } catch(e) { toast('Erreur réseau'); }
 }

@@ -185,8 +185,11 @@ function getCourseState(id){
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
   if(!el)return;
-  if(photo){el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s" onload="this.style.opacity=\'1\'">';}
-  else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
+  if(photo){
+    var _ex=el.querySelector('img');
+    if(_ex&&_ex.src===photo){return;} // même URL déjà affichée → pas de re-flash
+    el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s" onload="this.style.opacity=\'1\'">';
+  }else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
 }
 
 // Badge sera mis à jour après chargement des follows
@@ -361,7 +364,7 @@ function buildFavPage(){
           +'</div>'
           +'<div class="fav-cours-card-body">'
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+esc(fmtDt(c.dt))+'</div>'
+          +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
           +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+esc(c.lc)+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'</div>'
@@ -397,7 +400,8 @@ function buildFavPage(){
         var avBg=(_fresh&&p.photo)?'none':col;
         // Nom : données fraîches → afficher, sinon skeleton animé
         var nmHtml=_fresh?('<span>'+esc(p.nm||'Professeur')+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
-        var nbCours=cours.filter(function(c){return c.fl<c.sp;}).length;
+        var _now=Date.now();
+        var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
@@ -922,6 +926,20 @@ function _pcShowSlide(id,isBack){
   el.style.display='block';
   if(isBack)el.classList.add('pc-back');
   _pcCurrentSlide=id;
+  // Adapter la question du lieu selon le statut du prof
+  if(id==='pcPfC'){
+    var _villeTitle=g('pcVilleTitle');
+    if(_villeTitle){
+      var _studying=['bac','licence','master','doctorat'];
+      if(_studying.indexOf(_pcNivEtudes)!==-1){
+        _villeTitle.textContent='Ou etudiez-vous ?';
+      } else if(_pcNivEtudes==='autre'){
+        _villeTitle.textContent='Ou travaillez-vous ?';
+      } else {
+        _villeTitle.textContent='Ou enseignez-vous ?';
+      }
+    }
+  }
   var pc=g('profCompletion');if(pc)pc.scrollTop=0;
   _pcUpdateProgress();
 }
@@ -1708,6 +1726,7 @@ function goAccount(){
   // Statut vérification
   updateVerifStatusBlock();
   updateDiplomeStatusBlock();
+  updateCasierStatusBlock();
   // Afficher les préférences notif si push actif
   var notifTypes = g('notifTypes');
   if (notifTypes) notifTypes.style.display = (_pushSubscription) ? 'block' : 'none';
@@ -1736,7 +1755,7 @@ function switchATab(s,el){
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
-  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();updateDiplomeStatusBlock();}
+  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();updateDiplomeStatusBlock();updateCasierStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
   if(s==='F'){ buildAccLists(); }
@@ -1749,7 +1768,7 @@ function buildAccLists(){
   var isProf=user&&user.role==='professeur';
   var stats=g('accStats');
   if(stats){
-    var nbCours=isProf?C.filter(function(c){return c.pr===user.id;}).length:0;
+    var nbCours=isProf?C.filter(function(c){return c.pr===user.id&&!_isCoursPass(c);}).length:0;
     if(isProf){
       stats.innerHTML=
         '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
@@ -1800,7 +1819,7 @@ function buildAccLists(){
           +'</div>'
           +'<div class="fav-cours-card-body">'
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+esc(fmtDt(c.dt))+'</div>'
+          +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
@@ -1912,7 +1931,8 @@ function buildAccLists(){
       _fetchProf(id);
       var cours=C.filter(function(c){return c.pr===id;});
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
-      var prochainCours=cours.filter(function(c){return c.fl<c.sp;}).length;
+      var _now2=Date.now();
+      var prochainCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now2);}).length;
       var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
         '<span style="font-size:15px;font-weight:800;color:var(--or)">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
@@ -2176,6 +2196,7 @@ function _fetchProf(pid){
     P[pid]._fresh=true;
     if(prof.verified!==undefined)P[pid].verified=prof.verified;
     if(prof.diplome_verifie!==undefined)P[pid].dv=prof.diplome_verifie;
+    if(prof.casier_verifie!==undefined)P[pid].cv=prof.casier_verifie;
     if(nm2){
       P[pid].nm=nm2;
       P[pid].i=((pr2[0]||'')+(no2[0]||'')).toUpperCase()||'?';
@@ -2583,8 +2604,39 @@ var FM={
   langues:function(t){return /anglais|espagnol|allemand|langue|toefl|ielts|fle/.test(t);},
   economie:function(t){return /econom|macro|finance|compta|gestion|marketing/.test(t);},
   soir:function(t){return /18h|19h|20h|21h|soir/.test(t);},
-  weekend:function(t){return /sam|dim|week/.test(t);}
+  weekend:function(t){return /sam|dim|week/.test(t);},
+  histoire:function(t){return /histoire|histor/.test(t);},
+  philosophie:function(t){return /philo/.test(t);},
+  chimie:function(t){return /chimie|chim/.test(t);},
+  biologie:function(t){return /biolog|svt/.test(t);},
+  sport:function(t){return /sport|gym|fitness/.test(t);},
+  musique:function(t){return /musique|piano|guitare|solfege/.test(t);},
+  droit:function(t){return /droit|jurid|loi/.test(t);}
 };
+
+// Pool complet de filtres disponibles
+var _FILTER_POOL=[
+  {key:'maths',       label:'Maths',     emoji:'📐'},
+  {key:'physique',    label:'Physique',  emoji:'⚗️'},
+  {key:'informatique',label:'Info',      emoji:'💻'},
+  {key:'langues',     label:'Langues',   emoji:'🌍'},
+  {key:'economie',    label:'Éco',       emoji:'📊'},
+  {key:'soir',        label:'Ce soir',   emoji:'🌙'},
+  {key:'weekend',     label:'Week-end',  emoji:'🎉'},
+  {key:'histoire',    label:'Histoire',  emoji:'📖'},
+  {key:'philosophie', label:'Philo',     emoji:'🧠'},
+  {key:'chimie',      label:'Chimie',    emoji:'🔬'},
+  {key:'biologie',    label:'Bio',       emoji:'🌿'},
+  {key:'sport',       label:'Sport',     emoji:'🏃'},
+  {key:'musique',     label:'Musique',   emoji:'🎵'},
+  {key:'droit',       label:'Droit',     emoji:'⚖️'}
+];
+
+// Filtres actifs dans la barre (chargés depuis localStorage)
+var _barActive=(function(){
+  try{var s=localStorage.getItem('cp_bar_active');return s?JSON.parse(s):['maths','langues','histoire','soir','weekend'];}
+  catch(e){return['maths','langues','histoire','soir','weekend'];}
+})();
 function doFilter(){
   // Récupérer la valeur depuis l'un ou l'autre des champs de recherche
   var mobInp=document.getElementById('mobSearchInput');
@@ -2653,10 +2705,8 @@ function acceptFilterAlias(){
   if(!_pendingFilterAlias)return;
   var box=g('filterAliasSuggestion');if(box)box.style.display='none';
   var inp=g('filterInput');if(inp)inp.value=_pendingFilterAlias;
-  addFilterQuick(_pendingFilterAlias);
-  var key=_pendingFilterAlias.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   _pendingFilterAlias=null;
-  selectCustomFilter(key);
+  addBarCustomFilter();
 }
 
 function denyFilterAlias(){
@@ -2666,28 +2716,42 @@ function denyFilterAlias(){
 function setPill(el){haptic(4);document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
 function restoreFilters(){
   try{
-    // Réinjecter dans la barre tous les filtres custom sauvegardés
-    var _addBtn=g('pillAdd');
-    if(_addBtn){
-      customFilters.forEach(function(f){
-        if(!document.querySelector('[data-f="custom_'+f.key+'"]')){
-          var pill=document.createElement('button');
-          pill.className='filter-pill-btn pill';
-          pill.dataset.f='custom_'+f.key;
-          pill.innerHTML=esc(f.label)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+f.key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
-          pill.onclick=function(){setPill(pill);};
-          _addBtn.parentNode.insertBefore(pill,_addBtn);
-        }
-      });
-    }
     var f=sessionStorage.getItem('cp_filter');
-    if(f&&f!=='tous'){
-      var el=document.querySelector('[data-f="'+f+'"]');
-      if(el){el.classList.add('on');var tous=g('pillTous');if(tous)tous.classList.remove('on','active');actF=f;}
-    }
+    if(f&&f!=='tous'){actF=f;}
     var niv=sessionStorage.getItem('cp_niv');
     if(niv){actNiv=niv;var lbl=g('pillNivLabel');if(lbl)lbl.textContent=niv;var pn=g('pillNiv');if(pn)pn.classList.add('on');}
   }catch(e){}
+  renderFilterBar();
+}
+
+function renderFilterBar(){
+  var bar=document.getElementById('filterBar');
+  if(!bar)return;
+  // Supprimer toutes les pills existantes (sauf #pillAdd)
+  Array.from(bar.querySelectorAll('.pill')).forEach(function(p){p.remove();});
+  var addBtn=document.getElementById('pillAdd');
+
+  // Toujours afficher "Tous" en premier
+  var tousBtn=document.createElement('button');
+  tousBtn.className='filter-pill-btn pill'+(actF==='tous'?' on':'');
+  tousBtn.dataset.f='tous';
+  tousBtn.id='pillTous';
+  tousBtn.textContent='Tous';
+  tousBtn.onclick=function(){setPill(tousBtn);};
+  bar.insertBefore(tousBtn,addBtn);
+
+  // Afficher les filtres actifs de la barre
+  var allPool=_FILTER_POOL.concat(customFilters.map(function(f){return{key:f.key,label:f.label,emoji:'✨'};}));
+  _barActive.forEach(function(key){
+    var f=allPool.find(function(x){return x.key===key;});
+    if(!f)return;
+    var pill=document.createElement('button');
+    pill.className='filter-pill-btn pill'+(actF===key?' on':'');
+    pill.dataset.f=key;
+    pill.textContent=f.label;
+    pill.onclick=function(){setPill(pill);};
+    bar.insertBefore(pill,addBtn);
+  });
 }
 
 // RÉSERVATION
@@ -3036,7 +3100,8 @@ function openPr(pid){
   g('mpbd').textContent=pCache.niveau||'';
   var vBadge=g('mpVerifiedBadge');if(vBadge)vBadge.style.display=(pCache.verified===true||pCache.verified==='true')?'block':'none';
   var dvBadge=g('mpDiplomeBadge');if(dvBadge)dvBadge.style.display=(pCache.dv===true||pCache.dv==='true')?'block':'none';
-  g('mpC').textContent=cours.length;
+  var cvBadge=g('mpCasierBadge');if(cvBadge)cvBadge.style.display=(pCache.cv===true||pCache.cv==='true')?'block':'none';
+  g('mpC').textContent=cours.filter(function(x){return !_isCoursPass(x);}).length;
   g('mpN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
   g('mpE').textContent=p.e||0;
   // Cours donnés : passés + au moins 1 élève réservé — uniquement ce qu'on peut vérifier depuis C[]
@@ -3171,9 +3236,10 @@ function openPr(pid){
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;
     P[pid]._fullFetched=true;
-    ['bio','matieres','niveau','statut','verified','diplome_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
     if(prof.verified!==undefined){var _vB=g('mpVerifiedBadge');if(_vB)_vB.style.display=(prof.verified===true||prof.verified==='true')?'block':'none';}
     if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;var _dvB=g('mpDiplomeBadge');if(_dvB)_dvB.style.display=(prof.diplome_verifie===true||prof.diplome_verifie==='true')?'block':'none';}
+    if(prof.casier_verifie!==undefined){P[pid].cv=prof.casier_verifie;var _cvB=g('mpCasierBadge');if(_cvB)_cvB.style.display=(prof.casier_verifie===true||prof.casier_verifie==='true')?'block':'none';}
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';
     var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
     if(_apiNm){
@@ -3683,6 +3749,18 @@ async function loadMessages(){
             var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];
             txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');
           }
+          // Bouton visio si applicable (inscrit dans la fenêtre ou prof)
+          if(_mc&&_mc.mode==='visio'&&_mc.visio_url){
+            var _vNow=Date.now();
+            var _vStart=_mc.dt_iso?new Date(_mc.dt_iso).getTime():0;
+            var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+            var _isProf2=user&&_mc.pr===user.id;
+            var _isEnrolled2=!!res[_mc.id];
+            if(_isProf2||(_isEnrolled2&&_vInWin)){
+              var _vBtn='<a href="'+safeUrl(_mc.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;text-decoration:none;box-sizing:border-box" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</a>';
+              txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
+            }
+          }
           // Remplacer la card entière si le cours n'est plus actif
           var _st=getCourseState(_cid);
           if(_st==='past'||_st==='deleted'){
@@ -3883,7 +3961,7 @@ async function loadConversations(){
       var _pc=m.contenu||'';
       var preview=_pc.includes('chat-cours-card')||_pc.includes('"mode":"')?'📚 A partagé un cours':(esc(_pc.slice(0,35))+(_pc.length>35?'…':''));
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" style="animation-delay:'+(_idx*0.055)+'s" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
+      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
     var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
     lm.innerHTML=_convHtml;
@@ -4044,18 +4122,97 @@ function locInputClear(){
 // FILTRES CUSTOM
 // ============================================================
 var customFilters=(function(){try{return JSON.parse(localStorage.getItem('cp_custom_filters')||'[]');}catch(e){return[];}})();
-// Reconstruire FM pour les filtres restaurés depuis localStorage
-customFilters.forEach(function(f){FM['custom_'+f.key]=function(t){return t.includes(f.key);};});
+// Reconstruire FM pour les filtres custom restaurés depuis localStorage
+customFilters.forEach(function(f){FM[f.key]=function(t){return t.includes(f.key);};});
 
 function openAddFilter(){
   var bd=g('bdFilter');
   if(!bd)return;
   // Déplacer dans body pour éviter le clipping par overflow:hidden du parent
   if(bd.parentNode!==document.body)document.body.appendChild(bd);
-  g('filterInput').value='';
-  renderCustomPills();
+  var inp=g('filterInput');if(inp)inp.value='';
+  var aliasBox=g('filterAliasSuggestion');if(aliasBox)aliasBox.style.display='none';
+  renderBarConfig();
   bd.style.display='flex';
   document.body.style.overflow='hidden';
+}
+
+function renderBarConfig(){
+  var grid=g('barConfigGrid');
+  if(!grid)return;
+  // Pool complet : built-ins + custom
+  var allPool=_FILTER_POOL.slice();
+  customFilters.forEach(function(f){
+    if(!allPool.find(function(x){return x.key===f.key;})){
+      allPool.push({key:f.key,label:f.label,emoji:'✨',custom:true});
+    }
+  });
+  var html='<div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:4px">';
+  allPool.forEach(function(f){
+    var inBar=_barActive.indexOf(f.key)!==-1;
+    html+='<button onclick="toggleBarFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:5px;'
+      +(inBar
+          ?'background:var(--or);color:#fff;border:1.5px solid var(--or);box-shadow:0 2px 8px rgba(255,107,43,.25);'
+          :'background:var(--wh);color:var(--ink);border:1.5px solid var(--bdr);')
+      +'border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
+      +esc(f.label)
+      +(inBar?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>':'')
+      +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.3);font-size:10px;font-weight:800">✕</span>':'')
+      +'</button>';
+  });
+  html+='</div>';
+  grid.innerHTML=html;
+}
+
+function toggleBarFilter(key){
+  var idx=_barActive.indexOf(key);
+  if(idx!==-1){
+    _barActive.splice(idx,1);
+  } else {
+    _barActive.push(key);
+  }
+  try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  // Si le filtre actif vient d'être retiré, revenir à "tous"
+  if(actF===key){actF='tous';}
+  renderFilterBar();
+  renderBarConfig();
+  doFilter();
+}
+
+function addBarCustomFilter(){
+  var inp=g('filterInput');
+  if(!inp)return;
+  var val=inp.value.trim();
+  if(!val)return;
+  var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // Ajouter aux customFilters si absent
+  if(!customFilters.find(function(f){return f.key===key;})){
+    customFilters.push({label:val,key:key});
+    try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
+    FM[key]=function(t){return t.includes(key);};
+  }
+  // Ajouter à la barre
+  if(_barActive.indexOf(key)===-1){
+    _barActive.push(key);
+    try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  }
+  inp.value='';
+  var aliasBox=g('filterAliasSuggestion');if(aliasBox)aliasBox.style.display='none';
+  renderFilterBar();
+  renderBarConfig();
+  doFilter();
+}
+
+function removeBarCustom(key){
+  customFilters=customFilters.filter(function(f){return f.key!==key;});
+  try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
+  _barActive=_barActive.filter(function(k){return k!==key;});
+  try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  delete FM[key];
+  if(actF===key)actF='tous';
+  renderFilterBar();
+  renderBarConfig();
+  doFilter();
 }
 function closeAddFilter(){
   var bd=g('bdFilter');
@@ -4063,69 +4220,59 @@ function closeAddFilter(){
   document.body.style.overflow='';
 }
 
+// Compat: addCustomFilter now delegates to addBarCustomFilter
 function addCustomFilter(){
-  var val=g('filterInput').value.trim();
-  if(!val)return;
-  addFilterQuick(val);
-  g('filterInput').value='';
+  addBarCustomFilter();
 }
 
-// Ajoute la matière dans le popup (liste de sélection) — PAS dans la barre
+// Compat: addFilterQuick adds to customFilters + FM without activating bar
 function addFilterQuick(val){
   var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(customFilters.find(function(f){return f.key===key;}))return;
   customFilters.push({label:val,key:key});
   try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
-  renderCustomPills();
+  FM[key]=function(t){return t.includes(key);};
 }
 
-// Appelé quand l'user clique sur un chip dans le popup → ajoute à la barre et active
+// Compat: selectCustomFilter → toggle in bar and activate
 function selectCustomFilter(key){
-  var f=customFilters.find(function(cf){return cf.key===key;});
-  if(!f)return;
-  var existing=document.querySelector('[data-f="custom_'+key+'"]');
-  if(!existing){
-    var addBtn=g('pillAdd');
-    var pill=document.createElement('button');
-    pill.className='filter-pill-btn pill';
-    pill.dataset.f='custom_'+key;
-    pill.innerHTML=esc(f.label)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
-    pill.onclick=function(){setPill(pill);};
-    addBtn.parentNode.insertBefore(pill,addBtn);
-    FM['custom_'+key]=function(t){return t.includes(key);};
-    existing=pill;
+  if(_barActive.indexOf(key)===-1){
+    _barActive.push(key);
+    try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
   }
+  renderFilterBar();
+  renderBarConfig();
   closeAddFilter();
-  setPill(existing);
+  var pill=document.querySelector('[data-f="'+key+'"]');
+  if(pill)setPill(pill);
 }
 
+// Compat: removeCustomFilter → delegates to removeBarCustom
 function removeCustomFilter(key){
-  customFilters=customFilters.filter(function(f){return f.key!==key;});
-  try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
-  var pill=document.querySelector('[data-f="custom_'+key+'"]');
-  if(pill){
-    if(pill.classList.contains('on')){var _tous=g('pillTous')||document.querySelector('[data-f="tous"]');if(_tous)setPill(_tous);}
-    pill.remove();
-  }
-  delete FM['custom_'+key];
-  applyFilter();
-  renderCustomPills();
+  removeBarCustom(key);
 }
 
+// Compat: renderCustomPills is no longer used (replaced by renderBarConfig)
 function renderCustomPills(){
-  var box=g('customPillsList');
-  if(!box)return;
-  if(!customFilters.length){box.innerHTML='';return;}
-  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mes matières — appuie pour filtrer</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
-    +customFilters.map(function(f){
-      var isActive=!!document.querySelector('[data-f="custom_'+f.key+'"].on');
-      return'<span onclick="selectCustomFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:6px;'
-        +(isActive?'background:var(--or);color:#fff;border:1.5px solid var(--or)':'background:var(--orp);color:var(--or);border:1.5px solid var(--or)')
-        +';border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">'+esc(f.label)
-        +'<span onclick="event.stopPropagation();removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.6;font-size:12px;font-weight:700;line-height:1;margin-left:2px">✕</span></span>';
-    }).join('')
-    +'</div>';
+  // no-op: replaced by renderBarConfig
+}
+
+// Compat: addAndActivateFilter (was called from suggestion chips — now those chips are gone)
+function addAndActivateFilter(label){
+  var key=label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(!customFilters.find(function(f){return f.key===key;})){
+    customFilters.push({label:label,key:key});
+    try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
+    FM[key]=function(t){return t.includes(key);};
+  }
+  if(_barActive.indexOf(key)===-1){
+    _barActive.push(key);
+    try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  }
+  renderFilterBar();
+  renderBarConfig();
+  var pill=document.querySelector('[data-f="'+key+'"]');
+  if(pill)setTimeout(function(){closeAddFilter();setPill(pill);},120);
 }
 
 // ============================================================
@@ -4592,6 +4739,7 @@ function diplomeDone(){
   var bd=g('bdDiplome');if(bd)bd.style.display='none';
   document.body.style.overflow='';
   updateDiplomeStatusBlock();
+  updateCasierStatusBlock();
 }
 
 function diplomePreview(input){
@@ -4662,6 +4810,135 @@ function updateDiplomeStatusBlock(){
   }
   if(html)block.innerHTML=html;
 }
+
+// ============================================================
+// PROFIL DE CONFIANCE — upload et vérification
+// ============================================================
+function getCasierStatus(){
+  if(!user)return 'none';
+  if(user.casier_verifie===true||user.casier_verifie==='true')return 'verified';
+  if(user.casier_uploaded===true||user.casier_uploaded==='true')return 'pending';
+  return 'none';
+}
+
+function updateCasierStatusBlock(){
+  var block=g('casierStatusBlock');
+  if(!block)return;
+  if(!user||user.role!=='professeur'){block.style.display='none';return;}
+  var status=getCasierStatus();
+  var html='';
+  if(status==='none'){
+    html='<div style="background:#ECFDF5;border-radius:12px;padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#059669">Badge Profil de confiance disponible</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez une attestation pour rassurer les familles et vous démarquer.</div>'
+      +'<button onclick="openCasierSheet()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon attestation</button>'
+      +'</div>';
+    block.style.display='block';
+  } else if(status==='verified'){
+    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#ECFDF5;border-radius:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#059669">Profil de confiance vérifié — Badge affiché sur votre profil</span>'
+      +'</div>';
+    block.style.display='block';
+  } else if(status==='pending'){
+    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFBEB;border-radius:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#92400E">Attestation en cours de vérification — Réponse sous 24h</span>'
+      +'</div>';
+    block.style.display='block';
+  } else {
+    block.style.display='none';
+  }
+  if(html)block.innerHTML=html;
+}
+
+function openCasierSheet(){
+  var bd=g('bdCasier');if(!bd)return;
+  if(bd.parentNode!==document.body)document.body.appendChild(bd);
+  casierGoStep1();
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function casierLater(){var bd=g('bdCasier');if(bd){bd.style.display='none';document.body.style.overflow='';}}
+function casierGoStep1(){var s1=g('casierStep1'),s2=g('casierStep2');if(s1)s1.style.display='block';if(s2)s2.style.display='none';}
+function casierGoStep2(){var s1=g('casierStep1'),s2=g('casierStep2');if(s1)s1.style.display='none';if(s2)s2.style.display='block';}
+function casierPreview(input){
+  var file=input.files[0];if(!file)return;
+  var lbl=g('casierUploadLabel');
+  if(lbl)lbl.textContent=file.name;
+  var zone=g('casierDropZone');if(zone){zone.style.borderColor='#10B981';zone.style.background='rgba(16,185,129,.05)';}
+}
+async function submitCasier(){
+  var finput=g('casierFileInput');
+  var file=finput&&finput.files&&finput.files[0];
+  if(!file){
+    var zone=g('casierDropZone');
+    if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
+    toast('Document manquant','Choisissez une photo de votre attestation');return;
+  }
+  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
+  var btn=g('casierSubmitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
+  try{
+    var reader=new FileReader();
+    reader.onload=async function(e){
+      try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
+      user.casier_uploaded=true;
+      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+      casierLater();
+      toast('Envoyé !','Votre attestation est en cours de vérification');
+      updateCasierStatusBlock();
+      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+    };
+    reader.readAsDataURL(file);
+  }catch(e){
+    toast('Erreur',"Impossible d'envoyer le fichier");
+    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+  }
+}
+
+// ============================================================
+// BADGE INFO — bottom sheet explication
+// ============================================================
+function showBadgeInfo(type){
+  haptic(4);
+  var bd=g('bdBadgeInfo');if(!bd)return;
+  if(bd.parentNode!==document.body)document.body.appendChild(bd);
+  var content=g('bdBadgeInfoContent');if(!content)return;
+  var info={
+    identite:{
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="40" height="40"><polyline points="20 6 9 17 4 12"/></svg>',
+      bg:'#FFF4EE',
+      name:'Identité vérifiée',
+      desc:'Ce professeur a fourni une pièce d\'identité officielle vérifiée par l\'équipe CoursPool. Son identité est authentifiée.'
+    },
+    diplome:{
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="40" height="40"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+      bg:'#EFF6FF',
+      name:'Diplôme vérifié',
+      desc:'Ce professeur a soumis un diplôme officiel (Licence, Master, CAPES, agrégation…) vérifié et validé par notre équipe.'
+    },
+    confiance:{
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="40" height="40"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      bg:'#ECFDF5',
+      name:'Profil de confiance',
+      desc:'Ce professeur a fourni une attestation officielle confirmant l\'absence d\'antécédents judiciaires, vérifiée par l\'équipe CoursPool.'
+    }
+  };
+  var d=info[type];if(!d)return;
+  content.innerHTML='<div style="text-align:center;margin-bottom:20px">'
+    +'<div style="width:72px;height:72px;background:'+d.bg+';border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'+d.icon+'</div>'
+    +'<div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">'+d.name+'</div>'
+    +'<div style="font-size:14px;color:var(--mid);line-height:1.65">'+d.desc+'</div>'
+    +'</div>'
+    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button>';
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeBadgeInfo(){var bd=g('bdBadgeInfo');if(bd){bd.style.display='none';document.body.style.overflow='';}}
 
 // ============================================================
 // COURS PRIVÉ
@@ -6321,6 +6598,7 @@ function startAccountCheck(){
         // Mettre à jour la bannière de vérification
         updateVerifBand();
         updateDiplomeStatusBlock();
+        updateCasierStatusBlock();
         // Notifier si compte maintenant vérifié
         if(user.role==='professeur'&&(p.statut_compte==='verified'||p.verified)){
           toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
@@ -6752,19 +7030,6 @@ async function subCrStep(){
   // openMsg/closeMsgConv — handled directly in functions above
   var _om=openMsg; // keep reference for compatibility
 
-  // buildCards — mode badge on visio cards
-  var _bc=buildCards;
-  buildCards=function(){
-    _bc.apply(this,arguments);
-    document.querySelectorAll('.card').forEach(function(card){
-      var id=card.dataset.id;var c=C.find(function(x){return x.id==id;});
-      if(!c||c.mode!=='visio')return;
-      var ctopDiv=card.querySelector('.ctop>div');
-      if(ctopDiv&&!ctopDiv.querySelector('.mode-badge')){
-        var sp=document.createElement('span');sp.className='mode-badge visio';sp.textContent='Visio';sp.style.marginLeft='4px';ctopDiv.appendChild(sp);
-      }
-    });
-  };
 })();
 
 // ---- Retry payment ----
@@ -6836,7 +7101,7 @@ function buildMesCard(c,isPast,isProf){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
       else{visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
     } else if(!!res[c.id]){
-      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre le cours en visio</a>';}
+      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre en visio</a>';}
       else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
     }
   }
@@ -7478,3 +7743,7 @@ function initSwipeNav(){
     }
   },{passive:true});
 }
+
+// Render filter bar once all variables are initialized
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',renderFilterBar);}
+else{renderFilterBar();}

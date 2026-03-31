@@ -448,7 +448,7 @@
   <!-- ═══ PROF SLIDE 3 : Ville + mode ═══ -->
   <div id="pcPfC" class="pc-slide" style="display:none">
     <div class="lreg-slide-inner">
-      <h2 class="lscreen-title">Ou enseignez-vous ?</h2>
+      <h2 class="lscreen-title" id="pcVilleTitle">Ou enseignez-vous ?</h2>
       <div class="lfield">
         <label>Ville</label>
         <input id="pcVille" type="text" placeholder="Paris, Lyon, Marseille..." autocomplete="address-level2">
@@ -612,18 +612,9 @@
         </div>
         <!-- Matières scrollables -->
         <div class="filter-bar" id="filterBar">
-          <button class="filter-pill-btn active" data-f="tous" onclick="setPill(this)" id="pillTous">Tous</button>
-          <button class="filter-pill-btn" data-f="maths" onclick="setPill(this)">Maths</button>
-          <button class="filter-pill-btn" data-f="physique" onclick="setPill(this)">Physique</button>
-          <button class="filter-pill-btn" data-f="informatique" onclick="setPill(this)">Info</button>
-          <button class="filter-pill-btn" data-f="langues" onclick="setPill(this)">Langues</button>
-          <button class="filter-pill-btn" data-f="economie" onclick="setPill(this)">Éco</button>
-          <button class="filter-pill-btn" data-f="soir" onclick="setPill(this)">Ce soir</button>
-          <button class="filter-pill-btn" data-f="weekend" onclick="setPill(this)">Week-end</button>
           <button class="filter-pill-btn filter-pill-add" id="pillAdd" onclick="openAddFilter()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div id="pillsBar" style="display:none"></div>
         </div>
       </div>
 
@@ -704,36 +695,37 @@
       </div>
 
       <!-- Modal ajout filtre -->
-      <div id="bdFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAddFilter()">
-        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:82vh;overflow-y:auto;padding:24px;padding-bottom:max(100px,calc(env(safe-area-inset-bottom,0px) + 88px));animation:mi .25s ease">
-          <div style="font-size:17px;font-weight:800;margin-bottom:6px">Ajouter un filtre</div>
-          <div style="font-size:13px;color:var(--lite);margin-bottom:16px">Tapez une matière ou choisissez-en une</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input id="filterInput" class="fi3" style="flex:1" placeholder="Ex: chimie, droit, musique…" oninput="previewCustomFilter(this.value)">
-            <button class="pb pri" style="padding:10px 16px;flex-shrink:0" onclick="addCustomFilter()">Ajouter</button>
+      <div id="bdFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAddFilter()">
+        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;animation:mi .25s ease">
+          <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
+          <div style="padding:16px 20px 4px;display:flex;align-items:flex-start;justify-content:space-between">
+            <div>
+              <div style="font-size:19px;font-weight:800;letter-spacing:-.03em">Ma barre de filtres</div>
+              <div style="font-size:13px;color:var(--lite);margin-top:3px">Tape sur un filtre pour l'ajouter ou le retirer</div>
+            </div>
+            <button onclick="closeAddFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;margin-top:2px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
-          <!-- Suggestion alias filtre -->
-          <div id="filterAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin-bottom:12px;border:1px solid rgba(255,107,43,.2)">
-            <span class="filter-alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Oui</button>
-              <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Non</button>
+          <!-- Dynamic toggle grid rendered by renderBarConfig() -->
+          <div id="barConfigGrid" style="padding:0 20px 8px"></div>
+          <!-- Custom filter input -->
+          <div style="padding:8px 20px 0">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
+            <div style="display:flex;gap:8px">
+              <input id="filterInput" class="fi3" style="flex:1;font-size:15px" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
+              <button onclick="addBarCustomFilter()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28)">+</button>
+            </div>
+            <!-- Suggestion alias filtre -->
+            <div id="filterAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin-top:10px;border:1px solid rgba(255,107,43,.2)">
+              <span class="filter-alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
+                <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+              </div>
             </div>
           </div>
-          <div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Suggestions</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px" id="filterSuggestions">
-            <div class="pill" onclick="addFilterQuick('Histoire')">Histoire</div>
-            <div class="pill" onclick="addFilterQuick('Philosophie')">Philosophie</div>
-            <div class="pill" onclick="addFilterQuick('Chimie')">Chimie</div>
-            <div class="pill" onclick="addFilterQuick('Biologie')">Biologie</div>
-            <div class="pill" onclick="addFilterQuick('SVT')">SVT</div>
-            <div class="pill" onclick="addFilterQuick('Musique')">Musique</div>
-            <div class="pill" onclick="addFilterQuick('Arts')">Arts</div>
-            <div class="pill" onclick="addFilterQuick('Droit')">Droit</div>
-            <div class="pill" onclick="addFilterQuick('Géographie')">Géographie</div>
-            <div class="pill" onclick="addFilterQuick('Sport')">Sport</div>
-          </div>
-          <div style="margin-top:16px" id="customPillsList"></div>
+          <div style="height:max(24px,env(safe-area-inset-bottom,24px))"></div>
         </div>
       </div>
       <div class="grid" id="grid"></div>
@@ -1171,6 +1163,9 @@
           <!-- Statut diplôme (profs uniquement) -->
           <div id="diplomeStatusBlock" style="display:none;padding:4px 0 4px"></div>
 
+          <!-- Statut profil de confiance (profs uniquement) -->
+          <div id="casierStatusBlock" style="display:none;padding:4px 0 4px"></div>
+
           <!-- Partager profil (profs) -->
           <div id="shareProfBtn" style="display:none;padding:16px 0 4px">
             <button onclick="shareProfil()" style="width:100%;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:50px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
@@ -1213,7 +1208,7 @@
       </div>
       <div style="margin-bottom:10px"><span id="rModeBadge"></span></div>
       <div style="display:flex;align-items:center;gap:8px;background:#F0FDF4;border-radius:12px;padding:10px 14px;margin-bottom:14px"><svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span style="font-size:13px;font-weight:600;color:#16A34A">Remboursé si le cours est annulé.</span></div>
-      <a id="rVisioJoin" class="btn-visio" target="_blank" rel="noopener" style="display:none;width:100%;justify-content:center;margin-bottom:14px;text-decoration:none">Rejoindre en visio</a>
+      <a id="rVisioJoin" class="btn-visio" target="_blank" rel="noopener" style="display:none;width:100%;justify-content:center;margin-bottom:14px;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</a>
       <div class="ibox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="rInf"></span></div>
       <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;padding:10px;background:var(--bg);border-radius:12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span style="font-size:12px;color:var(--mid);font-weight:600">Paiement 100% sécurisé</span></div>
       <button class="pb pri" style="width:100%;margin-bottom:10px" onclick="confR()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong id="rFinB"></strong></button>
@@ -1292,8 +1287,9 @@
       <div id="mpnm" style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:4px;line-height:1.2"></div>
       <div id="mprl" style="font-size:13px;color:rgba(255,255,255,.75);font-weight:500;margin-bottom:4px"></div>
       <div id="mpbd" style="font-size:12px;color:rgba(255,255,255,.6)"></div>
-      <div id="mpVerifiedBadge" style="display:none;margin-top:8px"><span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Identité vérifiée</span></div>
-      <div id="mpDiplomeBadge" style="display:none;margin-top:6px"><span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Diplôme vérifié</span></div>
+      <div id="mpVerifiedBadge" style="display:none;margin-top:8px"><span onclick="showBadgeInfo('identite')" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Identité vérifiée</span></div>
+      <div id="mpDiplomeBadge" style="display:none;margin-top:6px"><span onclick="showBadgeInfo('diplome')" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Diplôme vérifié</span></div>
+      <div id="mpCasierBadge" style="display:none;margin-top:6px"><span onclick="showBadgeInfo('confiance')" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:50px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#fff;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Profil de confiance</span></div>
     </div>
 
     <!-- Stats row -->
@@ -1813,6 +1809,70 @@
       <div id="diplomeStep3Sub" style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px">Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
       <button onclick="diplomeDone()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35)">Compris, merci !</button>
     </div>
+  </div>
+</div>
+
+<!-- PROFIL DE CONFIANCE — bottom sheet upload -->
+<div id="bdCasier" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:500;align-items:flex-end;justify-content:center" onclick="if(event.target===this)casierLater()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .3s ease;overflow:hidden">
+    <div style="padding:12px 20px 0;text-align:center">
+      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto"></div>
+    </div>
+    <!-- Étape 1 -->
+    <div id="casierStep1" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <div style="width:72px;height:72px;background:#ECFDF5;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="36" height="36"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Obtenez le badge Profil de confiance</div>
+      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Montrez aux familles que votre profil a été contrôlé. Ce badge renforce la confiance et vous démarque.</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:#10B981;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre attestation</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Extrait de casier judiciaire bulletin n°3</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès validation</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
+          <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Badge affiché sur votre profil</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves et parents</div></div>
+        </div>
+      </div>
+      <button onclick="casierGoStep2()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,.35);margin-bottom:12px">Envoyer mon attestation</button>
+      <button onclick="casierLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
+    </div>
+    <!-- Étape 2 : upload -->
+    <div id="casierStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button onclick="casierGoStep1()" style="background:none;border:none;cursor:pointer;color:#10B981;padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div style="font-size:17px;font-weight:800">Votre attestation</div>
+      </div>
+      <div id="casierDropZone" onclick="g('casierFileInput').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:var(--bg)">
+        <div id="casierUploadIcon" style="margin-bottom:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div id="casierUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">Extrait de casier judiciaire (bulletin n°3)</div>
+        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
+        <input type="file" id="casierFileInput" accept="image/*,.pdf" style="display:none" onchange="casierPreview(this)">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Vos documents sont chiffrés et ne seront jamais partagés.
+      </div>
+      <button id="casierSubmitBtn" onclick="submitCasier()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,.35);display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+        Envoyer pour vérification
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- BADGE INFO — bottom sheet explication -->
+<div id="bdBadgeInfo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:600;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeBadgeInfo()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0;animation:mi .25s ease">
+    <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
+    <div id="bdBadgeInfoContent" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))"></div>
   </div>
 </div>
 

@@ -228,6 +228,22 @@ function initSocket() {
     }
   });
 
+  // ── casier_update : validation profil de confiance en temps réel ────────
+  _socket.on('casier_update', function(data) {
+    console.log('[Socket] casier_update reçu:', data.professeur_id, '→', data.casier_verifie);
+    if (!user || user.id !== data.professeur_id) return;
+    user.casier_verifie = data.casier_verifie;
+    if (!data.casier_verifie) user.casier_uploaded = false;
+    try { localStorage.setItem('cp_user', JSON.stringify(user)); } catch(e) {}
+    var cvB = document.getElementById('mpCasierBadge');
+    if (cvB) cvB.style.display = data.casier_verifie ? 'block' : 'none';
+    if (typeof updateCasierStatusBlock === 'function') updateCasierStatusBlock();
+    if (data.casier_verifie) {
+      if (typeof toast === 'function') toast('Profil de confiance !', 'Le badge est maintenant visible sur votre profil');
+      if (typeof haptic === 'function') haptic([10, 50, 100, 50, 10]);
+    }
+  });
+
   // ── note_update : note moyenne en temps réel ────────────────────────────
   _socket.on('note_update', function(data) {
     console.log('[Socket] note_update reçu:', data.professeur_id, '→', data.note_moyenne);

@@ -1350,6 +1350,24 @@ app.post('/email/diplome-verification', requireAdmin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// PROFIL DE CONFIANCE — vérification admin
+app.post('/email/casier-verification', requireAdmin, async (req, res) => {
+  const { prof_id, approved } = req.body;
+  if (!prof_id) return res.status(400).json({ error: 'prof_id requis' });
+  try {
+    if (approved) {
+      await supabase.from('profiles').update({ casier_verifie: true }).eq('id', prof_id);
+      req.app.get('io').to(prof_id).emit('casier_update', { professeur_id: prof_id, casier_verifie: true });
+    } else {
+      await supabase.from('profiles').update({ casier_uploaded: false, casier_verifie: false }).eq('id', prof_id);
+      req.app.get('io').to(prof_id).emit('casier_update', { professeur_id: prof_id, casier_verifie: false });
+    }
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // STRIPE — récupérer les paiements réels
 app.get('/stripe/payments', requireAdmin, async (req, res) => {
   try {
@@ -1644,7 +1662,7 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
 // PROFILES — récupérer profil par ID
 app.get('/profiles/:id', async (req, res) => {
   res.set('Cache-Control', 'no-store');
-  const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,created_at,diplome_verifie';
+  const PUBLIC_COLS = 'id,prenom,nom,photo_url,bio,ville,matieres,niveau,statut,role,verified,statut_compte,note_moyenne,created_at,diplome_verifie,casier_verifie';
   try {
     const {data,error}=await supabase.from('profiles').select(PUBLIC_COLS).eq('id',req.params.id).single();
     if(error){const status=error.code==='PGRST116'?404:500;return res.status(status).json({error:error.message});}
@@ -1813,6 +1831,36 @@ app.post('/upload/diplome', async (req, res) => {
   } catch(e) {
     console.log('Diplome upload error:', e.message);
     await supabase.from('profiles').update({ diplome_uploaded: true }).eq('id', userId).catch(()=>{});
+    res.json({ success: true });
+  }
+});
+
+// PROFIL DE CONFIANCE — upload attestation
+app.post('/upload/casier', requireAuth, async (req, res) => {
+  const { base64, userId, filename } = req.body;
+  if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
+  if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
+  if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Réservé aux professeurs' });
+  try {
+    const buffer = Buffer.from(base64.split(',')[1], 'base64');
+    const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
+    const validExt = ['jpg','jpeg','png','pdf','webp'].includes(ext) ? ext : 'jpg';
+    const contentType = validExt === 'pdf' ? 'application/pdf' : 'image/' + (validExt === 'jpg' ? 'jpeg' : validExt);
+    const filePath = userId + '/casier.' + validExt;
+    let casierUrl = null;
+    try { await supabase.storage.from('photos').remove(['casiers/' + filePath]); } catch(e) {}
+    const { error: uploadError } = await supabase.storage.from('photos').upload('casiers/' + filePath, buffer, { contentType, upsert: true });
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl('casiers/' + filePath);
+      casierUrl = urlData.publicUrl;
+    } else {
+      casierUrl = base64;
+    }
+    await supabase.from('profiles').update({ casier_uploaded: true, casier_url: casierUrl, casier_verifie: false }).eq('id', userId);
+    res.json({ success: true, url: casierUrl });
+  } catch(e) {
+    console.log('Casier upload error:', e.message);
+    await supabase.from('profiles').update({ casier_uploaded: true }).eq('id', userId).catch(()=>{});
     res.json({ success: true });
   }
 });
@@ -2109,7 +2157,7 @@ app.delete('/admin/contacts/:id', requireAdmin, async (req, res) => {
 
 // ADMIN — mettre à jour un profil (champs admin uniquement)
 app.patch('/admin/users/:id', requireAdmin, async (req, res) => {
-  const adminFields = ['verified', 'statut_compte', 'rejection_reason', 'can_retry_cni', 'cni_uploaded', 'diplome_verifie', 'diplome_uploaded', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
+  const adminFields = ['verified', 'statut_compte', 'rejection_reason', 'can_retry_cni', 'cni_uploaded', 'diplome_verifie', 'diplome_uploaded', 'casier_verifie', 'casier_uploaded', 'casier_url', 'prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url'];
   const validStatuts = ['actif', 'bloqué', 'rejeté', 'en_attente_verification'];
   const updates = {};
   adminFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
