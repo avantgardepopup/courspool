@@ -2223,9 +2223,9 @@ function toggleFollowCard(pid,btn){
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){return r.json();})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
       .then(function(data){
-        // Utiliser le vrai count serveur (source de vérité)
+        if(data&&data.error)throw new Error(data.error);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -2887,8 +2887,9 @@ function confF(){
   if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
   if(user&&user.id){
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){return r.json();})
+      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
       .then(function(data){
+        if(data&&data.error)throw new Error(data.error);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -3043,6 +3044,18 @@ function openPr(pid){
   fb.style.display=(user&&pid===user.id)?'none':'flex';
   _setFollowBtn(fol.has(pid));
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
+  // Vérification silencieuse de l'état du suivi depuis le serveur (auto-correction si fol désynchronisé)
+  if(user&&user.id&&pid!==user.id){
+    fetch(API+'/follows/check?professeur_id='+encodeURIComponent(pid)+'&eleve_id='+encodeURIComponent(user.id),{headers:apiH()})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(!data||data.isFollowing===undefined)return;
+        var serverSays=data.isFollowing;
+        var localSays=fol.has(pid);
+        if(serverSays&&!localSays){fol.add(pid);_setFollowBtn(true);_syncFollowBtns(pid,true);}
+        else if(!serverSays&&localSays){fol.delete(pid);_setFollowBtn(false);_syncFollowBtns(pid,false);}
+      }).catch(function(){});
+  }
 
   // Mise à jour silencieuse depuis l'API (tous les champs du modal)
   fetch(API+'/profiles/'+pid+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(prof){
@@ -3183,8 +3196,9 @@ function togFP(){
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
-        .then(function(r){return r.json();})
+        .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
         .then(function(data){
+          if(data&&data.error)throw new Error(data.error);
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
             if(g('mpE'))g('mpE').textContent=P[id].e;
