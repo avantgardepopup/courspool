@@ -372,7 +372,7 @@
         <div class="lniv-chip" onclick="pickPcNiv(this,'autre')">Autre</div>
         <div class="lniv-chip" onclick="pickPcNiv(this,'no_answer')">Je prefere ne pas repondre</div>
       </div>
-      <button class="lbtn" onclick="pcNext()">Continuer</button>
+      <button class="lbtn" onclick="saveProfCompletion()">Terminer</button>
       <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
     </div>
   </div>
@@ -399,28 +399,7 @@
         <label>Age de l'enfant (optionnel)</label>
         <input id="pcEnfantAge" type="number" placeholder="10" min="4" max="17">
       </div>
-      <button class="lbtn" onclick="pcNext()">Continuer</button>
-      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
-    </div>
-  </div>
-
-  <!-- ═══ ELEVE SLIDE 3 : Ville ═══ -->
-  <div id="pcElC" class="pc-slide" style="display:none">
-    <div class="lreg-slide-inner">
-      <h2 class="lscreen-title">Ou etudiez-vous ?</h2>
-      <p class="lscreen-sub">Pour trouver des cours près de chez vous</p>
-      <div class="lfield">
-        <label>Ville</label>
-        <input id="pcElCVille" type="text" placeholder="Paris, Lyon, Marseille..." autocomplete="address-level2">
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--bdr);margin-top:8px">
-        <div>
-          <div style="font-size:14px;font-weight:600;color:var(--ink)">Afficher sur mon profil</div>
-          <div style="font-size:12px;color:var(--lite);margin-top:2px">Les profs pourront voir votre ville</div>
-        </div>
-        <div class="ntog on" id="pcElCVilleVis" onclick="this.classList.toggle('on')"></div>
-      </div>
-      <button class="lbtn" style="margin-top:16px" onclick="saveProfCompletion()">Terminer</button>
+      <button class="lbtn" onclick="saveProfCompletion()">Terminer</button>
       <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
     </div>
   </div>

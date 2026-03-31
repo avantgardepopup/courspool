@@ -909,16 +909,16 @@ function showProfCompletion(){
   _pcShowSlide(first,false);
 }
 
-function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcElC','pcPfA','pcPfB','pcPfC'];}
+function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPfA','pcPfB','pcPfC'];}
 
 function _pcOrderedSlides(){
   if(_pcIsOAuth){
     if(!user)return['pcOAuthRole'];
     if(user.role==='professeur')return['pcOAuthRole','pcPfA','pcPfB','pcPfC'];
-    return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf','pcElC']:['pcOAuthRole','pcElA','pcElBmoi','pcElC'];
+    return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf']:['pcOAuthRole','pcElA','pcElBmoi'];
   }
   if(user&&user.role==='professeur')return['pcPfA','pcPfB','pcPfC'];
-  return _pcPour==='enfant'?['pcElA','pcElBenf','pcElC']:['pcElA','pcElBmoi','pcElC'];
+  return _pcPour==='enfant'?['pcElA','pcElBenf']:['pcElA','pcElBmoi'];
 }
 
 function _pcShowSlide(id,isBack){
@@ -1057,10 +1057,6 @@ async function saveProfCompletion(){
     }
     var age=parseInt((g('pcEnfantAge')&&g('pcEnfantAge').value)||'0')||0;
     if(age>0){payload.age_enfant=age;if(age<13)payload.is_mineur=true;}
-    var elVille=(g('pcElCVille')&&g('pcElCVille').value||'').trim();
-    if(elVille)payload.ville=elVille;
-    var elVilleVisEl=g('pcElCVilleVis');
-    if(elVille&&elVilleVisEl)payload.ville_visible=elVilleVisEl.classList.contains('on');
   }
   if(Object.keys(payload).length>0){
     try{
@@ -1076,8 +1072,6 @@ async function saveProfCompletion(){
       if(payload.pour_enfant!==undefined)user.pour_enfant=payload.pour_enfant;
       if(payload.niveau)user.niveau=payload.niveau;
       if(payload.niveau_enfant)user.niveau_enfant=payload.niveau_enfant;
-      if(payload.ville)user.ville=payload.ville;
-      if(payload.ville_visible!==undefined)user.ville_visible=payload.ville_visible;
     }
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   }
