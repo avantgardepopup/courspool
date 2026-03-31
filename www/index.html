@@ -213,6 +213,7 @@
       </button>
 
       <p class="lswitch">Pas encore de compte ? <span onclick="showReg()">S'inscrire</span></p>
+      <p style="text-align:center;font-size:12px;color:var(--lite);margin-top:14px;line-height:1.6">En continuant, vous acceptez nos <span style="color:var(--or);text-decoration:underline;cursor:pointer" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')">CGU</span> et notre <span style="color:var(--or);text-decoration:underline;cursor:pointer" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')">Politique de confidentialité</span></p>
     </div>
   </div>
 
@@ -279,6 +280,7 @@
 
       <button class="lbtn" id="regCreateBtn" onclick="doReg()" disabled>Créer mon compte</button>
       <p class="lswitch">Déjà un compte ? <span onclick="showLogin()">Se connecter</span></p>
+      <p style="text-align:center;font-size:12px;color:var(--lite);margin-top:14px;line-height:1.6">En créant un compte, vous acceptez nos <span style="color:var(--or);text-decoration:underline;cursor:pointer" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')">CGU</span> et notre <span style="color:var(--or);text-decoration:underline;cursor:pointer" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')">Politique de confidentialité</span></p>
     </div>
   </div>
 
@@ -345,6 +347,7 @@
         </div>
       </div>
       <button class="lbtn" onclick="pcNext()">Continuer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="pcNext()">Plus tard</p>
     </div>
   </div>
 
@@ -369,7 +372,8 @@
         <div class="lniv-chip" onclick="pickPcNiv(this,'autre')">Autre</div>
         <div class="lniv-chip" onclick="pickPcNiv(this,'no_answer')">Je prefere ne pas repondre</div>
       </div>
-      <button class="lbtn" onclick="saveProfCompletion()">Terminer</button>
+      <button class="lbtn" onclick="pcNext()">Continuer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
     </div>
   </div>
 
@@ -395,7 +399,29 @@
         <label>Age de l'enfant (optionnel)</label>
         <input id="pcEnfantAge" type="number" placeholder="10" min="4" max="17">
       </div>
-      <button class="lbtn" onclick="saveProfCompletion()">Terminer</button>
+      <button class="lbtn" onclick="pcNext()">Continuer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
+    </div>
+  </div>
+
+  <!-- ═══ ELEVE SLIDE 3 : Ville ═══ -->
+  <div id="pcElC" class="pc-slide" style="display:none">
+    <div class="lreg-slide-inner">
+      <h2 class="lscreen-title">Ou etudiez-vous ?</h2>
+      <p class="lscreen-sub">Pour trouver des cours près de chez vous</p>
+      <div class="lfield">
+        <label>Ville</label>
+        <input id="pcElCVille" type="text" placeholder="Paris, Lyon, Marseille..." autocomplete="address-level2">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--bdr);margin-top:8px">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink)">Afficher sur mon profil</div>
+          <div style="font-size:12px;color:var(--lite);margin-top:2px">Les profs pourront voir votre ville</div>
+        </div>
+        <div class="ntog on" id="pcElCVilleVis" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <button class="lbtn" style="margin-top:16px" onclick="saveProfCompletion()">Terminer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
     </div>
   </div>
 
@@ -411,6 +437,7 @@
         <div class="lniv-chip" onclick="pickPcNivEtudes(this,'autre')">Autre</div>
       </div>
       <button class="lbtn" onclick="pcNext()">Continuer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="pcNext()">Plus tard</p>
     </div>
   </div>
 
@@ -442,6 +469,7 @@
         <div id="pcMatSelectedChips" class="lniv-grid" style="margin-top:6px;margin-bottom:0"></div>
       </div>
       <button class="lbtn" style="margin-top:16px" onclick="pcNext()">Continuer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="pcNext()">Plus tard</p>
     </div>
   </div>
 
@@ -460,6 +488,7 @@
         <div class="pc-mode-item" id="pcModeBoth" onclick="pickPcMode('les_deux')">Les deux</div>
       </div>
       <button class="lbtn" style="margin-top:20px" onclick="saveProfCompletion()">Terminer</button>
+      <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()">Plus tard</p>
     </div>
   </div>
 
@@ -1065,6 +1094,11 @@
               <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <span class="pref-label">Ville</span>
               <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:140px">
+            </div>
+            <div class="pref-row" style="cursor:default">
+              <div class="pref-icon" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+              <div style="flex:1"><span class="pref-label">Afficher la ville</span><div style="font-size:12px;color:var(--lite);margin-top:1px">Visible sur votre profil public</div></div>
+              <div class="ntog" id="pfVilleVisible" onclick="this.classList.toggle('on')"></div>
             </div>
             <div class="pref-row" style="cursor:default">
               <div class="pref-icon" style="background:var(--orp)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
@@ -1873,6 +1907,45 @@
   <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0;animation:mi .25s ease">
     <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
     <div id="bdBadgeInfoContent" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))"></div>
+  </div>
+</div>
+
+<!-- NUDGE BADGES POST-CNI -->
+<div id="bdBadgeNudge" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);z-index:550;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeBadgeNudge()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 max(28px,env(safe-area-inset-bottom,28px));animation:mi .32s ease">
+    <div style="padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--or);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">Profil de confiance</div>
+        <div style="font-size:19px;font-weight:800;color:var(--ink)">Allez encore plus loin</div>
+      </div>
+      <button onclick="closeBadgeNudge()" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;font-size:14px;color:var(--mid);cursor:pointer;flex-shrink:0">✕</button>
+    </div>
+    <div style="padding:4px 20px 16px;font-size:13.5px;color:var(--lite);line-height:1.5">Votre identité est vérifiée ✓ — complétez votre profil pour inspirer encore plus confiance aux élèves.</div>
+    <!-- Badge diplôme -->
+    <div style="margin:0 16px 10px;background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px">
+      <div style="width:44px;height:44px;border-radius:12px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--ink)">Diplôme vérifié</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:1px">Montrez vos qualifications aux élèves</div>
+      </div>
+      <button id="nudgeDiplomeBtn" onclick="closeBadgeNudge();openDiplomeSheet()" style="background:#FFFBEB;color:#B45309;border:1.5px solid #FDE68A;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0">Ajouter</button>
+    </div>
+    <!-- Badge confiance -->
+    <div style="margin:0 16px 20px;background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px">
+      <div style="width:44px;height:44px;border-radius:12px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--ink)">Profil de confiance</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:1px">Attestation de moralité vérifiée</div>
+      </div>
+      <button onclick="closeBadgeNudge();openCasierSheet()" style="background:#F0FDF4;color:#10B981;border:1.5px solid #6EE7B7;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0">Ajouter</button>
+    </div>
+    <div style="padding:0 16px">
+      <button onclick="closeBadgeNudge()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Plus tard</button>
+    </div>
   </div>
 </div>
 

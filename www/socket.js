@@ -81,10 +81,12 @@ function initSocket() {
     console.log('[Socket] follow_update reçu:', data);
     var pid = data.professeur_id;
     if (!pid) return;
-    // Invalider le cache profil pour forcer un re-fetch
-    if (typeof P !== 'undefined' && P[pid]) delete P[pid];
-    if (!P[pid]) P[pid] = { n: '—', e: 0, col: 'linear-gradient(135deg,#FF8C55,#E04E10)' };
-    P[pid].e = data.nb_eleves;
+    // Mettre à jour le count sans effacer nm/photo (évite les "undefined" dans la liste suivi)
+    if (typeof P !== 'undefined') {
+      if (!P[pid]) P[pid] = { n: '—', e: 0, col: 'linear-gradient(135deg,#FF8C55,#E04E10)' };
+      P[pid].e = data.nb_eleves;
+      delete P[pid]._fresh; // invalide le cache → prochain _fetchProf ira chercher les données
+    }
     // Modal profil prof ouverte sur ce prof (affichage visiteur)
     if (typeof curProf !== 'undefined' && curProf == pid) {
       var mpE = document.getElementById('mpE');

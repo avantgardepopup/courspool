@@ -194,6 +194,7 @@ function setAvatar(el,photo,ini,col){
 
 // Badge sera mis à jour après chargement des follows
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
+var _followInFlight=new Set(); // guard anti-spam follow/unfollow
 // Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
 loadFavCours();
 // Pré-charger les réservations depuis localStorage (toujours, pour éviter le flash à 0 dans le profil)
@@ -908,16 +909,16 @@ function showProfCompletion(){
   _pcShowSlide(first,false);
 }
 
-function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPfA','pcPfB','pcPfC'];}
+function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcElC','pcPfA','pcPfB','pcPfC'];}
 
 function _pcOrderedSlides(){
   if(_pcIsOAuth){
     if(!user)return['pcOAuthRole'];
     if(user.role==='professeur')return['pcOAuthRole','pcPfA','pcPfB','pcPfC'];
-    return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf']:['pcOAuthRole','pcElA','pcElBmoi'];
+    return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf','pcElC']:['pcOAuthRole','pcElA','pcElBmoi','pcElC'];
   }
   if(user&&user.role==='professeur')return['pcPfA','pcPfB','pcPfC'];
-  return _pcPour==='enfant'?['pcElA','pcElBenf']:['pcElA','pcElBmoi'];
+  return _pcPour==='enfant'?['pcElA','pcElBenf','pcElC']:['pcElA','pcElBmoi','pcElC'];
 }
 
 function _pcShowSlide(id,isBack){
@@ -1056,11 +1057,29 @@ async function saveProfCompletion(){
     }
     var age=parseInt((g('pcEnfantAge')&&g('pcEnfantAge').value)||'0')||0;
     if(age>0){payload.age_enfant=age;if(age<13)payload.is_mineur=true;}
+    var elVille=(g('pcElCVille')&&g('pcElCVille').value||'').trim();
+    if(elVille)payload.ville=elVille;
+    var elVilleVisEl=g('pcElCVilleVis');
+    if(elVille&&elVilleVisEl)payload.ville_visible=elVilleVisEl.classList.contains('on');
   }
   if(Object.keys(payload).length>0){
     try{
       await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify(payload)});
     }catch(e){}
+    // Sync user object en mémoire pour que la page profil affiche les bonnes valeurs sans re-fetch
+    if(user.role==='professeur'){
+      if(payload.statut)user.statut=payload.statut;
+      if(payload.matieres)user.matieres=payload.matieres;
+      if(payload.ville)user.ville=payload.ville;
+      if(payload.mode_cours)user.mode_cours=payload.mode_cours;
+    } else {
+      if(payload.pour_enfant!==undefined)user.pour_enfant=payload.pour_enfant;
+      if(payload.niveau)user.niveau=payload.niveau;
+      if(payload.niveau_enfant)user.niveau_enfant=payload.niveau_enfant;
+      if(payload.ville)user.ville=payload.ville;
+      if(payload.ville_visible!==undefined)user.ville_visible=payload.ville_visible;
+    }
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   }
   try{localStorage.setItem('cp_profile_done_'+user.id,'1');}catch(e){}
   _hideProfCompletion();
@@ -1648,6 +1667,8 @@ function goAccount(){
   var pfPr=g('pfPr'),pfNm=g('pfNm'),pfEm=g('pfEm'),pfVille=g('pfVille'),pfBio=g('pfBio');
   if(pfPr)pfPr.value=user.pr||'';if(pfNm)pfNm.value=user.nm||'';if(pfEm)pfEm.value=user.em||'';
   if(pfVille)pfVille.value=user.ville||'';if(pfBio)pfBio.value=user.bio||'';
+  var pfVilleVisEl=g('pfVilleVisible');
+  if(pfVilleVisEl){if(user.ville_visible)pfVilleVisEl.classList.add('on');else pfVilleVisEl.classList.remove('on');}
   var roleDisplay=g('pfRoleDisplay');
   if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 Professeur':'🎓 Élève';
   var pfProfExtra=g('pfProfExtra');
@@ -1685,7 +1706,8 @@ function goAccount(){
         if(prof.nom!==undefined)user.nm=prof.nom||'';
         if(prof.photo_url)user.photo=prof.photo_url;
         if(prof.bio!==undefined)user.bio=prof.bio||'';
-        if(prof.ville!==undefined)user.ville=prof.ville||'';
+        if(prof.ville!==undefined){user.ville=prof.ville||'';var _pfVil=g('pfVille');if(_pfVil)_pfVil.value=user.ville;}
+        if(prof.ville_visible!==undefined){user.ville_visible=prof.ville_visible;var _pvv=g('pfVilleVisible');if(_pvv){if(prof.ville_visible)_pvv.classList.add('on');else _pvv.classList.remove('on');}}
         if(prof.statut!==undefined)user.statut=prof.statut||'';
         if(prof.niveau!==undefined)user.niveau=prof.niveau||'';
         if(prof.matieres!==undefined)user.matieres=prof.matieres||'';
@@ -1973,6 +1995,8 @@ function saveProf(){
   user.pr=g('pfPr').value||user.pr;user.nm=g('pfNm').value||'';
   user.em=g('pfEm').value||user.em;user.ville=g('pfVille').value||'';
   user.bio=g('pfBio').value||'';
+  var _pfVilleVisEl=g('pfVilleVisible');
+  if(_pfVilleVisEl)user.ville_visible=_pfVilleVisEl.classList.contains('on');
   // Ne pas changer le rôle
   user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
   if(user.role==='professeur'){
@@ -2005,7 +2029,7 @@ function saveProf(){
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   // Pousser vers le serveur (Supabase via Railway)
   if(user.id){
-    var payload={prenom:user.pr,nom:user.nm,bio:user.bio||'',ville:user.ville||''};
+    var payload={prenom:user.pr,nom:user.nm,bio:user.bio||'',ville:user.ville||'',ville_visible:user.ville_visible||false};
     if(user.role==='professeur'){
       payload.statut=user.statut||'';
       payload.niveau=user.niveau||'';
@@ -2023,6 +2047,7 @@ function saveProf(){
         if(data.profile.niveau!==undefined)user.niveau=data.profile.niveau;
         if(data.profile.bio!==undefined)user.bio=data.profile.bio;
         if(data.profile.ville!==undefined)user.ville=data.profile.ville;
+        if(data.profile.ville_visible!==undefined)user.ville_visible=data.profile.ville_visible;
         try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
         // Re-render les chips avec la valeur confirmée par le serveur
         if(user.role==='professeur') initMatieresChips(user.matieres||'');
@@ -2213,8 +2238,8 @@ function _fetchProf(pid){
     }
     // Mettre à jour le compteur d'abonnés depuis l'API (synchronisation inter-comptes)
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-    if(_nbE!==undefined&&_nbE>0){
-      P[pid].e=Math.max(_nbE,P[pid].e||0);
+    if(_nbE!==undefined){
+      P[pid].e=_nbE; // source de vérité serveur (pas de Math.max — sinon le count ne peut pas baisser)
       _saveFollowCount(pid,P[pid].e);
     }
     // Persister dans localStorage pour que le prochain chargement démarre avec des données fraîches
@@ -2322,15 +2347,18 @@ function applyFilter(){
 function toggleFollowCard(pid,btn){
   if(!user||user.guest){toast('Connectez-vous pour suivre un professeur','');return;}
   if(!pid)return;
+  if(_followInFlight.has(pid))return; // anti-spam : request déjà en cours
+  _followInFlight.add(pid);
   var isFollowing=fol.has(pid);
   if(isFollowing){
-    fol.delete(pid);
+    fol.delete(pid);_saveFol();
     _syncFollowBtns(pid,false);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){return r.json();})
       .then(function(data){
+        _followInFlight.delete(pid);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -2338,6 +2366,7 @@ function toggleFollowCard(pid,btn){
         }
       })
       .catch(function(){
+        _followInFlight.delete(pid);
         fol.add(pid);_syncFollowBtns(pid,true);
         P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -2345,14 +2374,14 @@ function toggleFollowCard(pid,btn){
         toast('Erreur réseau','Impossible de modifier le suivi');
       });
   } else {
-    fol.add(pid);
+    fol.add(pid);_saveFol();
     _syncFollowBtns(pid,true);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
     toast('Vous suivez ce professeur','Notifié dès son prochain cours');
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){return r.json();})
       .then(function(data){
-        // Utiliser le vrai count serveur (source de vérité)
+        _followInFlight.delete(pid);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -2360,6 +2389,7 @@ function toggleFollowCard(pid,btn){
         }
       })
       .catch(function(){
+        _followInFlight.delete(pid);
         fol.delete(pid);_syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -2371,6 +2401,8 @@ function toggleFollowCard(pid,btn){
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   // Persister le compteur dans le cache localStorage
   if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
+  // Rebuild le compteur "Suivis" dans les stats si l'onglet suivi est visible
+  if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
   updateFavBadge();
   haptic(8);
 }
@@ -3044,21 +3076,29 @@ function confF(){
   if(!folPr)return;
   var pid=folPr;
   var p=P[pid]||{};
-  fol.add(pid);
+  fol.add(pid);_saveFol();
   _syncFollowBtns(pid,true);
   closeM('bdF');
   toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours');
   folPr=null;
-  updateFavBadge();
-  // Sauvegarder le follow en base
+  P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
+  P[pid].e=(P[pid].e||0)+1;
   if(user&&user.id){
-    fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
-    // Incrémenter le compteur d'élèves du prof (toujours créer P[pid] d'abord)
-    P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
-    P[pid].e=(P[pid].e||0)+1;
+    fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.nb_eleves!==undefined){
+          P[pid].e=data.nb_eleves;
+          if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
+          _saveFollowCount(pid,P[pid].e);
+        }
+      })
+      .catch(function(){});
   }
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
+  if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+  updateFavBadge();
 }
 
 // PROFIL PROF
@@ -3341,6 +3381,8 @@ function togFP(){
   haptic(6);
   var id=curProf,p=P[id]||{nm:'ce prof'};
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
+  if(_followInFlight.has(id))return; // anti-spam
+  _followInFlight.add(id);
   if(fol.has(id)){
     fol.delete(id);_saveFol();
     _setFollowBtn(false);
@@ -3357,6 +3399,7 @@ function togFP(){
       fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
         .then(function(r){return r.json();})
         .then(function(data){
+          _followInFlight.delete(id);
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
             if(g('mpE'))g('mpE').textContent=P[id].e;
@@ -3364,6 +3407,7 @@ function togFP(){
           }
         })
         .catch(function(){
+          _followInFlight.delete(id);
           fol.add(id);_setFollowBtn(true);_syncFollowBtns(id,true);
           if(P[id])P[id].e=(P[id].e||0)+1;
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
@@ -3381,6 +3425,7 @@ function togFP(){
       fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
         .then(function(r){return r.json();})
         .then(function(data){
+          _followInFlight.delete(id);
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
             if(g('mpE'))g('mpE').textContent=P[id].e;
@@ -3388,6 +3433,7 @@ function togFP(){
           }
         })
         .catch(function(){
+          _followInFlight.delete(id);
           fol.delete(id);_setFollowBtn(false);_syncFollowBtns(id,false);
           if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
@@ -3399,15 +3445,20 @@ function togFP(){
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
   if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}_saveFollowCount(id,P[id].e||0);}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
+  // Mettre à jour le compteur "Suivis" dans les stats immédiatement
+  if(g('asecF')&&g('asecF').classList.contains('on')){
+    var _folCntEl=g('accStats');
+    if(_folCntEl){var _sc=_folCntEl.querySelector('div:nth-child(2) div');if(_sc)_sc.textContent=fol.size;}
+  }
   updateFavBadge();
   // Fetch différé supprimé — le count serveur est maintenant retourné directement par POST/DELETE /follows
   setTimeout(function(){
     fetch(API+'/profiles/'+id).then(function(r){return r.json();}).then(function(prof){
       if(!prof||!prof.id)return;
       var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-      if(_nbE!==undefined&&_nbE>0){
+      if(_nbE!==undefined){
         P[id]=P[id]||{};
-        P[id].e=Math.max(_nbE,P[id].e||0);
+        P[id].e=_nbE;
         if(g('mpE')&&curProf===id)g('mpE').textContent=P[id].e;
         _saveFollowCount(id,P[id].e);
       }
@@ -4562,6 +4613,7 @@ function cniGoStep3(isReturn){
 function cniLater(){
   var bd=g('bdCni');if(bd)bd.style.display='none';
   document.body.style.overflow='';
+  updateVerifBand();
   toast('À compléter','Vous pourrez envoyer votre document depuis votre profil');
   setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},600);
 }
@@ -4569,11 +4621,39 @@ function cniLater(){
 function cniDone(){
   var bd=g('bdCni');if(bd)bd.style.display='none';
   document.body.style.overflow='';
-  // Mettre à jour les deux indicateurs de statut
   updateVerifStatusBlock();
   updateVerifBand();
+  // Marquer pour le nudge badges (affiché 30s après, 1 seule fois)
+  try{if(!localStorage.getItem('cp_badge_nudge_done_'+(user&&user.id||'')))localStorage.setItem('cp_badge_nudge_pending_'+(user&&user.id||''),'1');}catch(e){}
   setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},400);
+  _scheduleBadgeNudge();
 }
+
+function _scheduleBadgeNudge(){
+  if(!user||user.role!=='professeur')return;
+  try{
+    var uid=user.id||'';
+    if(localStorage.getItem('cp_badge_nudge_done_'+uid))return; // déjà affiché
+    if(!localStorage.getItem('cp_badge_nudge_pending_'+uid))return;
+  }catch(e){return;}
+  setTimeout(function(){
+    // Ne montrer que si l'utilisateur n'a pas encore tous les badges
+    if(!user)return;
+    if(user.diplome_verifie&&user.casier_verifie)return; // tous badges déjà OK
+    var bd=g('bdBadgeNudge');if(!bd)return;
+    // Masquer le bouton diplôme si déjà uploadé/vérifié
+    var nbtn=g('nudgeDiplomeBtn');
+    if(nbtn&&(user.diplome_uploaded||user.diplome_verifie))nbtn.style.display='none';
+    bd.style.display='flex';
+    try{localStorage.setItem('cp_badge_nudge_done_'+(user.id||''),'1');localStorage.removeItem('cp_badge_nudge_pending_'+(user.id||''));}catch(e){}
+  },30000);
+}
+
+function closeBadgeNudge(){
+  var bd=g('bdBadgeNudge');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .22s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},230);}
+}
+
 
 function cniPreview(input){
   if(!input.files||!input.files[0])return;
@@ -4612,14 +4692,21 @@ async function submitCni(){
 async function checkFirstProfLogin(){
   if(!user||user.role!=='professeur')return;
   var status=getCniStatus();
-  if(status!=='none')return;
+  if(status!=='none'){_scheduleBadgeNudge();return;}
   try{
     var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
     var p=await r.json();
-    if(p&&p.verified){user.verified=true;return;}
-    if(p&&p.cni_uploaded){user.cni_uploaded=true;return;}
+    if(p&&p.verified){user.verified=true;_scheduleBadgeNudge();return;}
+    if(p&&p.cni_uploaded){user.cni_uploaded=true;_scheduleBadgeNudge();return;}
   }catch(e){}
-  setTimeout(openCniSheet, 1000);
+  // N'ouvrir la sheet CNI que si le tutoriel est déjà terminé
+  var _tutoDoneKey=user&&user.id?'cp_tuto_done_'+user.id:'cp_tuto_done_guest';
+  try{if(!localStorage.getItem(_tutoDoneKey))return;}catch(e){}
+  // N'ouvrir qu'une seule fois (1ère connexion) — ensuite le verifBand prend le relais
+  var _cniPopupKey=user&&user.id?'cp_cni_popup_shown_'+user.id:'';
+  try{if(_cniPopupKey&&localStorage.getItem(_cniPopupKey))return;}catch(e){}
+  try{if(_cniPopupKey)localStorage.setItem(_cniPopupKey,'1');}catch(e){}
+  setTimeout(openCniSheet, 600);
 }
 
 function updateVerifStatusBlock(){
@@ -5284,12 +5371,16 @@ function tutoDone(){
     var doneKey=user&&user.id?'cp_tuto_done_'+user.id:'cp_tuto_done_guest';
     var stepKey=user&&user.id?'cp_tuto_step_'+user.id:'cp_tuto_step_guest';
     localStorage.setItem(doneKey,'1');
-    localStorage.removeItem(stepKey); // effacer la progression
+    localStorage.removeItem(stepKey);
   }catch(e){}
   var root=g('tutoRoot');
   if(root){
     root.style.opacity='0';root.style.transition='opacity .3s';
-    setTimeout(function(){root.style.display='none';root.style.opacity='';root.style.transition='';},300);
+    setTimeout(function(){
+      root.style.display='none';root.style.opacity='';root.style.transition='';
+      // Tuto terminé → montrer CNI si nécessaire (profs seulement)
+      if(user&&user.role==='professeur')checkFirstProfLogin();
+    },300);
   }
 }
 
