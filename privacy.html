@@ -29,6 +29,11 @@
   .contact-box p{margin-bottom:8px;}
   .contact-box a{color:var(--or);font-weight:600;text-decoration:none;}
   footer{text-align:center;padding:24px;font-size:12px;color:var(--lite);}
+  .page-nav{background:var(--wh);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .page-nav::-webkit-scrollbar{display:none;}
+  .page-nav a{display:flex;align-items:center;gap:6px;padding:14px 18px;font-size:13px;font-weight:600;color:var(--lite);text-decoration:none;white-space:nowrap;border-bottom:2.5px solid transparent;transition:color .18s,border-color .18s;}
+  .page-nav a:hover{color:var(--ink);}
+  .page-nav a.active{color:var(--or);border-bottom-color:var(--or);}
 </style>
 </head>
 <body>
@@ -42,6 +47,21 @@
   <span>CoursPool</span>
   <a href="https://courspool.vercel.app">← Retour à l'app</a>
 </header>
+
+<nav class="page-nav">
+  <a href="cgu.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    CGU
+  </a>
+  <a href="privacy.html" class="active">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Confidentialité
+  </a>
+  <a href="contact.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    Contact
+  </a>
+</nav>
 
 <div class="container">
   <div class="badge">Légal</div>
