@@ -1074,19 +1074,34 @@ async function saveProfCompletion(){
   }
   if(Object.keys(payload).length>0){
     try{
-      await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify(payload)});
-    }catch(e){}
-    // Sync user object en mémoire pour que la page profil affiche les bonnes valeurs sans re-fetch
-    if(user.role==='professeur'){
-      if(payload.statut)user.statut=payload.statut;
-      if(payload.matieres)user.matieres=payload.matieres;
-      if(payload.niveau_etudes)user.niveau_etudes=payload.niveau_etudes;
-      if(payload.ville)user.ville=payload.ville;
-      if(payload.mode_cours)user.mode_cours=payload.mode_cours;
-    } else {
-      if(payload.pour_enfant!==undefined)user.pour_enfant=payload.pour_enfant;
-      if(payload.niveau)user.niveau=payload.niveau;
-      if(payload.niveau_enfant)user.niveau_enfant=payload.niveau_enfant;
+      var _pcResp=await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify(payload)});
+      var _pcData=await _pcResp.json().catch(function(){return null;});
+      // Sync depuis réponse serveur si disponible, sinon depuis payload
+      var _pcProf=(_pcData&&_pcData.profile)||payload;
+      if(user.role==='professeur'){
+        if(_pcProf.statut!==undefined)user.statut=_pcProf.statut;
+        if(_pcProf.matieres!==undefined)user.matieres=_pcProf.matieres;
+        if(_pcProf.niveau_etudes!==undefined)user.niveau_etudes=_pcProf.niveau_etudes;
+        if(_pcProf.ville!==undefined)user.ville=_pcProf.ville;
+        if(_pcProf.mode_cours!==undefined)user.mode_cours=_pcProf.mode_cours;
+      } else {
+        if(_pcProf.pour_enfant!==undefined)user.pour_enfant=_pcProf.pour_enfant;
+        if(_pcProf.niveau!==undefined)user.niveau=_pcProf.niveau;
+        if(_pcProf.niveau_enfant!==undefined)user.niveau_enfant=_pcProf.niveau_enfant;
+      }
+    }catch(e){
+      // Fallback sync depuis payload si fetch échoue
+      if(user.role==='professeur'){
+        if(payload.statut)user.statut=payload.statut;
+        if(payload.matieres)user.matieres=payload.matieres;
+        if(payload.niveau_etudes)user.niveau_etudes=payload.niveau_etudes;
+        if(payload.ville)user.ville=payload.ville;
+        if(payload.mode_cours)user.mode_cours=payload.mode_cours;
+      } else {
+        if(payload.pour_enfant!==undefined)user.pour_enfant=payload.pour_enfant;
+        if(payload.niveau)user.niveau=payload.niveau;
+        if(payload.niveau_enfant)user.niveau_enfant=payload.niveau_enfant;
+      }
     }
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   }
