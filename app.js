@@ -2177,6 +2177,7 @@ function buildCards(){
   }
   if(nc)nc.style.display='none';
   applyFilter();
+  _syncAllFollowBtns(); // garantit l'état follow correct après chaque rendu
   updateFavBadge(); // recalcule le badge avec C[] chargé pour exclure les cours passés
 }
 
