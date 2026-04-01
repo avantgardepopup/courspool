@@ -1,0 +1,26 @@
+{
+	"appId": "com.courspool.app",
+	"appName": "CoursPool",
+	"webDir": "www",
+	"server": {
+		"allowNavigation": [
+			"js.stripe.com",
+			"hooks.stripe.com",
+			"devoted-achievement-production-fdfa.up.railway.app"
+		]
+	},
+	"plugins": {
+		"Keyboard": {
+			"resize": "body",
+			"style": "dark",
+			"resizeOnFullScreen": true
+		}
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"CAPBrowserPlugin",
+		"HapticsPlugin",
+		"KeyboardPlugin",
+		"StatusBarPlugin"
+	]
+}
