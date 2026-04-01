@@ -3053,6 +3053,7 @@ function openR(id){haptic(4);
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
   var rLcEl=g('rLc');if(rLcEl){rLcEl.textContent=_oIsVisio?'':c.lc;rLcEl.style.display=_oIsVisio?'none':'';}
+  var rNivEl=g('rNiv');if(rNivEl){if(c.niveau){rNivEl.style.display='block';var _ns=rNivEl.querySelector('span');if(_ns)_ns.textContent=c.niveau;}else{rNivEl.style.display='none';}}
   var rDescEl=g('rDesc');
   if(rDescEl){if(c.description){rDescEl.textContent=c.description;rDescEl.style.display='block';}else{rDescEl.style.display='none';}}
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
