@@ -11,6 +11,8 @@
   ],
   "routes": [
     { "src": "/app.js", "dest": "/app.js" },
+    { "src": "/supabase.min.js", "dest": "/supabase.min.js" },
+    { "src": "/socket.io.min.js", "dest": "/socket.io.min.js" },
     { "src": "/socket.js", "dest": "/socket.js" },
     { "src": "/search-aliases.js", "dest": "/search-aliases.js" },
     { "src": "/style.css", "dest": "/style.css" },
