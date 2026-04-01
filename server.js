@@ -512,6 +512,7 @@ app.use(function(req, res, next) {
   if (req.method === 'GET'  && req.path.startsWith('/cours/code/')) return next();
   if (req.method === 'GET'  && req.path.startsWith('/profiles/')) return next();
   if (req.method === 'GET'  && req.path.startsWith('/notations/')) return next();
+  if (req.method === 'GET'  && req.path.startsWith('/follows/')) return next();
   if (req.method === 'GET'  && req.path === '/stripe/success') return next();
   if (req.method === 'POST' && req.path === '/stripe/webhook') return next();
   if (req.method === 'POST' && req.path === '/contact') return next();
