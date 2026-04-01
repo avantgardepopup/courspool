@@ -103,6 +103,13 @@ window.addEventListener('popstate',function(e){
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
+// Prefetch cours dès le chargement du script — endpoint public, pas besoin d'auth
+// Le fetch démarre pendant que le JS vérifie la session, économise ~300-500ms
+var _prefetchP=fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();}).catch(function(){return null;});
+// Ping warm-up séparé — réveille Railway sans bloquer le prefetch cours
+// (ignoré si serveur déjà chaud ; utile après une période d'inactivité)
+fetch(API+'/health',{method:'HEAD',cache:'no-store'}).catch(function(){});
+
 // En-têtes API — injecte le token Bearer si l'utilisateur est connecté
 function apiH(extra){
   var h=Object.assign({'Content-Type':'application/json'},extra||{});
@@ -178,16 +185,25 @@ function getCourseState(id){
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
   if(!el)return;
-  if(photo){el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
-  else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
+  if(photo){
+    var _ex=el.querySelector('img');
+    if(_ex&&_ex.src===photo){return;} // même URL déjà affichée → pas de re-flash
+    el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s" onload="this.style.opacity=\'1\'">';
+  }else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
 }
 
 // Badge sera mis à jour après chargement des follows
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
+var _followInFlight=new Set(); // guard anti-spam follow/unfollow
 // Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
 loadFavCours();
-// Pré-charger les réservations depuis localStorage pour éviter le flash "Réserver" au rendu initial
-(function(){try{var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');_sr.forEach(function(id){res[id]=true;});}catch(e){}})();
+// Pré-charger les réservations depuis localStorage (toujours, pour éviter le flash à 0 dans le profil)
+(function(){
+  try{
+    var _sr=JSON.parse(localStorage.getItem('cp_res')||'[]');
+    _sr.forEach(function(id){res[id]=true;});
+  }catch(e){}
+})();
 // Pré-peupler P[] avec les profils mis en cache pour éviter le flash au chargement
 // NE PAS mettre _fresh=true ici : _fetchProf doit toujours tourner pour vérifier les données
 (function(){
@@ -196,7 +212,7 @@ loadFavCours();
     var _now=Date.now();
     Object.keys(_pc).forEach(function(pid){
       var e=_pc[pid];
-      if(_now-e.ts<3600000){
+      if(_now-e.ts<900000){ // 15 min — au-delà, données trop stale
         P[pid]=P[pid]||{n:'—',e:0};
         if(e.nm)P[pid].nm=e.nm;
         if(e.i)P[pid].i=e.i;
@@ -206,29 +222,28 @@ loadFavCours();
       }
     });
   }catch(ex){}
-  // Restaurer les compteurs de suivis (clé sans TTL — persiste même si cp_profs expire)
+  // Restaurer les compteurs de suivis (TTL 24h)
   try{
     var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');
+    var _fcNow=Date.now();
     Object.keys(_fc).forEach(function(pid){
-      if(_fc[pid]>0){P[pid]=P[pid]||{n:'—',e:0};if(!P[pid].e||P[pid].e<_fc[pid])P[pid].e=_fc[pid];}
+      var entry=_fc[pid];
+      var count=typeof entry==='object'?entry.n:entry;
+      var ts=typeof entry==='object'?entry.ts:0;
+      if(ts&&(_fcNow-ts>86400000))return; // expirer après 24h
+      if(count>0){P[pid]=P[pid]||{n:'—',e:0};if(!P[pid].e||P[pid].e<count)P[pid].e=count;}
     });
   }catch(ex){}
 })();
 
 // ── FAVORIS COURS — persistance localStorage ──
 // Sauvegarder le compteur de suivis d'un prof — clé sans TTL pour persister même après expiration de cp_profs
-function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]=n||0;localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
-
-// ── Persistance localStorage des follows (Set d'IDs) ──
-function _folKey(){return(user&&user.id)?'cp_fol_'+user.id:null;}
-function _saveFol(){try{var k=_folKey();if(k)localStorage.setItem(k,JSON.stringify(Array.from(fol)));}catch(e){}}
-function _loadFol(){try{var k=_folKey();if(!k)return;var s=localStorage.getItem(k);if(s)JSON.parse(s).forEach(function(id){fol.add(id);});}catch(e){}}
+function _saveFollowCount(pid,n){try{var _fc=JSON.parse(localStorage.getItem('cp_follow_counts')||'{}');_fc[pid]={n:n||0,ts:Date.now()};localStorage.setItem('cp_follow_counts',JSON.stringify(_fc));}catch(ex){}}
 
 function _favKey(){return(user&&user.id)?'cp_fav_cours_'+user.id:'cp_fav_cours';}
 function loadFavCours(){
   try{
     var saved=localStorage.getItem(_favKey());
-    // Migration : fallback sur la clé générique si rien trouvé avec la clé user
     if(!saved&&user&&user.id)saved=localStorage.getItem('cp_fav_cours');
     if(saved){JSON.parse(saved).forEach(function(id){favCours.add(id);});}
   }catch(e){}
@@ -236,6 +251,19 @@ function loadFavCours(){
 function saveFavCours(){
   try{localStorage.setItem(_favKey(),JSON.stringify(Array.from(favCours)));}catch(e){}
   updateFavBadge();
+}
+
+// ── Persistance des profils suivis (fol) ──────────────────────────────────
+function _folKey(){return(user&&user.id)?'cp_fol_'+user.id:null;}
+function _loadFol(){
+  try{
+    var k=_folKey();if(!k)return;
+    var saved=localStorage.getItem(k);
+    if(saved){JSON.parse(saved).forEach(function(id){fol.add(id);});}
+  }catch(e){}
+}
+function _saveFol(){
+  try{var k=_folKey();if(k)localStorage.setItem(k,JSON.stringify(Array.from(fol)));}catch(e){}
 }
 
 function updateFavBadge(){
@@ -247,8 +275,8 @@ function updateFavBadge(){
       return c&&!_isCoursPass(c);
     }).length;
   } else {
-    // C[] pas encore chargé : fallback sur le total brut
-    total=favCours.size;
+    // C[] pas encore chargé : masquer le badge (évite les counts stale)
+    total=0;
   }
   var badge=g('bnavFavBadge');
   if(!badge)return;
@@ -337,7 +365,7 @@ function buildFavPage(){
           +'</div>'
           +'<div class="fav-cours-card-body">'
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+esc(fmtDt(c.dt))+'</div>'
+          +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
           +'<div class="fav-cours-card-meta" style="margin-bottom:8px">📍 '+esc(c.lc)+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'</div>'
@@ -361,16 +389,24 @@ function buildFavPage(){
           p={nm:cours[0].prof_nm||'Professeur',i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
           P[pid]=p;
         }
-        // Fetch frais du profil si pas encore fait cette session
+        // Fetch frais du profil — toujours, si pas encore confirmé cette session
         _fetchProf(pid);
-        var nm=p.nm||'Professeur';
-        var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':((p.i||nm[0]||'?').toUpperCase());
+        // Si données non confirmées cette session : afficher initiales + skeleton nom
+        // pour éviter le flash d'un ancien nom/avatar qui sera corrigé par _fetchProf
+        var _fresh=p._fresh===true;
+        var col=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+        var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
+        // Photo : seulement si données fraîches (évite le flash d'ancienne photo)
+        var av=(_fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
+        var avBg=(_fresh&&p.photo)?'none':col;
+        // Nom : données fraîches → afficher, sinon skeleton animé
+        var nmHtml=_fresh?('<span>'+esc(p.nm||'Professeur')+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
         var _now=Date.now();
         var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-          +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+(p.photo?'none':(p.col||'linear-gradient(135deg,#FF8C55,#E04E10))'))+'">'+av+'</div>'
-          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+esc(nm)+'</div>'
+          +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
+          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
           +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
           +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
           +'</div>';
@@ -383,13 +419,7 @@ function unfollowProf(pid){
   fol.delete(pid);_saveFol();
   _syncFollowBtns(pid,false);
   if(user&&user.id){
-    fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
-      .catch(function(){
-        fol.add(pid);_saveFol();_syncFollowBtns(pid,true);
-        buildFavPage();
-        toast('Erreur réseau','Impossible de retirer le suivi');
-      });
+    fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
   }
   toast('Professeur retiré des suivis','');
   haptic(4);
@@ -429,18 +459,43 @@ function showSkeletons(){
 
 var _allLoaded=false,_totalCours=0,_currentPage=1,_loadingMore=false;
 
+// ── Cache cours (stale-while-revalidate) ──────────────────────────────────
+var _COURS_CACHE_KEY='cp_cours_v1';
+var _COURS_CACHE_TTL=5*60*1000; // 5 minutes
+function _saveCoursCache(){
+  try{localStorage.setItem(_COURS_CACHE_KEY,JSON.stringify({ts:Date.now(),data:C}));}catch(e){}
+}
+function _loadCoursCache(){
+  // Retourne true si un cache valide a été chargé dans C[] et affiché
+  try{
+    var raw=localStorage.getItem(_COURS_CACHE_KEY);
+    if(!raw)return false;
+    var parsed=JSON.parse(raw);
+    if(!parsed||!Array.isArray(parsed.data)||!parsed.data.length)return false;
+    if(Date.now()-parsed.ts>_COURS_CACHE_TTL)return false; // expiré
+    C=parsed.data;
+    return true;
+  }catch(e){return false;}
+}
+
 async function loadData(page,silent){
   page=page||1;
   if(page===1&&!silent)showSkeletonsV2();
   try{
-    var _ldCtrl=new AbortController();var _ldTid=setTimeout(function(){_ldCtrl.abort();},15000);
-    var r=await fetch(API+'/cours?page='+page+'&limit=20',{signal:_ldCtrl.signal});
-    clearTimeout(_ldTid);
-    var json=await r.json();
+    // Page 1 : utiliser le prefetch déjà en vol si disponible (évite un aller-retour réseau)
+    var json;
+    if(page===1&&_prefetchP){
+      json=await _prefetchP;
+      _prefetchP=null; // consommer une seule fois
+      if(!json)json=await fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();});
+    } else {
+      var _ldCtrl=new AbortController();var _ldTid=setTimeout(function(){_ldCtrl.abort();},15000);
+      json=await fetch(API+'/cours?page='+page+'&limit=12',{signal:_ldCtrl.signal}).then(function(r){clearTimeout(_ldTid);return r.json();});
+    }
     // Support ancien format (array) et nouveau (objet paginé)
     var cours=Array.isArray(json)?json:(json.cours||[]);
     _totalCours=json.total||cours.length;
-    _allLoaded=cours.length<20||(_currentPage*20)>=_totalCours;
+    _allLoaded=cours.length<12||(_currentPage*12)>=_totalCours;
     if(!cours.length&&page===1){
       // Serveur qui se réveille : garder les skeletons et réessayer après 5s
       setTimeout(function(){loadData(1).then(function(){buildCards();});},5000);
@@ -487,9 +542,8 @@ async function loadData(page,silent){
         else if(c.prof_photo&&!P[c.pr].photo&&!P[c.pr]._fresh)P[c.pr].photo=c.prof_photo;
       }
     });
-    // Lancer les fetches de profils frais dès maintenant (avant renderPage)
-    // Quand ils reviennent ils patchent P[], C[], et le DOM via _fetchProf
-    if(page===1){var _fpSeen={};mapped.forEach(function(c){if(c.pr&&user&&c.pr!==user.id&&!_fpSeen[c.pr]){_fpSeen[c.pr]=true;_fetchProf(c.pr);}});}
+    // _fetchProf différé : ne pas saturer la connexion au démarrage
+    // Les profils sont chargés à la demande (openPr) ou via _fetchProf dans buildFavPage
     // Après traitement des cours, écraser P[user.id] avec les données fraîches du user connecté
     // (bio/statut/niveau/matieres/nom ne viennent pas des cours)
     if(user&&user.id&&page===1){
@@ -504,9 +558,10 @@ async function loadData(page,silent){
       if(user.niveau)_pu.niveau=user.niveau;
       if(user.matieres)_pu.matieres=user.matieres;
     }
+    // Sauvegarder le cache après chaque chargement page 1 réussi
+    if(page===1)_saveCoursCache();
   }catch(e){
     if(e.name==='AbortError'){
-      // Timeout — vider les skeletons et réessayer dans 5s
       var _gr=g('grid');if(_gr)_gr.innerHTML='';
       var _nc=g('nocard');if(_nc){_nc.style.display='block';var _nt=g('nocardTitle');if(_nt)_nt.textContent='Chargement...';}
       setTimeout(function(){loadData(1,true).then(function(){buildCards();});},5000);
@@ -699,26 +754,16 @@ async function _handleOAuthSignIn(session){
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
       _scheduleTokenRefresh();
-      fol.clear();_loadFol();favCours.clear();loadFavCours();
+      favCours.clear();loadFavCours();
       applyUser();
-      var _oauthCoursP=loadData();
-      var _oauthFolP=fetch(API+'/follows/'+sbUser.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
-      var _oauthFolRace=Promise.race([_oauthFolP,new Promise(function(resolve){setTimeout(function(){resolve(null);},2000);})]);
-      Promise.all([_oauthCoursP,_oauthFolRace]).then(function(results){
-        var folData=results[1];
-        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
-      }).catch(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
-      _oauthFolP.then(function(folData){
-        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        if(C.length){_syncAllFollowBtns();}
-      }).catch(function(){});
+      loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
       toast('Bienvenue '+pr+' !','Connecté à CoursPool');
       _oauthProcessing=false;
       return;
     }
   }catch(e){
     _oauthProcessing=false;
+    // Restaurer le login et informer l'utilisateur (échec réseau ou Railway froid)
     var _lel=document.getElementById('login');
     if(_lel){_lel.style.display='';_lel.style.zIndex='';}
     var _sp2=document.getElementById('oauthLoading');if(_sp2)_sp2.remove();
@@ -731,7 +776,7 @@ async function _handleOAuthSignIn(session){
   _pcIsOAuth=true;
   _oauthSession=session;
   _regRole='eleve';
-  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcMatieres=[];_pcMode='';
+  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcStatut='';_pcMatieres=[];_pcMode='';
   _pcHistory=[];
   var pc=g('profCompletion');if(pc){pc.style.display='block';pc.scrollTop=0;}
   _pcShowSlide('pcOAuthRole',false);
@@ -827,7 +872,7 @@ async function pcOAuthRoleNext(){
     loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     // Avancer vers les slides spécifiques au rôle
     _pcHistory.push('pcOAuthRole');
-    var nextSlide=(user.role==='professeur')?'pcPfA':'pcElA';
+    var nextSlide=(user.role==='professeur')?'pcPf0':'pcElA';
     _pcShowSlide(nextSlide,false);
   }catch(e){
     toast('Erreur','Problème de connexion');
@@ -849,6 +894,7 @@ function regBack(){showLogin();}
 var _pcPour='moi';
 var _pcNivEleve='';
 var _pcNivEtudes='';
+var _pcStatut='';
 var _pcMatieres=[];
 var _pcMode='';
 var _pcCurrentSlide='';
@@ -858,21 +904,27 @@ function showProfCompletion(){
   var pc=g('profCompletion');if(!pc)return;
   pc.style.display='block';
   _pcIsOAuth=false;_oauthSession=null;
-  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcMatieres=[];_pcMode='';
+  _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcStatut='';_pcMatieres=[];_pcMode='';
   _pcHistory=[];
-  var first=(user&&user.role==='professeur')?'pcPfA':'pcElA';
+  var first=(user&&user.role==='professeur')?'pcPf0':'pcElA';
   _pcShowSlide(first,false);
 }
 
-function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPfA','pcPfB','pcPfC'];}
+function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPf0','pcPfA','pcPfB','pcPfC'];}
+
+function _pcProfSlides(){
+  // pcPfA (niveau d'études) uniquement si statut = étudiant ou non encore sélectionné
+  var inclNiv=(!_pcStatut||_pcStatut==='etudiant');
+  return inclNiv?['pcPf0','pcPfA','pcPfB','pcPfC']:['pcPf0','pcPfB','pcPfC'];
+}
 
 function _pcOrderedSlides(){
   if(_pcIsOAuth){
     if(!user)return['pcOAuthRole'];
-    if(user.role==='professeur')return['pcOAuthRole','pcPfA','pcPfB','pcPfC'];
+    if(user.role==='professeur')return['pcOAuthRole'].concat(_pcProfSlides());
     return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf']:['pcOAuthRole','pcElA','pcElBmoi'];
   }
-  if(user&&user.role==='professeur')return['pcPfA','pcPfB','pcPfC'];
+  if(user&&user.role==='professeur')return _pcProfSlides();
   return _pcPour==='enfant'?['pcElA','pcElBenf']:['pcElA','pcElBmoi'];
 }
 
@@ -882,6 +934,19 @@ function _pcShowSlide(id,isBack){
   el.style.display='block';
   if(isBack)el.classList.add('pc-back');
   _pcCurrentSlide=id;
+  // Adapter la question du lieu selon le statut du prof
+  if(id==='pcPfC'){
+    var _villeTitle=g('pcVilleTitle');
+    if(_villeTitle){
+      if(_pcStatut==='etudiant'){
+        _villeTitle.textContent='Ou etudiez-vous ?';
+      } else if(_pcStatut==='auto'||_pcStatut==='autre'){
+        _villeTitle.textContent='Ou travaillez-vous ?';
+      } else {
+        _villeTitle.textContent='Ou enseignez-vous ?';
+      }
+    }
+  }
   var pc=g('profCompletion');if(pc)pc.scrollTop=0;
   _pcUpdateProgress();
 }
@@ -919,6 +984,13 @@ function pickPour(v){
 
 function pickPcNiv(el,v){
   _pcNivEleve=v;
+  var grid=el.parentNode;
+  [].forEach.call(grid.querySelectorAll('.lniv-chip'),function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
+
+function pickPcStatut(el,v){
+  _pcStatut=v;
   var grid=el.parentNode;
   [].forEach.call(grid.querySelectorAll('.lniv-chip'),function(c){c.classList.remove('on');});
   el.classList.add('on');
@@ -985,7 +1057,8 @@ async function saveProfCompletion(){
   var payload={};
   if(!user||!user.id||user.guest){_hideProfCompletion();return;}
   if(user.role==='professeur'){
-    if(_pcNivEtudes)payload.statut=_pcNivEtudes;
+    if(_pcStatut)payload.statut=_pcStatut;
+    if(_pcNivEtudes)payload.niveau_etudes=_pcNivEtudes;
     if(_pcMatieres.length>0)payload.matieres=_pcMatieres.join(', ');
     var ville=(g('pcVille')&&g('pcVille').value||'').trim();
     if(ville)payload.ville=ville;
@@ -1001,8 +1074,36 @@ async function saveProfCompletion(){
   }
   if(Object.keys(payload).length>0){
     try{
-      await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify(payload)});
-    }catch(e){}
+      var _pcResp=await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify(payload)});
+      var _pcData=await _pcResp.json().catch(function(){return null;});
+      // Sync depuis réponse serveur si disponible, sinon depuis payload
+      var _pcProf=(_pcData&&_pcData.profile)||payload;
+      if(user.role==='professeur'){
+        if(_pcProf.statut!==undefined)user.statut=_pcProf.statut;
+        if(_pcProf.matieres!==undefined)user.matieres=_pcProf.matieres;
+        if(_pcProf.niveau_etudes!==undefined)user.niveau_etudes=_pcProf.niveau_etudes;
+        if(_pcProf.ville!==undefined)user.ville=_pcProf.ville;
+        if(_pcProf.mode_cours!==undefined)user.mode_cours=_pcProf.mode_cours;
+      } else {
+        if(_pcProf.pour_enfant!==undefined)user.pour_enfant=_pcProf.pour_enfant;
+        if(_pcProf.niveau!==undefined)user.niveau=_pcProf.niveau;
+        if(_pcProf.niveau_enfant!==undefined)user.niveau_enfant=_pcProf.niveau_enfant;
+      }
+    }catch(e){
+      // Fallback sync depuis payload si fetch échoue
+      if(user.role==='professeur'){
+        if(payload.statut)user.statut=payload.statut;
+        if(payload.matieres)user.matieres=payload.matieres;
+        if(payload.niveau_etudes)user.niveau_etudes=payload.niveau_etudes;
+        if(payload.ville)user.ville=payload.ville;
+        if(payload.mode_cours)user.mode_cours=payload.mode_cours;
+      } else {
+        if(payload.pour_enfant!==undefined)user.pour_enfant=payload.pour_enfant;
+        if(payload.niveau)user.niveau=payload.niveau;
+        if(payload.niveau_enfant)user.niveau_enfant=payload.niveau_enfant;
+      }
+    }
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   }
   try{localStorage.setItem('cp_profile_done_'+user.id,'1');}catch(e){}
   _hideProfCompletion();
@@ -1063,30 +1164,29 @@ async function doLogin(){
     try{localStorage.removeItem('cp_profs');}catch(e){}
     Object.keys(res).forEach(function(k){delete res[k];});
     fol.clear();
-    _loadFol(); // Charge les follows depuis localStorage → disponibles immédiatement pour buildCards
+    _loadFol(); // fallback localStorage si GET /follows échoue plus bas
     favCours.clear();loadFavCours();
+    _convCache='';
     if(uid){
-      var _coursP=loadData();
-      // Follows en parallèle — Railway est déjà réveillé par le login, réponse en <1s
-      var _folP=fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
-      var _resP=fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];});
-      // Timeout 2s sur les follows — garantit que buildCards() n'attend jamais longtemps
-      var _folRace=Promise.race([_folP,new Promise(function(resolve){setTimeout(function(){resolve(null);},2000);})]);
-      // Attendre cours + follows avant buildCards → follow state correct dès le premier rendu
-      Promise.all([_coursP,_folRace]).then(function(results){
-        var folData=results[1];
-        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
-      }).catch(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
-      // Réservations en fond
-      _resP.then(function(resData){
+      // loadData ET res+follows EN PARALLÈLE
+      var _dataP2=loadData();
+      var _rfP2=Promise.all([
+        fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
+      ]);
+      // Afficher les cours dès qu'ils arrivent
+      _dataP2.then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      // Appliquer res+follows quand ils arrivent, puis reconstruire
+      _rfP2.then(function(results){
+        var resData=results[0],folData=results[1];
+        Object.keys(res).forEach(function(k){delete res[k];});
+        Object.keys(P).forEach(function(k){delete P[k];});
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
+        // Ne remplacer fol QUE si le fetch a réussi (folData=null = échec réseau → garder fol du localStorage)
+        if(Array.isArray(folData)){var _newFol2=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});fol=_newFol2;_saveFol();}
+        if(C.length)buildCards();
         updateFavBadge();
-      }).catch(function(){});
-      // Si follows arrivent après le timeout (Railway lent), sync tous les boutons
-      _folP.then(function(folData){
-        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        if(C.length){_syncAllFollowBtns();}
+        var _pfav3=g('pgFav');if(_pfav3&&_pfav3.classList.contains('on'))buildFavPage();
       }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
@@ -1372,6 +1472,9 @@ function _springIcon(el){
 function restoreNav(){
   var nav=g('bnav');
   if(nav&&user)nav.style.display='flex';
+  // Nettoyer les classes iPad messaging (sécurité si restoreNav appelé sans closeMsgConv)
+  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');}
+  var _bbR=g('bnavIpadBack');if(_bbR)_bbR.classList.remove('visible');
 
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
@@ -1429,12 +1532,9 @@ function goExplore(){
       user=parsedUser;
       _scheduleTokenRefresh();
       applyUser();
-      _loadFol(); // restaurer les follows depuis localStorage (fallback si API échoue ci-dessous)
-      favCours.clear();loadFavCours(); // charger les favoris avec le bon user.id dès maintenant
-      // Fetch profil en background — corrige avatar/pseudo stales sans attendre goAccount()
-      // /profiles/ est public (pas besoin de token valide) → fonctionne même en cold start
+      // Fetch profil en background dès le démarrage — corrige les données stales sans attendre goAccount()
       if(user.id&&!user.guest){
-        fetch(API+'/profiles/'+user.id+'?t='+Date.now(),{cache:'no-store'})
+        fetch(API+'/profiles/'+user.id+'?t='+Date.now(),{cache:'no-store',headers:apiH()})
           .then(function(r){return r.json();})
           .then(function(prof){
             if(!prof||!prof.id)return;
@@ -1442,9 +1542,10 @@ function goExplore(){
             if(prof.prenom&&prof.prenom!==user.pr){user.pr=prof.prenom;_chg=true;}
             if(prof.nom!==undefined&&(prof.nom||'')!==(user.nm||'')){user.nm=prof.nom||'';_chg=true;}
             if(prof.photo_url&&prof.photo_url!==user.photo){user.photo=prof.photo_url;_chg=true;}
-            if(!_chg)return;
+            if(!_chg)return; // pas de changement, rien à faire
             user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
             try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
+            // Mettre à jour tous les avatars + nom dans l'UI
             setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
             setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
             var _mt=g('mobTitle');if(_mt&&g('pgExp')&&g('pgExp').classList.contains('on'))_mt.textContent=getGreeting()+' '+user.pr+' 👋';
@@ -1452,29 +1553,36 @@ function goExplore(){
             var _accNm2=g('accName');if(_accNm2)_accNm2.textContent=user.pr+(user.nm?' '+user.nm:'');
           }).catch(function(){});
       }
+      // Affichage instantané depuis le cache si disponible
+      var _hadCache=_loadCoursCache();
+      _loadFol(); // restaurer les profils suivis depuis localStorage (affichage immédiat dans fav)
+      favCours.clear();loadFavCours(); // recharger avec user.id défini — évite page Favoris vide en cold start
+      if(_hadCache)buildCards();
       if(user.id){
-        var _startCoursP=loadData();
-        // Follows en parallèle — timeout 3s pour cold start au démarrage
-        var _startFolP=fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
-        var _startResP=fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];});
-        var _startFolRace=Promise.race([_startFolP,new Promise(function(resolve){setTimeout(function(){resolve(null);},3000);})]);
-        // Attendre cours + follows avant buildCards → follow state correct dès le premier rendu
-        Promise.all([_startCoursP,_startFolRace]).then(function(results){
-          var folData=results[1];
-          if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-          buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();
-        }).catch(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
-        // Réservations en fond
-        _startResP.then(function(resData){
+        // Lancer loadData ET res+follows EN PARALLÈLE — ne pas attendre l'un pour l'autre
+        // silent=true si cache déjà affiché (évite de remplacer le contenu par des skeletons)
+        var _dataP=loadData(1,_hadCache);
+        var _rfP=Promise.all([
+          fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → on garde fol du localStorage
+        ]);
+        // Afficher les cours dès qu'ils arrivent (sans attendre res+follows)
+        // loadData(1) avec silent=true si cache déjà affiché pour éviter les skeletons
+        _dataP.then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();}).catch(function(){});
+        // Appliquer res+follows quand ils arrivent, puis reconstruire
+        _rfP.then(function(results){
+          var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-          favCours.clear();loadFavCours();updateFavBadge();
-        }).catch(function(){});
-        // Si follows arrivent après le timeout, sync les boutons
-        _startFolP.then(function(folData){
-          if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-          if(C.length){_syncAllFollowBtns();}
+          Object.keys(P).forEach(function(k){delete P[k];});
+          // Ne remplacer fol QUE si le fetch a réussi (folData=null = timeout/erreur réseau)
+          if(Array.isArray(folData)){var _newFol=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol.add(f.professeur_id);});fol=_newFol;_saveFol();}
+          // sinon on garde fol chargé depuis localStorage par _loadFol() au démarrage
+          favCours.clear();loadFavCours();
+          updateFavBadge();
+          if(C.length)buildCards();
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+          var _pfav2=g('pgFav');if(_pfav2&&_pfav2.classList.contains('on'))buildFavPage();
         }).catch(function(){});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
@@ -1582,6 +1690,9 @@ function goAccount(){
   var pfPr=g('pfPr'),pfNm=g('pfNm'),pfEm=g('pfEm'),pfVille=g('pfVille'),pfBio=g('pfBio');
   if(pfPr)pfPr.value=user.pr||'';if(pfNm)pfNm.value=user.nm||'';if(pfEm)pfEm.value=user.em||'';
   if(pfVille)pfVille.value=user.ville||'';if(pfBio)pfBio.value=user.bio||'';
+  var pfVilleVisEl=g('pfVilleVisible');
+  if(pfVilleVisEl){if(user.ville_visible)pfVilleVisEl.classList.add('on');else pfVilleVisEl.classList.remove('on');}
+  _updatePfVilleLabel();
   var roleDisplay=g('pfRoleDisplay');
   if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 Professeur':'🎓 Élève';
   var pfProfExtra=g('pfProfExtra');
@@ -1619,8 +1730,9 @@ function goAccount(){
         if(prof.nom!==undefined)user.nm=prof.nom||'';
         if(prof.photo_url)user.photo=prof.photo_url;
         if(prof.bio!==undefined)user.bio=prof.bio||'';
-        if(prof.ville!==undefined)user.ville=prof.ville||'';
-        if(prof.statut!==undefined)user.statut=prof.statut||'';
+        if(prof.ville!==undefined){user.ville=prof.ville||'';var _pfVil=g('pfVille');if(_pfVil)_pfVil.value=user.ville;}
+        if(prof.ville_visible!==undefined){user.ville_visible=prof.ville_visible;var _pvv=g('pfVilleVisible');if(_pvv){if(prof.ville_visible)_pvv.classList.add('on');else _pvv.classList.remove('on');}}
+        if(prof.statut!==undefined){user.statut=prof.statut||'';_updatePfVilleLabel();}
         if(prof.niveau!==undefined)user.niveau=prof.niveau||'';
         if(prof.matieres!==undefined)user.matieres=prof.matieres||'';
         user.nbEleves=prof.nb_eleves||0;
@@ -1640,7 +1752,11 @@ function goAccount(){
         resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});
         try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}
       }
-      if(Array.isArray(folData)){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+      if(Array.isArray(folData)){
+        fol.clear();
+        folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});
+        _saveFol();
+      }
       buildAccLists();
     }).catch(function(){});
   }
@@ -1657,6 +1773,7 @@ function goAccount(){
   // Statut vérification
   updateVerifStatusBlock();
   updateDiplomeStatusBlock();
+  updateCasierStatusBlock();
   // Afficher les préférences notif si push actif
   var notifTypes = g('notifTypes');
   if (notifTypes) notifTypes.style.display = (_pushSubscription) ? 'block' : 'none';
@@ -1685,7 +1802,7 @@ function switchATab(s,el){
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
   if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
-  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();updateDiplomeStatusBlock();}
+  if(s==='P'){setTimeout(renderNotifStatus,100);updateVerifStatusBlock();updateDiplomeStatusBlock();updateCasierStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
   if(s==='F'){ buildAccLists(); }
@@ -1698,19 +1815,17 @@ function buildAccLists(){
   var isProf=user&&user.role==='professeur';
   var stats=g('accStats');
   if(stats){
-    var nbCours=isProf?C.filter(function(c){return c.pr===user.id;}).length:0;
+    var nbCours=isProf?C.filter(function(c){return c.pr===user.id&&!_isCoursPass(c);}).length:0;
     if(isProf){
-      var _sA='animation:popIn .22s ease-out;';
       stats.innerHTML=
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or);'+_sA+'">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or);'+_sA+'">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or);'+_sA+'">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
     } else {
-      var _sB='animation:popIn .22s ease-out;';
       stats.innerHTML=
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or);'+_sB+'">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or);'+_sB+'">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or);'+_sB+'">'+(rIds.length+fIds.length)+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
     }
   }
   // Rôle pill
@@ -1751,7 +1866,7 @@ function buildAccLists(){
           +'</div>'
           +'<div class="fav-cours-card-body">'
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
-          +'<div class="fav-cours-card-meta">📅 '+esc(fmtDt(c.dt))+'</div>'
+          +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
           +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
@@ -1900,11 +2015,26 @@ function setPfRole(role){
   g('pfProfExtra').style.display=role==='professeur'?'block':'none';
 }
 
+function _updatePfVilleLabel(){
+  var lbl=g('pfVilleLabel');
+  if(!lbl||!user)return;
+  if(user.role==='eleve'){
+    lbl.textContent='Où étudiez-vous ?';
+  } else {
+    var st=user.statut||'';
+    if(st==='etudiant') lbl.textContent='Où étudiez-vous ?';
+    else if(st==='auto'||st==='autre') lbl.textContent='Où travaillez-vous ?';
+    else lbl.textContent='Où enseignez-vous ?';
+  }
+}
+
 function saveProf(){
   if(!user)return;
   user.pr=g('pfPr').value||user.pr;user.nm=g('pfNm').value||'';
   user.em=g('pfEm').value||user.em;user.ville=g('pfVille').value||'';
   user.bio=g('pfBio').value||'';
+  var _pfVilleVisEl=g('pfVilleVisible');
+  if(_pfVilleVisEl)user.ville_visible=_pfVilleVisEl.classList.contains('on');
   // Ne pas changer le rôle
   user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
   if(user.role==='professeur'){
@@ -1937,7 +2067,7 @@ function saveProf(){
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   // Pousser vers le serveur (Supabase via Railway)
   if(user.id){
-    var payload={prenom:user.pr,nom:user.nm,bio:user.bio||'',ville:user.ville||''};
+    var payload={prenom:user.pr,nom:user.nm,bio:user.bio||'',ville:user.ville||'',ville_visible:user.ville_visible||false};
     if(user.role==='professeur'){
       payload.statut=user.statut||'';
       payload.niveau=user.niveau||'';
@@ -1955,6 +2085,7 @@ function saveProf(){
         if(data.profile.niveau!==undefined)user.niveau=data.profile.niveau;
         if(data.profile.bio!==undefined)user.bio=data.profile.bio;
         if(data.profile.ville!==undefined)user.ville=data.profile.ville;
+        if(data.profile.ville_visible!==undefined)user.ville_visible=data.profile.ville_visible;
         try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
         // Re-render les chips avec la valeur confirmée par le serveur
         if(user.role==='professeur') initMatieresChips(user.matieres||'');
@@ -1982,8 +2113,11 @@ function doLogout(){
   try{localStorage.removeItem('cp_res');}catch(e){}
   try{localStorage.removeItem('cp_profs');}catch(e){}
   try{localStorage.removeItem('cp_follow_counts');}catch(e){}
-  // cp_fol_{userId} intentionnellement gardé : fallback si API Railway froide au prochain login
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
+  _convCache='';
+  try{localStorage.removeItem(_COURS_CACHE_KEY);}catch(e){}
+  try{var _fk=_folKey();if(_fk)localStorage.removeItem(_fk);}catch(e){}
+  try{localStorage.removeItem('cp_fav_cours');}catch(e){} // nettoyer la clé fallback sans user.id
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
   // Restaurer les items bnav pour la prochaine connexion
@@ -2125,6 +2259,7 @@ function _fetchProf(pid){
     P[pid]._fresh=true;
     if(prof.verified!==undefined)P[pid].verified=prof.verified;
     if(prof.diplome_verifie!==undefined)P[pid].dv=prof.diplome_verifie;
+    if(prof.casier_verifie!==undefined)P[pid].cv=prof.casier_verifie;
     if(nm2){
       P[pid].nm=nm2;
       P[pid].i=((pr2[0]||'')+(no2[0]||'')).toUpperCase()||'?';
@@ -2136,13 +2271,13 @@ function _fetchProf(pid){
       C.forEach(function(c){if(c.pr===pid)c.prof_photo=prof.photo_url;});
       document.querySelectorAll('[data-prof="'+pid+'"]').forEach(function(el){
         el.style.background='none';
-        el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+        el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">';
       });
     }
     // Mettre à jour le compteur d'abonnés depuis l'API (synchronisation inter-comptes)
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-    if(_nbE!==undefined&&_nbE>0){
-      P[pid].e=Math.max(_nbE,P[pid].e||0);
+    if(_nbE!==undefined){
+      P[pid].e=_nbE; // source de vérité serveur (pas de Math.max — sinon le count ne peut pas baisser)
       _saveFollowCount(pid,P[pid].e);
     }
     // Persister dans localStorage pour que le prochain chargement démarre avec des données fraîches
@@ -2159,6 +2294,8 @@ function _fetchProf(pid){
     }
     // Rafraîchir la liste des suivis si l'onglet est visible (profs fantômes)
     if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+    // Invalider le cache conversations (photo/nom mis à jour → forcer re-rendu)
+    _convCache='';
   }).catch(function(){});
 }
 function buildCards(){
@@ -2178,7 +2315,21 @@ function buildCards(){
   if(nc)nc.style.display='none';
   applyFilter();
   _syncAllFollowBtns(); // garantit l'état follow correct après chaque rendu
+  // Nettoyer les favoris obsolètes : cours supprimés du serveur (plus dans C[])
+  // Seulement quand _allLoaded=true pour éviter de supprimer des cours en page 2+
+  if(_allLoaded&&favCours.size){
+    var _changed=false;
+    favCours.forEach(function(id){
+      var inC=C.find(function(x){return String(x.id)===String(id);});
+      var inHist=_histCache&&_histCache[String(id)];
+      // Pas dans C[] ni dans l'historique → cours supprimé côté serveur → purger
+      if(!inC&&!inHist){favCours.delete(id);_changed=true;}
+    });
+    if(_changed)saveFavCours();
+  }
   updateFavBadge(); // recalcule le badge avec C[] chargé pour exclure les cours passés
+  // Rafraîchir la page favoris si elle est active (les skeletons deviendraient sinon permanents)
+  var _pfav=g('pgFav');if(_pfav&&_pfav.classList.contains('on'))buildFavPage();
 }
 
 function applyFilter(){
@@ -2235,6 +2386,8 @@ function applyFilter(){
 function toggleFollowCard(pid,btn){
   if(!user||user.guest){toast('Connectez-vous pour suivre un professeur','');return;}
   if(!pid)return;
+  if(_followInFlight.has(pid))return; // anti-spam : request déjà en cours
+  _followInFlight.add(pid);
   var isFollowing=fol.has(pid);
   if(isFollowing){
     fol.delete(pid);_saveFol();
@@ -2242,8 +2395,9 @@ function toggleFollowCard(pid,btn){
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
     toast('Retiré des suivis','');
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+      .then(function(r){return r.json();})
       .then(function(data){
+        _followInFlight.delete(pid);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -2251,6 +2405,7 @@ function toggleFollowCard(pid,btn){
         }
       })
       .catch(function(){
+        _followInFlight.delete(pid);
         fol.add(pid);_saveFol();_syncFollowBtns(pid,true);
         P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -2265,6 +2420,7 @@ function toggleFollowCard(pid,btn){
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
       .then(function(data){
+        _followInFlight.delete(pid);
         if(data&&data.error)throw new Error(data.error);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
@@ -2273,6 +2429,7 @@ function toggleFollowCard(pid,btn){
         }
       })
       .catch(function(){
+        _followInFlight.delete(pid);
         fol.delete(pid);_saveFol();_syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -2284,6 +2441,8 @@ function toggleFollowCard(pid,btn){
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
   // Persister le compteur dans le cache localStorage
   if(P[pid]){try{var _pc3=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc3[pid])_pc3[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc3[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc3));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
+  // Rebuild le compteur "Suivis" dans les stats si l'onglet suivi est visible
+  if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
   updateFavBadge();
   haptic(8);
 }
@@ -2517,8 +2676,39 @@ var FM={
   langues:function(t){return /anglais|espagnol|allemand|langue|toefl|ielts|fle/.test(t);},
   economie:function(t){return /econom|macro|finance|compta|gestion|marketing/.test(t);},
   soir:function(t){return /18h|19h|20h|21h|soir/.test(t);},
-  weekend:function(t){return /sam|dim|week/.test(t);}
+  weekend:function(t){return /sam|dim|week/.test(t);},
+  histoire:function(t){return /histoire|histor/.test(t);},
+  philosophie:function(t){return /philo/.test(t);},
+  chimie:function(t){return /chimie|chim/.test(t);},
+  biologie:function(t){return /biolog|svt/.test(t);},
+  sport:function(t){return /sport|gym|fitness/.test(t);},
+  musique:function(t){return /musique|piano|guitare|solfege/.test(t);},
+  droit:function(t){return /droit|jurid|loi/.test(t);}
 };
+
+// Pool complet de filtres disponibles
+var _FILTER_POOL=[
+  {key:'maths',       label:'Maths',     emoji:'📐'},
+  {key:'physique',    label:'Physique',  emoji:'⚗️'},
+  {key:'informatique',label:'Info',      emoji:'💻'},
+  {key:'langues',     label:'Langues',   emoji:'🌍'},
+  {key:'economie',    label:'Éco',       emoji:'📊'},
+  {key:'soir',        label:'Ce soir',   emoji:'🌙'},
+  {key:'weekend',     label:'Week-end',  emoji:'🎉'},
+  {key:'histoire',    label:'Histoire',  emoji:'📖'},
+  {key:'philosophie', label:'Philo',     emoji:'🧠'},
+  {key:'chimie',      label:'Chimie',    emoji:'🔬'},
+  {key:'biologie',    label:'Bio',       emoji:'🌿'},
+  {key:'sport',       label:'Sport',     emoji:'🏃'},
+  {key:'musique',     label:'Musique',   emoji:'🎵'},
+  {key:'droit',       label:'Droit',     emoji:'⚖️'}
+];
+
+// Filtres actifs dans la barre (chargés depuis localStorage)
+var _barActive=(function(){
+  try{var s=localStorage.getItem('cp_bar_active');return s?JSON.parse(s):['maths','langues','histoire','soir','weekend'];}
+  catch(e){return['maths','langues','histoire','soir','weekend'];}
+})();
 function doFilter(){
   // Récupérer la valeur depuis l'un ou l'autre des champs de recherche
   var mobInp=document.getElementById('mobSearchInput');
@@ -2587,10 +2777,8 @@ function acceptFilterAlias(){
   if(!_pendingFilterAlias)return;
   var box=g('filterAliasSuggestion');if(box)box.style.display='none';
   var inp=g('filterInput');if(inp)inp.value=_pendingFilterAlias;
-  addFilterQuick(_pendingFilterAlias);
-  var key=_pendingFilterAlias.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   _pendingFilterAlias=null;
-  selectCustomFilter(key);
+  addBarCustomFilter();
 }
 
 function denyFilterAlias(){
@@ -2600,28 +2788,42 @@ function denyFilterAlias(){
 function setPill(el){haptic(4);document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});el.classList.add('on');actF=el.dataset.f;doFilter();try{sessionStorage.setItem('cp_filter',actF);}catch(e){}}
 function restoreFilters(){
   try{
-    // Réinjecter dans la barre tous les filtres custom sauvegardés
-    var _addBtn=g('pillAdd');
-    if(_addBtn){
-      customFilters.forEach(function(f){
-        if(!document.querySelector('[data-f="custom_'+f.key+'"]')){
-          var pill=document.createElement('button');
-          pill.className='filter-pill-btn pill';
-          pill.dataset.f='custom_'+f.key;
-          pill.innerHTML=esc(f.label)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+f.key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
-          pill.onclick=function(){setPill(pill);};
-          _addBtn.parentNode.insertBefore(pill,_addBtn);
-        }
-      });
-    }
     var f=sessionStorage.getItem('cp_filter');
-    if(f&&f!=='tous'){
-      var el=document.querySelector('[data-f="'+f+'"]');
-      if(el){el.classList.add('on');var tous=g('pillTous');if(tous)tous.classList.remove('on','active');actF=f;}
-    }
+    if(f&&f!=='tous'){actF=f;}
     var niv=sessionStorage.getItem('cp_niv');
     if(niv){actNiv=niv;var lbl=g('pillNivLabel');if(lbl)lbl.textContent=niv;var pn=g('pillNiv');if(pn)pn.classList.add('on');}
   }catch(e){}
+  renderFilterBar();
+}
+
+function renderFilterBar(){
+  var bar=document.getElementById('filterBar');
+  if(!bar)return;
+  // Supprimer toutes les pills existantes (sauf #pillAdd)
+  Array.from(bar.querySelectorAll('.pill')).forEach(function(p){p.remove();});
+  var addBtn=document.getElementById('pillAdd');
+
+  // Toujours afficher "Tous" en premier
+  var tousBtn=document.createElement('button');
+  tousBtn.className='filter-pill-btn pill'+(actF==='tous'?' on':'');
+  tousBtn.dataset.f='tous';
+  tousBtn.id='pillTous';
+  tousBtn.textContent='Tous';
+  tousBtn.onclick=function(){setPill(tousBtn);};
+  bar.insertBefore(tousBtn,addBtn);
+
+  // Afficher les filtres actifs de la barre
+  var allPool=_FILTER_POOL.concat(customFilters.map(function(f){return{key:f.key,label:f.label,emoji:'✨'};}));
+  _barActive.forEach(function(key){
+    var f=allPool.find(function(x){return x.key===key;});
+    if(!f)return;
+    var pill=document.createElement('button');
+    pill.className='filter-pill-btn pill'+(actF===key?' on':'');
+    pill.dataset.f=key;
+    pill.textContent=f.label;
+    pill.onclick=function(){setPill(pill);};
+    bar.insertBefore(pill,addBtn);
+  });
 }
 
 // RÉSERVATION
@@ -2919,17 +3121,12 @@ function confF(){
   closeM('bdF');
   toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours');
   folPr=null;
-  updateFavBadge();
-  // Sauvegarder le follow en base
   P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
   P[pid].e=(P[pid].e||0)+1;
-  if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
-  if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
   if(user&&user.id){
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
-      .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+      .then(function(r){return r.json();})
       .then(function(data){
-        if(data&&data.error)throw new Error(data.error);
         if(data&&data.nb_eleves!==undefined){
           P[pid].e=data.nb_eleves;
           if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid].e;
@@ -2937,7 +3134,7 @@ function confF(){
         }
       })
       .catch(function(){
-        // Rollback : POST échoué → annuler le suivi côté client
+        // Rollback : le POST a échoué → annuler le suivi côté client
         fol.delete(pid);_saveFol();
         _syncFollowBtns(pid,false);
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
@@ -2946,6 +3143,10 @@ function confF(){
         toast('Erreur réseau','Impossible de suivre ce professeur');
       });
   }
+  if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
+  if(P[pid]){try{var _pc4=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc4[pid])_pc4[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||''};_pc4[pid].e=P[pid].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc4));}catch(ex){}_saveFollowCount(pid,P[pid].e||0);}
+  if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+  updateFavBadge();
 }
 
 // PROFIL PROF
@@ -2987,16 +3188,27 @@ function openPr(pid){
   g('mpbd').textContent=pCache.niveau||'';
   var vBadge=g('mpVerifiedBadge');if(vBadge)vBadge.style.display=(pCache.verified===true||pCache.verified==='true')?'block':'none';
   var dvBadge=g('mpDiplomeBadge');if(dvBadge)dvBadge.style.display=(pCache.dv===true||pCache.dv==='true')?'block':'none';
-  g('mpC').textContent=cours.length;
+  var cvBadge=g('mpCasierBadge');if(cvBadge)cvBadge.style.display=(pCache.cv===true||pCache.cv==='true')?'block':'none';
+  g('mpC').textContent=cours.filter(function(x){return !_isCoursPass(x);}).length;
   g('mpN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
   g('mpE').textContent=p.e||0;
   // Cours donnés : passés + au moins 1 élève réservé — uniquement ce qu'on peut vérifier depuis C[]
   var _crsD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
   var mpD=g('mpD');if(mpD)mpD.textContent=_crsD;
 
-  // Bio : cache ou placeholder discret
+  // Bio : cache ou skeleton si profil complet pas encore chargé (_fullFetched)
   var bioEl=g('mpBio');
-  if(bioEl)bioEl.textContent=pCache.bio||'';
+  if(bioEl){
+    if(pCache.bio){
+      bioEl.style.opacity='1';
+      bioEl.textContent=pCache.bio;
+    } else if(!pCache._fullFetched){
+      bioEl.innerHTML='<span class="skeleton" style="display:block;height:13px;border-radius:6px;width:88%;margin-bottom:8px"></span>'
+        +'<span class="skeleton" style="display:block;height:13px;border-radius:6px;width:62%"></span>';
+    } else {
+      bioEl.textContent='';
+    }
+  }
 
   // Matières : depuis cache P[] ou depuis les cours en attente API
   var tagsEl=g('mpTags');
@@ -3040,7 +3252,15 @@ function openPr(pid){
   }
   if(pCache.matieres){_renderTags(pCache.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
   else if(immediateTags.length){_renderTags(immediateTags);}
-  else{if(tagsSect)tagsSect.style.display='none';}
+  else if(!pCache._fullFetched){
+    // Skeleton pills uniquement si profil complet pas encore chargé
+    if(tagsSect)tagsSect.style.display='block';
+    if(tagsEl)tagsEl.innerHTML='<div class="skeleton" style="height:30px;width:76px;border-radius:50px"></div>'
+      +'<div class="skeleton" style="height:30px;width:98px;border-radius:50px;animation-delay:.18s"></div>'
+      +'<div class="skeleton" style="height:30px;width:64px;border-radius:50px;animation-delay:.36s"></div>';
+  } else {
+    if(tagsSect)tagsSect.style.display='none';
+  }
 
   // Prochains cours — belle carte avec date formatée (à venir + places dispo)
   var prochains=cours.filter(function(c){return !_isCoursPass(c)&&c.fl<c.sp;});
@@ -3062,15 +3282,21 @@ function openPr(pid){
       :'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
   }
 
-  // Avis
+  // Avis : skeleton uniquement si profil complet pas encore chargé
   var avisBlock=g('mpAvisBlock'),avisContainer=g('mpAvis');
-  if(avisBlock)avisBlock.style.display='none';
-  fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
-    if(!notes||!notes.length)return;
+  if(!pCache._fullFetched){
     if(avisBlock)avisBlock.style.display='block';
+    if(avisContainer)avisContainer.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px"></div>'
+      +'<div class="skeleton" style="height:62px;border-radius:12px;animation-delay:.15s"></div>';
+  } else {
+    if(avisBlock)avisBlock.style.display='none';
+  }
+  fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
+    if(curProf!==pid)return;
+    if(!notes||!notes.length){if(avisBlock)avisBlock.style.display='none';return;}
     var stars=function(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;};
-    if(avisContainer)avisContainer.innerHTML=notes.slice(0,3).map(function(a){
-      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px">'
+    var html=notes.slice(0,3).map(function(a){
+      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;opacity:0;transition:opacity .3s">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(a.commentaire?'6':'0')+'px">'
         +'<span style="font-size:13px;color:#F59E0B;letter-spacing:2px">'+stars(a.note)+'</span>'
         +'<span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'')+'</span>'
@@ -3078,33 +3304,30 @@ function openPr(pid){
         +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+esc(a.commentaire)+'</div>':'')
         +'</div>';
     }).join('');
-  }).catch(function(){});
+    if(avisBlock)avisBlock.style.display='block';
+    if(avisContainer){avisContainer.innerHTML=html;requestAnimationFrame(function(){avisContainer.querySelectorAll('div[style*="opacity:0"]').forEach(function(el,i){setTimeout(function(){el.style.opacity='1';},i*80);});});}
+  }).catch(function(){if(avisBlock)avisBlock.style.display='none';});
 
   var fb=g('bFP');
   fb.style.display=(user&&pid===user.id)?'none':'flex';
   _setFollowBtn(fol.has(pid));
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
-  // Vérification silencieuse de l'état du suivi depuis le serveur (auto-correction si fol désynchronisé)
-  if(user&&user.id&&pid!==user.id){
-    fetch(API+'/follows/check?professeur_id='+encodeURIComponent(pid)+'&eleve_id='+encodeURIComponent(user.id),{headers:apiH()})
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(!data||data.isFollowing===undefined)return;
-        var serverSays=data.isFollowing;
-        var localSays=fol.has(pid);
-        if(serverSays&&!localSays){fol.add(pid);_setFollowBtn(true);_syncFollowBtns(pid,true);}
-        else if(!serverSays&&localSays){fol.delete(pid);_setFollowBtn(false);_syncFollowBtns(pid,false);}
-      }).catch(function(){});
-  }
+
+  // Niveau/statut : placeholder discret dans le hero si profil complet pas encore chargé
+  if(!pCache.statut&&!pCache._fullFetched){var _rlEl=g('mprl');if(_rlEl){_rlEl.innerHTML='<span style="display:inline-block;height:10px;width:80px;border-radius:4px;background:rgba(255,255,255,.25);animation:shimmer 1.4s infinite;background-size:200% 100%"></span>';}}
+  if(!pCache.niveau&&!pCache._fullFetched){var _bdEl2=g('mpbd');if(_bdEl2){_bdEl2.innerHTML='<span style="display:inline-block;height:9px;width:60px;border-radius:4px;background:rgba(255,255,255,.18);animation:shimmer 1.4s infinite;background-size:200% 100%;animation-delay:.2s"></span>';}}
 
   // Mise à jour silencieuse depuis l'API (tous les champs du modal)
   fetch(API+'/profiles/'+pid+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(prof){
     if(!prof||!prof.id)return;
+    if(curProf!==pid)return;
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;
-    ['bio','matieres','niveau','statut','verified','diplome_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    P[pid]._fullFetched=true;
+    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
     if(prof.verified!==undefined){var _vB=g('mpVerifiedBadge');if(_vB)_vB.style.display=(prof.verified===true||prof.verified==='true')?'block':'none';}
     if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;var _dvB=g('mpDiplomeBadge');if(_dvB)_dvB.style.display=(prof.diplome_verifie===true||prof.diplome_verifie==='true')?'block':'none';}
+    if(prof.casier_verifie!==undefined){P[pid].cv=prof.casier_verifie;var _cvB=g('mpCasierBadge');if(_cvB)_cvB.style.display=(prof.casier_verifie===true||prof.casier_verifie==='true')?'block':'none';}
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';
     var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
     if(_apiNm){
@@ -3123,10 +3346,18 @@ function openPr(pid){
         el.innerHTML='<img src="'+esc(prof.photo_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
       });
     }
-    if(bioEl&&prof.bio!==undefined)bioEl.textContent=prof.bio;
-    if(prof.matieres){_renderTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
-    if(prof.niveau&&g('mpbd'))g('mpbd').textContent=prof.niveau;
-    if(prof.statut&&g('mprl'))g('mprl').textContent=STATUT[prof.statut]||prof.statut;
+    if(bioEl&&prof.bio!==undefined){
+      var _newBio=prof.bio||'';
+      bioEl.style.transition='opacity .2s';bioEl.style.opacity='0';
+      setTimeout(function(){bioEl.textContent=_newBio;bioEl.style.opacity='1';},180);
+    }
+    if(prof.matieres){
+      var _mt=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
+      if(tagsEl){tagsEl.style.transition='opacity .2s';tagsEl.style.opacity='0';setTimeout(function(){_renderTags(_mt);tagsEl.style.opacity='1';},180);}
+      else{_renderTags(_mt);}
+    }
+    if(prof.niveau!==undefined&&g('mpbd')){var _bdEl=g('mpbd');_bdEl.style.transition='opacity .2s';_bdEl.style.opacity='0';setTimeout(function(){_bdEl.textContent=prof.niveau||'';_bdEl.style.opacity='1';},180);}
+    if(prof.statut&&g('mprl')){var _rlEl2=g('mprl');_rlEl2.style.transition='opacity .2s';_rlEl2.style.opacity='0';setTimeout(function(){_rlEl2.textContent=STATUT[prof.statut]||prof.statut;_rlEl2.style.opacity='1';},180);}
     // Nombre d'élèves/abonnés depuis l'API si disponible
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined && _nbE>0){
@@ -3198,6 +3429,8 @@ function togFP(){
   haptic(6);
   var id=curProf,p=P[id]||{nm:'ce prof'};
   if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
+  if(_followInFlight.has(id))return; // anti-spam
+  _followInFlight.add(id);
   if(fol.has(id)){
     fol.delete(id);_saveFol();
     _setFollowBtn(false);
@@ -3212,8 +3445,9 @@ function togFP(){
     }
     if(user&&user.id){
       fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
-        .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+        .then(function(r){return r.json();})
         .then(function(data){
+          _followInFlight.delete(id);
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
             if(g('mpE'))g('mpE').textContent=P[id].e;
@@ -3221,6 +3455,7 @@ function togFP(){
           }
         })
         .catch(function(){
+          _followInFlight.delete(id);
           fol.add(id);_saveFol();_setFollowBtn(true);_syncFollowBtns(id,true);
           if(P[id])P[id].e=(P[id].e||0)+1;
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
@@ -3238,6 +3473,7 @@ function togFP(){
       fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
         .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
         .then(function(data){
+          _followInFlight.delete(id);
           if(data&&data.error)throw new Error(data.error);
           if(data&&data.nb_eleves!==undefined){
             P[id].e=data.nb_eleves;
@@ -3246,6 +3482,7 @@ function togFP(){
           }
         })
         .catch(function(){
+          _followInFlight.delete(id);
           fol.delete(id);_saveFol();_setFollowBtn(false);_syncFollowBtns(id,false);
           if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
@@ -3257,15 +3494,20 @@ function togFP(){
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
   if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}_saveFollowCount(id,P[id].e||0);}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
+  // Mettre à jour le compteur "Suivis" dans les stats immédiatement
+  if(g('asecF')&&g('asecF').classList.contains('on')){
+    var _folCntEl=g('accStats');
+    if(_folCntEl){var _sc=_folCntEl.querySelector('div:nth-child(2) div');if(_sc)_sc.textContent=fol.size;}
+  }
   updateFavBadge();
   // Fetch différé supprimé — le count serveur est maintenant retourné directement par POST/DELETE /follows
   setTimeout(function(){
     fetch(API+'/profiles/'+id).then(function(r){return r.json();}).then(function(prof){
       if(!prof||!prof.id)return;
       var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-      if(_nbE!==undefined&&_nbE>0){
+      if(_nbE!==undefined){
         P[id]=P[id]||{};
-        P[id].e=Math.max(_nbE,P[id].e||0);
+        P[id].e=_nbE;
         if(g('mpE')&&curProf===id)g('mpE').textContent=P[id].e;
         _saveFollowCount(id,P[id].e);
       }
@@ -3607,6 +3849,18 @@ async function loadMessages(){
             var _mm=findMatiere(_mc.subj||'')||MATIERES[MATIERES.length-1];
             txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');
           }
+          // Bouton visio si applicable (inscrit dans la fenêtre ou prof)
+          if(_mc&&_mc.mode==='visio'&&_mc.visio_url){
+            var _vNow=Date.now();
+            var _vStart=_mc.dt_iso?new Date(_mc.dt_iso).getTime():0;
+            var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+            var _isProf2=user&&_mc.pr===user.id;
+            var _isEnrolled2=!!res[_mc.id];
+            if(_isProf2||(_isEnrolled2&&_vInWin)){
+              var _vBtn='<a href="'+safeUrl(_mc.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;text-decoration:none;box-sizing:border-box" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</a>';
+              txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
+            }
+          }
           // Remplacer la card entière si le cours n'est plus actif
           var _st=getCourseState(_cid);
           if(_st==='past'||_st==='deleted'){
@@ -3734,22 +3988,26 @@ async function sendModalMsg(){
 }
 
 var _convLoading=false;
-var _convCache='';
-var _convRetries=0; // compteur retry auto (cold start / timeout iOS)
-var _convRetryTimer=null;
+var _convCache=''; // cache HTML de la liste pour affichage immédiat
+var _convRetries=0; // compteur de tentatives auto (cold start / timeout iOS)
+var _convRetryTimer=null; // handle du timer de retry — annulable
 var _convGen=0; // génération — écarte les résultats périmés (requêtes en retard)
 async function loadConversations(){
   if(!user)return;
-  if(_convLoading)return;
+  var lm=g('listM');
+  if(!lm)return;
+  // Afficher le cache immédiatement si disponible, sinon spinner
+  if(_convCache){lm.innerHTML=_convCache;}
+  else{lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';}
+  if(_convLoading)return; // refresh déjà en cours, cache affiché suffit
   _convLoading=true;
   var myGen=++_convGen; // marquer cette invocation
-  // Timeout de sécurité : libérer après 8s max
-  var _convTimeout=setTimeout(function(){_convLoading=false;},8000);
-  var lm=g('listM');
-  if(!lm){_convLoading=false;return;}
-  lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  // Timeout de sécurité : libérer après 10s max
+  var _convTimeout=setTimeout(function(){_convLoading=false;},10000);
   try{
     var r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});
+    // Token expiré (cold start ou inactivité >1h) → refresh + réessai automatique
+    if(r.status===401){await _refreshToken();r=await fetch(API+'/conversations/'+user.id,{headers:apiH()});}
     // Requête périmée — une invocation plus récente a déjà pris le relais
     if(myGen!==_convGen)return;
     if(!r.ok)throw new Error('HTTP '+r.status);
@@ -3803,9 +4061,11 @@ async function loadConversations(){
       var _pc=m.contenu||'';
       var preview=_pc.includes('chat-cours-card')||_pc.includes('"mode":"')?'📚 A partagé un cours':(esc(_pc.slice(0,35))+(_pc.length>35?'…':''));
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" style="animation-delay:'+(_idx*0.055)+'s" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
+      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
-    lm.innerHTML=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
+    var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
+    lm.innerHTML=_convHtml;
+    _convCache=_convHtml; // mémoriser pour affichage instantané au prochain onglet
     var badge=g('msgBadge');
     if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
     var bnavBadge=g('bnavBadge');
@@ -3814,10 +4074,17 @@ async function loadConversations(){
     // Requête périmée (une plus récente a déjà abouti) — ne pas toucher l'UI
     if(myGen!==_convGen)return;
     _convLoading=false;
+    // Ne pas retry sur erreurs 4xx (auth/client) — seulement réseau/5xx méritent un retry
+    var _httpM=e.message&&e.message.match(/HTTP (\d+)/);var _httpC=_httpM?parseInt(_httpM[1]):0;
+    if(_httpC>=400&&_httpC<500){
+      clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;
+      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de connexion. <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+      return;
+    }
     _convRetries++;
     if(_convRetries<4){
       // Retry silencieux (cold start Railway / timeout réseau iOS) — max 3 tentatives
-      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Reconnexion...</div>';
+      if(lm&&!_convCache)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Reconnexion...</div>';
       clearTimeout(_convRetryTimer);
       _convRetryTimer=setTimeout(function(){_convRetryTimer=null;loadConversations();},_convRetries*4000);
     }else{
@@ -3955,18 +4222,97 @@ function locInputClear(){
 // FILTRES CUSTOM
 // ============================================================
 var customFilters=(function(){try{return JSON.parse(localStorage.getItem('cp_custom_filters')||'[]');}catch(e){return[];}})();
-// Reconstruire FM pour les filtres restaurés depuis localStorage
-customFilters.forEach(function(f){FM['custom_'+f.key]=function(t){return t.includes(f.key);};});
+// Reconstruire FM pour les filtres custom restaurés depuis localStorage
+customFilters.forEach(function(f){FM[f.key]=function(t){return t.includes(f.key);};});
 
 function openAddFilter(){
   var bd=g('bdFilter');
   if(!bd)return;
   // Déplacer dans body pour éviter le clipping par overflow:hidden du parent
   if(bd.parentNode!==document.body)document.body.appendChild(bd);
-  g('filterInput').value='';
-  renderCustomPills();
+  var inp=g('filterInput');if(inp)inp.value='';
+  var aliasBox=g('filterAliasSuggestion');if(aliasBox)aliasBox.style.display='none';
+  renderBarConfig();
   bd.style.display='flex';
   document.body.style.overflow='hidden';
+}
+
+function renderBarConfig(){
+  var grid=g('barConfigGrid');
+  if(!grid)return;
+  // Pool complet : built-ins + custom
+  var allPool=_FILTER_POOL.slice();
+  customFilters.forEach(function(f){
+    if(!allPool.find(function(x){return x.key===f.key;})){
+      allPool.push({key:f.key,label:f.label,emoji:'✨',custom:true});
+    }
+  });
+  var html='<div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:4px">';
+  allPool.forEach(function(f){
+    var inBar=_barActive.indexOf(f.key)!==-1;
+    html+='<button onclick="toggleBarFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:5px;'
+      +(inBar
+          ?'background:var(--or);color:#fff;border:1.5px solid var(--or);box-shadow:0 2px 8px rgba(255,107,43,.25);'
+          :'background:var(--wh);color:var(--ink);border:1.5px solid var(--bdr);')
+      +'border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
+      +esc(f.label)
+      +(inBar?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>':'')
+      +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.3);font-size:10px;font-weight:800">✕</span>':'')
+      +'</button>';
+  });
+  html+='</div>';
+  grid.innerHTML=html;
+}
+
+function toggleBarFilter(key){
+  var idx=_barActive.indexOf(key);
+  if(idx!==-1){
+    _barActive.splice(idx,1);
+  } else {
+    _barActive.push(key);
+  }
+  try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  // Si le filtre actif vient d'être retiré, revenir à "tous"
+  if(actF===key){actF='tous';}
+  renderFilterBar();
+  renderBarConfig();
+  doFilter();
+}
+
+function addBarCustomFilter(){
+  var inp=g('filterInput');
+  if(!inp)return;
+  var val=inp.value.trim();
+  if(!val)return;
+  var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // Ajouter aux customFilters si absent
+  if(!customFilters.find(function(f){return f.key===key;})){
+    customFilters.push({label:val,key:key});
+    try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
+    FM[key]=function(t){return t.includes(key);};
+  }
+  // Ajouter à la barre
+  if(_barActive.indexOf(key)===-1){
+    _barActive.push(key);
+    try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  }
+  inp.value='';
+  var aliasBox=g('filterAliasSuggestion');if(aliasBox)aliasBox.style.display='none';
+  renderFilterBar();
+  renderBarConfig();
+  doFilter();
+}
+
+function removeBarCustom(key){
+  customFilters=customFilters.filter(function(f){return f.key!==key;});
+  try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
+  _barActive=_barActive.filter(function(k){return k!==key;});
+  try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  delete FM[key];
+  if(actF===key)actF='tous';
+  renderFilterBar();
+  renderBarConfig();
+  doFilter();
 }
 function closeAddFilter(){
   var bd=g('bdFilter');
@@ -3974,69 +4320,59 @@ function closeAddFilter(){
   document.body.style.overflow='';
 }
 
+// Compat: addCustomFilter now delegates to addBarCustomFilter
 function addCustomFilter(){
-  var val=g('filterInput').value.trim();
-  if(!val)return;
-  addFilterQuick(val);
-  g('filterInput').value='';
+  addBarCustomFilter();
 }
 
-// Ajoute la matière dans le popup (liste de sélection) — PAS dans la barre
+// Compat: addFilterQuick adds to customFilters + FM without activating bar
 function addFilterQuick(val){
   var key=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(customFilters.find(function(f){return f.key===key;}))return;
   customFilters.push({label:val,key:key});
   try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
-  renderCustomPills();
+  FM[key]=function(t){return t.includes(key);};
 }
 
-// Appelé quand l'user clique sur un chip dans le popup → ajoute à la barre et active
+// Compat: selectCustomFilter → toggle in bar and activate
 function selectCustomFilter(key){
-  var f=customFilters.find(function(cf){return cf.key===key;});
-  if(!f)return;
-  var existing=document.querySelector('[data-f="custom_'+key+'"]');
-  if(!existing){
-    var addBtn=g('pillAdd');
-    var pill=document.createElement('button');
-    pill.className='filter-pill-btn pill';
-    pill.dataset.f='custom_'+key;
-    pill.innerHTML=esc(f.label)+' <span onclick="event.stopPropagation();removeCustomFilter(\''+key+'\');" style="margin-left:4px;opacity:.5;font-size:11px">✕</span>';
-    pill.onclick=function(){setPill(pill);};
-    addBtn.parentNode.insertBefore(pill,addBtn);
-    FM['custom_'+key]=function(t){return t.includes(key);};
-    existing=pill;
+  if(_barActive.indexOf(key)===-1){
+    _barActive.push(key);
+    try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
   }
+  renderFilterBar();
+  renderBarConfig();
   closeAddFilter();
-  setPill(existing);
+  var pill=document.querySelector('[data-f="'+key+'"]');
+  if(pill)setPill(pill);
 }
 
+// Compat: removeCustomFilter → delegates to removeBarCustom
 function removeCustomFilter(key){
-  customFilters=customFilters.filter(function(f){return f.key!==key;});
-  try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
-  var pill=document.querySelector('[data-f="custom_'+key+'"]');
-  if(pill){
-    if(pill.classList.contains('on')){var _tous=g('pillTous')||document.querySelector('[data-f="tous"]');if(_tous)setPill(_tous);}
-    pill.remove();
-  }
-  delete FM['custom_'+key];
-  applyFilter();
-  renderCustomPills();
+  removeBarCustom(key);
 }
 
+// Compat: renderCustomPills is no longer used (replaced by renderBarConfig)
 function renderCustomPills(){
-  var box=g('customPillsList');
-  if(!box)return;
-  if(!customFilters.length){box.innerHTML='';return;}
-  box.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Mes matières — appuie pour filtrer</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
-    +customFilters.map(function(f){
-      var isActive=!!document.querySelector('[data-f="custom_'+f.key+'"].on');
-      return'<span onclick="selectCustomFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:6px;'
-        +(isActive?'background:var(--or);color:#fff;border:1.5px solid var(--or)':'background:var(--orp);color:var(--or);border:1.5px solid var(--or)')
-        +';border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">'+esc(f.label)
-        +'<span onclick="event.stopPropagation();removeCustomFilter(\''+f.key+'\');" style="cursor:pointer;opacity:.6;font-size:12px;font-weight:700;line-height:1;margin-left:2px">✕</span></span>';
-    }).join('')
-    +'</div>';
+  // no-op: replaced by renderBarConfig
+}
+
+// Compat: addAndActivateFilter (was called from suggestion chips — now those chips are gone)
+function addAndActivateFilter(label){
+  var key=label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(!customFilters.find(function(f){return f.key===key;})){
+    customFilters.push({label:label,key:key});
+    try{localStorage.setItem('cp_custom_filters',JSON.stringify(customFilters));}catch(e){}
+    FM[key]=function(t){return t.includes(key);};
+  }
+  if(_barActive.indexOf(key)===-1){
+    _barActive.push(key);
+    try{localStorage.setItem('cp_bar_active',JSON.stringify(_barActive));}catch(e){}
+  }
+  renderFilterBar();
+  renderBarConfig();
+  var pill=document.querySelector('[data-f="'+key+'"]');
+  if(pill)setTimeout(function(){closeAddFilter();setPill(pill);},120);
 }
 
 // ============================================================
@@ -4326,6 +4662,7 @@ function cniGoStep3(isReturn){
 function cniLater(){
   var bd=g('bdCni');if(bd)bd.style.display='none';
   document.body.style.overflow='';
+  updateVerifBand();
   toast('À compléter','Vous pourrez envoyer votre document depuis votre profil');
   setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},600);
 }
@@ -4333,11 +4670,39 @@ function cniLater(){
 function cniDone(){
   var bd=g('bdCni');if(bd)bd.style.display='none';
   document.body.style.overflow='';
-  // Mettre à jour les deux indicateurs de statut
   updateVerifStatusBlock();
   updateVerifBand();
+  // Marquer pour le nudge badges (affiché 30s après, 1 seule fois)
+  try{if(!localStorage.getItem('cp_badge_nudge_done_'+(user&&user.id||'')))localStorage.setItem('cp_badge_nudge_pending_'+(user&&user.id||''),'1');}catch(e){}
   setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},400);
+  _scheduleBadgeNudge();
 }
+
+function _scheduleBadgeNudge(){
+  if(!user||user.role!=='professeur')return;
+  try{
+    var uid=user.id||'';
+    if(localStorage.getItem('cp_badge_nudge_done_'+uid))return; // déjà affiché
+    if(!localStorage.getItem('cp_badge_nudge_pending_'+uid))return;
+  }catch(e){return;}
+  setTimeout(function(){
+    // Ne montrer que si l'utilisateur n'a pas encore tous les badges
+    if(!user)return;
+    if(user.diplome_verifie&&user.casier_verifie)return; // tous badges déjà OK
+    var bd=g('bdBadgeNudge');if(!bd)return;
+    // Masquer le bouton diplôme si déjà uploadé/vérifié
+    var nbtn=g('nudgeDiplomeBtn');
+    if(nbtn&&(user.diplome_uploaded||user.diplome_verifie))nbtn.style.display='none';
+    bd.style.display='flex';
+    try{localStorage.setItem('cp_badge_nudge_done_'+(user.id||''),'1');localStorage.removeItem('cp_badge_nudge_pending_'+(user.id||''));}catch(e){}
+  },30000);
+}
+
+function closeBadgeNudge(){
+  var bd=g('bdBadgeNudge');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .22s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},230);}
+}
+
 
 function cniPreview(input){
   if(!input.files||!input.files[0])return;
@@ -4376,14 +4741,21 @@ async function submitCni(){
 async function checkFirstProfLogin(){
   if(!user||user.role!=='professeur')return;
   var status=getCniStatus();
-  if(status!=='none')return;
+  if(status!=='none'){_scheduleBadgeNudge();return;}
   try{
     var r=await fetch(API+'/profiles/'+user.id,{headers:apiH()});
     var p=await r.json();
-    if(p&&p.verified){user.verified=true;return;}
-    if(p&&p.cni_uploaded){user.cni_uploaded=true;return;}
+    if(p&&p.verified){user.verified=true;_scheduleBadgeNudge();return;}
+    if(p&&p.cni_uploaded){user.cni_uploaded=true;_scheduleBadgeNudge();return;}
   }catch(e){}
-  setTimeout(openCniSheet, 1000);
+  // N'ouvrir la sheet CNI que si le tutoriel est déjà terminé
+  var _tutoDoneKey=user&&user.id?'cp_tuto_done_'+user.id:'cp_tuto_done_guest';
+  try{if(!localStorage.getItem(_tutoDoneKey))return;}catch(e){}
+  // N'ouvrir qu'une seule fois (1ère connexion) — ensuite le verifBand prend le relais
+  var _cniPopupKey=user&&user.id?'cp_cni_popup_shown_'+user.id:'';
+  try{if(_cniPopupKey&&localStorage.getItem(_cniPopupKey))return;}catch(e){}
+  try{if(_cniPopupKey)localStorage.setItem(_cniPopupKey,'1');}catch(e){}
+  setTimeout(openCniSheet, 600);
 }
 
 function updateVerifStatusBlock(){
@@ -4423,7 +4795,7 @@ function updateVerifStatusBlock(){
       +'<span style="font-size:13px;font-weight:700;color:#991B1B">Vérification refusée — Vous pouvez renvoyer votre document</span>'
       +'</div>'
       +(raison?'<div style="font-size:12px;color:#B91C1C;background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5">'+raison+'</div>':'')
-      +'<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pi\u00e8ce d\'identit\u00e9</button>'
+      +'<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pièce d\'identité</button>'
       +'</div>';
     // Réinitialiser le statut local pour permettre le renvoi
     if(user)user.cni_uploaded=false;
@@ -4490,6 +4862,7 @@ function diplomeGoStep3(isReturn){
   } else {
     if(t)t.textContent='Diplôme envoyé ✓';
     if(sub)sub.innerHTML='Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    haptic(20);
   }
 }
 
@@ -4502,6 +4875,7 @@ function diplomeDone(){
   var bd=g('bdDiplome');if(bd)bd.style.display='none';
   document.body.style.overflow='';
   updateDiplomeStatusBlock();
+  updateCasierStatusBlock();
 }
 
 function diplomePreview(input){
@@ -4572,6 +4946,135 @@ function updateDiplomeStatusBlock(){
   }
   if(html)block.innerHTML=html;
 }
+
+// ============================================================
+// PROFIL DE CONFIANCE — upload et vérification
+// ============================================================
+function getCasierStatus(){
+  if(!user)return 'none';
+  if(user.casier_verifie===true||user.casier_verifie==='true')return 'verified';
+  if(user.casier_uploaded===true||user.casier_uploaded==='true')return 'pending';
+  return 'none';
+}
+
+function updateCasierStatusBlock(){
+  var block=g('casierStatusBlock');
+  if(!block)return;
+  if(!user||user.role!=='professeur'){block.style.display='none';return;}
+  var status=getCasierStatus();
+  var html='';
+  if(status==='none'){
+    html='<div style="background:#ECFDF5;border-radius:12px;padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#059669">Badge Profil de confiance disponible</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez une attestation pour rassurer les familles et vous démarquer.</div>'
+      +'<button onclick="openCasierSheet()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon attestation</button>'
+      +'</div>';
+    block.style.display='block';
+  } else if(status==='verified'){
+    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#ECFDF5;border-radius:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#059669">Profil de confiance vérifié — Badge affiché sur votre profil</span>'
+      +'</div>';
+    block.style.display='block';
+  } else if(status==='pending'){
+    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFBEB;border-radius:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+      +'<span style="font-size:13px;font-weight:700;color:#92400E">Attestation en cours de vérification — Réponse sous 24h</span>'
+      +'</div>';
+    block.style.display='block';
+  } else {
+    block.style.display='none';
+  }
+  if(html)block.innerHTML=html;
+}
+
+function openCasierSheet(){
+  var bd=g('bdCasier');if(!bd)return;
+  if(bd.parentNode!==document.body)document.body.appendChild(bd);
+  casierGoStep1();
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function casierLater(){var bd=g('bdCasier');if(bd){bd.style.display='none';document.body.style.overflow='';}}
+function casierGoStep1(){var s1=g('casierStep1'),s2=g('casierStep2');if(s1)s1.style.display='block';if(s2)s2.style.display='none';}
+function casierGoStep2(){var s1=g('casierStep1'),s2=g('casierStep2');if(s1)s1.style.display='none';if(s2)s2.style.display='block';}
+function casierPreview(input){
+  var file=input.files[0];if(!file)return;
+  var lbl=g('casierUploadLabel');
+  if(lbl)lbl.textContent=file.name;
+  var zone=g('casierDropZone');if(zone){zone.style.borderColor='#10B981';zone.style.background='rgba(16,185,129,.05)';}
+}
+async function submitCasier(){
+  var finput=g('casierFileInput');
+  var file=finput&&finput.files&&finput.files[0];
+  if(!file){
+    var zone=g('casierDropZone');
+    if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
+    toast('Document manquant','Choisissez une photo de votre attestation');return;
+  }
+  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
+  var btn=g('casierSubmitBtn');
+  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
+  try{
+    var reader=new FileReader();
+    reader.onload=async function(e){
+      try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
+      user.casier_uploaded=true;
+      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+      casierLater();
+      toast('Envoyé !','Votre attestation est en cours de vérification');
+      updateCasierStatusBlock();
+      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+    };
+    reader.readAsDataURL(file);
+  }catch(e){
+    toast('Erreur',"Impossible d'envoyer le fichier");
+    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+  }
+}
+
+// ============================================================
+// BADGE INFO — bottom sheet explication
+// ============================================================
+function showBadgeInfo(type){
+  haptic(4);
+  var bd=g('bdBadgeInfo');if(!bd)return;
+  if(bd.parentNode!==document.body)document.body.appendChild(bd);
+  var content=g('bdBadgeInfoContent');if(!content)return;
+  var info={
+    identite:{
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="40" height="40"><polyline points="20 6 9 17 4 12"/></svg>',
+      bg:'#FFF4EE',
+      name:'Identité vérifiée',
+      desc:'Ce professeur a fourni une pièce d\'identité officielle vérifiée par l\'équipe CoursPool. Son identité est authentifiée.'
+    },
+    diplome:{
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="40" height="40"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+      bg:'#EFF6FF',
+      name:'Diplôme vérifié',
+      desc:'Ce professeur a soumis un diplôme officiel (Licence, Master, CAPES, agrégation…) vérifié et validé par notre équipe.'
+    },
+    confiance:{
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="40" height="40"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      bg:'#ECFDF5',
+      name:'Profil de confiance',
+      desc:'Ce professeur a fourni une attestation officielle confirmant l\'absence d\'antécédents judiciaires, vérifiée par l\'équipe CoursPool.'
+    }
+  };
+  var d=info[type];if(!d)return;
+  content.innerHTML='<div style="text-align:center;margin-bottom:20px">'
+    +'<div style="width:72px;height:72px;background:'+d.bg+';border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'+d.icon+'</div>'
+    +'<div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">'+d.name+'</div>'
+    +'<div style="font-size:14px;color:var(--mid);line-height:1.65">'+d.desc+'</div>'
+    +'</div>'
+    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button>';
+  bd.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeBadgeInfo(){var bd=g('bdBadgeInfo');if(bd){bd.style.display='none';document.body.style.overflow='';}}
 
 // ============================================================
 // COURS PRIVÉ
@@ -4917,12 +5420,16 @@ function tutoDone(){
     var doneKey=user&&user.id?'cp_tuto_done_'+user.id:'cp_tuto_done_guest';
     var stepKey=user&&user.id?'cp_tuto_step_'+user.id:'cp_tuto_step_guest';
     localStorage.setItem(doneKey,'1');
-    localStorage.removeItem(stepKey); // effacer la progression
+    localStorage.removeItem(stepKey);
   }catch(e){}
   var root=g('tutoRoot');
   if(root){
     root.style.opacity='0';root.style.transition='opacity .3s';
-    setTimeout(function(){root.style.display='none';root.style.opacity='';root.style.transition='';},300);
+    setTimeout(function(){
+      root.style.display='none';root.style.opacity='';root.style.transition='';
+      // Tuto terminé → montrer CNI si nécessaire (profs seulement)
+      if(user&&user.role==='professeur')checkFirstProfLogin();
+    },300);
   }
 }
 
@@ -5034,7 +5541,7 @@ async function loadRevenues() {
 
     // Liste des paiements
     if (!paid.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>d\u00e8s qu\'un \u00e9l\u00e8ve r\u00e9serve un cours.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu\'un élève réserve un cours.</div></div>';
       return;
     }
 
@@ -6231,6 +6738,7 @@ function startAccountCheck(){
         // Mettre à jour la bannière de vérification
         updateVerifBand();
         updateDiplomeStatusBlock();
+        updateCasierStatusBlock();
         // Notifier si compte maintenant vérifié
         if(user.role==='professeur'&&(p.statut_compte==='verified'||p.verified)){
           toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
@@ -6552,7 +7060,6 @@ async function subCrStep(){
     var _bg=_mat?_mat.bg:'linear-gradient(135deg,#F5F3FF,#DDD6FE)';
     var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
       date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
-      date_iso:dt.toISOString(),
       lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
       prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
       description:_sd.desc||'',
@@ -6640,7 +7147,15 @@ async function subCrStep(){
       var rmb=g('rModeBadge');
       if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?'Visio':'Présentiel')+'</span>';}
       var rvj=g('rVisioJoin');
-      if(rvj){var _isProf=user&&c.pr===user.id;var _isEnrolled=!!res[c.id];var _rStart=c.dt_iso?new Date(c.dt_iso).getTime():0;var _rInWin=!_rStart||(Date.now()>=_rStart-15*60*1000&&Date.now()<=_rStart+2*60*60*1000);var show=c.mode==='visio'&&c.visio_url&&(_isProf||(_isEnrolled&&_rInWin));rvj.style.display=show?'flex':'none';if(show)rvj.href=(/^https?:\/\//i.test(c.visio_url)?c.visio_url:'#');}
+      if(rvj){
+        var _isProf=user&&c.pr===user.id;
+        var _isEnrolled=!!res[c.id];
+        var _rStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
+        var _rInWin=!_rStart||(Date.now()>=_rStart-15*60*1000&&Date.now()<=_rStart+2*60*60*1000);
+        var show=c.mode==='visio'&&c.visio_url&&(_isProf||(_isEnrolled&&_rInWin));
+        rvj.style.display=show?'flex':'none';
+        if(show)rvj.href=(/^https?:\/\//i.test(c.visio_url)?c.visio_url:'#');
+      }
     },50);
   };
 
@@ -6721,12 +7236,13 @@ function buildMesCard(c,isPast,isProf){
     var _vStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
     var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
     var _vNotYet=_vStart&&_vNow<_vStart-15*60*1000;
+    var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
     if(isProf){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
-      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre le cours en visio</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
+      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
     } else if(!!res[c.id]){
-      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre le cours en visio</a>';}
-      else if(_vNotYet){var _vH=new Date(_vStart).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});visio='<div style="margin-top:10px;text-align:center;font-size:13px;color:var(--lite);padding:10px;background:var(--bg);border-radius:12px">🕐 Accès à partir de '+_vH+'</div>';}
+      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre en visio</a>';}
+      else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
     }
   }
   var code='';
@@ -7367,3 +7883,7 @@ function initSwipeNav(){
     }
   },{passive:true});
 }
+
+// Render filter bar once all variables are initialized
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',renderFilterBar);}
+else{renderFilterBar();}
