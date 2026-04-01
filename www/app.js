@@ -1169,15 +1169,31 @@ async function doLogin(){
     _convCache='';
     if(uid){
       // loadData ET res+follows EN PARALLÈLE
+      var _folDone2=false;
       var _dataP2=loadData();
       var _rfP2=Promise.all([
         fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
         fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
       ]);
       // Afficher les cours dès qu'ils arrivent
-      _dataP2.then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      _dataP2.then(function(){
+        restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
+        // Sync follow buttons dès que les follows arrivent (courses ont chargé en premier)
+        _rfP2.then(function(){if(C.length&&user)_syncAllFollowBtns();}).catch(function(){});
+        // Retry follows si pas encore arrivés après 5s (Railway cold start / fetch bloqué)
+        setTimeout(function(){
+          if(_folDone2||!user||user.id!==uid)return;
+          fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}).then(function(fd){
+            _folDone2=true;
+            if(!Array.isArray(fd))return;
+            var _r=new Set();fd.forEach(function(f){if(f.professeur_id)_r.add(f.professeur_id);});
+            fol=_r;_saveFol();if(C.length)buildCards();
+          });
+        },5000);
+      });
       // Appliquer res+follows quand ils arrivent, puis reconstruire
       _rfP2.then(function(results){
+        _folDone2=true;
         var resData=results[0],folData=results[1];
         Object.keys(res).forEach(function(k){delete res[k];});
         Object.keys(P).forEach(function(k){delete P[k];});
@@ -1185,6 +1201,7 @@ async function doLogin(){
         // Ne remplacer fol QUE si le fetch a réussi (folData=null = échec réseau → garder fol du localStorage)
         if(Array.isArray(folData)){var _newFol2=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});fol=_newFol2;_saveFol();}
         if(C.length)buildCards();
+        _syncAllFollowBtns();
         updateFavBadge();
         var _pfav3=g('pgFav');if(_pfav3&&_pfav3.classList.contains('on'))buildFavPage();
       }).catch(function(){});
@@ -1561,6 +1578,8 @@ function goExplore(){
       if(user.id){
         // Lancer loadData ET res+follows EN PARALLÈLE — ne pas attendre l'un pour l'autre
         // silent=true si cache déjà affiché (évite de remplacer le contenu par des skeletons)
+        var _folDone=false;
+        var _uid=user.id;
         var _dataP=loadData(1,_hadCache);
         var _rfP=Promise.all([
           fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
@@ -1568,9 +1587,24 @@ function goExplore(){
         ]);
         // Afficher les cours dès qu'ils arrivent (sans attendre res+follows)
         // loadData(1) avec silent=true si cache déjà affiché pour éviter les skeletons
-        _dataP.then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();}).catch(function(){});
+        _dataP.then(function(){
+          buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();
+          // Sync follow buttons dès que les follows arrivent
+          _rfP.then(function(){if(C.length&&user)_syncAllFollowBtns();}).catch(function(){});
+          // Retry follows si pas encore arrivés après 5s (Railway cold start / fetch bloqué)
+          setTimeout(function(){
+            if(_folDone||!user||user.id!==_uid)return;
+            fetch(API+'/follows/'+_uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}).then(function(fd){
+              _folDone=true;
+              if(!Array.isArray(fd))return;
+              var _r=new Set();fd.forEach(function(f){if(f.professeur_id)_r.add(f.professeur_id);});
+              fol=_r;_saveFol();if(C.length)buildCards();
+            });
+          },5000);
+        }).catch(function(){});
         // Appliquer res+follows quand ils arrivent, puis reconstruire
         _rfP.then(function(results){
+          _folDone=true;
           var resData=results[0],folData=results[1];
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
@@ -1581,6 +1615,7 @@ function goExplore(){
           favCours.clear();loadFavCours();
           updateFavBadge();
           if(C.length)buildCards();
+          _syncAllFollowBtns();
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           var _pfav2=g('pgFav');if(_pfav2&&_pfav2.classList.contains('on'))buildFavPage();
         }).catch(function(){});
@@ -2104,6 +2139,7 @@ function saveProf(){
 }
 
 function doLogout(){
+  var _fkLogout=_folKey(); // sauvegarder la clé AVANT user=null (sinon _folKey() retourne null)
   user=null;
   _tutoLaunched=false;
   clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;
@@ -2116,7 +2152,7 @@ function doLogout(){
   Object.keys(res).forEach(function(k){delete res[k]});fol.clear();favCours.clear();Object.keys(P).forEach(function(k){delete P[k]});
   _convCache='';
   try{localStorage.removeItem(_COURS_CACHE_KEY);}catch(e){}
-  try{var _fk=_folKey();if(_fk)localStorage.removeItem(_fk);}catch(e){}
+  try{if(_fkLogout)localStorage.removeItem(_fkLogout);}catch(e){}
   try{localStorage.removeItem('cp_fav_cours');}catch(e){} // nettoyer la clé fallback sans user.id
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
