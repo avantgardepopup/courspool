@@ -1824,9 +1824,9 @@ function goAccount(){
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   var cr=g('accCardRev');
   if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
-  // Onglet Remboursements — caché mais utilisable via paramètres (élèves seulement)
+  // Onglet Remboursements — visible pour les profs, caché pour les élèves (accessibles via paramètres)
   var tabRmb=g('aTabRmb');
-  if(tabRmb)tabRmb.style.display='none';
+  if(tabRmb)tabRmb.style.display=(user&&user.role==='professeur')?'flex':'none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Statut vérification
@@ -5504,6 +5504,56 @@ async function loadRemboursements(){
   var el=g('listRmb');
   if(!el||!user)return;
   el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span> Chargement…</div>';
+
+  // ── Mode professeur : remboursements émis aux élèves ────────────────────
+  if(user.role==='professeur'){
+    try{
+      var r=await fetch(API+'/stripe/refunds/prof/'+user.id,{cache:'no-store',headers:apiH()});
+      var data=await r.json();
+      var refunds=Array.isArray(data)?data:[];
+      if(!refunds.length){
+        el.innerHTML='<div style="text-align:center;padding:40px 20px">'
+          +'<div style="width:64px;height:64px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" width="28" height="28"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>'
+          +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun remboursement</div>'
+          +'<div style="font-size:13px;color:var(--lite);line-height:1.6">Les remboursements aux élèves<br>apparaîtront ici lors d\'annulations.</div>'
+          +'</div>';
+        return;
+      }
+      var html='<div style="background:var(--wh);border-radius:16px;overflow:hidden;border:1px solid var(--bdr)">';
+      refunds.forEach(function(rb,i){
+        var titre=esc(rb.cours_titre||'Cours CoursPool');
+        var montant=rb.amount||0;
+        var montantStr=montant?(montant%1===0?montant+'€':montant.toFixed(2)+'€'):'—';
+        var dateStr=rb.created?new Date(rb.created).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+        var st=rb.status||'succeeded';
+        var pill,pillBg,pillColor;
+        if(st==='succeeded'){pill='Remboursé';pillBg='#DCFCE7';pillColor='#15803D';}
+        else if(st==='pending'){pill='En cours';pillBg='#FEF3C7';pillColor='#92400E';}
+        else{pill='Échoué';pillBg='#FEE2E2';pillColor='#B91C1C';}
+        var border=i<refunds.length-1?'border-bottom:1px solid var(--bdr)':'';
+        html+='<div style="padding:14px 16px;'+border+';display:flex;align-items:center;gap:12px">'
+          +'<div style="width:40px;height:40px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+titre+'</div>'
+          +(dateStr?'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+dateStr+'</div>':'')
+          +'</div>'
+          +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'
+          +'<div style="font-size:14px;font-weight:800;color:#EF4444">-'+montantStr+'</div>'
+          +'<span style="background:'+pillBg+';color:'+pillColor+';border-radius:50px;padding:3px 9px;font-size:11px;font-weight:700">'+pill+'</span>'
+          +'</div></div>';
+      });
+      html+='</div>';
+      html+='<div style="padding:14px 4px;font-size:12px;color:var(--lite);line-height:1.6;text-align:center">Remboursements traités par Stripe · délai 5-10 jours ouvrés</div>';
+      el.innerHTML=html;
+    }catch(e){
+      el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les remboursements</div>';
+    }
+    return;
+  }
+
+  // ── Mode élève : remboursements reçus ───────────────────────────────────
   try{
     var r=await fetch(API+'/reservations/'+user.id,{cache:'no-store',headers:apiH()});
     var data=await r.json();
@@ -7499,7 +7549,7 @@ async function sendCoursCardMsg(c){
 // ============================================================
 // PROFILE — Home grid + Detail view navigation
 // ============================================================
-var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus'};
+var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus','Rmb':'Remboursements'};
 
 function showAccHome(){
   var pg=g('pgAcc');
@@ -7516,7 +7566,7 @@ function showAccHome(){
 
 // Override switchATab to show detail view + update topbar title
 (function(){
-  var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus'};
+  var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus',Rmb:'Remboursements'};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
@@ -7539,13 +7589,15 @@ function showAccHome(){
   };
 })();
 
-// applyUser — show revenue card for profs
+// applyUser — show revenue + refunds cards for profs
 (function(){
   var _au2=applyUser;
   applyUser=function(){
     _au2();
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+    var crmb=g('accCardRmb');
+    if(crmb)crmb.style.display=(user&&user.role==='professeur')?'block':'none';
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';

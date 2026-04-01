@@ -858,7 +858,7 @@ app.post('/stripe/checkout', async (req, res) => {
 
   try {
     // Prix depuis la BDD — ne jamais faire confiance au client
-    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre').eq('id', cours_id).single();
+    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre,professeur_id').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
     // Vérifier que le cours n'est pas complet
     if (!pour_ami && cours.places_prises >= cours.places_max) {
@@ -883,7 +883,7 @@ app.post('/stripe/checkout', async (req, res) => {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0' },
+      metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0', prof_id: cours.professeur_id || '' },
     });
     res.json({ url: session.url });
   } catch (e) {
@@ -898,7 +898,7 @@ app.post('/stripe/payment-intent', async (req, res) => {
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
     // Prix depuis la BDD — ne jamais faire confiance au client
-    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre').eq('id', cours_id).single();
+    const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre,professeur_id').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
     // Vérifier que le cours n'est pas complet
     if (!pour_ami && cours.places_prises >= cours.places_max) {
@@ -915,7 +915,7 @@ app.post('/stripe/payment-intent', async (req, res) => {
       amount: Math.round(montant * 100),
       currency: 'eur',
       description: cours.titre || cours_titre || 'Réservation CoursPool',
-      metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0' },
+      metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0', prof_id: cours.professeur_id || '' },
       automatic_payment_methods: { enabled: true },
     });
     res.json({ client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id, montant });
@@ -1545,6 +1545,27 @@ app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
     const result=reservations.map(r=>({id:r.cours_id+'_'+r.created_at,amount:r.montant_paye||0,currency:'eur',status:'succeeded',created:r.created_at,cours_titre:coursMap[r.cours_id]||'Cours'}));
     res.json(result);
   }catch(e){res.status(500).json({error:e.message});}
+});
+
+// STRIPE — remboursements émis par un prof
+app.get('/stripe/refunds/prof/:prof_id', async (req, res) => {
+  if (req.user.id !== req.params.prof_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
+  try {
+    const refunds = await stripe.refunds.list({ limit: 100, expand: ['data.payment_intent'] });
+    const result = refunds.data
+      .filter(r => r.payment_intent && r.payment_intent.metadata && r.payment_intent.metadata.prof_id === req.params.prof_id)
+      .map(r => ({
+        id: r.id,
+        amount: r.amount / 100,
+        currency: r.currency,
+        status: r.status,
+        created: new Date(r.created * 1000).toISOString(),
+        cours_id: r.payment_intent.metadata.cours_id || null,
+        user_id: r.payment_intent.metadata.user_id || null,
+        cours_titre: r.payment_intent.description || 'Cours CoursPool',
+      }));
+    res.json(result);
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // GROUPE — envoyer un message à plusieurs élèves d'un cours
