@@ -699,9 +699,20 @@ async function _handleOAuthSignIn(session){
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
       _scheduleTokenRefresh();
-      favCours.clear();loadFavCours();
+      fol.clear();_loadFol();favCours.clear();loadFavCours();
       applyUser();
-      loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      var _oauthCoursP=loadData();
+      var _oauthFolP=fetch(API+'/follows/'+sbUser.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
+      var _oauthFolRace=Promise.race([_oauthFolP,new Promise(function(resolve){setTimeout(function(){resolve(null);},2000);})]);
+      Promise.all([_oauthCoursP,_oauthFolRace]).then(function(results){
+        var folData=results[1];
+        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+        buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
+      }).catch(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      _oauthFolP.then(function(folData){
+        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+        if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
+      }).catch(function(){});
       toast('Bienvenue '+pr+' !','Connecté à CoursPool');
       _oauthProcessing=false;
       return;
@@ -1055,21 +1066,27 @@ async function doLogin(){
     _loadFol(); // Charge les follows depuis localStorage → disponibles immédiatement pour buildCards
     favCours.clear();loadFavCours();
     if(uid){
-      // Lancer cours ET follows EN PARALLÈLE (pas séquentiellement)
       var _coursP=loadData();
-      // Afficher les cours dès qu'ils arrivent (fol déjà chargé depuis localStorage)
-      _coursP.then(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();}).catch(function(){});
-      // Follows et réservations en fond — mettre à jour les boutons quand ça arrive
-      Promise.all([
-        fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;})
-      ]).then(function(results){
-        var resData=results[0],folData=results[1];
-        if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
+      // Follows en parallèle — Railway est déjà réveillé par le login, réponse en <1s
+      var _folP=fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
+      var _resP=fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];});
+      // Timeout 2s sur les follows — garantit que buildCards() n'attend jamais longtemps
+      var _folRace=Promise.race([_folP,new Promise(function(resolve){setTimeout(function(){resolve(null);},2000);})]);
+      // Attendre cours + follows avant buildCards → follow state correct dès le premier rendu
+      Promise.all([_coursP,_folRace]).then(function(results){
+        var folData=results[1];
         if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        // Sync les boutons follow sur les cartes déjà affichées
-        if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
+        restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
+      }).catch(function(){restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      // Réservations en fond
+      _resP.then(function(resData){
+        if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
         updateFavBadge();
+      }).catch(function(){});
+      // Si follows arrivent après le timeout (Railway lent), sync les boutons
+      _folP.then(function(folData){
+        if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+        if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
       }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
@@ -1436,23 +1453,26 @@ function goExplore(){
           }).catch(function(){});
       }
       if(user.id){
-        // Cours ET follows en parallèle — fol localStorage déjà chargé par _loadFol() ci-dessus
         var _startCoursP=loadData();
-        // Afficher les cours immédiatement avec les follows du localStorage
-        _startCoursP.then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();}).catch(function(){});
-        // Résas + follows en fond
-        Promise.all([
-          fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;})
-        ]).then(function(results){
-          var resData=results[0],folData=results[1];
+        // Follows en parallèle — timeout 3s pour cold start au démarrage
+        var _startFolP=fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
+        var _startResP=fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];});
+        var _startFolRace=Promise.race([_startFolP,new Promise(function(resolve){setTimeout(function(){resolve(null);},3000);})]);
+        // Attendre cours + follows avant buildCards → follow state correct dès le premier rendu
+        Promise.all([_startCoursP,_startFolRace]).then(function(results){
+          var folData=results[1];
+          if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
+          buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();setTimeout(checkCoursANoter,3000);_startAutoRefresh();if(typeof initSocket==='function')initSocket();
+        }).catch(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();checkProfDeepLink();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+        // Réservations en fond
+        _startResP.then(function(resData){
           Object.keys(res).forEach(function(k){delete res[k];});
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
-          Object.keys(P).forEach(function(k){delete P[k]});
+          favCours.clear();loadFavCours();updateFavBadge();
+        }).catch(function(){});
+        // Si follows arrivent après le timeout, sync les boutons
+        _startFolP.then(function(folData){
           if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-          favCours.clear();loadFavCours();
-          updateFavBadge();
-          // Sync boutons follow sur les cartes déjà affichées
           if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
         }).catch(function(){});
