@@ -195,6 +195,7 @@ function setAvatar(el,photo,ini,col){
 // Badge sera mis à jour après chargement des follows
 var C=[],P={},res={},fol=new Set(),favCours=new Set();
 var _followInFlight=new Set(); // guard anti-spam follow/unfollow
+var _followsInitialized=false; // true dès que fol a été chargé depuis le serveur (n'importe quel chemin)
 // Charger les favoris cours depuis localStorage dès le démarrage (APRÈS l'init de favCours)
 loadFavCours();
 // Pré-charger les réservations depuis localStorage (toujours, pour éviter le flash à 0 dans le profil)
@@ -754,9 +755,21 @@ async function _handleOAuthSignIn(session){
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
       _scheduleTokenRefresh();
+      _followsInitialized=false;
+      _loadFol();
       favCours.clear();loadFavCours();
       applyUser();
-      loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
+      var _oauthUid=user.id;
+      var _oauthFolP=fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;});
+      loadData().then(function(){
+        buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
+        _oauthFolP.then(function(fd){
+          if(!Array.isArray(fd)||!user||user.id!==_oauthUid)return;
+          _followsInitialized=true;
+          var _r=new Set();fd.forEach(function(f){if(f.professeur_id)_r.add(f.professeur_id);});
+          fol=_r;_saveFol();if(C.length)buildCards();
+        }).catch(function(){});
+      });
       toast('Bienvenue '+pr+' !','Connecté à CoursPool');
       _oauthProcessing=false;
       return;
@@ -1178,19 +1191,15 @@ async function doLogin(){
       // Afficher les cours dès qu'ils arrivent
       _dataP2.then(function(){
         restoreFilters();buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();
-        console.log('[FOL-DBG] dataP2 done — fol.size='+fol.size+' C.length='+C.length);
         // Sync follow buttons dès que les follows arrivent (courses ont chargé en premier)
-        _rfP2.then(function(){if(C.length&&user){console.log('[FOL-DBG] rfP2 inner sync — fol.size='+fol.size);_syncAllFollowBtns();}}).catch(function(){});
         // Retry follows si pas encore arrivés après 5s (Railway cold start / fetch bloqué)
         setTimeout(function(){
           if(_folDone2||!user||user.id!==uid)return;
-          console.log('[FOL-DBG] 5s retry follows triggered');
           fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}).then(function(fd){
             _folDone2=true;
-            console.log('[FOL-DBG] 5s retry result — Array:'+Array.isArray(fd)+' len:'+(Array.isArray(fd)?fd.length:'null'));
             if(!Array.isArray(fd))return;
             var _r=new Set();fd.forEach(function(f){if(f.professeur_id)_r.add(f.professeur_id);});
-            fol=_r;_saveFol();if(C.length)buildCards();
+            fol=_r;_saveFol();_followsInitialized=true;if(C.length)buildCards();
           });
         },5000);
       });
@@ -1198,18 +1207,16 @@ async function doLogin(){
       _rfP2.then(function(results){
         _folDone2=true;
         var resData=results[0],folData=results[1];
-        console.log('[FOL-DBG] rfP2 done — folData isArray:'+Array.isArray(folData)+' folData:',JSON.stringify(folData&&folData.slice?folData.slice(0,2):folData));
         Object.keys(res).forEach(function(k){delete res[k];});
         Object.keys(P).forEach(function(k){delete P[k];});
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
         // Ne remplacer fol QUE si le fetch a réussi (folData=null = échec réseau → garder fol du localStorage)
-        if(Array.isArray(folData)){var _newFol2=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});fol=_newFol2;_saveFol();}
-        console.log('[FOL-DBG] after rfP2 — fol.size='+fol.size+' C.length='+C.length);
+        if(Array.isArray(folData)){var _newFol2=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol2.add(f.professeur_id);});fol=_newFol2;_saveFol();_followsInitialized=true;}
         if(C.length)buildCards();
         _syncAllFollowBtns();
         updateFavBadge();
         var _pfav3=g('pgFav');if(_pfav3&&_pfav3.classList.contains('on'))buildFavPage();
-      }).catch(function(e){console.error('[FOL-DBG] rfP2 error',e);});
+      }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     }
@@ -1459,6 +1466,18 @@ function navTo(tab,_skipHistory){
     var br=g('btnRefresh');if(br)br.style.display=user?'flex':'none';
     restoreNav();
     _syncAllFollowBtns();
+    // Si les follows ne sont pas encore initialisés (ex: connexion OAuth), les charger maintenant
+    if(!_followsInitialized&&user&&user.id&&!user.guest){
+      var _navFolUid=user.id;
+      fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}).then(function(fd){
+        if(!Array.isArray(fd)||!user||user.id!==_navFolUid)return;
+        _followsInitialized=true;
+        var _r=new Set();fd.forEach(function(f){if(f.professeur_id)_r.add(f.professeur_id);});
+        fol=_r;_saveFol();
+        _syncAllFollowBtns();
+        if(C.length&&pgExp&&pgExp.classList.contains('on'))buildCards();
+      });
+    }
   } else if(tab==='fav'){
     if(pgFav)pgFav.classList.add('on');
     var bFav=g('bniFav');if(bFav){bFav.classList.add('on');_springIcon(bFav);}
@@ -1615,7 +1634,7 @@ function goExplore(){
           if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
           Object.keys(P).forEach(function(k){delete P[k];});
           // Ne remplacer fol QUE si le fetch a réussi (folData=null = timeout/erreur réseau)
-          if(Array.isArray(folData)){var _newFol=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol.add(f.professeur_id);});fol=_newFol;_saveFol();}
+          if(Array.isArray(folData)){var _newFol=new Set();folData.forEach(function(f){if(f.professeur_id)_newFol.add(f.professeur_id);});fol=_newFol;_saveFol();_followsInitialized=true;}
           // sinon on garde fol chargé depuis localStorage par _loadFol() au démarrage
           favCours.clear();loadFavCours();
           updateFavBadge();
@@ -1795,7 +1814,7 @@ function goAccount(){
       if(Array.isArray(folData)){
         fol.clear();
         folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});
-        _saveFol();
+        _saveFol();_followsInitialized=true;
       }
       buildAccLists();
     }).catch(function(){});
@@ -2145,6 +2164,7 @@ function saveProf(){
 
 function doLogout(){
   var _fkLogout=_folKey(); // sauvegarder la clé AVANT user=null (sinon _folKey() retourne null)
+  _followsInitialized=false;
   user=null;
   _tutoLaunched=false;
   clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;
@@ -3427,9 +3447,7 @@ function contPr(){
 function _syncAllFollowBtns(){
   var svgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
   var svgOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
-  var btns=document.querySelectorAll('.card-follow-btn[data-pid]');
-  console.log('[FOL-DBG] _syncAllFollowBtns — buttons='+btns.length+' fol.size='+fol.size+' fol=['+Array.from(fol).slice(0,3).join(',')+']');
-  btns.forEach(function(btn){
+  document.querySelectorAll('.card-follow-btn[data-pid]').forEach(function(btn){
     var pid=btn.getAttribute('data-pid');
     var on=fol.has(pid);
     btn.setAttribute('data-fol',on?'1':'0');
