@@ -7633,8 +7633,16 @@ function addToCalendar(coursId){
 
   if(isIOS){
     addBtn(calIco,'Calendrier Apple',function(){
-      var dataUrl='data:text/calendar;charset=utf-8,'+encodeURIComponent(icsText);
-      if(isCap){window.open(dataUrl,'_system');}else{window.location.href=dataUrl;}
+      var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
+      var file=new File([blob],'cours.ics',{type:'text/calendar'});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:c.title}).catch(function(){});
+      }else{
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');a.href=url;a.download='cours.ics';
+        document.body.appendChild(a);a.click();
+        setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+      }
     });
   }
   addBtn(gcIco,'Google Agenda',function(){
