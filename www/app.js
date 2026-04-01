@@ -2314,6 +2314,7 @@ function buildCards(){
   }
   if(nc)nc.style.display='none';
   applyFilter();
+  _syncAllFollowBtns(); // garantit l'état follow correct après chaque rendu
   // Nettoyer les favoris obsolètes : cours supprimés du serveur (plus dans C[])
   // Seulement quand _allLoaded=true pour éviter de supprimer des cours en page 2+
   if(_allLoaded&&favCours.size){
