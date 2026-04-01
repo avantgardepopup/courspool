@@ -307,7 +307,7 @@ function toggleFavCours(coursId,btn){
     setTimeout(function(){btn.classList.remove('popping');},400);
   }
   // Update all heart buttons for this course across all cards
-  document.querySelectorAll('[data-cours-id="'+coursId+'"] .card-heart-btn').forEach(function(b){
+  document.querySelectorAll('[data-cours-id="'+coursId+'"] .card-fav-btn').forEach(function(b){
     b.classList.toggle('saved',!wasSaved);
   });
 }
@@ -950,13 +950,17 @@ function _pcShowSlide(id,isBack){
   // Adapter la question du lieu selon le statut du prof
   if(id==='pcPfC'){
     var _villeTitle=g('pcVilleTitle');
+    var _etabLabel=g('pcEtabLabel');
     if(_villeTitle){
       if(_pcStatut==='etudiant'){
-        _villeTitle.textContent='Ou etudiez-vous ?';
+        _villeTitle.textContent='Où étudiez-vous ?';
+        if(_etabLabel)_etabLabel.innerHTML='Université / école <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
       } else if(_pcStatut==='auto'||_pcStatut==='autre'){
-        _villeTitle.textContent='Ou travaillez-vous ?';
+        _villeTitle.textContent='Où travaillez-vous ?';
+        if(_etabLabel)_etabLabel.innerHTML='Lieu d\'activité <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
       } else {
-        _villeTitle.textContent='Ou enseignez-vous ?';
+        _villeTitle.textContent='Où enseignez-vous ?';
+        if(_etabLabel)_etabLabel.innerHTML='Établissement <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
       }
     }
   }
@@ -1075,6 +1079,8 @@ async function saveProfCompletion(){
     if(_pcMatieres.length>0)payload.matieres=_pcMatieres.join(', ');
     var ville=(g('pcVille')&&g('pcVille').value||'').trim();
     if(ville)payload.ville=ville;
+    var etab=(g('pcEtablissement')&&g('pcEtablissement').value||'').trim();
+    if(etab)payload.etablissement=etab;
     if(_pcMode)payload.mode_cours=_pcMode;
   }else{
     payload.pour_enfant=(_pcPour==='enfant');
@@ -1826,9 +1832,6 @@ function goAccount(){
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   var cr=g('accCardRev');
   if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
-  // Onglet Remboursements — visible pour les profs, caché pour les élèves (accessibles via paramètres)
-  var tabRmb=g('aTabRmb');
-  if(tabRmb)tabRmb.style.display=(user&&user.role==='professeur')?'flex':'none';
   // Afficher le statut des notifications push
   setTimeout(renderNotifStatus, 100);
   // Statut vérification
@@ -2512,6 +2515,16 @@ function toggleFollowCard(pid,btn){
   haptic(8);
 }
 
+function buildPlacesCircles(fl,sp){
+  var pleft=sp-fl;
+  var pct=sp>0?Math.round(fl/sp*100):100;
+  var cls=pleft<=0?' full':pleft===1?' last':'';
+  var barColor=pleft<=0?'#9CA3AF':pleft===1?'#EF4444':'#FF6B35';
+  var txt=pleft<=0?'Complet':pleft===1?'Dernière place !':pleft+' place'+(pleft>1?'s':'')+' libre'+(pleft>1?'s':'');
+  return '<div class="places-bar"><div class="places-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'
+    +'<span class="card-places-count'+cls+'">'+txt+'</span>';
+}
+
 function renderPage(){
   var grid=g('grid');if(!grid)return;grid.innerHTML='';
   var sorted=sortCourses(filteredCards);
@@ -2526,48 +2539,75 @@ function renderPage(){
     if(_lmw)_lmw.style.display='none';
     return;
   }
-  // Compteur de résultats dans le sous-titre du header
-  // result count removed
   if(_nc)_nc.style.display='none';
   toShow.forEach(function(c,i){
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-    var pct=c.sp>0?Math.round(c.fl/c.sp*100):0;
     var pleft=c.sp-c.fl;
-    var bc=c.fl>=c.sp?'#ccc':pleft<=1?'#EF4444':pleft<=2?'var(--or)':'#22C069';
     var isR=!!res[c.id],isFull=c.fl>=c.sp;
     var isOwner=user&&c.pr===user.id;
-    var btn;
-    if(isOwner) btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
-    else if(isR&&isFull) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11px">Inscrit · Complet</button>';
-    else if(isR) btn='<button class="btnres" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
-    else if(isFull) btn='<button class="btnfull" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet</button>';
-    else btn='<button class="btnr" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
-    var _isDark=document.documentElement.classList.contains('dk');
     var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
-    var profAv=_pPhoto?'<img src="'+esc(_pPhoto)+'" style="width:100%;height:100%;object-fit:cover">':esc(c.prof_ini);
-    var _mFound=findMatiere(c.subj||'');
-    var _cardBg=_isDark?((_mFound&&_mFound.bgDark?_mFound.bgDark:c.bgDark)||c.bg):((_mFound?_mFound.bg:null)||c.bg);
-    var d=document.createElement('div');
-    d.className='card'+(c.prive?' card-prive':'');d.dataset.id=c.id;d.dataset.t=c.t;d.dataset.coursId=c.id;d.style.animationDelay=(i*.04)+'s';
-    d.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
-    var nivBadge=c.niveau?'<span style="display:inline-flex;align-items:center;background:rgba(0,0,0,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:3px 9px;font-size:9.5px;font-weight:700;color:#fff;margin-left:4px;letter-spacing:.03em;text-transform:uppercase">'+c.niveau+'</span>':'';
-    var isNew=c.created_at&&(Date.now()-new Date(c.created_at).getTime()<86400000);
-    var newBadge=isNew?'<span style="display:inline-flex;align-items:center;background:#FF6B2B;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:800;color:#fff;margin-left:6px;letter-spacing:.04em;animation:pulse 1.5s infinite">NOUVEAU</span>':'';
+    var _pNm=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'';
+    var profAv=_pPhoto?'<img src="'+esc(_pPhoto)+'">':('<span style="pointer-events:none">'+esc(c.prof_ini)+'</span>');
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
-    var modeBadge=_isVisio
-      ?'<span class="card-mode-badge visio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio</span>'
-      :'<span class="card-mode-badge presentiel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Présentiel</span>';
-    var descLine=c.description?'<div style="font-size:12px;color:var(--lite);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4">'+esc(c.description)+'</div>':'';
-    var profData=P[c.pr]||{};
-    var noteProf=profData.n&&profData.n!=='—'?profData.n:null;
-    var ratingBadge=noteProf?'<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.1);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;color:#fff;margin-left:6px">★ '+esc(noteProf)+'</span>':'';
+    // Subject badge
+    var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
+    // Mode badge
+    var modeIcon=_isVisio?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+    var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?'Visio':'Présentiel')+'</span>';
+    // Mini follow button (inside prof avatar)
+    var miniFollowBtn='';
+    if(user&&!user.guest&&!isOwner){
+      var isFolP=fol.has(c.pr);
+      var miniSvgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>';
+      var miniSvgOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      miniFollowBtn='<button class="card-follow-btn card-follow-mini" data-pid="'+c.pr+'" data-fol="'+(isFolP?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(isFolP?'Ne plus suivre':'Suivre')+'" style="background:'+(isFolP?'#FF6B35':'#fff')+'">'+(isFolP?miniSvgOn:miniSvgOff)+'</button>';
+    }
+    var profAvDiv='<div class="card-prof-av" style="background:'+(_pPhoto?'none':esc(c.prof_col))+';" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
+    // Schedule box
+    var schedHtml='<div class="card-sched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(fmtDt(c.dt))+'</div>';
+    // Location (présentiel only)
+    var locHtml=(!_isVisio&&c.lc)?'<div class="card-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>':'';
+    // Fav button
     var heartHtml='';
     if(user&&!user.guest){
       var isSaved=favCours.has(c.id);
-      heartHtml='<button class="card-heart-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder ce cours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
+      heartHtml='<button class="card-fav-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
     }
-    d.innerHTML='<div class="ctop" style="background:'+_cardBg+'"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:2px"><span class="chip" style="color:'+c.sc+'">'+esc(c.subj)+'</span>'+modeBadge+nivBadge+newBadge+'</div><div class="pbub" data-prof="'+c.pr+'" style="background:'+(_pPhoto?'none':c.prof_col)+'" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+'</div>'+(user&&!user.guest&&!isOwner?'<button class="card-follow-btn" data-pid="'+c.pr+'" data-fol="'+(fol.has(c.pr)?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(fol.has(c.pr)?'Ne plus suivre':'Suivre ce professeur')+'" style="position:absolute;bottom:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,'+(fol.has(c.pr)?'0.95':'0.85')+');color:'+(fol.has(c.pr)?'#FF6B2B':'var(--lite)')+'">'+( fol.has(c.pr)?'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>' )+'</button>':'')+'</div><div class="cbody"><div class="ctitle-row"><div class="ctitle">'+esc(c.title)+'</div>'+heartHtml+'</div>'+descLine+'<div class="cmeta"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'+esc(fmtDt(c.dt))+'</div></div>'+(_isVisio?'':'<div class="ltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>')+'<div class="cf"><div><div style="font-size:10px;color:var(--lite)">Prix / élève</div><div class="pm" style="font-size:22px;font-weight:800">'+pp+'€</div></div><div class="sw2"><div class="st"><span>Places</span><span style="color:'+bc+'">'+pleft+'/'+c.sp+'</span></div><div class="bar" style="height:5px"><div class="bf" style="width:'+pct+'%;background:'+bc+'">'+(pleft===1&&!isFull?'<div style="font-size:10px;color:#EF4444;font-weight:600">⚠ Dernière place !</div>':'')+'</div></div></div>'+btn+'</div></div>';
-    grid.appendChild(d);
+    // Reserve button
+    var btnHtml;
+    if(isOwner) btnHtml='<button class="card-btn-reserve card-btn-consult" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
+    else if(isR&&isFull) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Complet</button>';
+    else if(isR) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
+    else if(isFull) btnHtml='<button class="card-btn-reserve card-btn-full" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet</button>';
+    else btnHtml='<button class="card-btn-reserve" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
+    // Build card-wrap
+    var wrap=document.createElement('div');
+    wrap.className='card-wrap'+(c.prive?' card-prive-wrap':'');
+    wrap.dataset.id=c.id;wrap.dataset.t=c.t;wrap.dataset.coursId=c.id;
+    wrap.style.animationDelay=(i*.04)+'s';
+    wrap.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
+    wrap.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
+    wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
+    wrap.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
+    wrap.innerHTML=
+      subjBadge+modeBadge+profAvDiv+
+      '<div class="card card-new'+(c.prive?' card-prive':'')+'">'+
+        '<div class="card-body-new">'+
+          '<div class="card-title-new">'+esc(c.title)+'</div>'+
+          (c.description?'<div class="card-desc-preview">'+esc(c.description)+'</div>':'')+
+          schedHtml+locHtml+
+          '<div class="card-sep-dash"></div>'+
+          '<div class="card-foot">'+
+            '<div class="card-price-block">'+
+              '<div class="card-price-val">'+pp+'€</div>'+
+              '<div class="card-price-sub">/ élève</div>'+
+            '</div>'+
+            '<div class="card-circles-wrap">'+buildPlacesCircles(c.fl,c.sp)+'</div>'+
+            heartHtml+btnHtml+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    grid.appendChild(wrap);
   });
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
@@ -2962,7 +3002,7 @@ function viewCoursCard(id){
 
 function openR(id){haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
-  var _rBtn=document.querySelector('[data-id="'+id+'"] .btnr');
+  var _rBtn=document.querySelector('[data-id="'+id+'"] .card-btn-reserve,[data-id="'+id+'"] .btnr');
   if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);}
   var c=C.find(function(x){return x.id==id})||_histCache[String(id)];
   if(!c)return;
@@ -3451,26 +3491,40 @@ function contPr(){
 function _syncAllFollowBtns(){
   var svgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
   var svgOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
+  var miniOn='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>';
+  var miniOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
   document.querySelectorAll('.card-follow-btn[data-pid]').forEach(function(btn){
     var pid=btn.getAttribute('data-pid');
     var on=fol.has(pid);
     btn.setAttribute('data-fol',on?'1':'0');
     btn.title=on?'Ne plus suivre':'Suivre ce professeur';
-    btn.innerHTML=on?svgOn:svgOff;
-    btn.style.background=on?'rgba(255,107,43,0.12)':'rgba(255,255,255,0.85)';
-    btn.style.color=on?'#FF6B2B':'var(--lite)';
+    if(btn.classList.contains('card-follow-mini')){
+      btn.style.background=on?'#FF6B35':'#fff';
+      btn.innerHTML=on?miniOn:miniOff;
+    }else{
+      btn.innerHTML=on?svgOn:svgOff;
+      btn.style.background=on?'rgba(255,107,43,0.12)':'rgba(255,255,255,0.85)';
+      btn.style.color=on?'#FF6B2B':'var(--lite)';
+    }
   });
 }
 /* ── sync tous les card-follow-btn d'un prof sur les cards explorer ── */
 function _syncFollowBtns(pid,isFollowing){
   var svgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
   var svgOff='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
+  var miniOn='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>';
+  var miniOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
   document.querySelectorAll('.card-follow-btn[data-pid="'+pid+'"]').forEach(function(btn){
     btn.setAttribute('data-fol',isFollowing?'1':'0');
     btn.title=isFollowing?'Ne plus suivre':'Suivre ce professeur';
-    btn.innerHTML=isFollowing?svgOn:svgOff;
-    btn.style.background=isFollowing?'rgba(255,107,43,0.12)':'rgba(255,255,255,0.85)';
-    btn.style.color=isFollowing?'#FF6B2B':'var(--lite)';
+    if(btn.classList.contains('card-follow-mini')){
+      btn.style.background=isFollowing?'#FF6B35':'#fff';
+      btn.innerHTML=isFollowing?miniOn:miniOff;
+    }else{
+      btn.innerHTML=isFollowing?svgOn:svgOff;
+      btn.style.background=isFollowing?'rgba(255,107,43,0.12)':'rgba(255,255,255,0.85)';
+      btn.style.color=isFollowing?'#FF6B2B':'var(--lite)';
+    }
   });
 }
 /* ── helper pour l'état du bouton Suivre/Suivi — UN SEUL endroit ── */
@@ -3661,7 +3715,7 @@ async function subCr(){
     if(tog)tog.style.background='var(--bdr)';if(knob)knob.style.transform='translateX(0)';if(box)box.style.display='none';
     closeM('bdCr');await loadData();buildCards();buildAccLists();
     var isFirstCours=C.filter(function(c){return c.pr===user.id;}).length<=1;
-    toast(isFirstCours?'Premier cours publié 🎉':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
+    toast(isFirstCours?'Premier cours publié !':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
   }catch(e){toast('Erreur réseau','Vérifiez votre connexion');}
   finally{window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}}
 }
@@ -4218,7 +4272,7 @@ function requestGeoloc(){
       if(lbl)lbl.style.display='none'; // masquer le texte, garder juste l'icône
       var distBtn=g('geoDistBtn');if(distBtn)distBtn.style.display='block';
       applyFilter();
-      toast('Position détectée 📍','');
+      toast('Position détectée','');
       // Reverse geocoding en arrière-plan (non bloquant)
       fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=fr')
         .then(function(r){return r.json();})
@@ -4755,6 +4809,13 @@ function _scheduleBadgeNudge(){
     if(!user)return;
     if(user.diplome_verifie&&user.casier_verifie)return; // tous badges déjà OK
     var bd=g('bdBadgeNudge');if(!bd)return;
+    // Sous-titre adapté au statut réel — ne jamais dire "vérifiée" si pas encore validé
+    var nudgeSub=g('nudgeSubText');
+    if(nudgeSub){
+      nudgeSub.textContent=user.verified
+        ?'Votre identité est vérifiée \u2713 \u2014 complétez votre profil pour inspirer encore plus confiance aux élèves.'
+        :'Complétez votre profil pour inspirer confiance aux élèves et vous démarquer.';
+    }
     // Masquer le bouton diplôme si déjà uploadé/vérifié
     var nbtn=g('nudgeDiplomeBtn');
     if(nbtn&&(user.diplome_uploaded||user.diplome_verifie))nbtn.style.display='none';
@@ -6163,6 +6224,16 @@ function updateMsgBadge(n){
   else{b.classList.remove('on');try{sessionStorage.removeItem('cp_unread');}catch(e){};}
 }
 
+function _syncStatusBar(){
+  try{
+    var SB=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.StatusBar;
+    if(!SB)return;
+    // overlaysWebView doit être appelé en JS pour ne pas nécessiter de rebuild Xcode
+    if(typeof SB.setOverlaysWebView==='function')SB.setOverlaysWebView({overlay:true});
+    SB.setStyle({style:document.documentElement.classList.contains('dk')?'LIGHT':'DARK'});
+  }catch(e){}
+}
+
 function initDarkMode(){
   var saved=null;
   try{saved=localStorage.getItem('cp_dark');}catch(e){}
@@ -6174,6 +6245,7 @@ function initDarkMode(){
     _darkMode=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
   }
   document.documentElement.classList.toggle('dk',_darkMode);
+  _syncStatusBar();
   updateDarkBtn();
   var spb=g('shareProfBtn');if(spb)spb.style.display=(user&&user.role==='professeur')?'block':'none';
 }
@@ -6182,6 +6254,7 @@ function toggleDarkMode(){
   _darkMode=!_darkMode;
   document.documentElement.classList.toggle('dk',_darkMode);
   try{localStorage.setItem('cp_dark',_darkMode?'1':'0');}catch(e){}
+  _syncStatusBar();
   updateDarkBtn();
   var tm=document.getElementById('themeColorMeta');
   if(tm)tm.content=_darkMode?'#131110':'#ffffff';
@@ -6888,20 +6961,21 @@ if('serviceWorker' in navigator){
 var escH=function(s){return (s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
 var safeUrl=function(u){return (u&&/^https?:\/\//i.test(u))?escH(u):'#';};
 
-// Step form with SVG illustrations
+// Step form — icônes natives simples (style Feather, cercle orange)
+function _si(d){return '<div style="width:80px;height:80px;background:#FFF0E8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">'+d+'</svg></div>';}
 var STEP_DEFS=[
-  {id:'mode',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="8" y="14" width="32" height="22" rx="4" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><line x1="8" y1="21" x2="40" y2="21" stroke="#FF6B2B" stroke-width="2"/><circle cx="24" cy="31" r="3" fill="#FF6B2B"/></svg>',q:'Type de cours',h:'Pr\u00e9sentiel en personne ou visio en ligne'},
-  {id:'prive',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="18" width="28" height="20" rx="3" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><path d="M16 18v-5a8 8 0 0116 0v5" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="28" r="3" fill="#FF6B2B"/><line x1="24" y1="31" x2="24" y2="33" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/></svg>',q:'Visibilit\u00e9 du cours',h:'Un cours priv\u00e9 n\'est pas visible publiquement — acc\u00e8s par code unique'},
-  {id:'titre',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="12" y="12" width="24" height="28" rx="3" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="17" y1="19" x2="31" y2="19" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="24" x2="31" y2="24" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" opacity=".5"/><line x1="17" y1="29" x2="24" y2="29" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" opacity=".3"/></svg>',q:'Titre du cours',h:'Donnez un titre clair et accrocheur'},
-  {id:'matiere',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="9" width="14" height="30" rx="2" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><rect x="18" y="12" width="18" height="26" rx="2" fill="#FFF4EE" stroke="#FF6B2B" stroke-width="2"/><line x1="22" y1="18" x2="32" y2="18" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round"/><line x1="22" y1="22" x2="32" y2="22" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".5"/><line x1="22" y1="26" x2="28" y2="26" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".3"/></svg>',q:'Quelle mati\u00e8re\u00a0?',h:'Choisissez la discipline'},
-  {id:'niveau',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><path d="M24 9l4 8.5 9 1.3-6.5 6.4 1.5 9L24 29.7 16 34.2l1.5-9L11 18.8l9-1.3L24 9z" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2" stroke-linejoin="round"/></svg>',q:'Niveau vis\u00e9',h:'Quel public ciblez-vous\u00a0?'},
-  {id:'datetime',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="8" y="13" width="32" height="28" rx="3" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="8" y1="22" x2="40" y2="22" stroke="#FF6B2B" stroke-width="2"/><line x1="16" y1="9" x2="16" y2="17" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round"/><line x1="32" y1="9" x2="32" y2="17" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="32" r="5" fill="#FF6B2B"/></svg>',q:'Quand\u00a0?',h:'Date et heure du cours'},
-  {id:'lieu',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><path d="M24 40s-14-10.5-14-21a14 14 0 0128 0c0 10.5-14 21-14 21z" fill="#FF8A5530" stroke="#FF6B2B" stroke-width="2"/><circle cx="24" cy="19" r="5" fill="#FF6B2B"/></svg>',q:'O\u00f9\u00a0?',h:'Ville, adresse \u2014 ou lien g\u00e9n\u00e9r\u00e9 pour la visio'},
-  {id:'prix',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><circle cx="24" cy="24" r="15" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="24" y1="14" x2="24" y2="16" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/><line x1="24" y1="32" x2="24" y2="34" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/><path d="M20 20.5c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5c0 4-8 4-8 7.5 0 2.2 1.8 3.5 4 3.5s4-1.3 4-3.5" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round"/></svg>',q:'Prix &amp; places',h:'Prix total que vous souhaitez recevoir'},
-  {id:'desc',em:'<svg viewBox="0 0 48 48" fill="none" width="56" height="56"><rect width="48" height="48" rx="16" fill="#FFF4EE"/><rect x="10" y="10" width="28" height="32" rx="3" fill="#FF8A5520" stroke="#FF6B2B" stroke-width="2"/><line x1="16" y1="18" x2="32" y2="18" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="23" x2="32" y2="23" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="16" y1="28" x2="28" y2="28" stroke="#FF6B2B" stroke-width="1.5" stroke-linecap="round" opacity=".4"/></svg>',q:'Description',h:'D\u00e9tails sur votre cours (optionnel)'},
+  {id:'mode',    em:_si('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'), q:'Type de cours',       h:'Pr\u00e9sentiel en personne ou visio en ligne'},
+  {id:'prive',   em:_si('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>'),                                           q:'Visibilit\u00e9',      h:'Un cours priv\u00e9 n\'est pas visible publiquement \u2014 acc\u00e8s par code unique'},
+  {id:'titre',   em:_si('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>'),                                        q:'Titre du cours',       h:'Donnez un titre clair et accrocheur'},
+  {id:'matiere', em:_si('<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>'),                         q:'Quelle mati\u00e8re\u00a0?', h:'Choisissez la discipline'},
+  {id:'niveau',  em:_si('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),           q:'Niveau vis\u00e9',     h:'Quel public ciblez-vous\u00a0?'},
+  {id:'datetime',em:_si('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'), q:'Quand\u00a0?', h:'Date et heure du cours'},
+  {id:'lieu',    em:_si('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),                                       q:'O\u00f9\u00a0?',       h:'Ville, adresse \u2014 ou lien g\u00e9n\u00e9r\u00e9 pour la visio'},
+  {id:'prix',    em:_si('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),                                       q:'Prix &amp; places',   h:'Prix total que vous souhaitez recevoir'},
+  {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:'Description', h:'D\u00e9tails sur votre cours (optionnel)'},
 ];
 
-var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',desc:''};
+var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_type:'',desc:''};
 var _sc=0;
 
 function openCrStep(){
@@ -6912,7 +6986,7 @@ function openCrStep(){
     else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
     return;
   }
-  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',desc:''};
+  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_type:'',desc:''};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
   stepRender(0);
@@ -6947,7 +7021,14 @@ function stepRender(idx){
   var _visioOffset=(_sd.mode==='visio'&&idx>STEP_DEFS.findIndex(function(s){return s.id==='lieu';}))&&idx>0?1:0;
   var _dispIdx=idx-_visioOffset;
   var fill=g('stepFill');if(fill)fill.style.width=Math.round(_dispIdx/_totalSteps*100)+'%';
-  var backBtn=g('stepBackBtn');if(backBtn)backBtn.style.opacity=idx===0?'0.3':'1';
+  var backBtn=g('stepBackBtn');
+  if(backBtn){
+    backBtn.style.opacity='1';
+    backBtn.innerHTML=idx===0
+      ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>';
+    backBtn.title=idx===0?'Annuler':'Étape précédente';
+  }
   var cta=g('stepCta');if(cta){cta.textContent=idx===STEP_DEFS.length-1?'Publier':'Continuer';cta.disabled=false;}
   var body=g('stepBody');if(!body)return;
 
@@ -7012,9 +7093,52 @@ function stepRender(idx){
         +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">Un lien Jitsi sera créé pour votre cours. Vous pourrez le modifier depuis <strong>Mes cours</strong> après publication.</div></div>'
         +'</div></div>';
     }else{
-      html+='<div style="width:100%">'
-        +'<input id="stepLieu" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ville ou adresse..." value="'+escH(_sd.lieu)+'">'
-        +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+      var _fi='width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box;margin-top:0';
+      var _lt=_sd.lieu_type||'';
+      // Chaque option a ses propres placeholders / notes
+      var _lieuCfg={
+        domicile:{
+          label:'Votre ville ou arrondissement',
+          ph:'Ex\u00a0: Paris 5e, Lyon 3e\u2026',
+          note:'Seule la ville sera affich\u00e9e. L\u2019adresse exacte est partag\u00e9e en priv\u00e9 avec les \u00e9l\u00e8ves inscrits.',
+          geo:true
+        },
+        etablissement:{
+          label:'Nom de l\u2019\u00e9tablissement + ville',
+          ph:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Paris 5e\u2026',
+          note:'',
+          geo:false
+        },
+        autre:{
+          label:'Adresse ou ville',
+          ph:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
+          note:'',
+          geo:true
+        }
+      };
+      var _cfg=_lieuCfg[_lt]||null;
+      var _lieuVal=_sd.lieu||'';
+      function _sloBtn(id,icon,title,sub){
+        var sel=(_lt===id);
+        return '<div onclick="pickLieuType(\''+id+'\')" style="background:var(--wh);border:2px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:18px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .15s">'
+          +'<div style="width:40px;height:40px;border-radius:11px;background:'+(sel?'var(--orp)':'var(--bg)')+';flex-shrink:0;display:flex;align-items:center;justify-content:center">'+icon+'</div>'
+          +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+title+'</div><div style="font-size:12px;color:var(--lite);margin-top:1px">'+sub+'</div></div>'
+        +'</div>';
+      }
+      var _icoHome='<svg viewBox="0 0 24 24" fill="none" stroke="'+(_lt==='domicile'?'var(--or)':'var(--mid)')+'" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+      var _icoEtab='<svg viewBox="0 0 24 24" fill="none" stroke="'+(_lt==='etablissement'?'var(--or)':'var(--mid)')+'" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>';
+      var _icoPin='<svg viewBox="0 0 24 24" fill="none" stroke="'+(_lt==='autre'?'var(--or)':'var(--mid)')+'" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+      html+='<div style="width:100%;display:flex;flex-direction:column;gap:10px">'
+        +_sloBtn('domicile',_icoHome,'À domicile','Adresse partagée en privé avec les inscrits')
+        +_sloBtn('etablissement',_icoEtab,'Établissement','Collège, lycée, bibliothèque, université…')
+        +_sloBtn('autre',_icoPin,'Autre lieu','Salle de co-working, café, parc…')
+        // Champ adresse — toujours affiché dès qu'un type est sélectionné
+        +(_cfg?'<div id="stepLieuInputWrap">'
+          +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label+'</div>'
+          +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="'+_cfg.ph+'" value="'+escH(_lieuVal)+'">'
+          +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+          +(_cfg.note?'<div style="margin-top:10px;background:var(--orp);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--mid);line-height:1.5">'+_cfg.note+'</div>':'')
+          +'</div>':'')
         +'</div>';
     }
 
@@ -7087,6 +7211,13 @@ function stepRender(idx){
   setTimeout(function(){var inp=body.querySelector('input[type="text"],input[type="number"],textarea');if(inp)inp.focus();},300);
 }
 
+function pickLieuType(t){
+  _sd.lieu_type=t;
+  if(t!==_sd.lieu_type)_sd.lieu=''; // reset lieu quand on change de type
+  _sd.lieu_type=t;
+  stepRender(_sc);
+}
+
 function sOpt(a,v,l,s,sel,bg,ex){
   return '<div class="step-option'+(sel?' selected':'')+'" data-sa="'+a+'" data-sv="'+escH(v)+'" onclick="_stepOptClick(this)" style="background:var(--wh);border:2px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:18px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;'+(ex||'')+';box-shadow:0 1px 3px rgba(0,0,0,.05)">'
     +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+bg+'"></div>'
@@ -7104,6 +7235,7 @@ function stepPxCalc(){
 var _sLT=null;
 function stepLieuSearch(q){
   if(_sd.mode==='visio')return;
+  if(_sd.lieu_type==='etablissement')return; // pas d'autocomplétion géo pour un établissement (nom libre)
   var box=g('stepLieuSug');if(!box)return;
   if(!q||q.length<3){box.style.display='none';return;}
   clearTimeout(_sLT);
@@ -7140,8 +7272,11 @@ function stepNext(){
     if(!_sd.heure){toast('Heure manquante','Choisissez une heure');return;}
   }
   if(step.id==='lieu'){
-    if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
-    if(!_sd.lieu&&_sd.mode!=='visio'){toast('Lieu manquant','Entrez le lieu');return;}
+    if(_sd.mode!=='visio'){
+      if(!_sd.lieu_type){toast('Lieu manquant','Choisissez un type de lieu');return;}
+      if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
+      if(!_sd.lieu){toast('Lieu manquant','Précisez la ville ou l\'adresse');return;}
+    }
   }
   if(step.id==='prix'){
     if(g('stepPrix'))_sd.prix=parseInt(g('stepPrix').value)||0;
@@ -7600,8 +7735,6 @@ function showAccHome(){
     _au2();
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
-    var crmb=g('accCardRmb');
-    if(crmb)crmb.style.display=(user&&user.role==='professeur')?'block':'none';
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
@@ -7742,9 +7875,9 @@ document.addEventListener('click',function(e){
 function openSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.add('on');document.body.style.overflow='hidden';}
-  // Afficher la ligne Remboursements seulement pour les élèves
+  // Remboursements — visible pour tous les utilisateurs connectés (profs : remboursements émis ; élèves : reçus)
   var rmbRow=g('settingsRmbRow');
-  if(rmbRow)rmbRow.style.display=(user&&user.role!=='professeur')?'':'none';
+  if(rmbRow)rmbRow.style.display=user?'':'none';
   updateDarkBtn();
   haptic(6);
 }
