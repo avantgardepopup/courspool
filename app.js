@@ -711,7 +711,7 @@ async function _handleOAuthSignIn(session){
       }).catch(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
       _oauthFolP.then(function(folData){
         if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
+        if(C.length){_syncAllFollowBtns();}
       }).catch(function(){});
       toast('Bienvenue '+pr+' !','Connecté à CoursPool');
       _oauthProcessing=false;
@@ -1083,10 +1083,10 @@ async function doLogin(){
         if(Array.isArray(resData)){resData.forEach(function(r){if(r.cours_id)res[r.cours_id]=true;});try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
         updateFavBadge();
       }).catch(function(){});
-      // Si follows arrivent après le timeout (Railway lent), sync les boutons
+      // Si follows arrivent après le timeout (Railway lent), sync tous les boutons
       _folP.then(function(folData){
         if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-        if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
+        if(C.length){_syncAllFollowBtns();}
       }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
@@ -1473,7 +1473,7 @@ function goExplore(){
         // Si follows arrivent après le timeout, sync les boutons
         _startFolP.then(function(folData){
           if(Array.isArray(folData)&&folData.length>0){folData.forEach(function(f){if(f.professeur_id)fol.add(f.professeur_id);});_saveFol();}
-          if(C.length){Array.from(fol).forEach(function(pid){_syncFollowBtns(pid,true);});}
+          if(C.length){_syncAllFollowBtns();}
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
         }).catch(function(){});
       } else {
