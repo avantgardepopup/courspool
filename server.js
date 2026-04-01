@@ -1,3 +1,26 @@
+// ── Sentry — DOIT être initialisé avant tous les autres imports ────────────
+// Permet l'instrumentation automatique d'Express, Stripe, fetch, etc.
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
+    tracesSampleRate: 0.0, // Pas de tracing perf (économies Railway)
+    beforeSend(event) {
+      // Ne jamais logger de données sensibles
+      if (event.request) {
+        if (event.request.headers) {
+          ['authorization', 'Authorization', 'cookie', 'Cookie'].forEach(h => delete event.request.headers[h]);
+        }
+        // Supprimer le corps (tokens, mots de passe, CNI, IBAN)
+        delete event.request.data;
+      }
+      return event;
+    },
+  });
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -2253,6 +2276,12 @@ app.post('/admin/reset-test-data', requireAdmin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Sentry error handler — AVANT le middleware d'erreur custom ────────────
+// Capture les erreurs Express transmises via next(err) ou throws non catchés
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
+
 // ── Global error middleware — dernier recours pour les routes sans try/catch ──
 app.use((err, req, res, next) => {
   console.error('[Express error]', err.message);
@@ -2262,6 +2291,7 @@ app.use((err, req, res, next) => {
 // Empêcher Railway de redémarrer sur une rejection non gérée
 process.on('unhandledRejection', (reason) => {
   console.error('[unhandledRejection]', reason);
+  if (process.env.SENTRY_DSN) Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
 });
 
 // ── CRON VISIO NOTIFICATIONS ─────────────────────────────────

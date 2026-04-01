@@ -10,6 +10,7 @@
     { "src": "fonts/*.woff2", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/sentry-init.js", "dest": "/sentry-init.js" },
     { "src": "/app.js", "dest": "/app.js" },
     { "src": "/supabase.min.js", "dest": "/supabase.min.js" },
     { "src": "/socket.io.min.js", "dest": "/socket.io.min.js" },

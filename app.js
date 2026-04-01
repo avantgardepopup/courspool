@@ -818,7 +818,7 @@ async function doOAuthGoogle(){
         options:{redirectTo:redirectTo,queryParams:{access_type:'offline',prompt:'consent'}}
       });
     }
-  }catch(e){toast('Erreur','Impossible de continuer avec Google');}
+  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'oauth_google'});toast('Erreur','Impossible de continuer avec Google');}
 }
 async function doOAuthApple(){
   if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
@@ -1349,6 +1349,8 @@ function applyUser(){
     initSwipeDismiss(g('bdNote'), function(){closeM('bdNote');});
     initSwipeDismiss(g('bdPreview'), function(){g('bdPreview').style.display='none';});
   },500);
+  // Contexte utilisateur pour le monitoring d'erreurs (id + rôle uniquement, jamais l'email)
+  if(typeof setSentryUser==='function')setSentryUser(user);
   // Forcer la synchro complète de la nav et du header
   navTo('exp');
 }
@@ -2214,6 +2216,8 @@ function doLogout(){
   if(window.location.search||window.location.hash){
     window.history.replaceState({},'',window.location.pathname);
   }
+  // Effacer le contexte utilisateur Sentry à la déconnexion
+  if(typeof setSentryUser==='function')setSentryUser(null);
   toast('Déconnecté','À bientôt !');
 }
 
@@ -3087,7 +3091,7 @@ async function confR(){haptic(15);
     // Rediriger vers paiement
     if(!data.url||!data.url.startsWith('https://checkout.stripe.com/')){toast('Erreur','URL de paiement invalide');return;}
     window.location.href=data.url;
-  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
+  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'checkout_reserve'});toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
 }
 function contR(){
@@ -3153,7 +3157,7 @@ async function confAmi(id){
     if(data.error){toast('Erreur',data.error);return;}
     if(!data.url||!data.url.startsWith('https://checkout.stripe.com/')){toast('Erreur','URL de paiement invalide');return;}
     window.location.href=data.url;
-  }catch(e){toast('Erreur réseau','Impossible de lancer le paiement');}
+  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'checkout_ami'});toast('Erreur réseau','Impossible de lancer le paiement');}
   finally{if(btn){btn.disabled=false;if(_btnHtml)btn.innerHTML=_btnHtml;btn.onclick=function(){confAmi(id);};}}
 }
 
@@ -3736,7 +3740,7 @@ async function confirmDeleteCours(){
     await loadData();buildCards();buildAccLists();
     var nb=data.remboursements||0;
     toast('Cours annul\u00e9',nb>0?nb+' \u00e9l\u00e8ve'+(nb>1?'s':'')+' rembours\u00e9'+(nb>1?'s':'')+' automatiquement \u2713':'Cours supprim\u00e9');
-  }catch(e){toast('Erreur réseau','Impossible d\'annuler ce cours');}
+  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'annuler_cours',cours_id:id});toast('Erreur réseau','Impossible d\'annuler ce cours');}
   window._deleteId=null;
 }
 function calcH(){
