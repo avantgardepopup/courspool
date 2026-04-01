@@ -8052,16 +8052,18 @@ function clearSearch(){
     inp.addEventListener('input',function(){btn.style.display=this.value?'flex':'none';});
   });
 })();
-// ---- Swipe to close settings ----
+// ---- Swipe to close settings (handle seulement) ----
 (function(){
   var startY=0,dragging=false;
   document.addEventListener('touchstart',function(e){
-    if(e.target.closest('.settings-sheet')){startY=e.touches[0].clientY;dragging=true;}
+    // Ne démarrer que si le touch est sur le handle — pas sur le contenu scrollable
+    if(e.target.closest('.settings-handle')){startY=e.touches[0].clientY;dragging=true;}
+    else{dragging=false;}
   },{passive:true});
   document.addEventListener('touchend',function(e){
     if(!dragging)return;dragging=false;
     var dy=e.changedTouches[0].clientY-startY;
-    if(dy>80)closeSettings();
+    if(dy>60)closeSettings();
   },{passive:true});
 })();
 
