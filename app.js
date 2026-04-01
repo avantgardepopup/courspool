@@ -185,11 +185,23 @@ function getCourseState(id){
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
   if(!el)return;
+  var _col=col||'linear-gradient(135deg,#FF8C55,var(--ord))';
+  var _ini=ini||'?';
   if(photo){
     var _ex=el.querySelector('img');
     if(_ex&&_ex.src===photo){return;} // même URL déjà affichée → pas de re-flash
-    el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s" onload="this.style.opacity=\'1\'">';
-  }else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
+    el.style.background='none';
+    var img=document.createElement('img');
+    img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s';
+    img.onload=function(){this.style.opacity='1';};
+    img.onerror=function(){
+      var p=this.parentNode;if(!p)return;
+      p.removeChild(this);
+      p.style.background=_col;p.textContent=_ini;
+    };
+    img.src=esc(photo);
+    el.innerHTML='';el.appendChild(img);
+  }else{el.style.background=_col;el.textContent=_ini;}
 }
 
 // Badge sera mis à jour après chargement des follows
@@ -1735,6 +1747,13 @@ async function checkStripeReturn(){
       window._paidCoursId=coursId;
       var calBtn=document.getElementById('popupPaidCalBtn');
       if(calBtn)calBtn.style.display=pourAmi?'none':'flex';
+      // Adresse privée — montrer si disponible et non pour un ami
+      var adresseBlock=document.getElementById('popupPaidAdresse');
+      var adresseText=document.getElementById('popupPaidAdresseText');
+      var paidC=C.find(function(x){return x.id==coursId;});
+      if(!pourAmi&&adresseBlock&&adresseText&&paidC&&paidC.lieu_prive){
+        adresseText.textContent=paidC.lieu_prive;adresseBlock.style.display='block';
+      }else if(adresseBlock){adresseBlock.style.display='none';}
       if(p){p.style.display='flex';haptic(40);}
       var icon=p?p.querySelector('div[style*="F0FDF4"]'):null;
       if(icon){icon.style.transform='scale(0)';icon.style.transition='transform .5s cubic-bezier(.34,1.56,.64,1)';requestAnimationFrame(function(){requestAnimationFrame(function(){icon.style.transform='scale(1)';});});}
@@ -3841,13 +3860,11 @@ function openMsg(profNm,destId,avatar){
     avatar=P[destId].photo;
   }
   var av=g('msgConvAv');
-  if(avatar&&avatar!=='null'&&avatar!==''){
-    av.style.background='none';
-    av.innerHTML='<img src="'+safeUrl(avatar)+'" style="width:100%;height:100%;object-fit:cover">';
-  } else {
-    av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';
-    av.textContent=(profNm&&profNm[0])||'?';
-  }
+  var _pCache=P[destId]||{};
+  var _avIni=_pCache.i||(profNm?profNm.trim().split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase():'?')||'?';
+  var _avCol=_pCache.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var _avPhoto=(avatar&&avatar!=='null'&&avatar!=='')?avatar:(_pCache.photo||null);
+  setAvatar(av,_avPhoto,_avIni,_avCol);
   var _isPlaceholder=!profNm||profNm==='·\u200B·\u200B·'||profNm==='Contact';
   g('msgConvName').textContent=_isPlaceholder?'…':profNm;
   // Si nom inconnu, charger le profil pour mettre à jour la topbar
@@ -6975,7 +6992,7 @@ var STEP_DEFS=[
   {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:'Description', h:'D\u00e9tails sur votre cours (optionnel)'},
 ];
 
-var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_type:'',desc:''};
+var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:''};
 var _sc=0;
 
 function openCrStep(){
@@ -6986,7 +7003,7 @@ function openCrStep(){
     else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
     return;
   }
-  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_type:'',desc:''};
+  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:''};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
   stepRender(0);
@@ -7076,12 +7093,15 @@ function stepRender(idx){
 
   }else if(step.id==='datetime'){
     var today=new Date().toISOString().split('T')[0];
-    var fi='width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:17px;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink)';
+    var _dtFi='width:100%;border:1.5px solid rgba(255,107,53,.3);border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .18s';
+    var _dtFiNeu='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .18s';
     var lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
-    html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
-      +'<div><label style="'+lbl+'">Date</label><input id="stepDate" style="'+fi+'" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div>'
-      +'<div><label style="'+lbl+'">Heure</label><input id="stepHeure" style="'+fi+'" type="time" value="'+escH(_sd.heure)+'"></div>'
-      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><input id="stepDuree" style="'+fi+'" type="number" value="'+_sd.duree+'" min="30"></div>'
+    html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Date du cours</label><input id="stepDate" style="'+_dtFi+'" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Heure de d\u00e9but</label><input id="stepHeure" style="'+_dtFi+'" type="time" value="'+escH(_sd.heure)+'"></div>'
+      +'</div>'
+      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><input id="stepDuree" style="'+_dtFiNeu+'" type="number" value="'+_sd.duree+'" min="30"></div>'
       +'</div>';
 
   }else if(step.id==='lieu'){
@@ -7132,12 +7152,28 @@ function stepRender(idx){
         +_sloBtn('domicile',_icoHome,'À domicile','Adresse partagée en privé avec les inscrits')
         +_sloBtn('etablissement',_icoEtab,'Établissement','Collège, lycée, bibliothèque, université…')
         +_sloBtn('autre',_icoPin,'Autre lieu','Salle de co-working, café, parc…')
-        // Champ adresse — toujours affiché dès qu'un type est sélectionné
-        +(_cfg?'<div id="stepLieuInputWrap">'
-          +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label+'</div>'
-          +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="'+_cfg.ph+'" value="'+escH(_lieuVal)+'">'
-          +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-          +(_cfg.note?'<div style="margin-top:10px;background:var(--orp);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--mid);line-height:1.5">'+_cfg.note+'</div>':'')
+        // Champ(s) adresse — toujours affiché dès qu'un type est sélectionné
+        +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
+          +(_lt==='domicile'
+            // domicile : deux champs séparés
+            ?'<div>'
+              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
+              +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'">'
+              +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+              +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement pour que les \u00e9l\u00e8ves puissent filtrer par lieu.</div>'
+              +'</div>'
+              +'<div>'
+              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Adresse exacte</div>'
+              +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="Ex\u00a0: 12 rue de la Paix, Paris\u2026" value="'+escH(_sd.lieu_prive||'')+'">'
+              +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.</div>'
+              +'</div>'
+            // établissement / autre : champ unique
+            :'<div>'
+              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label+'</div>'
+              +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="'+_cfg.ph+'" value="'+escH(_sd.lieu||'')+'">'
+              +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+              +'</div>'
+          )
           +'</div>':'')
         +'</div>';
     }
@@ -7193,6 +7229,7 @@ function stepRender(idx){
   wire('stepHeure',function(){_sd.heure=this.value;});
   wire('stepDuree',function(){_sd.duree=parseInt(this.value)||60;});
   wire('stepLieu',function(){_sd.lieu=this.value;stepLieuSearch(this.value);});
+  wire('stepLieuPrive',function(){_sd.lieu_prive=this.value;});
   wire('stepPrix',function(){_sd.prix=parseInt(this.value)||0;stepPxCalc();});
   wire('stepPlaces',function(){_sd.places=parseInt(this.value)||5;stepPxCalc();});
   wire('stepDesc',function(){if(this.value.length>400)this.value=this.value.slice(0,400);_sd.desc=this.value;var cnt=g('stepDescCount');if(cnt)cnt.textContent=this.value.length+'/400';});
@@ -7212,8 +7249,7 @@ function stepRender(idx){
 }
 
 function pickLieuType(t){
-  _sd.lieu_type=t;
-  if(t!==_sd.lieu_type)_sd.lieu=''; // reset lieu quand on change de type
+  if(t!==_sd.lieu_type){_sd.lieu='';_sd.lieu_prive='';}
   _sd.lieu_type=t;
   stepRender(_sc);
 }
@@ -7275,6 +7311,7 @@ function stepNext(){
     if(_sd.mode!=='visio'){
       if(!_sd.lieu_type){toast('Lieu manquant','Choisissez un type de lieu');return;}
       if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
+      if(g('stepLieuPrive'))_sd.lieu_prive=g('stepLieuPrive').value.trim();
       if(!_sd.lieu){toast('Lieu manquant','Précisez la ville ou l\'adresse');return;}
     }
   }
@@ -7311,6 +7348,8 @@ async function subCrStep(){
     var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
       date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
       lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
+      lieu_prive:_sd.lieu_prive||'',
+      lieu_type:_sd.lieu_type||'',
       prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
       description:_sd.desc||'',
       prof_id:user.id,professeur_id:user.id,
@@ -7620,8 +7659,9 @@ function addToCalendar(coursId){
 
 // ---- Share cours in messagerie ----
 function openShareCoursSheet(){
-  var myC=C.filter(function(c){return user&&c.pr===user.id;});
-  if(!myC.length){toast('Aucun cours','Publiez un cours pour commencer');return;}
+  var myC=C.filter(function(c){return user&&c.pr===user.id&&!_isCoursPass(c);})
+    .sort(function(a,b){return new Date(a.dt)-new Date(b.dt);});
+  if(!myC.length){toast('Aucun cours à venir','Publiez un nouveau cours pour le partager');return;}
   var bd=document.createElement('div');
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
@@ -7662,6 +7702,7 @@ async function sendCoursCardMsg(c){
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
     +'<div class="chat-cours-card-meta">'+escH(fmtDt(c.dt))+(_cIsVisio?' &middot; Visio':'')+'</div>'
     +'<div style="margin-top:6px"><span class="mode-badge '+(_cIsVisio?'visio':'presentiel')+'">'+(_cIsVisio?'Visio':'Pr\u00e9sentiel')+'</span></div>'
+    +(c.lieu_prive?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.07);font-size:11px;color:var(--mid);display:flex;align-items:flex-start;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>'+escH(c.lieu_prive)+'</span></div>':'')
     +'</div></div>';
   try{
     await fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({expediteur_id:user.id,destinataire_id:msgDestId,contenu:cardHtml,type:'cours_card'})});
@@ -7872,14 +7913,112 @@ document.addEventListener('click',function(e){
 
 
 // ---- Settings sheet ----
+var _msgContactLabels={all:'Tous les élèves',enrolled:'Inscrits uniquement',none:'Personne (messagerie désactivée)'};
 function openSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.add('on');document.body.style.overflow='hidden';}
-  // Remboursements — visible pour tous les utilisateurs connectés (profs : remboursements émis ; élèves : reçus)
+  // Remboursements — visible pour tous les utilisateurs connectés
   var rmbRow=g('settingsRmbRow');
   if(rmbRow)rmbRow.style.display=user?'':'none';
+  // Confidentialité et communication — visible uniquement pour les profs connectés
+  var isProf=user&&user.role==='professeur';
+  var privSec=g('settingsProfPrivSection');var privGrp=g('settingsProfPrivGroup');
+  if(privSec)privSec.style.display=isProf?'':'none';
+  if(privGrp)privGrp.style.display=isProf?'':'none';
+  if(isProf){
+    // Adresse exacte (default: on)
+    var adresseTog=g('adresseAutoToggle');
+    if(adresseTog)adresseTog.classList.toggle('on',user.adresse_auto!==false);
+    // Messagerie
+    var sub=g('settingsMsgContactSub');
+    if(sub)sub.textContent=_msgContactLabels[user.contact_pref||'all']||_msgContactLabels.all;
+    // Apparition dans les recherches (default: on)
+    var searchTog=g('searchVisibleToggle');
+    if(searchTog)searchTog.classList.toggle('on',user.search_visible!==false);
+    // Visibilité du profil (default: on)
+    var profileTog=g('profileVisibleToggle');
+    if(profileTog)profileTog.classList.toggle('on',user.profile_visible!==false);
+  }
   updateDarkBtn();
   haptic(6);
+}
+function openMsgContactSheet(){
+  var opts=[
+    {k:'all',    icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+     l:'Tous les élèves', s:'N\'importe quel élève peut vous écrire'},
+    {k:'enrolled',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>',
+     l:'Inscrits uniquement', s:'Réservé aux élèves inscrits à vos cours'},
+    {k:'none',   icon:'<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
+     l:'Désactivée', s:'Personne ne peut vous envoyer de message'}
+  ];
+  var cur=user&&user.contact_pref||'all';
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:16px 20px 8px">'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Messages entrants</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Qui peut vous contacter sur CoursPool ?</div>'
+    +'</div>'
+    +'<div style="padding:8px 16px 32px;display:flex;flex-direction:column;gap:8px">';
+  opts.forEach(function(o){
+    var sel=cur===o.k;
+    html+='<div onclick="setMsgContactPref(\''+o.k+'\')" style="background:'+(sel?'var(--orp)':'var(--wh)')+';border:1.5px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s">'
+      +'<div style="width:38px;height:38px;border-radius:11px;background:'+(sel?'var(--or)':'var(--bg)')+';flex-shrink:0;display:flex;align-items:center;justify-content:center">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(sel?'#fff':'var(--mid)')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+o.icon+'</svg>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">'+o.l+'</div>'
+      +'<div style="font-size:12px;color:var(--lite);margin-top:2px;line-height:1.4">'+o.s+'</div>'
+      +'</div>'
+      +(sel?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  showQuickSheet(html);
+}
+async function setMsgContactPref(k){
+  if(!user)return;
+  user.contact_pref=k;
+  var sub=g('settingsMsgContactSub');if(sub)sub.textContent=_msgContactLabels[k]||_msgContactLabels.all;
+  // Rafraîchit la feuille pour que le check se déplace visuellement
+  openMsgContactSheet();
+  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({contact_pref:k})});}catch(e){}
+}
+async function toggleAdresseAuto(){
+  if(!user)return;
+  user.adresse_auto=(user.adresse_auto===false)?true:false;
+  var tog=g('adresseAutoToggle');if(tog)tog.classList.toggle('on',user.adresse_auto!==false);
+  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({adresse_auto:user.adresse_auto})});}catch(e){}
+}
+async function toggleSearchVisible(){
+  if(!user)return;
+  user.search_visible=(user.search_visible===false)?true:false;
+  var tog=g('searchVisibleToggle');if(tog)tog.classList.toggle('on',user.search_visible!==false);
+  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({search_visible:user.search_visible})});}catch(e){}
+}
+async function toggleProfileVisible(){
+  if(!user)return;
+  user.profile_visible=(user.profile_visible===false)?true:false;
+  var tog=g('profileVisibleToggle');if(tog)tog.classList.toggle('on',user.profile_visible!==false);
+  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({profile_visible:user.profile_visible})});}catch(e){}
+}
+// ---- Quick sheet helper ----
+function showQuickSheet(html){
+  var bd=document.getElementById('bdQuickSheet');
+  if(!bd){
+    bd=document.createElement('div');bd.id='bdQuickSheet';
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center';
+    bd.onclick=function(e){if(e.target===bd)closeQuickSheet();};
+    var inner=document.createElement('div');
+    inner.id='bdQuickSheetInner';
+    inner.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;overflow-y:auto;animation:mi .28s cubic-bezier(.32,0,.67,0)';
+    bd.appendChild(inner);document.body.appendChild(bd);
+  }
+  var inner=document.getElementById('bdQuickSheetInner');
+  if(inner)inner.innerHTML=html;
+  bd.style.display='flex';document.body.style.overflow='hidden';
+}
+function closeQuickSheet(){
+  var bd=document.getElementById('bdQuickSheet');
+  if(bd){bd.style.display='none';document.body.style.overflow='';}
 }
 function openRemboursements(){
   closeSettings();
