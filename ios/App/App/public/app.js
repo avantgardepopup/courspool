@@ -3059,8 +3059,8 @@ function viewCoursCard(id){
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
-  var _mat2=findMatiere(c.subj||'');
-  var _rBg2=(_mat2&&_mat2.bgDark)?_mat2.bgDark:(c.bgDark||c.bg||'var(--or)');
+  var _mat2=findMatiere(c.subj||'');var _rIsDk2=document.documentElement.classList.contains('dk');
+  var _rBg2=_rIsDk2?((_mat2&&_mat2.bgDark)?_mat2.bgDark:(c.bgDark||'var(--or)')):((_mat2&&_mat2.color)?_mat2.color:(c.bg||'var(--or)'));
   var _rBanEl2=document.querySelector('#bdR .rban');if(_rBanEl2&&_rBg2){_rBanEl2.style.background=_rBg2;}
   var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
@@ -3107,9 +3107,9 @@ function openR(id){haptic(4);
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
-  // Coloriser le banner — toujours bgDark pour garantir lisibilité texte blanc
-  var _mat=findMatiere(c.subj||'');
-  var _rBg=(_mat&&_mat.bgDark)?_mat.bgDark:(c.bgDark||c.bg||'var(--or)');
+  // Coloriser le banner — couleur solide en light, dégradé foncé en dark
+  var _mat=findMatiere(c.subj||'');var _rIsDk=document.documentElement.classList.contains('dk');
+  var _rBg=_rIsDk?((_mat&&_mat.bgDark)?_mat.bgDark:(c.bgDark||'var(--or)')):((_mat&&_mat.color)?_mat.color:(c.bg||'var(--or)'));
   var _rBanEl=document.querySelector('#bdR .rban');if(_rBanEl&&_rBg){_rBanEl.style.background=_rBg;}
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
