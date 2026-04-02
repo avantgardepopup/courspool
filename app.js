@@ -2461,7 +2461,7 @@ function applyFilter(){
     } else if(actLoc){
       matchLoc=loc.includes(actLoc);
     }
-    var matchNiv=!actNiv||(c.niveau||'')=== actNiv;
+    var matchNiv=!actNiv||(c.niveau||'')===actNiv||(NIV_GROUPES[actNiv]&&NIV_GROUPES[actNiv].indexOf(c.niveau||'')>=0);
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     var matchMode=!actMode||(actMode==='visio'?_isVisio:!_isVisio);
     return matchFilter&&matchSearch&&matchLoc&&matchNiv&&matchMode;
@@ -6166,6 +6166,14 @@ function pickNiveau(el){
 // ============================================================
 // FILTRE NIVEAU + MODE
 // ============================================================
+var NIV_GROUPES={
+  'Primaire':['Maternelle','PS','MS','GS','CP','CE1','CE2','CM1','CM2','Primaire'],
+  'Collège':['6ème','5ème','4ème','3ème','Collège'],
+  'Lycée':['Seconde','Première','Terminale','Lycée'],
+  'Bac+1/2':['Bac+1/2','BTS / Prépa','BUT','Licence 1','Licence 2'],
+  'Bac+3/4':['Bac+3/4','Licence 3','Bachelor','Master 1'],
+  'Bac+5':['Bac+5','Bac+5 et +','Master 2','Doctorat','Grandes écoles'],
+};
 var actNiv = '';
 var actMode = '';
 
@@ -7078,18 +7086,59 @@ function stepRender(idx){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
-    var topM=['Maths','Physique','Chimie','SVT / Biologie','Anglais','Espagnol','Fran\u00e7ais','Histoire-G\u00e9o','Philosophie','Informatique','\u00c9conomie','Droit','Comptabilit\u00e9','Marketing','Architecture','Statistiques','Musique','Arts plastiques','Sport / EPS','Autre'];
-    html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    topM.forEach(function(m){
-      var mo=MATIERES.find(function(x){return x.label===m;})||{bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)'};
-      html+=sOpt('matiere',m,m,'',_sd.matiere===m,mo.bg,'padding:13px 16px');
+    var _isDkM=document.documentElement.classList.contains('dk');
+    var _matCats=[
+      {lbl:'Sciences exactes', items:['Maths','Statistiques','Physique','Chimie','SVT / Biologie']},
+      {lbl:'Numérique', items:['Informatique','Python','Data Science','Électronique','Design / UI']},
+      {lbl:'Langues', items:['Français','Anglais','Espagnol','Allemand','Italien','Arabe','Chinois','Japonais','Portugais']},
+      {lbl:'Lettres & Arts', items:['Écriture créative','Arts plastiques','Dessin','Musique','Chant','Photographie','Danse']},
+      {lbl:'Sciences humaines', items:['Philosophie','Histoire-Géo','Psychologie','Sociologie']},
+      {lbl:'Business & Droit', items:['Économie','Comptabilité','Finance','Marketing','Droit','Architecture']},
+      {lbl:'Sport & Bien-être', items:['Sport / EPS','Fitness','Yoga / Méditation','Arts martiaux']},
+      {lbl:'Créatif & Pratique', items:['Cuisine / Gastronomie','Jardinage','Bricolage','Couture / Tricot','Poterie / Céramique','Jeux de société']},
+      {lbl:'Autre', items:['Autre']},
+    ];
+    html+='<div style="display:flex;flex-direction:column;gap:20px;width:100%">';
+    _matCats.forEach(function(cat){
+      html+='<div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      cat.items.forEach(function(m){
+        var mo=MATIERES.find(function(x){return x.label===m;})||{color:'#9CA3AF',bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'};
+        var isSel=_sd.matiere===m;
+        var chipBg=isSel?(_isDkM?(mo.bgDark||mo.bg):mo.bg):'var(--wh)';
+        var chipBorder=isSel?mo.color:'var(--bdr)';
+        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="matiere" data-sv="'+escH(m)+'" onclick="_stepOptClick(this)" style="background:'+chipBg+';border:2px solid '+chipBorder+';border-radius:50px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
+          +'<div style="width:9px;height:9px;border-radius:50%;background:'+mo.color+';flex-shrink:0"></div>'
+          +'<span style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap">'+m+'</span>'
+          +'</div>';
+      });
+      html+='</div></div>';
     });
     html+='</div>';
 
   }else if(step.id==='niveau'){
-    var nivs=[['','Tous niveaux'],['Primaire','Primaire'],['Coll\u00e8ge','Coll\u00e8ge'],['Lyc\u00e9e','Lyc\u00e9e'],['Bac+1/2','Bac\u00a0+1/2'],['Bac+3/4','Bac\u00a0+3/4'],['Bac+5','Bac\u00a0+5+']];
-    html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    nivs.forEach(function(nv){html+=sOpt('niveau',nv[0],nv[1],'',_sd.niveau===nv[0],'var(--orp)','padding:12px 16px');});
+    var _nivCats=[
+      {lbl:'Maternelle', items:['PS','MS','GS']},
+      {lbl:'Primaire', items:['CP','CE1','CE2','CM1','CM2']},
+      {lbl:'Collège', items:['6ème','5ème','4ème','3ème']},
+      {lbl:'Lycée', items:['Seconde','Première','Terminale']},
+      {lbl:'Supérieur', items:['BTS / Prépa','Bac+1/2','Bac+3/4','Bac+5 et +']},
+      {lbl:'Général', items:['Tous niveaux','Adultes / Pro']},
+    ];
+    html+='<div style="display:flex;flex-direction:column;gap:20px;width:100%">';
+    _nivCats.forEach(function(cat){
+      html+='<div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      cat.items.forEach(function(nv){
+        var isSel=_sd.niveau===nv;
+        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="niveau" data-sv="'+escH(nv)+'" onclick="_stepOptClick(this)" style="background:'+(isSel?'var(--orp)':'var(--wh)')+';border:2px solid '+(isSel?'var(--or)':'var(--bdr)')+';border-radius:50px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
+          +'<span style="font-size:14px;font-weight:600;color:'+(isSel?'var(--or)':'var(--ink)')+';white-space:nowrap">'+nv+'</span>'
+          +'</div>';
+      });
+      html+='</div></div>';
+    });
     html+='</div>';
 
   }else if(step.id==='datetime'){
@@ -7944,9 +7993,6 @@ function openSettings(){
     // Apparition dans les recherches (default: on)
     var searchTog=g('searchVisibleToggle');
     if(searchTog)searchTog.classList.toggle('on',user.search_visible!==false);
-    // Visibilité du profil (default: on)
-    var profileTog=g('profileVisibleToggle');
-    if(profileTog)profileTog.classList.toggle('on',user.profile_visible!==false);
   }
   updateDarkBtn();
   haptic(6);
@@ -8003,12 +8049,7 @@ async function toggleSearchVisible(){
   var tog=g('searchVisibleToggle');if(tog)tog.classList.toggle('on',user.search_visible!==false);
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({search_visible:user.search_visible})});}catch(e){}
 }
-async function toggleProfileVisible(){
-  if(!user)return;
-  user.profile_visible=(user.profile_visible===false)?true:false;
-  var tog=g('profileVisibleToggle');if(tog)tog.classList.toggle('on',user.profile_visible!==false);
-  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({profile_visible:user.profile_visible})});}catch(e){}
-}
+
 // ---- Quick sheet helper ----
 function showQuickSheet(html){
   var bd=document.getElementById('bdQuickSheet');
