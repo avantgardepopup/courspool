@@ -6136,10 +6136,12 @@ function setNote(n){
 }
 
 function updateStars(n){
-  var stars=g('noteStars').querySelectorAll('span');
+  var stars=g('noteStars').querySelectorAll('svg');
   stars.forEach(function(s,i){
-    s.style.filter=i<n?'none':'grayscale(1)';
-    s.style.transform=i<n?'scale(1.15)':'scale(1)';
+    var on=i<n;
+    s.style.fill=on?'#F59E0B':'none';
+    s.style.stroke=on?'#F59E0B':'var(--bdr)';
+    s.style.transform=on?'scale(1.18)':'scale(1)';
   });
 }
 
