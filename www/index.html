@@ -730,15 +730,21 @@
             <div style="font-size:17px;font-weight:800">Période</div>
             <button onclick="closeDateFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
-          <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="dateFilterList">
-            <div class="niv-fchip on" onclick="setDateFilter('',this)">Toutes les dates</div>
-            <div class="niv-fchip" onclick="setDateFilter('semaine',this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" style="margin-right:8px;flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-              Cette semaine <span style="font-size:11px;color:var(--lite);font-weight:400;margin-left:6px">Lun → Dim</span>
+          <div id="dateFilterList">
+            <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin-bottom:12px">
+              <div class="niv-fchip on" onclick="setDateFilter('',this)">Toutes les dates</div>
+              <div class="niv-fchip" onclick="setDateFilter('semaine',this)">Cette semaine <span style="font-size:11px;color:var(--lite);font-weight:400;margin-left:6px">Lun → Dim</span></div>
+              <div class="niv-fchip" onclick="setDateFilter('mois',this)">Ce mois-ci</div>
             </div>
-            <div class="niv-fchip" onclick="setDateFilter('mois',this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14" style="margin-right:8px;flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-              Ce mois-ci <span style="font-size:11px;color:var(--lite);font-weight:400;margin-left:6px">Janvier → Décembre</span>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:8px">Jour précis</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+              <div class="niv-fchip" onclick="setDateFilter('lundi',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Lun</div>
+              <div class="niv-fchip" onclick="setDateFilter('mardi',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Mar</div>
+              <div class="niv-fchip" onclick="setDateFilter('mercredi',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Mer</div>
+              <div class="niv-fchip" onclick="setDateFilter('jeudi',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Jeu</div>
+              <div class="niv-fchip" onclick="setDateFilter('vendredi',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Ven</div>
+              <div class="niv-fchip" onclick="setDateFilter('samedi',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Sam</div>
+              <div class="niv-fchip" onclick="setDateFilter('dimanche',this)" style="border-radius:12px;text-align:center;padding:11px 4px;font-size:13px">Dim</div>
             </div>
           </div>
           <button onclick="resetFilters();closeDateFilter()" style="width:100%;margin-top:16px;background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:11px 0;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--lite);cursor:pointer">Réinitialiser tous les filtres</button>

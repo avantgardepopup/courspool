@@ -2547,17 +2547,22 @@ function applyFilter(){
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     var matchMode=!actMode||(actMode==='visio'?_isVisio:!_isVisio);
     var matchDate=true;
-    if(actDate&&c.dt_iso){
-      var _now=new Date(),_dt=new Date(c.dt_iso);
-      if(actDate==='semaine'){
-        var _day=_now.getDay(),_diff=_day===0?-6:1-_day;
-        var _wS=new Date(_now);_wS.setHours(0,0,0,0);_wS.setDate(_now.getDate()+_diff);
-        var _wE=new Date(_wS);_wE.setDate(_wS.getDate()+7);
-        matchDate=_dt>=_wS&&_dt<_wE;
-      }else if(actDate==='mois'){
-        matchDate=_dt.getFullYear()===_now.getFullYear()&&_dt.getMonth()===_now.getMonth();
-      }
-    }else if(actDate){matchDate=false;}
+    if(actDate){
+      var _DAY_MAP={lundi:1,mardi:2,mercredi:3,jeudi:4,vendredi:5,samedi:6,dimanche:0};
+      if(c.dt_iso){
+        var _now=new Date(),_dt=new Date(c.dt_iso);
+        if(actDate==='semaine'){
+          var _d=_now.getDay(),_diff=_d===0?-6:1-_d;
+          var _wS=new Date(_now);_wS.setHours(0,0,0,0);_wS.setDate(_now.getDate()+_diff);
+          var _wE=new Date(_wS);_wE.setDate(_wS.getDate()+7);
+          matchDate=_dt>=_wS&&_dt<_wE;
+        }else if(actDate==='mois'){
+          matchDate=_dt.getFullYear()===_now.getFullYear()&&_dt.getMonth()===_now.getMonth();
+        }else if(actDate in _DAY_MAP){
+          matchDate=_dt.getDay()===_DAY_MAP[actDate];
+        }
+      }else{matchDate=false;}
+    }
     return matchFilter&&matchSearch&&matchLoc&&matchNiv&&matchMode&&matchDate;
   });
   updateResetBtn();
@@ -6608,7 +6613,9 @@ function setDateFilter(date,el){
   actDate=date;
   document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   if(el)el.classList.add('on');
-  var labels={'':'Période','semaine':'Cette semaine','mois':'Ce mois'};
+  var labels={'':'Période','semaine':'Cette semaine','mois':'Ce mois',
+    'lundi':'Lundi','mardi':'Mardi','mercredi':'Mercredi','jeudi':'Jeudi',
+    'vendredi':'Vendredi','samedi':'Samedi','dimanche':'Dimanche'};
   var lbl=g('pillDateLabel');if(lbl)lbl.textContent=labels[date]||'Période';
   var pill=g('pillDate');if(pill)pill.classList.toggle('on',!!date);
   closeDateFilter();
