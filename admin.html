@@ -529,9 +529,30 @@ tr:hover td{background:#FAFAF9;}
         <div class="info-grid" style="margin-top:8px">
           <div class="info-item"><label>CNI uploadée</label><span id="modalCniStatus">—</span></div>
         </div>
-        <div id="modalCniBox" style="margin-bottom:12px;background:var(--bg);border-radius:12px;padding:16px;text-align:center;color:var(--lite);font-size:13px"></div>
-        <div id="modalDiplomeBox" style="margin-bottom:12px;background:var(--bg);border-radius:12px;padding:16px;color:var(--lite);font-size:13px"></div>
-        <div id="modalCasierBox" style="margin-bottom:16px;background:var(--bg);border-radius:12px;padding:16px;color:var(--lite);font-size:13px"></div>
+        <!-- Tiroir CNI -->
+        <div style="margin-bottom:8px;border:1.5px solid var(--bdr);border-radius:12px;overflow:hidden">
+          <div onclick="toggleDrawer('modalCniBox',this)" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--bg);user-select:none">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>CNI / Pièce d'identité <span id="modalCniStatus" style="font-size:11px;font-weight:500;color:var(--mid)">—</span></div>
+            <svg id="cniDrawerArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div id="modalCniBox" style="display:none;padding:14px"></div>
+        </div>
+        <!-- Tiroir Diplôme -->
+        <div style="margin-bottom:8px;border:1.5px solid var(--bdr);border-radius:12px;overflow:hidden">
+          <div onclick="toggleDrawer('modalDiplomeBox',this)" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--bg);user-select:none">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Diplôme</div>
+            <svg id="diplomeDrawerArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div id="modalDiplomeBox" style="display:none;padding:14px"></div>
+        </div>
+        <!-- Tiroir Casier -->
+        <div style="margin-bottom:16px;border:1.5px solid var(--bdr);border-radius:12px;overflow:hidden">
+          <div onclick="toggleDrawer('modalCasierBox',this)" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;background:var(--bg);user-select:none">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Profil de confiance (casier)</div>
+            <svg id="casierDrawerArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div id="modalCasierBox" style="display:none;padding:14px"></div>
+        </div>
       </div>
       <!-- Champs ÉLÈVE -->
       <div id="modalEleveSection" style="display:none">
@@ -582,6 +603,24 @@ var API='https://devoted-achievement-production-fdfa.up.railway.app';
 var adminToken=null;
 var allProfs=[],allEleves=[],allCours=[],allRes=[];
 var profFilter='all';
+
+function toggleDrawer(id, headerEl){
+  var box=document.getElementById(id);
+  if(!box)return;
+  var open=box.style.display!=='none';
+  box.style.display=open?'none':'block';
+  // Rotation flèche
+  var arrow=headerEl&&headerEl.querySelector('svg:last-child');
+  if(arrow)arrow.style.transform=open?'':'rotate(180deg)';
+}
+function openDrawer(id){
+  var box=document.getElementById(id);
+  if(!box||box.style.display!=='none')return;
+  box.style.display='block';
+  var header=box.previousElementSibling;
+  var arrow=header&&header.querySelector('svg:last-child');
+  if(arrow)arrow.style.transform='rotate(180deg)';
+}
 
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
@@ -787,7 +826,7 @@ function renderProfs(filter,search){
     var cni=p.cni_uploaded?'<span class="badge green">CNI ✓</span>':'<span class="badge gray">Sans CNI</span>';
     var diplBadge=p.diplome_verifie?'<span class="badge green">Diplôme ✓</span>':p.diplome_uploaded?'<span class="badge" style="background:#FFFBEB;color:#B45309;border:1px solid #FDE68A">Diplôme ⏳</span>':'';
     var casierBadge=p.casier_verifie?'<span class="badge" style="background:#F0FDF4;color:#065F46;border:1px solid #6EE7B7">Casier ✓</span>':p.casier_uploaded?'<span class="badge" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0">Casier ⏳</span>':'';
-    return'<tr><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+' '+cni+' '+diplBadge+' '+casierBadge+'</td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="openProfModal(\''+p.id+'\')">Voir</button></td></tr>';
+    return'<tr style="cursor:pointer" onclick="openProfModal(\''+p.id+'\')" onmouseenter="this.querySelectorAll(\'td\').forEach(function(t){t.style.background=\'#FAFAF9\'})" onmouseleave="this.querySelectorAll(\'td\').forEach(function(t){t.style.background=\'\'})"><td><div class="user-cell">'+(p.photo_url?'<div class="avatar"><img src="'+p.photo_url+'" style="width:100%;height:100%;object-fit:cover"></div>':'<div class="avatar" style="background:linear-gradient(135deg,#FF8C55,#E04E10)">'+ini+'</div>')+'<div class="user-info"><div class="name">'+(p.prenom||'')+' '+(p.nom||'')+'</div><div class="email">'+(p.email||'')+'</div></div></div></td><td>'+statusBadge+' '+cni+' '+diplBadge+' '+casierBadge+'</td><td>'+(p.matieres||'—')+'</td><td>'+date+'</td><td><button class="btn btn-blue" onclick="event.stopPropagation();openProfModal(\''+p.id+'\')">Voir</button></td></tr>';
   }).join('');
 }
 function filterProfs(f,el){profFilter=f;document.querySelectorAll('#pageProfs .filter-btn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');renderProfs(f);}
@@ -956,12 +995,16 @@ function openProfModal(id){
   var _pnm=((p.prenom||'')+' '+(p.nom||'')).trim();
   var _msgBtn='<button class="btn btn-blue" onclick="openConvModal(\''+p.id+'\',\''+escHtml(_pnm)+'\')" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</button>';
   if(!p.verified&&p.statut_compte!=='bloqué'){
-    actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Valider</button><button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rejeter</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button>';
+    actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Valider</button><button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Rejeter</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button>'+_msgBtn;
   } else if(p.verified){
-    actions.innerHTML='<button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')">Révoquer</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button><button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;margin-top:8px;width:100%;justify-content:center">Supprimer le compte</button>';
+    actions.innerHTML='<button class="btn btn-red" onclick="verifyProf(\''+p.id+'\',\'reject\')">Révoquer</button><button class="btn" style="background:#1F2937;color:#fff" onclick="verifyProf(\''+p.id+'\',\'block\')">Bloquer</button>'+_msgBtn+'<button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="background:#FEF2F2;color:#EF4444;border:1px solid #FECACA;margin-top:8px;width:100%;justify-content:center">Supprimer le compte</button>';
   } else {
-    actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')">Débloquer</button><button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="margin-top:8px;width:100%;justify-content:center">Supprimer le compte</button>';
+    actions.innerHTML='<button class="btn btn-green" onclick="verifyProf(\''+p.id+'\',\'verify\')">Débloquer</button>'+_msgBtn+'<button class="btn btn-red" onclick="deleteUser(\''+p.id+'\',\''+((p.prenom||'')+' '+(p.nom||'')).trim()+'\')" style="margin-top:8px;width:100%;justify-content:center">Supprimer le compte</button>';
   }
+  // Auto-ouvrir les tiroirs avec documents en attente
+  if(p.cni_uploaded)openDrawer('modalCniBox');
+  if(p.diplome_uploaded&&!p.diplome_verifie)openDrawer('modalDiplomeBox');
+  if(p.casier_uploaded&&!p.casier_verifie)openDrawer('modalCasierBox');
   document.getElementById('modalProf').classList.add('on');
 }
 
