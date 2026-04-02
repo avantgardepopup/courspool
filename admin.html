@@ -1211,9 +1211,8 @@ async function openSupportMsg(id){
     +'<a href="mailto:'+c.email+'?subject=Re: '+encodeURIComponent(c.sujet||'Votre message CoursPool')+'" style="flex:1;background:var(--or);color:#fff;border-radius:12px;padding:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px">Répondre par email</a>'
     +'<button class="del-msg-btn" data-mid="'+id+'" style="background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;color:#EF4444">Supprimer</button>'
     +'</div>';
-  document.getElementById('modalActions').innerHTML = '';
   // Attacher le listener sur le bouton supprimer
-  var delBtn = document.querySelector('.del-msg-btn');
+  var delBtn = document.getElementById('modalBody').querySelector('.del-msg-btn');
   if(delBtn) delBtn.onclick = function(){deleteSupportMsg(this.dataset.mid);};
   document.getElementById('modalProf').classList.add('on');
 }
