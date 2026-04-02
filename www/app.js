@@ -6800,38 +6800,78 @@ function _renderNotifTypes(){
   if(!_pushSubscription){types.style.display='none';return;}
   var isProf=user&&user.role==='professeur';
   var prefs=_getNotifPrefs();
-  var BELL='<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>';
-  var MSG='<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>';
-  var CLOCK='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+  // SVG paths
+  var BELL ='<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>';
+  var MSG  ='<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>';
   var CHECK='<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
   var XCIRC='<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-  var STAR='<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>';
-  var items=isProf?[
-    {type:'reservations',icon:CHECK,  color:'#F97316',bg:'#FFF7ED',label:'Nouvelles réservations',sub:'Quand un élève réserve un de vos cours'},
-    {type:'messages',    icon:MSG,    color:'#3B82F6',bg:'#EFF6FF',label:'Messages',              sub:'Quand un élève vous envoie un message'},
-    {type:'rappels',     icon:CLOCK,  color:'#10B981',bg:'#ECFDF5',label:'Rappels de cours',      sub:'Avant le début de chacune de vos sessions'},
-    {type:'annulations', icon:XCIRC, color:'#EF4444',bg:'#FEF2F2',label:'Annulations',            sub:'Quand un élève annule sa réservation'},
-    {type:'avis',        icon:STAR,   color:'#F59E0B',bg:'#FFFBEB',label:'Avis et notations',     sub:'Quand un élève laisse un avis sur votre cours'}
-  ]:[
-    {type:'cours',    icon:BELL, color:'#F97316',bg:'#FFF7ED',label:'Nouveaux cours',    sub:'Quand un prof que vous suivez publie un cours'},
-    {type:'messages', icon:MSG,  color:'#3B82F6',bg:'#EFF6FF',label:'Messages',          sub:'Quand un prof vous répond dans la messagerie'},
-    {type:'rappels',  icon:CLOCK,color:'#10B981',bg:'#ECFDF5',label:'Rappels de cours',  sub:'Avant un cours que vous avez réservé'}
+  var STAR ='<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>';
+  var CLOCK24='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><text x="6" y="22" style="font-size:5px;font-weight:700;fill:currentColor;stroke:none">24h</text>';
+  var CLOCK1 ='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><text x="7.5" y="22" style="font-size:5px;font-weight:700;fill:currentColor;stroke:none">1h</text>';
+  var EURO ='<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>';
+  var USERS='<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>';
+  var FULL ='<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>';
+
+  // Groupes élève
+  var eleveGroups=[
+    {label:'Cours',items:[
+      {type:'cours_nouveau',   icon:BELL,  color:'#F97316',bg:'#FFF7ED',label:'Nouveaux cours',         sub:'Quand un prof suivi publie un cours'},
+      {type:'cours_place',     icon:FULL,  color:'#8B5CF6',bg:'#F5F3FF',label:'Place disponible',        sub:'Quand une place se libère sur un cours complet'}
+    ]},
+    {label:'Réservations',items:[
+      {type:'resa_confirmee',  icon:CHECK, color:'#10B981',bg:'#ECFDF5',label:'Confirmation de réservation',sub:'Dès que votre réservation est validée'},
+      {type:'resa_annulee',    icon:XCIRC,color:'#EF4444',bg:'#FEF2F2',label:'Cours annulé',             sub:'Quand le prof annule un cours auquel vous êtes inscrit'}
+    ]},
+    {label:'Rappels',items:[
+      {type:'rappel_24h',      icon:CLOCK24,color:'#10B981',bg:'#ECFDF5',label:'Rappel 24h avant',       sub:'La veille du cours réservé'},
+      {type:'rappel_1h',       icon:CLOCK1, color:'#10B981',bg:'#ECFDF5',label:'Rappel 1h avant',        sub:'Une heure avant le début du cours'}
+    ]},
+    {label:'Messages',items:[
+      {type:'messages',        icon:MSG,   color:'#3B82F6',bg:'#EFF6FF',label:'Messages',                sub:'Quand un prof vous répond dans la messagerie'}
+    ]}
   ];
+
+  // Groupes prof
+  var profGroups=[
+    {label:'Réservations',items:[
+      {type:'resa_nouvelle',   icon:USERS, color:'#F97316',bg:'#FFF7ED',label:'Nouvelle réservation',    sub:'Quand un élève réserve un de vos cours'},
+      {type:'resa_annulee',    icon:XCIRC,color:'#EF4444',bg:'#FEF2F2',label:'Annulation',               sub:'Quand un élève annule sa réservation'},
+      {type:'cours_complet',   icon:FULL,  color:'#8B5CF6',bg:'#F5F3FF',label:'Cours complet',            sub:'Quand toutes les places de votre cours sont prises'},
+      {type:'paiement',        icon:EURO,  color:'#10B981',bg:'#ECFDF5',label:'Paiement reçu',            sub:'Confirmation de virement sur votre compte'}
+    ]},
+    {label:'Rappels',items:[
+      {type:'rappel_24h',      icon:CLOCK24,color:'#10B981',bg:'#ECFDF5',label:'Rappel 24h avant',       sub:'La veille de chacun de vos cours'},
+      {type:'rappel_1h',       icon:CLOCK1, color:'#10B981',bg:'#ECFDF5',label:'Rappel 1h avant',        sub:'Une heure avant le début du cours'}
+    ]},
+    {label:'Messages & avis',items:[
+      {type:'messages',        icon:MSG,   color:'#3B82F6',bg:'#EFF6FF',label:'Messages',                sub:'Quand un élève vous envoie un message'},
+      {type:'avis',            icon:STAR,  color:'#F59E0B',bg:'#FFFBEB',label:'Avis et notations',       sub:'Quand un élève laisse un avis sur votre cours'}
+    ]}
+  ];
+
+  var groups=isProf?profGroups:eleveGroups;
+  var lbl='<div style="font-size:10.5px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:14px 16px 6px">';
   var sep='<div style="height:1px;background:var(--bdr);margin:0 16px"></div>';
-  types.innerHTML=items.map(function(item,i){
-    var on=prefs[item.type]!==false;
-    return (i>0?sep:'')
-      +'<div class="settings-row" style="padding:14px 16px">'
-      +'<div style="width:36px;height:36px;border-radius:10px;background:'+item.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+item.color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">'+item.icon+'</svg>'
-      +'</div>'
-      +'<div style="flex:1;margin-left:12px">'
-      +'<div class="settings-label">'+item.label+'</div>'
-      +'<div class="settings-sub">'+item.sub+'</div>'
-      +'</div>'
-      +'<div class="ntog'+(on?' on':'')+'" onclick="toggleNotifPref(\''+item.type+'\',this)"></div>'
-      +'</div>';
-  }).join('');
+  var html='<div style="height:1px;background:var(--bdr);margin:0 16px"></div>';
+  groups.forEach(function(grp,gi){
+    if(gi>0)html+='<div style="height:8px"></div>';
+    html+=lbl+grp.label+'</div>';
+    grp.items.forEach(function(item,ii){
+      var on=prefs[item.type]!==false;
+      if(ii>0)html+=sep;
+      html+='<div class="settings-row" style="padding:13px 16px">'
+        +'<div style="width:34px;height:34px;border-radius:10px;background:'+item.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="'+item.color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">'+item.icon+'</svg>'
+        +'</div>'
+        +'<div style="flex:1;margin-left:12px">'
+        +'<div class="settings-label">'+item.label+'</div>'
+        +'<div class="settings-sub">'+item.sub+'</div>'
+        +'</div>'
+        +'<div class="ntog'+(on?' on':'')+'" onclick="toggleNotifPref(\''+item.type+'\',this)"></div>'
+        +'</div>';
+    });
+  });
+  types.innerHTML=html;
   types.style.display='block';
 }
 
