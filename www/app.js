@@ -5956,7 +5956,11 @@ async function submitPayment(){
   if(loader)loader.style.display='inline-block';
   if(btnTxt)btnTxt.textContent='Traitement…';
   try{
-    var result=await _stripeInstance.confirmPayment({elements:_payElements,redirect:'if_required'});
+    var result=await _stripeInstance.confirmPayment({
+      elements:_payElements,
+      redirect:'if_required',
+      confirmParams:{payment_method_data:{billing_details:{email:user&&user.em?user.em:''}}}
+    });
     if(result.error){
       toast('Paiement refusé',result.error.message,true);
       btn.disabled=false;btn.style.opacity='1';
