@@ -1697,6 +1697,7 @@ async function checkStripeReturn(){
     window.history.replaceState({},'',window.location.pathname);
 
     if(cancelled){
+      // Garder cp_stripe_pending pour le retry (retryPayment() l'utilise)
       setTimeout(function(){
         var p=document.getElementById('popupFailed');
         if(p)p.style.display='flex';
@@ -2002,7 +2003,7 @@ function buildAccLists(){
       var _phHtml=_ph?'<img src="'+esc(_ph)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<span style="font-size:9px;font-weight:700;color:#fff">'+esc(_ini)+'</span>';
       var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
       var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
-      return'<div onclick="openR(\''+c.id+'\')" style="background:var(--wh);border-radius:18px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid var(--bdr);margin:0 20px 12px;cursor:pointer;transition:opacity .15s;active:opacity:.8" onmousedown="this.style.opacity=\'.85\'" onmouseup="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'1\'">'
+      return'<div class="rrow" data-id="'+c.id+'" onclick="openR(\''+c.id+'\')" style="background:var(--wh);border-radius:18px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid var(--bdr);margin:0 20px 12px;cursor:pointer;transition:opacity .15s;active:opacity:.8" onmousedown="this.style.opacity=\'.85\'" onmouseup="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'1\'">'
         // Bande colorée + matière + titre
         +'<div style="background:'+_bg+';padding:14px 16px 12px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
@@ -2030,7 +2031,14 @@ function buildAccLists(){
   // Swipe sur les cours à venir
   setTimeout(function(){
     if(g('listR'))g('listR').querySelectorAll('.rrow').forEach(function(el){
-      initSwipeCancel(el,function(){toast('Réservation annulée','Contactez le professeur pour confirmation');});
+      initSwipeCancel(el,function(){
+        var cid=el.dataset.id;
+        var c=cid?C.find(function(x){return x.id==cid;}):null;
+        var profNm=c?(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'le professeur':'le professeur';
+        var profPhoto=c?(P[c.pr]&&P[c.pr].photo)||c.prof_photo||null:null;
+        if(!confirm('Pour annuler, contactez '+profNm+' — le remboursement est effectué par le professeur.\n\nOuvrir la messagerie ?'))return;
+        if(c&&c.pr)openMsg(profNm,c.pr,profPhoto);
+      });
     });
   },200);
   var lf=g('listF');
