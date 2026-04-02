@@ -439,6 +439,7 @@ function unfollowProf(pid){
   updateFavBadge();
 }
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
+var _mesViewMode='liste';
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
@@ -2545,7 +2546,19 @@ function applyFilter(){
     var matchNiv=!actNiv||(c.niveau||'')===actNiv||(NIV_GROUPES[actNiv]&&NIV_GROUPES[actNiv].indexOf(c.niveau||'')>=0);
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     var matchMode=!actMode||(actMode==='visio'?_isVisio:!_isVisio);
-    return matchFilter&&matchSearch&&matchLoc&&matchNiv&&matchMode;
+    var matchDate=true;
+    if(actDate&&c.dt_iso){
+      var _now=new Date(),_dt=new Date(c.dt_iso);
+      if(actDate==='semaine'){
+        var _day=_now.getDay(),_diff=_day===0?-6:1-_day;
+        var _wS=new Date(_now);_wS.setHours(0,0,0,0);_wS.setDate(_now.getDate()+_diff);
+        var _wE=new Date(_wS);_wE.setDate(_wS.getDate()+7);
+        matchDate=_dt>=_wS&&_dt<_wE;
+      }else if(actDate==='mois'){
+        matchDate=_dt.getFullYear()===_now.getFullYear()&&_dt.getMonth()===_now.getMonth();
+      }
+    }else if(actDate){matchDate=false;}
+    return matchFilter&&matchSearch&&matchLoc&&matchNiv&&matchMode&&matchDate;
   });
   updateResetBtn();
   renderPage();
@@ -6504,10 +6517,11 @@ var NIV_GROUPES={
 };
 var actNiv = '';
 var actMode = '';
+var actDate = '';
 
 function updateResetBtn(){
   var btn=g('pillReset');if(!btn)return;
-  var active=actF!=='tous'||!!actNiv||!!actMode||!!actLoc||geoMode;
+  var active=actF!=='tous'||!!actNiv||!!actMode||!!actLoc||geoMode||!!actDate;
   btn.style.display=active?'inline-flex':'none';
 }
 
@@ -6579,6 +6593,25 @@ function setModeFilter(mode, el){
   var lbl=g('pillModeLabel');if(lbl)lbl.textContent=labels[mode]||'Mode';
   var pill=g('pillMode');if(pill)pill.classList.toggle('on',!!mode);
   closeModeFilter();
+  applyFilter();
+}
+
+function openDateFilter(){
+  var el=g('bdDateFilter');if(!el)return;
+  if(el.parentNode!==document.body)document.body.appendChild(el);
+  el.style.display='flex';document.body.style.overflow='hidden';
+}
+function closeDateFilter(){
+  var el=g('bdDateFilter');if(el){el.style.display='none';document.body.style.overflow='';}
+}
+function setDateFilter(date,el){
+  actDate=date;
+  document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
+  if(el)el.classList.add('on');
+  var labels={'':'Période','semaine':'Cette semaine','mois':'Ce mois'};
+  var lbl=g('pillDateLabel');if(lbl)lbl.textContent=labels[date]||'Période';
+  var pill=g('pillDate');if(pill)pill.classList.toggle('on',!!date);
+  closeDateFilter();
   applyFilter();
 }
 
@@ -6800,7 +6833,12 @@ function sortCourses(arr){
 }
 
 function resetFilters(){
-  actF='tous';actLoc='';actNiv='';actMode='';
+  actF='tous';actLoc='';actNiv='';actMode='';actDate='';
+  var _dpill=g('pillDate'),_dlbl=g('pillDateLabel');
+  if(_dpill)_dpill.classList.remove('on');
+  if(_dlbl)_dlbl.textContent='Période';
+  document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
+  var _dFirst=document.querySelector('#dateFilterList .niv-fchip');if(_dFirst)_dFirst.classList.add('on');
   geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;
   var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
   if(_rlbl){_rlbl.textContent='Autour de moi';_rlbl.style.display='';}
@@ -8034,9 +8072,39 @@ function buildMesCours(){
   myCours.forEach(function(c){
     (_isCoursPass(c)?past:upcoming).push(c);
   });
-  var h='<div style="padding-bottom:120px">';
-  if(upcoming.length){h+='<div class="mes-section-title">A venir &middot; '+upcoming.length+'</div>';upcoming.forEach(function(c){h+=buildMesCard(c,false,isProf);});}
-  if(past.length){h+='<div class="mes-section-title">Pass\u00e9s &middot; '+past.length+'</div>';past.forEach(function(c){h+=buildMesCard(c,true,isProf);});}
+  // Toggle liste / agenda
+  var _mesView=typeof _mesViewMode!=='undefined'?_mesViewMode:'liste';
+  var toggleHtml='<div style="display:flex;gap:6px;padding:0 16px 14px;margin-top:4px">'
+    +'<button id="mesToggleListe" onclick="_mesViewMode=\'liste\';buildMesCours()" style="flex:1;padding:9px 0;border-radius:50px;border:1.5px solid '+((_mesView==='liste')?'#FF6B2B':'var(--bdr)')+';background:'+((_mesView==='liste')?'rgba(255,107,43,.08)':'var(--bg)')+';color:'+((_mesView==='liste')?'#FF6B2B':'var(--mid)')+';font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Liste</button>'
+    +'<button id="mesToggleAgenda" onclick="_mesViewMode=\'agenda\';buildMesCours()" style="flex:1;padding:9px 0;border-radius:50px;border:1.5px solid '+((_mesView==='agenda')?'#FF6B2B':'var(--bdr)')+';background:'+((_mesView==='agenda')?'rgba(255,107,43,.08)':'var(--bg)')+';color:'+((_mesView==='agenda')?'#FF6B2B':'var(--mid)')+';font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Agenda</button>'
+    +'</div>';
+  var h='<div style="padding-bottom:120px">'+toggleHtml;
+  if(_mesView==='agenda'){
+    // Vue agenda : cours à venir groupés par jour
+    var _byDay={};
+    upcoming.forEach(function(c){
+      var _d=c.dt_iso?new Date(c.dt_iso).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):(c.dt||'Date inconnue');
+      if(!_byDay[_d])_byDay[_d]=[];
+      _byDay[_d].push(c);
+    });
+    var _days=Object.keys(_byDay);
+    if(!_days.length){
+      h+='<div style="text-align:center;padding:40px 24px;color:var(--lite);font-size:14px">Aucun cours à venir</div>';
+    } else {
+      _days.forEach(function(day){
+        h+='<div style="padding:10px 16px 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--or)">'
+          +day.charAt(0).toUpperCase()+day.slice(1)+'</div>';
+        _byDay[day].forEach(function(c){h+=buildMesCard(c,false,isProf);});
+      });
+    }
+    if(past.length){
+      h+='<div class="mes-section-title" style="margin-top:8px">Passés &middot; '+past.length+'</div>';
+      past.forEach(function(c){h+=buildMesCard(c,true,isProf);});
+    }
+  } else {
+    if(upcoming.length){h+='<div class="mes-section-title">À venir &middot; '+upcoming.length+'</div>';upcoming.forEach(function(c){h+=buildMesCard(c,false,isProf);});}
+    if(past.length){h+='<div class="mes-section-title">Passés &middot; '+past.length+'</div>';past.forEach(function(c){h+=buildMesCard(c,true,isProf);});}
+  }
   h+='</div>';
   el.innerHTML=h;
   el.querySelectorAll('.mes-card').forEach(function(card){card.onclick=function(){openR(card.dataset.cid);};});
