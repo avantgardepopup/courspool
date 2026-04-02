@@ -130,7 +130,7 @@ function initSocket() {
         closeM('bdR');
       }
     }
-    if (typeof buildCards === 'function') buildCards();
+    if (typeof applyFilter === 'function') applyFilter();
     if (typeof buildAccLists === 'function') buildAccLists();
   });
 
@@ -140,7 +140,14 @@ function initSocket() {
     var c = C.find(function(x) { return x.id == data.cours_id; });
     if (!c) return;
     c.fl = data.places_prises;
-    if (typeof buildCards === 'function') buildCards();
+    // Mise à jour ciblée des cercles places sur la card (évite le re-render complet)
+    var cardEl = document.querySelector('[data-cours-id="' + data.cours_id + '"]');
+    if (cardEl) {
+      var circlesWrap = cardEl.querySelector('.card-circles-wrap');
+      if (circlesWrap && typeof buildPlacesCircles === 'function') {
+        circlesWrap.innerHTML = buildPlacesCircles(c.fl, c.sp);
+      }
+    }
     if (typeof curId !== 'undefined' && curId == data.cours_id) {
       var restant = c.sp - c.fl;
       var rPlaces = document.getElementById('rPlaces');

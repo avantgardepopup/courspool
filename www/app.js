@@ -2649,7 +2649,7 @@ function renderPage(){
     var isOwner=user&&c.pr===user.id;
     var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
     var _pNm=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'';
-    var _avCol=esc(c.prof_col);var _avIni=esc(c.prof_ini);
+    var _avCol=esc(c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)');var _avIni=esc(c.prof_ini);
     var profAv=_pPhoto
       ?'<img src="'+esc(_pPhoto)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'
       :('<span style="pointer-events:none">'+_avIni+'</span>');
@@ -2718,6 +2718,13 @@ function renderPage(){
   grid.appendChild(_frag);
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
+  // Scroll animation: observe each card-wrap for viewport entry
+  if(typeof IntersectionObserver!=='undefined'){
+    var _io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('card-in');_io.unobserve(e.target);}});
+    },{threshold:0.1,rootMargin:'0px 0px -20px 0px'});
+    grid.querySelectorAll('.card-wrap').forEach(function(w){_io.observe(w);});
+  }
 }
 
 function loadMore(){
