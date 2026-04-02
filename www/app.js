@@ -2649,10 +2649,12 @@ function renderPage(){
     var isOwner=user&&c.pr===user.id;
     var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
     var _pNm=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'';
-    var _avCol=esc(c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)');var _avIni=esc(c.prof_ini);
+    var _avCol=esc(c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)');var _avIni=esc(c.prof_ini||'?');
+    // Initiales toujours dans le DOM — visibles si pas de photo ou si l'image échoue
+    var _avIniSpan='<span style="pointer-events:none">'+_avIni+'</span>';
     var profAv=_pPhoto
-      ?'<img src="'+esc(_pPhoto)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'
-      :('<span style="pointer-events:none">'+_avIni+'</span>');
+      ?('<img src="'+esc(_pPhoto)+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'+_avIniSpan)
+      :_avIniSpan;
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     // Subject badge
     var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
@@ -2667,7 +2669,7 @@ function renderPage(){
       var miniSvgOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
       miniFollowBtn='<button class="card-follow-btn card-follow-mini" data-pid="'+c.pr+'" data-fol="'+(isFolP?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(isFolP?'Ne plus suivre':'Suivre')+'" style="background:'+(isFolP?'#FF6B35':'#fff')+'">'+(isFolP?miniSvgOn:miniSvgOff)+'</button>';
     }
-    var profAvDiv='<div class="card-prof-av" style="background:'+(_pPhoto?'none':_avCol)+';" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
+    var profAvDiv='<div class="card-prof-av" style="background:'+_avCol+';position:relative;" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
     // Schedule box
     var schedHtml='<div class="card-sched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(fmtDt(c.dt))+'</div>';
     // Location (présentiel only)
@@ -2689,7 +2691,7 @@ function renderPage(){
     var wrap=document.createElement('div');
     wrap.className='card-wrap'+(c.prive?' card-prive-wrap':'');
     wrap.dataset.id=c.id;wrap.dataset.t=c.t;wrap.dataset.coursId=c.id;
-    wrap.style.animationDelay=(i*.04)+'s';
+    // pas de delay inline — l'entrée est gérée par IntersectionObserver
     wrap.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
     wrap.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
     wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
@@ -2718,12 +2720,27 @@ function renderPage(){
   grid.appendChild(_frag);
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
-  // Scroll animation: observe each card-wrap for viewport entry
+  // Animation entrée : cards déjà visibles → apparaissent immédiatement (pas de flash)
+  // Cards sous le fold → masquées, animées quand elles entrent dans le viewport
   if(typeof IntersectionObserver!=='undefined'){
+    var _vH=window.innerHeight||document.documentElement.clientHeight;
     var _io=new IntersectionObserver(function(entries){
-      entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('card-in');_io.unobserve(e.target);}});
-    },{threshold:0.1,rootMargin:'0px 0px -20px 0px'});
-    grid.querySelectorAll('.card-wrap').forEach(function(w){_io.observe(w);});
+      entries.forEach(function(e){
+        if(!e.isIntersecting)return;
+        _io.unobserve(e.target);
+        e.target.classList.add('card-in');
+        e.target.addEventListener('animationend',function(){
+          e.target.classList.remove('card-in','card-below');
+        },{once:true});
+      });
+    },{threshold:0.05});
+    grid.querySelectorAll('.card-wrap').forEach(function(w){
+      // Seulement masquer les cards vraiment hors-écran (sous le fold)
+      if(w.getBoundingClientRect().top>=_vH-10){
+        w.classList.add('card-below');
+        _io.observe(w);
+      }
+    });
   }
 }
 

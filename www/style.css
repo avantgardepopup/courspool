@@ -2174,13 +2174,18 @@ html.dk .filter-pill-btn { background:var(--wh); }
   overflow: visible;
   padding-top: 20px;
   cursor: pointer;
-  transition: transform .26s cubic-bezier(.22,.61,.36,1), opacity .32s ease, translate .32s cubic-bezier(.22,.61,.36,1);
+  transition: transform .26s cubic-bezier(.22,.61,.36,1);
+}
+.card-wrap.card-below {
   opacity: 0;
-  translate: 0 18px;
+  transform: translateY(14px) scale(.985);
+}
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to   { opacity: 1; transform: none; }
 }
 .card-wrap.card-in {
-  opacity: 1;
-  translate: 0 0;
+  animation: cardSlideIn .36s cubic-bezier(.22,.61,.36,1) forwards;
 }
 @media(hover:hover)and(pointer:fine){
   .card-wrap:hover { transform: translateY(-6px) scale(1.008); }
