@@ -895,10 +895,9 @@ async function pcOAuthRoleNext(){
     _scheduleTokenRefresh();
     applyUser();
     loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
-    // Avancer vers les slides spécifiques au rôle
+    // Avancer vers la collecte d'âge (RGPD) avant les slides spécifiques au rôle
     _pcHistory.push('pcOAuthRole');
-    var nextSlide=(user.role==='professeur')?'pcPf0':'pcElA';
-    _pcShowSlide(nextSlide,false);
+    _pcShowSlide('pcAge',false);
   }catch(e){
     toast('Erreur','Problème de connexion');
     if(btn){btn.disabled=false;btn.textContent='Continuer';}
@@ -931,11 +930,10 @@ function showProfCompletion(){
   _pcIsOAuth=false;_oauthSession=null;
   _pcPour='moi';_pcNivEleve='';_pcNivEtudes='';_pcStatut='';_pcMatieres=[];_pcMode='';
   _pcHistory=[];
-  var first=(user&&user.role==='professeur')?'pcPf0':'pcElA';
-  _pcShowSlide(first,false);
+  _pcShowSlide('pcAge',false);
 }
 
-function _pcAllSlides(){return['pcOAuthRole','pcElA','pcElBmoi','pcElBenf','pcPf0','pcPfA','pcPfB','pcPfC'];}
+function _pcAllSlides(){return['pcOAuthRole','pcAge','pcElA','pcElBmoi','pcElBenf','pcPf0','pcPfA','pcPfB','pcPfC'];}
 
 function _pcProfSlides(){
   // pcPfA (niveau d'études) uniquement si statut = étudiant ou non encore sélectionné
@@ -946,11 +944,11 @@ function _pcProfSlides(){
 function _pcOrderedSlides(){
   if(_pcIsOAuth){
     if(!user)return['pcOAuthRole'];
-    if(user.role==='professeur')return['pcOAuthRole'].concat(_pcProfSlides());
-    return _pcPour==='enfant'?['pcOAuthRole','pcElA','pcElBenf']:['pcOAuthRole','pcElA','pcElBmoi'];
+    if(user.role==='professeur')return['pcOAuthRole','pcAge'].concat(_pcProfSlides());
+    return _pcPour==='enfant'?['pcOAuthRole','pcAge','pcElA','pcElBenf']:['pcOAuthRole','pcAge','pcElA','pcElBmoi'];
   }
-  if(user&&user.role==='professeur')return _pcProfSlides();
-  return _pcPour==='enfant'?['pcElA','pcElBenf']:['pcElA','pcElBmoi'];
+  if(user&&user.role==='professeur')return['pcAge'].concat(_pcProfSlides());
+  return _pcPour==='enfant'?['pcAge','pcElA','pcElBenf']:['pcAge','pcElA','pcElBmoi'];
 }
 
 function _pcShowSlide(id,isBack){
@@ -1005,6 +1003,71 @@ function pcBack(){
 }
 
 // ── Sélections ──
+// ── Âge / RGPD ──
+var _pcBirthYear=0;
+
+function pcAgeCheck(){
+  var yr=parseInt((g('pcBirthYear')&&g('pcBirthYear').value)||'0');
+  var curYear=new Date().getFullYear();
+  var age=curYear-yr;
+  var msg=g('pcAgeMsg'),consent=g('pcParentalConsent'),btn=g('pcAgeBtn');
+  if(!yr||yr<1920||yr>curYear-3){
+    if(msg){msg.style.display='none';}
+    if(consent)consent.style.display='none';
+    if(btn){btn.disabled=true;btn.style.opacity='.5';}
+    return;
+  }
+  var isProf=user&&user.role==='professeur';
+  // Bloquant
+  if(isProf&&age<18){
+    if(msg){msg.style.display='block';msg.style.cssText='display:block;background:#FEF2F2;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px;color:#EF4444'
+      ;msg.textContent='Vous devez avoir au moins 18 ans pour enseigner sur CoursPool.';}
+    if(consent)consent.style.display='none';
+    if(btn){btn.disabled=true;btn.style.opacity='.5';}
+    return;
+  }
+  if(!isProf&&age<13){
+    if(msg){msg.style.display='block';msg.style.cssText='display:block;background:#FEF2F2;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px;color:#EF4444'
+      ;msg.textContent='CoursPool est réservé aux utilisateurs de 13 ans et plus. Demandez à un parent de créer un compte pour vous.';}
+    if(consent)consent.style.display='none';
+    if(btn){btn.disabled=true;btn.style.opacity='.5';}
+    return;
+  }
+  // Consentement parental 13–14 ans
+  if(!isProf&&age>=13&&age<15){
+    if(msg){msg.style.display='block';msg.style.cssText='display:block;background:#FFF7ED;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px;color:#92400E'
+      ;msg.textContent='Les moins de 15 ans doivent avoir l\'accord de leur parent ou tuteur légal.';}
+    if(consent)consent.style.display='block';
+    var chk=g('pcConsentCheck');
+    if(btn){btn.disabled=!chk||!chk.checked;btn.style.opacity=(!chk||!chk.checked)?'.5':'1';}
+    return;
+  }
+  // Tout bon
+  if(msg)msg.style.display='none';
+  if(consent)consent.style.display='none';
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
+}
+
+function pcAgeNext(){
+  var yr=parseInt((g('pcBirthYear')&&g('pcBirthYear').value)||'0');
+  var age=new Date().getFullYear()-yr;
+  var isProf=user&&user.role==='professeur';
+  if(!yr||yr<1920||(isProf&&age<18)||(!isProf&&age<13))return;
+  if(!isProf&&age>=13&&age<15){
+    var chk=g('pcConsentCheck');
+    if(!chk||!chk.checked){toast('Consentement requis','Cochez la case pour continuer');return;}
+  }
+  _pcBirthYear=yr;
+  if(user){
+    user.birth_year=yr;
+    user.is_mineur=(age<18);
+    if(age>=13&&age<15)user.is_tuteur=false;
+  }
+  _pcHistory.push('pcAge');
+  var nextSlide=(user&&user.role==='professeur')?'pcPf0':'pcElA';
+  _pcShowSlide(nextSlide,false);
+}
+
 function pickPour(v){
   _pcPour=v;
   ['pcMoi','pcEnfant'].forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
@@ -1085,6 +1148,7 @@ function pickPcMode(v){
 async function saveProfCompletion(){
   var payload={};
   if(!user||!user.id||user.guest){_hideProfCompletion();return;}
+  if(_pcBirthYear>0)payload.birth_year=_pcBirthYear;
   if(user.role==='professeur'){
     if(_pcStatut)payload.statut=_pcStatut;
     if(_pcNivEtudes)payload.niveau_etudes=_pcNivEtudes;
@@ -8391,6 +8455,38 @@ function openSettings(){
   updateDarkBtn();
   setTimeout(renderNotifStatus,50);
   haptic(6);
+}
+
+async function deleteAccount(){
+  if(!user)return;
+  closeSettings();
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:20px 20px 8px;text-align:center">'
+    +'<div style="width:56px;height:56px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="26" height="26"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>'
+    +'</div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:10px">Supprimer mon compte</div>'
+    +'<div style="font-size:14px;color:var(--mid);line-height:1.6;margin-bottom:20px">Toutes vos données seront effacées définitivement :<br>profil, cours, réservations, messages.<br><strong style="color:#EF4444">Cette action est irréversible.</strong></div>'
+    +'</div>'
+    +'<div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">'
+    +'<button onclick="_confirmDeleteAccount()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Supprimer définitivement</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'</div>'
+    +'<div style="height:max(20px,env(safe-area-inset-bottom,20px))"></div>';
+  showQuickSheet(html);
+}
+
+async function _confirmDeleteAccount(){
+  closeQuickSheet();
+  if(!user)return;
+  try{
+    await fetch(API+'/users/'+user.id,{method:'DELETE',headers:apiH()});
+  }catch(e){}
+  try{localStorage.clear();sessionStorage.clear();}catch(e){}
+  user=null;
+  haptic(10);
+  toast('Compte supprimé','À bientôt');
+  setTimeout(function(){location.reload();},1500);
 }
 
 async function toggleTuteurMode(){

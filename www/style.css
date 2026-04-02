@@ -356,7 +356,7 @@ html.dk .lreg-back{background:#1C1917;border-color:var(--bdr);}
 .btnr,.pb,.lbtn,.btnadd,.lguest{-webkit-tap-highlight-color:transparent;}
 .bni:active{opacity:.6;transform:scale(.9);}
 .card-prive{background:linear-gradient(to bottom,#FFFBF5,var(--wh));box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07),0 0 0 1.5px #E8D9C4;}
-.card:hover{transform:translateY(-5px) scale(1.006);box-shadow:0 2px 6px rgba(0,0,0,.05),0 16px 48px rgba(0,0,0,.11);}
+@media(hover:hover)and(pointer:fine){.card:hover{transform:translateY(-5px) scale(1.006);box-shadow:0 2px 6px rgba(0,0,0,.05),0 16px 48px rgba(0,0,0,.11);}}
 @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 .ctop{height:84px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;}
@@ -1022,7 +1022,7 @@ body, input, textarea, button, select {
   transition: transform .28s cubic-bezier(.22,.61,.36,1), box-shadow .28s;
   overflow: hidden;
 }
-.card:hover  { transform: translateY(-6px) scale(1.008); box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 20px 56px rgba(0,0,0,.12); }
+@media(hover:hover)and(pointer:fine){.card:hover{transform:translateY(-6px) scale(1.008);box-shadow:0 2px 6px rgba(0,0,0,.04),0 20px 56px rgba(0,0,0,.12);}}
 .card:active { transform: translateY(-1px) scale(.995); transition-duration: .1s; }
 .ctop   { height: 96px; }
 .ctitle { font-size: 15px; font-weight: 700; letter-spacing: -.025em; }
@@ -2178,11 +2178,9 @@ html.dk .filter-pill-btn { background:var(--wh); }
   transition: transform .26s cubic-bezier(.22,.61,.36,1);
 }
 @keyframes cwFade { from { opacity: 0; } to { opacity: 1; } }
-.card-wrap:hover {
-  transform: translateY(-6px) scale(1.008);
-}
-.card-wrap:hover .card.card-new {
-  box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14);
+@media(hover:hover)and(pointer:fine){
+  .card-wrap:hover { transform: translateY(-6px) scale(1.008); }
+  .card-wrap:hover .card.card-new { box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14); }
 }
 .card-wrap:active,
 .card-wrap.tapped {

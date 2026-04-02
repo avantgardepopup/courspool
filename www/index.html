@@ -333,6 +333,29 @@
     </div>
   </div>
 
+  <!-- ═══ AGE : Année de naissance ═══ -->
+  <div id="pcAge" class="pc-slide" style="display:none">
+    <div class="lreg-slide-inner">
+      <h2 class="lscreen-title">Votre année de naissance</h2>
+      <p class="lscreen-sub">Requise pour votre sécurité et la conformité RGPD.</p>
+      <div class="lfield" style="margin-top:24px">
+        <label style="font-size:12px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.06em">Année</label>
+        <input id="pcBirthYear" type="number" placeholder="2000" min="1920" max="2025" inputmode="numeric" style="font-size:28px;text-align:center;letter-spacing:.08em;font-weight:700" oninput="pcAgeCheck()">
+      </div>
+      <!-- Message erreur / avertissement -->
+      <div id="pcAgeMsg" style="display:none;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px"></div>
+      <!-- Consentement parental (13–14 ans) -->
+      <div id="pcParentalConsent" style="display:none;background:#FFF7ED;border-radius:12px;padding:14px;font-size:13px;color:#92400E;line-height:1.6;margin-top:12px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input type="checkbox" id="pcConsentCheck" style="margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:var(--or)" onchange="pcAgeCheck()">
+          <span>Mon parent ou tuteur légal autorise mon inscription et accepte le traitement de mes données selon la <a href="https://courspool.vercel.app/privacy.html" target="_blank" style="color:var(--or)">politique de confidentialité</a>.</span>
+        </label>
+      </div>
+      <button class="lbtn" id="pcAgeBtn" onclick="pcAgeNext()" style="margin-top:20px;opacity:.5" disabled>Continuer</button>
+      <p style="text-align:center;font-size:11.5px;color:var(--lite);margin-top:12px;line-height:1.5;padding:0 8px">Ces données servent uniquement à votre sécurité et ne sont jamais partagées avec des tiers.</p>
+    </div>
+  </div>
+
   <!-- ═══ ELEVE SLIDE 1 : Pour qui ? ═══ -->
   <div id="pcElA" class="pc-slide">
     <div class="lreg-slide-inner">
@@ -2415,6 +2438,12 @@
     <div class="settings-group">
       <div class="settings-row" onclick="closeSettings();doLogout()" style="cursor:pointer">
         <div class="settings-label" style="color:#EF4444">Se déconnecter</div>
+      </div>
+      <div class="settings-row" onclick="deleteAccount()" style="cursor:pointer">
+        <div style="flex:1">
+          <div class="settings-label" style="color:#EF4444">Supprimer mon compte</div>
+          <div class="settings-sub">Efface toutes vos données — irréversible</div>
+        </div>
       </div>
     </div>
 
