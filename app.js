@@ -3378,6 +3378,15 @@ function openPr(pid){
   g('mpnm').textContent=displayNm;
   g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:'Professeur';
   g('mpbd').textContent=pCache.niveau||'';
+  // Ville / lieu
+  (function(){
+    var _vEl=g('mpVille'),_vTxt=g('mpVilleTxt');if(!_vEl||!_vTxt)return;
+    var _parts=[];
+    if(pCache.lieu&&pCache.lieu_visible)_parts.push(pCache.lieu);
+    if(pCache.ville&&pCache.ville_visible)_parts.push(pCache.ville);
+    if(_parts.length){_vTxt.textContent=_parts.join(' · ');_vEl.style.display='flex';}
+    else{_vEl.style.display='none';}
+  })();
   var vBadge=g('mpVerifiedBadge');if(vBadge)vBadge.style.display=(pCache.verified===true||pCache.verified==='true')?'block':'none';
   var dvBadge=g('mpDiplomeBadge');if(dvBadge)dvBadge.style.display=(pCache.dv===true||pCache.dv==='true')?'block':'none';
   var cvBadge=g('mpCasierBadge');if(cvBadge)cvBadge.style.display=(pCache.cv===true||pCache.cv==='true')?'block':'none';
@@ -3516,7 +3525,16 @@ function openPr(pid){
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;
     P[pid]._fullFetched=true;
-    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie','ville','ville_visible','lieu','lieu_visible'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    // Ville / lieu dans le hero
+    (function(){
+      var _vEl=g('mpVille'),_vTxt=g('mpVilleTxt');if(!_vEl||!_vTxt)return;
+      var _parts=[];
+      if(prof.lieu&&prof.lieu_visible)_parts.push(prof.lieu);
+      if(prof.ville&&prof.ville_visible)_parts.push(prof.ville);
+      if(_parts.length){_vTxt.textContent=_parts.join(' · ');_vEl.style.display='flex';}
+      else{_vEl.style.display='none';}
+    })();
     if(prof.verified!==undefined){var _vB=g('mpVerifiedBadge');if(_vB)_vB.style.display=(prof.verified===true||prof.verified==='true')?'block':'none';}
     if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;var _dvB=g('mpDiplomeBadge');if(_dvB)_dvB.style.display=(prof.diplome_verifie===true||prof.diplome_verifie==='true')?'block':'none';}
     if(prof.casier_verifie!==undefined){P[pid].cv=prof.casier_verifie;var _cvB=g('mpCasierBadge');if(_cvB)_cvB.style.display=(prof.casier_verifie===true||prof.casier_verifie==='true')?'block':'none';}
