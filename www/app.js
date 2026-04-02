@@ -446,14 +446,16 @@ var _searchTimer=null;
 var _autoRefreshTimer=null;
 var _accountCheckTimer=null;
 
+function _cSnapshot(){return C.map(function(c){return c.id+':'+c.fl+':'+c.tot;}).join('|');}
 function _startAutoRefresh(){
   _stopAutoRefresh();
   _autoRefreshTimer=setInterval(function(){
-    if(document.hidden)return; // pause si app en arrière-plan
+    if(document.hidden)return;
     if(!user||user.guest)return;
+    var _before=_cSnapshot();
     loadData(1,true).then(function(){
-      // Réappliquer le filtre actif sans changer la page ni réinitialiser le scroll
-      applyFilter();
+      // Ne re-rendre que si les données ont réellement changé
+      if(_cSnapshot()!==_before)applyFilter();
     }).catch(function(){});
   },30000);
 }
@@ -2647,7 +2649,10 @@ function renderPage(){
     var isOwner=user&&c.pr===user.id;
     var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
     var _pNm=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'';
-    var profAv=_pPhoto?'<img src="'+esc(_pPhoto)+'">':('<span style="pointer-events:none">'+esc(c.prof_ini)+'</span>');
+    var _avCol=esc(c.prof_col);var _avIni=esc(c.prof_ini);
+    var profAv=_pPhoto
+      ?'<img src="'+esc(_pPhoto)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'
+      :('<span style="pointer-events:none">'+_avIni+'</span>');
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     // Subject badge
     var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
@@ -2662,7 +2667,7 @@ function renderPage(){
       var miniSvgOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
       miniFollowBtn='<button class="card-follow-btn card-follow-mini" data-pid="'+c.pr+'" data-fol="'+(isFolP?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(isFolP?'Ne plus suivre':'Suivre')+'" style="background:'+(isFolP?'#FF6B35':'#fff')+'">'+(isFolP?miniSvgOn:miniSvgOff)+'</button>';
     }
-    var profAvDiv='<div class="card-prof-av" style="background:'+(_pPhoto?'none':esc(c.prof_col))+';" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
+    var profAvDiv='<div class="card-prof-av" style="background:'+(_pPhoto?'none':_avCol)+';" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
     // Schedule box
     var schedHtml='<div class="card-sched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(fmtDt(c.dt))+'</div>';
     // Location (présentiel only)
