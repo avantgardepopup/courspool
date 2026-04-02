@@ -699,24 +699,6 @@
         </div>
       </div>
 
-      <!-- Bottom sheet filtre ville -->
-      <div id="bdVilleFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeVilleFilter()">
-        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-            <div style="font-size:17px;font-weight:800">Ville ou arrondissement</div>
-            <button onclick="closeVilleFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
-          </div>
-          <div style="position:relative">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input id="villeFilterInput" type="text" placeholder="Ex : Paris 5e, Lyon 3e, Marseille…" autocomplete="off" style="width:100%;border:2px solid var(--bdr);border-radius:14px;padding:13px 16px 13px 40px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'" onkeydown="if(event.key==='Enter')applyVilleFilter()">
-          </div>
-          <div style="display:flex;gap:10px;margin-top:16px">
-            <button onclick="clearVilleFilter()" style="flex:1;background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:12px;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Effacer</button>
-            <button onclick="applyVilleFilter()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Appliquer</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Bottom sheet distance géoloc -->
       <div id="bdDistFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeDistFilter()">
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
@@ -1125,8 +1107,16 @@
               <input id="pfVille" type="text" placeholder="Paris…" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:160px">
             </div>
             <div class="pref-row" style="cursor:default;padding:10px 16px;min-height:unset;background:var(--bg)">
-              <span style="flex:1;font-size:13px;color:var(--lite)">Visible sur mon profil public</span>
+              <span style="flex:1;font-size:13px;color:var(--lite)">Ville visible sur mon profil public</span>
               <div class="ntog" id="pfVilleVisible" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="pref-row">
+              <span class="pref-label" id="pfLieuLabel">Établissement</span>
+              <input id="pfLieu" type="text" placeholder="—" style="border:none;font-family:inherit;font-size:15px;text-align:right;outline:none;background:transparent;color:var(--mid);max-width:200px">
+            </div>
+            <div class="pref-row" style="cursor:default;padding:10px 16px;min-height:unset;background:var(--bg)">
+              <span style="flex:1;font-size:13px;color:var(--lite)" id="pfLieuVisLabel">Établissement visible sur mon profil</span>
+              <div class="ntog" id="pfLieuVisible" onclick="this.classList.toggle('on')"></div>
             </div>
             <div class="pref-row" style="cursor:default">
               <span class="pref-label">Rôle</span>

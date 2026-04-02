@@ -311,7 +311,8 @@ html.dk .lreg-back{background:#1C1917;border-color:var(--bdr);}
 .ptr-spinner{width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--or);border-radius:50%;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .ptr-spinner.spinning{animation:spin .7s linear infinite;}
-.locbar{background:var(--wh);border-radius:16px;border:1.5px solid var(--bdr);padding:11px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .18s,box-shadow .18s;}
+.locbar{background:var(--wh);border-radius:16px;border:1.5px solid var(--bdr);padding:11px 14px;display:none;align-items:center;gap:8px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .18s,box-shadow .18s;}
+.locbar.open{display:flex;}
 .locbar:focus-within{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,107,43,.08);}
 .locbar>svg{width:16px;height:16px;color:var(--or);flex-shrink:0;}
 .locbar input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;min-width:0;background:transparent;color:var(--ink);}
@@ -2163,10 +2164,11 @@ html.dk .filter-pill-btn { background:var(--wh); }
   position: relative;
   overflow: visible;
   padding-top: 20px;
-  animation: fu .35s ease both;
+  animation: cwFade .3s ease both;
   cursor: pointer;
   transition: transform .26s cubic-bezier(.22,.61,.36,1);
 }
+@keyframes cwFade { from { opacity: 0; } to { opacity: 1; } }
 .card-wrap:hover {
   transform: translateY(-6px) scale(1.008);
 }
@@ -2232,7 +2234,7 @@ html.dk .card.card-new {
   white-space: nowrap;
   pointer-events: none;
 }
-html.dk .card-badge-mode-new { background: rgba(255,255,255,.15); }
+html.dk .card-badge-mode-new { background: #22223A; }
 .card-prof-av {
   position: absolute;
   top: 0; right: 14px;
@@ -2276,7 +2278,7 @@ html.dk .card-badge-mode-new { background: rgba(255,255,255,.15); }
 .card-follow-mini:active { transform: scale(.82) !important; }
 .card-body-new { padding: 44px 16px 14px; }
 .card-title-new {
-  font-size: 15.5px;
+  font-size: 16.5px;
   font-weight: 800;
   line-height: 1.3;
   letter-spacing: -.025em;
@@ -2285,7 +2287,7 @@ html.dk .card-badge-mode-new { background: rgba(255,255,255,.15); }
   padding-right: 70px;
 }
 .card-desc-preview {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 400;
   color: var(--lite);
   line-height: 1.45;
@@ -2314,7 +2316,7 @@ html.dk .card-sched { background: rgba(255,107,43,.08); border-color: rgba(255,1
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--lite);
   margin-bottom: 6px;
   margin-top: 2px;
