@@ -639,6 +639,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
             <span id="pillModeLabel">Mode</span>
           </button>
+          <button class="filter-pill-btn" id="pillVille" onclick="openVilleFilter()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span id="pillVilleLabel">Ville</span>
+          </button>
           <button class="filter-pill-btn" id="pillReset" onclick="resetFilters()" style="display:none;color:var(--or);border-color:rgba(255,107,43,.35)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             Effacer
@@ -692,6 +696,24 @@
             </div>
           </div>
           <button onclick="resetFilters();closeModeFilter()" style="width:100%;margin-top:16px;background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:11px 0;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--lite);cursor:pointer">Réinitialiser tous les filtres</button>
+        </div>
+      </div>
+
+      <!-- Bottom sheet filtre ville -->
+      <div id="bdVilleFilter" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:400;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeVilleFilter()">
+        <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div style="font-size:17px;font-weight:800">Ville ou arrondissement</div>
+            <button onclick="closeVilleFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+          </div>
+          <div style="position:relative">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input id="villeFilterInput" type="text" placeholder="Ex : Paris 5e, Lyon 3e, Marseille…" autocomplete="off" style="width:100%;border:2px solid var(--bdr);border-radius:14px;padding:13px 16px 13px 40px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;box-sizing:border-box;transition:border-color .2s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'" onkeydown="if(event.key==='Enter')applyVilleFilter()">
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button onclick="clearVilleFilter()" style="flex:1;background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:12px;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Effacer</button>
+            <button onclick="applyVilleFilter()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">Appliquer</button>
+          </div>
         </div>
       </div>
 
@@ -839,9 +861,9 @@
         </button>
       </div>
       <div id="msgMessages"></div>
-      <div id="msgSafetyBanner" style="padding:8px 16px 0">
-        <div style="background:var(--bg);border-radius:10px;padding:9px 12px;font-size:11px;color:var(--lite);line-height:1.5;text-align:center">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="vertical-align:-1px;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Pour la sécurité des utilisateurs, les messages peuvent être vérifiés en cas de signalement. Ne partagez pas de coordonnées personnelles hors de la plateforme.
+      <div id="msgSafetyBanner">
+        <div style="background:var(--bg);border-radius:10px;padding:8px 12px;font-size:11px;color:var(--lite);line-height:1.5;text-align:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="vertical-align:-1px;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Pour la sécurité des utilisateurs, les messages peuvent être vérifiés en cas de signalement.
         </div>
       </div>
       <div id="msgInputBar">
@@ -886,8 +908,8 @@
 
           <!-- Mes cours -->
           <div class="acc-card" onclick="switchATab('R',document.getElementById('aTabR'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:#FFF4EE;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes cours</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Réservations</div>
@@ -895,8 +917,8 @@
 
           <!-- Suivis -->
           <div class="acc-card" onclick="switchATab('F',document.getElementById('aTabF'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:#FFF0F0;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Suivis</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Professeurs</div>
@@ -904,8 +926,8 @@
 
           <!-- Historique -->
           <div class="acc-card" onclick="switchATab('H',document.getElementById('aTabH'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:#F0F9FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Historique</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Cours passés</div>
@@ -913,8 +935,8 @@
 
           <!-- Profil -->
           <div class="acc-card" onclick="switchATab('P',document.getElementById('aTabP'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mon profil</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Infos &amp; réglages</div>
@@ -922,8 +944,8 @@
 
           <!-- Revenus (prof seulement) -->
           <div class="acc-card" id="accCardRev" onclick="switchATab('Rev',document.getElementById('aTabRev'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Revenus</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Paiements reçus</div>
@@ -931,8 +953,8 @@
 
           <!-- Paramètres -->
           <div class="acc-card" id="accCardParams" onclick="openSettings()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Paramètres</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Notifications, CGU…</div>
@@ -1196,6 +1218,15 @@
             </div>
           </div>
 
+          <!-- Séparateur section Vérification -->
+          <div id="verifSectionLabel" style="display:none">
+            <div style="display:flex;align-items:center;gap:10px;padding:20px 4px 0">
+              <div style="flex:1;height:1px;background:var(--bdr)"></div>
+              <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Vérification</div>
+              <div style="flex:1;height:1px;background:var(--bdr)"></div>
+            </div>
+          </div>
+
           <!-- Statut vérification (profs uniquement) -->
           <div id="verifStatusBlock" style="display:none;padding:4px 0 4px"></div>
 
@@ -1237,7 +1268,7 @@
   <div class="modal">
     <div class="mhd"><div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Réservation</div><div style="font-size:17px;font-weight:800" id="rTit"></div></div><button class="mcl" onclick="closeR()">✕</button></div>
     <div class="mbd">
-      <div class="rban"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;position:relative;z-index:1"><div id="rProfAv" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:700;color:#fff" id="rProfNm"></div><div style="font-size:11px;opacity:.75;color:#fff" id="rSbj"></div></div></div><div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div><div style="font-size:12px;opacity:.75;margin-top:4px;position:relative;z-index:1" id="rLc"></div></div>
+      <div class="rban"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;position:relative;z-index:1"><div id="rProfAv" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0"></div><div><div style="font-size:13px;font-weight:700;color:#fff" id="rProfNm"></div><div style="font-size:11px;opacity:.75;color:#fff" id="rSbj"></div></div></div><div style="font-size:15px;font-weight:700;position:relative;z-index:1" id="rDt"></div><div style="font-size:12px;opacity:.75;margin-top:4px;position:relative;z-index:1" id="rLc"></div><div id="rNiv" style="display:none;margin-top:8px;position:relative;z-index:1"><span style="display:inline-block;background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px)"></span></div></div>
       <div id="rDesc" style="display:none;font-size:13.5px;color:var(--mid);line-height:1.75;background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:16px"></div>
       <div style="font-size:13px;font-weight:700;margin-bottom:10px">Détail du prix</div>
       <div class="bdn">
@@ -2241,9 +2272,6 @@
     <div class="settings-section-lbl">Apparence</div>
     <div class="settings-group">
       <div class="settings-row" onclick="toggleDarkMode()" style="cursor:pointer">
-        <div class="settings-icon" style="background:#1A1714">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#A09890" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Mode sombre</div>
           <div class="settings-sub" id="darkModeSubLabel">Suit le système</div>
@@ -2256,9 +2284,6 @@
     <div class="settings-section-lbl">Assistance</div>
     <div class="settings-group">
       <div class="settings-row" id="settingsRmbRow" onclick="openRemboursements()" style="display:none">
-        <div class="settings-icon" style="background:#FEE2E2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Mes remboursements</div>
           <div class="settings-sub">Annulations &amp; retours</div>
@@ -2266,9 +2291,6 @@
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="shareApp()">
-        <div class="settings-icon" style="background:#EFF6FF">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Inviter un ami</div>
           <div class="settings-sub">Partager CoursPool</div>
@@ -2276,9 +2298,6 @@
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="closeSettings();openContact()">
-        <div class="settings-icon" style="background:var(--orp)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Nous contacter</div>
           <div class="settings-sub">Une question ? On répond vite</div>
@@ -2286,9 +2305,6 @@
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')">
-        <div class="settings-icon" style="background:#EFF6FF">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Confidentialité</div>
           <div class="settings-sub">Politique de confidentialité</div>
@@ -2296,9 +2312,6 @@
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')">
-        <div class="settings-icon" style="background:#F0FDF4">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">CGU</div>
           <div class="settings-sub">Conditions générales d'utilisation</div>
@@ -2313,9 +2326,6 @@
 
       <!-- 1. Adresse du cours -->
       <div class="settings-row" style="cursor:pointer" onclick="toggleAdresseAuto()">
-        <div class="settings-icon" style="background:var(--orp)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Adresse du cours</div>
           <div class="settings-sub">Partagée aux élèves inscrits après réservation</div>
@@ -2325,9 +2335,6 @@
 
       <!-- 2. Messages entrants -->
       <div class="settings-row" style="cursor:pointer" onclick="openMsgContactSheet()">
-        <div class="settings-icon" style="background:var(--orp)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Messages entrants</div>
           <div class="settings-sub" id="settingsMsgContactSub">Tous les élèves</div>
@@ -2337,26 +2344,11 @@
 
       <!-- 3. Visibilité dans Explorer -->
       <div class="settings-row" style="cursor:pointer" onclick="toggleSearchVisible()">
-        <div class="settings-icon" style="background:var(--bg)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Visibilité dans Explorer</div>
           <div class="settings-sub">Votre profil est proposé aux élèves dans les recherches</div>
         </div>
         <div class="ntog" id="searchVisibleToggle"></div>
-      </div>
-
-      <!-- 4. Accès au profil -->
-      <div class="settings-row" style="cursor:pointer" onclick="toggleProfileVisible()">
-        <div class="settings-icon" style="background:var(--bg)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <div style="flex:1">
-          <div class="settings-label">Accès au profil</div>
-          <div class="settings-sub">Visible par tous — désactiver pour limiter aux liens directs</div>
-        </div>
-        <div class="ntog" id="profileVisibleToggle"></div>
       </div>
 
     </div>
@@ -2365,9 +2357,6 @@
     <div class="settings-section-lbl">Permissions</div>
     <div class="settings-group">
       <div class="settings-row" onclick="openAppSettings()" style="cursor:pointer">
-        <div class="settings-icon" style="background:#F0FDF4">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
         <div style="flex:1">
           <div class="settings-label">Localisation</div>
           <div class="settings-sub">Ouvrir les réglages de l'app</div>
@@ -2380,9 +2369,6 @@
     <div class="settings-section-lbl">Compte</div>
     <div class="settings-group">
       <div class="settings-row" onclick="closeSettings();doLogout()" style="cursor:pointer">
-        <div class="settings-icon" style="background:#FEF2F2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </div>
         <div class="settings-label" style="color:#EF4444">Se déconnecter</div>
       </div>
     </div>

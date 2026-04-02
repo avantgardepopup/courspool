@@ -185,11 +185,23 @@ function getCourseState(id){
 // Avatar — affiche une photo ou un rond avec initiales (évite la duplication)
 function setAvatar(el,photo,ini,col){
   if(!el)return;
+  var _col=col||'linear-gradient(135deg,#FF8C55,var(--ord))';
+  var _ini=ini||'?';
   if(photo){
     var _ex=el.querySelector('img');
     if(_ex&&_ex.src===photo){return;} // même URL déjà affichée → pas de re-flash
-    el.style.background='none';el.innerHTML='<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s" onload="this.style.opacity=\'1\'">';
-  }else{el.style.background=col||'linear-gradient(135deg,#FF8C55,var(--ord))';el.textContent=ini||'?';}
+    el.style.background='none';
+    var img=document.createElement('img');
+    img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .35s';
+    img.onload=function(){this.style.opacity='1';};
+    img.onerror=function(){
+      var p=this.parentNode;if(!p)return;
+      p.removeChild(this);
+      p.style.background=_col;p.textContent=_ini;
+    };
+    img.src=esc(photo);
+    el.innerHTML='';el.appendChild(img);
+  }else{el.style.background=_col;el.textContent=_ini;}
 }
 
 // Badge sera mis à jour après chargement des follows
@@ -750,7 +762,7 @@ async function _handleOAuthSignIn(session){
       var nm=p.nom||(meta.family_name||'');
       user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role,id:sbUser.id,
         ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
-        photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,
+        photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,statut_compte:p.statut_compte||'',
         statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
@@ -876,7 +888,7 @@ async function pcOAuthRoleNext(){
     var nm=p.nom||meta.family_name||'';
     user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role||_regRole,id:sbUser.id,
       ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
-      photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,
+      photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,statut_compte:p.statut_compte||'',
       statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
       token:session.access_token,refresh_token:session.refresh_token,token_exp:session.expires_at};
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
@@ -2449,7 +2461,7 @@ function applyFilter(){
     } else if(actLoc){
       matchLoc=loc.includes(actLoc);
     }
-    var matchNiv=!actNiv||(c.niveau||'')=== actNiv;
+    var matchNiv=!actNiv||(c.niveau||'')===actNiv||(NIV_GROUPES[actNiv]&&NIV_GROUPES[actNiv].indexOf(c.niveau||'')>=0);
     var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     var matchMode=!actMode||(actMode==='visio'?_isVisio:!_isVisio);
     return matchFilter&&matchSearch&&matchLoc&&matchNiv&&matchMode;
@@ -2636,62 +2648,119 @@ function loadMore(){
 // RÉFÉRENTIEL MATIÈRES — partagé formulaire + filtres
 // ============================================================
 var MATIERES = [
-  // --- Sciences exactes (bleu) ---
-  {label:'Maths',             key:'maths',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',  bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
-  {label:'Statistiques',      key:'stats',        color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',  bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
-  {label:'Physique',          key:'physique',     color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
-  {label:'Chimie',            key:'chimie',       color:'#6EE7B7', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',  bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
-  {label:'SVT / Biologie',    key:'svt',          color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0F4A24)'},
-  // --- Tech & Numérique (ambre/jaune) ---
-  {label:'Informatique',      key:'informatique', color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
-  {label:'Python',            key:'python',       color:'#FBBF24', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
-  {label:'Data Science',      key:'data',         color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#452A00)'},
-  {label:'Électronique',      key:'electronique', color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
-  {label:'Design / UI',       key:'design',       color:'#FB7185', bg:'linear-gradient(135deg,#FFF1F2,#FFE4E6)',  bgDark:'linear-gradient(135deg,#2D0A10,#4A1520)'},
-  // --- Langues (rouge/corail) ---
-  {label:'Anglais',           key:'anglais',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Espagnol',          key:'espagnol',     color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Allemand',          key:'allemand',     color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Italien',           key:'italien',      color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  {label:'Arabe',             key:'arabe',        color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Chinois',           key:'chinois',      color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Japonais',          key:'japonais',     color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Portugais',         key:'portugais',    color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  // --- Lettres & Arts (rose) ---
-  {label:'Français',          key:'francais',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Écriture créative', key:'ecriture',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Arts plastiques',   key:'arts',         color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Dessin',            key:'dessin',       color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)',  bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
-  {label:'Musique',           key:'musique',      color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
-  {label:'Chant',             key:'chant',        color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
-  {label:'Photographie',      key:'photo',        color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)',  bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
-  // --- Sciences humaines & sociales (violet/indigo) ---
-  {label:'Philosophie',       key:'philo',        color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
-  {label:'Histoire-Géo',      key:'histoire',     color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
-  {label:'Psychologie',       key:'psycho',       color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
-  {label:'Sociologie',        key:'socio',        color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
-  {label:'Architecture',      key:'architecture', color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',  bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
-  {label:'Jeux de société',   key:'jeux',         color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)',  bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
-  // --- Business & Finance (cyan/teal) ---
-  {label:'Économie',          key:'economie',     color:'#2DD4BF', bg:'linear-gradient(135deg,#F0FDFA,#CCFBF1)',  bgDark:'linear-gradient(135deg,#052825,#084035)'},
-  {label:'Comptabilité',      key:'compta',       color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',  bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
-  {label:'Finance',           key:'finance',      color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)',  bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
-  {label:'Marketing',         key:'marketing',    color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Droit',             key:'droit',        color:'#F87171', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)',  bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
-  // --- Sport & Bien-être (vert) ---
-  {label:'Sport / EPS',       key:'sport',        color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
-  {label:'Yoga / Méditation', key:'yoga',         color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)',  bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
-  {label:'Fitness',           key:'fitness',      color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
-  {label:'Arts martiaux',     key:'martial',      color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
-  {label:'Danse',             key:'danse',        color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  // --- Nature & Artisanat (vert foncé / ambre) ---
-  {label:'Jardinage',         key:'jardinage',    color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',  bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
-  {label:'Bricolage',         key:'bricolage',    color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
-  {label:'Cuisine / Gastronomie',key:'cuisine',   color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)',  bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
-  {label:'Couture / Tricot',  key:'couture',      color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)',  bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
-  {label:'Poterie / Céramique',key:'poterie',     color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)',  bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  // --- Sciences exactes ---
+  {label:'Maths',                  key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Statistiques',           key:'stats',          color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
+  {label:'Physique',               key:'physique',       color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'Chimie',                 key:'chimie',         color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'SVT / Biologie',         key:'svt',            color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Astronomie',             key:'astro',          color:'#4F46E5', bg:'linear-gradient(135deg,#EEF2FF,#C7D2FE)', bgDark:'linear-gradient(135deg,#0D0B35,#1A1760)'},
+  {label:'Géologie',               key:'geologie',       color:'#92400E', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Médecine / Santé',       key:'medecine',       color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Écologie',               key:'ecologie',       color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#BBFFD1)', bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
+  // --- Numérique & Tech ---
+  {label:'Informatique',           key:'informatique',   color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Python',                 key:'python',         color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'JavaScript',             key:'javascript',     color:'#EAB308', bg:'linear-gradient(135deg,#FEFCE8,#FEF08A)', bgDark:'linear-gradient(135deg,#2D2300,#3D3000)'},
+  {label:'Développement web',      key:'devweb',         color:'#8B5CF6', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Data Science',           key:'data',           color:'#F97316', bg:'linear-gradient(135deg,#FFF7ED,#FED7AA)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'IA & Machine Learning',  key:'ia',             color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#A5F3FC)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Électronique',           key:'electronique',   color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Design / UI',            key:'design',         color:'#EC4899', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Cybersécurité',          key:'cyber',          color:'#DC2626', bg:'linear-gradient(135deg,#FEF2F2,#FECACA)', bgDark:'linear-gradient(135deg,#2D0808,#4A1010)'},
+  {label:'No-code',                key:'nocode',         color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Blockchain',             key:'blockchain',     color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  // --- Langues ---
+  {label:'Français',               key:'francais',       color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Anglais',                key:'anglais',        color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Espagnol',               key:'espagnol',       color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Allemand',               key:'allemand',       color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Italien',                key:'italien',        color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Portugais',              key:'portugais',      color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Arabe',                  key:'arabe',          color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Chinois',                key:'chinois',        color:'#DC2626', bg:'linear-gradient(135deg,#FEF2F2,#FECACA)', bgDark:'linear-gradient(135deg,#2D0808,#4A1010)'},
+  {label:'Japonais',               key:'japonais',       color:'#FB7185', bg:'linear-gradient(135deg,#FFF1F2,#FFE4E6)', bgDark:'linear-gradient(135deg,#2D0A10,#4A1520)'},
+  {label:'Russe',                  key:'russe',          color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'Coréen',                 key:'coreen',         color:'#8B5CF6', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Hindi',                  key:'hindi',          color:'#F97316', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Latin',                  key:'latin',          color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Langue des signes',      key:'lsf',            color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#DDD6FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  // --- Lettres & Écriture ---
+  {label:'Écriture créative',      key:'ecriture',       color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Philosophie',            key:'philo',          color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  {label:'Théâtre',                key:'theatre',        color:'#EC4899', bg:'linear-gradient(135deg,#FDF2F8,#FBCFE8)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Cinéma / Vidéo',         key:'cinema',         color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#C7D2FE)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'BD / Manga',             key:'bd',             color:'#F97316', bg:'linear-gradient(135deg,#FFF7ED,#FED7AA)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  // --- Arts visuels ---
+  {label:'Dessin',                 key:'dessin',         color:'#E879F9', bg:'linear-gradient(135deg,#FDF4FF,#FAE8FF)', bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
+  {label:'Peinture',               key:'peinture',       color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Aquarelle',              key:'aquarelle',      color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
+  {label:'Arts plastiques',        key:'arts',           color:'#D946EF', bg:'linear-gradient(135deg,#FDF4FF,#F5D0FE)', bgDark:'linear-gradient(135deg,#2A0830,#3D1250)'},
+  {label:'Calligraphie',           key:'calligraphie',   color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Photographie',           key:'photo',          color:'#64748B', bg:'linear-gradient(135deg,#F8FAFC,#E2E8F0)', bgDark:'linear-gradient(135deg,#0F1720,#1A2535)'},
+  {label:'Illustration',           key:'illustration',   color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FBCFE8)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  // --- Musique ---
+  {label:'Musique',                key:'musique',        color:'#FCD34D', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1F00,#4A3300)'},
+  {label:'Piano',                  key:'piano',          color:'#475569', bg:'linear-gradient(135deg,#F8FAFC,#E2E8F0)', bgDark:'linear-gradient(135deg,#0F1720,#1A2535)'},
+  {label:'Guitare',                key:'guitare',        color:'#B45309', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2500)'},
+  {label:'Chant',                  key:'chant',          color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Batterie',               key:'batterie',       color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Violon',                 key:'violon',         color:'#92400E', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2000)'},
+  {label:'Saxophone',              key:'saxo',           color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  // --- Sciences humaines ---
+  {label:'Histoire-Géo',           key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Psychologie',            key:'psycho',         color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Sociologie',             key:'socio',          color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  {label:'Géographie',             key:'geographie',     color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Sciences politiques',    key:'sciencespol',    color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#C7D2FE)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'Anthropologie',          key:'anthropo',       color:'#B45309', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2500)'},
+  // --- Business & Droit ---
+  {label:'Économie',               key:'economie',       color:'#2DD4BF', bg:'linear-gradient(135deg,#F0FDFA,#CCFBF1)', bgDark:'linear-gradient(135deg,#052825,#084035)'},
+  {label:'Comptabilité',           key:'compta',         color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Finance',                key:'finance',        color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Marketing',              key:'marketing',      color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Droit',                  key:'droit',          color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Entrepreneuriat',        key:'entrepreneuriat',color:'#F97316', bg:'linear-gradient(135deg,#FFF7ED,#FED7AA)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Gestion de projet',      key:'gestion',        color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'Communication',          key:'communication',  color:'#EC4899', bg:'linear-gradient(135deg,#FDF2F8,#FBCFE8)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'RH & Recrutement',       key:'rh',             color:'#8B5CF6', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  {label:'Immobilier',             key:'immo',           color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Architecture',           key:'architecture',   color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  // --- Prépa & Concours ---
+  {label:'CPGE / Prépa',           key:'prepa',          color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Médecine (PASS/LAS)',     key:'pass',           color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Sciences Po',            key:'sciencespo',     color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
+  {label:'TOEFL / IELTS',          key:'toefl',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'GMAT / GRE',             key:'gmat',           color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  // --- Sport ---
+  {label:'Sport / EPS',            key:'sport',          color:'#4ADE80', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Fitness',                key:'fitness',        color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', bgDark:'linear-gradient(135deg,#052E16,#0A3D20)'},
+  {label:'Yoga / Méditation',      key:'yoga',           color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Arts martiaux',          key:'martial',        color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
+  {label:'Danse',                  key:'danse',          color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Natation',               key:'natation',       color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#A5F3FC)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
+  {label:'Tennis',                 key:'tennis',         color:'#84CC16', bg:'linear-gradient(135deg,#F7FEE7,#ECFCCB)', bgDark:'linear-gradient(135deg,#172805,#243D08)'},
+  {label:'Football',               key:'football',       color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
+  {label:'Basket',                 key:'basket',         color:'#F97316', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Running',                key:'running',        color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
+  {label:'Boxe / MMA',             key:'boxe',           color:'#DC2626', bg:'linear-gradient(135deg,#FEF2F2,#FECACA)', bgDark:'linear-gradient(135deg,#2D0808,#4A1010)'},
+  {label:'Golf',                   key:'golf',           color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#BBFFD1)', bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
+  // --- Bien-être ---
+  {label:'Nutrition / Diététique', key:'nutrition',      color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
+  {label:'Développement perso',    key:'devperso',       color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
+  // --- Cuisine & Artisanat ---
+  {label:'Cuisine / Gastronomie',  key:'cuisine',        color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
+  {label:'Pâtisserie',             key:'patisserie',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Jardinage',              key:'jardinage',      color:'#22C55E', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', bgDark:'linear-gradient(135deg,#052E16,#083D1A)'},
+  {label:'Bricolage',              key:'bricolage',      color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Couture / Tricot',       key:'couture',        color:'#EC4899', bg:'linear-gradient(135deg,#FDF2F8,#FBCFE8)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Broderie',               key:'broderie',       color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
+  {label:'Poterie / Céramique',    key:'poterie',        color:'#B45309', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2500)'},
+  // --- Jeux & Loisirs ---
+  {label:'Jeux de soci\u00e9t\u00e9', key:'jeux',       color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
+  {label:'\u00c9checs',            key:'echecs',         color:'#475569', bg:'linear-gradient(135deg,#F8FAFC,#E2E8F0)', bgDark:'linear-gradient(135deg,#0F1720,#1A2535)'},
   // --- Autre ---
-  {label:'Autre',             key:'autre',        color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',  bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
+  {label:'Autre',                  key:'autre',          color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)', bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
 
 // Fonction pour normaliser une chaîne
@@ -3041,6 +3110,7 @@ function openR(id){haptic(4);
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
   var rLcEl=g('rLc');if(rLcEl){rLcEl.textContent=_oIsVisio?'':c.lc;rLcEl.style.display=_oIsVisio?'none':'';}
+  var rNivEl=g('rNiv');if(rNivEl){if(c.niveau){rNivEl.style.display='block';var _ns=rNivEl.querySelector('span');if(_ns)_ns.textContent=c.niveau;}else{rNivEl.style.display='none';}}
   var rDescEl=g('rDesc');
   if(rDescEl){if(c.description){rDescEl.textContent=c.description;rDescEl.style.display='block';}else{rDescEl.style.display='none';}}
   g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
@@ -3848,13 +3918,11 @@ function openMsg(profNm,destId,avatar){
     avatar=P[destId].photo;
   }
   var av=g('msgConvAv');
-  if(avatar&&avatar!=='null'&&avatar!==''){
-    av.style.background='none';
-    av.innerHTML='<img src="'+safeUrl(avatar)+'" style="width:100%;height:100%;object-fit:cover">';
-  } else {
-    av.style.background='linear-gradient(135deg,#FF8C55,#E04E10)';
-    av.textContent=(profNm&&profNm[0])||'?';
-  }
+  var _pCache=P[destId]||{};
+  var _avIni=_pCache.i||(profNm?profNm.trim().split(/\s+/).slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase():'?')||'?';
+  var _avCol=_pCache.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var _avPhoto=(avatar&&avatar!=='null'&&avatar!=='')?avatar:(_pCache.photo||null);
+  setAvatar(av,_avPhoto,_avIni,_avCol);
   var _isPlaceholder=!profNm||profNm==='·\u200B·\u200B·'||profNm==='Contact';
   g('msgConvName').textContent=_isPlaceholder?'…':profNm;
   // Si nom inconnu, charger le profil pour mettre à jour la topbar
@@ -4191,6 +4259,11 @@ async function loadConversations(){
     }).join('');
     var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
     lm.innerHTML=_convHtml;
+    lm.querySelectorAll('.msg-row').forEach(function(r){
+      r.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
+      r.addEventListener('touchend',function(){this.classList.remove('tapped');});
+      r.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
+    });
     _convCache=_convHtml; // mémoriser pour affichage instantané au prochain onglet
     var badge=g('msgBadge');
     if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
@@ -4894,7 +4967,8 @@ async function checkFirstProfLogin(){
 function updateVerifStatusBlock(){
   var block=g('verifStatusBlock');
   if(!block)return;
-  if(!user||user.role!=='professeur'){block.style.display='none';return;}
+  var secLbl=g('verifSectionLabel');
+  if(!user||user.role!=='professeur'){block.style.display='none';if(secLbl)secLbl.style.display='none';return;}
   var status=getCniStatus();
   if(status==='none'){
     var html='<div style="background:var(--orp);border-radius:12px;padding:14px 16px">'
@@ -4905,8 +4979,8 @@ function updateVerifStatusBlock(){
       +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez votre pièce d\'identité pour activer votre compte et publier des cours.</div>'
       +'<button onclick="openCniSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer ma pièce d\'identité</button>'
       +'</div>';
-    block.style.display='block';
-    block.innerHTML=html;
+    block.style.display='block';block.innerHTML=html;
+    if(secLbl)secLbl.style.display='block';
     return;
   }
   var html='';
@@ -4942,8 +5016,8 @@ function updateVerifStatusBlock(){
       +(raison?'<div style="font-size:12px;color:#6B7280;line-height:1.5">'+raison+'</div>':'')
       +'</div>';
   }
-  block.style.display='block';
-  block.innerHTML=html;
+  block.style.display='block';block.innerHTML=html;
+  if(secLbl)secLbl.style.display='block';
 }
 
 
@@ -6155,6 +6229,14 @@ function pickNiveau(el){
 // ============================================================
 // FILTRE NIVEAU + MODE
 // ============================================================
+var NIV_GROUPES={
+  'Primaire':['Maternelle','PS','MS','GS','CP','CE1','CE2','CM1','CM2','Primaire'],
+  'Collège':['6ème','5ème','4ème','3ème','Collège'],
+  'Lycée':['Seconde','Première','Terminale','Lycée'],
+  'Bac+1/2':['Bac+1/2','BTS / Prépa','BUT','Licence 1','Licence 2'],
+  'Bac+3/4':['Bac+3/4','Licence 3','Bachelor','Master 1'],
+  'Bac+5':['Bac+5','Bac+5 et +','Master 2','Doctorat','Grandes écoles'],
+};
 var actNiv = '';
 var actMode = '';
 
@@ -6185,6 +6267,44 @@ function setNivFilter(niv, el){
   if(pill){pill.classList.toggle('on',!!niv);}
   closeNivFilter();
   applyFilter();
+}
+
+function openVilleFilter(){
+  var el=g('bdVilleFilter');
+  if(!el)return;
+  if(el.parentNode!==document.body)document.body.appendChild(el);
+  var inp=g('villeFilterInput');
+  if(inp){var lbl=g('pillVilleLabel');inp.value=(lbl&&lbl.textContent!=='Ville')?lbl.textContent:'';}
+  el.style.display='flex';
+  document.body.style.overflow='hidden';
+  setTimeout(function(){var inp=g('villeFilterInput');if(inp)inp.focus();},120);
+}
+function closeVilleFilter(){
+  var el=g('bdVilleFilter');
+  if(el){el.style.display='none';document.body.style.overflow='';}
+}
+function applyVilleFilter(){
+  var inp=g('villeFilterInput');
+  var val=inp?inp.value.trim():'';
+  actLoc=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=val||'Ville';
+  var pill=g('pillVille');if(pill)pill.classList.toggle('on',!!val);
+  var locInp=g('locInput');if(locInp)locInp.value=val;
+  var cb=g('locClearBtn');if(cb)cb.style.display=val?'block':'none';
+  updateResetBtn();
+  applyFilter();
+  closeVilleFilter();
+}
+function clearVilleFilter(){
+  var inp=g('villeFilterInput');if(inp)inp.value='';
+  actLoc='';
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent='Ville';
+  var pill=g('pillVille');if(pill)pill.classList.remove('on');
+  var locInp=g('locInput');if(locInp)locInp.value='';
+  var cb=g('locClearBtn');if(cb)cb.style.display='none';
+  updateResetBtn();
+  applyFilter();
+  closeVilleFilter();
 }
 
 function openModeFilter(){
@@ -6445,6 +6565,9 @@ function resetFilters(){
   var fm=document.querySelector('#modeFilterList .niv-fchip');if(fm)fm.classList.add('on');
   var lm=g('pillModeLabel');if(lm)lm.textContent='Mode';
   var pm=g('pillMode');if(pm)pm.classList.remove('on');
+  var lv=g('pillVilleLabel');if(lv)lv.textContent='Ville';
+  var pv=g('pillVille');if(pv)pv.classList.remove('on');
+  var vi=g('villeFilterInput');if(vi)vi.value='';
   var pr=g('pillReset');if(pr)pr.style.display='none';
   if(g('srch'))g('srch').value='';
   if(g('mobSearchInput'))g('mobSearchInput').value='';
@@ -6922,6 +7045,7 @@ function startAccountCheck(){
       }
       // Mettre à jour le statut si changé (ex: vérifié par admin)
       if(p.statut_compte!==user.statut_compte||p.verified!==user.verified||p.diplome_verifie!==user.diplome_verifie){
+        var _prevVerified=user.verified;
         user.statut_compte=p.statut_compte;
         user.verified=p.verified;
         user.can_retry_cni=p.can_retry_cni;
@@ -6934,8 +7058,8 @@ function startAccountCheck(){
         updateVerifBand();
         updateDiplomeStatusBlock();
         updateCasierStatusBlock();
-        // Notifier si compte maintenant vérifié
-        if(user.role==='professeur'&&(p.statut_compte==='verified'||p.verified)){
+        // Notifier uniquement si le compte vient d'être vérifié (pas déjà vérifié avant)
+        if(user.role==='professeur'&&!_prevVerified&&(p.statut_compte==='verified'||p.verified)){
           toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
           haptic([10,50,100,50,10]);
         } else if(user.role==='professeur'&&p.statut_compte==='rejeté'){
@@ -7067,28 +7191,80 @@ function stepRender(idx){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
-    var topM=['Maths','Physique','Chimie','SVT / Biologie','Anglais','Espagnol','Fran\u00e7ais','Histoire-G\u00e9o','Philosophie','Informatique','\u00c9conomie','Droit','Comptabilit\u00e9','Marketing','Architecture','Statistiques','Musique','Arts plastiques','Sport / EPS','Autre'];
-    html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    topM.forEach(function(m){
-      var mo=MATIERES.find(function(x){return x.label===m;})||{bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)'};
-      html+=sOpt('matiere',m,m,'',_sd.matiere===m,mo.bg,'padding:13px 16px');
+    var _isDkM=document.documentElement.classList.contains('dk');
+    var _matCats=[
+      {lbl:'Sciences exactes',   items:['Maths','Statistiques','Physique','Chimie','SVT / Biologie','Astronomie','G\u00e9ologie','M\u00e9decine / Sant\u00e9','\u00c9cologie']},
+      {lbl:'Num\u00e9rique & Tech', items:['Informatique','Python','JavaScript','D\u00e9veloppement web','Data Science','IA & Machine Learning','\u00c9lectronique','Design / UI','Cybers\u00e9curit\u00e9','No-code','Blockchain']},
+      {lbl:'Langues',            items:['Fran\u00e7ais','Anglais','Espagnol','Allemand','Italien','Portugais','Arabe','Chinois','Japonais','Russe','Cor\u00e9en','Hindi','Latin','Langue des signes']},
+      {lbl:'Lettres & \u00c9criture', items:['\u00c9criture cr\u00e9ative','Philosophie','Th\u00e9\u00e2tre','Cin\u00e9ma / Vid\u00e9o','BD / Manga']},
+      {lbl:'Arts visuels',       items:['Dessin','Peinture','Aquarelle','Arts plastiques','Illustration','Calligraphie','Photographie']},
+      {lbl:'Musique',            items:['Musique','Piano','Guitare','Chant','Batterie','Violon','Saxophone']},
+      {lbl:'Sciences humaines',  items:['Histoire-G\u00e9o','Psychologie','Sociologie','G\u00e9ographie','Sciences politiques','Anthropologie']},
+      {lbl:'Business & Droit',   items:['\u00c9conomie','Comptabilit\u00e9','Finance','Marketing','Droit','Entrepreneuriat','Gestion de projet','Communication','RH & Recrutement','Immobilier','Architecture']},
+      {lbl:'Pr\u00e9pa & Concours', items:['CPGE / Pr\u00e9pa','M\u00e9decine (PASS/LAS)','Sciences Po','TOEFL / IELTS','GMAT / GRE']},
+      {lbl:'Sport',              items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
+      {lbl:'Bien-\u00eatre',     items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso']},
+      {lbl:'Cuisine & Artisanat',items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique']},
+      {lbl:'Jeux & Loisirs',     items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
+      {lbl:'Autre',              items:['Autre']},
+    ];
+    html+='<div style="width:100%;margin-bottom:4px;position:relative">'
+      +'<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      +'<input id="stepMatSearch" type="text" placeholder="Rechercher une mati\u00e8re\u2026" style="width:100%;box-sizing:border-box;padding:11px 14px 11px 38px;border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none" oninput="_matSearchFilter(this.value)">'
+      +'</div>';
+    html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%">';
+    _matCats.forEach(function(cat){
+      html+='<div data-cat>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      cat.items.forEach(function(m){
+        var mo=MATIERES.find(function(x){return x.label===m;})||{color:'#9CA3AF',bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'};
+        var isSel=_sd.matiere===m;
+        var chipBg=isSel?(_isDkM?(mo.bgDark||mo.bg):mo.bg):'var(--wh)';
+        var chipBorder=isSel?mo.color:'var(--bdr)';
+        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="matiere" data-sv="'+escH(m)+'" onclick="_stepOptClick(this)" style="background:'+chipBg+';border:2px solid '+chipBorder+';border-radius:50px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
+          +'<div style="width:9px;height:9px;border-radius:50%;background:'+mo.color+';flex-shrink:0"></div>'
+          +'<span style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap">'+m+'</span>'
+          +'</div>';
+      });
+      html+='</div></div>';
     });
     html+='</div>';
 
   }else if(step.id==='niveau'){
-    var nivs=[['','Tous niveaux'],['Primaire','Primaire'],['Coll\u00e8ge','Coll\u00e8ge'],['Lyc\u00e9e','Lyc\u00e9e'],['Bac+1/2','Bac\u00a0+1/2'],['Bac+3/4','Bac\u00a0+3/4'],['Bac+5','Bac\u00a0+5+']];
-    html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    nivs.forEach(function(nv){html+=sOpt('niveau',nv[0],nv[1],'',_sd.niveau===nv[0],'var(--orp)','padding:12px 16px');});
+    var _nivCats=[
+      {lbl:'Primaire', items:['CP','CE1','CE2','CM1','CM2']},
+      {lbl:'Collège', items:['6ème','5ème','4ème','3ème']},
+      {lbl:'Lycée', items:['Seconde','Première','Terminale']},
+      {lbl:'Supérieur', items:['BTS / Prépa','Bac+1/2','Bac+3/4','Bac+5 et +']},
+      {lbl:'Général', items:['Tous niveaux','Adultes / Pro']},
+    ];
+    html+='<div style="display:flex;flex-direction:column;gap:20px;width:100%">';
+    _nivCats.forEach(function(cat){
+      html+='<div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      cat.items.forEach(function(nv){
+        var isSel=_sd.niveau===nv;
+        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="niveau" data-sv="'+escH(nv)+'" onclick="_stepOptClick(this)" style="background:'+(isSel?'var(--orp)':'var(--wh)')+';border:2px solid '+(isSel?'var(--or)':'var(--bdr)')+';border-radius:50px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
+          +'<span style="font-size:14px;font-weight:600;color:'+(isSel?'var(--or)':'var(--ink)')+';white-space:nowrap">'+nv+'</span>'
+          +'</div>';
+      });
+      html+='</div></div>';
+    });
     html+='</div>';
 
   }else if(step.id==='datetime'){
     var today=new Date().toISOString().split('T')[0];
-    var fi='width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:17px;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink)';
+    var _dtFi='width:100%;border:1.5px solid rgba(255,107,53,.3);border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .18s';
+    var _dtFiNeu='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .18s';
     var lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
-    html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
-      +'<div><label style="'+lbl+'">Date</label><input id="stepDate" style="'+fi+'" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div>'
-      +'<div><label style="'+lbl+'">Heure</label><input id="stepHeure" style="'+fi+'" type="time" value="'+escH(_sd.heure)+'"></div>'
-      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><input id="stepDuree" style="'+fi+'" type="number" value="'+_sd.duree+'" min="30"></div>'
+    html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
+      +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Date du cours</label><input id="stepDate" style="'+_dtFi+'" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Heure de d\u00e9but</label><input id="stepHeure" style="'+_dtFi+'" type="time" value="'+escH(_sd.heure)+'"></div>'
+      +'</div>'
+      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><input id="stepDuree" style="'+_dtFiNeu+'" type="number" value="'+_sd.duree+'" min="30"></div>'
       +'</div>';
 
   }else if(step.id==='lieu'){
@@ -7105,22 +7281,19 @@ function stepRender(idx){
       // Chaque option a ses propres placeholders / notes
       var _lieuCfg={
         domicile:{
-          label:'Votre ville ou arrondissement',
-          ph:'Ex\u00a0: Paris 5e, Lyon 3e\u2026',
-          note:'Seule la ville sera affich\u00e9e. L\u2019adresse exacte est partag\u00e9e en priv\u00e9 avec les \u00e9l\u00e8ves inscrits.',
-          geo:true
+          label2:'Adresse exacte',
+          ph2:'Ex\u00a0: 12 rue de la Paix, Paris\u2026',
+          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.'
         },
         etablissement:{
-          label:'Nom de l\u2019\u00e9tablissement + ville',
-          ph:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Paris 5e\u2026',
-          note:'',
-          geo:false
+          label2:'Nom de l\u2019\u00e9tablissement',
+          ph2:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Lyc\u00e9e Pasteur\u2026',
+          note2:'Partag\u00e9 avec les \u00e9l\u00e8ves inscrits.'
         },
         autre:{
-          label:'Adresse ou ville',
-          ph:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
-          note:'',
-          geo:true
+          label2:'Adresse exacte',
+          ph2:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
+          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits.'
         }
       };
       var _cfg=_lieuCfg[_lt]||null;
@@ -7141,26 +7314,17 @@ function stepRender(idx){
         +_sloBtn('autre',_icoPin,'Autre lieu','Salle de co-working, café, parc…')
         // Champ(s) adresse — toujours affiché dès qu'un type est sélectionné
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
-          +(_lt==='domicile'
-            // domicile : deux champs séparés
-            ?'<div>'
-              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
-              +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'">'
-              +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-              +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement pour que les \u00e9l\u00e8ves puissent filtrer par lieu.</div>'
-              +'</div>'
-              +'<div>'
-              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Adresse exacte</div>'
-              +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="Ex\u00a0: 12 rue de la Paix, Paris\u2026" value="'+escH(_sd.lieu_prive||'')+'">'
-              +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.</div>'
-              +'</div>'
-            // établissement / autre : champ unique
-            :'<div>'
-              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label+'</div>'
-              +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="'+_cfg.ph+'" value="'+escH(_sd.lieu||'')+'">'
-              +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-              +'</div>'
-          )
+          +'<div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
+            +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'">'
+            +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement — les \u00e9l\u00e8ves pourront filtrer par lieu.</div>'
+          +'</div>'
+          +'<div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label2+'</div>'
+            +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="'+_cfg.ph2+'" value="'+escH(_sd.lieu_prive||'')+'">'
+            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">'+_cfg.note2+'</div>'
+          +'</div>'
           +'</div>':'')
         +'</div>';
     }
@@ -7239,6 +7403,21 @@ function pickLieuType(t){
   if(t!==_sd.lieu_type){_sd.lieu='';_sd.lieu_prive='';}
   _sd.lieu_type=t;
   stepRender(_sc);
+}
+
+function _matSearchFilter(q){
+  var list=g('stepMatList');if(!list)return;
+  var n=normStr(q);
+  list.querySelectorAll('[data-cat]').forEach(function(cat){
+    var chips=cat.querySelectorAll('[data-sa="matiere"]');
+    var visible=0;
+    chips.forEach(function(chip){
+      var match=!n||normStr(chip.dataset.sv).includes(n);
+      chip.style.display=match?'':'none';
+      if(match)visible++;
+    });
+    cat.style.display=visible?'':'none';
+  });
 }
 
 function sOpt(a,v,l,s,sel,bg,ex){
@@ -7619,8 +7798,16 @@ function addToCalendar(coursId){
 
   if(isIOS){
     addBtn(calIco,'Calendrier Apple',function(){
-      var dataUrl='data:text/calendar;charset=utf-8,'+encodeURIComponent(icsText);
-      if(isCap){window.open(dataUrl,'_system');}else{window.location.href=dataUrl;}
+      var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
+      var file=new File([blob],'cours.ics',{type:'text/calendar'});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:c.title}).catch(function(){});
+      }else{
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');a.href=url;a.download='cours.ics';
+        document.body.appendChild(a);a.click();
+        setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+      }
     });
   }
   addBtn(gcIco,'Google Agenda',function(){
@@ -7646,8 +7833,9 @@ function addToCalendar(coursId){
 
 // ---- Share cours in messagerie ----
 function openShareCoursSheet(){
-  var myC=C.filter(function(c){return user&&c.pr===user.id;});
-  if(!myC.length){toast('Aucun cours','Publiez un cours pour commencer');return;}
+  var myC=C.filter(function(c){return user&&c.pr===user.id&&!_isCoursPass(c);})
+    .sort(function(a,b){return new Date(a.dt)-new Date(b.dt);});
+  if(!myC.length){toast('Aucun cours à venir','Publiez un nouveau cours pour le partager');return;}
   var bd=document.createElement('div');
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
@@ -7921,9 +8109,6 @@ function openSettings(){
     // Apparition dans les recherches (default: on)
     var searchTog=g('searchVisibleToggle');
     if(searchTog)searchTog.classList.toggle('on',user.search_visible!==false);
-    // Visibilité du profil (default: on)
-    var profileTog=g('profileVisibleToggle');
-    if(profileTog)profileTog.classList.toggle('on',user.profile_visible!==false);
   }
   updateDarkBtn();
   haptic(6);
@@ -7980,12 +8165,7 @@ async function toggleSearchVisible(){
   var tog=g('searchVisibleToggle');if(tog)tog.classList.toggle('on',user.search_visible!==false);
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({search_visible:user.search_visible})});}catch(e){}
 }
-async function toggleProfileVisible(){
-  if(!user)return;
-  user.profile_visible=(user.profile_visible===false)?true:false;
-  var tog=g('profileVisibleToggle');if(tog)tog.classList.toggle('on',user.profile_visible!==false);
-  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({profile_visible:user.profile_visible})});}catch(e){}
-}
+
 // ---- Quick sheet helper ----
 function showQuickSheet(html){
   var bd=document.getElementById('bdQuickSheet');
@@ -8038,16 +8218,18 @@ function clearSearch(){
     inp.addEventListener('input',function(){btn.style.display=this.value?'flex':'none';});
   });
 })();
-// ---- Swipe to close settings ----
+// ---- Swipe to close settings (handle seulement) ----
 (function(){
   var startY=0,dragging=false;
   document.addEventListener('touchstart',function(e){
-    if(e.target.closest('.settings-sheet')){startY=e.touches[0].clientY;dragging=true;}
+    // Ne démarrer que si le touch est sur le handle — pas sur le contenu scrollable
+    if(e.target.closest('.settings-handle')){startY=e.touches[0].clientY;dragging=true;}
+    else{dragging=false;}
   },{passive:true});
   document.addEventListener('touchend',function(e){
     if(!dragging)return;dragging=false;
     var dy=e.changedTouches[0].clientY-startY;
-    if(dy>80)closeSettings();
+    if(dy>60)closeSettings();
   },{passive:true});
 })();
 

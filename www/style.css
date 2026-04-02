@@ -1680,13 +1680,15 @@ html.dk .settings-chevron { color:var(--bdr); }
   gap: 14px;
   padding: 12px 14px;
   cursor: pointer;
-  transition: transform .12s, box-shadow .12s;
+  transition: transform .26s cubic-bezier(.22,.61,.36,1), box-shadow .26s;
   background: var(--wh);
   border-radius: 16px;
   margin-bottom: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 2px 10px rgba(0,0,0,.05);
+  box-shadow: 0 6px 24px rgba(255,107,53,.16), 0 2px 6px rgba(255,107,53,.09);
+  -webkit-tap-highlight-color: transparent;
 }
-.msg-row:active { transform: scale(.98); box-shadow: none; }
+.msg-row:active,
+.msg-row.tapped { transform: translateY(-1px) scale(.995); transition-duration: .1s; box-shadow: 0 3px 12px rgba(255,107,53,.12), 0 1px 3px rgba(255,107,53,.07); }
 .msg-row.active { background: var(--orp); box-shadow: 0 2px 12px rgba(255,107,43,.15); }
 .msg-av {
   width: 52px;
@@ -1906,6 +1908,11 @@ html.dk .msg-bubble-time.them { color: #fff; }
   margin-top: 4px;
 }
 
+/* Bandeau sécurité */
+#msgSafetyBanner {
+  flex-shrink: 0;
+  padding: 6px 12px 4px;
+}
 /* Barre de saisie */
 #msgInputBar {
   flex-shrink: 0;

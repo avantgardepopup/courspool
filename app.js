@@ -4259,6 +4259,11 @@ async function loadConversations(){
     }).join('');
     var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">Aucune conversation</div>';
     lm.innerHTML=_convHtml;
+    lm.querySelectorAll('.msg-row').forEach(function(r){
+      r.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
+      r.addEventListener('touchend',function(){this.classList.remove('tapped');});
+      r.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
+    });
     _convCache=_convHtml; // mémoriser pour affichage instantané au prochain onglet
     var badge=g('msgBadge');
     if(badge){if(nonLus>0){badge.style.display='inline-flex';badge.textContent=nonLus;}else{badge.style.display='none';}}
@@ -4962,7 +4967,8 @@ async function checkFirstProfLogin(){
 function updateVerifStatusBlock(){
   var block=g('verifStatusBlock');
   if(!block)return;
-  if(!user||user.role!=='professeur'){block.style.display='none';return;}
+  var secLbl=g('verifSectionLabel');
+  if(!user||user.role!=='professeur'){block.style.display='none';if(secLbl)secLbl.style.display='none';return;}
   var status=getCniStatus();
   if(status==='none'){
     var html='<div style="background:var(--orp);border-radius:12px;padding:14px 16px">'
@@ -4973,8 +4979,8 @@ function updateVerifStatusBlock(){
       +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez votre pièce d\'identité pour activer votre compte et publier des cours.</div>'
       +'<button onclick="openCniSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer ma pièce d\'identité</button>'
       +'</div>';
-    block.style.display='block';
-    block.innerHTML=html;
+    block.style.display='block';block.innerHTML=html;
+    if(secLbl)secLbl.style.display='block';
     return;
   }
   var html='';
@@ -5010,8 +5016,8 @@ function updateVerifStatusBlock(){
       +(raison?'<div style="font-size:12px;color:#6B7280;line-height:1.5">'+raison+'</div>':'')
       +'</div>';
   }
-  block.style.display='block';
-  block.innerHTML=html;
+  block.style.display='block';block.innerHTML=html;
+  if(secLbl)secLbl.style.display='block';
 }
 
 
@@ -6263,6 +6269,44 @@ function setNivFilter(niv, el){
   applyFilter();
 }
 
+function openVilleFilter(){
+  var el=g('bdVilleFilter');
+  if(!el)return;
+  if(el.parentNode!==document.body)document.body.appendChild(el);
+  var inp=g('villeFilterInput');
+  if(inp){var lbl=g('pillVilleLabel');inp.value=(lbl&&lbl.textContent!=='Ville')?lbl.textContent:'';}
+  el.style.display='flex';
+  document.body.style.overflow='hidden';
+  setTimeout(function(){var inp=g('villeFilterInput');if(inp)inp.focus();},120);
+}
+function closeVilleFilter(){
+  var el=g('bdVilleFilter');
+  if(el){el.style.display='none';document.body.style.overflow='';}
+}
+function applyVilleFilter(){
+  var inp=g('villeFilterInput');
+  var val=inp?inp.value.trim():'';
+  actLoc=val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=val||'Ville';
+  var pill=g('pillVille');if(pill)pill.classList.toggle('on',!!val);
+  var locInp=g('locInput');if(locInp)locInp.value=val;
+  var cb=g('locClearBtn');if(cb)cb.style.display=val?'block':'none';
+  updateResetBtn();
+  applyFilter();
+  closeVilleFilter();
+}
+function clearVilleFilter(){
+  var inp=g('villeFilterInput');if(inp)inp.value='';
+  actLoc='';
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent='Ville';
+  var pill=g('pillVille');if(pill)pill.classList.remove('on');
+  var locInp=g('locInput');if(locInp)locInp.value='';
+  var cb=g('locClearBtn');if(cb)cb.style.display='none';
+  updateResetBtn();
+  applyFilter();
+  closeVilleFilter();
+}
+
 function openModeFilter(){
   var el=g('bdModeFilter');
   if(!el)return;
@@ -6521,6 +6565,9 @@ function resetFilters(){
   var fm=document.querySelector('#modeFilterList .niv-fchip');if(fm)fm.classList.add('on');
   var lm=g('pillModeLabel');if(lm)lm.textContent='Mode';
   var pm=g('pillMode');if(pm)pm.classList.remove('on');
+  var lv=g('pillVilleLabel');if(lv)lv.textContent='Ville';
+  var pv=g('pillVille');if(pv)pv.classList.remove('on');
+  var vi=g('villeFilterInput');if(vi)vi.value='';
   var pr=g('pillReset');if(pr)pr.style.display='none';
   if(g('srch'))g('srch').value='';
   if(g('mobSearchInput'))g('mobSearchInput').value='';
@@ -7186,7 +7233,6 @@ function stepRender(idx){
 
   }else if(step.id==='niveau'){
     var _nivCats=[
-      {lbl:'Maternelle', items:['PS','MS','GS']},
       {lbl:'Primaire', items:['CP','CE1','CE2','CM1','CM2']},
       {lbl:'Collège', items:['6ème','5ème','4ème','3ème']},
       {lbl:'Lycée', items:['Seconde','Première','Terminale']},
@@ -7235,22 +7281,19 @@ function stepRender(idx){
       // Chaque option a ses propres placeholders / notes
       var _lieuCfg={
         domicile:{
-          label:'Votre ville ou arrondissement',
-          ph:'Ex\u00a0: Paris 5e, Lyon 3e\u2026',
-          note:'Seule la ville sera affich\u00e9e. L\u2019adresse exacte est partag\u00e9e en priv\u00e9 avec les \u00e9l\u00e8ves inscrits.',
-          geo:true
+          label2:'Adresse exacte',
+          ph2:'Ex\u00a0: 12 rue de la Paix, Paris\u2026',
+          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.'
         },
         etablissement:{
-          label:'Nom de l\u2019\u00e9tablissement + ville',
-          ph:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Paris 5e\u2026',
-          note:'',
-          geo:false
+          label2:'Nom de l\u2019\u00e9tablissement',
+          ph2:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Lyc\u00e9e Pasteur\u2026',
+          note2:'Partag\u00e9 avec les \u00e9l\u00e8ves inscrits.'
         },
         autre:{
-          label:'Adresse ou ville',
-          ph:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
-          note:'',
-          geo:true
+          label2:'Adresse exacte',
+          ph2:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
+          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits.'
         }
       };
       var _cfg=_lieuCfg[_lt]||null;
@@ -7271,26 +7314,17 @@ function stepRender(idx){
         +_sloBtn('autre',_icoPin,'Autre lieu','Salle de co-working, café, parc…')
         // Champ(s) adresse — toujours affiché dès qu'un type est sélectionné
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
-          +(_lt==='domicile'
-            // domicile : deux champs séparés
-            ?'<div>'
-              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
-              +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'">'
-              +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-              +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement pour que les \u00e9l\u00e8ves puissent filtrer par lieu.</div>'
-              +'</div>'
-              +'<div>'
-              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Adresse exacte</div>'
-              +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="Ex\u00a0: 12 rue de la Paix, Paris\u2026" value="'+escH(_sd.lieu_prive||'')+'">'
-              +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.</div>'
-              +'</div>'
-            // établissement / autre : champ unique
-            :'<div>'
-              +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label+'</div>'
-              +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="'+_cfg.ph+'" value="'+escH(_sd.lieu||'')+'">'
-              +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-              +'</div>'
-          )
+          +'<div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
+            +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'">'
+            +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
+            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement — les \u00e9l\u00e8ves pourront filtrer par lieu.</div>'
+          +'</div>'
+          +'<div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label2+'</div>'
+            +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="'+_cfg.ph2+'" value="'+escH(_sd.lieu_prive||'')+'">'
+            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">'+_cfg.note2+'</div>'
+          +'</div>'
           +'</div>':'')
         +'</div>';
     }
