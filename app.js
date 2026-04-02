@@ -762,7 +762,7 @@ async function _handleOAuthSignIn(session){
       var nm=p.nom||(meta.family_name||'');
       user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role,id:sbUser.id,
         ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
-        photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,
+        photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,statut_compte:p.statut_compte||'',
         statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
         token:token,refresh_token:session.refresh_token,token_exp:session.expires_at};
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
@@ -888,7 +888,7 @@ async function pcOAuthRoleNext(){
     var nm=p.nom||meta.family_name||'';
     user={pr:pr,nm:nm,em:sbUser.email||'',role:p.role||_regRole,id:sbUser.id,
       ini:((pr[0]||'')+(nm[0]||'')).toUpperCase()||'U',
-      photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,
+      photo:p.photo_url||null,verified:p.verified,diplome_verifie:p.diplome_verifie,statut_compte:p.statut_compte||'',
       statut:p.statut||'',niveau:p.niveau||'',matieres:p.matieres||'',bio:p.bio||'',
       token:session.access_token,refresh_token:session.refresh_token,token_exp:session.expires_at};
     try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
@@ -6998,6 +6998,7 @@ function startAccountCheck(){
       }
       // Mettre à jour le statut si changé (ex: vérifié par admin)
       if(p.statut_compte!==user.statut_compte||p.verified!==user.verified||p.diplome_verifie!==user.diplome_verifie){
+        var _prevVerified=user.verified;
         user.statut_compte=p.statut_compte;
         user.verified=p.verified;
         user.can_retry_cni=p.can_retry_cni;
@@ -7010,8 +7011,8 @@ function startAccountCheck(){
         updateVerifBand();
         updateDiplomeStatusBlock();
         updateCasierStatusBlock();
-        // Notifier si compte maintenant vérifié
-        if(user.role==='professeur'&&(p.statut_compte==='verified'||p.verified)){
+        // Notifier uniquement si le compte vient d'être vérifié (pas déjà vérifié avant)
+        if(user.role==='professeur'&&!_prevVerified&&(p.statut_compte==='verified'||p.verified)){
           toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
           haptic([10,50,100,50,10]);
         } else if(user.role==='professeur'&&p.statut_compte==='rejeté'){
@@ -7160,9 +7161,13 @@ function stepRender(idx){
       {lbl:'Jeux & Loisirs',     items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
       {lbl:'Autre',              items:['Autre']},
     ];
-    html+='<div style="display:flex;flex-direction:column;gap:20px;width:100%">';
+    html+='<div style="width:100%;margin-bottom:4px;position:relative">'
+      +'<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      +'<input id="stepMatSearch" type="text" placeholder="Rechercher une mati\u00e8re\u2026" style="width:100%;box-sizing:border-box;padding:11px 14px 11px 38px;border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none" oninput="_matSearchFilter(this.value)">'
+      +'</div>';
+    html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%">';
     _matCats.forEach(function(cat){
-      html+='<div>'
+      html+='<div data-cat>'
         +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
       cat.items.forEach(function(m){
@@ -7364,6 +7369,21 @@ function pickLieuType(t){
   if(t!==_sd.lieu_type){_sd.lieu='';_sd.lieu_prive='';}
   _sd.lieu_type=t;
   stepRender(_sc);
+}
+
+function _matSearchFilter(q){
+  var list=g('stepMatList');if(!list)return;
+  var n=normStr(q);
+  list.querySelectorAll('[data-cat]').forEach(function(cat){
+    var chips=cat.querySelectorAll('[data-sa="matiere"]');
+    var visible=0;
+    chips.forEach(function(chip){
+      var match=!n||normStr(chip.dataset.sv).includes(n);
+      chip.style.display=match?'':'none';
+      if(match)visible++;
+    });
+    cat.style.display=visible?'':'none';
+  });
 }
 
 function sOpt(a,v,l,s,sel,bg,ex){
