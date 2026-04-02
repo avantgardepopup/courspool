@@ -2748,7 +2748,6 @@ var MATIERES = [
   // --- Bien-être ---
   {label:'Nutrition / Diététique', key:'nutrition',      color:'#10B981', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
   {label:'Développement perso',    key:'devperso',       color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
-  {label:'Sophrologie',            key:'sophro',         color:'#34D399', bg:'linear-gradient(135deg,#ECFDF5,#D1FAE5)', bgDark:'linear-gradient(135deg,#062318,#0D3D2B)'},
   // --- Cuisine & Artisanat ---
   {label:'Cuisine / Gastronomie',  key:'cuisine',        color:'#FB923C', bg:'linear-gradient(135deg,#FFF7ED,#FFEDD5)', bgDark:'linear-gradient(135deg,#2D1200,#4A2000)'},
   {label:'Pâtisserie',             key:'patisserie',     color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
@@ -2757,8 +2756,6 @@ var MATIERES = [
   {label:'Couture / Tricot',       key:'couture',        color:'#EC4899', bg:'linear-gradient(135deg,#FDF2F8,#FBCFE8)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
   {label:'Broderie',               key:'broderie',       color:'#F472B6', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
   {label:'Poterie / Céramique',    key:'poterie',        color:'#B45309', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2500)'},
-  {label:'Origami',                key:'origami',        color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
-  {label:'\u0152nologie',          key:'oenologie',      color:'#B45309', bg:'linear-gradient(135deg,#FDF2F8,#FECDD3)', bgDark:'linear-gradient(135deg,#2D0A1E,#4A1535)'},
   // --- Jeux & Loisirs ---
   {label:'Jeux de soci\u00e9t\u00e9', key:'jeux',       color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
   {label:'\u00c9checs',            key:'echecs',         color:'#475569', bg:'linear-gradient(135deg,#F8FAFC,#E2E8F0)', bgDark:'linear-gradient(135deg,#0F1720,#1A2535)'},
@@ -7158,8 +7155,8 @@ function stepRender(idx){
       {lbl:'Business & Droit',   items:['\u00c9conomie','Comptabilit\u00e9','Finance','Marketing','Droit','Entrepreneuriat','Gestion de projet','Communication','RH & Recrutement','Immobilier','Architecture']},
       {lbl:'Pr\u00e9pa & Concours', items:['CPGE / Pr\u00e9pa','M\u00e9decine (PASS/LAS)','Sciences Po','TOEFL / IELTS','GMAT / GRE']},
       {lbl:'Sport',              items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
-      {lbl:'Bien-\u00eatre',     items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso','Sophrologie']},
-      {lbl:'Cuisine & Artisanat',items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique','Origami','\u0152nologie']},
+      {lbl:'Bien-\u00eatre',     items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso']},
+      {lbl:'Cuisine & Artisanat',items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique']},
       {lbl:'Jeux & Loisirs',     items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
       {lbl:'Autre',              items:['Autre']},
     ];
