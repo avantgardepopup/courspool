@@ -2762,8 +2762,6 @@ var MATIERES = [
   // --- Jeux & Loisirs ---
   {label:'Jeux de soci\u00e9t\u00e9', key:'jeux',       color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
   {label:'\u00c9checs',            key:'echecs',         color:'#475569', bg:'linear-gradient(135deg,#F8FAFC,#E2E8F0)', bgDark:'linear-gradient(135deg,#0F1720,#1A2535)'},
-  {label:'Jeux vid\u00e9o',        key:'jeuxvideo',      color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#C7D2FE)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
-  {label:'Poker',                  key:'poker',          color:'#EF4444', bg:'linear-gradient(135deg,#FEF2F2,#FEE2E2)', bgDark:'linear-gradient(135deg,#2D0A0A,#4A1515)'},
   // --- Autre ---
   {label:'Autre',                  key:'autre',          color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)', bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
@@ -7162,7 +7160,7 @@ function stepRender(idx){
       {lbl:'Sport',              items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
       {lbl:'Bien-\u00eatre',     items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso','Sophrologie']},
       {lbl:'Cuisine & Artisanat',items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique','Origami','\u0152nologie']},
-      {lbl:'Jeux & Loisirs',     items:['Jeux de soci\u00e9t\u00e9','\u00c9checs','Jeux vid\u00e9o','Poker']},
+      {lbl:'Jeux & Loisirs',     items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
       {lbl:'Autre',              items:['Autre']},
     ];
     html+='<div style="display:flex;flex-direction:column;gap:20px;width:100%">';
