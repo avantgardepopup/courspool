@@ -1553,22 +1553,31 @@ html.dk .settings-chevron { color:var(--bdr); }
   }
   #msgBackBtn { display:none !important; }
 
-  /* Nav desktop — plus grande, draggable */
+  /* Nav desktop — floating draggable pill */
   .bnav {
-    padding:10px 16px !important;
-    gap:8px !important;
-    cursor:grab !important;
-    border-radius:60px !important;
+    bottom: auto !important;
+    right: auto !important;
+    width: auto !important;
+    padding: 8px 12px !important;
+    padding-bottom: 8px !important;
+    gap: 4px !important;
+    cursor: grab !important;
+    border-radius: 60px !important;
+    box-shadow: 0 6px 28px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.10) !important;
+    will-change: left, top;
+    user-select: none;
   }
-  .bnav:active { cursor:grabbing !important; }
+  .bnav:active { cursor: grabbing !important; }
+  .bnav::after { display: none !important; }
+  html.dk .bnav { box-shadow: 0 6px 28px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3) !important; }
 
   .bni {
-    padding:10px 16px !important;
-    min-width:52px !important;
-    gap:6px !important;
+    padding: 8px 14px !important;
+    min-width: 50px !important;
+    gap: 5px !important;
   }
-  .bni svg { width:24px !important; height:24px !important; }
-  #bniAdd > div { width:48px !important; height:28px !important; }
+  .bni svg { width: 22px !important; height: 22px !important; }
+  #bniAdd > div { width: 36px !important; height: 36px !important; }
 }
 
 /* ── Mobile (<769px) ── */

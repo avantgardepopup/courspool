@@ -79,13 +79,10 @@
 <script>
 (function(){
   function checkDesktop(){
-    var isCapacitor=!!(window.Capacitor||window.capacitorExports||navigator.userAgent.includes('Capacitor'));
-    var isDesktop=window.innerWidth>900&&!isCapacitor&&!/Mobi|Android|iPhone|iPad|iPod|wv\)/i.test(navigator.userAgent);
     var el=document.getElementById('desktopBlock');
-    if(el)el.style.display=isDesktop?'flex':'none';
+    if(el)el.style.display='none';
   }
   checkDesktop();
-  window.addEventListener('resize',checkDesktop);
 })();
 </script>
 
