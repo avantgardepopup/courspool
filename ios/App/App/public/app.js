@@ -3107,6 +3107,25 @@ function openR(id){haptic(4);
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
+  // Note moyenne du prof dans le rban
+  (function(){
+    var _rNoteEl=g('rProfNote');if(!_rNoteEl)return;
+    var _pn=(P[c.pr]&&P[c.pr].n&&P[c.pr].n!=='—')?P[c.pr].n:null;
+    if(_pn){_rNoteEl.innerHTML='<span style="color:#FBBF24">★</span> '+_pn+' · '+((P[c.pr]&&P[c.pr].e)||0)+' élève'+((P[c.pr]&&P[c.pr].e)!==1?'s':'');_rNoteEl.style.display='block';}
+    else{_rNoteEl.style.display='none';}
+    // Fetch silencieux si pas encore en cache
+    if(!_pn&&P[c.pr]&&!P[c.pr]._notesFetched){
+      P[c.pr]._notesFetched=true;
+      var _profId=c.pr;
+      fetch(API+'/notations/'+_profId).then(function(r){return r.json();}).then(function(notes){
+        if(!notes||!notes.length)return;
+        var _avg=(notes.reduce(function(s,n){return s+(n.note||0);},0)/notes.length).toFixed(1);
+        if(P[_profId])P[_profId].n=_avg;
+        var _el=g('rProfNote');
+        if(_el&&curId==id){_el.innerHTML='<span style="color:#FBBF24">★</span> '+_avg+' · '+((P[_profId]&&P[_profId].e)||0)+' élève'+((P[_profId]&&P[_profId].e)!==1?'s':'');_el.style.display='block';}
+      }).catch(function(){});
+    }
+  })();
   // Coloriser le banner — couleur solide en light, dégradé foncé en dark
   var _mat=findMatiere(c.subj||'');var _rIsDk=document.documentElement.classList.contains('dk');
   var _rBg=_rIsDk?((_mat&&_mat.bgDark)?_mat.bgDark:(c.bgDark||'var(--or)')):((_mat&&_mat.color)?_mat.color:(c.bg||'var(--or)'));
@@ -3125,17 +3144,30 @@ function openR(id){haptic(4);
   var btnContact=document.querySelector('#bdR .pb.sec');
   var btnDel=g('btnDelCours');
   var btnEleves=g('btnVoirEleves');
+  var btnNoter=g('btnNoterCours');
   if(isOwner){
-    // Prof consulte son propre cours
     if(btnConf)btnConf.style.display='none';
     if(btnContact)btnContact.style.display='none';
     if(btnDel)btnDel.style.display='flex';
     if(btnEleves)btnEleves.style.display='flex';
+    if(btnNoter)btnNoter.style.display='none';
   } else {
     if(btnConf){btnConf.style.display='flex';btnConf.onclick=confR;}
     if(btnContact)btnContact.style.display='flex';
     if(btnDel)btnDel.style.display='none';
     if(btnEleves)btnEleves.style.display='none';
+    // Bouton "Laisser un avis" : cours passé depuis >1h, réservé, pas encore noté
+    if(btnNoter){
+      var _canNote=(function(){
+        try{
+          if(!res[id])return false;
+          if(localStorage.getItem('cp_noted_'+id))return false;
+          var _diff=Date.now()-new Date(c.dt_iso||0);
+          return !isNaN(_diff)&&_diff>3600000;
+        }catch(e){return false;}
+      }());
+      btnNoter.style.display=_canNote?'flex':'none';
+    }
   }
   openM('bdR');
 }
@@ -3489,7 +3521,15 @@ function openPr(pid){
   fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
     if(curProf!==pid)return;
     if(!notes||!notes.length){if(avisBlock)avisBlock.style.display='none';return;}
-    var stars=function(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;};
+    // Mettre à jour la note moyenne en cache depuis les avis réels
+    var _avgAll=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
+    if(P[pid])P[pid].n=_avgAll;
+    var _mpNEl=g('mpN');if(_mpNEl)_mpNEl.textContent='★ '+_avgAll;
+    var stars=function(n){
+      var s='';
+      for(var i=1;i<=5;i++)s+='<svg viewBox="0 0 24 24" width="13" height="13" fill="'+(i<=n?'#FBBF24':'none')+'" stroke="'+(i<=n?'#FBBF24':'#D1D5DB')+'" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+      return s;
+    };
     var html=notes.slice(0,3).map(function(a){
       return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;opacity:0;transition:opacity .3s">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(a.commentaire?'6':'0')+'px">'
@@ -6068,7 +6108,7 @@ var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 
 function openNote(cours){
   if(!cours||!user||user.role==='professeur')return;
   if(!res[cours.id]){toast('Réservation requise','Vous devez avoir réservé ce cours pour le noter');return;}
-  var isPastNow=false;try{var diffMs2=Date.now()-new Date(cours.created_at||0);isPastNow=diffMs2>24*60*60*1000;}catch(e){}
+  var isPastNow=false;try{var _diffNow=Date.now()-new Date(cours.dt_iso||0);isPastNow=!isNaN(_diffNow)&&_diffNow>3600000;}catch(e){}
   if(!isPastNow){toast('Cours à venir','Vous pourrez noter ce cours une fois qu\'il est terminé');return;}
   noteCours=cours;noteVal=0;
   updateStars(0);
@@ -6915,9 +6955,9 @@ function checkCoursANoter(){
   var now=new Date();
   // Cours passés depuis plus de 1h et pas encore notés (pas de notation dans localStorage)
   var aNoter=Object.keys(res).map(function(id){return C.find(function(x){return x.id==id;});}).filter(function(c){
-    if(!c||!c.dt)return false;
-    var diff=now-new Date(c.dt);
-    if(diff<3600000)return false; // moins d'1h après la date du cours
+    if(!c||(!c.dt_iso&&!c.dt))return false;
+    var diff=now-new Date(c.dt_iso||0);
+    if(isNaN(diff)||diff<3600000)return false;
     try{if(localStorage.getItem('cp_noted_'+c.id))return false;}catch(e){}
     return true;
   });
