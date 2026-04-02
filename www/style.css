@@ -776,7 +776,7 @@ html.dk .fav-cours-card-title,html.dk .fav-prof-name{color:var(--ink);}
 .pw-toggle svg{width:18px;height:18px;}
 /* mobile nav — floating pill, no bottom bar */
 .rban{background:var(--or);border-radius:12px;padding:46px 16px 16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
-.rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
+.rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.07);z-index:0;}
 .bdn{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px;}
 .br{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;}
 .br:not(:last-child){border-bottom:1px solid var(--bdr);}

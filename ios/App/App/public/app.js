@@ -3055,13 +3055,12 @@ function viewCoursCard(id){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
   var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
-  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?'Visio':'Présentiel';_rMdBdg.style.display='block';}
+  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?'Visio':'Présentiel';_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
-  var _rIsDk2=document.documentElement.classList.contains('dk');
   var _mat2=findMatiere(c.subj||'');
-  var _rBg2=_rIsDk2?(_mat2&&_mat2.bgDark?_mat2.bgDark:(c.bgDark||c.bg)):(_mat2&&_mat2.bg?_mat2.bg:c.bg);
+  var _rBg2=(_mat2&&_mat2.bgDark)?_mat2.bgDark:(c.bgDark||c.bg||'var(--or)');
   var _rBanEl2=document.querySelector('#bdR .rban');if(_rBanEl2&&_rBg2){_rBanEl2.style.background=_rBg2;}
   var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
@@ -3104,14 +3103,13 @@ function openR(id){haptic(4);
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
   var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
-  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?'Visio':'Présentiel';_rMdBdg.style.display='block';}
+  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?'Visio':'Présentiel';_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
-  // Coloriser le banner selon la matière
-  var _rIsDk=document.documentElement.classList.contains('dk');
+  // Coloriser le banner — toujours bgDark pour garantir lisibilité texte blanc
   var _mat=findMatiere(c.subj||'');
-  var _rBg=_rIsDk?(_mat&&_mat.bgDark?_mat.bgDark:(c.bgDark||c.bg)):(_mat&&_mat.bg?_mat.bg:c.bg);
+  var _rBg=(_mat&&_mat.bgDark)?_mat.bgDark:(c.bgDark||c.bg||'var(--or)');
   var _rBanEl=document.querySelector('#bdR .rban');if(_rBanEl&&_rBg){_rBanEl.style.background=_rBg;}
   var _oIsVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   g('rDt').textContent=fmtDt(c.dt);
