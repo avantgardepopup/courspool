@@ -3227,7 +3227,8 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
     buildCards();
   }catch(e){toast('Erreur réseau','Impossible d\'annuler');}
 }
-async function confR(){haptic(15);
+function confR(){
+  haptic(15);
   var id=curId;
   if(!id){toast('Erreur','Veuillez réessayer');return;}
   var c=C.find(function(x){return x.id==id});
@@ -3235,25 +3236,8 @@ async function confR(){haptic(15);
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
   if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
-  var btn=document.querySelector('#bdR .pb.pri');
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="cp-loader"></span>Redirection…';}
-  try{
-    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-    // Sauvegarder les infos avant paiement
-    try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:false}));}catch(e){}
-    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:apiH(),body:JSON.stringify({
-      cours_id:id,
-      user_id:user.id,
-      montant:pp,
-      cours_titre:c.title
-    })});
-    var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
-    // Rediriger vers paiement
-    if(!data.url||!data.url.startsWith('https://checkout.stripe.com/')){toast('Erreur','URL de paiement invalide');return;}
-    window.location.href=data.url;
-  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'checkout_reserve'});toast('Erreur réseau','Impossible de lancer le paiement');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Confirmer — <strong>'+( g('rFinB')?g('rFinB').textContent:'')+'</strong>';}}
+  closeM('bdR');
+  openPaymentSheet(id,false);
 }
 function contR(){
   var c=C.find(function(x){return x.id==curId});
@@ -3297,29 +3281,12 @@ function confO(){
   openM('bdR');
 }
 
-async function confAmi(id){
+function confAmi(id){
   var c=C.find(function(x){return x.id==id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  var btn=document.querySelector('#bdR .pb.pri');
-  var _btnHtml=btn?btn.innerHTML:null;
-  if(btn){btn.disabled=true;btn.textContent='⏳ Redirection vers le paiement…';}
-  try{
-    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-    try{localStorage.setItem('cp_stripe_pending',JSON.stringify({cours_id:id,user_id:user.id,montant:pp,pour_ami:true}));}catch(e){}
-    var r=await fetch(API+'/stripe/checkout',{method:'POST',headers:apiH(),body:JSON.stringify({
-      cours_id:id,
-      user_id:user.id,
-      montant:pp,
-      cours_titre:c.title+' · Place supplémentaire',
-      pour_ami:true
-    })});
-    var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
-    if(!data.url||!data.url.startsWith('https://checkout.stripe.com/')){toast('Erreur','URL de paiement invalide');return;}
-    window.location.href=data.url;
-  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'checkout_ami'});toast('Erreur réseau','Impossible de lancer le paiement');}
-  finally{if(btn){btn.disabled=false;if(_btnHtml)btn.innerHTML=_btnHtml;btn.onclick=function(){confAmi(id);};}}
+  closeM('bdR');
+  openPaymentSheet(id,true);
 }
 
 function shareCoursLink(){
@@ -5934,6 +5901,107 @@ async function loadRevenues() {
 var _stripeInstance = null;
 var _ibanElement = null;
 var STRIPE_PK = 'pk_live_51TB9Am3FNybFliKQGUpI1uSMheaSyFV0TwgRoAfmgRJtLtxAujacxrLJqM5zaOdLa0EuZNLJe7HOXKSZWmwZHyR500YZcvAF6h';
+
+// ============================================================
+// PAYMENT ELEMENT — paiement natif in-app (sans redirect)
+// ============================================================
+var _payElements=null,_payCoursId=null,_payPourAmi=false;
+
+async function openPaymentSheet(id,pourAmi){
+  _payCoursId=id;_payPourAmi=!!pourAmi;
+  var c=C.find(function(x){return x.id==id;});
+  if(!c)return;
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+  var sheet=g('bdPayment');if(!sheet)return;
+  var btn=g('payBtn'),btnTxt=g('payBtnTxt'),loader=g('payLoader');
+  // Reset UI
+  if(btn){btn.disabled=true;btn.style.opacity='.7';}
+  if(btnTxt)btnTxt.textContent='Chargement…';
+  if(loader)loader.style.display='none';
+  g('payCoursTitle').textContent=c.title;
+  g('payAmount').textContent=pp+'€';
+  g('stripe-payment-element').innerHTML='<div style="text-align:center;padding:28px;color:var(--lite);font-size:13px">Chargement du formulaire…</div>';
+  sheet.style.display='flex';
+  document.body.style.overflow='hidden';
+  try{
+    var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:id,user_id:user.id,pour_ami:pourAmi})});
+    var data=await r.json();
+    if(data.error){toast('Erreur',data.error,true);closePaymentSheet();return;}
+    if(data.already_reserved){toast('Déjà réservé','Vous avez déjà une place pour ce cours');closePaymentSheet();return;}
+    if(!_stripeInstance){if(!window.Stripe){toast('Erreur','Service de paiement indisponible',true);closePaymentSheet();return;}_stripeInstance=Stripe(STRIPE_PK);}
+    var dk=document.documentElement.classList.contains('dk');
+    var appearance={
+      theme:dk?'night':'stripe',
+      variables:{colorPrimary:'#FF6B2B',borderRadius:'10px',fontFamily:'Plus Jakarta Sans, system-ui, sans-serif',fontSizeBase:'15px',spacingUnit:'4px'}
+    };
+    _payElements=_stripeInstance.elements({clientSecret:data.client_secret,appearance:appearance});
+    var pe=_payElements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
+    g('stripe-payment-element').innerHTML='';
+    pe.mount('#stripe-payment-element');
+    pe.on('ready',function(){
+      if(btn){btn.disabled=false;btn.style.opacity='1';}
+      if(btnTxt)btnTxt.textContent='Payer '+pp+'€';
+    });
+  }catch(e){
+    if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'open_payment_sheet'});
+    toast('Erreur réseau','Impossible de charger le paiement',true);
+    closePaymentSheet();
+  }
+}
+
+async function submitPayment(){
+  if(!_payElements||!_stripeInstance)return;
+  var btn=g('payBtn'),btnTxt=g('payBtnTxt'),loader=g('payLoader');
+  btn.disabled=true;
+  if(loader)loader.style.display='inline-block';
+  if(btnTxt)btnTxt.textContent='Traitement…';
+  try{
+    var result=await _stripeInstance.confirmPayment({elements:_payElements,redirect:'if_required'});
+    if(result.error){
+      toast('Paiement refusé',result.error.message,true);
+      btn.disabled=false;btn.style.opacity='1';
+      if(loader)loader.style.display='none';
+      if(btnTxt)btnTxt.textContent='Réessayer';
+      return;
+    }
+    var pi=result.paymentIntent;
+    if(pi&&pi.status==='succeeded'){
+      if(btnTxt)btnTxt.textContent='Confirmation…';
+      var r2=await fetch(API+'/stripe/confirm-payment',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pi.id})});
+      var d2=await r2.json();
+      if(d2.success||d2.already_existed){
+        closePaymentSheet();
+        localStorage.removeItem('cp_stripe_pending');
+        if(!_payPourAmi)res[_payCoursId]=true;
+        var c=C.find(function(x){return x.id==_payCoursId;});
+        if(c){c.fl=(c.fl||0)+1;}
+        haptic(6);
+        toast('Réservation confirmée ✓','Vous êtes inscrit au cours');
+        setTimeout(function(){loadData(1).then(function(){buildCards();updateMesRes();});},800);
+      }else{
+        toast('Erreur',d2.error||'Erreur de confirmation',true);
+        btn.disabled=false;btn.style.opacity='1';
+        if(loader)loader.style.display='none';
+        if(btnTxt)btnTxt.textContent='Réessayer';
+      }
+    }
+  }catch(e){
+    if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'submit_payment'});
+    toast('Erreur réseau','Impossible de confirmer le paiement',true);
+    btn.disabled=false;btn.style.opacity='1';
+    if(loader)loader.style.display='none';
+    if(btnTxt)btnTxt.textContent='Réessayer';
+  }
+}
+
+function closePaymentSheet(){
+  var sheet=g('bdPayment');
+  if(sheet)sheet.style.display='none';
+  document.body.style.overflow='';
+  _payElements=null;
+  var el=g('stripe-payment-element');
+  if(el)el.innerHTML='';
+}
 
 function initStripeIban() {
   if (!window.Stripe) return; // lib paiement
