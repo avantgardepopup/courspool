@@ -2150,8 +2150,8 @@
 </button>
 
 <!-- PAYMENT SHEET -->
-<div class="bd" id="bdPayment" style="display:none;z-index:620;align-items:flex-end">
-  <div style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;animation:mi .28s cubic-bezier(.32,1,.6,1);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,.1)">
+<div class="bd" id="bdPayment" style="display:none;z-index:620;align-items:flex-end;padding:0 0 max(16px,env(safe-area-inset-bottom,16px))">
+  <div style="background:var(--wh);border-radius:24px;width:calc(100% - 24px);max-width:460px;animation:mi .28s cubic-bezier(.32,1,.6,1);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 60px rgba(0,0,0,.18)">
 
     <!-- Handle + Header : fixe, ne scrolle pas -->
     <div style="flex-shrink:0">
@@ -2180,8 +2180,8 @@
       <div id="stripe-payment-element" style="min-height:80px"></div>
     </div>
 
-    <!-- Footer : toujours visible, colle au bas avec safe area -->
-    <div style="flex-shrink:0;padding:14px 22px;padding-bottom:max(22px,env(safe-area-inset-bottom,22px));border-top:1px solid var(--bdr);background:var(--wh)">
+    <!-- Footer : toujours visible -->
+    <div style="flex-shrink:0;padding:14px 22px 18px;border-top:1px solid var(--bdr);background:var(--wh);border-radius:0 0 24px 24px">
       <button id="payBtn" onclick="submitPayment()" disabled style="width:100%;background:linear-gradient(135deg,#FF6B2B,#E04E10);color:#fff;border:none;border-radius:16px;padding:16px;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,43,.35);display:flex;align-items:center;justify-content:center;gap:9px;opacity:.65;transition:opacity .2s;letter-spacing:-.01em;margin-bottom:12px">
         <span class="cp-loader" style="display:none" id="payLoader"></span>
         <span id="payBtnTxt">Chargement…</span>

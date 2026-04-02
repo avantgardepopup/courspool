@@ -2563,12 +2563,13 @@ function buildPlacesCircles(fl,sp){
 }
 
 function renderPage(){
-  var grid=g('grid');if(!grid)return;grid.innerHTML='';
+  var grid=g('grid');if(!grid)return;
   var sorted=sortCourses(filteredCards);
   var toShow=sorted.slice(0,currentPage*PAGE_SIZE);
   var sc=g('sortResultCount');if(sc)sc.textContent=filteredCards.length+' cours';
   var _nc=g('nocard'),_lmw=g('loadMoreWrap');
   if(!toShow.length){
+    grid.innerHTML='';
     if(_nc)_nc.style.display='block';
     var _nt=g('nocardTitle'),_ns=g('nocardSub');
     if(_nt)_nt.textContent='Aucun cours trouvé';
@@ -2577,6 +2578,7 @@ function renderPage(){
     return;
   }
   if(_nc)_nc.style.display='none';
+  var _frag=document.createDocumentFragment();
   toShow.forEach(function(c,i){
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     var pleft=c.sp-c.fl;
@@ -2644,8 +2646,10 @@ function renderPage(){
           '</div>'+
         '</div>'+
       '</div>';
-    grid.appendChild(wrap);
+    _frag.appendChild(wrap);
   });
+  grid.innerHTML='';
+  grid.appendChild(_frag);
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
 }
