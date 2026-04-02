@@ -1320,6 +1320,8 @@ function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
 
 function applyUser(){
   var _l=g('login');if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}g('app').style.display='block';
+  // Restaurer is_tuteur depuis localStorage si non fourni par le backend
+  if(user&&user.is_tuteur===undefined){try{user.is_tuteur=localStorage.getItem('cp_is_tuteur')==='1';}catch(e){}}
   // Greeting dynamique
   try{
     var h=new Date().getHours();
@@ -3199,13 +3201,25 @@ async function openEleves(id){
         var montant=res.montant_paye||0;
         var date=res.created_at?new Date(res.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
         var ini=nom[0]||'?';
+        var isTuteur=!!res.is_tuteur;
+        var roleBadge=isTuteur
+          ?'<span style="font-size:10px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle">Tuteur</span>'
+          :'<span style="font-size:10px;font-weight:700;color:#3B82F6;background:#EFF6FF;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle">Élève</span>';
+        var rid=JSON.stringify(res.reservation_id),uid=JSON.stringify(res.user_id),cid=JSON.stringify(id);
         return'<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--bdr)">'
-          +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0">'+esc(ini)+'</div>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--ink)">'+esc(nom)+'</div>'
-          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(email)+(date?' · '+esc(date):'')+'</div></div>'
-          +'<div style="text-align:right;flex-shrink:0">'
-          +'<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px">'+montant+'€</div>'
-          +('<button onclick="cancelEleveReservation('+JSON.stringify(res.reservation_id)+','+JSON.stringify(res.user_id)+','+JSON.stringify(id)+','+montant+')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>')
+          +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,'+(isTuteur?'#A78BFA,#7C3AED':'#FF8C55,var(--ord)')+');display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0">'+esc(ini)+'</div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:14px;font-weight:600;color:var(--ink)">'+esc(nom)+roleBadge+'</div>'
+          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(email)+(date?' · '+esc(date):'')+'</div>'
+          +'</div>'
+          +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--green)">'+montant+'€</div>'
+          +'<div style="display:flex;gap:5px">'
+          +'<button onclick="openSignalement(\'eleve\','+uid+',\''+esc(nom)+'\')" style="background:var(--bg);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Signaler">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>'
+          +'</button>'
+          +'<button onclick="cancelEleveReservation('+rid+','+uid+','+cid+','+montant+')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>'
+          +'</div>'
           +'</div></div>';
       }).join('');
   }catch(e){
@@ -3505,9 +3519,19 @@ function openPr(pid){
       return s;
     };
     var html=notes.slice(0,3).map(function(a){
+      var isTuteur=!!a.is_tuteur;
+      var roleLabel=isTuteur?'Tuteur':'Élève';
+      var roleColor=isTuteur?'#8B5CF6':'#3B82F6';
+      var roleBg=isTuteur?'#F5F3FF':'#EFF6FF';
+      // Afficher seulement la première initiale du prénom pour préserver l'anonymat (jamais le nom complet)
+      var initial=a.prenom?a.prenom[0].toUpperCase()+'.':null;
+      var reviewerLabel=initial?(initial+' · '+roleLabel):roleLabel;
       return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;opacity:0;transition:opacity .3s">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(a.commentaire?'6':'0')+'px">'
-        +'<span style="font-size:13px;color:#F59E0B;letter-spacing:2px">'+stars(a.note)+'</span>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:'+(a.commentaire?'7':'3')+'px">'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+        +'<span style="font-size:13px;color:#F59E0B">'+stars(a.note)+'</span>'
+        +'<span style="font-size:10px;font-weight:700;color:'+roleColor+';background:'+roleBg+';border-radius:5px;padding:2px 6px">'+esc(reviewerLabel)+'</span>'
+        +'</div>'
         +'<span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'')+'</span>'
         +'</div>'
         +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+esc(a.commentaire)+'</div>':'')
@@ -6222,7 +6246,8 @@ async function submitNote(){
   var comment=g('noteComment').value.trim();
   try{
     var r=await fetch(API+'/notations',{method:'POST',headers:apiH(),body:JSON.stringify({
-      eleve_id:user.id,professeur_id:noteCours.pr,cours_id:noteCours.id,note:noteVal,commentaire:comment
+      eleve_id:user.id,professeur_id:noteCours.pr,cours_id:noteCours.id,note:noteVal,commentaire:comment,
+      is_tuteur:!!(user.is_tuteur),prenom:user.pr||null
     })});
     var data=await r.json();
     if(data.error){toast('Erreur','Impossible d\'envoyer la note');return;}
@@ -8357,9 +8382,26 @@ function openSettings(){
     var searchTog=g('searchVisibleToggle');
     if(searchTog)searchTog.classList.toggle('on',user.search_visible!==false);
   }
+  // Tuteur / parent — visible pour les élèves uniquement
+  var isEleve=user&&user.role!=='professeur';
+  var tutSec=g('settingsTuteurSection'),tutGrp=g('settingsTuteurGroup');
+  if(tutSec)tutSec.style.display=isEleve?'':'none';
+  if(tutGrp)tutGrp.style.display=isEleve?'':'none';
+  if(isEleve){var tutTog=g('tuteurToggle');if(tutTog)tutTog.classList.toggle('on',!!(user&&user.is_tuteur));}
   updateDarkBtn();
   setTimeout(renderNotifStatus,50);
   haptic(6);
+}
+
+async function toggleTuteurMode(){
+  if(!user)return;
+  user.is_tuteur=!user.is_tuteur;
+  var tog=g('tuteurToggle');if(tog)tog.classList.toggle('on',user.is_tuteur);
+  try{localStorage.setItem('cp_is_tuteur',user.is_tuteur?'1':'0');}catch(e){}
+  // Sync backend si possible
+  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:user.is_tuteur})});}catch(e){}
+  haptic(6);
+  toast(user.is_tuteur?'Mode tuteur activé':'Mode tuteur désactivé',user.is_tuteur?'Vos avis seront identifiés "Tuteur"':'Vos avis seront identifiés "Élève"');
 }
 function openMsgContactSheet(){
   var opts=[
@@ -8412,6 +8454,79 @@ async function toggleSearchVisible(){
   user.search_visible=(user.search_visible===false)?true:false;
   var tog=g('searchVisibleToggle');if(tog)tog.classList.toggle('on',user.search_visible!==false);
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({search_visible:user.search_visible})});}catch(e){}
+}
+
+// ---- Signalement ----
+function openSignalement(context,targetId,targetName){
+  if(!user){toast('Connexion requise','Connectez-vous pour signaler');return;}
+  var WARN='<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+  var CIRC='<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+  var CLOK='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
+  var USER='<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>';
+  var EURO='<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>';
+  var MSG ='<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>';
+  var CHLD='<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>';
+  var motifs=context==='eleve'?[
+    {k:'comportement',l:'Comportement inapproprié',i:WARN},
+    {k:'absence',     l:'Absence sans prévenir',   i:CLOK},
+    {k:'harcelement', l:'Harcèlement',              i:CIRC},
+    {k:'fraude',      l:'Fraude / impayé',          i:EURO},
+    {k:'autre',       l:'Autre',                    i:MSG}
+  ]:context==='message'?[
+    {k:'offensant',   l:'Contenu offensant',        i:WARN},
+    {k:'harcelement', l:'Harcèlement / menaces',    i:CIRC},
+    {k:'spam',        l:'Spam ou contenu commercial',i:MSG},
+    {k:'usurpation',  l:'Usurpation d\'identité',   i:USER},
+    {k:'autre',       l:'Autre',                    i:MSG}
+  ]:[
+    {k:'comportement',l:'Comportement inapproprié', i:WARN},
+    {k:'fausse_id',   l:'Fausse identité',          i:USER},
+    {k:'trompeur',    l:'Informations trompeuses',  i:CIRC},
+    {k:'harcelement', l:'Harcèlement',              i:CIRC},
+    {k:'mineurs',     l:'Comportement envers mineurs',i:CHLD},
+    {k:'autre',       l:'Autre',                    i:MSG}
+  ];
+  var tn=targetName?('<div style="font-size:12px;color:var(--lite);margin-top:1px">'+esc(targetName)+'</div>'):'';
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:16px 20px 10px;display:flex;align-items:center;gap:12px">'
+    +'<div style="width:38px;height:38px;border-radius:11px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+WARN+'</svg>'
+    +'</div>'
+    +'<div><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Signaler</div>'+tn+'</div>'
+    +'</div>'
+    +'<div style="font-size:13px;color:var(--lite);padding:0 20px 14px;line-height:1.5">Votre signalement est traité de façon confidentielle par notre équipe.</div>'
+    +'<div style="padding:0 14px;display:flex;flex-direction:column;gap:6px">';
+  motifs.forEach(function(m){
+    html+='<div onclick="submitSignalement(\''+context+'\',\''+esc(targetId||'')+'\',\''+esc(targetName||'')+'\',\''+m.k+'\',\''+esc(m.l)+'\')" '
+      +'style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--bg);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      +'<div style="width:34px;height:34px;border-radius:9px;background:var(--wh);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">'+m.i+'</svg>'
+      +'</div>'
+      +'<div style="font-size:14px;font-weight:600;color:var(--ink)">'+esc(m.l)+'</div>'
+      +'</div>';
+  });
+  html+='</div><div style="height:max(20px,env(safe-area-inset-bottom,20px))"></div>';
+  showQuickSheet(html);
+}
+
+async function submitSignalement(context,targetId,targetName,motif,motifLabel){
+  closeQuickSheet();
+  if(!user)return;
+  var ctxLabels={prof:'Professeur',eleve:'Élève',message:'Conversation'};
+  var body='[Signalement — '+(ctxLabels[context]||context)+'] '+motifLabel
+    +(targetName?'\nConcerné(e) : '+targetName:'')
+    +(targetId?'\nID : '+targetId:'')
+    +'\nSignalé par : '+(user.em||'')+'  (ID: '+user.id+')';
+  try{
+    await fetch(API+'/contact',{method:'POST',headers:apiH(),body:JSON.stringify({
+      email:user.em||'noreply@courspool.app',
+      sujet:'Signalement',message:body,
+      nom:((user.pr||'')+' '+(user.nm||'')).trim()||'Utilisateur',
+      role:user.role||'',user_id:user.id
+    })});
+    haptic(12);
+    toast('Signalement envoyé','Notre équipe va examiner ce contenu. Merci.');
+  }catch(e){toast('Erreur',"Impossible d'envoyer le signalement");}
 }
 
 // ---- Quick sheet helper ----

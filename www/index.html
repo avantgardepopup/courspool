@@ -838,6 +838,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           <span>Partager</span>
         </button>
+        <button id="btnSignalMsg" onclick="openSignalement('message',msgDestId,g('msgConvName').textContent)" title="Signaler" style="width:34px;height:34px;border-radius:50%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;-webkit-tap-highlight-color:transparent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        </button>
       </div>
       <div id="msgMessages"></div>
       <div id="msgSafetyBanner">
@@ -1369,6 +1372,14 @@
       </button>
       <button id="bFP" onclick="togFP()" style="flex:1;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s">
         <span id="bFPt">Suivre</span>
+      </button>
+    </div>
+
+    <!-- Signaler ce profil -->
+    <div style="margin:12px 16px 0;text-align:center">
+      <button onclick="openSignalement('prof',curProf,g('mpnm').textContent)" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:6px 12px;display:inline-flex;align-items:center;gap:5px;border-radius:8px;-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        Signaler ce profil
       </button>
     </div>
 
@@ -2384,6 +2395,18 @@
           <div class="settings-sub">Ouvrir les réglages de l'app</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
+    <!-- Profil (élèves seulement) -->
+    <div class="settings-section-lbl" id="settingsTuteurSection" style="display:none">Mon profil</div>
+    <div class="settings-group" id="settingsTuteurGroup" style="display:none">
+      <div class="settings-row" style="cursor:pointer" onclick="toggleTuteurMode()">
+        <div style="flex:1">
+          <div class="settings-label">Je suis tuteur / parent</div>
+          <div class="settings-sub">Vos avis seront identifiés "Tuteur" — aide les autres familles</div>
+        </div>
+        <div class="ntog" id="tuteurToggle"></div>
       </div>
     </div>
 
