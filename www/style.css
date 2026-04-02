@@ -2182,14 +2182,17 @@ html.dk .filter-pill-btn { background:var(--wh); }
   .card-wrap:hover { transform: translateY(-6px) scale(1.008); }
   .card-wrap:hover .card.card-new { box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14); }
 }
-.card-wrap:active,
 .card-wrap.tapped {
-  transform: translateY(-1px) scale(.995);
-  transition-duration: .1s;
+  transform: translateY(-5px) scale(1.006);
+  transition: transform .18s cubic-bezier(.22,.61,.36,1);
 }
-.card-wrap:active .card.card-new,
 .card-wrap.tapped .card.card-new {
-  box-shadow: 0 4px 16px rgba(255,107,53,.14), 0 1px 4px rgba(255,107,53,.08);
+  box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14);
+  transition: box-shadow .18s;
+}
+.card-wrap:active:not(.tapped) {
+  transform: translateY(-1px) scale(.997);
+  transition-duration: .08s;
 }
 .card.card-new {
   animation: none;
