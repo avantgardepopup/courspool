@@ -438,6 +438,21 @@ tr:hover td{background:#FAFAF9;}
       <!-- PAGE SUPPORT -->
       <div class="page" id="pageSupport">
         <div class="section-title">Messages support <span id="supportCount" style="font-size:13px;color:var(--lite);font-weight:500"></span></div>
+        <div class="filters" id="supportFilters">
+          <button class="filter-btn on" onclick="filterSupport('all',this)">Tous</button>
+          <button class="filter-btn" onclick="filterSupport('non_lu',this)">Non lus <span id="filterUnreadBadge" style="display:none;background:var(--red);color:#fff;border-radius:50px;padding:1px 6px;font-size:10px;margin-left:3px">0</span></button>
+          <button class="filter-btn" onclick="filterSupport('Question générale',this)">Question</button>
+          <button class="filter-btn" onclick="filterSupport('Remboursement',this)">Remboursement</button>
+          <button class="filter-btn" onclick="filterSupport('Paiement',this)">Paiement</button>
+          <button class="filter-btn" onclick="filterSupport('Réservation',this)">Réservation</button>
+          <button class="filter-btn" onclick="filterSupport('Annulation de cours',this)">Annulation</button>
+          <button class="filter-btn" onclick="filterSupport('Problème technique',this)">Technique</button>
+          <button class="filter-btn" onclick="filterSupport('Bug / Crash',this)">Bug</button>
+          <button class="filter-btn" onclick="filterSupport('Vérification de compte',this)">Vérification</button>
+          <button class="filter-btn" onclick="filterSupport('Signalement',this)">Signalement</button>
+          <button class="filter-btn" onclick="filterSupport('Sécurité & Confidentialité',this)">Sécurité</button>
+          <button class="filter-btn" onclick="filterSupport('Autre',this)">Autre</button>
+        </div>
         <div class="card">
           <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
             <h3>Demandes des utilisateurs</h3>
@@ -1077,49 +1092,85 @@ function toast(msg,isError){
 // SUPPORT — messages de contact
 // ============================================================
 var allContacts = [];
+var supportFilter = 'all';
 
 async function renderSupport(){
   var list = document.getElementById('supportList');
-  var count = document.getElementById('supportCount');
   if(!list) return;
   list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Chargement…</div>';
   try{
     var data = await adminGet('/admin/contacts');
     allContacts = Array.isArray(data) ? data : [];
-    var nonLus = allContacts.filter(function(c){return !c.lu;}).length;
-    if(count) count.textContent = allContacts.length + ' message' + (allContacts.length>1?'s':'');
-    // Badge nav
-    var badge = document.getElementById('supportBadge');
-    if(badge){badge.style.display=nonLus>0?'inline':'none';badge.textContent=nonLus;}
-    if(!allContacts.length){
-      list.innerHTML='<div style="padding:40px;text-align:center;color:var(--lite);font-size:14px">Aucun message reçu</div>';
-      return;
-    }
-    list.innerHTML = allContacts.map(function(c){
-      var date = new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      var roleColor = c.role==='professeur'?'var(--or)':'#6366F1';
-      var bg = c.lu ? 'transparent' : '#FFFBF7';
-      var cid = c.id;
-      return '<div class="crow" data-cid="'+cid+'" data-bg="'+bg+'" style="border-bottom:1px solid var(--bdr);padding:16px 20px;cursor:pointer;background:'+bg+';transition:background .15s">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        +'<div style="display:flex;align-items:center;gap:8px">'
-        +(c.lu?'':'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0"></div>')
-        +'<span style="font-size:14px;font-weight:'+(c.lu?500:700)+';color:var(--ink)">'+(c.nom||c.email||'')+'</span>'
-        +'<span style="font-size:11px;font-weight:600;color:'+roleColor+';background:'+(c.role==='professeur'?'var(--orp)':'#EEF2FF')+';padding:2px 8px;border-radius:50px">'+(c.role||'')+'</span>'
-        +'</div>'
-        +'<span style="font-size:11px;color:var(--lite)">'+date+'</span>'
-        +'</div>'
-        +'<div style="font-size:13px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(c.message||c.sujet||'')+'</div>'
-        +'</div>';
-    }).join('');
-    list.querySelectorAll('.crow').forEach(function(el){
-      el.onclick=function(){openSupportMsg(this.dataset.cid);};
-      el.onmouseenter=function(){this.style.background='var(--bg)';};
-      el.onmouseleave=function(){this.style.background=this.dataset.bg;};
-    });
+    _renderSupportList();
   }catch(e){
     list.innerHTML='<div style="padding:20px;text-align:center;color:var(--lite);font-size:13px">Erreur de chargement</div>';
   }
+}
+
+function _renderSupportList(){
+  var list = document.getElementById('supportList');
+  var count = document.getElementById('supportCount');
+  if(!list) return;
+  var nonLus = allContacts.filter(function(c){return !c.lu;}).length;
+  // Badge nav
+  var badge = document.getElementById('supportBadge');
+  if(badge){badge.style.display=nonLus>0?'inline':'none';badge.textContent=nonLus;}
+  // Badge filtre non lus
+  var ub = document.getElementById('filterUnreadBadge');
+  if(ub){ub.style.display=nonLus>0?'inline':'none';ub.textContent=nonLus;}
+  // Filtrer
+  var filtered = allContacts.filter(function(c){
+    if(supportFilter==='all') return true;
+    if(supportFilter==='non_lu') return !c.lu;
+    return (c.sujet||'')===supportFilter;
+  });
+  if(count) count.textContent = filtered.length + ' message' + (filtered.length!==1?'s':'') + (supportFilter!=='all'?' (filtrés)':'');
+  if(!filtered.length){
+    list.innerHTML='<div style="padding:40px;text-align:center;color:var(--lite);font-size:14px">'+(allContacts.length?'Aucun message pour ce filtre':'Aucun message reçu')+'</div>';
+    return;
+  }
+  var subjColors={
+    'Remboursement':'#EFF6FF;color:#3B82F6',
+    'Paiement':'#EFF6FF;color:#3B82F6',
+    'Bug / Crash':'#FEF2F2;color:#EF4444',
+    'Problème technique':'#FEF2F2;color:#EF4444',
+    'Signalement':'#FEF2F2;color:#EF4444',
+    'Annulation de cours':'#FFFBEB;color:#D97706',
+    'Réservation':'#FFFBEB;color:#D97706',
+    'Vérification de compte':'#F5F3FF;color:#8B5CF6',
+    'Sécurité & Confidentialité':'#F5F3FF;color:#8B5CF6',
+  };
+  list.innerHTML = filtered.map(function(c){
+    var date = new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    var roleColor = c.role==='professeur'?'var(--or)':'#6366F1';
+    var bg = c.lu ? 'transparent' : '#FFFBF7';
+    var sc = subjColors[c.sujet]||'var(--orp);color:var(--or)';
+    var subjBg=sc.split(';')[0], subjTxt=sc.split(';')[1]||'color:var(--or)';
+    return '<div class="crow" data-cid="'+c.id+'" data-bg="'+bg+'" style="border-bottom:1px solid var(--bdr);padding:14px 20px;cursor:pointer;background:'+bg+';transition:background .15s">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
+      +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'
+      +(c.lu?'':'<div style="width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0"></div>')
+      +'<span style="font-size:13.5px;font-weight:'+(c.lu?500:700)+';color:var(--ink)">'+(escHtml(c.nom)||c.email||'Anonyme')+'</span>'
+      +'<span style="font-size:10.5px;font-weight:600;color:'+roleColor+';background:'+(c.role==='professeur'?'var(--orp)':'#EEF2FF')+';padding:2px 7px;border-radius:50px">'+(c.role||'')+'</span>'
+      +'<span style="font-size:10.5px;font-weight:600;background:'+subjBg+';'+subjTxt+';padding:2px 8px;border-radius:50px">'+escHtml(c.sujet||'')+'</span>'
+      +'</div>'
+      +'<span style="font-size:11px;color:var(--lite);white-space:nowrap;margin-left:8px">'+date+'</span>'
+      +'</div>'
+      +'<div style="font-size:12.5px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:'+(c.lu?'0':'15px')+'">'+escHtml(c.message||'')+'</div>'
+      +'</div>';
+  }).join('');
+  list.querySelectorAll('.crow').forEach(function(el){
+    el.onclick=function(){openSupportMsg(this.dataset.cid);};
+    el.onmouseenter=function(){this.style.background='var(--bg)';};
+    el.onmouseleave=function(){this.style.background=this.dataset.bg;};
+  });
+}
+
+function filterSupport(f, el){
+  supportFilter = f;
+  document.querySelectorAll('#supportFilters .filter-btn').forEach(function(b){b.classList.remove('on');});
+  if(el) el.classList.add('on');
+  _renderSupportList();
 }
 
 async function openSupportMsg(id){
@@ -1129,7 +1180,7 @@ async function openSupportMsg(id){
   if(!c.lu){
     await adminPatch('/admin/contacts/'+id,{lu:true});
     c.lu = true;
-    renderSupport();
+    _renderSupportList();
   }
   var date = new Date(c.created_at).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   // Ouvrir modal
@@ -1153,7 +1204,7 @@ async function openSupportMsg(id){
   // Attacher le listener sur le bouton supprimer
   var delBtn = document.querySelector('.del-msg-btn');
   if(delBtn) delBtn.onclick = function(){deleteSupportMsg(this.dataset.mid);};
-  document.getElementById('overlay').classList.add('on');
+  document.getElementById('modalProf').classList.add('on');
 }
 
 async function deleteSupportMsg(id){
@@ -1170,7 +1221,7 @@ async function markAllSupportRead(){
     var unread = allContacts.filter(function(c){return !c.lu;});
     await Promise.all(unread.map(function(c){return adminPatch('/admin/contacts/'+c.id,{lu:true});}));
     allContacts.forEach(function(c){c.lu=true;});
-    renderSupport();
+    _renderSupportList();
     toast('Tous les messages marqués comme lus');
   }catch(e){toast('Erreur');}
 }
@@ -1324,3 +1375,4 @@ async function deleteUser(id, nom){
 
 </body>
 </html>
+
