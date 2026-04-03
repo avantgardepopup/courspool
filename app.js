@@ -1447,11 +1447,11 @@ function applyUser(){
 
 // Titres et sous-titres par page
 var MOB_TITLES={
-  exp:{title:'Accueil',sub:'Cours près de vous'},
-  fav:{title:'Mes favoris',sub:'Cours & professeurs sauvegardés'},
-  mes:{title:'Mes cours',sub:'Réservations & historique'},
-  msg:{title:'Messages',sub:'Vos conversations'},
-  acc:{title:'Mon profil',sub:'Paramètres & réservations'}
+  exp:{titleKey:'exp_title',subKey:'exp_subtitle'},
+  fav:{titleKey:'bnav_favoris',subKey:'fav_saved'},
+  mes:{titleKey:'acc_mes_cours',subKey:'acc_reservations'},
+  msg:{titleKey:'msg_title',subKey:'msg_title'},
+  acc:{titleKey:'acc_mon_profil',subKey:'acc_parametres'}
 };
 
 function getGreeting(){
@@ -1476,14 +1476,16 @@ function updateTopbarNav(tab){
 }
 
 function updateMobHeader(tab){
-  var t=MOB_TITLES[tab]||{title:'CoursPool',sub:''};
+  var entry=MOB_TITLES[tab]||{titleKey:null,subKey:null};
+  var title=entry.titleKey?t(entry.titleKey):'CoursPool';
+  var sub=entry.subKey?t(entry.subKey):'';
   var mt=g('mobTitle'),ms=g('mobSub');
   if(tab==='exp'&&user){
     if(mt)mt.textContent=getGreeting()+' '+user.pr+' 👋';
-    if(ms)ms.textContent=t.sub;
+    if(ms)ms.textContent=sub;
   } else {
-    if(mt)mt.textContent=t.title;
-    if(ms)ms.textContent=t.sub;
+    if(mt)mt.textContent=title;
+    if(ms)ms.textContent=sub;
   }
   // Recherche visible seulement sur Explorer
   var ms2=g('mobSearch');if(ms2)ms2.style.display=tab==='exp'?'block':'none';
@@ -2656,8 +2658,8 @@ function renderPage(){
     grid.innerHTML='';
     if(_nc)_nc.style.display='block';
     var _nt=g('nocardTitle'),_ns=g('nocardSub');
-    if(_nt)_nt.textContent='Aucun cours trouvé';
-    if(_ns)_ns.textContent='Essayez un autre filtre ou une autre ville';
+    if(_nt)_nt.textContent=t('exp_empty_title');
+    if(_ns)_ns.textContent=t('exp_empty_sub');
     if(_lmw)_lmw.style.display='none';
     return;
   }
@@ -4502,7 +4504,7 @@ function requestGeoloc(){
     _geoActive=false;_geoCoords=null;
     var btn=g('locGeoBtn'),lbl=g('geoBtnLabel'),distBtn=g('geoDistBtn');
     if(btn){btn.style.background='var(--orp)';btn.style.color='var(--or)';btn.style.padding='5px 8px';}
-    if(lbl){lbl.textContent='Autour de moi';lbl.style.display='';}
+    if(lbl){lbl.textContent=t('exp_around_me');lbl.style.display='';}
     if(distBtn)distBtn.style.display='none';
     var inp=g('locInput');if(inp)inp.value='';
     var cb=g('locClearBtn');if(cb)cb.style.display='none';
@@ -4539,7 +4541,7 @@ function requestGeoloc(){
     },
     function(err){
       if(btn){btn.style.opacity='1';}
-      if(lbl)lbl.textContent='Autour de moi';
+      if(lbl)lbl.textContent=t('exp_around_me');
       if(err.code===1){
         _geoPermDenied=true;
         // Changer l'icône du bouton pour indiquer l'état "refusé → réglages"
@@ -4575,7 +4577,7 @@ function setDistFilter(km,el){
 function filterByLoc(val){
   var btn=g('locClearBtn');
   if(btn)btn.style.display=val.trim()?'block':'none';
-  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=val.trim()||'Ville';
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=val.trim()||t('filter_ville');
   clearTimeout(locFilterTimer);
   locFilterTimer=setTimeout(function(){
     actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -4587,7 +4589,7 @@ function filterByLoc(val){
 function locInputClear(){
   var inp=g('locInput');if(inp)inp.value='';
   var btn=g('locClearBtn');if(btn)btn.style.display='none';
-  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent='Ville';
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=t('filter_ville');
   var bar=document.querySelector('.locbar');if(bar)bar.classList.remove('open');
   var pill=g('pillVille');if(pill)pill.classList.remove('on');
   actLoc='';
@@ -6550,7 +6552,7 @@ function setNivFilter(niv, el){
   if(el)el.classList.add('on');
   var lbl=g('pillNivLabel');
   var pill=g('pillNiv');
-  if(lbl){lbl.textContent=niv||'Niveau';}
+  if(lbl){lbl.textContent=niv||t('filter_niveau');}
   if(pill){pill.classList.toggle('on',!!niv);}
   closeNivFilter();
   applyFilter();
@@ -6579,7 +6581,7 @@ function clearVilleFilter(){
   locInputClear();
   closeVilleFilter();
   var pill=g('pillVille');if(pill)pill.classList.remove('on');
-  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent='Ville';
+  var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=t('filter_ville');
 }
 
 function openModeFilter(){
@@ -6597,8 +6599,8 @@ function setModeFilter(mode, el){
   actMode=mode;
   document.querySelectorAll('#modeFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   if(el)el.classList.add('on');
-  var labels={'':'Mode','presentiel':'Présentiel','visio':'Visio'};
-  var lbl=g('pillModeLabel');if(lbl)lbl.textContent=labels[mode]||'Mode';
+  var labels={'':t('filter_mode'),'presentiel':t('filter_mode_pres'),'visio':t('filter_mode_vis')};
+  var lbl=g('pillModeLabel');if(lbl)lbl.textContent=labels[mode]||t('filter_mode');
   var pill=g('pillMode');if(pill)pill.classList.toggle('on',!!mode);
   closeModeFilter();
   applyFilter();
@@ -6616,10 +6618,10 @@ function setDateFilter(date,el){
   actDate=date;
   document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   if(el)el.classList.add('on');
-  var labels={'':'Période','semaine':'Cette semaine','mois':'Ce mois',
-    'lundi':'Lundi','mardi':'Mardi','mercredi':'Mercredi','jeudi':'Jeudi',
-    'vendredi':'Vendredi','samedi':'Samedi','dimanche':'Dimanche'};
-  var lbl=g('pillDateLabel');if(lbl)lbl.textContent=labels[date]||'Période';
+  var labels={'':t('filter_periode'),'semaine':t('filter_this_week'),'mois':t('filter_this_month'),
+    'lundi':t('filter_lun'),'mardi':t('filter_mar'),'mercredi':t('filter_mer'),'jeudi':t('filter_jeu'),
+    'vendredi':t('filter_ven'),'samedi':t('filter_sam'),'dimanche':t('filter_dim')};
+  var lbl=g('pillDateLabel');if(lbl)lbl.textContent=labels[date]||t('filter_periode');
   var pill=g('pillDate');if(pill)pill.classList.toggle('on',!!date);
   closeDateFilter();
   applyFilter();
@@ -6846,12 +6848,12 @@ function resetFilters(){
   actF='tous';actLoc='';actNiv='';actMode='';actDate='';
   var _dpill=g('pillDate'),_dlbl=g('pillDateLabel');
   if(_dpill)_dpill.classList.remove('on');
-  if(_dlbl)_dlbl.textContent='Période';
+  if(_dlbl)_dlbl.textContent=t('filter_periode');
   document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   var _dFirst=document.querySelector('#dateFilterList .niv-fchip');if(_dFirst)_dFirst.classList.add('on');
   geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;
   var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
-  if(_rlbl){_rlbl.textContent='Autour de moi';_rlbl.style.display='';}
+  if(_rlbl){_rlbl.textContent=t('exp_around_me');_rlbl.style.display='';}
   if(_rdist)_rdist.style.display='none';
   var inp=g('locInput');if(inp)inp.value='';
   var cb=g('locClearBtn');if(cb)cb.style.display='none';
@@ -6860,13 +6862,13 @@ function resetFilters(){
   var tous=g('pillTous');if(tous)tous.classList.add('on');
   document.querySelectorAll('#nivFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   var fn=document.querySelector('#nivFilterList .niv-fchip');if(fn)fn.classList.add('on');
-  var lbl=g('pillNivLabel');if(lbl)lbl.textContent='Niveau';
+  var lbl=g('pillNivLabel');if(lbl)lbl.textContent=t('filter_niveau');
   var pn=g('pillNiv');if(pn)pn.classList.remove('on');
   document.querySelectorAll('#modeFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   var fm=document.querySelector('#modeFilterList .niv-fchip');if(fm)fm.classList.add('on');
-  var lm=g('pillModeLabel');if(lm)lm.textContent='Mode';
+  var lm=g('pillModeLabel');if(lm)lm.textContent=t('filter_mode');
   var pm=g('pillMode');if(pm)pm.classList.remove('on');
-  var lv=g('pillVilleLabel');if(lv)lv.textContent='Ville';
+  var lv=g('pillVilleLabel');if(lv)lv.textContent=t('filter_ville');
   var pv=g('pillVille');if(pv)pv.classList.remove('on');
   var lb=document.querySelector('.locbar');if(lb)lb.classList.remove('open');
   var pr=g('pillReset');if(pr)pr.style.display='none';
@@ -8364,13 +8366,13 @@ function showAccHome(){
 
 // Override switchATab to show detail view + update topbar title
 (function(){
-  var _tabTitles={R:'Mes cours',F:'Suivis',H:'Historique',P:'Mon profil',Rev:'Revenus',Rmb:'Remboursements'};
+  var _tabTitleKeys={R:'acc_mes_cours',F:'acc_suivis',H:'acc_historique',P:'acc_mon_profil',Rev:'acc_revenus',Rmb:'settings_remb'};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
     var pg=g('pgAcc');
     if(pg){pg.classList.remove('home-mode');pg.classList.add('detail-mode');}
-    var mt=g('mobTitle');if(mt&&_tabTitles[s])mt.textContent=_tabTitles[s];
+    var mt=g('mobTitle');if(mt&&_tabTitleKeys[s])mt.textContent=t(_tabTitleKeys[s]);
     var mh=g('mobHeader');if(mh)mh.style.display='block';
     var ms=g('mobSearch');if(ms)ms.style.display='none';
     var body=document.querySelector('#pgAcc .acc-body');
