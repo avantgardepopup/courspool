@@ -383,7 +383,7 @@ function buildFavPage(){
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
           +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
           +'<div class="fav-cours-card-meta" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> '+esc(c.lc)+'</div>'
-          +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
+          +'<div class="fav-cours-card-price">'+pp+'€<span> / '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</span></div>'
           +'</div>'
           +'</div>';
       }).join('');
@@ -1862,7 +1862,7 @@ function goAccount(){
   if(pfLieuLbl)pfLieuLbl.textContent=_lieuLbl;
   if(pfLieuVisLbl)pfLieuVisLbl.textContent=_lieuVisLbl+' public';
   var roleDisplay=g('pfRoleDisplay');
-  if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 Professeur':'🎓 Élève';
+  if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 '+t('reg_prof'):'🎓 '+t('reg_eleve');
   var pfProfExtra=g('pfProfExtra');
   if(user.role==='professeur'){
     if(pfProfExtra)pfProfExtra.style.display='block';
@@ -1978,19 +1978,19 @@ function buildAccLists(){
     var nbCours=isProf?C.filter(function(c){return c.pr===user.id&&!_isCoursPass(c);}).length:0;
     if(isProf){
       stats.innerHTML=
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Cours</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Élèves</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Note</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('mp_cours')+'</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('mp_eleves')+'</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('mp_note')+'</div></div>';
     } else {
       stats.innerHTML=
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Réservés</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Suivis</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">Total</div></div>';
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('acc_reservations')+'</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('acc_suivis')+'</div></div>'+
+        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('acc_professeurs')+'</div></div>';
     }
   }
   // Rôle pill
   var rp=g('accRolePill');
-  if(rp)rp.textContent=isProf?'👨‍🏫 Professeur':'👤 Élève';
+  if(rp)rp.textContent=isProf?'👨‍🏫 '+t('reg_prof'):'👤 '+t('reg_eleve');
   var lr=g('listR');
   // ── Section "Mes cours créés" pour les professeurs ──
   var profCoursHtml='';
@@ -2022,12 +2022,12 @@ function buildAccLists(){
         profCoursHtml+='<div class="fav-cours-card" onclick="openR(\''+esc(c.id)+'\')">'
           +'<div class="fav-cours-card-top" style="background:'+_favBg+'">'
           +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
-          +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">Complet</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
+          +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">'+t('rr_complet')+'</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
           +'</div>'
           +'<div class="fav-cours-card-body">'
           +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
           +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
-          +'<div class="fav-cours-card-price">'+pp+'€<span> / élève</span></div>'
+          +'<div class="fav-cours-card-price">'+pp+'€<span> / '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</span></div>'
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
           +'</div>'
@@ -2090,7 +2090,7 @@ function buildAccLists(){
         +'<div style="display:flex;align-items:center;gap:8px">'
         +'<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0" data-prof="'+c.pr+'">'+_phHtml+'</div>'
         +'<span data-profnm="'+c.pr+'" style="font-size:12px;color:var(--mid);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur')+'</span>'
-        +(pp?'<span style="font-size:13px;font-weight:800;color:var(--or)">'+pp+'€<span style="font-size:10px;font-weight:500;color:var(--lite)"> / élève</span></span>':'')
+        +(pp?'<span style="font-size:13px;font-weight:800;color:var(--or)">'+pp+'€<span style="font-size:10px;font-weight:500;color:var(--lite)"> / '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</span></span>':'')
         +(noteBtn?'<span>'+noteBtn+'</span>':'')
         +'</div>'
         +'</div>'
@@ -2643,7 +2643,7 @@ function buildPlacesCircles(fl,sp){
   var pct=sp>0?Math.round(fl/sp*100):100;
   var cls=pleft<=0?' full':pleft===1?' last':'';
   var barColor=pleft<=0?'#9CA3AF':pleft===1?'#EF4444':'#FF6B35';
-  var txt=pleft<=0?'Complet':pleft===1?'Dernière place !':pleft+' place'+(pleft>1?'s':'')+' libre'+(pleft>1?'s':'');
+  var txt=pleft<=0?t('rr_complet'):pleft===1?t('rr_place'):pleft+' '+t('rr_places');
   return '<div class="places-bar"><div class="places-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'
     +'<span class="card-places-count'+cls+'">'+txt+'</span>';
 }
@@ -2683,7 +2683,7 @@ function renderPage(){
     var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
     // Mode badge
     var modeIcon=_isVisio?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-    var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?'Visio':'Présentiel')+'</span>';
+    var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>';
     // Mini follow button (inside prof avatar)
     var miniFollowBtn='';
     if(user&&!user.guest&&!isOwner){
@@ -2706,9 +2706,9 @@ function renderPage(){
     // Reserve button
     var btnHtml;
     if(isOwner) btnHtml='<button class="card-btn-reserve card-btn-consult" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
-    else if(isR&&isFull) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Complet</button>';
-    else if(isR) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">Inscrit · Ajouter</button>';
-    else if(isFull) btnHtml='<button class="card-btn-reserve card-btn-full" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">Complet</button>';
+    else if(isR&&isFull) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · '+t('rr_complet')+'</button>';
+    else if(isR) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · +</button>';
+    else if(isFull) btnHtml='<button class="card-btn-reserve card-btn-full" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">'+t('rr_complet')+'</button>';
     else btnHtml='<button class="card-btn-reserve" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
     // Build card-wrap
     var wrap=document.createElement('div');
@@ -2730,7 +2730,7 @@ function renderPage(){
           '<div class="card-foot">'+
             '<div class="card-price-block">'+
               '<div class="card-price-val">'+pp+'€</div>'+
-              '<div class="card-price-sub">/ élève</div>'+
+              '<div class="card-price-sub">/ '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</div>'+
             '</div>'+
             '<div class="card-circles-wrap">'+buildPlacesCircles(c.fl,c.sp)+'</div>'+
             heartHtml+btnHtml+
@@ -4429,7 +4429,7 @@ async function loadConversations(){
       var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var _pc=m.contenu||'';
-      var preview=_pc.includes('chat-cours-card')||_pc.includes('"mode":"')?'📚 A partagé un cours':(esc(_pc.slice(0,35))+(_pc.length>35?'…':''));
+      var preview=_pc.includes('chat-cours-card')||_pc.includes('"mode":"')?'📚 '+t('rr_partager'):(esc(_pc.slice(0,35))+(_pc.length>35?'…':''));
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
       return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
@@ -5905,11 +5905,11 @@ async function loadRemboursements(){
       var st=r.status||'';
       var pill,pillBg,pillColor;
       if(st==='refunded'||r.rembourse){
-        pill='Remboursé'; pillBg='#DCFCE7'; pillColor='#15803D';
+        pill=t('t_refreshed'); pillBg='#DCFCE7'; pillColor='#15803D';
       } else if(st==='cancelled'||r.annule||r.cancelled){
-        pill='En cours'; pillBg='#FEF3C7'; pillColor='#92400E';
+        pill=t('exp_verif'); pillBg='#FEF3C7'; pillColor='#92400E';
       } else {
-        pill='Annulé'; pillBg='#FEE2E2'; pillColor='#B91C1C';
+        pill=t('t_cancelled'); pillBg='#FEE2E2'; pillColor='#B91C1C';
       }
       var border=i<refunds.length-1?'border-bottom:1px solid var(--bdr)':'';
       html+='<div style="padding:14px 16px;'+border+';display:flex;align-items:center;gap:12px">'
