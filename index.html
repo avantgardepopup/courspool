@@ -1004,11 +1004,11 @@
 
       <!-- Hidden tabs (needed for JS) -->
       <div style="display:none">
-        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)">Mes cours</button>
-        <button class="ptab" id="aTabF" onclick="switchATab('F',this)">Suivis</button>
-        <button class="ptab" id="aTabH" onclick="switchATab('H',this)">Historique</button>
-        <button class="ptab" id="aTabP" onclick="switchATab('P',this)">Profil</button>
-        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none">Revenus</button>
+        <button class="ptab on" id="aTabR" onclick="switchATab('R',this)" data-i18n="acc_mes_cours">Mes cours</button>
+        <button class="ptab" id="aTabF" onclick="switchATab('F',this)" data-i18n="acc_suivis">Suivis</button>
+        <button class="ptab" id="aTabH" onclick="switchATab('H',this)" data-i18n="acc_historique">Historique</button>
+        <button class="ptab" id="aTabP" onclick="switchATab('P',this)" data-i18n="acc_mon_profil">Profil</button>
+        <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none" data-i18n="acc_revenus">Revenus</button>
         <button class="ptab" id="aTabRmb" onclick="switchATab('Rmb',this)" style="display:none">Remboursements</button>
       </div>
 
@@ -1112,7 +1112,7 @@
           </div>
 
           <!-- Liste des paiements -->
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Historique</div>
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px" data-i18n="acc_historique">Historique</div>
           <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>
           </div>
@@ -2345,7 +2345,7 @@
       <button onclick="closeSettings()" style="width:34px;height:34px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em">Paramètres</div>
+      <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em" data-i18n="settings_title">Paramètres</div>
     </div>
 
     <!-- Langue -->

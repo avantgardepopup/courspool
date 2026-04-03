@@ -633,7 +633,7 @@ function updatePwStrength(pw){
   if(/[A-Z]/.test(pw)||/[0-9]/.test(pw))score++;
   if(/[^a-zA-Z0-9]/.test(pw))score++;
   var colors=['var(--bdr)','#EF4444','#F97316','#22C55E','#22C55E'];
-  var labels=['','Trop court','Faible','Correct','Fort'];
+  var labels=['',t('pw_too_short'),t('pw_weak'),t('pw_ok'),t('pw_strong')];
   for(var i=1;i<=4;i++){var b=g('pwBar'+i);if(b)b.style.background=i<=score?colors[score]:'var(--bdr)';}
   var lbl=g('pwStrengthLabel');if(lbl){lbl.textContent=labels[score]||'';lbl.style.color=colors[score]||'';}
 }
@@ -788,7 +788,7 @@ async function _handleOAuthSignIn(session){
           fol=_r;_saveFol();if(C.length)buildCards();
         }).catch(function(){});
       });
-      toast('Bienvenue '+pr+' !','Connecté à CoursPool');
+      toast('Bienvenue '+pr+' !',t('t_welcome_sub'));
       _oauthProcessing=false;
       return;
     }
@@ -1308,7 +1308,7 @@ async function doLogin(){
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     }
-    toast('Bienvenue '+pr+' !','Connecté à CoursPool');
+    toast('Bienvenue '+pr+' !',t('t_welcome_sub'));
     // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
     if(role!=='professeur'){setTimeout(tutoStart,1200);}
   }catch(e){
@@ -1327,8 +1327,8 @@ async function doReg(){
   var em=(g('rEm')&&g('rEm').value||'').trim();
   var pw=(g('rPw')&&g('rPw').value||'');
   var role=_regRole||'eleve';
-  if(!pr||!em||!pw){toast('Champs manquants','Prénom, email et mot de passe requis');return;}
-  if(pw.length<6){toast('Erreur','Mot de passe trop court (6 min)');return;}
+  if(!pr||!em||!pw){toast(t('t_fields_miss'),'');return;}
+  if(pw.length<6){toast(t('t_error'),t('t_pw_short'));return;}
   var btn=g('regCreateBtn');if(btn){btn.disabled=true;btn.textContent='Création...';}
   try{
     var body={email:em,password:pw,prenom:pr,nom:nm,role:role};
@@ -1385,7 +1385,7 @@ function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
   favCours.clear();loadFavCours();
   applyUser();
   loadData().then(function(){buildCards();});
-  toast('Bienvenue '+pr+' !','Connecté à CoursPool');
+  toast('Bienvenue '+pr+' !',t('t_welcome_sub'));
 }
 
 function applyUser(){
@@ -1502,14 +1502,14 @@ function updateMobHeader(tab){
 function navTo(tab,_skipHistory){
   // ── Gardes : vérification avant tout changement DOM ─────────────────────
   if(tab==='fav'&&(!user||user.guest)){
-    toast('Connectez-vous pour accéder à vos favoris','');
+    toast(t('t_fav_login'),'');
     setTimeout(scrollToLogin,800);
     return;
   }
   if(tab==='msg'){
     if(!user){navTo('exp');return;}
     if(user.guest){
-      toast('Connectez-vous pour accéder aux messages','');
+      toast(t('t_msg_login'),'');
       setTimeout(scrollToLogin,800);
       return;
     }
@@ -1525,7 +1525,7 @@ function navTo(tab,_skipHistory){
         if(s)s.innerHTML='Rejoignez CoursPool pour réserver des cours,<br>suivre des professeurs et gérer votre profil.';
         bd.style.display='flex';
       }else{
-        toast('Connectez-vous pour accéder à votre profil','');
+        toast(t('t_acc_login'),'');
         setTimeout(scrollToLogin,800);
       }
       return;
@@ -1782,7 +1782,7 @@ async function checkStripeReturn(){
     // Retour configuration bancaire
     if(params.get('stripe_connected')){
       window.history.replaceState({},'',window.location.pathname);
-      toast('Paiements activés ✓','Vous allez recevoir vos virements automatiquement');
+      toast(t('t_pay_active'),t('t_pay_active_s'));
       setTimeout(function(){navTo('acc');if(user&&user.role==='professeur'){var tabRev=g('aTabRev');if(tabRev)tabRev.click();}},800);
       return;
     }
@@ -1804,7 +1804,7 @@ async function checkStripeReturn(){
       function tryOpenCours(){
         var c=C.find(function(x){return x.id==directCours;});
         if(c){openR(c.id);}
-        else{toast('Cours introuvable','Ce lien n\'est plus valide');}
+        else{toast(t('t_not_found'),'');}
       }
       if(C.length){tryOpenCours();}
       else{setTimeout(tryOpenCours,1200);}
@@ -2260,7 +2260,7 @@ function saveProf(){
         // Re-render les chips avec la valeur confirmée par le serveur
         if(user.role==='professeur') initMatieresChips(user.matieres||'');
       }
-    }).catch(function(){toast('Erreur réseau','Profil non sauvegardé sur le serveur');});
+    }).catch(function(){toast(t('t_net_error'),t('t_prof_not_saved'));});
   }
   // Mettre à jour UI sans quitter la page profil
   setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
@@ -2601,7 +2601,7 @@ function toggleFollowCard(pid,btn){
         P[pid]=P[pid]||{};P[pid].e=(P[pid].e||0)+1;
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
-        toast('Erreur réseau','Impossible de modifier le suivi');
+        toast(t('t_net_error'),'');
       });
   } else {
     fol.add(pid);_saveFol();
@@ -2625,7 +2625,7 @@ function toggleFollowCard(pid,btn){
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
-        toast('Erreur réseau','Impossible de modifier le suivi');
+        toast(t('t_net_error'),'');
       });
   }
   // Mettre à jour mpE immédiatement (valeur optimiste)
@@ -3171,9 +3171,9 @@ function viewCoursCard(id){
   if(!c){
     // Cours absent du cache local — le charger depuis l'API
     fetch(API+'/cours/'+id).then(function(r){return r.json();}).then(function(cd){
-      if(!cd||!cd.id){toast('Cours introuvable','Ce cours n\'est plus disponible');return;}
+      if(!cd||!cd.id){toast(t('t_not_found'),t('t_unavail'));return;}
       C.push(cd);viewCoursCard(cd.id);
-    }).catch(function(){toast('Cours introuvable','Ce cours n\'est plus disponible');});
+    }).catch(function(){toast(t('t_not_found'),t('t_unavail'));});
     return;
   }
   curId=c.id;
@@ -3349,12 +3349,12 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
     var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
     var data=await r.json();
     if(data.error){toast('Erreur',data.error);return;}
-    toast('Annulé','L\'élève a été remboursé automatiquement ✓');
+    toast(t('t_cancelled'),t('t_cancelled_sub'));
     openEleves(coursId);
     var c=C.find(function(x){return x.id==coursId;});
     if(c&&c.fl>0)c.fl--;
     buildCards();
-  }catch(e){toast('Erreur réseau','Impossible d\'annuler');}
+  }catch(e){toast(t('t_net_error'),'');}
 }
 function confR(){
   haptic(15);
@@ -3462,7 +3462,7 @@ function confF(){
         P[pid]=P[pid]||{};P[pid].e=Math.max(0,(P[pid].e||1)-1);
         if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
         _saveFollowCount(pid,P[pid].e||0);
-        toast('Erreur réseau','Impossible de suivre ce professeur');
+        toast(t('t_net_error'),'');
       });
   }
   if(g('mpE')&&curProf===pid)g('mpE').textContent=P[pid]?P[pid].e:0;
@@ -3832,7 +3832,7 @@ function togFP(){
           if(P[id])P[id].e=(P[id].e||0)+1;
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
           _saveFollowCount(id,P[id].e||0);
-          toast('Erreur réseau','Impossible de modifier le suivi');
+          toast(t('t_net_error'),'');
         });
     }
   } else {
@@ -3859,7 +3859,7 @@ function togFP(){
           if(P[id])P[id].e=Math.max(0,(P[id].e||1)-1);
           if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
           _saveFollowCount(id,P[id].e||0);
-          toast('Erreur réseau','Impossible de modifier le suivi');
+          toast(t('t_net_error'),'');
         });
     }
   }
@@ -3889,10 +3889,10 @@ function togFP(){
 
 // CRÉER COURS
 function openCr(){
-  if(!user||user.role!=='professeur'){toast('Accès refusé','Seuls les professeurs peuvent proposer des cours');return;}
+  if(!user||user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
   if(user.verified===false){
-    if(getCniStatus()==='none'){toast('Pièce d\'identité requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
-    else{toast('Vérification en cours','Votre identité est en cours de vérification. Vous pourrez publier des cours sous 24h.');}
+    if(getCniStatus()==='none'){toast(t('t_cni_req'),'');openCniSheet();}
+    else{toast(t('exp_verif'),t('exp_verif_sub'));}
     return;
   }
   var today=new Date().toLocaleDateString('fr-CA',{timeZone:'Europe/Paris'});
@@ -3926,7 +3926,7 @@ async function subCr(){
   var matFound=MATIERES.find(function(m){return m.key===subjKey;});
   var sujet=matFound?matFound.label:'Autre';
   if(!titre||!date||!heure||!lieu||!prix){
-    toast('Champs manquants','Remplissez tous les champs obligatoires');
+    toast(t('t_fields_miss'),'');
     window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}return;
   }
   var dateObj=new Date(date+'T'+heure);
@@ -3969,7 +3969,7 @@ async function subCr(){
     closeM('bdCr');await loadData();buildCards();buildAccLists();
     var isFirstCours=C.filter(function(c){return c.pr===user.id;}).length<=1;
     toast(isFirstCours?'Premier cours publié !':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
-  }catch(e){toast('Erreur réseau','Vérifiez votre connexion');}
+  }catch(e){toast(t('t_net_error'),'');}
   finally{window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}}
 }
 
@@ -4047,7 +4047,7 @@ async function confirmDeleteCours(){
     await loadData();buildCards();buildAccLists();
     var nb=data.remboursements||0;
     toast('Cours annul\u00e9',nb>0?nb+' \u00e9l\u00e8ve'+(nb>1?'s':'')+' rembours\u00e9'+(nb>1?'s':'')+' automatiquement \u2713':'Cours supprim\u00e9');
-  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'annuler_cours',cours_id:id});toast('Erreur réseau','Impossible d\'annuler ce cours');}
+  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'annuler_cours',cours_id:id});toast(t('t_net_error'),'');}
   window._deleteId=null;
 }
 function calcH(){
@@ -4278,7 +4278,7 @@ async function loadMessages(){
     if(msgDestId)fetch(API+'/messages/lu/'+user.id,{method:'PUT',headers:apiH(),body:JSON.stringify({expediteur_id:msgDestId})}).catch(function(){});
   }catch(e){
     console.log('loadMessages err',e);
-    if(!_msgLoadFailed){_msgLoadFailed=true;toast('Erreur réseau','Impossible de charger les messages');}
+    if(!_msgLoadFailed){_msgLoadFailed=true;toast(t('t_net_error'),'');}
   }
 }
 
@@ -6083,7 +6083,7 @@ async function openPaymentSheet(id,pourAmi){
     });
   }catch(e){
     if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'open_payment_sheet'});
-    toast('Erreur réseau','Impossible de charger le paiement',true);
+    toast(t('t_net_error'),'',true);
     closePaymentSheet();
   }
 }
@@ -6130,7 +6130,7 @@ async function submitPayment(){
     }
   }catch(e){
     if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'submit_payment'});
-    toast('Erreur réseau','Impossible de confirmer le paiement',true);
+    toast(t('t_net_error'),'',true);
     btn.disabled=false;btn.style.opacity='1';
     if(loader)loader.style.display='none';
     if(btnTxt)btnTxt.textContent='Réessayer';
@@ -6371,7 +6371,7 @@ async function submitNote(){
     try{if(noteCours)localStorage.setItem('cp_noted_'+noteCours.id,'1');}catch(e){}
     toast('Merci pour votre avis !','Votre note a été enregistrée ⭐');
     noteCours=null;noteVal=0;
-  }catch(e){toast('Erreur réseau','Impossible d\'envoyer la note');}
+  }catch(e){toast(t('t_net_error'),'');}
 }
 
 // LIEU SEARCH
@@ -7465,7 +7465,7 @@ function startAccountCheck(){
           toast('Document refusé','Vérifiez votre email pour plus d\'informations');
         }
         if(_dvChanged&&p.diplome_verifie===true){
-          toast('Diplôme vérifié !','Le badge est maintenant visible sur votre profil');
+          toast(t('t_diplome_ok'),t('t_diplome_sub'));
           haptic([10,50,100,50,10]);
         }
       }
@@ -8489,7 +8489,7 @@ async function submitEditMsg(msgId, btn){
       var ac=wrap.querySelector('.msg-actions');if(ac)ac.style.display='';
       haptic(6);
     }else{toast('Erreur','Impossible de modifier');}
-  }catch(e){toast('Erreur réseau','');}
+  }catch(e){toast(t('t_net_error'),'');}
   finally{btn.disabled=false;btn.textContent='OK';}
 }
 
@@ -8508,7 +8508,7 @@ async function deleteMsg(msgId){
       }
       haptic([10,30]);toast('Message supprimé','');
     }else{toast('Erreur','Impossible de supprimer');}
-  }catch(e){toast('Erreur réseau','');}
+  }catch(e){toast(t('t_net_error'),'');}
 }
 
 // Touch-hold on mobile to show msg actions
