@@ -137,7 +137,7 @@ function _refreshToken(){
       var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:user.refresh_token})});
       if(!r.ok){
         console.warn('[Auth] refresh échoué: HTTP',r.status);
-        if(r.status===400||r.status===401){toast('Session expirée','Veuillez vous reconnecter');setTimeout(doLogout,2000);}
+        if(r.status===400||r.status===401){toast(t('t_session_exp'),t('t_reconnect'));setTimeout(doLogout,2000);}
         return;
       }
       var d=await r.json();
@@ -163,8 +163,10 @@ function fmtDt(dt){
   try{
     var d=new Date(dt);
     if(isNaN(d.getTime()))return dt;
-    var days=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
-    var months=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+    // Utilise les traductions i18n si disponibles, sinon fallback français
+    var _t=typeof t==='function'?t:function(k){return k;};
+    var days=[_t('day_0'),_t('day_1'),_t('day_2'),_t('day_3'),_t('day_4'),_t('day_5'),_t('day_6')];
+    var months=[_t('month_0'),_t('month_1'),_t('month_2'),_t('month_3'),_t('month_4'),_t('month_5'),_t('month_6'),_t('month_7'),_t('month_8'),_t('month_9'),_t('month_10'),_t('month_11')];
     var h=('0'+d.getHours()).slice(-2),m=('0'+d.getMinutes()).slice(-2);
     return days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()]+' · '+h+':'+m;
   }catch(e){return dt;}
@@ -298,17 +300,17 @@ function updateFavBadge(){
 }
 function toggleFavCours(coursId,btn){
   if(!user||user.guest){
-    toast('Connectez-vous pour sauvegarder des cours','');
+    toast(t('t_save_login'),'');
     setTimeout(scrollToLogin,800);
     return;
   }
   var wasSaved=favCours.has(coursId);
   if(wasSaved){
     favCours.delete(coursId);
-    toast('Retiré des favoris','');
+    toast(t('t_fav_removed'),'');
   } else {
     favCours.add(coursId);
-    toast('Cours sauvegardé','Retrouvez-le dans vos favoris');
+    toast(t('t_fav_saved'),t('t_fav_saved_sub'));
   }
   saveFavCours();
   haptic(wasSaved?4:12);
@@ -434,7 +436,7 @@ function unfollowProf(pid){
   if(user&&user.id){
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})}).catch(function(){});
   }
-  toast('Professeur retiré des suivis','');
+  toast(t('t_prof_removed'),'');
   haptic(4);
   updateFavBadge();
 }
@@ -646,7 +648,7 @@ function _oauthRestoreLogin(msg){
   var sp=document.getElementById('oauthLoading');if(sp)sp.remove();
   var lsL=document.getElementById('lsLogin');if(lsL)lsL.style.display='';
   window.history.replaceState({},'',window.location.pathname);
-  if(msg)toast('Connexion échouée',msg);
+  if(msg)toast(t('t_login_fail'),msg);
 }
 async function _initSupabase(){
   try{
@@ -688,8 +690,8 @@ function _setupCapacitorDeepLink(){
       if(at){
         window._supabase.auth.setSession({access_token:at,refresh_token:rt}).then(function(result){
           if(result&&result.data&&result.data.session)_handleOAuthSignIn(result.data.session);
-          else toast('Erreur connexion','Réessaie ou utilise email/mot de passe');
-        }).catch(function(err){console.warn('[OAuth] setSession:',err);toast('Erreur connexion','Réessaie ou utilise email/mot de passe');});
+          else toast(t('t_login_fail'),t('t_retry'));
+        }).catch(function(err){console.warn('[OAuth] setSession:',err);toast(t('t_login_fail'),t('t_retry'));});
         return;
       }
     }
@@ -699,11 +701,11 @@ function _setupCapacitorDeepLink(){
         _handleOAuthSignIn(result.data.session);
       }else{
         console.warn('[OAuth] exchangeCodeForSession: pas de session',result);
-        toast('Erreur connexion','Réessaie ou utilise email/mot de passe');
+        toast(t('t_login_fail'),t('t_retry'));
       }
     }).catch(function(err){
       console.warn('[OAuth] exchangeCodeForSession:',err);
-      toast('Erreur connexion','Réessaie ou utilise email/mot de passe');
+      toast(t('t_login_fail'),t('t_retry'));
     });
   });
 }
@@ -722,7 +724,7 @@ function _setupAuthStateChange(){
         var lsLogin=document.getElementById('lsLogin');
         if(lsLogin)lsLogin.style.display='';
         window.history.replaceState({},'',window.location.pathname);
-        toast('Connexion échouée','Réessaie ou utilise email / mot de passe');
+        toast(t('t_login_fail'),t('t_retry'));
       }
     },30000);
   }
@@ -797,7 +799,7 @@ async function _handleOAuthSignIn(session){
     var _sp2=document.getElementById('oauthLoading');if(_sp2)_sp2.remove();
     var _lsL2=document.getElementById('lsLogin');if(_lsL2)_lsL2.style.display='';
     window.history.replaceState({},'',window.location.pathname);
-    toast('Connexion échouée','Réessaie ou utilise email / mot de passe');
+    toast(t('t_login_fail'),t('t_retry'));
     return;
   }
   // Nouvel utilisateur OAuth — afficher sélection du rôle
@@ -812,7 +814,7 @@ async function _handleOAuthSignIn(session){
 }
 
 async function doOAuthGoogle(){
-  if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
+  if(!window._supabase){toast(t('t_error'),t('t_oauth_unavail'));return;}
   var isCap=_isIOS&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
   var redirectTo=isCap?'com.courspool.app://login-callback':'https://courspool.vercel.app';
   try{
@@ -833,10 +835,10 @@ async function doOAuthGoogle(){
         options:{redirectTo:redirectTo,queryParams:{access_type:'offline',prompt:'consent'}}
       });
     }
-  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'oauth_google'});toast('Erreur','Impossible de continuer avec Google');}
+  }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'oauth_google'});toast(t('t_error'),t('t_google_fail'));}
 }
 async function doOAuthApple(){
-  if(!window._supabase){toast('Erreur','OAuth non disponible');return;}
+  if(!window._supabase){toast(t('t_error'),t('t_oauth_unavail'));return;}
   var isCap=_isIOS&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
   var redirectTo=isCap?'com.courspool.app://login-callback':'https://courspool.vercel.app';
   try{
@@ -857,7 +859,7 @@ async function doOAuthApple(){
         options:{redirectTo:redirectTo}
       });
     }
-  }catch(e){toast('Erreur','Impossible de continuer avec Apple');}
+  }catch(e){toast(t('t_error'),t('t_apple_fail'));}
 }
 
 function pickOAuthRole(r){
@@ -1058,7 +1060,7 @@ function pcAgeNext(){
   if(!yr||yr<1920||(isProf&&age<18)||(!isProf&&age<13))return;
   if(!isProf&&age>=13&&age<15){
     var chk=g('pcConsentCheck');
-    if(!chk||!chk.checked){toast('Consentement requis','Cochez la case pour continuer');return;}
+    if(!chk||!chk.checked){toast(t('t_consent'),t('t_consent_check'));return;}
   }
   _pcBirthYear=yr;
   if(user){
@@ -2263,7 +2265,7 @@ function saveProf(){
   var an=g('accName');if(an)an.textContent=user.pr+(user.nm?' '+user.nm:'');
   var ae=g('accEmail');if(ae)ae.textContent=user.em;
   setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.2)');
-  toast('Profil sauvegardé ✓','');
+  toast(t('t_profile_saved'),'');
   // Sync photo partout si présente
   if(user&&user.photo) _applyPhotoPartout(user.photo);
 }
@@ -2322,7 +2324,7 @@ function doLogout(){
   }
   // Effacer le contexte utilisateur Sentry à la déconnexion
   if(typeof setSentryUser==='function')setSentryUser(null);
-  toast('Déconnecté','À bientôt !');
+  toast(t('t_disconn'),t('t_disconn_sub'));
 }
 
 // PHOTO - Upload vers Supabase Storage
@@ -2385,7 +2387,7 @@ function previewPhoto(input){
   if(input.files&&input.files[0]){
     var file=input.files[0];
     if(file.size>2*1024*1024){
-      toast('Photo trop lourde','Maximum 2MB. Compressez votre image.');
+      toast(t('t_photo_heavy'),t('t_photo_heavy_s'));
       input.value='';return;
     }
     var reader=new FileReader();
@@ -2405,7 +2407,7 @@ function previewPhoto(input){
             try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
             // Remplacer la base64 par l'URL Supabase définitive
             _applyPhotoPartout(data.url);
-            toast('Photo mise à jour ✓','');
+            toast(t('t_photo_ok'),'');
           }
         }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
       }
@@ -2570,7 +2572,7 @@ function applyFilter(){
 }
 
 function toggleFollowCard(pid,btn){
-  if(!user||user.guest){toast('Connectez-vous pour suivre un professeur','');return;}
+  if(!user||user.guest){toast(t('t_follow_login'),'');return;}
   if(!pid)return;
   if(_followInFlight.has(pid))return; // anti-spam : request déjà en cours
   _followInFlight.add(pid);
@@ -2579,7 +2581,7 @@ function toggleFollowCard(pid,btn){
     fol.delete(pid);_saveFol();
     _syncFollowBtns(pid,false);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=Math.max(0,(P[pid].e||1)-1);
-    toast('Retiré des suivis','');
+    toast(t('t_unfollowed'),'');
     fetch(API+'/follows',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){return r.json();})
       .then(function(data){
@@ -2602,7 +2604,7 @@ function toggleFollowCard(pid,btn){
     fol.add(pid);_saveFol();
     _syncFollowBtns(pid,true);
     P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[pid].e=(P[pid].e||0)+1;
-    toast('Vous suivez ce professeur','Notifié dès son prochain cours');
+    toast(t('t_followed'),t('t_followed_sub'));
     fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:pid})})
       .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
       .then(function(data){
@@ -3359,7 +3361,7 @@ function confR(){
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
   if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
-  if(res[id]){toast('Déjà réservé','Vous avez déjà une place pour ce cours');return;}
+  if(res[id]){toast(t('t_already_res'),t('t_already_res_s'));return;}
   closeM('bdR');
   openPaymentSheet(id,false);
 }
@@ -3423,7 +3425,7 @@ function shareCoursLink(){
   ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
   document.body.appendChild(ta);ta.select();document.execCommand('copy');
   document.body.removeChild(ta);
-  toast('Lien copié !','Partagez ce lien pour inviter quelqu\'un');
+  toast(t('t_link_copied'),t('t_link_copied_s'));
 }
 
 // SUIVRE
@@ -3795,7 +3797,7 @@ function _setFollowBtn(isFollowed){
 function togFP(){
   haptic(6);
   var id=curProf,p=P[id]||{nm:'ce prof'};
-  if(user&&id===user.id){toast('Action impossible','Vous ne pouvez pas vous suivre vous-même');return;}
+  if(user&&id===user.id){toast(t('t_self_follow'),t('t_self_follow_s'));return;}
   if(_followInFlight.has(id))return; // anti-spam
   _followInFlight.add(id);
   if(fol.has(id)){
@@ -8761,6 +8763,53 @@ function closeSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.remove('on');document.body.style.overflow='';}
 }
+
+// ── i18n — applyLang, sélecteur de langue ─────────────────────────────────
+var _LANG_NAMES={fr:'Français',en:'English',es:'Español',de:'Deutsch',it:'Italiano',pt:'Português',da:'Dansk',fi:'Suomi',sv:'Svenska',pl:'Polski',el:'Ελληνικά'};
+var _LANG_FLAGS={fr:'🇫🇷',en:'🇬🇧',es:'🇪🇸',de:'🇩🇪',it:'🇮🇹',pt:'🇵🇹',da:'🇩🇰',fi:'🇫🇮',sv:'🇸🇪',pl:'🇵🇱',el:'🇬🇷'};
+
+function applyLang(){
+  // 1. Mettre à jour tous les éléments data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    el.textContent=t(el.getAttribute('data-i18n'));
+  });
+  // 2. Placeholders data-i18n-ph
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
+    el.placeholder=t(el.getAttribute('data-i18n-ph'));
+  });
+  // 3. Attribut lang sur <html> pour l'accessibilité
+  document.documentElement.lang=window._i18nLang||'fr';
+  // 4. Label de la langue courante dans les settings
+  var lbl=document.getElementById('currentLangLabel');
+  if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
+  // 5. Re-render les pages actives qui contiennent du texte généré en JS
+  if(typeof applyFilter==='function')applyFilter();
+}
+
+function openLangPicker(){
+  var bd=document.getElementById('bdLangPicker');
+  if(!bd)return;
+  var list=document.getElementById('langPickerList');
+  if(list){
+    var cur=window._i18nLang||'fr';
+    list.innerHTML=Object.keys(_LANG_NAMES).map(function(code){
+      var active=code===cur;
+      return'<div onclick="setLang(\''+code+'\');closeLangPicker()" style="display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;border-bottom:1px solid var(--bdr);-webkit-tap-highlight-color:transparent">'
+        +'<span style="font-size:20px">'+_LANG_FLAGS[code]+'</span>'
+        +'<div style="flex:1;font-size:15px;font-weight:'+(active?'700':'500')+';color:'+(active?'var(--or)':'var(--ink)')+'">'+_LANG_NAMES[code]+'</div>'
+        +(active?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>':'')
+        +'</div>';
+    }).join('');
+  }
+  bd.style.display='flex';
+  requestAnimationFrame(function(){bd.classList.add('on');});
+}
+
+function closeLangPicker(){
+  var bd=document.getElementById('bdLangPicker');
+  if(bd){bd.classList.remove('on');setTimeout(function(){bd.style.display='none';},300);}
+}
+
 // ---- Search clear ----
 function clearSearch(){
   var inp=document.getElementById('mobSearchInput');

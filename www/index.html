@@ -2156,37 +2156,37 @@
 
   <div class="bni on" id="bniExp" onclick="navTo('exp')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <span class="bni-lbl">Explorer</span>
+    <span class="bni-lbl" data-i18n="bnav_explorer">Explorer</span>
   </div>
 
   <div class="bni" id="bniFav" onclick="navTo('fav')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
     <div class="bni-badge" id="bnavFavBadge" style="background:var(--or)"></div>
-    <span class="bni-lbl">Favoris</span>
+    <span class="bni-lbl" data-i18n="bnav_favoris">Favoris</span>
   </div>
 
   <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
     <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
     <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
-    <span class="bni-lbl bni-msg-lbl">Messages</span>
+    <span class="bni-lbl bni-msg-lbl" data-i18n="bnav_messages">Messages</span>
   </div>
 
   <div class="bni" id="bniAdd" onclick="openCr()" style="display:none;">
     <div class="bni-add-circle" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
-    <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1">Créer</span>
+    <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1" data-i18n="bnav_creer">Créer</span>
   </div>
 
   <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-    <span class="bni-lbl">Mes cours</span>
+    <span class="bni-lbl" data-i18n="bnav_mes_cours">Mes cours</span>
   </div>
 
   <div class="bni" id="bniAcc" onclick="navTo('acc')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    <span class="bni-lbl">Profil</span>
+    <span class="bni-lbl" data-i18n="bnav_profil">Profil</span>
   </div>
 
 </nav>
@@ -2334,6 +2334,7 @@
 <script src="/supabase.min.js"></script>
 <script src="/sentry-init.js" defer></script>
 <script src="/search-aliases.js" defer></script>
+<script src="/lang.js"></script>
 <script src="/app.js" defer></script>
 <!-- SETTINGS SHEET -->
 <div id="bdSettings" onclick="if(event.target===this)closeSettings()">
@@ -2347,20 +2348,32 @@
       <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em">Paramètres</div>
     </div>
 
+    <!-- Langue -->
+    <div class="settings-section-lbl" data-i18n="settings_langue">Langue</div>
+    <div class="settings-group">
+      <div class="settings-row" onclick="openLangPicker()" style="cursor:pointer">
+        <div style="flex:1">
+          <div class="settings-label" data-i18n="settings_langue">Langue</div>
+          <div class="settings-sub" id="currentLangLabel">Français</div>
+        </div>
+        <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+
     <!-- Apparence -->
-    <div class="settings-section-lbl">Apparence</div>
+    <div class="settings-section-lbl" data-i18n="settings_apparence">Apparence</div>
     <div class="settings-group">
       <div class="settings-row" onclick="toggleDarkMode()" style="cursor:pointer">
         <div style="flex:1">
-          <div class="settings-label">Mode sombre</div>
-          <div class="settings-sub" id="darkModeSubLabel">Suit le système</div>
+          <div class="settings-label" data-i18n="settings_dark">Mode sombre</div>
+          <div class="settings-sub" id="darkModeSubLabel" data-i18n="settings_dark_sys">Suit le système</div>
         </div>
         <div class="ntog" id="darkModeToggle" onclick="event.stopPropagation();toggleDarkMode()"></div>
       </div>
     </div>
 
     <!-- Notifications -->
-    <div class="settings-section-lbl">Notifications</div>
+    <div class="settings-section-lbl" data-i18n="settings_notifs">Notifications</div>
     <div class="settings-group">
       <!-- Statut push (activer / désactiver) — rempli par renderNotifStatus() -->
       <div id="notifStatus" style="padding:16px"></div>
@@ -2369,54 +2382,54 @@
     </div>
 
     <!-- Assistance -->
-    <div class="settings-section-lbl">Assistance</div>
+    <div class="settings-section-lbl" data-i18n="settings_assistance">Assistance</div>
     <div class="settings-group">
       <div class="settings-row" id="settingsRmbRow" onclick="openRemboursements()" style="display:none">
         <div style="flex:1">
-          <div class="settings-label">Mes remboursements</div>
-          <div class="settings-sub">Annulations &amp; retours</div>
+          <div class="settings-label" data-i18n="settings_remb">Mes remboursements</div>
+          <div class="settings-sub" data-i18n="settings_remb_sub">Annulations &amp; retours</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="shareApp()">
         <div style="flex:1">
-          <div class="settings-label">Inviter un ami</div>
-          <div class="settings-sub">Partager CoursPool</div>
+          <div class="settings-label" data-i18n="settings_inviter">Inviter un ami</div>
+          <div class="settings-sub" data-i18n="settings_inviter_sub">Partager CoursPool</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="closeSettings();openContact()">
         <div style="flex:1">
-          <div class="settings-label">Nous contacter</div>
-          <div class="settings-sub">Une question ? On répond vite</div>
+          <div class="settings-label" data-i18n="settings_contact">Nous contacter</div>
+          <div class="settings-sub" data-i18n="settings_contact_sub">Une question ? On répond vite</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="window.open('https://courspool.vercel.app/privacy.html','_blank')">
         <div style="flex:1">
-          <div class="settings-label">Confidentialité</div>
-          <div class="settings-sub">Politique de confidentialité</div>
+          <div class="settings-label" data-i18n="settings_confid">Confidentialité</div>
+          <div class="settings-sub" data-i18n="settings_confid_sub">Politique de confidentialité</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="settings-row" onclick="window.open('https://courspool.vercel.app/cgu.html','_blank')">
         <div style="flex:1">
-          <div class="settings-label">CGU</div>
-          <div class="settings-sub">Conditions générales d'utilisation</div>
+          <div class="settings-label" data-i18n="settings_cgu">CGU</div>
+          <div class="settings-sub" data-i18n="settings_cgu_sub">Conditions générales d'utilisation</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
 
     <!-- Confidentialité (profs uniquement) -->
-    <div class="settings-section-lbl" id="settingsProfPrivSection" style="display:none">Confidentialité</div>
+    <div class="settings-section-lbl" id="settingsProfPrivSection" style="display:none" data-i18n="settings_priv">Confidentialité</div>
     <div class="settings-group" id="settingsProfPrivGroup" style="display:none">
 
       <!-- 1. Adresse du cours -->
       <div class="settings-row" style="cursor:pointer" onclick="toggleAdresseAuto()">
         <div style="flex:1">
-          <div class="settings-label">Adresse du cours</div>
-          <div class="settings-sub">Partagée aux élèves inscrits après réservation</div>
+          <div class="settings-label" data-i18n="settings_adresse">Adresse du cours</div>
+          <div class="settings-sub" data-i18n="settings_adresse_sub">Partagée aux élèves inscrits après réservation</div>
         </div>
         <div class="ntog" id="adresseAutoToggle"></div>
       </div>
@@ -2424,7 +2437,7 @@
       <!-- 2. Messages entrants -->
       <div class="settings-row" style="cursor:pointer" onclick="openMsgContactSheet()">
         <div style="flex:1">
-          <div class="settings-label">Messages entrants</div>
+          <div class="settings-label" data-i18n="settings_msg_in">Messages entrants</div>
           <div class="settings-sub" id="settingsMsgContactSub">Tous les élèves</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2433,8 +2446,8 @@
       <!-- 3. Visibilité dans Explorer -->
       <div class="settings-row" style="cursor:pointer" onclick="toggleSearchVisible()">
         <div style="flex:1">
-          <div class="settings-label">Visibilité dans Explorer</div>
-          <div class="settings-sub">Votre profil est proposé aux élèves dans les recherches</div>
+          <div class="settings-label" data-i18n="settings_visible">Visibilité dans Explorer</div>
+          <div class="settings-sub" data-i18n="settings_visible_sub">Votre profil est proposé aux élèves dans les recherches</div>
         </div>
         <div class="ntog" id="searchVisibleToggle"></div>
       </div>
@@ -2442,44 +2455,57 @@
     </div>
 
     <!-- Permissions -->
-    <div class="settings-section-lbl">Permissions</div>
+    <div class="settings-section-lbl" data-i18n="settings_permissions">Permissions</div>
     <div class="settings-group">
       <div class="settings-row" onclick="openAppSettings()" style="cursor:pointer">
         <div style="flex:1">
-          <div class="settings-label">Localisation</div>
-          <div class="settings-sub">Ouvrir les réglages de l'app</div>
+          <div class="settings-label" data-i18n="settings_location">Localisation</div>
+          <div class="settings-sub" data-i18n="settings_location_sub">Ouvrir les réglages de l'app</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
 
     <!-- Profil (élèves seulement) -->
-    <div class="settings-section-lbl" id="settingsTuteurSection" style="display:none">Mon profil</div>
+    <div class="settings-section-lbl" id="settingsTuteurSection" style="display:none" data-i18n="settings_mon_profil">Mon profil</div>
     <div class="settings-group" id="settingsTuteurGroup" style="display:none">
       <div class="settings-row" style="cursor:pointer" onclick="toggleTuteurMode()">
         <div style="flex:1">
-          <div class="settings-label">Je suis tuteur / parent</div>
-          <div class="settings-sub">Vos avis seront identifiés "Tuteur" — aide les autres familles</div>
+          <div class="settings-label" data-i18n="settings_tuteur">Je suis tuteur / parent</div>
+          <div class="settings-sub" data-i18n="settings_tuteur_sub">Vos avis seront identifiés "Tuteur" — aide les autres familles</div>
         </div>
         <div class="ntog" id="tuteurToggle"></div>
       </div>
     </div>
 
     <!-- Compte -->
-    <div class="settings-section-lbl">Compte</div>
+    <div class="settings-section-lbl" data-i18n="settings_compte">Compte</div>
     <div class="settings-group">
       <div class="settings-row" onclick="closeSettings();doLogout()" style="cursor:pointer">
-        <div class="settings-label" style="color:#EF4444">Se déconnecter</div>
+        <div class="settings-label" style="color:#EF4444" data-i18n="settings_deconn">Se déconnecter</div>
       </div>
       <div class="settings-row" onclick="deleteAccount()" style="cursor:pointer">
         <div style="flex:1">
-          <div class="settings-label" style="color:#EF4444">Supprimer mon compte</div>
-          <div class="settings-sub">Efface toutes vos données — irréversible</div>
+          <div class="settings-label" style="color:#EF4444" data-i18n="settings_suppr">Supprimer mon compte</div>
+          <div class="settings-sub" data-i18n="settings_suppr_sub">Efface toutes vos données — irréversible</div>
         </div>
       </div>
     </div>
 
     <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- SÉLECTEUR DE LANGUE -->
+<div id="bdLangPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1050;align-items:flex-end;padding-bottom:max(0px,env(safe-area-inset-bottom,0px))" onclick="if(event.target===this)closeLangPicker()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-height:80vh;overflow-y:auto;animation:mi .28s cubic-bezier(.32,1,.6,1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px">
+      <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em" data-i18n="settings_langue">Langue</div>
+      <button onclick="closeLangPicker()" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="langPickerList" style="padding:0 0 16px"></div>
   </div>
 </div>
 
