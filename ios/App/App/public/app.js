@@ -423,7 +423,7 @@ function buildFavPage(){
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
           +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
-          +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' cours dispo':'')+'</div>'
+          +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' '+t('cours_dispo'):'')+'</div>'
           +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
           +'</div>';
       }).join('');
@@ -2480,7 +2480,7 @@ function buildCards(){
     if(nc&&nc.style.display==='block')return;
     if(nc)nc.style.display='block';
     var nt=g('nocardTitle'),ns=g('nocardSub');
-    if(nt)nt.textContent='Aucun cours disponible';
+    if(nt)nt.textContent=t('aucun_cours_dispo');
     if(ns)ns.textContent='Soyez le premier à proposer un cours !';
     if(lmw)lmw.style.display='none';
     if(gr)gr.innerHTML='';
@@ -4185,7 +4185,7 @@ async function loadMessages(){
     // Mémoriser si l'utilisateur était en bas pour décider du scroll après rendu
     var _wasAtBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80;
     if(!msgs.length){
-      box.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite);font-size:14px">Aucun message. Dites bonjour !</div>';
+      box.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite);font-size:14px">'+t('aucun_msg')+'. '+t('dites_bonjour')+'</div>';
       return;
     }
     updateMsgBadge(0);
@@ -5693,19 +5693,19 @@ var _TUTO_SVG={
 };
 
 var TUTO_ELEVE_STEPS=[
-  {bg:'linear-gradient(135deg,#FF8C55,#E04E10)',illu:'logo',title:'Bienvenue sur CoursPool !',desc:'La plateforme qui partage le coût d un cours entre élèves. Un prof, plusieurs places, un prix juste pour tous.'},
-  {bg:'linear-gradient(135deg,#3B82F6,#1D4ED8)',illu:'locbar',title:'Trouvez des cours près de vous',desc:'Tapez votre ville ou appuyez sur Autour de moi. Filtrez par matière, niveau ou distance.'},
-  {bg:'linear-gradient(135deg,#22C069,#16A34A)',illu:'card',title:'Réservez votre place',desc:'Appuyez sur un cours puis Réserver. Vous ne payez que votre part — le reste est partagé entre les élèves.'},
-  {bg:'linear-gradient(135deg,#8B5CF6,#6D28D9)',illu:'msg',title:'Contactez le professeur',desc:'Avant de réserver, écrivez au professeur depuis l onglet Messages.'},
-  {bg:'linear-gradient(135deg,#F59E0B,#D97706)',illu:'profil',title:'Prêt à découvrir ?',desc:'Créez un compte gratuit pour réserver votre premier cours.'}
-];
+  {bg:'linear-gradient(135deg,#FF8C55,#E04E10)',illu:'logo',title:t('tuto_e1_title'),desc:t('tuto_e1_desc')},
+  {bg:'linear-gradient(135deg,#3B82F6,#1D4ED8)',illu:'locbar',title:t('tuto_e2_title'),desc:t('tuto_e2_desc')},
+  {bg:'linear-gradient(135deg,#22C069,#16A34A)',illu:'card',title:t('tuto_e3_title'),desc:t('tuto_e3_desc')},
+  {bg:'linear-gradient(135deg,#8B5CF6,#6D28D9)',illu:'msg',title:t('tuto_e4_title'),desc:t('tuto_e4_desc')},
+  {bg:'linear-gradient(135deg,#F59E0B,#D97706)',illu:'profil',title:t('tuto_e5_title'),desc:t('tuto_e5_desc')}
+]
 var TUTO_PROF_STEPS=[
-  {bg:'linear-gradient(135deg,#FF8C55,#E04E10)',illu:'logo',title:'Bienvenue professeur !',desc:'Proposez vos cours à plusieurs élèves. CoursPool gère tout : inscriptions, paiements et messagerie.'},
-  {bg:'linear-gradient(135deg,#22C069,#16A34A)',illu:'plus',title:'Créez votre premier cours',desc:'Appuyez sur le bouton + orange en bas de l ecran.'},
-  {bg:'linear-gradient(135deg,#3B82F6,#1D4ED8)',illu:'card',title:'Vos cours visibles par tous',desc:'Dès la publication, vos cours sont visibles par tous les élèves.'},
-  {bg:'linear-gradient(135deg,#8B5CF6,#6D28D9)',illu:'msg',title:'Messagerie directe',desc:'Les élèves vous contactent avant de réserver. Répondre vite aide.'},
-  {bg:'linear-gradient(135deg,#F59E0B,#D97706)',illu:'revenus',title:'Paiements sécurisés',desc:'Renseignez votre IBAN dans Revenus pour recevoir vos virements automatiquement. Bonne aventure !'}
-];
+  {bg:'linear-gradient(135deg,#FF8C55,#E04E10)',illu:'logo',title:t('tuto_p1_title'),desc:t('tuto_p1_desc')},
+  {bg:'linear-gradient(135deg,#22C069,#16A34A)',illu:'plus',title:t('tuto_p2_title'),desc:t('tuto_p2_desc')},
+  {bg:'linear-gradient(135deg,#3B82F6,#1D4ED8)',illu:'card',title:t('tuto_p3_title'),desc:t('tuto_p3_desc')},
+  {bg:'linear-gradient(135deg,#8B5CF6,#6D28D9)',illu:'msg',title:t('tuto_p4_title'),desc:t('tuto_p4_desc')},
+  {bg:'linear-gradient(135deg,#F59E0B,#D97706)',illu:'revenus',title:t('tuto_p5_title'),desc:t('tuto_p5_desc')}
+]
 
 function tutoStart(){
   if(!user)return;

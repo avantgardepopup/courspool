@@ -405,6 +405,58 @@ const SOURCE = {
   month_0: 'janv.', month_1: 'févr.', month_2: 'mars', month_3: 'avr.',
   month_4: 'mai',   month_5: 'juin',  month_6: 'juil.', month_7: 'août',
   month_8: 'sept.', month_9: 'oct.',  month_10: 'nov.', month_11: 'déc.',
+
+  // Niveaux courts (chips création cours)
+  niv_all:   'Tous',
+  niv_prim:  'Primaire',
+  niv_col:   'Collège',
+  niv_lyc:   'Lycée',
+  niv_bac12: 'Bac+1/2',
+  niv_bac34: 'Bac+3/4',
+  niv_bac5:  'Bac+5+',
+
+  // Création cours — sections
+  nc_quand_ou:      'Quand & Où',
+  nc_infos:         'Infos pratiques',
+  nc_desc_section:  'Description',
+  nc_optionnel:     '(optionnelle)',
+  nc_mode_label:    'Format',
+  nc_mode_pres:     'Présentiel',
+  nc_mode_vis:      'Visio',
+
+  // Divers UI
+  cours_dispo:      'cours dispo',
+  par_eleve:        '/ élève',
+  aucun_cours_dispo:'Aucun cours disponible',
+  aucune_conv:      'Aucune conversation',
+  aucun_msg:        'Aucun message',
+  dites_bonjour:    'Dites bonjour !',
+  inscrit:          'Inscrit',
+  configuration_requise: 'Configuration requise',
+
+  // Tutoriel élève (steps interactifs)
+  tuto_e1_title: 'Bienvenue sur CoursPool !',
+  tuto_e1_desc:  'La plateforme qui partage le coût d\'un cours entre élèves. Un prof, plusieurs places, un prix juste pour tous.',
+  tuto_e2_title: 'Trouvez des cours près de vous',
+  tuto_e2_desc:  'Tapez votre ville ou appuyez sur Autour de moi. Filtrez par matière, niveau ou distance.',
+  tuto_e3_title: 'Réservez votre place',
+  tuto_e3_desc:  'Appuyez sur un cours puis Réserver. Vous ne payez que votre part — le reste est partagé entre les élèves.',
+  tuto_e4_title: 'Contactez le professeur',
+  tuto_e4_desc:  'Avant de réserver, écrivez au professeur depuis l\'onglet Messages.',
+  tuto_e5_title: 'Prêt à découvrir ?',
+  tuto_e5_desc:  'Créez un compte gratuit pour réserver votre premier cours.',
+
+  // Tutoriel professeur (steps interactifs)
+  tuto_p1_title: 'Bienvenue professeur !',
+  tuto_p1_desc:  'Proposez vos cours à plusieurs élèves. CoursPool gère tout : inscriptions, paiements et messagerie.',
+  tuto_p2_title: 'Créez votre premier cours',
+  tuto_p2_desc:  'Appuyez sur le bouton + orange en bas de l\'écran.',
+  tuto_p3_title: 'Vos cours visibles par tous',
+  tuto_p3_desc:  'Dès la publication, vos cours sont visibles par tous les élèves.',
+  tuto_p4_title: 'Messagerie directe',
+  tuto_p4_desc:  'Les élèves vous contactent avant de réserver. Répondre vite aide.',
+  tuto_p5_title: 'Paiements sécurisés',
+  tuto_p5_desc:  'Renseignez votre IBAN dans Revenus pour recevoir vos virements automatiquement. Bonne aventure !',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────

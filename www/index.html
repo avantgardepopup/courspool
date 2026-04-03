@@ -1497,20 +1497,20 @@
       <div style="padding:12px 0 4px">
         <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px" data-i18n="nc_niveau">Niveau visé</div>
         <div style="display:flex;flex-wrap:wrap;gap:7px" id="crNiveauChips">
-          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="">Tous</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire">Primaire</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège">Collège</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée">Lycée</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+1/2">Bac+1/2</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+3/4">Bac+3/4</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+5">Bac+5</div>
+          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="" data-i18n="niv_all">Tous</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire" data-i18n="niv_prim">Primaire</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège" data-i18n="niv_col">Collège</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée" data-i18n="niv_lyc">Lycée</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+1/2" data-i18n="niv_bac12">Bac+1/2</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+3/4" data-i18n="niv_bac34">Bac+3/4</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+5" data-i18n="niv_bac5">Bac+5</div>
         </div>
         <input type="hidden" id="crNiveau" value="">
       </div>
 
       <!-- Section 3 : Quand & Où -->
       <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Quand &amp; Où</div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px" data-i18n="nc_quand_ou">Quand &amp; Où</div>
         <div style="background:var(--bg);border-radius:14px;overflow:hidden">
           <label for="crDate" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;-webkit-tap-highlight-color:transparent">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
@@ -1532,7 +1532,7 @@
 
       <!-- Section 4 : Infos pratiques -->
       <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Infos pratiques</div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px" data-i18n="nc_infos">Infos pratiques</div>
         <div style="background:var(--bg);border-radius:14px;overflow:hidden">
           <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--bdr)">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1557,7 +1557,7 @@
 
       <!-- Section 5 : Description optionnelle -->
       <div style="padding:12px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optionnelle)</span></div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px"><span data-i18n="nc_desc_section">Description</span> <span style="font-weight:400;text-transform:none;letter-spacing:0" data-i18n="nc_optionnel">(optionnelle)</span></div>
         <textarea class="fi3" id="crDesc" rows="2" data-i18n-ph="nc_desc_ph" placeholder="Niveau requis, programme abordé…" style="resize:none;font-size:15px"></textarea>
       </div>
 
