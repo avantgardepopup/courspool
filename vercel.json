@@ -16,6 +16,7 @@
     { "src": "/socket.io.min.js", "dest": "/socket.io.min.js" },
     { "src": "/socket.js", "dest": "/socket.js" },
     { "src": "/search-aliases.js", "dest": "/search-aliases.js" },
+    { "src": "/lang.js", "dest": "/lang.js" },
     { "src": "/style.css", "dest": "/style.css" },
     { "src": "/fonts.css", "dest": "/fonts.css" },
     { "src": "/fonts/(.*)", "dest": "/fonts/$1" },
