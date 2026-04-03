@@ -575,6 +575,140 @@ const SOURCE = {
   cas_type_form:   'Extrait de casier judiciaire (bulletin n°3)',
   cas_btn:         'Envoyer mon attestation',
   cas_your:        'Votre attestation',
+
+  // Notifications push — statut
+  notif_not_supported:    'Les notifications ne sont pas supportées sur cet appareil.',
+  notif_blocked_title:    'Notifications bloquées',
+  notif_blocked_sub:      'Activez-les dans les réglages de votre appareil',
+  notif_active_title:     'Notifications activées',
+  notif_active_sub:       'Vous recevez les alertes en temps réel',
+  notif_inactive_title:   'Notifications désactivées',
+  notif_inactive_sub:     'Activez pour ne rien manquer',
+  notif_activate_btn:     'Activer',
+  notif_deactivate_btn:   'Désactiver',
+  notif_denied:           'Refusé',
+  notif_enable_settings:  'Activez les notifications dans vos réglages',
+  notif_enabled:          'Notifications activées ✓',
+  notif_will_receive:     'Vous recevrez les alertes',
+  notif_disabled:         'Notifications désactivées',
+  notif_err_enable:       "Impossible d'activer les notifications",
+  notif_err_disable:      'Impossible de désactiver',
+
+  // Notifications — groupes et types
+  notif_grp_courses:      'Cours',
+  notif_grp_reservations: 'Réservations',
+  notif_grp_reminders:    'Rappels',
+  notif_grp_messages:     'Messages',
+  notif_grp_msg_avis:     'Messages & avis',
+  notif_new_course:       'Nouveaux cours',
+  notif_new_course_sub:   'Quand un prof suivi publie un cours',
+  notif_place_available:  'Place disponible',
+  notif_place_available_sub: 'Quand une place se libère sur un cours complet',
+  notif_resa_confirmed:   'Confirmation de réservation',
+  notif_resa_confirmed_sub: 'Dès que votre réservation est validée',
+  notif_cours_annule:     'Cours annulé',
+  notif_cours_annule_sub: 'Quand le prof annule un cours auquel vous êtes inscrit',
+  notif_rappel_24h:       'Rappel 24h avant',
+  notif_rappel_24h_e_sub: 'La veille du cours réservé',
+  notif_rappel_1h:        'Rappel 1h avant',
+  notif_rappel_1h_sub:    'Une heure avant le début du cours',
+  notif_messages:         'Messages',
+  notif_messages_e_sub:   'Quand un prof vous répond dans la messagerie',
+  notif_new_reservation:  'Nouvelle réservation',
+  notif_new_reservation_sub: "Quand un élève réserve un de vos cours",
+  notif_annulation:       'Annulation',
+  notif_annulation_sub:   "Quand un élève annule sa réservation",
+  notif_cours_complet:    'Cours complet',
+  notif_cours_complet_sub:'Quand toutes les places de votre cours sont prises',
+  notif_paiement:         'Paiement reçu',
+  notif_paiement_sub:     'Confirmation de virement sur votre compte',
+  notif_rappel_24h_p_sub: 'La veille de chacun de vos cours',
+  notif_messages_p_sub:   "Quand un élève vous envoie un message",
+  notif_avis:             'Avis et notations',
+  notif_avis_sub:         "Quand un élève laisse un avis sur votre cours",
+
+  // Salutations dynamiques
+  greet_morning:    'Bonjour',
+  greet_afternoon:  'Bon après-midi',
+  greet_evening:    'Bonsoir',
+  greet_night:      'Bonne nuit',
+  explore_sub1:     'Que voulez-vous apprendre ?',
+  explore_sub2:     'Trouvez votre prochain cours',
+
+  // Statuts professeur
+  statut_etudiant:    'Étudiant',
+  statut_prof_ecoles: 'Prof des écoles',
+  statut_prof_clg:    'Collège / lycée',
+  statut_chercheur:   'Enseignant-chercheur',
+  statut_auto:        'Auto-entrepreneur',
+  statut_autre:       'Autre',
+
+  // Toasts publication cours
+  t_first_course:      'Premier cours publié !',
+  t_first_course_sub:  'Félicitations ! Vos élèves peuvent maintenant vous trouver.',
+  t_course_published:  'Cours publié ✓',
+  t_visible_students:  'Visible pour tous les élèves',
+
+  // Toasts follow
+  t_vous_suivez:    'Vous suivez',
+  t_following_msg:  'Notifié dès son prochain cours',
+
+  // Mode de cours (badges courts)
+  mode_visio: 'Visio',
+  mode_pres:  'Présentiel',
+
+  // Niveaux supplémentaires (groupes picker)
+  niv_superieur:    'Supérieur',
+  niv_general:      'Général',
+  niv_tous_niveaux: 'Tous niveaux',
+  niv_adultes:      'Adultes / Pro',
+
+  // Catégories matières (picker)
+  mat_cat_sciences:  'Sciences exactes',
+  mat_cat_numerique: 'Numérique & Tech',
+  mat_cat_langues:   'Langues',
+  mat_cat_lettres:   'Lettres & Écriture',
+  mat_cat_arts:      'Arts visuels',
+  mat_cat_musique:   'Musique',
+  mat_cat_humaines:  'Sciences humaines',
+  mat_cat_business:  'Business & Droit',
+  mat_cat_prepa:     'Prépa & Concours',
+  mat_cat_sport:     'Sport',
+  mat_cat_bienetre:  'Bien-être',
+  mat_cat_cuisine:   'Cuisine & Artisanat',
+  mat_cat_jeux:      'Jeux & Loisirs',
+  mat_cat_autre:     'Autre',
+
+  // Préférences messagerie
+  msg_pref_all:          'Tous les élèves',
+  msg_pref_all_sub:      "N'importe quel élève peut vous écrire",
+  msg_pref_enrolled:     'Inscrits uniquement',
+  msg_pref_enrolled_sub: 'Réservé aux élèves inscrits à vos cours',
+  msg_pref_none:         'Désactivée',
+  msg_pref_none_sub:     'Personne ne peut vous envoyer de message',
+
+  // Types de lieu (création cours)
+  lieu_home:      'À domicile',
+  lieu_home_desc: 'Adresse partagée en privé avec les inscrits',
+  lieu_etab:      'Établissement',
+  lieu_etab_desc: 'Collège, lycée, bibliothèque, université…',
+  lieu_other:     'Autre lieu',
+  lieu_other_desc:'Salle de co-working, café, parc…',
+
+  // Confidentialité cours
+  nc_public:      'Cours public',
+  nc_public_desc: 'Visible dans les résultats de recherche',
+  nc_prive_desc:  'Invisible au public — accès par code unique',
+
+  // États vides / erreurs génériques
+  err_load_fail:  'Impossible de charger.',
+  err_revenues:   'Impossible de charger les revenus.',
+  err_refunds:    'Impossible de charger les remboursements',
+  err_courses:    'Impossible de charger les cours.',
+  err_connection: 'Erreur de connexion.',
+  err_check_conn: 'Vérifiez votre connexion internet.',
+  empty_no_msgs:  'Aucun message pour l\'instant.',
+  empty_be_first: 'Soyez le premier à écrire !',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────

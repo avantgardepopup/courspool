@@ -1395,10 +1395,10 @@ function applyUser(){
   // Greeting dynamique
   try{
     var h=new Date().getHours();
-    var greet=h<6?'Bonne nuit':h<12?'Bonjour':h<18?'Bonjour':h<22?'Bonsoir':'Bonne nuit';
+    var greet=h<6?t('greet_night'):h<12?t('greet_morning'):h<18?t('greet_morning'):h<22?t('greet_evening'):t('greet_night');
     var mobT=g('mobTitle'),mobS=g('mobSub');
     if(mobT)mobT.textContent=user&&user.pr?greet+' '+user.pr+' 👋':greet+' 👋';
-    if(mobS){var msgs=['Cours près de vous','Que voulez-vous apprendre ?','Trouvez votre prochain cours'];if(msgs&&msgs.length)mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
+    if(mobS){var msgs=[t('exp_subtitle'),t('explore_sub1'),t('explore_sub2')];if(msgs&&msgs.length)mobS.textContent=msgs[Math.floor(Math.random()*msgs.length)];}
   }catch(e){}
   setAvatar(g('tav'),user.photo,user.ini,'linear-gradient(135deg,#FF8C55,var(--ord))');
   g('btnProposer').style.display=user.role==='professeur'?'flex':'none';
@@ -3180,7 +3180,7 @@ function viewCoursCard(id){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
   var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
-  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?'Visio':'Présentiel';_rMdBdg.style.display='inline-block';}
+  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
@@ -3228,7 +3228,7 @@ function openR(id){haptic(4);
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
   var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
-  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?'Visio':'Présentiel';_rMdBdg.style.display='inline-block';}
+  var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
   if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
@@ -3441,7 +3441,7 @@ function confF(){
   fol.add(pid);_saveFol();
   _syncFollowBtns(pid,true);
   closeM('bdF');
-  toast('Vous suivez '+(p.nm||'ce prof'),'Notifié dès son prochain cours');
+  toast(t('t_vous_suivez')+' '+(p.nm||t('mp_contacter')),t('t_following_msg'));
   folPr=null;
   P[pid]=P[pid]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
   P[pid].e=(P[pid].e||0)+1;
@@ -3481,7 +3481,7 @@ function openPr(pid){
   if(!P[pid])P[pid]={n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
   var p=P[pid];
   var pCache=P[pid];
-  var STATUT={'etudiant':'Étudiant','prof_ecole':'Prof des écoles','prof_college':'Prof collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Professionnel'};
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
   // Alimenter P[pid] depuis les cours si champs manquants (sans écraser les données fraîches)
   if(dernierCours){
     if(!P[pid])P[pid]={n:'—',e:0};
@@ -3839,7 +3839,7 @@ function togFP(){
     fol.add(id);_saveFol();
     _setFollowBtn(true);
     _syncFollowBtns(id,true);
-    toast('Vous suivez '+p.nm,'Notifié dès son prochain cours');
+    toast(t('t_vous_suivez')+' '+p.nm,t('t_following_msg'));
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=(P[id].e||0)+1;
     if(user&&user.id){
       fetch(API+'/follows',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:user.id,professeur_id:id})})
@@ -3968,7 +3968,7 @@ async function subCr(){
     if(tog)tog.style.background='var(--bdr)';if(knob)knob.style.transform='translateX(0)';if(box)box.style.display='none';
     closeM('bdCr');await loadData();buildCards();buildAccLists();
     var isFirstCours=C.filter(function(c){return c.pr===user.id;}).length<=1;
-    toast(isFirstCours?'Premier cours publié !':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
+    toast(isFirstCours?t('t_first_course'):t('t_course_published'),isFirstCours?t('t_first_course_sub'):t('t_visible_students'));
   }catch(e){toast(t('t_net_error'),'');}
   finally{window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}}
 }
@@ -6929,22 +6929,22 @@ function renderNotifStatus(){
   var block=g('notifStatus');
   if(!block)return;
   if(!('Notification' in window)){
-    block.innerHTML='<div style="font-size:13px;color:var(--lite)">Les notifications ne sont pas supportées sur cet appareil.</div>';
+    block.innerHTML='<div style="font-size:13px;color:var(--lite)">'+t('notif_not_supported')+'</div>';
     _renderNotifTypes();
     return;
   }
   var perm=Notification.permission;
   if(perm==='denied'){
-    block.innerHTML='<div style="display:flex;align-items:center;gap:10px"><div><div style="font-size:14px;font-weight:600;color:var(--ink)">Notifications bloquées</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Activez-les dans les réglages de votre appareil</div></div></div>';
+    block.innerHTML='<div style="display:flex;align-items:center;gap:10px"><div><div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('notif_blocked_title')+'</div><div style="font-size:12px;color:var(--lite);margin-top:1px">'+t('notif_blocked_sub')+'</div></div></div>';
     _renderNotifTypes();
     return;
   }
   if(perm==='granted'&&_pushSubscription){
-    block.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div><div style="font-size:14px;font-weight:600;color:var(--ink)">Notifications activées</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Vous recevez les alertes en temps réel</div></div></div><button onclick="unsubscribePush()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:4px 8px">Désactiver</button></div>';
+    block.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div><div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('notif_active_title')+'</div><div style="font-size:12px;color:var(--lite);margin-top:1px">'+t('notif_active_sub')+'</div></div></div><button onclick="unsubscribePush()" style="background:none;border:none;font-size:12px;color:var(--lite);cursor:pointer;font-family:inherit;padding:4px 8px">'+t('notif_deactivate_btn')+'</button></div>';
     _renderNotifTypes();
     return;
   }
-  block.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div><div style="font-size:14px;font-weight:600;color:var(--ink)">Notifications désactivées</div><div style="font-size:12px;color:var(--lite);margin-top:1px">Activez pour ne rien manquer</div></div></div><button onclick="subscribePush()" style="background:var(--or);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Activer</button></div>';
+  block.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div><div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('notif_inactive_title')+'</div><div style="font-size:12px;color:var(--lite);margin-top:1px">'+t('notif_inactive_sub')+'</div></div></div><button onclick="subscribePush()" style="background:var(--or);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">'+t('notif_activate_btn')+'</button></div>';
   _renderNotifTypes();
 }
 
@@ -6981,38 +6981,38 @@ function _renderNotifTypes(){
 
   // Groupes élève
   var eleveGroups=[
-    {label:'Cours',items:[
-      {type:'cours_nouveau',   icon:BELL,  color:'#F97316',bg:'#FFF7ED',label:'Nouveaux cours',         sub:'Quand un prof suivi publie un cours'},
-      {type:'cours_place',     icon:FULL,  color:'#8B5CF6',bg:'#F5F3FF',label:'Place disponible',        sub:'Quand une place se libère sur un cours complet'}
+    {label:t('notif_grp_courses'),items:[
+      {type:'cours_nouveau',   icon:BELL,  color:'#F97316',bg:'#FFF7ED',label:t('notif_new_course'),         sub:t('notif_new_course_sub')},
+      {type:'cours_place',     icon:FULL,  color:'#8B5CF6',bg:'#F5F3FF',label:t('notif_place_available'),    sub:t('notif_place_available_sub')}
     ]},
-    {label:'Réservations',items:[
-      {type:'resa_confirmee',  icon:CHECK, color:'#10B981',bg:'#ECFDF5',label:'Confirmation de réservation',sub:'Dès que votre réservation est validée'},
-      {type:'resa_annulee',    icon:XCIRC,color:'#EF4444',bg:'#FEF2F2',label:'Cours annulé',             sub:'Quand le prof annule un cours auquel vous êtes inscrit'}
+    {label:t('notif_grp_reservations'),items:[
+      {type:'resa_confirmee',  icon:CHECK, color:'#10B981',bg:'#ECFDF5',label:t('notif_resa_confirmed'),     sub:t('notif_resa_confirmed_sub')},
+      {type:'resa_annulee',    icon:XCIRC,color:'#EF4444',bg:'#FEF2F2',label:t('notif_cours_annule'),       sub:t('notif_cours_annule_sub')}
     ]},
-    {label:'Rappels',items:[
-      {type:'rappel_24h',      icon:CLOCK24,color:'#10B981',bg:'#ECFDF5',label:'Rappel 24h avant',       sub:'La veille du cours réservé'},
-      {type:'rappel_1h',       icon:CLOCK1, color:'#10B981',bg:'#ECFDF5',label:'Rappel 1h avant',        sub:'Une heure avant le début du cours'}
+    {label:t('notif_grp_reminders'),items:[
+      {type:'rappel_24h',      icon:CLOCK24,color:'#10B981',bg:'#ECFDF5',label:t('notif_rappel_24h'),       sub:t('notif_rappel_24h_e_sub')},
+      {type:'rappel_1h',       icon:CLOCK1, color:'#10B981',bg:'#ECFDF5',label:t('notif_rappel_1h'),        sub:t('notif_rappel_1h_sub')}
     ]},
-    {label:'Messages',items:[
-      {type:'messages',        icon:MSG,   color:'#3B82F6',bg:'#EFF6FF',label:'Messages',                sub:'Quand un prof vous répond dans la messagerie'}
+    {label:t('notif_grp_messages'),items:[
+      {type:'messages',        icon:MSG,   color:'#3B82F6',bg:'#EFF6FF',label:t('notif_messages'),          sub:t('notif_messages_e_sub')}
     ]}
   ];
 
   // Groupes prof
   var profGroups=[
-    {label:'Réservations',items:[
-      {type:'resa_nouvelle',   icon:USERS, color:'#F97316',bg:'#FFF7ED',label:'Nouvelle réservation',    sub:'Quand un élève réserve un de vos cours'},
-      {type:'resa_annulee',    icon:XCIRC,color:'#EF4444',bg:'#FEF2F2',label:'Annulation',               sub:'Quand un élève annule sa réservation'},
-      {type:'cours_complet',   icon:FULL,  color:'#8B5CF6',bg:'#F5F3FF',label:'Cours complet',            sub:'Quand toutes les places de votre cours sont prises'},
-      {type:'paiement',        icon:EURO,  color:'#10B981',bg:'#ECFDF5',label:'Paiement reçu',            sub:'Confirmation de virement sur votre compte'}
+    {label:t('notif_grp_reservations'),items:[
+      {type:'resa_nouvelle',   icon:USERS, color:'#F97316',bg:'#FFF7ED',label:t('notif_new_reservation'),   sub:t('notif_new_reservation_sub')},
+      {type:'resa_annulee',    icon:XCIRC,color:'#EF4444',bg:'#FEF2F2',label:t('notif_annulation'),         sub:t('notif_annulation_sub')},
+      {type:'cours_complet',   icon:FULL,  color:'#8B5CF6',bg:'#F5F3FF',label:t('notif_cours_complet'),     sub:t('notif_cours_complet_sub')},
+      {type:'paiement',        icon:EURO,  color:'#10B981',bg:'#ECFDF5',label:t('notif_paiement'),          sub:t('notif_paiement_sub')}
     ]},
-    {label:'Rappels',items:[
-      {type:'rappel_24h',      icon:CLOCK24,color:'#10B981',bg:'#ECFDF5',label:'Rappel 24h avant',       sub:'La veille de chacun de vos cours'},
-      {type:'rappel_1h',       icon:CLOCK1, color:'#10B981',bg:'#ECFDF5',label:'Rappel 1h avant',        sub:'Une heure avant le début du cours'}
+    {label:t('notif_grp_reminders'),items:[
+      {type:'rappel_24h',      icon:CLOCK24,color:'#10B981',bg:'#ECFDF5',label:t('notif_rappel_24h'),       sub:t('notif_rappel_24h_p_sub')},
+      {type:'rappel_1h',       icon:CLOCK1, color:'#10B981',bg:'#ECFDF5',label:t('notif_rappel_1h'),        sub:t('notif_rappel_1h_sub')}
     ]},
-    {label:'Messages & avis',items:[
-      {type:'messages',        icon:MSG,   color:'#3B82F6',bg:'#EFF6FF',label:'Messages',                sub:'Quand un élève vous envoie un message'},
-      {type:'avis',            icon:STAR,  color:'#F59E0B',bg:'#FFFBEB',label:'Avis et notations',       sub:'Quand un élève laisse un avis sur votre cours'}
+    {label:t('notif_grp_msg_avis'),items:[
+      {type:'messages',        icon:MSG,   color:'#3B82F6',bg:'#EFF6FF',label:t('notif_messages'),          sub:t('notif_messages_p_sub')},
+      {type:'avis',            icon:STAR,  color:'#F59E0B',bg:'#FFFBEB',label:t('notif_avis'),              sub:t('notif_avis_sub')}
     ]}
   ];
 
@@ -7050,7 +7050,7 @@ async function subscribePush(){
   if(btn){btn.disabled=true;btn.textContent='...';}
   try{
     var perm=await Notification.requestPermission();
-    if(perm!=='granted'){toast('Refusé','Activez les notifications dans vos réglages');return;}
+    if(perm!=='granted'){toast(t('notif_denied'),t('notif_enable_settings'));return;}
     // Attendre le SW si pas encore prêt
     if(!_swReg&&'serviceWorker' in navigator){
       try{
@@ -7062,7 +7062,7 @@ async function subscribePush(){
     }
     if(!_swReg){
       // Fallback sans push : juste stocker la préférence localement
-      toast('Notifications activées ✓','Vous recevrez les alertes');
+      toast(t('notif_enabled'),t('notif_will_receive'));
       try{localStorage.setItem('cp_notif_pref','1');}catch(e){}
       renderNotifStatus();
       return;
@@ -7085,8 +7085,8 @@ async function subscribePush(){
     });
     renderNotifStatus();
     haptic(10);
-    toast('Notifications activées ✓','');
-  }catch(e){toast('Erreur',"Impossible d'activer les notifications");}
+    toast(t('notif_enabled'),'');
+  }catch(e){toast(t('t_error'),t('notif_err_enable'));}
 }
 
 async function unsubscribePush(){
@@ -7099,8 +7099,8 @@ async function unsubscribePush(){
       _pushSubscription=null;
     }
     renderNotifStatus();
-    toast('Notifications désactivées','');
-  }catch(e){toast('Erreur','Impossible de désactiver');}
+    toast(t('notif_disabled'),'');
+  }catch(e){toast(t('t_error'),t('notif_err_disable'));}
 }
 
 function urlBase64ToUint8Array(base64String){
@@ -7567,14 +7567,14 @@ function stepRender(idx){
 
   if(step.id==='mode'){
     html+='<div style="display:flex;flex-direction:column;gap:12px;width:100%">'
-      +sOpt('mode','presentiel','Pr\u00e9sentiel','En personne',_sd.mode==='presentiel','rgba(0,177,79,.1)')
-      +sOpt('mode','visio','Visio','En ligne',_sd.mode==='visio','rgba(0,113,227,.1)')
+      +sOpt('mode','presentiel',t('mode_pres'),t('nc_mode_pres'),_sd.mode==='presentiel','rgba(0,177,79,.1)')
+      +sOpt('mode','visio',t('mode_visio'),t('nc_mode_vis'),_sd.mode==='visio','rgba(0,113,227,.1)')
       +'</div>';
 
   }else if(step.id==='prive'){
     html+='<div style="display:flex;flex-direction:column;gap:12px;width:100%">'
-      +sOpt('prive','public','Cours public','Visible dans les r\u00e9sultats de recherche',!_sd.prive,'rgba(0,177,79,.1)')
-      +sOpt('prive','prive','Cours priv\u00e9','Invisible au public \u2014 acc\u00e8s par code unique',_sd.prive,'rgba(255,107,43,.1)')
+      +sOpt('prive','public',t('nc_public'),t('nc_public_desc'),!_sd.prive,'rgba(0,177,79,.1)')
+      +sOpt('prive','prive',t('nc_prive'),t('nc_prive_desc'),_sd.prive,'rgba(255,107,43,.1)')
       +'</div>';
     if(_sd.prive){
       html+='<div style="margin-top:16px;width:100%;background:var(--orp);border-radius:14px;padding:14px 16px">'
@@ -7591,20 +7591,20 @@ function stepRender(idx){
   }else if(step.id==='matiere'){
     var _isDkM=document.documentElement.classList.contains('dk');
     var _matCats=[
-      {lbl:'Sciences exactes',   items:['Maths','Statistiques','Physique','Chimie','SVT / Biologie','Astronomie','G\u00e9ologie','M\u00e9decine / Sant\u00e9','\u00c9cologie']},
-      {lbl:'Num\u00e9rique & Tech', items:['Informatique','Python','JavaScript','D\u00e9veloppement web','Data Science','IA & Machine Learning','\u00c9lectronique','Design / UI','Cybers\u00e9curit\u00e9','No-code','Blockchain']},
-      {lbl:'Langues',            items:['Fran\u00e7ais','Anglais','Espagnol','Allemand','Italien','Portugais','Arabe','Chinois','Japonais','Russe','Cor\u00e9en','Hindi','Latin','Langue des signes']},
-      {lbl:'Lettres & \u00c9criture', items:['\u00c9criture cr\u00e9ative','Philosophie','Th\u00e9\u00e2tre','Cin\u00e9ma / Vid\u00e9o','BD / Manga']},
-      {lbl:'Arts visuels',       items:['Dessin','Peinture','Aquarelle','Arts plastiques','Illustration','Calligraphie','Photographie']},
-      {lbl:'Musique',            items:['Musique','Piano','Guitare','Chant','Batterie','Violon','Saxophone']},
-      {lbl:'Sciences humaines',  items:['Histoire-G\u00e9o','Psychologie','Sociologie','G\u00e9ographie','Sciences politiques','Anthropologie']},
-      {lbl:'Business & Droit',   items:['\u00c9conomie','Comptabilit\u00e9','Finance','Marketing','Droit','Entrepreneuriat','Gestion de projet','Communication','RH & Recrutement','Immobilier','Architecture']},
-      {lbl:'Pr\u00e9pa & Concours', items:['CPGE / Pr\u00e9pa','M\u00e9decine (PASS/LAS)','Sciences Po','TOEFL / IELTS','GMAT / GRE']},
-      {lbl:'Sport',              items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
-      {lbl:'Bien-\u00eatre',     items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso']},
-      {lbl:'Cuisine & Artisanat',items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique']},
-      {lbl:'Jeux & Loisirs',     items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
-      {lbl:'Autre',              items:['Autre']},
+      {lbl:t('mat_cat_sciences'),  items:['Maths','Statistiques','Physique','Chimie','SVT / Biologie','Astronomie','G\u00e9ologie','M\u00e9decine / Sant\u00e9','\u00c9cologie']},
+      {lbl:t('mat_cat_numerique'), items:['Informatique','Python','JavaScript','D\u00e9veloppement web','Data Science','IA & Machine Learning','\u00c9lectronique','Design / UI','Cybers\u00e9curit\u00e9','No-code','Blockchain']},
+      {lbl:t('mat_cat_langues'),   items:['Fran\u00e7ais','Anglais','Espagnol','Allemand','Italien','Portugais','Arabe','Chinois','Japonais','Russe','Cor\u00e9en','Hindi','Latin','Langue des signes']},
+      {lbl:t('mat_cat_lettres'),   items:['\u00c9criture cr\u00e9ative','Philosophie','Th\u00e9\u00e2tre','Cin\u00e9ma / Vid\u00e9o','BD / Manga']},
+      {lbl:t('mat_cat_arts'),      items:['Dessin','Peinture','Aquarelle','Arts plastiques','Illustration','Calligraphie','Photographie']},
+      {lbl:t('mat_cat_musique'),   items:['Musique','Piano','Guitare','Chant','Batterie','Violon','Saxophone']},
+      {lbl:t('mat_cat_humaines'),  items:['Histoire-G\u00e9o','Psychologie','Sociologie','G\u00e9ographie','Sciences politiques','Anthropologie']},
+      {lbl:t('mat_cat_business'),  items:['\u00c9conomie','Comptabilit\u00e9','Finance','Marketing','Droit','Entrepreneuriat','Gestion de projet','Communication','RH & Recrutement','Immobilier','Architecture']},
+      {lbl:t('mat_cat_prepa'),     items:['CPGE / Pr\u00e9pa','M\u00e9decine (PASS/LAS)','Sciences Po','TOEFL / IELTS','GMAT / GRE']},
+      {lbl:t('mat_cat_sport'),     items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
+      {lbl:t('mat_cat_bienetre'),  items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso']},
+      {lbl:t('mat_cat_cuisine'),   items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique']},
+      {lbl:t('mat_cat_jeux'),      items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
+      {lbl:t('mat_cat_autre'),     items:['Autre']},
     ];
     html+='<div style="width:100%;margin-bottom:4px;position:relative">'
       +'<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
@@ -7631,11 +7631,11 @@ function stepRender(idx){
 
   }else if(step.id==='niveau'){
     var _nivCats=[
-      {lbl:'Primaire', items:['CP','CE1','CE2','CM1','CM2']},
-      {lbl:'Collège', items:['6ème','5ème','4ème','3ème']},
-      {lbl:'Lycée', items:['Seconde','Première','Terminale']},
-      {lbl:'Supérieur', items:['BTS / Prépa','Bac+1/2','Bac+3/4','Bac+5 et +']},
-      {lbl:'Général', items:['Tous niveaux','Adultes / Pro']},
+      {lbl:t('niv_prim'),      items:['CP','CE1','CE2','CM1','CM2']},
+      {lbl:t('niv_col'),       items:['6ème','5ème','4ème','3ème']},
+      {lbl:t('niv_lyc'),       items:['Seconde','Première','Terminale']},
+      {lbl:t('niv_superieur'), items:['BTS / Prépa','Bac+1/2','Bac+3/4','Bac+5 et +']},
+      {lbl:t('niv_general'),   items:[t('niv_tous_niveaux'),t('niv_adultes')]},
     ];
     html+='<div style="display:flex;flex-direction:column;gap:20px;width:100%">';
     _nivCats.forEach(function(cat){
@@ -7707,9 +7707,9 @@ function stepRender(idx){
       var _icoEtab='<svg viewBox="0 0 24 24" fill="none" stroke="'+(_lt==='etablissement'?'var(--or)':'var(--mid)')+'" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>';
       var _icoPin='<svg viewBox="0 0 24 24" fill="none" stroke="'+(_lt==='autre'?'var(--or)':'var(--mid)')+'" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
       html+='<div style="width:100%;display:flex;flex-direction:column;gap:10px">'
-        +_sloBtn('domicile',_icoHome,'À domicile','Adresse partagée en privé avec les inscrits')
-        +_sloBtn('etablissement',_icoEtab,'Établissement','Collège, lycée, bibliothèque, université…')
-        +_sloBtn('autre',_icoPin,'Autre lieu','Salle de co-working, café, parc…')
+        +_sloBtn('domicile',_icoHome,t('lieu_home'),t('lieu_home_desc'))
+        +_sloBtn('etablissement',_icoEtab,t('lieu_etab'),t('lieu_etab_desc'))
+        +_sloBtn('autre',_icoPin,t('lieu_other'),t('lieu_other_desc'))
         // Champ(s) adresse — toujours affiché dès qu'un type est sélectionné
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
           +'<div>'
@@ -8532,7 +8532,7 @@ document.addEventListener('click',function(e){
 
 
 // ---- Settings sheet ----
-var _msgContactLabels={all:'Tous les élèves',enrolled:'Inscrits uniquement',none:'Personne (messagerie désactivée)'};
+var _msgContactLabels={all:function(){return t('msg_pref_all');},enrolled:function(){return t('msg_pref_enrolled');},none:function(){return t('msg_pref_none');}};
 function openSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.add('on');document.body.style.overflow='hidden';}
@@ -8550,7 +8550,7 @@ function openSettings(){
     if(adresseTog)adresseTog.classList.toggle('on',user.adresse_auto!==false);
     // Messagerie
     var sub=g('settingsMsgContactSub');
-    if(sub)sub.textContent=_msgContactLabels[user.contact_pref||'all']||_msgContactLabels.all;
+    var _mc=_msgContactLabels[user.contact_pref||'all']||_msgContactLabels.all;if(sub)sub.textContent=typeof _mc==='function'?_mc():_mc;
     // Apparition dans les recherches (default: on)
     var searchTog=g('searchVisibleToggle');
     if(searchTog)searchTog.classList.toggle('on',user.search_visible!==false);
@@ -8611,11 +8611,11 @@ async function toggleTuteurMode(){
 function openMsgContactSheet(){
   var opts=[
     {k:'all',    icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
-     l:'Tous les élèves', s:'N\'importe quel élève peut vous écrire'},
+     l:t('msg_pref_all'), s:t('msg_pref_all_sub')},
     {k:'enrolled',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>',
-     l:'Inscrits uniquement', s:'Réservé aux élèves inscrits à vos cours'},
+     l:t('msg_pref_enrolled'), s:t('msg_pref_enrolled_sub')},
     {k:'none',   icon:'<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
-     l:'Désactivée', s:'Personne ne peut vous envoyer de message'}
+     l:t('msg_pref_none'), s:t('msg_pref_none_sub')}
   ];
   var cur=user&&user.contact_pref||'all';
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
