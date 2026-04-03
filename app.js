@@ -6145,9 +6145,13 @@ function closePaymentSheet(){
 }
 
 function initStripeIban() {
-  if (!window.Stripe) return; // lib paiement
-  if (_stripeInstance) return;
-  _stripeInstance = Stripe(STRIPE_PK);
+  if (!window.Stripe) return;
+  if (!_stripeInstance) _stripeInstance = Stripe(STRIPE_PK);
+  // Toujours (re)créer le champ IBAN — l'ancien peut être démonté si on revient sur la page
+  if (_ibanElement) { try { _ibanElement.unmount(); } catch(e) {} _ibanElement = null; }
+  var container = g('ibanElement');
+  if (!container) return;
+  container.innerHTML = '';
   var elements = _stripeInstance.elements();
   _ibanElement = elements.create('iban', {
     supportedCountries: ['SEPA'],
@@ -6162,13 +6166,9 @@ function initStripeIban() {
     },
     placeholderCountry: 'FR'
   });
-  var container = g('ibanElement');
-  if (container) {
-    _ibanElement.mount('#ibanElement');
-    // Focus styling
-    _ibanElement.on('focus', function() { container.style.borderColor = 'var(--or)'; });
-    _ibanElement.on('blur', function() { container.style.borderColor = 'var(--bdr)'; });
-  }
+  _ibanElement.mount('#ibanElement');
+  _ibanElement.on('focus', function() { container.style.borderColor = 'var(--or)'; });
+  _ibanElement.on('blur', function() { container.style.borderColor = 'var(--bdr)'; });
 }
 
 async function loadStripeConnectStatus() {
