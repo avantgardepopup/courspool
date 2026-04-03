@@ -1793,32 +1793,32 @@
     <!-- Étape 1 : intro -->
     <div id="cniStep1" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
       <div style="width:72px;height:72px;background:var(--orp);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg></div>
-      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Vérifiez votre identité</div>
-      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Pour garantir la confiance des élèves,<br>nous vérifions l'identité de chaque professeur.</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em" data-i18n="cni_title">Vérifiez votre identité</div>
+      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px" data-i18n="cni_desc">Pour garantir la confiance des élèves,<br>nous vérifions l'identité de chaque professeur.</div>
       <!-- Étapes visuelles -->
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--or);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre CNI ou passeport</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Recto uniquement, lisible</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="cni_photo_label">Photo de votre CNI ou passeport</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="cni_recto">Recto uniquement, lisible</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès que c'est fait</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="cni_24h">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="cni_email_conf">Email de confirmation dès que c'est fait</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Publiez vos premiers cours</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="cni_publish">Publiez vos premiers cours</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="cni_visible_all">Visible par tous les élèves</div></div>
         </div>
       </div>
-      <button onclick="cniGoStep2()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:12px">Commencer la vérification</button>
-      <button onclick="cniLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
+      <button onclick="cniGoStep2()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);margin-bottom:12px" data-i18n="cni_start_btn">Commencer la vérification</button>
+      <button onclick="cniLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px" data-i18n="cni_later">Plus tard</button>
     </div>
 
     <!-- Étape 2 : upload -->
     <div id="cniStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
         <button onclick="cniGoStep1()" style="background:none;border:none;cursor:pointer;color:var(--or);padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <div style="font-size:17px;font-weight:800">Votre pièce d'identité</div>
+        <div style="font-size:17px;font-weight:800" data-i18n="cni_your_id">Votre pièce d'identité</div>
       </div>
 
       <!-- Zone d'upload -->
@@ -1826,19 +1826,19 @@
         <div id="cniUploadIcon" style="margin-bottom:12px">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 15l-5-5L5 20"/></svg>
         </div>
-        <div id="cniUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">CNI, Passeport ou Carte de séjour</div>
-        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
+        <div id="cniUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px" data-i18n="cni_id_types">CNI, Passeport ou Carte de séjour</div>
+        <div style="font-size:12px;color:var(--lite)" data-i18n="cni_file_inst">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
         <input type="file" id="cniFileInput" accept="image/*,.pdf" style="display:none" onchange="cniPreview(this)">
       </div>
 
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Vos documents sont chiffrés et ne seront jamais partagés. Votre pièce d'identité est automatiquement supprimée après vérification.
+        <span data-i18n="cni_privacy">Vos documents sont chiffrés et ne seront jamais partagés. Votre pièce d'identité est automatiquement supprimée après vérification.</span>
       </div>
 
       <button id="cniSubmitBtn" onclick="submitCni()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35);display:flex;align-items:center;justify-content:center;gap:8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-        Envoyer pour vérification
+        <span data-i18n="txt_send_verif">Envoyer pour vérification</span>
       </button>
     </div>
 
@@ -1849,7 +1849,7 @@
       </div>
       <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" id="cniStep3Title">Document envoyé ✓</div>
       <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px" id="cniStep3Sub">Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
-      <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Compris, merci !</button>
+      <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="cni_thanks">Compris, merci !</button>
     </div>
 
   </div>
@@ -1864,46 +1864,46 @@
     <!-- Étape 1 : intro -->
     <div id="diplomeStep1" style="padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
       <div style="width:72px;height:72px;background:#EFF6FF;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px">🎓</div>
-      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Obtenez le badge Diplôme vérifié</div>
-      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Rassurez les parents en prouvant votre qualification. Le badge apparaît sur votre profil et vos cours.</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em" data-i18n="dip_title">Obtenez le badge Diplôme vérifié</div>
+      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px" data-i18n="dip_desc">Rassurez les parents en prouvant votre qualification. Le badge apparaît sur votre profil et vos cours.</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:#3B82F6;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre diplôme</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Licence, Master, CAPES, agrégation…</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="dip_photo_label">Photo de votre diplôme</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="dip_types">Licence, Master, CAPES, agrégation…</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès validation</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="cni_24h">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="dip_email_val">Email de confirmation dès validation</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Badge affiché sur votre profil</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves et parents</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="dip_badge">Badge affiché sur votre profil</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="dip_visible">Visible par tous les élèves et parents</div></div>
         </div>
       </div>
-      <button onclick="diplomeGoStep2()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35);margin-bottom:12px">Envoyer mon diplôme</button>
-      <button onclick="diplomeLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
+      <button onclick="diplomeGoStep2()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35);margin-bottom:12px" data-i18n="dip_btn">Envoyer mon diplôme</button>
+      <button onclick="diplomeLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px" data-i18n="cni_later">Plus tard</button>
     </div>
     <!-- Étape 2 : upload -->
     <div id="diplomeStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
         <button onclick="diplomeGoStep1()" style="background:none;border:none;cursor:pointer;color:#3B82F6;padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <div style="font-size:17px;font-weight:800">Votre diplôme</div>
+        <div style="font-size:17px;font-weight:800" data-i18n="dip_your">Votre diplôme</div>
       </div>
       <div id="diplomeDropZone" onclick="g('diplomeFileInput').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:var(--bg)">
         <div id="diplomeUploadIcon" style="margin-bottom:12px">
           <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
-        <div id="diplomeUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">Licence, Master, CAPES, agrégation…</div>
-        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
+        <div id="diplomeUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px" data-i18n="dip_types">Licence, Master, CAPES, agrégation…</div>
+        <div style="font-size:12px;color:var(--lite)" data-i18n="cni_file_inst">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
         <input type="file" id="diplomeFileInput" accept="image/*,.pdf" style="display:none" onchange="diplomePreview(this)">
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
         <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Vos documents sont chiffrés et ne seront jamais partagés.
+        <span data-i18n="dip_encrypted">Vos documents sont chiffrés et ne seront jamais partagés.</span>
       </div>
       <button id="diplomeSubmitBtn" onclick="submitDiplome()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35);display:flex;align-items:center;justify-content:center;gap:8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-        Envoyer pour vérification
+        <span data-i18n="txt_send_verif">Envoyer pour vérification</span>
       </button>
     </div>
     <!-- Étape 3 : confirmation -->
@@ -1911,9 +1911,9 @@
       <div style="width:72px;height:72px;background:#EFF6FF;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
         <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div id="diplomeStep3Title" style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em">Diplôme envoyé ✓</div>
+      <div id="diplomeStep3Title" style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" data-i18n="txt_diploma_sent">Diplôme envoyé ✓</div>
       <div id="diplomeStep3Sub" style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px">Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
-      <button onclick="diplomeDone()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35)">Compris, merci !</button>
+      <button onclick="diplomeDone()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35)" data-i18n="cni_thanks">Compris, merci !</button>
     </div>
   </div>
 </div>
@@ -1929,46 +1929,46 @@
       <div style="width:72px;height:72px;background:#ECFDF5;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
         <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="36" height="36"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
-      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em">Obtenez le badge Profil de confiance</div>
-      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px">Montrez aux familles que votre profil a été contrôlé. Ce badge renforce la confiance et vous démarque.</div>
+      <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em" data-i18n="cas_title">Obtenez le badge Profil de confiance</div>
+      <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px" data-i18n="cas_desc">Montrez aux familles que votre profil a été contrôlé. Ce badge renforce la confiance et vous démarque.</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:#10B981;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:16px;font-weight:800">1</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Photo de votre attestation</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Extrait de casier judiciaire bulletin n°3</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="cas_photo_label">Photo de votre attestation</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="cas_type">Extrait de casier judiciaire bulletin n°3</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">2</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Email de confirmation dès validation</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="cni_24h">Vérification sous 24h</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="dip_email_val">Email de confirmation dès validation</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:14px;padding:14px">
           <div style="width:36px;height:36px;background:var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid);font-size:16px;font-weight:800">3</div>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Badge affiché sur votre profil</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Visible par tous les élèves et parents</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)" data-i18n="dip_badge">Badge affiché sur votre profil</div><div style="font-size:12px;color:var(--lite);margin-top:2px" data-i18n="dip_visible">Visible par tous les élèves et parents</div></div>
         </div>
       </div>
-      <button onclick="casierGoStep2()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,.35);margin-bottom:12px">Envoyer mon attestation</button>
-      <button onclick="casierLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px">Plus tard</button>
+      <button onclick="casierGoStep2()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,.35);margin-bottom:12px" data-i18n="cas_btn">Envoyer mon attestation</button>
+      <button onclick="casierLater()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px" data-i18n="cni_later">Plus tard</button>
     </div>
     <!-- Étape 2 : upload -->
     <div id="casierStep2" style="display:none;padding:24px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
         <button onclick="casierGoStep1()" style="background:none;border:none;cursor:pointer;color:#10B981;padding:4px;display:flex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <div style="font-size:17px;font-weight:800">Votre attestation</div>
+        <div style="font-size:17px;font-weight:800" data-i18n="cas_your">Votre attestation</div>
       </div>
       <div id="casierDropZone" onclick="g('casierFileInput').click()" style="border:2px dashed var(--bdr);border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:var(--bg)">
         <div id="casierUploadIcon" style="margin-bottom:12px">
           <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" width="48" height="48" style="margin:0 auto;display:block"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div id="casierUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px">Extrait de casier judiciaire (bulletin n°3)</div>
-        <div style="font-size:12px;color:var(--lite)">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
+        <div id="casierUploadLabel" style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px" data-i18n="cas_type_form">Extrait de casier judiciaire (bulletin n°3)</div>
+        <div style="font-size:12px;color:var(--lite)" data-i18n="cni_file_inst">Appuyez pour choisir · JPG, PNG ou PDF · Max 5 MB</div>
         <input type="file" id="casierFileInput" accept="image/*,.pdf" style="display:none" onchange="casierPreview(this)">
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:var(--mid)">
         <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Vos documents sont chiffrés et ne seront jamais partagés.
+        <span data-i18n="dip_encrypted">Vos documents sont chiffrés et ne seront jamais partagés.</span>
       </div>
       <button id="casierSubmitBtn" onclick="submitCasier()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(16,185,129,.35);display:flex;align-items:center;justify-content:center;gap:8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
-        Envoyer pour vérification
+        <span data-i18n="txt_send_verif">Envoyer pour vérification</span>
       </button>
     </div>
   </div>

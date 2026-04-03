@@ -788,7 +788,7 @@ async function _handleOAuthSignIn(session){
           fol=_r;_saveFol();if(C.length)buildCards();
         }).catch(function(){});
       });
-      toast('Bienvenue '+pr+' !',t('t_welcome_sub'));
+      toast(t('t_welcome')+' '+pr+' !',t('t_welcome_sub'));
       _oauthProcessing=false;
       return;
     }
@@ -826,7 +826,7 @@ async function doOAuthGoogle(){
       });
       if(res.data&&res.data.url){
         var _oauthUrl=res.data.url;
-        if(!window._supabaseOrigin||!_oauthUrl.startsWith(window._supabaseOrigin)){toast('Erreur','URL OAuth invalide');return;}
+        if(!window._supabaseOrigin||!_oauthUrl.startsWith(window._supabaseOrigin)){toast(t('t_error'),t('t_oauth_unavail'));return;}
         try{await window.Capacitor.Plugins.Browser.open({url:_oauthUrl});}
         catch(be){window.location.href=_oauthUrl;}
       }
@@ -850,7 +850,7 @@ async function doOAuthApple(){
       });
       if(res.data&&res.data.url){
         var _oauthUrlA=res.data.url;
-        if(!window._supabaseOrigin||!_oauthUrlA.startsWith(window._supabaseOrigin)){toast('Erreur','URL OAuth invalide');return;}
+        if(!window._supabaseOrigin||!_oauthUrlA.startsWith(window._supabaseOrigin)){toast(t('t_error'),t('t_oauth_unavail'));return;}
         try{await window.Capacitor.Plugins.Browser.open({url:_oauthUrlA});}
         catch(be){window.location.href=_oauthUrlA;}
       }
@@ -888,7 +888,7 @@ async function pcOAuthRoleNext(){
       })
     });
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);if(btn){btn.disabled=false;btn.textContent='Continuer';}return;}
+    if(data.error){toast(t('t_error'),data.error);if(btn){btn.disabled=false;btn.textContent=t('pc_continue');}return;}
     var p=data.profile||{};
     var pr=p.prenom||(meta.given_name||(sbUser.email||'').split('@')[0]);
     var nm=p.nom||meta.family_name||'';
@@ -905,8 +905,8 @@ async function pcOAuthRoleNext(){
     _pcHistory.push('pcOAuthRole');
     _pcShowSlide('pcAge',false);
   }catch(e){
-    toast('Erreur','Problème de connexion');
-    if(btn){btn.disabled=false;btn.textContent='Continuer';}
+    toast(t('t_error'),t('t_try_again'));
+    if(btn){btn.disabled=false;btn.textContent=t('pc_continue');}
   }
 }
 
@@ -1234,7 +1234,7 @@ async function doLogin(){
     var p=data.profile||{};
     // Vérifier si compte bloqué
     if(p.statut_compte==='bloqué'){
-      toast('Compte suspendu','Votre compte a été suspendu. Contactez le support CoursPool.');
+      toast(t('t_account_suspended'),t('t_account_suspended_msg'));
       g('lEm').disabled=false;g('lPw').disabled=false;
       return;
     }
@@ -1308,16 +1308,16 @@ async function doLogin(){
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
     }
-    toast('Bienvenue '+pr+' !',t('t_welcome_sub'));
+    toast(t('t_welcome')+' '+pr+' !',t('t_welcome_sub'));
     // Lancer tuto — si prof sans CNI, délégué à après la modal CNI
     if(role!=='professeur'){setTimeout(tutoStart,1200);}
   }catch(e){
-    if(e.name==='AbortError'){toast('Délai dépassé','Le serveur met du temps à répondre, réessaie');}
-    else{toast('Erreur','Impossible de se connecter');}
+    if(e.name==='AbortError'){toast(t('t_timeout'),t('t_timeout_msg'));}
+    else{toast(t('t_error'),t('t_login_fail_msg'));}
   }
   finally{
     g('lEm').disabled=false;g('lPw').disabled=false;
-    var _lb=g('loginSubmitBtn');if(_lb){_lb.disabled=false;_lb.textContent='Se connecter';}
+    var _lb=g('loginSubmitBtn');if(_lb){_lb.disabled=false;_lb.textContent=t('txt_login_btn');}
   }
 }
 
@@ -1329,12 +1329,12 @@ async function doReg(){
   var role=_regRole||'eleve';
   if(!pr||!em||!pw){toast(t('t_fields_miss'),'');return;}
   if(pw.length<6){toast(t('t_error'),t('t_pw_short'));return;}
-  var btn=g('regCreateBtn');if(btn){btn.disabled=true;btn.textContent='Création...';}
+  var btn=g('regCreateBtn');if(btn){btn.disabled=true;btn.textContent=t('txt_creating');}
   try{
     var body={email:em,password:pw,prenom:pr,nom:nm,role:role};
     var r=await fetch(API+'/auth/register',{method:'POST',headers:apiH(),body:JSON.stringify(body)});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
+    if(data.error){toast(t('t_error'),data.error);return;}
     // Auto-login
     var loginR=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw})});
     var loginData=await loginR.json();
@@ -1346,8 +1346,8 @@ async function doReg(){
     go(pr,nm,em,role,data.user.id,null,token,rtok,texp);
     // Lancer la complétion de profil (avant tutoriel)
     setTimeout(showProfCompletion,300);
-  }catch(e){toast('Erreur','Impossible de créer le compte');}
-  finally{if(btn){btn.disabled=false;btn.textContent='Créer mon compte';}}
+  }catch(e){toast(t('t_error'),t('t_signup_fail'));}
+  finally{if(btn){btn.disabled=false;btn.textContent=t('txt_create_btn');}}
 }
 
 function doGuest(){
@@ -3303,13 +3303,13 @@ async function openEleves(id){
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' inscrit'+(c.fl>1?'s':'');
   var list=g('elevesList');
-  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_loading')+'</div>';
   openM('bdEleves');
-  if(c.fl===0){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
+  if(c.fl===0){list.innerHTML='<div class="bempty"><p>'+t('txt_no_students')+'</p></div>';return;}
   try{
     var r=await fetch(API+'/reservations/cours/'+id,{headers:apiH()});
     var data=await r.json();
-    if(!Array.isArray(data)||!data.length){list.innerHTML='<div class="bempty"><p>Aucun élève inscrit pour l\'instant.</p></div>';return;}
+    if(!Array.isArray(data)||!data.length){list.innerHTML='<div class="bempty"><p>'+t('txt_no_students')+'</p></div>';return;}
     list.innerHTML='<div style="margin-bottom:12px;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--mid)">📋 <strong>'+data.length+' élève'+(data.length>1?'s':'')+' inscrit'+(data.length>1?'s':'')+'</strong> sur '+c.sp+' places</div>'
       +data.map(function(res){
         var nom=((res.prenom||'')+(res.nom?' '+res.nom:'')).trim()||'Élève';
@@ -3907,17 +3907,17 @@ function shakeField(el){
 }
 
 async function subCr(){
-  if(window._publishing){toast('En cours...','Publication déjà en cours');return;}
+  if(window._publishing){toast(t('t_error'),t('t_in_progress'));return;}
   window._publishing=true;
   var btn=document.querySelector('#bdCr .pb.pri');
-  if(btn){btn.textContent='⏳ Publication…';btn.disabled=true;}
+  if(btn){btn.textContent=t('txt_publishing');btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
   // Validation
-  if(!titre){shakeField(g('crTitre'));toast('Titre manquant','Donnez un titre à votre cours',true);return;}
+  if(!titre){shakeField(g('crTitre'));toast(t('t_title_req'),t('t_title_req_msg'),true);return;}
   var crSubjH=g('crSubjHidden');
-  if(!crSubjH||!crSubjH.value){var crMB=g('crMatBtn');if(crMB){crMB.style.borderColor='#EF4444';setTimeout(function(){crMB.style.borderColor='';},600);}toast('Matière manquante','Choisissez une matière',true);return;}
-  if(!date){shakeField(g('crDate'));toast('Date manquante','Choisissez une date',true);return;}
-  if(!heure){shakeField(g('crHeure'));toast('Heure manquante','Choisissez une heure',true);return;}
+  if(!crSubjH||!crSubjH.value){var crMB=g('crMatBtn');if(crMB){crMB.style.borderColor='#EF4444';setTimeout(function(){crMB.style.borderColor='';},600);}toast(t('t_subject_req'),t('t_subject_req_msg'),true);return;}
+  if(!date){shakeField(g('crDate'));toast(t('t_date_req'),t('t_date_req_msg'),true);return;}
+  if(!heure){shakeField(g('crHeure'));toast(t('t_hour_req'),t('t_hour_req_msg'),true);return;}
   var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   // Matière depuis le sélecteur natif
@@ -3927,12 +3927,12 @@ async function subCr(){
   var sujet=matFound?matFound.label:'Autre';
   if(!titre||!date||!heure||!lieu||!prix){
     toast(t('t_fields_miss'),'');
-    window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}return;
+    window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
   var dateObj=new Date(date+'T'+heure);
   if(dateObj<=new Date()){
-    toast('Date invalide','Choisissez une date future');
-    window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}return;
+    toast(t('t_invalid_date'),t('t_future_date'));
+    window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
   var dateFormatee=dateObj.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
   var colors={'📐 Maths':'#16A34A','⚗️ Physique':'#BE185D','💻 Info':'#2563EB','🌍 Langues':'#059669','📊 Éco':'#D97706','✨ Autre':'#7C3AED'};
@@ -3953,10 +3953,10 @@ async function subCr(){
   try{
     var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(payload)});
     var data=await r.json();
-    if(data.error){toast('Impossible de publier',typeof data.error==='string'?data.error:data.error.message||data.error.details||'Vérifiez votre connexion et réessayez');return;}
+    if(data.error){toast(t('t_publish_fail'),typeof data.error==='string'?data.error:data.error.message||data.error.details||t('t_try_again'));return;}
     g('crTitre').value='';
   var crSH=g('crSubjHidden');if(crSH)crSH.value='';
-  var crML=g('crMatLabel');if(crML){crML.textContent='Choisir une matière…';crML.style.color='var(--lite)';}
+  var crML=g('crMatLabel');if(crML){crML.textContent=t('nc_mat_ph');crML.style.color='var(--lite)';}
   var crMD=g('crMatDot');if(crMD)crMD.style.background='var(--bdr)';
   var crMB=g('crMatBtn');if(crMB)crMB.style.borderColor='var(--bdr)';g('crDate').value='';g('crHeure').value='';
     g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
@@ -3970,7 +3970,7 @@ async function subCr(){
     var isFirstCours=C.filter(function(c){return c.pr===user.id;}).length<=1;
     toast(isFirstCours?'Premier cours publié !':'Cours publié ✓',isFirstCours?'Félicitations ! Vos élèves peuvent maintenant vous trouver.':'Visible pour tous les élèves');
   }catch(e){toast(t('t_net_error'),'');}
-  finally{window._publishing=false;if(btn){btn.textContent='Publier le cours';btn.disabled=false;}}
+  finally{window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}}
 }
 
 // TOGGLE MOT DE PASSE
@@ -4010,7 +4010,7 @@ function dupCours(id){
       var _niv=g('crNiveau');if(_niv&&c.niveau){_niv.value=c.niveau;document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(ch){ch.classList.toggle('on',ch.dataset.n===(c.niveau||''));});}
       var _dsc=g('crDesc');if(_dsc&&c.description)_dsc.value=c.description;
       var _df=g('crDate');if(_df){_df.value='';_df.style.borderColor='var(--or)';_df.style.boxShadow='0 0 0 3px rgba(255,107,43,.15)';setTimeout(function(){_df.scrollIntoView({behavior:'smooth',block:'center'});_df.focus();},350);}
-      toast('Cours dupliqué','Changez la date et l\'heure puis publiez');
+      toast(t('t_duplicated'),t('t_duplicated_msg'));
     },200);
   },300);
 }
@@ -4043,10 +4043,10 @@ async function confirmDeleteCours(){
   try{
     var r=await fetch(API+'/cours/'+id+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({professeur_id:user.id})});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
+    if(data.error){toast(t('t_error'),data.error);return;}
     await loadData();buildCards();buildAccLists();
     var nb=data.remboursements||0;
-    toast('Cours annul\u00e9',nb>0?nb+' \u00e9l\u00e8ve'+(nb>1?'s':'')+' rembours\u00e9'+(nb>1?'s':'')+' automatiquement \u2713':'Cours supprim\u00e9');
+    toast(t('t_cancelled'),nb>0?nb+' '+t('mp_eleves').toLowerCase().replace(/s$/,'')+(nb>1?'s':'')+' '+t('t_cancelled_sub'):'');
   }catch(e){if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'annuler_cours',cours_id:id});toast(t('t_net_error'),'');}
   window._deleteId=null;
 }
@@ -4079,9 +4079,9 @@ function pickS(el){document.querySelectorAll('#bdCr .so').forEach(function(s){s.
 var msgDestinataire=null,msgDestId=null,msgPollTimer=null,_msgLoadFailed=false;
 
 function openMsg(profNm,destId,avatar){
-  if(!user||!user.id){toast('Connexion requise','Connectez-vous pour envoyer des messages');return;}
-  if(!destId){toast('Erreur','Destinataire introuvable');return;}
-  if(destId===user.id){toast('Action impossible','Vous ne pouvez pas vous écrire à vous-même');return;}
+  if(!user||!user.id){toast(t('t_error'),t('t_login_msg'));return;}
+  if(!destId){toast(t('t_error'),t('t_no_recipient'));return;}
+  if(destId===user.id){toast(t('t_action_impossible'),t('t_msg_self'));return;}
   msgDestinataire=profNm;msgDestId=destId;
   var _b=g('bnavBadge');if(_b){_b.classList.remove('on');_b.textContent='';}
 
@@ -4285,9 +4285,9 @@ async function loadMessages(){
 async function sendMsg(){
   var txt=(g('msgInput').value||'').trim();
   if(!txt)return;
-  if(!user){toast('Connexion requise','Reconnectez-vous pour envoyer des messages');return;}
-  if(user.role==='professeur'&&!user.verified){toast('Compte non vérifié','Votre compte doit être vérifié pour envoyer des messages');return;}
-  if(!msgDestId){toast('Erreur','Aucun destinataire sélectionné');return;}
+  if(!user){toast(t('t_error'),t('t_reconnect_msg'));return;}
+  if(user.role==='professeur'&&!user.verified){toast(t('t_not_verified'),t('t_verify_to_msg'));return;}
+  if(!msgDestId){toast(t('t_error'),t('t_no_recipient'));return;}
   var inp=g('msgInput');
   inp.value='';inp.style.height='auto';
   var btn=document.querySelector('#msgConvPane button[onclick*="sendMsg"]');
@@ -4298,7 +4298,7 @@ async function sendMsg(){
       destinataire_id:msgDestId,
       contenu:txt
     })});
-    if(!r.ok){var err=await r.json().catch(function(){return{};});toast('Erreur',err.error||'Message non envoyé');inp.value=txt;return;}
+    if(!r.ok){var err=await r.json().catch(function(){return{};});toast(t('t_error'),err.error||t('t_msg_failed_s'));inp.value=txt;return;}
     // Marquer comme lu immédiatement dans l'UI
     var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
     if(activeRow){activeRow.classList.remove('msg-unread');var dot=activeRow.querySelector('div[style*="border-radius:50%"]');if(dot)dot.remove();}
@@ -4311,7 +4311,7 @@ async function sendMsg(){
     }
 
     loadMessages();
-  }catch(e){inp.value=txt;toast('Erreur','Message non envoyé — vérifiez votre connexion');}
+  }catch(e){inp.value=txt;toast(t('t_error'),t('t_msg_failed'));}
   finally{if(btn)btn.disabled=false;}
 }
 
@@ -4325,7 +4325,7 @@ async function sendModalMsg(){
   var txt=g('modalMsgInput').value.trim();
   if(!txt||!msgDestId||!user)return;
   if(user.role==='professeur'&&!user.verified){
-    toast('Compte non vérifié','Votre compte doit être vérifié pour envoyer des messages');
+    toast(t('t_not_verified'),t('t_verify_to_msg'));
     return;
   }
   g('modalMsgInput').value='';
@@ -4354,7 +4354,7 @@ async function sendModalMsg(){
     });
     container.innerHTML=html;
     container.scrollTop=container.scrollHeight;
-  }catch(e){toast('Erreur','Message non envoyé');}
+  }catch(e){toast(t('t_error'),t('t_msg_failed_s'));}
 }
 
 var _convLoading=false;
@@ -4493,7 +4493,7 @@ function openAppSettings(){
     var isCap=window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
     if(isCap){window.open('app-settings:','_system');return;}
   }catch(e){}
-  toast('Localisation désactivée','Activez-la dans Réglages > CoursPool > Localisation');
+  toast(t('t_geoloc_off'),t('t_geoloc_off_msg'));
 }
 
 function requestGeoloc(){
@@ -4512,7 +4512,7 @@ function requestGeoloc(){
     applyFilter();
     return;
   }
-  if(!navigator.geolocation){toast('Non supporté','Géolocalisation non disponible');return;}
+  if(!navigator.geolocation){toast(t('t_error'),t('t_geoloc_unsup'));return;}
   var btn=g('locGeoBtn'),lbl=g('geoBtnLabel');
   if(lbl)lbl.textContent='…';
   if(btn)btn.style.opacity='.6';
@@ -4528,7 +4528,7 @@ function requestGeoloc(){
       if(lbl)lbl.style.display='none'; // masquer le texte, garder juste l'icône
       var distBtn=g('geoDistBtn');if(distBtn)distBtn.style.display='block';
       applyFilter();
-      toast('Position détectée','');
+      toast(t('exp_around_me'),'');
       // Reverse geocoding en arrière-plan (non bloquant)
       fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=fr')
         .then(function(r){return r.json();})
@@ -4546,9 +4546,9 @@ function requestGeoloc(){
         _geoPermDenied=true;
         // Changer l'icône du bouton pour indiquer l'état "refusé → réglages"
         if(btn){btn.style.background='#FEF2F2';btn.style.color='#EF4444';}
-        toast('Localisation refusée','Appuie à nouveau pour ouvrir les Réglages');
+        toast(t('t_geoloc_deny'),t('t_geoloc_deny_msg'));
       } else {
-        toast('Erreur','Impossible de détecter la position');
+        toast(t('t_error'),t('t_geoloc_fail'));
       }
     },
     {enableHighAccuracy:false,timeout:5000,maximumAge:30000}
@@ -4888,7 +4888,7 @@ async function _loadGroupeMsgs(){
 async function sendGroupeMsg(){
   if(!user) return;
   var canWrite = _groupeIsProf || _groupeElevesPermis;
-  if(!canWrite){ toast('Lecture seule',"Le professeur n'a pas activé les réponses"); return; }
+  if(!canWrite){ toast(t('t_read_only'),t('t_read_only_msg')); return; }
   var inp = g('groupeMsg');
   var contenu = inp ? inp.value.trim() : '';
   if(!contenu) return;
@@ -4911,7 +4911,7 @@ async function sendGroupeMsg(){
     var container = g('groupeMsgList');
     if(container) container.scrollTop = container.scrollHeight;
     haptic(6);
-  }catch(e){ toast('Erreur','Message non envoyé'); }
+  }catch(e){ toast(t('t_error'),t('t_msg_failed_s')); }
   finally{ if(btn) btn.disabled = false; }
 }
 
@@ -5027,12 +5027,12 @@ function cniGoStep3(isReturn){
   if(s2)s2.style.display='none';
   if(s3)s3.style.display='block';
   // Texte différent si on revient consulter l'état
-  var t=g('cniStep3Title'),sub=g('cniStep3Sub');
+  var _cniT=g('cniStep3Title'),sub=g('cniStep3Sub');
   if(isReturn){
-    if(t)t.textContent='Vérification en cours ⏳';
+    if(_cniT)_cniT.textContent=window.t('txt_verif_prog');
     if(sub)sub.innerHTML='Votre document a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
   } else {
-    if(t)t.textContent='Document envoyé ✓';
+    if(_cniT)_cniT.textContent=window.t('txt_doc_sent');
     if(sub)sub.innerHTML='Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
     haptic(20);
   }
@@ -5042,7 +5042,6 @@ function cniLater(){
   var bd=g('bdCni');if(bd)bd.style.display='none';
   document.body.style.overflow='';
   updateVerifBand();
-  toast('À compléter','Vous pourrez envoyer votre document depuis votre profil');
   setTimeout(function(){if(typeof tutoStart==='function')tutoStart();},600);
 }
 
@@ -5104,23 +5103,23 @@ async function submitCni(){
   if(!file){
     var zone=g('cniDropZone');
     if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
-    toast('Document manquant','Choisissez votre CNI ou passeport');return;
+    toast(t('t_doc_req'),t('t_doc_cni'));return;
   }
-  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
+  if(file.size>5*1024*1024){toast(t('t_file_heavy'),t('t_file_heavy_msg'));return;}
   var btn=g('cniSubmitBtn');
-  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
+  if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
     var reader=new FileReader();
     reader.onload=async function(e){
       try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
       user.cni_uploaded=true;
       cniGoStep3();
-      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
     };
     reader.readAsDataURL(file);
   }catch(e){
-    toast('Erreur',"Impossible d'envoyer le fichier");
-    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+    toast(t('t_error'),t('t_file_fail'));
+    if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
 
@@ -5242,12 +5241,12 @@ function diplomeGoStep3(isReturn){
   if(s1)s1.style.display='none';
   if(s2)s2.style.display='none';
   if(s3)s3.style.display='block';
-  var t=g('diplomeStep3Title'),sub=g('diplomeStep3Sub');
+  var _dipT=g('diplomeStep3Title'),sub=g('diplomeStep3Sub');
   if(isReturn){
-    if(t)t.textContent='Vérification en cours ⏳';
+    if(_dipT)_dipT.textContent=window.t('txt_verif_prog');
     if(sub)sub.innerHTML='Votre diplôme a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
   } else {
-    if(t)t.textContent='Diplôme envoyé ✓';
+    if(_dipT)_dipT.textContent=window.t('txt_diploma_sent');
     if(sub)sub.innerHTML='Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
     haptic(20);
   }
@@ -5279,11 +5278,11 @@ async function submitDiplome(){
   if(!file){
     var zone=g('diplomeDropZone');
     if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
-    toast('Document manquant','Choisissez une photo de votre diplôme');return;
+    toast(t('t_doc_req'),t('t_doc_diplome'));return;
   }
-  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
+  if(file.size>5*1024*1024){toast(t('t_file_heavy'),t('t_file_heavy_msg'));return;}
   var btn=g('diplomeSubmitBtn');
-  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
+  if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
     var reader=new FileReader();
     reader.onload=async function(e){
@@ -5291,12 +5290,12 @@ async function submitDiplome(){
       user.diplome_uploaded=true;
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
       diplomeGoStep3();
-      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
     };
     reader.readAsDataURL(file);
   }catch(e){
-    toast('Erreur',"Impossible d'envoyer le fichier");
-    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+    toast(t('t_error'),t('t_file_fail'));
+    if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
 
@@ -5400,11 +5399,11 @@ async function submitCasier(){
   if(!file){
     var zone=g('casierDropZone');
     if(zone){zone.style.borderColor='#EF4444';setTimeout(function(){zone.style.borderColor='var(--bdr)';},600);}
-    toast('Document manquant','Choisissez une photo de votre attestation');return;
+    toast(t('t_doc_req'),t('t_doc_attest'));return;
   }
-  if(file.size>5*1024*1024){toast('Fichier trop lourd','La taille maximale est 5 Mo');return;}
+  if(file.size>5*1024*1024){toast(t('t_file_heavy'),t('t_file_heavy_msg'));return;}
   var btn=g('casierSubmitBtn');
-  if(btn){btn.disabled=true;btn.textContent='Envoi...';}
+  if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
     var reader=new FileReader();
     reader.onload=async function(e){
@@ -5412,14 +5411,14 @@ async function submitCasier(){
       user.casier_uploaded=true;
       try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
       casierLater();
-      toast('Envoyé !','Votre attestation est en cours de vérification');
+      toast(t('t_sent'),t('t_attest_verif'));
       updateCasierStatusBlock();
-      if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
     };
     reader.readAsDataURL(file);
   }catch(e){
-    toast('Erreur',"Impossible d'envoyer le fichier");
-    if(btn){btn.disabled=false;btn.textContent='Envoyer pour vérification';}
+    toast(t('t_error'),t('t_file_fail'));
+    if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
 
@@ -5548,11 +5547,11 @@ function openPrivateCours(code){
         };
         C.unshift(nc);
         openR(nc.id);
-        toast('Cours privé trouvé !',nc.title);
+        toast(t('exp_private'),nc.title);
       } else {
-        toast('Code invalide','Aucun cours trouvé avec ce code');
+        toast(t('t_code_invalid'),t('t_no_course_code'));
       }
-    }).catch(function(){toast('Code invalide','Aucun cours trouvé avec ce code');});
+    }).catch(function(){toast(t('t_code_invalid'),t('t_no_course_code'));});
   }
 }
 
@@ -6055,7 +6054,7 @@ async function openPaymentSheet(id,pourAmi){
   var btn=g('payBtn'),btnTxt=g('payBtnTxt'),loader=g('payLoader');
   // Reset UI
   if(btn){btn.disabled=true;btn.style.opacity='.7';}
-  if(btnTxt)btnTxt.textContent='Chargement…';
+  if(btnTxt)btnTxt.textContent=t('txt_loading');
   if(loader)loader.style.display='none';
   g('payCoursTitle').textContent=c.title;
   g('payAmount').textContent=pp+'€';
@@ -6065,9 +6064,9 @@ async function openPaymentSheet(id,pourAmi){
   try{
     var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:id,user_id:user.id,pour_ami:pourAmi})});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error,true);closePaymentSheet();return;}
-    if(data.already_reserved){toast('Déjà réservé','Vous avez déjà une place pour ce cours');closePaymentSheet();return;}
-    if(!_stripeInstance){if(!window.Stripe){toast('Erreur','Service de paiement indisponible',true);closePaymentSheet();return;}_stripeInstance=Stripe(STRIPE_PK);}
+    if(data.error){toast(t('t_error'),data.error,true);closePaymentSheet();return;}
+    if(data.already_reserved){toast(t('t_already_res'),t('t_already_res_s'));closePaymentSheet();return;}
+    if(!_stripeInstance){if(!window.Stripe){toast(t('t_error'),t('t_payment_svc'),true);closePaymentSheet();return;}_stripeInstance=Stripe(STRIPE_PK);}
     var dk=document.documentElement.classList.contains('dk');
     var appearance={
       theme:dk?'night':'stripe',
@@ -6079,7 +6078,7 @@ async function openPaymentSheet(id,pourAmi){
     pe.mount('#stripe-payment-element');
     pe.on('ready',function(){
       if(btn){btn.disabled=false;btn.style.opacity='1';}
-      if(btnTxt)btnTxt.textContent='Payer '+pp+'€';
+      if(btnTxt)btnTxt.textContent=t('nc_prix')+' '+pp+'€';
     });
   }catch(e){
     if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'open_payment_sheet'});
@@ -6093,7 +6092,7 @@ async function submitPayment(){
   var btn=g('payBtn'),btnTxt=g('payBtnTxt'),loader=g('payLoader');
   btn.disabled=true;
   if(loader)loader.style.display='inline-block';
-  if(btnTxt)btnTxt.textContent='Traitement…';
+  if(btnTxt)btnTxt.textContent=t('txt_processing');
   try{
     var result=await _stripeInstance.confirmPayment({
       elements:_payElements,
@@ -6101,15 +6100,15 @@ async function submitPayment(){
       confirmParams:{payment_method_data:{billing_details:{email:user&&user.em?user.em:''}}}
     });
     if(result.error){
-      toast('Paiement refusé',result.error.message,true);
+      toast(t('t_pay_declined'),result.error.message,true);
       btn.disabled=false;btn.style.opacity='1';
       if(loader)loader.style.display='none';
-      if(btnTxt)btnTxt.textContent='Réessayer';
+      if(btnTxt)btnTxt.textContent=t('txt_retry');
       return;
     }
     var pi=result.paymentIntent;
     if(pi&&pi.status==='succeeded'){
-      if(btnTxt)btnTxt.textContent='Confirmation…';
+      if(btnTxt)btnTxt.textContent=t('txt_confirming');
       var r2=await fetch(API+'/stripe/confirm-payment',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pi.id})});
       var d2=await r2.json();
       if(d2.success||d2.already_existed){
@@ -6119,13 +6118,13 @@ async function submitPayment(){
         var c=C.find(function(x){return x.id==_payCoursId;});
         if(c){c.fl=(c.fl||0)+1;}
         haptic(6);
-        toast('Réservation confirmée ✓','Vous êtes inscrit au cours');
+        toast(t('t_res_confirmed'),t('t_res_confirmed_msg'));
         setTimeout(function(){loadData(1).then(function(){buildCards();updateMesRes();});},800);
       }else{
-        toast('Erreur',d2.error||'Erreur de confirmation',true);
+        toast(t('t_error'),d2.error||t('t_try_again'),true);
         btn.disabled=false;btn.style.opacity='1';
         if(loader)loader.style.display='none';
-        if(btnTxt)btnTxt.textContent='Réessayer';
+        if(btnTxt)btnTxt.textContent=t('txt_retry');
       }
     }
   }catch(e){
@@ -6133,7 +6132,7 @@ async function submitPayment(){
     toast(t('t_net_error'),'',true);
     btn.disabled=false;btn.style.opacity='1';
     if(loader)loader.style.display='none';
-    if(btnTxt)btnTxt.textContent='Réessayer';
+    if(btnTxt)btnTxt.textContent=t('txt_retry');
   }
 }
 
@@ -6213,11 +6212,11 @@ async function saveIban() {
   var btn = g('btnSaveIban');
   var name = (g('ibanName') && g('ibanName').value.trim()) || (user.pr + ' ' + user.nm).trim();
 
-  if (!name) { toast('Champ manquant', 'Entrez le titulaire du compte'); return; }
-  if (!_ibanElement) { toast('Erreur', 'Chargement en cours, réessayez'); return; }
-  if (!_stripeInstance) { toast('Erreur', 'Service de paiement non disponible'); return; }
+  if (!name) { toast(t('t_fields_miss'),t('t_iban_holder_req')); return; }
+  if (!_ibanElement) { toast(t('t_error'),t('t_try_again')); return; }
+  if (!_stripeInstance) { toast(t('t_error'),t('t_payment_svc')); return; }
 
-  btn.disabled = true; btn.textContent = '⏳ Enregistrement…';
+  btn.disabled = true; btn.textContent = t('txt_saving');
 
   try {
     // 1. Créer le compte Connect côté serveur si pas encore fait
@@ -6229,7 +6228,7 @@ async function saveIban() {
         body: JSON.stringify({ prof_id: user.id, email: user.em })
       });
       var d1 = await r1.json();
-      if (d1.error) { toast('Erreur', d1.error); return; }
+      if (d1.error) { toast(t('t_error'), d1.error); return; }
       accountId = d1.account_id;
       user.stripe_account_id = accountId;
       try { localStorage.setItem('cp_user', JSON.stringify(user)); } catch(e) {}
@@ -6242,7 +6241,7 @@ async function saveIban() {
       body: JSON.stringify({ stripe_account_id: accountId })
     });
     var d2 = await r2.json();
-    if (d2.error) { toast('Erreur', d2.error); return; }
+    if (d2.error) { toast(t('t_error'), d2.error); return; }
 
     // 3. Confirmer avec Stripe.js — l'IBAN ne passe JAMAIS par notre serveur
     var result = await _stripeInstance.confirmSepaDebitSetup(d2.client_secret, {
@@ -8182,10 +8181,10 @@ function openAddVisioLink(coursId){
   var title=document.createElement('div');title.style.cssText='font-size:18px;font-weight:800;margin-bottom:4px;letter-spacing:-.03em';title.textContent=c.visio_url?'Modifier le lien visio':'Ajouter un lien visio';sheet.appendChild(title);
   var sub=document.createElement('div');sub.style.cssText='font-size:13px;color:var(--lite);margin-bottom:20px';sub.textContent='Zoom, Google Meet, Jitsi ou tout autre lien';sheet.appendChild(sub);
   var inp=document.createElement('input');inp.type='url';inp.placeholder='https://meet.google.com/...';inp.value=c.visio_url||'';inp.style.cssText='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:16px;outline:none;margin-bottom:20px;box-sizing:border-box;transition:border-color .2s';inp.addEventListener('focus',function(){inp.style.borderColor='var(--or)';});inp.addEventListener('blur',function(){inp.style.borderColor='var(--bdr)';});sheet.appendChild(inp);
-  var btnS=document.createElement('button');btnS.style.cssText='width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px';btnS.textContent='Enregistrer';
+  var btnS=document.createElement('button');btnS.style.cssText='width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px';btnS.textContent=t('prof_sauvegarder');
   btnS.onclick=async function(){
-    var url=inp.value.trim();btnS.disabled=true;btnS.textContent='Enregistrement...';
-    try{var r=await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:apiH(),body:JSON.stringify({visio_url:url})});var d=await r.json();if(!r.ok||d.error){toast('Erreur',d.error||'Impossible');btnS.disabled=false;btnS.textContent='Enregistrer';return;}if(c)c.visio_url=url;bd.remove();toast(url?'Lien enregistr\u00e9':'Lien supprim\u00e9','');buildMesCours();}catch(e){toast('Erreur r\u00e9seau','');btnS.disabled=false;btnS.textContent='Enregistrer';}
+    var url=inp.value.trim();btnS.disabled=true;btnS.textContent=t('txt_saving');
+    try{var r=await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:apiH(),body:JSON.stringify({visio_url:url})});var d=await r.json();if(!r.ok||d.error){toast(t('t_error'),d.error||t('t_try_again'));btnS.disabled=false;btnS.textContent=t('prof_sauvegarder');return;}if(c)c.visio_url=url;bd.remove();toast(url?t('t_link_saved'):t('t_link_deleted'),'');buildMesCours();}catch(e){toast(t('t_net_error'),'');btnS.disabled=false;btnS.textContent=t('prof_sauvegarder');}
   };
   sheet.appendChild(btnS);
   if(c.visio_url){var btnCl=document.createElement('button');btnCl.style.cssText='width:100%;background:none;border:none;color:#EF4444;font-family:inherit;font-size:14px;cursor:pointer;padding:6px;margin-bottom:4px';btnCl.textContent='Supprimer le lien';btnCl.onclick=async function(){if(!confirm('Supprimer\u00a0?'))return;try{await fetch(API+'/cours/'+coursId,{method:'PATCH',headers:apiH(),body:JSON.stringify({visio_url:''})});if(c)c.visio_url='';bd.remove();buildMesCours();}catch(e){}};sheet.appendChild(btnCl);}
