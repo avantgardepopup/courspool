@@ -2497,15 +2497,15 @@
 </div>
 
 <!-- SÉLECTEUR DE LANGUE -->
-<div id="bdLangPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1050;align-items:flex-end;padding-bottom:max(0px,env(safe-area-inset-bottom,0px))" onclick="if(event.target===this)closeLangPicker()">
-  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-height:80vh;overflow-y:auto;animation:mi .28s cubic-bezier(.32,1,.6,1)">
+<div id="bdLangPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1050;align-items:flex-end" onclick="if(event.target===this)closeLangPicker()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-height:90vh;overflow-y:auto;animation:mi .28s cubic-bezier(.32,1,.6,1)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px">
       <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em" data-i18n="settings_langue">Langue</div>
       <button onclick="closeLangPicker()" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div id="langPickerList" style="padding:0 0 16px"></div>
+    <div id="langPickerList" style="padding:0 0 max(20px,env(safe-area-inset-bottom,20px))"></div>
   </div>
 </div>
 
