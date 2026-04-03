@@ -709,6 +709,137 @@ const SOURCE = {
   err_check_conn: 'Vérifiez votre connexion internet.',
   empty_no_msgs:  'Aucun message pour l\'instant.',
   empty_be_first: 'Soyez le premier à écrire !',
+
+  // Boutons cartes
+  card_reserve:  'Réserver',
+  card_consult:  'Consulter',
+  card_calendar: 'Calendrier',
+  cal_add_title: 'Ajouter au calendrier',
+  cal_apple:     'Calendrier Apple',
+  cal_google:    'Google Agenda',
+  cal_download:  'Télécharger .ics (Outlook, Apple…)',
+
+  // Places et prix (cours cards / détail)
+  places_max:    'places max',
+  prix_fixe:     'Prix fixe de',
+  par_eleve_confirm: 'par élève. Confirmez pour réserver votre place.',
+  soit_par_eleve:'Soit',
+  calc_per:      'par élève pour',
+  pour_place:    'place',
+  pour_places:   'places',
+
+  // Comptage élèves inscrits (openEleves)
+  eleve_inscrit:  'élève inscrit',
+  eleves_inscrits:'élèves inscrits',
+  sur_places:     'sur',
+  role_eleve:     'Élève',
+  role_tuteur:    'Tuteur',
+
+  // Statut paiement réservation
+  paiement_paye:    'Payé',
+  paiement_attente: 'En attente',
+
+  // Boutons confirmations / dialogs
+  confirm_cancel_cours:    'Annuler ce cours ? Tous les élèves inscrits seront notifiés.',
+  confirm_cancel_eleve:    'Annuler et rembourser cet élève ?',
+  confirm_cancel_res_btn:  'Annuler',
+  confirm_cancel_res:      'Annuler cette réservation ?',
+
+  // Labels lieu enseignement (profil)
+  lieu_enseignement: 'Lieu d\'enseignement',
+  etab_ecole:        'Établissement / école',
+  lieu_activite:     'Lieu d\'activité',
+  visible_profil:    'Visible sur mon profil',
+  visible_public:    'public',
+
+  // Rôle affiché dans settings (ligne 1942)
+  role_prof_display: '👨‍🏫 Professeur',
+  role_eleve_display:'👤 Élève',
+
+  // Cours partagé en messagerie
+  t_cours_shared:    'Cours partagé\u00a0!',
+  t_carte_conv:      'La carte est dans la conversation',
+  t_send_impossible: 'Envoi impossible',
+
+  // Signalement
+  ctx_prof:     'Professeur',
+  ctx_eleve:    'Élève',
+  ctx_message:  'Conversation',
+
+  // Cours privé — badge
+  badge_prive:  'Privé',
+
+  // Chargement/erreur openEleves
+  err_eleves_load: 'Impossible de charger.',
+  txt_retry_link:  'Réessayer',
+
+  // Annuler dans calendrier
+  txt_annuler: 'Annuler',
+
+  // Dates relatives (messagerie)
+  date_today: "Aujourd'hui",
+  date_yesterday: 'Hier',
+
+  // ProfCompletion — lieu selon statut
+  pc_ou_etudiez:   'Où étudiez-vous ?',
+  pc_univ_ecole:   'Université / école',
+  pc_ou_travaillez:'Où travaillez-vous ?',
+  pc_ou_enseignez: 'Où enseignez-vous ?',
+  pc_etab_opt:     'Établissement',
+
+  // Onboarding boutons
+  ob_continuer:    'Continuer',
+  ob_commencer:    'Commencer 🎉',
+  ob_cest_parti:   'C\u2019est parti !',
+
+  // Validation âge (profCompletion)
+  age_18_requis:   'Vous devez avoir au moins 18 ans pour enseigner sur CoursPool.',
+  age_13_requis:   'CoursPool est réservé aux utilisateurs de 13 ans et plus. Demandez à un parent de créer un compte pour vous.',
+  age_15_accord:   "Les moins de 15 ans doivent avoir l'accord de leur parent ou tuteur légal.",
+
+  // Page Explorer (titre / sous-titre avant connexion)
+  exp_explore_title: 'Explorer',
+  exp_guest_title:   'Créez votre compte gratuit',
+  exp_guest_sub:     'Rejoignez CoursPool pour réserver des cours,<br>suivre des professeurs et gérer votre profil.',
+  exp_first_course:  'Soyez le premier à proposer un cours !',
+  exp_near_you:      'Trouvez un cours près de vous',
+
+  // Réservation — email confirmation
+  res_email_ami:  'La place supplémentaire a été réservée. Un email de confirmation a été envoyé.',
+  res_email_vous: 'Votre place est réservée. Un email de confirmation vous a été envoyé.',
+
+  // Documents vérification — sous-titres après envoi
+  doc_cni_recu:   'Votre document a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.',
+  doc_cni_verif:  'Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.',
+  doc_dip_recu:   'Votre diplôme a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.',
+  doc_dip_verif:  'Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.',
+
+  // Titre verif identité dans explore (mini card statut CNI)
+  verif_id_required:  'Vérification d\'identité requise',
+  verif_id_tap:       'Appuyez pour envoyer votre document',
+  verif_id_progress:  'Vérification en cours',
+  verif_id_email24h:  'Réponse par email sous 24h',
+  verif_id_rejected:  'Document refusé — renvoyer',
+  verif_id_resubmit:  'Appuyez pour soumettre à nouveau',
+
+  // Envoi en cours (contact form / signalement)
+  txt_envoi:  'Envoi…',
+  txt_choose: 'Choisir…',
+  t_share_profile_sub: 'Partagez votre profil avec vos élèves',
+  t_copy_link:        'Copiez ce lien',
+  t_share_profile_msg: 'Retrouvez mes cours sur CoursPool — partagez les frais à plusieurs !',
+
+  // Filtres (explore)
+  filter_prof:     'Professeur',
+  filter_niveau:   'Niveau',
+  filter_date:     'Date',
+  filter_prix:     'Prix',
+  filter_gratuit:  'Gratuit',
+  filter_reset:    'Réinitialiser',
+  filter_apply:    'Appliquer',
+  filter_all_mat:  'Toutes les matières',
+  filter_all_niv:  'Tous niveaux',
+  filter_all_mode: 'Tous les formats',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────

@@ -31,7 +31,7 @@ function obRender(){
     ds.forEach(function(d,i){d.classList.toggle('on',i===obCurrent);});
   }
   var btn=g('obBtn');
-  if(btn) btn.textContent=obCurrent===obTotal-1?'Commencer 🎉':'Continuer';
+  if(btn) btn.textContent=obCurrent===obTotal-1?t('ob_commencer'):t('ob_continuer');
   var skip=g('obSkip');
   if(skip) skip.style.opacity=obCurrent===obTotal-1?'0':'1';
 }
@@ -402,7 +402,7 @@ function buildFavPage(){
         // Trouver depuis les cours si pas en cache
         var cours=C.filter(function(x){return x.pr===pid;});
         if(cours.length&&!p.nm){
-          p={nm:cours[0].prof_nm||'Professeur',i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
+          p={nm:cours[0].prof_nm||t('reg_prof'),i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
           P[pid]=p;
         }
         // Fetch frais du profil — toujours, si pas encore confirmé cette session
@@ -416,14 +416,14 @@ function buildFavPage(){
         var av=(_fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
         var avBg=(_fresh&&p.photo)?'none':col;
         // Nom : données fraîches → afficher, sinon skeleton animé
-        var nmHtml=_fresh?('<span>'+esc(p.nm||'Professeur')+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
+        var nmHtml=_fresh?('<span>'+esc(p.nm||t('reg_prof'))+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
         var _now=Date.now();
         var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
         return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
           +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
           +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
           +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
-          +'<div class="fav-prof-role">'+esc(p.rl||'Professeur')+(nbCours?' · '+nbCours+' '+t('cours_dispo'):'')+'</div>'
+          +'<div class="fav-prof-role">'+esc(p.rl||t('reg_prof'))+(nbCours?' · '+nbCours+' '+t('cours_dispo'):'')+'</div>'
           +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
           +'</div>';
       }).join('');
@@ -533,7 +533,7 @@ async function loadData(page,silent){
         pr:c.professeur_id,em:c.emoji||'📚',
         prof_ini:c.prof_initiales||'?',
         prof_col:c.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
-        prof_nm:c.prof_nom||'Professeur',
+        prof_nm:c.prof_nom||t('reg_prof'),
         prof_photo:c.prof_photo||null,
         description:c.description||'',
         prive:c.prive||false,
@@ -969,14 +969,14 @@ function _pcShowSlide(id,isBack){
     var _etabLabel=g('pcEtabLabel');
     if(_villeTitle){
       if(_pcStatut==='etudiant'){
-        _villeTitle.textContent='Où étudiez-vous ?';
-        if(_etabLabel)_etabLabel.innerHTML='Université / école <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
+        _villeTitle.textContent=t('pc_ou_etudiez');
+        if(_etabLabel)_etabLabel.innerHTML=t('pc_univ_ecole')+' <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
       } else if(_pcStatut==='auto'||_pcStatut==='autre'){
-        _villeTitle.textContent='Où travaillez-vous ?';
-        if(_etabLabel)_etabLabel.innerHTML='Lieu d\'activité <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
+        _villeTitle.textContent=t('pc_ou_travaillez');
+        if(_etabLabel)_etabLabel.innerHTML=t('lieu_activite')+' <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
       } else {
-        _villeTitle.textContent='Où enseignez-vous ?';
-        if(_etabLabel)_etabLabel.innerHTML='Établissement <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
+        _villeTitle.textContent=t('pc_ou_enseignez');
+        if(_etabLabel)_etabLabel.innerHTML=t('pc_etab_opt')+' <span style="font-weight:400;color:var(--lite)">(optionnel)</span>';
       }
     }
   }
@@ -1027,14 +1027,14 @@ function pcAgeCheck(){
   // Bloquant
   if(isProf&&age<18){
     if(msg){msg.style.display='block';msg.style.cssText='display:block;background:#FEF2F2;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px;color:#EF4444'
-      ;msg.textContent='Vous devez avoir au moins 18 ans pour enseigner sur CoursPool.';}
+      ;msg.textContent=t('age_18_requis');}
     if(consent)consent.style.display='none';
     if(btn){btn.disabled=true;btn.style.opacity='.5';}
     return;
   }
   if(!isProf&&age<13){
     if(msg){msg.style.display='block';msg.style.cssText='display:block;background:#FEF2F2;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px;color:#EF4444'
-      ;msg.textContent='CoursPool est réservé aux utilisateurs de 13 ans et plus. Demandez à un parent de créer un compte pour vous.';}
+      ;msg.textContent=t('age_13_requis');}
     if(consent)consent.style.display='none';
     if(btn){btn.disabled=true;btn.style.opacity='.5';}
     return;
@@ -1042,7 +1042,7 @@ function pcAgeCheck(){
   // Consentement parental 13–14 ans
   if(!isProf&&age>=13&&age<15){
     if(msg){msg.style.display='block';msg.style.cssText='display:block;background:#FFF7ED;border-radius:12px;padding:13px 14px;font-size:13px;line-height:1.6;margin-top:12px;color:#92400E'
-      ;msg.textContent='Les moins de 15 ans doivent avoir l\'accord de leur parent ou tuteur légal.';}
+      ;msg.textContent=t('age_15_accord');}
     if(consent)consent.style.display='block';
     var chk=g('pcConsentCheck');
     if(btn){btn.disabled=!chk||!chk.checked;btn.style.opacity=(!chk||!chk.checked)?'.5':'1';}
@@ -1367,8 +1367,8 @@ function doGuest(){
   var bniMesG=g('bniMes');if(bniMesG)bniMesG.style.display='none';
   // Header invité
   var mobT=g('mobTitle'),mobS=g('mobSub');
-  if(mobT)mobT.textContent='Explorer';
-  if(mobS)mobS.textContent='Trouvez un cours près de vous';
+  if(mobT)mobT.textContent=t('exp_explore_title');
+  if(mobS)mobS.textContent=t('exp_near_you');
   var tav=g('tav');if(tav){tav.style.background='var(--bdr)';tav.textContent='?';}
   var tavMob=g('tavMob');if(tavMob){tavMob.style.background='var(--bdr)';tavMob.textContent='?';}
   loadData().then(function(){buildCards();});
@@ -1519,10 +1519,10 @@ function navTo(tab,_skipHistory){
     if(user.guest){
       var bd=g('bdLoginPrompt');
       if(bd){
-        var t=bd.querySelector('[style*="font-size:21px"]');
+        var _bdT=bd.querySelector('[style*="font-size:21px"]');
         var s=bd.querySelector('[style*="font-size:14px"][style*="color:var(--lite)"]');
-        if(t)t.textContent='Créez votre compte gratuit';
-        if(s)s.innerHTML='Rejoignez CoursPool pour réserver des cours,<br>suivre des professeurs et gérer votre profil.';
+        if(_bdT)_bdT.textContent=window.t('exp_guest_title');
+        if(s)s.innerHTML=window.t('exp_guest_sub');
         bd.style.display='flex';
       }else{
         toast(t('t_acc_login'),'');
@@ -1818,7 +1818,7 @@ async function checkStripeReturn(){
     setTimeout(function(){
       var p=document.getElementById('popupPaid');
       var msg=document.getElementById('popupPaidMsg');
-      if(msg)msg.textContent=pourAmi?'La place supplémentaire a été réservée. Un email de confirmation a été envoyé.':'Votre place est réservée. Un email de confirmation vous a été envoyé.';
+      if(msg)msg.textContent=pourAmi?t('res_email_ami'):t('res_email_vous');
       window._paidCoursId=coursId;
       var calBtn=document.getElementById('popupPaidCalBtn');
       if(calBtn)calBtn.style.display=pourAmi?'none':'flex';
@@ -1857,10 +1857,9 @@ function goAccount(){
   var pfLieu=g('pfLieu'),pfLieuVisEl=g('pfLieuVisible'),pfLieuLbl=g('pfLieuLabel'),pfLieuVisLbl=g('pfLieuVisLabel');
   if(pfLieu)pfLieu.value=user.lieu||'';
   if(pfLieuVisEl){if(user.lieu_visible)pfLieuVisEl.classList.add('on');else pfLieuVisEl.classList.remove('on');}
-  var _lieuLbl=user.role==='professeur'?'Lieu d\'enseignement':'Établissement / école';
-  var _lieuVisLbl=user.role==='professeur'?'Visible sur mon profil':'Visible sur mon profil';
+  var _lieuLbl=user.role==='professeur'?t('lieu_enseignement'):t('etab_ecole');
   if(pfLieuLbl)pfLieuLbl.textContent=_lieuLbl;
-  if(pfLieuVisLbl)pfLieuVisLbl.textContent=_lieuVisLbl+' public';
+  if(pfLieuVisLbl)pfLieuVisLbl.textContent=t('visible_profil')+' '+t('visible_public');
   var roleDisplay=g('pfRoleDisplay');
   if(roleDisplay)roleDisplay.textContent=user.role==='professeur'?'👨‍🏫 '+t('reg_prof'):'🎓 '+t('reg_eleve');
   var pfProfExtra=g('pfProfExtra');
@@ -1939,7 +1938,7 @@ function goAccount(){
   updateCasierStatusBlock();
   // Rôle pill
   var rp = g('accRolePill');
-  if (rp) rp.textContent = (user.role==='professeur') ? '👨‍🏫 Professeur' : '👤 Élève';
+  if (rp) rp.textContent = (user.role==='professeur') ? t('role_prof_display') : t('role_eleve_display');
   // Sync bouton dark mode
   updateDarkBtn();
 }
@@ -2031,7 +2030,7 @@ function buildAccLists(){
           +'<div style="margin-top:8px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;width:'+pct+'%;background:'+(isFull?'#22C069':'var(--or)')+';border-radius:4px"></div>'
           +'</div>'
-          +'<button onclick="event.stopPropagation();addToCalendar(\''+esc(c.id)+'\')" style="margin-top:10px;width:100%;padding:7px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Calendrier</button>'
+          +'<button onclick="event.stopPropagation();addToCalendar(\''+esc(c.id)+'\')" style="margin-top:10px;width:100%;padding:7px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'+t('card_calendar')+'</button>'
           +'</div>'
           +'</div>';
       });
@@ -2089,7 +2088,7 @@ function buildAccLists(){
         +'</div>'
         +'<div style="display:flex;align-items:center;gap:8px">'
         +'<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0" data-prof="'+c.pr+'">'+_phHtml+'</div>'
-        +'<span data-profnm="'+c.pr+'" style="font-size:12px;color:var(--mid);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur')+'</span>'
+        +'<span data-profnm="'+c.pr+'" style="font-size:12px;color:var(--mid);font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((P[c.pr]&&P[c.pr].nm)||c.prof_nm||t('reg_prof'))+'</span>'
         +(pp?'<span style="font-size:13px;font-weight:800;color:var(--or)">'+pp+'€<span style="font-size:10px;font-weight:500;color:var(--lite)"> / '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</span></span>':'')
         +(noteBtn?'<span>'+noteBtn+'</span>':'')
         +'</div>'
@@ -2135,7 +2134,7 @@ function buildAccLists(){
         // Construire un profil minimal depuis les cours pour éviter les "fantômes"
         var _cc=C.filter(function(x){return x.pr===id;});
         if(_cc.length){
-          p={nm:_cc[0].prof_nm||'Professeur',i:_cc[0].prof_ini||'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',e:0,photo:_cc[0].prof_photo||null};
+          p={nm:_cc[0].prof_nm||t('reg_prof'),i:_cc[0].prof_ini||'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',e:0,photo:_cc[0].prof_photo||null};
         } else {
           p={nm:'Professeur',i:'?',col:'linear-gradient(135deg,#FF8C55,#E04E10)',e:0};
         }
@@ -2155,7 +2154,7 @@ function buildAccLists(){
         +'<div style="width:46px;height:46px;border-radius:50%;background:'+p.col+';display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.nm+'</div>'
-        +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+(matieres||'Professeur')+dispoLabel+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+(matieres||t('reg_prof'))+dispoLabel+'</div>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
         +'</div>';
@@ -2186,12 +2185,12 @@ function _updatePfVilleLabel(){
   var lbl=g('pfVilleLabel');
   if(!lbl||!user)return;
   if(user.role==='eleve'){
-    lbl.textContent='Où étudiez-vous ?';
+    lbl.textContent=t('pc_ou_etudiez');
   } else {
     var st=user.statut||'';
-    if(st==='etudiant') lbl.textContent='Où étudiez-vous ?';
-    else if(st==='auto'||st==='autre') lbl.textContent='Où travaillez-vous ?';
-    else lbl.textContent='Où enseignez-vous ?';
+    if(st==='etudiant') lbl.textContent=t('pc_ou_etudiez');
+    else if(st==='auto'||st==='autre') lbl.textContent=t('pc_ou_travaillez');
+    else lbl.textContent=t('pc_ou_enseignez');
   }
 }
 
@@ -2481,7 +2480,7 @@ function buildCards(){
     if(nc)nc.style.display='block';
     var nt=g('nocardTitle'),ns=g('nocardSub');
     if(nt)nt.textContent=t('aucun_cours_dispo');
-    if(ns)ns.textContent='Soyez le premier à proposer un cours !';
+    if(ns)ns.textContent=t('exp_first_course');
     if(lmw)lmw.style.display='none';
     if(gr)gr.innerHTML='';
     return;
@@ -2705,11 +2704,11 @@ function renderPage(){
     }
     // Reserve button
     var btnHtml;
-    if(isOwner) btnHtml='<button class="card-btn-reserve card-btn-consult" onclick="event.stopPropagation();openR(\''+c.id+'\')">Consulter</button>';
+    if(isOwner) btnHtml='<button class="card-btn-reserve card-btn-consult" onclick="event.stopPropagation();openR(\''+c.id+'\')">'+t('card_consult')+'</button>';
     else if(isR&&isFull) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · '+t('rr_complet')+'</button>';
     else if(isR) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · +</button>';
     else if(isFull) btnHtml='<button class="card-btn-reserve card-btn-full" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">'+t('rr_complet')+'</button>';
-    else btnHtml='<button class="card-btn-reserve" onclick="event.stopPropagation();openR(\''+c.id+'\')">Réserver</button>';
+    else btnHtml='<button class="card-btn-reserve" onclick="event.stopPropagation();openR(\''+c.id+'\')">'+t('card_reserve')+'</button>';
     // Build card-wrap
     var wrap=document.createElement('div');
     wrap.className='card-wrap'+(c.prive?' card-prive-wrap':'');
@@ -3124,7 +3123,7 @@ function renderFilterBar(){
   tousBtn.className='filter-pill-btn pill'+(actF==='tous'?' on':'');
   tousBtn.dataset.f='tous';
   tousBtn.id='pillTous';
-  tousBtn.textContent='Tous';
+  tousBtn.textContent=t('niv_all');
   tousBtn.onclick=function(){setPill(tousBtn);};
   bar.insertBefore(tousBtn,addBtn);
 
@@ -3183,7 +3182,7 @@ function viewCoursCard(id){
   var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
-  if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
+  if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||t('reg_prof');
   var _mat2=findMatiere(c.subj||'');var _rIsDk2=document.documentElement.classList.contains('dk');
   var _rBg2=_rIsDk2?((_mat2&&_mat2.bgDark)?_mat2.bgDark:(c.bgDark||'var(--or)')):((_mat2&&_mat2.color)?_mat2.color:(c.bg||'var(--or)'));
   var _rBanEl2=document.querySelector('#bdR .rban');if(_rBanEl2&&_rBg2){_rBanEl2.style.background=_rBg2;}
@@ -3192,9 +3191,9 @@ function viewCoursCard(id){
   var rLcEl=g('rLc');if(rLcEl){rLcEl.textContent=_isVisio?'':c.lc;rLcEl.style.display=_isVisio?'none':'';}
   var rDescEl=g('rDesc');
   if(rDescEl){if(c.description){rDescEl.textContent=c.description;rDescEl.style.display='block';}else{rDescEl.style.display='none';}}
-  g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
+  g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' '+t('places_max');
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
-  g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
+  g('rInf').textContent=t('prix_fixe')+' '+pp+'€ '+t('par_eleve_confirm');
   var isOwner=user&&c.pr===user.id;
   var btnConf=document.querySelector('#bdR .pb.pri');
   var btnContact=document.querySelector('#bdR .pb.sec');
@@ -3231,7 +3230,7 @@ function openR(id){haptic(4);
   var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
-  if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'Professeur';
+  if(rNm)rNm.textContent=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||t('reg_prof');
   // Note moyenne du prof dans le rban
   (function(){
     var _rNoteEl=g('rProfNote');if(!_rNoteEl)return;
@@ -3261,9 +3260,9 @@ function openR(id){haptic(4);
   var rNivEl=g('rNiv');if(rNivEl){if(c.niveau){rNivEl.style.display='block';var _ns=rNivEl.querySelector('span');if(_ns)_ns.textContent=c.niveau;}else{rNivEl.style.display='none';}}
   var rDescEl=g('rDesc');
   if(rDescEl){if(c.description){rDescEl.textContent=c.description;rDescEl.style.display='block';}else{rDescEl.style.display='none';}}
-  g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' places max';
+  g('rTot').textContent=c.tot+'€';g('rCnt').textContent=c.sp+' '+t('places_max');
   g('rFin').textContent=pp+'€';g('rFinB').textContent=pp+'€';
-  g('rInf').textContent='Prix fixe de '+pp+'€ par élève. Confirmez pour réserver votre place.';
+  g('rInf').textContent=t('prix_fixe')+' '+pp+'€ '+t('par_eleve_confirm');
   var isOwner=user&&c.pr===user.id;
   var btnConf=document.querySelector('#bdR .pb.pri');
   var btnContact=document.querySelector('#bdR .pb.sec');
@@ -3301,7 +3300,7 @@ function closeR(){closeM('bdR');}
 async function openEleves(id){
   var c=C.find(function(x){return x.id==id;});
   if(!c)return;
-  g('elevesTitre').textContent=c.title+' — '+c.fl+' inscrit'+(c.fl>1?'s':'');
+  g('elevesTitre').textContent=c.title+' — '+c.fl+' '+(c.fl>1?t('eleves_inscrits'):t('eleve_inscrit'));
   var list=g('elevesList');
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_loading')+'</div>';
   openM('bdEleves');
@@ -3310,7 +3309,7 @@ async function openEleves(id){
     var r=await fetch(API+'/reservations/cours/'+id,{headers:apiH()});
     var data=await r.json();
     if(!Array.isArray(data)||!data.length){list.innerHTML='<div class="bempty"><p>'+t('txt_no_students')+'</p></div>';return;}
-    list.innerHTML='<div style="margin-bottom:12px;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--mid)">📋 <strong>'+data.length+' élève'+(data.length>1?'s':'')+' inscrit'+(data.length>1?'s':'')+'</strong> sur '+c.sp+' places</div>'
+    list.innerHTML='<div style="margin-bottom:12px;background:var(--orp);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--mid)">📋 <strong>'+data.length+' '+(data.length>1?t('eleves_inscrits'):t('eleve_inscrit'))+'</strong> '+t('sur_places')+' '+c.sp+' '+t('pour_places')+'</div>'
       +data.map(function(res){
         var nom=((res.prenom||'')+(res.nom?' '+res.nom:'')).trim()||'Élève';
         var email=res.email||'';
@@ -3319,8 +3318,8 @@ async function openEleves(id){
         var ini=nom[0]||'?';
         var isTuteur=!!res.is_tuteur;
         var roleBadge=isTuteur
-          ?'<span style="font-size:10px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle">Tuteur</span>'
-          :'<span style="font-size:10px;font-weight:700;color:#3B82F6;background:#EFF6FF;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle">Élève</span>';
+          ?'<span style="font-size:10px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle">'+t('role_tuteur')+'</span>'
+          :'<span style="font-size:10px;font-weight:700;color:#3B82F6;background:#EFF6FF;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle">'+t('role_eleve')+'</span>';
         var rid=JSON.stringify(res.reservation_id),uid=JSON.stringify(res.user_id),cid=JSON.stringify(id);
         return'<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--bdr)">'
           +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,'+(isTuteur?'#A78BFA,#7C3AED':'#FF8C55,var(--ord)')+');display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0">'+esc(ini)+'</div>'
@@ -3334,17 +3333,17 @@ async function openEleves(id){
           +'<button onclick="openSignalement(\'eleve\','+uid+',\''+esc(nom)+'\')" style="background:var(--bg);border:none;border-radius:7px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Signaler">'
           +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>'
           +'</button>'
-          +'<button onclick="cancelEleveReservation('+rid+','+uid+','+cid+','+montant+')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>'
+          +'<button onclick="cancelEleveReservation('+rid+','+uid+','+cid+','+montant+')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">'+t('confirm_cancel_res_btn')+'</button>'
           +'</div>'
           +'</div></div>';
       }).join('');
   }catch(e){
-    list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Impossible de charger.<br><a onclick="openEleves(\''+id+'\')" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_load_fail')+'<br><a onclick="openEleves(\''+id+'\')" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
   }
 }
 
 async function cancelEleveReservation(reservationId,userId,coursId,montant){
-  if(!confirm('Annuler et rembourser cet élève ?'))return;
+  if(!confirm(t('confirm_cancel_eleve')))return;
   try{
     var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
     var data=await r.json();
@@ -3397,7 +3396,7 @@ function confO(){
   g('rDt').textContent=c.dt;
   g('rLc').textContent=c.lc;
   g('rTot').textContent=c.tot+'€';
-  g('rCnt').textContent=c.sp+' places max';
+  g('rCnt').textContent=c.sp+' '+t('places_max');
   g('rFin').textContent=pp+'€';
   g('rFinB').textContent=pp+'€';
   g('rInf').textContent='Réservation d\'une place supplémentaire · '+pp+'€ par personne.';
@@ -3491,7 +3490,7 @@ function openPr(pid){
     if(!p.col)p.col=dernierCours.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)';
     if(!p.photo&&dernierCours.prof_photo)p.photo=dernierCours.prof_photo;
   }
-  var displayNm=p.nm||'Professeur';
+  var displayNm=p.nm||t('reg_prof');
   var displayIni=p.i||'?';
   var displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
   var displayPhoto=p.photo||null;
@@ -3506,7 +3505,7 @@ function openPr(pid){
   setAvatar(av,displayPhoto,displayIni,displayCol);
   var hero=g('mpHero');if(hero)hero.style.background=displayCol;
   g('mpnm').textContent=displayNm;
-  g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:'Professeur';
+  g('mprl').textContent=pCache.statut?STATUT[pCache.statut]||pCache.statut:t('reg_prof');
   g('mpbd').textContent=pCache.niveau||'';
   // Ville / lieu
   (function(){
@@ -3636,7 +3635,7 @@ function openPr(pid){
     };
     var html=notes.slice(0,3).map(function(a){
       var isTuteur=!!a.is_tuteur;
-      var roleLabel=isTuteur?'Tuteur':'Élève';
+      var roleLabel=isTuteur?t('role_tuteur'):t('role_eleve');
       var roleColor=isTuteur?'#8B5CF6':'#3B82F6';
       var roleBg=isTuteur?'#F5F3FF':'#EFF6FF';
       // Afficher seulement la première initiale du prénom pour préserver l'anonymat (jamais le nom complet)
@@ -4017,7 +4016,7 @@ function dupCours(id){
 
 function confirmDeleteCoursNative(id){
   // ActionSheet natif sur iOS/Android, confirm() sinon
-  if(window.confirm('Annuler ce cours ? Tous les élèves inscrits seront notifiés.')){
+  if(window.confirm(t('confirm_cancel_cours'))){
     deleteCours(id);
   }
 }
@@ -4056,7 +4055,7 @@ function calcH(){
   var ch=g('cH');
   if(!ch)return;
   if(p>0){
-    var txt='Soit '+pp+'€ par élève pour '+pl+' place'+(pl>1?'s':'');
+    var txt=t('soit_par_eleve')+' '+pp+'€ '+t('calc_per')+' '+pl+' '+(pl>1?t('pour_places'):t('pour_place'));
     if(ch.textContent!==txt){
       ch.style.animation='none';ch.offsetHeight;ch.style.animation='priceFlip .35s ease';
       ch.textContent=txt;
@@ -4198,7 +4197,7 @@ async function loadMessages(){
         lastDate=dk;
         var today=new Date();today.setHours(0,0,0,0);
         var diff=Math.round((today-new Date(dk))/(864e5));
-        var lbl=diff===0?"Aujourd'hui":diff===1?'Hier':d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+        var lbl=diff===0?t('date_today'):diff===1?t('date_yesterday'):d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
         h+='<div class="msg-date-sep"><span>'+lbl.charAt(0).toUpperCase()+lbl.slice(1)+'</span></div>';
       }
       var isMe=m.sender_id===user.id;
@@ -4453,7 +4452,7 @@ async function loadConversations(){
     var _httpM=e.message&&e.message.match(/HTTP (\d+)/);var _httpC=_httpM?parseInt(_httpM[1]):0;
     if(_httpC>=400&&_httpC<500){
       clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;
-      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de connexion. <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_connection')+' <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
       return;
     }
     _convRetries++;
@@ -4464,7 +4463,7 @@ async function loadConversations(){
       _convRetryTimer=setTimeout(function(){_convRetryTimer=null;loadConversations();},_convRetries*4000);
     }else{
       _convRetries=0;
-      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">Erreur de chargement. <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_load_fail')+' <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
     }
   }finally{
     clearTimeout(_convTimeout);_convLoading=false;
@@ -4860,7 +4859,7 @@ async function _loadGroupeMsgs(){
         lastDate = dateKey;
         var today = new Date(); today.setHours(0,0,0,0);
         var diff = Math.round((today.getTime() - new Date(dateKey).getTime())/(1000*60*60*24));
-        var label = diff===0?"Aujourd'hui":diff===1?'Hier':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+        var label = diff===0?t('date_today'):diff===1?t('date_yesterday'):d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
         html+='<div style="text-align:center;margin:10px 0 6px"><span style="background:var(--wh);color:var(--lite);font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;box-shadow:0 1px 4px rgba(0,0,0,.07)">'+label+'</span></div>';
       }
       var isMe = m.sender_id === (user&&user.id);
@@ -5030,10 +5029,10 @@ function cniGoStep3(isReturn){
   var _cniT=g('cniStep3Title'),sub=g('cniStep3Sub');
   if(isReturn){
     if(_cniT)_cniT.textContent=window.t('txt_verif_prog');
-    if(sub)sub.innerHTML='Votre document a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    if(sub)sub.innerHTML=t('doc_cni_recu');
   } else {
     if(_cniT)_cniT.textContent=window.t('txt_doc_sent');
-    if(sub)sub.innerHTML='Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    if(sub)sub.innerHTML=t('doc_cni_verif');
     haptic(20);
   }
 }
@@ -5244,10 +5243,10 @@ function diplomeGoStep3(isReturn){
   var _dipT=g('diplomeStep3Title'),sub=g('diplomeStep3Sub');
   if(isReturn){
     if(_dipT)_dipT.textContent=window.t('txt_verif_prog');
-    if(sub)sub.innerHTML='Votre diplôme a bien été reçu.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    if(sub)sub.innerHTML=t('doc_dip_recu');
   } else {
     if(_dipT)_dipT.textContent=window.t('txt_diploma_sent');
-    if(sub)sub.innerHTML='Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.';
+    if(sub)sub.innerHTML=t('doc_dip_verif');
     haptic(20);
   }
 }
@@ -5542,7 +5541,7 @@ function openPrivateCours(code){
           tot:data.prix_total||0,sp:data.places_max||5,fl:data.places_prises||0,
           pr:data.professeur_id,em:data.emoji||'🔒',
           prof_ini:data.prof_initiales||'?',prof_col:data.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
-          prof_nm:data.prof_nom||'Professeur',prof_photo:data.prof_photo||null,
+          prof_nm:data.prof_nom||t('reg_prof'),prof_photo:data.prof_photo||null,
           description:data.description||'',code:data.code_acces||''
         };
         C.unshift(nc);
@@ -5756,7 +5755,7 @@ function _tutoShow(){
   var isLast=_tutoIdx===_tutoSteps.length-1;
   var isGuestLast=(!user||user.guest)&&isLast;
   if(btn){
-    btn.textContent=isLast?(isGuestLast?'Cr\u00e9er un compte':'C\u2019est parti !'):('Continuer');
+    btn.textContent=isLast?(isGuestLast?t('reg_title'):t('ob_cest_parti')):t('ob_continuer');
     btn.style.background=isLast?'#22C069':'var(--or)';
     btn.style.boxShadow=isLast?'0 4px 16px rgba(34,192,105,.35)':'0 4px 16px rgba(255,107,43,.35)';
   }
@@ -5873,7 +5872,7 @@ async function loadRemboursements(){
       html+='<div style="padding:14px 4px;font-size:12px;color:var(--lite);line-height:1.6;text-align:center">Remboursements traités par Stripe · délai 5-10 jours ouvrés</div>';
       el.innerHTML=html;
     }catch(e){
-      el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les remboursements</div>';
+      el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('err_refunds')+'</div>';
     }
     return;
   }
@@ -5928,7 +5927,7 @@ async function loadRemboursements(){
     html+='<div style="padding:14px 4px;font-size:12px;color:var(--lite);line-height:1.6;text-align:center">Les remboursements sont traités par Stripe sous 5 à 10 jours ouvrés.</div>';
     el.innerHTML=html;
   }catch(e){
-    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les remboursements</div>';
+    el.innerHTML='<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('err_refunds')+'</div>';
   }
 }
 
@@ -6000,7 +5999,7 @@ async function loadRevenues() {
         var montant=typeof p.amount==='number'?p.amount:(parseFloat(p.amount)||0);
         var montantNet=(montant*0.85).toFixed(2);
         var statusColor=p.status==='succeeded'||p.status==='paid'?'var(--green)':'var(--amber)';
-        var statusLabel=p.status==='succeeded'||p.status==='paid'?'Payé':'En attente';
+        var statusLabel=p.status==='succeeded'||p.status==='paid'?t('paiement_paye'):t('paiement_attente');
         html+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bdr)">'
           +'<div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--orp),#FFE8DC);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
           +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
@@ -6023,7 +6022,7 @@ async function loadRevenues() {
     list.innerHTML=html;
 
   } catch(e) {
-    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Impossible de charger les revenus.<br><a onclick="loadRevenues()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('err_revenues')+'<br><a onclick="loadRevenues()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
   }
 }
 
@@ -6420,7 +6419,7 @@ function updateNiveauxPf(statut){
   // Reset le niveau si le statut change
   var pfNiv=g('pfNiveau');
   if(pfNiv)pfNiv.value='';
-  if(valLbl)valLbl.textContent='Choisir…';
+  if(valLbl)valLbl.textContent=t('txt_choose')+'…';
 }
 
 // ============================================================
@@ -6703,12 +6702,12 @@ function shareProfil(){
   if(navigator.share){
     navigator.share({
       title:'Mes cours sur CoursPool',
-      text:'Retrouvez mes cours sur CoursPool — partagez les frais à plusieurs !',
+      text:t('t_share_profile_msg'),
       url:url
     }).catch(function(){});
   } else {
-    try{navigator.clipboard.writeText(url);toast('Lien copié ✓','Partagez votre profil avec vos élèves');}
-    catch(e){toast(url,'Copiez ce lien');}
+    try{navigator.clipboard.writeText(url);toast(t('t_link_copied'),t('t_share_profile_sub'));}
+    catch(e){toast(url,t('t_copy_link'));}
   }
 }
 
@@ -6772,7 +6771,7 @@ async function submitContact(){
   var sujet=document.querySelector('.contact-subj.on');
   if(!email||!msg){toast('Champs manquants','Remplissez votre email et votre message',true);return;}
   var btn=g('contactSubmitBtn');
-  btn.disabled=true;btn.textContent='Envoi…';
+  btn.disabled=true;btn.textContent=t('txt_envoi')+'…';
   try{
     var photoFile=g('contactPhoto')&&g('contactPhoto').files&&g('contactPhoto').files[0];
     var photoB64=null;
@@ -6891,8 +6890,8 @@ function showNetworkError(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" width="32" height="32"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>'
     +'</div>'
     +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Connexion perdue</div>'
-    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Impossible de charger les cours.<br>Vérifiez votre connexion internet.</div>'
-    +'<button onclick="loadData(1).then(buildCards)" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);margin-bottom:12px;display:block;width:100%;max-width:220px;margin:0 auto 12px">Réessayer</button>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">'+t('err_courses')+'<br>'+t('err_check_conn')+'</div>'
+    +'<button onclick="loadData(1).then(buildCards)" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);margin-bottom:12px;display:block;width:100%;max-width:220px;margin:0 auto 12px">'+t('txt_retry')+'</button>'
     +'<button onclick="openContact()" style="background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:8px">Nous contacter</button>'
     +'</div>';
   g('nocard').style.display='none';
@@ -7226,9 +7225,9 @@ function updateVerifBand(){
   var status=getCniStatus();
   if(status==='none'){
     band.style.display='flex';
-    var t=g('verifBandTitle'),s=g('verifBandSub');
-    if(t)t.textContent='Vérification d\'identité requise';
-    if(s)s.textContent='Appuyez pour envoyer votre document';
+    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub');
+    if(_vBT)_vBT.textContent=window.t('verif_id_required');
+    if(_vBS)_vBS.textContent=window.t('verif_id_tap');
     band.style.background='var(--orp)';
     band.style.borderColor='#FED7AA';
     return;
@@ -7236,15 +7235,15 @@ function updateVerifBand(){
   if(status==='verified'){band.style.display='none';return;}
   if(status==='pending'||status==='rejected_retry'){
     band.style.display='flex';
-    var t=g('verifBandTitle'),s=g('verifBandSub');
+    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub');
     if(status==='pending'){
-      if(t)t.textContent='V\u00e9rification en cours';
-      if(s)s.textContent='R\u00e9ponse par email sous 24h';
+      if(_vBT)_vBT.textContent=window.t('verif_id_progress');
+      if(_vBS)_vBS.textContent=window.t('verif_id_email24h');
       band.style.background='#FFFBEB';
       band.style.borderColor='#FDE68A';
     } else {
-      if(t)t.textContent='Document refus\u00e9 \u2014 renvoyer';
-      if(s)s.textContent='Appuyez pour soumettre \u00e0 nouveau';
+      if(_vBT)_vBT.textContent=window.t('verif_id_rejected');
+      if(_vBS)_vBS.textContent=window.t('verif_id_resubmit');
       band.style.background='#FEF2F2';
       band.style.borderColor='#FECACA';
     }
@@ -7280,7 +7279,7 @@ function expandSearch(){
   if(!cancel){
     cancel=document.createElement('button');
     cancel.id='srchCancel';
-    cancel.textContent='Annuler';
+    cancel.textContent=t('txt_annuler');
     cancel.style.cssText='position:fixed;top:max(14px,calc(env(safe-area-inset-top,0px)+14px));right:16px;background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;z-index:201;padding:8px 0';
     cancel.onclick=function(){srch.blur();collapseSearch();srch.value='';applyFilter();};
     document.body.appendChild(cancel);
@@ -7397,8 +7396,8 @@ function initSwipeCancel(el,onConfirm){
         var btn=document.createElement('div');
         btn.className='swipe-del';
         btn.style.cssText='position:absolute;right:0;top:0;bottom:0;width:80px;background:#EF4444;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:11px;font-weight:700';
-        btn.textContent='Annuler';el.style.position='relative';el.style.overflow='hidden';el.appendChild(btn);
-        btn.onclick=function(){if(window.confirm('Annuler cette r\u00e9servation ?')){onConfirm();}else{el.style.transition='transform .2s';el.style.transform='translateX(0)';}};
+        btn.textContent=t('confirm_cancel_res_btn');el.style.position='relative';el.style.overflow='hidden';el.appendChild(btn);
+        btn.onclick=function(){if(window.confirm(t('confirm_cancel_res'))){onConfirm();}else{el.style.transition='transform .2s';el.style.transform='translateX(0)';}};
       }
     }else{el.style.transition='transform .2s';el.style.transform='translateX(0)';}
   },{passive:true});
@@ -8015,7 +8014,7 @@ async function subCrStep(){
     setTimeout(function(){
       var c=C.find(function(x){return x.id==id;});if(!c)return;
       var rmb=g('rModeBadge');
-      if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?'Visio':'Présentiel')+'</span>';}
+      if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?t('mode_visio'):t('mode_pres'))+'</span>';}
       var rvj=g('rVisioJoin');
       if(rvj){
         var _isProf=user&&c.pr===user.id;
@@ -8164,9 +8163,9 @@ function buildMesCard(c,isPast,isProf){
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:8px">'
     +'<span class="mode-badge '+mC+'">'+mL+'</span>'
-    +(c.prive?'<span style="background:var(--bg);border:1px solid var(--bdr);border-radius:50px;padding:3px 8px;font-size:10.5px;font-weight:600;color:var(--mid)">Priv\u00e9</span>':'')
+    +(c.prive?'<span style="background:var(--bg);border:1px solid var(--bdr);border-radius:50px;padding:3px 8px;font-size:10.5px;font-weight:600;color:var(--mid)">'+t('badge_prive')+'</span>':'')
     +'</div>'+code+shareLink+visio
-    +'<button class="mes-cal-btn" data-cid="'+escH(c.id)+'" onclick="event.stopPropagation();addToCalendar(\''+escH(c.id)+'\')" style="margin-top:10px;width:100%;padding:9px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Ajouter au calendrier</button>'
+    +'<button class="mes-cal-btn" data-cid="'+escH(c.id)+'" onclick="event.stopPropagation();addToCalendar(\''+escH(c.id)+'\')" style="margin-top:10px;width:100%;padding:9px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'+t('cal_add_title')+'</button>'
     +'</div>';
 }
 
@@ -8227,7 +8226,7 @@ function addToCalendar(coursId){
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
   sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
-    +'<div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:16px">Ajouter au calendrier</div>';
+    +'<div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:16px">'+t('cal_add_title')+'</div>';
 
   function addBtn(iconSvg,label,action){
     var btn=document.createElement('button');
@@ -8242,7 +8241,7 @@ function addToCalendar(coursId){
   var dlIco='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
   if(isIOS){
-    addBtn(calIco,'Calendrier Apple',function(){
+    addBtn(calIco,t('cal_apple'),function(){
       var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
       var file=new File([blob],'cours.ics',{type:'text/calendar'});
       if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
@@ -8255,11 +8254,11 @@ function addToCalendar(coursId){
       }
     });
   }
-  addBtn(gcIco,'Google Agenda',function(){
+  addBtn(gcIco,t('cal_google'),function(){
     if(isCap){window.open(gcUrl,'_system');}else{window.open(gcUrl,'_blank');}
   });
   if(!isIOS&&!isAndroid){
-    addBtn(dlIco,'Télécharger .ics (Outlook, Apple…)',function(){
+    addBtn(dlIco,t('cal_download'),function(){
       var blob=new Blob([icsText],{type:'text/calendar;charset=utf-8'});
       var url=URL.createObjectURL(blob);
       var a=document.createElement('a');a.href=url;a.download='cours.ics';
@@ -8270,7 +8269,7 @@ function addToCalendar(coursId){
 
   var btnC=document.createElement('button');
   btnC.style.cssText='width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:8px;margin-top:4px';
-  btnC.textContent='Annuler';btnC.onclick=function(){bd.remove();};
+  btnC.textContent=t('txt_annuler');btnC.onclick=function(){bd.remove();};
   sheet.appendChild(btnC);
   bd.appendChild(sheet);document.body.appendChild(bd);
   haptic(10);
@@ -8319,14 +8318,14 @@ async function sendCoursCardMsg(c){
     +'<div class="chat-cours-card-header" style="background:'+_chatHdrBg+'"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.18);color:#fff;border-radius:50px;padding:3px 8px">'+escH(c.subj)+'</span>'
     +'<span style="margin-left:auto;font-size:15px;font-weight:800;color:#fff">'+pp+'&euro;</span></div>'
     +'<div class="chat-cours-card-body"><div class="chat-cours-card-title">'+escH(c.title)+'</div>'
-    +'<div class="chat-cours-card-meta">'+escH(fmtDt(c.dt))+(_cIsVisio?' &middot; Visio':'')+'</div>'
-    +'<div style="margin-top:6px"><span class="mode-badge '+(_cIsVisio?'visio':'presentiel')+'">'+(_cIsVisio?'Visio':'Pr\u00e9sentiel')+'</span></div>'
+    +'<div class="chat-cours-card-meta">'+escH(fmtDt(c.dt))+(_cIsVisio?' &middot; '+t('mode_visio'):'')+'</div>'
+    +'<div style="margin-top:6px"><span class="mode-badge '+(_cIsVisio?'visio':'presentiel')+'">'+(_cIsVisio?t('mode_visio'):t('mode_pres'))+'</span></div>'
     +(c.lieu_prive?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,.07);font-size:11px;color:var(--mid);display:flex;align-items:flex-start;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>'+escH(c.lieu_prive)+'</span></div>':'')
     +'</div></div>';
   try{
     await fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({expediteur_id:user.id,destinataire_id:msgDestId,contenu:cardHtml,type:'cours_card'})});
-    loadMessages();toast('Cours partag\u00e9\u00a0!','La carte est dans la conversation');
-  }catch(e){toast('Erreur','Envoi impossible');}
+    loadMessages();toast(t('t_cours_shared'),t('t_carte_conv'));
+  }catch(e){toast(t('t_error'),t('t_send_impossible'));}
 }
 
 // ---- Visual viewport keyboard — colle la barre de saisie au-dessus du clavier ----
@@ -8717,7 +8716,7 @@ function openSignalement(context,targetId,targetName){
 async function submitSignalement(context,targetId,targetName,motif,motifLabel){
   closeQuickSheet();
   if(!user)return;
-  var ctxLabels={prof:'Professeur',eleve:'Élève',message:'Conversation'};
+  var ctxLabels={prof:t('ctx_prof'),eleve:t('ctx_eleve'),message:t('ctx_message')};
   var body='[Signalement — '+(ctxLabels[context]||context)+'] '+motifLabel
     +(targetName?'\nConcerné(e) : '+targetName:'')
     +(targetId?'\nID : '+targetId:'')
