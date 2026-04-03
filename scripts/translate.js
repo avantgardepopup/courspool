@@ -710,6 +710,11 @@ const SOURCE = {
   empty_no_msgs:  'Aucun message pour l\'instant.',
   empty_be_first: 'Soyez le premier à écrire !',
 
+  // Favoris — états cours supprimé/terminé
+  fav_cours_termine:  'Cours terminé',
+  fav_cours_supprime: 'Cours supprimé',
+  fav_retirer:        'Retirer',
+
   // Boutons cartes
   card_reserve:  'Réserver',
   card_consult:  'Consulter',

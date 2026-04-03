@@ -344,49 +344,37 @@ function buildFavPage(){
   }
   if(emptyAll)emptyAll.style.display='none';
 
-  // ── Carrousel cours sauvegardés ──
+  // ── Grille cours sauvegardés (même style qu'explorer) ──
   var carousel=g('favCoursCarousel');
   if(carousel){
     if(!favIds.length){
       if(coursSection)coursSection.style.display='none';
     } else {
       if(coursSection)coursSection.style.display='block';
-      // Exclure uniquement les cours actifs encore dans C[] mais passés ; garder les inconnus (supprimés/passés à afficher avec état)
       var _favActive=favIds.filter(function(id){
         var c=C.find(function(x){return x.id==id;});
-        return!c||!_isCoursPass(c); // si pas dans C[], on l'affiche (avec badge état)
+        return!c||!_isCoursPass(c);
       });
       if(!_favActive.length&&C.length){if(coursSection)coursSection.style.display='none';}
-      carousel.innerHTML=_favActive.map(function(id){
+      carousel.innerHTML='';
+      var _fFrag=document.createDocumentFragment();
+      _favActive.forEach(function(id){
         var c=C.find(function(x){return x.id==id;});
         if(!c){
-          // Si C[] pas encore chargé, skeleton
-          if(!C.length)return'<div class="fav-cours-card skeleton" style="min-height:140px"></div>';
+          if(!C.length){
+            var sk=document.createElement('div');sk.className='card-wrap';sk.style.cssText='min-height:180px;border-radius:20px;background:var(--bdr);animation:shimmer 1.4s infinite;background-size:200% 100%';_fFrag.appendChild(sk);return;
+          }
           var _state=getCourseState(id);
-          var _isPastFav=_state==='past';
-          var _label=_isPastFav?'Cours terminé':'Cours supprimé';
-          return'<div class="fav-cours-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--bg);padding:20px 14px;text-align:center;min-height:120px">'
-            +'<div style="font-size:12px;font-weight:600;color:var(--lite)">'+_label+'</div>'
-            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:5px 12px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">Retirer</button>'
-            +'</div>';
+          var ghost=document.createElement('div');
+          ghost.className='card-wrap';
+          ghost.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px 16px;text-align:center;background:var(--bg);border-radius:20px;border:1.5px dashed var(--bdr)';
+          ghost.innerHTML='<div style="font-size:12px;font-weight:600;color:var(--lite)">'+(_state==='past'?t('fav_cours_termine'):t('fav_cours_supprime'))+'</div>'
+            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">'+t('fav_retirer')+'</button>';
+          _fFrag.appendChild(ghost);return;
         }
-        var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-        var mat=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
-        var _isDkFp=document.documentElement.classList.contains('dk');
-        var bg=_isDkFp?(mat.bgDark||mat.bg):mat.bg;
-        return'<div class="fav-cours-card" onclick="openR(\''+c.id+'\')">'
-          +'<div class="fav-cours-card-top" style="background:'+bg+'">'
-          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
-          +'<button class="fav-remove-btn" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',null);buildFavPage();" title="Retirer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-          +'</div>'
-          +'<div class="fav-cours-card-body">'
-          +'<div class="fav-cours-card-title">'+esc(c.title)+'</div>'
-          +'<div class="fav-cours-card-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg> '+esc(fmtDt(c.dt))+'</div>'
-          +'<div class="fav-cours-card-meta" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> '+esc(c.lc)+'</div>'
-          +'<div class="fav-cours-card-price">'+pp+'€<span> / '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</span></div>'
-          +'</div>'
-          +'</div>';
-      }).join('');
+        _fFrag.appendChild(_buildCourseCard(c));
+      });
+      carousel.appendChild(_fFrag);
     }
   }
 
@@ -2471,6 +2459,68 @@ function _fetchProf(pid){
     _convCache='';
   }).catch(function(){});
 }
+function _buildCourseCard(c){
+  var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+  var isR=!!res[c.id],isFull=c.fl>=c.sp;
+  var isOwner=user&&c.pr===user.id;
+  var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
+  var _avCol=esc(c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)');var _avIni=esc(c.prof_ini||'?');
+  var _avIniSpan='<span style="pointer-events:none">'+_avIni+'</span>';
+  var profAv=_pPhoto
+    ?('<img src="'+esc(_pPhoto)+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'+_avIniSpan)
+    :_avIniSpan;
+  var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
+  var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
+  var modeIcon=_isVisio?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>';
+  var miniFollowBtn='';
+  if(user&&!user.guest&&!isOwner){
+    var isFolP=fol.has(c.pr);
+    var miniSvgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>';
+    var miniSvgOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    miniFollowBtn='<button class="card-follow-btn card-follow-mini" data-pid="'+c.pr+'" data-fol="'+(isFolP?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(isFolP?t('fol_remove'):t('fol_add'))+'" style="background:'+(isFolP?'#FF6B35':'#fff')+'">'+(isFolP?miniSvgOn:miniSvgOff)+'</button>';
+  }
+  var profAvDiv='<div class="card-prof-av" style="background:'+_avCol+';" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
+  var schedHtml='<div class="card-sched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(fmtDt(c.dt))+'</div>';
+  var locHtml=(!_isVisio&&c.lc)?'<div class="card-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>':'';
+  var heartHtml='';
+  if(user&&!user.guest){
+    var isSaved=favCours.has(c.id);
+    heartHtml='<button class="card-fav-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
+  }
+  var btnHtml;
+  if(isOwner) btnHtml='<button class="card-btn-reserve card-btn-consult" onclick="event.stopPropagation();openR(\''+c.id+'\')">'+t('card_consult')+'</button>';
+  else if(isR&&isFull) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · '+t('rr_complet')+'</button>';
+  else if(isR) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · +</button>';
+  else if(isFull) btnHtml='<button class="card-btn-reserve card-btn-full" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">'+t('rr_complet')+'</button>';
+  else btnHtml='<button class="card-btn-reserve" onclick="event.stopPropagation();openR(\''+c.id+'\')">'+t('card_reserve')+'</button>';
+  var wrap=document.createElement('div');
+  wrap.className='card-wrap'+(c.prive?' card-prive-wrap':'');
+  wrap.dataset.id=c.id;wrap.dataset.t=c.t;wrap.dataset.coursId=c.id;
+  wrap.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
+  wrap.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
+  wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
+  wrap.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
+  wrap.innerHTML=
+    subjBadge+modeBadge+profAvDiv+
+    '<div class="card card-new'+(c.prive?' card-prive':'')+'">'+
+      '<div class="card-body-new">'+
+        '<div class="card-title-new">'+esc(c.title)+'</div>'+
+        (c.description?'<div class="card-desc-preview">'+esc(c.description)+'</div>':'')+
+        schedHtml+locHtml+
+        '<div class="card-sep-dash"></div>'+
+        '<div class="card-foot">'+
+          '<div class="card-price-block">'+
+            '<div class="card-price-val">'+pp+'€</div>'+
+            '<div class="card-price-sub">/ '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</div>'+
+          '</div>'+
+          '<div class="card-circles-wrap">'+buildPlacesCircles(c.fl,c.sp)+'</div>'+
+          heartHtml+btnHtml+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  return wrap;
+}
 function buildCards(){
   currentPage=1;
   var nc=g('nocard'),lmw=g('loadMoreWrap'),gr=g('grid');
@@ -2665,78 +2715,7 @@ function renderPage(){
   if(_nc)_nc.style.display='none';
   var _frag=document.createDocumentFragment();
   toShow.forEach(function(c,i){
-    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-    var pleft=c.sp-c.fl;
-    var isR=!!res[c.id],isFull=c.fl>=c.sp;
-    var isOwner=user&&c.pr===user.id;
-    var _pPhoto=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;
-    var _pNm=(P[c.pr]&&P[c.pr].nm)||c.prof_nm||'';
-    var _avCol=esc(c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)');var _avIni=esc(c.prof_ini||'?');
-    // Initiales toujours dans le DOM — visibles si pas de photo ou si l'image échoue
-    var _avIniSpan='<span style="pointer-events:none">'+_avIni+'</span>';
-    var profAv=_pPhoto
-      ?('<img src="'+esc(_pPhoto)+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'+_avIniSpan)
-      :_avIniSpan;
-    var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
-    // Subject badge
-    var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
-    // Mode badge
-    var modeIcon=_isVisio?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-    var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>';
-    // Mini follow button (inside prof avatar)
-    var miniFollowBtn='';
-    if(user&&!user.guest&&!isOwner){
-      var isFolP=fol.has(c.pr);
-      var miniSvgOn='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"/></svg>';
-      var miniSvgOff='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
-      miniFollowBtn='<button class="card-follow-btn card-follow-mini" data-pid="'+c.pr+'" data-fol="'+(isFolP?'1':'0')+'" onclick="event.stopPropagation();toggleFollowCard(\''+c.pr+'\',this)" title="'+(isFolP?'Ne plus suivre':'Suivre')+'" style="background:'+(isFolP?'#FF6B35':'#fff')+'">'+(isFolP?miniSvgOn:miniSvgOff)+'</button>';
-    }
-    var profAvDiv='<div class="card-prof-av" style="background:'+_avCol+';" onclick="event.stopPropagation();openPr(\''+c.pr+'\')">'+profAv+miniFollowBtn+'</div>';
-    // Schedule box
-    var schedHtml='<div class="card-sched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(fmtDt(c.dt))+'</div>';
-    // Location (présentiel only)
-    var locHtml=(!_isVisio&&c.lc)?'<div class="card-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(c.lc)+'</div>':'';
-    // Fav button
-    var heartHtml='';
-    if(user&&!user.guest){
-      var isSaved=favCours.has(c.id);
-      heartHtml='<button class="card-fav-btn'+(isSaved?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+c.id+'\',this)" title="Sauvegarder" aria-label="Sauvegarder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
-    }
-    // Reserve button
-    var btnHtml;
-    if(isOwner) btnHtml='<button class="card-btn-reserve card-btn-consult" onclick="event.stopPropagation();openR(\''+c.id+'\')">'+t('card_consult')+'</button>';
-    else if(isR&&isFull) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · '+t('rr_complet')+'</button>';
-    else if(isR) btnHtml='<button class="card-btn-reserve card-btn-inscrit" onclick="event.stopPropagation();openO(\''+c.id+'\')" style="font-size:11.5px">'+t('rr_deja')+' · +</button>';
-    else if(isFull) btnHtml='<button class="card-btn-reserve card-btn-full" onclick="event.stopPropagation();openF(\''+c.pr+'\',\''+c.title+'\')">'+t('rr_complet')+'</button>';
-    else btnHtml='<button class="card-btn-reserve" onclick="event.stopPropagation();openR(\''+c.id+'\')">'+t('card_reserve')+'</button>';
-    // Build card-wrap
-    var wrap=document.createElement('div');
-    wrap.className='card-wrap'+(c.prive?' card-prive-wrap':'');
-    wrap.dataset.id=c.id;wrap.dataset.t=c.t;wrap.dataset.coursId=c.id;
-    // pas de delay inline — l'entrée est gérée par IntersectionObserver
-    wrap.onclick=function(){if(isFull&&!isR){openF(c.pr,c.title);return;}openR(c.id);};
-    wrap.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
-    wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
-    wrap.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
-    wrap.innerHTML=
-      subjBadge+modeBadge+profAvDiv+
-      '<div class="card card-new'+(c.prive?' card-prive':'')+'">'+
-        '<div class="card-body-new">'+
-          '<div class="card-title-new">'+esc(c.title)+'</div>'+
-          (c.description?'<div class="card-desc-preview">'+esc(c.description)+'</div>':'')+
-          schedHtml+locHtml+
-          '<div class="card-sep-dash"></div>'+
-          '<div class="card-foot">'+
-            '<div class="card-price-block">'+
-              '<div class="card-price-val">'+pp+'€</div>'+
-              '<div class="card-price-sub">/ '+t('mp_eleves').toLowerCase().replace(/s$/,'')+'</div>'+
-            '</div>'+
-            '<div class="card-circles-wrap">'+buildPlacesCircles(c.fl,c.sp)+'</div>'+
-            heartHtml+btnHtml+
-          '</div>'+
-        '</div>'+
-      '</div>';
-    _frag.appendChild(wrap);
+    _frag.appendChild(_buildCourseCard(c));
   });
   grid.innerHTML='';
   grid.appendChild(_frag);
@@ -6262,13 +6241,15 @@ async function saveIban() {
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
-    toast('IBAN enregistré !', 'Vos paiements seront virés automatiquement ✓');
+    toast('IBAN enregistré !', 'Vérification en cours — vous serez notifié par email ✓');
 
-    // Mettre à jour l'UI
+    // Mettre à jour l'UI — passer en état "en attente de validation Stripe"
     var notConn = g('stripeNotConnected');
+    var pending = g('stripePending');
     var connected = g('stripeConnected');
     if (notConn) notConn.style.display = 'none';
-    if (connected) connected.style.display = 'block';
+    if (connected) connected.style.display = 'none';
+    if (pending) pending.style.display = 'block';
 
   } catch(e) {
     toast('Erreur', 'Impossible d\'enregistrer l\'IBAN');
@@ -8642,7 +8623,7 @@ function openMsgContactSheet(){
 async function setMsgContactPref(k){
   if(!user)return;
   user.contact_pref=k;
-  var sub=g('settingsMsgContactSub');if(sub)sub.textContent=_msgContactLabels[k]||_msgContactLabels.all;
+  var sub=g('settingsMsgContactSub');if(sub){var _mc2=_msgContactLabels[k]||_msgContactLabels.all;sub.textContent=typeof _mc2==='function'?_mc2():_mc2;}
   // Rafraîchit la feuille pour que le check se déplace visuellement
   openMsgContactSheet();
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({contact_pref:k})});}catch(e){}
