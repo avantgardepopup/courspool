@@ -7044,6 +7044,8 @@ var VAPID_PUBLIC_KEY='BDyXpxjqx8h9llIzLNcaYdMpEX_jbkqEt4fjXOV_bSgENcpW7KaPFUHEjk
 var _swReg=null,_pushSubscription=null;
 
 async function subscribePush(){
+  var btn=document.querySelector('#notifStatus button');
+  if(btn){btn.disabled=true;btn.textContent='...';}
   try{
     var perm=await Notification.requestPermission();
     if(perm!=='granted'){toast('Refusé','Activez les notifications dans vos réglages');return;}
@@ -7086,6 +7088,8 @@ async function subscribePush(){
 }
 
 async function unsubscribePush(){
+  var btn=document.querySelector('#notifStatus button');
+  if(btn){btn.disabled=true;btn.textContent='...';}
   try{
     if(_pushSubscription){
       await _pushSubscription.unsubscribe();
