@@ -8770,21 +8770,15 @@ var _LANG_NAMES={fr:'Français',en:'English',es:'Español',de:'Deutsch',it:'Ital
 var _LANG_FLAGS={fr:'🇫🇷',en:'🇬🇧',es:'🇪🇸',de:'🇩🇪',it:'🇮🇹',pt:'🇵🇹',da:'🇩🇰',fi:'🇫🇮',sv:'🇸🇪',pl:'🇵🇱',el:'🇬🇷'};
 
 function applyLang(){
-  // 1. Mettre à jour tous les éléments data-i18n
-  document.querySelectorAll('[data-i18n]').forEach(function(el){
-    el.textContent=t(el.getAttribute('data-i18n'));
+  // Fondu + rechargement complet pour appliquer la langue partout
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:var(--wh,#fff);z-index:99999;opacity:0;transition:opacity .35s ease;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML='<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="#FF6B2B" stroke-width="3" stroke-dasharray="60" stroke-dashoffset="60" stroke-linecap="round"><animate attributeName="stroke-dashoffset" from="60" to="0" dur=".5s" fill="freeze"/></svg>';
+  document.body.appendChild(ov);
+  requestAnimationFrame(function(){
+    ov.style.opacity='1';
+    setTimeout(function(){window.location.reload();},380);
   });
-  // 2. Placeholders data-i18n-ph
-  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
-    el.placeholder=t(el.getAttribute('data-i18n-ph'));
-  });
-  // 3. Attribut lang sur <html> pour l'accessibilité
-  document.documentElement.lang=window._i18nLang||'fr';
-  // 4. Label de la langue courante dans les settings
-  var lbl=document.getElementById('currentLangLabel');
-  if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
-  // 5. Re-render les pages actives qui contiennent du texte généré en JS
-  if(typeof applyFilter==='function')applyFilter();
 }
 
 function openLangPicker(){
