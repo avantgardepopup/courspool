@@ -81,10 +81,12 @@ function initSocket() {
     console.log('[Socket] follow_update reçu:', data);
     var pid = data.professeur_id;
     if (!pid) return;
-    // Invalider le cache profil pour forcer un re-fetch
-    if (typeof P !== 'undefined' && P[pid]) delete P[pid];
-    if (!P[pid]) P[pid] = { n: '—', e: 0, col: 'linear-gradient(135deg,#FF8C55,#E04E10)' };
-    P[pid].e = data.nb_eleves;
+    // Mettre à jour le count sans effacer nm/photo (évite les "undefined" dans la liste suivi)
+    if (typeof P !== 'undefined') {
+      if (!P[pid]) P[pid] = { n: '—', e: 0, col: 'linear-gradient(135deg,#FF8C55,#E04E10)' };
+      P[pid].e = data.nb_eleves;
+      delete P[pid]._fresh; // invalide le cache → prochain _fetchProf ira chercher les données
+    }
     // Modal profil prof ouverte sur ce prof (affichage visiteur)
     if (typeof curProf !== 'undefined' && curProf == pid) {
       var mpE = document.getElementById('mpE');
@@ -128,7 +130,7 @@ function initSocket() {
         closeM('bdR');
       }
     }
-    if (typeof buildCards === 'function') buildCards();
+    if (typeof applyFilter === 'function') applyFilter();
     if (typeof buildAccLists === 'function') buildAccLists();
   });
 
@@ -138,7 +140,14 @@ function initSocket() {
     var c = C.find(function(x) { return x.id == data.cours_id; });
     if (!c) return;
     c.fl = data.places_prises;
-    if (typeof buildCards === 'function') buildCards();
+    // Mise à jour ciblée des cercles places sur la card (évite le re-render complet)
+    var cardEl = document.querySelector('[data-cours-id="' + data.cours_id + '"]');
+    if (cardEl) {
+      var circlesWrap = cardEl.querySelector('.card-circles-wrap');
+      if (circlesWrap && typeof buildPlacesCircles === 'function') {
+        circlesWrap.innerHTML = buildPlacesCircles(c.fl, c.sp);
+      }
+    }
     if (typeof curId !== 'undefined' && curId == data.cours_id) {
       var restant = c.sp - c.fl;
       var rPlaces = document.getElementById('rPlaces');
@@ -224,6 +233,22 @@ function initSocket() {
     if (typeof updateVerifBand === 'function') updateVerifBand();
     if (data.diplome_verifie) {
       if (typeof toast === 'function') toast('Diplôme vérifié !', 'Le badge est maintenant visible sur votre profil');
+      if (typeof haptic === 'function') haptic([10, 50, 100, 50, 10]);
+    }
+  });
+
+  // ── casier_update : validation profil de confiance en temps réel ────────
+  _socket.on('casier_update', function(data) {
+    console.log('[Socket] casier_update reçu:', data.professeur_id, '→', data.casier_verifie);
+    if (!user || user.id !== data.professeur_id) return;
+    user.casier_verifie = data.casier_verifie;
+    if (!data.casier_verifie) user.casier_uploaded = false;
+    try { localStorage.setItem('cp_user', JSON.stringify(user)); } catch(e) {}
+    var cvB = document.getElementById('mpCasierBadge');
+    if (cvB) cvB.style.display = data.casier_verifie ? 'block' : 'none';
+    if (typeof updateCasierStatusBlock === 'function') updateCasierStatusBlock();
+    if (data.casier_verifie) {
+      if (typeof toast === 'function') toast('Profil de confiance !', 'Le badge est maintenant visible sur votre profil');
       if (typeof haptic === 'function') haptic([10, 50, 100, 50, 10]);
     }
   });

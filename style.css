@@ -356,7 +356,7 @@ html.dk .lreg-back{background:#1C1917;border-color:var(--bdr);}
 .btnr,.pb,.lbtn,.btnadd,.lguest{-webkit-tap-highlight-color:transparent;}
 .bni:active{opacity:.6;transform:scale(.9);}
 .card-prive{background:linear-gradient(to bottom,#FFFBF5,var(--wh));box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07),0 0 0 1.5px #E8D9C4;}
-.card:hover{transform:translateY(-5px) scale(1.006);box-shadow:0 2px 6px rgba(0,0,0,.05),0 16px 48px rgba(0,0,0,.11);}
+@media(hover:hover)and(pointer:fine){.card:hover{transform:translateY(-5px) scale(1.006);box-shadow:0 2px 6px rgba(0,0,0,.05),0 16px 48px rgba(0,0,0,.11);}}
 @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
 .ctop{height:84px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;}
@@ -775,8 +775,8 @@ html.dk .fav-cours-card-title,html.dk .fav-prof-name{color:var(--ink);}
 .pw-toggle:hover{color:var(--or);}
 .pw-toggle svg{width:18px;height:18px;}
 /* mobile nav — floating pill, no bottom bar */
-.rban{background:var(--or);border-radius:12px;padding:16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
-.rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);}
+.rban{background:var(--or);border-radius:12px;padding:46px 16px 16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
+.rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.07);z-index:0;}
 .bdn{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px;}
 .br{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;}
 .br:not(:last-child){border-bottom:1px solid var(--bdr);}
@@ -1022,7 +1022,7 @@ body, input, textarea, button, select {
   transition: transform .28s cubic-bezier(.22,.61,.36,1), box-shadow .28s;
   overflow: hidden;
 }
-.card:hover  { transform: translateY(-6px) scale(1.008); box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 20px 56px rgba(0,0,0,.12); }
+@media(hover:hover)and(pointer:fine){.card:hover{transform:translateY(-6px) scale(1.008);box-shadow:0 2px 6px rgba(0,0,0,.04),0 20px 56px rgba(0,0,0,.12);}}
 .card:active { transform: translateY(-1px) scale(.995); transition-duration: .1s; }
 .ctop   { height: 96px; }
 .ctitle { font-size: 15px; font-weight: 700; letter-spacing: -.025em; }
@@ -1553,22 +1553,31 @@ html.dk .settings-chevron { color:var(--bdr); }
   }
   #msgBackBtn { display:none !important; }
 
-  /* Nav desktop — plus grande, draggable */
+  /* Nav desktop — floating draggable pill */
   .bnav {
-    padding:10px 16px !important;
-    gap:8px !important;
-    cursor:grab !important;
-    border-radius:60px !important;
+    bottom: auto !important;
+    right: auto !important;
+    width: auto !important;
+    padding: 8px 12px !important;
+    padding-bottom: 8px !important;
+    gap: 4px !important;
+    cursor: grab !important;
+    border-radius: 60px !important;
+    box-shadow: 0 6px 28px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.10) !important;
+    will-change: left, top;
+    user-select: none;
   }
-  .bnav:active { cursor:grabbing !important; }
+  .bnav:active { cursor: grabbing !important; }
+  .bnav::after { display: none !important; }
+  html.dk .bnav { box-shadow: 0 6px 28px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3) !important; }
 
   .bni {
-    padding:10px 16px !important;
-    min-width:52px !important;
-    gap:6px !important;
+    padding: 8px 14px !important;
+    min-width: 50px !important;
+    gap: 5px !important;
   }
-  .bni svg { width:24px !important; height:24px !important; }
-  #bniAdd > div { width:48px !important; height:28px !important; }
+  .bni svg { width: 22px !important; height: 22px !important; }
+  #bniAdd > div { width: 36px !important; height: 36px !important; }
 }
 
 /* ── Mobile (<769px) ── */
@@ -2164,25 +2173,35 @@ html.dk .filter-pill-btn { background:var(--wh); }
   position: relative;
   overflow: visible;
   padding-top: 20px;
-  animation: cwFade .3s ease both;
   cursor: pointer;
   transition: transform .26s cubic-bezier(.22,.61,.36,1);
 }
-@keyframes cwFade { from { opacity: 0; } to { opacity: 1; } }
-.card-wrap:hover {
-  transform: translateY(-6px) scale(1.008);
+.card-wrap.card-below {
+  opacity: 0;
+  transform: translateY(14px) scale(.985);
 }
-.card-wrap:hover .card.card-new {
-  box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14);
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to   { opacity: 1; transform: none; }
 }
-.card-wrap:active,
+.card-wrap.card-in {
+  animation: cardSlideIn .36s cubic-bezier(.22,.61,.36,1) forwards;
+}
+@media(hover:hover)and(pointer:fine){
+  .card-wrap:hover { transform: translateY(-6px) scale(1.008); }
+  .card-wrap:hover .card.card-new { box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14); }
+}
 .card-wrap.tapped {
-  transform: translateY(-1px) scale(.995);
-  transition-duration: .1s;
+  transform: translateY(-5px) scale(1.006);
+  transition: transform .18s cubic-bezier(.22,.61,.36,1);
 }
-.card-wrap:active .card.card-new,
 .card-wrap.tapped .card.card-new {
-  box-shadow: 0 4px 16px rgba(255,107,53,.14), 0 1px 4px rgba(255,107,53,.08);
+  box-shadow: 0 14px 48px rgba(255,107,53,.24), 0 4px 16px rgba(255,107,53,.14);
+  transition: box-shadow .18s;
+}
+.card-wrap:active:not(.tapped) {
+  transform: translateY(-1px) scale(.997);
+  transition-duration: .08s;
 }
 .card.card-new {
   animation: none;
