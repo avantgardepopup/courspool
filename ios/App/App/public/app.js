@@ -80,6 +80,7 @@ function _hideSplash(){
   if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
 }
 window.addEventListener('DOMContentLoaded',function(){
+  applyLangDOM();
   initDarkMode();
   initLargeTitle();
   initSwipeNav();
@@ -8768,6 +8769,18 @@ function closeSettings(){
 // ── i18n — applyLang, sélecteur de langue ─────────────────────────────────
 var _LANG_NAMES={fr:'Français',en:'English',es:'Español',de:'Deutsch',it:'Italiano',pt:'Português',da:'Dansk',fi:'Suomi',sv:'Svenska',pl:'Polski',el:'Ελληνικά'};
 var _LANG_FLAGS={fr:'🇫🇷',en:'🇬🇧',es:'🇪🇸',de:'🇩🇪',it:'🇮🇹',pt:'🇵🇹',da:'🇩🇰',fi:'🇫🇮',sv:'🇸🇪',pl:'🇵🇱',el:'🇬🇷'};
+
+function applyLangDOM(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    el.textContent=t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){
+    el.placeholder=t(el.getAttribute('data-i18n-ph'));
+  });
+  document.documentElement.lang=window._i18nLang||'fr';
+  var lbl=document.getElementById('currentLangLabel');
+  if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
+}
 
 function applyLang(){
   // Fondu + rechargement complet pour appliquer la langue partout
