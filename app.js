@@ -164,12 +164,21 @@ function fmtDt(dt){
   try{
     var d=new Date(dt);
     if(isNaN(d.getTime()))return dt;
-    // Utilise les traductions i18n si disponibles, sinon fallback français
     var _t=typeof t==='function'?t:function(k){return k;};
-    var days=[_t('day_0'),_t('day_1'),_t('day_2'),_t('day_3'),_t('day_4'),_t('day_5'),_t('day_6')];
     var months=[_t('month_0'),_t('month_1'),_t('month_2'),_t('month_3'),_t('month_4'),_t('month_5'),_t('month_6'),_t('month_7'),_t('month_8'),_t('month_9'),_t('month_10'),_t('month_11')];
+    var days=[_t('day_0'),_t('day_1'),_t('day_2'),_t('day_3'),_t('day_4'),_t('day_5'),_t('day_6')];
     var h=('0'+d.getHours()).slice(-2),m=('0'+d.getMinutes()).slice(-2);
-    return days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()]+' · '+h+':'+m;
+    var hm=h+'h'+m;
+    var now=new Date();
+    var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    var dDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    var diff=Math.round((dDay-today)/86400000);
+    if(diff===0)return'Aujourd\'hui à '+hm;
+    if(diff===1)return'Demain à '+hm;
+    if(diff>1&&diff<7)return days[d.getDay()]+' à '+hm;
+    var dateStr=d.getDate()+' '+months[d.getMonth()];
+    if(d.getFullYear()!==now.getFullYear())dateStr+=' '+d.getFullYear();
+    return dateStr+' à '+hm;
   }catch(e){return dt;}
 }
 // Retourne true si le cours est terminé (date passée)
@@ -332,9 +341,7 @@ function _buildFavCard2Col(c){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   var mat=findMatiere(c.subj||'')||{color:'#7C3AED',bg:'var(--orp)'};
-  var dt='';
-  if(c.dt_iso){try{var _d=new Date(c.dt_iso);var _days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var _months=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];dt=_days[_d.getDay()]+' '+_d.getDate()+' '+_months[_d.getMonth()]+' · '+('0'+_d.getHours()).slice(-2)+'h'+('0'+_d.getMinutes()).slice(-2);}catch(e){dt=c.dt||'';}}
-  if(!dt&&c.dt)dt=c.dt;
+  var dt=fmtDt(c.dt_iso||c.dt||'');
   var profNm=c.prof_nm||t('reg_prof');var profIni=(profNm[0]||'?').toUpperCase();
   var profCol=c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)';
   var profPhoto=c.prof_photo||null;
