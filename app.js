@@ -345,6 +345,7 @@ function _buildFavCard2Col(c){
   // Subject pill + prof avatar floating (like explorer card)
   var avInner=profPhoto?('<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">')
     :esc(profIni);
+  var rmId='frm-'+c.id;
   div.innerHTML='<span class="fav2-subj" style="background:'+mat.color+'">'+esc(c.subj||'Cours')+'</span>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'
     +avInner
@@ -355,15 +356,13 @@ function _buildFavCard2Col(c){
     +'<div class="fav2-sep"></div>'
     +'<div class="fav2-foot">'
     +(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
+    +'<div style="display:flex;align-items:center;gap:5px">'
     +'<div class="fav2-mode" style="background:'+modeBg+';color:'+modeCo+'">'+(isV?'Visio':'Présentiel')+'</div>'
+    +'<button id="'+rmId+'" class="fav2-rm" title="Retirer">✕</button>'
+    +'</div>'
     +'</div>'
     +'</div>';
-  var rm=document.createElement('button');
-  rm.className='fav2-rm';
-  rm.title='Retirer';
-  rm.innerHTML='✕';
-  rm.onclick=function(e){e.stopPropagation();favCours.delete(c.id);saveFavCours();buildFavPage();};
-  div.appendChild(rm);
+  setTimeout(function(){var btn=g(rmId);if(btn)btn.onclick=function(e){e.stopPropagation();favCours.delete(c.id);saveFavCours();buildFavPage();};},0);
   return div;
 }
 
@@ -3634,7 +3633,7 @@ function openPr(pid){
           +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
           +'</div>';
       }).join('')
-      :'<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>';
+      :'<div style="text-align:center;padding:28px 16px 16px"><div style="width:48px;height:48px;background:var(--bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>';
   }
 
   // Avis : skeleton uniquement si profil complet pas encore chargé
@@ -3842,9 +3841,14 @@ var _curPrEnrolled=false;
 function _buildBadges(p,pid){
   var chk='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>';
   var dip='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var shld='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var _isVrf=p.verified===true||p.verified==='true';
+  var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
+  var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
   var h='';
-  if(p.verified===true||p.verified==='true')h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+chk+t('mp_identite')+'</span>';
-  if(p.dv===true||p.dv==='true')h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+dip+t('mp_diplome')+'</span>';
+  if(_isVrf)h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+chk+t('mp_identite')+'</span>';
+  if(_isDip)h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+dip+t('mp_diplome')+'</span>';
+  if(_isCas)h+='<span onclick="showBadgeInfo(\'confiance\')" class="prof-badge prof-badge-cas">'+shld+t('mp_confiance')+'</span>';
   if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">'+chk+'Suivi</span>';
   return h;
 }
@@ -3912,7 +3916,7 @@ function openPrFull(pid){
         +'</div>'
         +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
         +'</div>';
-    }).join(''):('<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>');
+    }).join(''):('<div style="text-align:center;padding:28px 16px 16px"><div style="width:48px;height:48px;background:var(--bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>');
   }
   // Follow button
   var bff=g('bFPFull');if(bff)bff.style.display=(user&&pid===user.id)?'none':'flex';
@@ -3947,6 +3951,7 @@ function openPrFull(pid){
     if(prof.statut&&g('mpfInfoRl')){g('mpfInfoRl').textContent=STATUT[prof.statut]||prof.statut;}
     if(prof.verified!==undefined){P[pid].verified=prof.verified;}
     if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;}
+    if(prof.casier_verifie!==undefined){P[pid].cv=prof.casier_verifie;}
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('mpfStE'))g('mpfStE').textContent=P[pid].e;}
     var bdgEl2=g('mpfInfoBadges');if(bdgEl2)bdgEl2.innerHTML=_buildBadges(P[pid],pid);
@@ -5855,24 +5860,31 @@ function showBadgeInfo(type){
   var d=info[type];if(!d)return;
   content.innerHTML=
     // Hero gradient card
-    '<div style="background:'+d.grad+';border-radius:22px;padding:28px 20px 24px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 8px 30px '+d.glow+'">'
-    +'<div style="position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08);top:-50px;right:-40px"></div>'
-    +'<div style="position:absolute;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);bottom:-20px;left:-20px"></div>'
-    +'<div style="width:80px;height:80px;background:rgba(255,255,255,.2);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.3)">'+d.icon+'</div>'
-    +'<div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:6px">'+d.name+'</div>'
-    +'<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:4px 12px;font-size:11.5px;font-weight:700;color:#fff">'
-    +'<svg viewBox="0 0 24 24" fill="#fff" width="11" height="11"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+    '<div style="background:'+d.grad+';border-radius:24px;padding:32px 20px 26px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 40px '+d.glow+'">'
+    // deco circles
+    +'<div style="position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);top:-60px;right:-50px;pointer-events:none"></div>'
+    +'<div style="position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05);bottom:-25px;left:-25px;pointer-events:none"></div>'
+    // CERTIFIÉ label
+    +'<div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:16px">✦ CoursPool Certifié ✦</div>'
+    // icon box with glow ring
+    +'<div style="position:relative;display:inline-flex;margin-bottom:16px">'
+    +'<div style="width:88px;height:88px;background:rgba(255,255,255,.18);border-radius:28px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 0 8px rgba(255,255,255,.08)">'+d.icon+'</div>'
+    +'</div>'
+    +'<div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:8px;text-shadow:0 1px 8px rgba(0,0,0,.15)">'+d.name+'</div>'
+    // stats pill
+    +'<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.35);border-radius:50px;padding:5px 14px;font-size:11.5px;font-weight:700;color:#fff">'
+    +'<svg viewBox="0 0 24 24" fill="#fff" width="12" height="12"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
     +d.badge+'</div>'
     +'</div>'
     // Description
-    +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:10px">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Ce que ça garantit</div>'
+    +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Ce que ça garantit</div>'
     +'<div style="font-size:14px;color:var(--ink);line-height:1.65">'+d.desc+'</div>'
     +'</div>'
     // How to get it
     +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:18px">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Comment l\'obtenir</div>'
-    +'<div style="font-size:14px;color:var(--mid);line-height:1.6">'+d.how+'</div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Comment l\'obtenir</div>'
+    +'<div style="font-size:13.5px;color:var(--mid);line-height:1.65">'+d.how+'</div>'
     +'</div>'
     +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Fermer</button>';
   bd.style.display='flex';
