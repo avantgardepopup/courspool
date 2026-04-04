@@ -715,6 +715,63 @@ const SOURCE = {
   fav_cours_supprime: 'Cours supprimé',
   fav_retirer:        'Retirer',
 
+  // Boutons follow (profil page)
+  fol_add:     'Suivre',
+  fol_remove:  'Suivi',
+
+  // Confirmation annulation réservation (depuis mes cours)
+  confirm_cancel_swap: "Pour annuler, contactez {prof} — le remboursement est effectué par le professeur.\n\nOuvrir la messagerie ?",
+
+  // Réservation place supplémentaire
+  res_extra_place: 'Réservation d\'une place supplémentaire · {pp}€ par personne.',
+
+  // Code cours privé — suggestion de recherche
+  search_code_join: '🔒 Rejoindre le cours privé "{code}" ?',
+
+  // Messagerie — états vides / connexion
+  msg_reconnecting:    'Reconnexion...',
+  msg_empty_conv:      'Aucune conversation',
+  msg_empty_group:     'Aucun message pour l\'instant.<br>Soyez le premier à écrire !',
+
+  // Historique
+  hist_empty:          'Aucun cours passé pour le moment',
+
+  // Rappel cours (reminder band)
+  reminder_dans:       'Dans',
+  reminder_min:        'min',
+
+  // IBAN bouton
+  txt_save_iban:       'Enregistrer mon IBAN',
+
+  // Connexion OAuth loading
+  oauth_loading:       'Connexion en cours...',
+
+  // Visio link sheet
+  visio_add_title:     'Ajouter un lien visio',
+  visio_edit_title:    'Modifier le lien visio',
+  visio_help:          'Zoom, Google Meet, Jitsi ou tout autre lien',
+  visio_delete_link:   'Supprimer le lien',
+  visio_delete_confirm:'Supprimer ?',
+
+  // Partager cours (messagerie sheet)
+  share_cours_title: 'Partager un cours',
+  share_cours_sub:   'La carte s\'affichera dans la conversation.',
+
+  // Supprimer message
+  confirm_delete_msg:  'Supprimer ce message ?',
+
+  // Statut professionnel (label)
+  lbl_statut_pro:      'Statut professionnel',
+
+  // Wizard création cours — boutons de navigation
+  wiz_back_cancel:     'Annuler',
+  wiz_back_prev:       'Étape précédente',
+  wiz_publish:         'Publier',
+  wiz_continuer:       'Continuer',
+
+  // Suppression compte
+  delete_account_btn:  'Supprimer définitivement',
+
   // Boutons cartes
   card_reserve:  'Réserver',
   card_consult:  'Consulter',
