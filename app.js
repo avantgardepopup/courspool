@@ -342,19 +342,19 @@ function _buildFavCard2Col(c){
   var div=document.createElement('div');
   div.className='fav2-card';
   div.onclick=function(){openR(c.id);};
-  div.innerHTML='<div class="fav2-header" style="background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22)">'
-    +'<span class="fav2-subj">'+esc(c.subj||'Cours')+'</span>'
+  // Subject pill + prof avatar floating (like explorer card)
+  var avInner=profPhoto?('<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">')
+    :esc(profIni);
+  div.innerHTML='<span class="fav2-subj" style="background:'+mat.color+'">'+esc(c.subj||'Cours')+'</span>'
+    +'<div class="fav2-av-wrap" style="background:'+profCol+'">'
+    +avInner
     +'</div>'
     +'<div class="fav2-body">'
     +'<div class="fav2-title">'+esc(c.title)+'</div>'
-    +'<div class="fav2-meta">'
-    +(profPhoto?'<img src="'+esc(profPhoto)+'" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0">'
-      :'<div style="width:16px;height:16px;border-radius:50%;background:'+profCol+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0">'+esc(profIni)+'</div>')
-    +'<span style="font-size:10px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(profNm)+'</span>'
-    +'</div>'
+    +(dt?'<div class="fav2-sched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+esc(dt)+'</div>':'')
+    +'<div class="fav2-sep"></div>'
     +'<div class="fav2-foot">'
-    +'<div>'+(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
-    +(dt?'<div class="fav2-date">'+esc(dt)+'</div>':'')+'</div>'
+    +(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
     +'<div class="fav2-mode" style="background:'+modeBg+';color:'+modeCo+'">'+(isV?'Visio':'Présentiel')+'</div>'
     +'</div>'
     +'</div>';
@@ -3685,12 +3685,11 @@ function openPr(pid){
   fb.style.display=(user&&pid===user.id)?'none':'flex';
   _setFollowBtn(fol.has(pid));
 
-  // Onglets followers
-  var _isFollower=user&&!user.guest&&fol.has(pid);
+  // Onglets followers — masqués dans bdPr (visibles uniquement via openPrFull / Mes Profs)
   var mpFT=g('mpFollowerTabs');
   if(mpFT){
-    mpFT.style.display=_isFollower?'block':'none';
-    if(_isFollower){
+    mpFT.style.display='none';
+    if(false){
       switchMpTab('accueil');
       _loadMpAnnonces(pid);
       _loadMpRessources(pid);
