@@ -3840,10 +3840,12 @@ var _curPrFull=null;
 var _curPrEnrolled=false;
 
 function _buildBadges(p,pid){
+  var chk='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>';
+  var dip='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
   var h='';
-  if(p.verified===true||p.verified==='true')h+='<span onclick="showBadgeInfo(\'identite\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,177,79,.12);border:1px solid rgba(0,177,79,.3);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#007A38;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>'+t('mp_identite')+'</span>';
-  if(p.dv===true||p.dv==='true')h+='<span onclick="showBadgeInfo(\'diplome\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#4F46E5;cursor:pointer">'+t('mp_diplome')+'</span>';
-  if(fol.has(pid))h+='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.1);border:1px solid rgba(255,107,43,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--or)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>Suivi</span>';
+  if(p.verified===true||p.verified==='true')h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+chk+t('mp_identite')+'</span>';
+  if(p.dv===true||p.dv==='true')h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+dip+t('mp_diplome')+'</span>';
+  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">'+chk+'Suivi</span>';
   return h;
 }
 
@@ -5823,31 +5825,56 @@ function showBadgeInfo(type){
   var content=g('bdBadgeInfoContent');if(!content)return;
   var info={
     identite:{
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="40" height="40"><polyline points="20 6 9 17 4 12"/></svg>',
-      bg:'#FFF4EE',
+      grad:'linear-gradient(135deg,#00C853,#009640)',
+      glow:'rgba(0,180,80,.32)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><polyline points="20 6 9 17 4 12"/></svg>',
       name:'Identité vérifiée',
-      desc:'Ce professeur a fourni une pièce d\'identité officielle vérifiée par l\'équipe CoursPool. Son identité est authentifiée.'
+      badge:'Rare · ~14% des profs',
+      desc:'Ce professeur a fourni une pièce d\'identité officielle contrôlée par l\'équipe CoursPool. Vous interagissez avec une vraie personne.',
+      how:'Soumettez votre pièce d\'identité en cours de vérification dans Paramètres → Vérification.'
     },
     diplome:{
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="40" height="40"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-      bg:'#EFF6FF',
+      grad:'linear-gradient(135deg,#818CF8,#4338CA)',
+      glow:'rgba(99,102,241,.32)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
       name:'Diplôme vérifié',
-      desc:'Ce professeur a soumis un diplôme officiel (Licence, Master, CAPES, agrégation…) vérifié et validé par notre équipe.'
+      badge:'Prestige · ~8% des profs',
+      desc:'Ce professeur a soumis un diplôme officiel (Licence, Master, CAPES, agrégation…) validé par notre équipe. Expertise confirmée.',
+      how:'Téléchargez votre diplôme dans Paramètres → Vérification pour obtenir ce badge.'
     },
     confiance:{
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="40" height="40"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-      bg:'#ECFDF5',
+      grad:'linear-gradient(135deg,#34D399,#059669)',
+      glow:'rgba(16,185,129,.28)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
       name:'Profil de confiance',
-      desc:'Ce professeur a fourni une attestation officielle confirmant l\'absence d\'antécédents judiciaires, vérifiée par l\'équipe CoursPool.'
+      badge:'Exclusif · ~5% des profs',
+      desc:'Ce professeur a fourni une attestation officielle d\'absence d\'antécédents judiciaires, vérifiée par l\'équipe CoursPool.',
+      how:'Soumettez votre attestation officielle dans Paramètres → Vérification.'
     }
   };
   var d=info[type];if(!d)return;
-  content.innerHTML='<div style="text-align:center;margin-bottom:20px">'
-    +'<div style="width:72px;height:72px;background:'+d.bg+';border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'+d.icon+'</div>'
-    +'<div style="font-size:19px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px">'+d.name+'</div>'
-    +'<div style="font-size:14px;color:var(--mid);line-height:1.65">'+d.desc+'</div>'
+  content.innerHTML=
+    // Hero gradient card
+    '<div style="background:'+d.grad+';border-radius:22px;padding:28px 20px 24px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:0 8px 30px '+d.glow+'">'
+    +'<div style="position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08);top:-50px;right:-40px"></div>'
+    +'<div style="position:absolute;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.06);bottom:-20px;left:-20px"></div>'
+    +'<div style="width:80px;height:80px;background:rgba(255,255,255,.2);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.3)">'+d.icon+'</div>'
+    +'<div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:6px">'+d.name+'</div>'
+    +'<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:50px;padding:4px 12px;font-size:11.5px;font-weight:700;color:#fff">'
+    +'<svg viewBox="0 0 24 24" fill="#fff" width="11" height="11"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+    +d.badge+'</div>'
     +'</div>'
-    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button>';
+    // Description
+    +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:10px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Ce que ça garantit</div>'
+    +'<div style="font-size:14px;color:var(--ink);line-height:1.65">'+d.desc+'</div>'
+    +'</div>'
+    // How to get it
+    +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:18px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Comment l\'obtenir</div>'
+    +'<div style="font-size:14px;color:var(--mid);line-height:1.6">'+d.how+'</div>'
+    +'</div>'
+    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Fermer</button>';
   bd.style.display='flex';
   document.body.style.overflow='hidden';
 }
