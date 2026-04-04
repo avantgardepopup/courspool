@@ -51,7 +51,23 @@ const SOURCE = {
   bnav_messages:   'Messages',
   bnav_mes_cours:  'Mes cours',
   bnav_profil:     'Profil',
+  bnav_mes_profs:  'Mes Profs',
   bnav_creer:      'Créer',
+
+  // Page Mes Profs
+  mes_profs_empty_title: 'Aucun professeur suivi',
+  mes_profs_empty_sub:   'Suivez un professeur depuis son profil pour le retrouver ici.',
+
+  // Profil prof — onglets followers
+  mp_tab_accueil:       'Accueil',
+  mp_tab_ressources:    'Ressources',
+  mp_tab_notes:         'Notes',
+  mp_envoyer_msg:       'Envoyer un message',
+  mp_annonces:          'Annonces',
+  mp_aucune_annonce:    'Aucune annonce pour le moment.',
+  mp_aucune_ressource:  'Aucune ressource partagée.',
+  mp_notes_hint:        'Notes partagées par votre professeur',
+  mp_aucune_note:       'Aucune note de votre professeur pour le moment.',
 
   // Onboarding
   ob_tag1:   'Bienvenue',

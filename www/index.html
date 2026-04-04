@@ -847,11 +847,6 @@
       <div class="fav-section-title" data-i18n="fav_saved">Cours sauvegardés</div>
       <div id="favCoursCarousel" class="grid" style="padding:0 16px 8px"></div>
     </div>
-    <!-- Profs suivis -->
-    <div id="favProfsSection">
-      <div class="fav-section-title" data-i18n="fav_profs">Professeurs suivis</div>
-      <div id="favProfsCarousel" class="fav-carousel"></div>
-    </div>
     <!-- Empty global -->
     <div id="favEmptyAll" style="display:none;text-align:center;padding:60px 24px;width:100%;box-sizing:border-box">
       <div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">
@@ -861,6 +856,19 @@
       <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px" data-i18n="fav_empty_sub">Sauvegardez un cours ou suivez un professeur pour les retrouver ici.</div>
       <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="fav_explore">Explorer les cours →</button>
     </div>
+  </div>
+
+  <!-- PAGE MES PROFS -->
+  <div class="pg" id="pgMesProfs">
+    <div id="mesProfsEmpty" style="display:none;text-align:center;padding:60px 24px;width:100%;box-sizing:border-box">
+      <div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em" data-i18n="mes_profs_empty_title">Aucun professeur suivi</div>
+      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px" data-i18n="mes_profs_empty_sub">Suivez un professeur depuis son profil pour le retrouver ici.</div>
+      <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="fav_explore">Explorer les cours →</button>
+    </div>
+    <div id="mesProfsCarousel" class="fav-carousel" style="padding:8px 8px 0"></div>
   </div>
 
   <!-- PAGE MESSAGES -->
@@ -1448,6 +1456,40 @@
     <div id="mpAvisBlock" style="display:none;margin:16px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" data-i18n="mp_avis">Avis des élèves</div>
       <div id="mpAvis" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <!-- Onglets Mes Profs (visible followers seulement) -->
+    <div id="mpFollowerTabs" style="display:none;margin:20px 0 0">
+      <!-- Tab bar -->
+      <div style="display:flex;border-bottom:1.5px solid var(--bdr);margin:0 16px;gap:0">
+        <button id="mpTabAccueil" class="mp-tab on" onclick="switchMpTab('accueil')" style="flex:1;background:none;border:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--or);padding:10px 4px;cursor:pointer;border-bottom:2px solid var(--or);margin-bottom:-2px" data-i18n="mp_tab_accueil">Accueil</button>
+        <button id="mpTabRessources" class="mp-tab" onclick="switchMpTab('ressources')" style="flex:1;background:none;border:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--lite);padding:10px 4px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px" data-i18n="mp_tab_ressources">Ressources</button>
+        <button id="mpTabNotes" class="mp-tab" onclick="switchMpTab('notes')" style="flex:1;background:none;border:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--lite);padding:10px 4px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px" data-i18n="mp_tab_notes">Notes</button>
+      </div>
+      <!-- Onglet Accueil -->
+      <div id="mpPanelAccueil" style="padding:16px 16px 0">
+        <button onclick="contPr()" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span data-i18n="mp_envoyer_msg">Envoyer un message</span>
+        </button>
+        <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px" data-i18n="mp_annonces">Annonces</div>
+        <div id="mpAnnonces" style="display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:60px;border-radius:12px"></div>
+        </div>
+      </div>
+      <!-- Onglet Ressources -->
+      <div id="mpPanelRessources" style="display:none;padding:16px 16px 0">
+        <div id="mpRessources" style="display:flex;flex-direction:column;gap:8px">
+          <div class="skeleton" style="height:54px;border-radius:12px"></div>
+        </div>
+      </div>
+      <!-- Onglet Notes -->
+      <div id="mpPanelNotes" style="display:none;padding:16px 16px 0">
+        <div style="font-size:13px;color:var(--lite);margin-bottom:12px" data-i18n="mp_notes_hint">Notes partagées par votre professeur</div>
+        <div id="mpNotes" style="font-size:14px;color:var(--ink);line-height:1.7;white-space:pre-wrap">
+          <div class="skeleton" style="height:80px;border-radius:12px"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Padding bas -->
@@ -2184,9 +2226,9 @@
     <span class="bni-lbl" data-i18n="bnav_mes_cours">Mes cours</span>
   </div>
 
-  <div class="bni" id="bniAcc" onclick="navTo('acc')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    <span class="bni-lbl" data-i18n="bnav_profil">Profil</span>
+  <div class="bni" id="bniProfs" onclick="navTo('profs')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span class="bni-lbl" data-i18n="bnav_mes_profs">Mes Profs</span>
   </div>
 
 </nav>

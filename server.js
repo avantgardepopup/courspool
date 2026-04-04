@@ -536,6 +536,7 @@ app.use(function(req, res, next) {
   if (req.method === 'GET'  && req.path.startsWith('/profiles/')) return next();
   if (req.method === 'GET'  && req.path.startsWith('/notations/')) return next();
   if (req.method === 'GET'  && req.path.startsWith('/follows/')) return next();
+  if (req.method === 'GET'  && req.path.match(/^\/teacher\/[^/]+\/resources$/)) return next();
   if (req.method === 'GET'  && req.path === '/stripe/success') return next();
   if (req.method === 'POST' && req.path === '/stripe/webhook') return next();
   if (req.method === 'POST' && req.path === '/contact') return next();
@@ -2360,6 +2361,101 @@ setInterval(async () => {
     }
   } catch(e) { console.error('[Visio cron]', e.message); }
 }, 60 * 1000);
+
+// ── TEACHER ANNOUNCEMENTS ─────────────────────────────────────────────────────
+app.get('/teacher/:id/announcements', async (req, res) => {
+  try {
+    const isFollower = req.user && req.user.id;
+    if (!isFollower) return res.status(401).json({ error: 'Non autorisé' });
+    const { data, error } = await supabase.from('teacher_announcements')
+      .select('*').eq('teacher_id', req.params.id).order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error });
+    res.json(data || []);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/teacher/:id/announcements', async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { content } = req.body;
+    if (!content || !content.trim()) return res.status(400).json({ error: 'Contenu manquant' });
+    const { data, error } = await supabase.from('teacher_announcements')
+      .insert({ teacher_id: req.params.id, content: content.trim() }).select().single();
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/teacher/:id/announcements/:ann_id', async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { error } = await supabase.from('teacher_announcements')
+      .delete().eq('id', req.params.ann_id).eq('teacher_id', req.params.id);
+    if (error) return res.status(500).json({ error });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── TEACHER RESOURCES ─────────────────────────────────────────────────────────
+app.get('/teacher/:id/resources', async (req, res) => {
+  try {
+    const isFollower = req.user && req.user.id;
+    let query = supabase.from('teacher_resources').select('*').eq('teacher_id', req.params.id).order('created_at', { ascending: false });
+    if (!isFollower) query = query.eq('access_level', 'public');
+    const { data, error } = await query;
+    if (error) return res.status(500).json({ error });
+    res.json(data || []);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/teacher/:id/resources', async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { title, url, type, access_level } = req.body;
+    if (!title || !url) return res.status(400).json({ error: 'Titre et URL requis' });
+    const { data, error } = await supabase.from('teacher_resources')
+      .insert({ teacher_id: req.params.id, title: title.trim(), url: url.trim(), type: type || 'article', access_level: access_level || 'followers' })
+      .select().single();
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/teacher/:id/resources/:res_id', async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { error } = await supabase.from('teacher_resources')
+      .delete().eq('id', req.params.res_id).eq('teacher_id', req.params.id);
+    if (error) return res.status(500).json({ error });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── STUDENT NOTES ─────────────────────────────────────────────────────────────
+app.get('/teacher/:id/student-notes/:student_id', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    // accessible par le prof (teacher_id) ou l'élève concerné (student_id)
+    if (req.user.id !== req.params.id && req.user.id !== req.params.student_id) return res.status(403).json({ error: 'Non autorisé' });
+    const { data, error } = await supabase.from('student_notes')
+      .select('*').eq('teacher_id', req.params.id).eq('student_id', req.params.student_id).maybeSingle();
+    if (error) return res.status(500).json({ error });
+    res.json(data || null);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/teacher/:id/student-notes', async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { student_id, content } = req.body;
+    if (!student_id || !content) return res.status(400).json({ error: 'Données manquantes' });
+    const { data, error } = await supabase.from('student_notes')
+      .upsert({ teacher_id: req.params.id, student_id, content }, { onConflict: 'teacher_id,student_id' })
+      .select().single();
+    if (error) return res.status(500).json({ error });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 
 const PORT = process.env.PORT || 3000;
 // ── KEEP-ALIVE anti-cold-start Railway ──

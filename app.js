@@ -330,16 +330,13 @@ function toggleFavCours(coursId,btn){
 // ── BUILD PAGE FAVORIS ──
 function buildFavPage(){
   var favIds=Array.from(favCours);
-  var folIds=Array.from(fol);
-  var hasAny=favIds.length||folIds.length;
+  var hasAny=favIds.length;
 
   var emptyAll=g('favEmptyAll');
   var coursSection=g('favCoursSection');
-  var profsSection=g('favProfsSection');
   if(!hasAny){
     if(emptyAll){emptyAll.style.display='flex';emptyAll.style.flexDirection='column';emptyAll.style.alignItems='center';emptyAll.style.justifyContent='center';emptyAll.style.minHeight='60vh';}
     if(coursSection)coursSection.style.display='none';
-    if(profsSection)profsSection.style.display='none';
     return;
   }
   if(emptyAll)emptyAll.style.display='none';
@@ -378,44 +375,43 @@ function buildFavPage(){
     }
   }
 
-  // ── Carrousel profs suivis ──
-  var profsCarousel=g('favProfsCarousel');
-  if(profsCarousel){
-    if(!folIds.length){
-      if(profsSection)profsSection.style.display='none';
-    } else {
-      if(profsSection)profsSection.style.display='block';
-      profsCarousel.innerHTML=folIds.map(function(pid){
-        var p=P[pid]||{};
-        // Trouver depuis les cours si pas en cache
-        var cours=C.filter(function(x){return x.pr===pid;});
-        if(cours.length&&!p.nm){
-          p={nm:cours[0].prof_nm||t('reg_prof'),i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
-          P[pid]=p;
-        }
-        // Fetch frais du profil — toujours, si pas encore confirmé cette session
-        _fetchProf(pid);
-        // Si données non confirmées cette session : afficher initiales + skeleton nom
-        // pour éviter le flash d'un ancien nom/avatar qui sera corrigé par _fetchProf
-        var _fresh=p._fresh===true;
-        var col=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
-        var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
-        // Photo : seulement si données fraîches (évite le flash d'ancienne photo)
-        var av=(_fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
-        var avBg=(_fresh&&p.photo)?'none':col;
-        // Nom : données fraîches → afficher, sinon skeleton animé
-        var nmHtml=_fresh?('<span>'+esc(p.nm||t('reg_prof'))+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
-        var _now=Date.now();
-        var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
-        return'<div class="fav-prof-card" data-fav-pid="'+pid+'">'
-          +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildFavPage();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-          +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
-          +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
-          +'<div class="fav-prof-role">'+esc(p.rl||t('reg_prof'))+(nbCours?' · '+nbCours+' '+t('cours_dispo'):'')+'</div>'
-          +'<button class="fav-prof-btn" onclick="event.stopPropagation();openPr(\''+pid+'\')">Voir le profil</button>'
-          +'</div>';
-      }).join('');
-    }
+}
+
+// ── BUILD PAGE MES PROFS ──
+function buildMesProfs(){
+  var folIds=Array.from(fol);
+  var empty=g('mesProfsEmpty');
+  var carousel=g('mesProfsCarousel');
+  if(!folIds.length){
+    if(empty)empty.style.display='flex';
+    if(carousel)carousel.innerHTML='';
+    return;
+  }
+  if(empty)empty.style.display='none';
+  if(carousel){
+    carousel.innerHTML=folIds.map(function(pid){
+      var p=P[pid]||{};
+      var cours=C.filter(function(x){return x.pr===pid;});
+      if(cours.length&&!p.nm){
+        p={nm:cours[0].prof_nm||t('reg_prof'),i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null,rl:cours[0].niveau||'',e:0};
+        P[pid]=p;
+      }
+      _fetchProf(pid);
+      var _fresh=p._fresh===true;
+      var col=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+      var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
+      var av=(_fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
+      var avBg=(_fresh&&p.photo)?'none':col;
+      var nmHtml=_fresh?('<span>'+esc(p.nm||t('reg_prof'))+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
+      var _now=Date.now();
+      var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
+      return'<div class="fav-prof-card" data-fav-pid="'+pid+'" onclick="openPr(\''+pid+'\')">'
+        +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildMesProfs();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+        +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
+        +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
+        +'<div class="fav-prof-role">'+esc(p.rl||t('reg_prof'))+(nbCours?' · '+nbCours+' '+t('cours_dispo'):'')+'</div>'
+        +'</div>';
+    }).join('');
   }
 }
 
@@ -1292,6 +1288,7 @@ async function doLogin(){
         _syncAllFollowBtns();
         updateFavBadge();
         var _pfav3=g('pgFav');if(_pfav3&&_pfav3.classList.contains('on'))buildFavPage();
+        var _pmp3=g('pgMesProfs');if(_pmp3&&_pmp3.classList.contains('on'))buildMesProfs();
       }).catch(function(){});
     } else {
       loadData().then(function(){buildCards();_startAutoRefresh();if(typeof initSocket==='function')initSocket();});
@@ -1437,6 +1434,7 @@ function applyUser(){
 var MOB_TITLES={
   exp:{titleKey:'exp_title',subKey:'exp_subtitle'},
   fav:{titleKey:'bnav_favoris',subKey:'fav_saved'},
+  profs:{titleKey:'bnav_mes_profs',subKey:null},
   mes:{titleKey:'acc_mes_cours',subKey:'acc_reservations'},
   msg:{titleKey:'msg_title',subKey:'msg_title'},
   acc:{titleKey:'acc_mon_profil',subKey:'acc_parametres'}
@@ -1531,14 +1529,15 @@ function navTo(tab,_skipHistory){
   }
   clearTimeout(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
-  ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var appEl=g('app');if(appEl)appEl.scrollTop=0;
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes'),pgMesProfs=g('pgMesProfs');
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
   if(pgFav)pgFav.classList.remove('on');
   if(pgMes)pgMes.classList.remove('on');
+  if(pgMesProfs)pgMesProfs.classList.remove('on');
   updateMobHeader(tab);
   updateTopbarNav(tab);
 
@@ -1575,10 +1574,15 @@ function navTo(tab,_skipHistory){
     loadConversations();
   } else if(tab==='acc'){
     if(pgAcc)pgAcc.classList.add('on');
-    var bAcc=g('bniAcc');if(bAcc){bAcc.classList.add('on');_springIcon(bAcc);}
     var br2=g('btnRefresh');if(br2)br2.style.display='none';
     restoreNav();
     goAccount();
+  } else if(tab==='profs'){
+    if(pgMesProfs)pgMesProfs.classList.add('on');
+    var bProfs=g('bniProfs');if(bProfs){bProfs.classList.add('on');_springIcon(bProfs);}
+    var br4=g('btnRefresh');if(br4)br4.style.display='none';
+    restoreNav();
+    buildMesProfs();
   }
 }
 
@@ -1611,8 +1615,8 @@ function restoreNav(){
   // Messages
   var bniMsg=g('bniMsg');
   if(bniMsg)bniMsg.style.display=(user&&!user.guest)?'flex':'none';
-  // Profil
-  var bniAcc=g('bniAcc');if(bniAcc)bniAcc.style.display='flex';
+  // Mes Profs
+  var bniProfsEl=g('bniProfs');if(bniProfsEl)bniProfsEl.style.display=(user&&!user.guest)?'flex':'none';
   // Mes cours — élèves seulement
   var bniMesR=g('bniMes');
   if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
@@ -1622,13 +1626,14 @@ function restoreNav(){
 }
 
 function goExplore(){
-  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes');
+  var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes'),pgMesProfs=g('pgMesProfs');
   if(pgExp)pgExp.classList.add('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
   if(pgFav)pgFav.classList.remove('on');
   if(pgMes)pgMes.classList.remove('on');
-  ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  if(pgMesProfs)pgMesProfs.classList.remove('on');
+  ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var b=g('bniExp');if(b)b.classList.add('on');
   restoreNav();
 }
@@ -1724,6 +1729,7 @@ function goExplore(){
           _syncAllFollowBtns();
           if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
           var _pfav2=g('pgFav');if(_pfav2&&_pfav2.classList.contains('on'))buildFavPage();
+          var _pmp2=g('pgMesProfs');if(_pmp2&&_pmp2.classList.contains('on'))buildMesProfs();
         }).catch(function(){});
       } else {
         loadData().then(function(){buildCards();checkStripeReturn();checkPrivateCoursAccess();});
@@ -3638,6 +3644,20 @@ function openPr(pid){
   var fb=g('bFP');
   fb.style.display=(user&&pid===user.id)?'none':'flex';
   _setFollowBtn(fol.has(pid));
+
+  // Onglets followers
+  var _isFollower=user&&!user.guest&&fol.has(pid);
+  var mpFT=g('mpFollowerTabs');
+  if(mpFT){
+    mpFT.style.display=_isFollower?'block':'none';
+    if(_isFollower){
+      switchMpTab('accueil');
+      _loadMpAnnonces(pid);
+      _loadMpRessources(pid);
+      _loadMpNotes(pid);
+    }
+  }
+
   var bdPrEl=g('bdPr');if(bdPrEl)bdPrEl.style.display='flex';
 
   // Niveau/statut : placeholder discret dans le hero si profil complet pas encore chargé
@@ -3712,6 +3732,63 @@ function openPr(pid){
   }).catch(function(){});
 }
 function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
+
+function switchMpTab(tab){
+  var tabs=['accueil','ressources','notes'];
+  tabs.forEach(function(k){
+    var btn=g('mpTab'+k[0].toUpperCase()+k.slice(1));
+    var panel=g('mpPanel'+k[0].toUpperCase()+k.slice(1));
+    var active=(k===tab);
+    if(btn){btn.style.color=active?'var(--or)':'var(--lite)';btn.style.borderBottomColor=active?'var(--or)':'transparent';}
+    if(panel)panel.style.display=active?'block':'none';
+  });
+}
+
+function _loadMpAnnonces(pid){
+  var el=g('mpAnnonces');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px"></div>';
+  fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(curProf!==pid)return;
+    if(!data||!data.length){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:10px 0" data-i18n="mp_aucune_annonce">Aucune annonce pour le moment.</div>';return;}
+    el.innerHTML=data.map(function(a){
+      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px">'
+        +'<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap">'+esc(a.content)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite);margin-top:6px">'+new Date(a.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){if(curProf===pid)el.innerHTML='';});
+}
+
+function _loadMpRessources(pid){
+  var el=g('mpRessources');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px"></div>';
+  fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(curProf!==pid)return;
+    if(!data||!data.length){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:10px 0" data-i18n="mp_aucune_ressource">Aucune ressource partagée.</div>';return;}
+    var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
+    el.innerHTML=data.map(function(r){
+      return'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;text-decoration:none">'
+        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+esc(r.type)+(r.access_level==='public'?' · public':'')+'</div>'
+        +'</div>'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+        +'</a>';
+    }).join('');
+  }).catch(function(){if(curProf===pid)el.innerHTML='';});
+}
+
+function _loadMpNotes(pid){
+  var el=g('mpNotes');if(!el||!user)return;
+  el.innerHTML='<div class="skeleton" style="height:80px;border-radius:12px"></div>';
+  fetch(API+'/teacher/'+pid+'/student-notes/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(curProf!==pid)return;
+    if(!data||!data.content){el.textContent='';el.innerHTML='<div style="font-size:13px;color:var(--lite)" data-i18n="mp_aucune_note">Aucune note de votre professeur pour le moment.</div>';return;}
+    el.textContent=data.content;
+  }).catch(function(){if(curProf===pid)el.innerHTML='';});
+}
+
 function contPr(){
   var p=P[curProf]||{};
   var pid=curProf;
@@ -3844,6 +3921,7 @@ function togFP(){
   if(g('mpE'))g('mpE').textContent=P[id]?P[id].e:0;
   if(P[id]){try{var _pc2=JSON.parse(localStorage.getItem('cp_profs')||'{}');if(!_pc2[id])_pc2[id]={ts:Date.now(),nm:P[id].nm||'',i:P[id].i||'',photo:P[id].photo||''};_pc2[id].e=P[id].e||0;localStorage.setItem('cp_profs',JSON.stringify(_pc2));}catch(ex){}_saveFollowCount(id,P[id].e||0);}
   var pfav=g('pgFav');if(pfav&&pfav.classList.contains('on'))buildFavPage();
+  var pmp=g('pgMesProfs');if(pmp&&pmp.classList.contains('on'))buildMesProfs();
   // Mettre à jour le compteur "Suivis" dans les stats immédiatement
   if(g('asecF')&&g('asecF').classList.contains('on')){
     var _folCntEl=g('accStats');
@@ -7952,13 +8030,13 @@ async function subCrStep(){
     if(tab==='mes'){
       if(!user||user.guest||user.role==='professeur'){navTo('exp');return;}
       // Masquer toutes les pages
-      ['pgExp','pgMsg','pgAcc','pgFav','pgMes'].forEach(function(id){
+      ['pgExp','pgMsg','pgAcc','pgFav','pgMes','pgMesProfs'].forEach(function(id){
         var el=g(id);if(el)el.classList.remove('on');
       });
       // Activer pgMes
       var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.add('on');
       // Désactiver tous les items nav
-      ['bniExp','bniFav','bniMsg','bniAcc','bniMes'].forEach(function(id){
+      ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){
         var b=g(id);if(b)b.classList.remove('on');
       });
       // Activer bniMes
