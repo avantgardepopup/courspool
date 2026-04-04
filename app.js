@@ -327,31 +327,40 @@ function toggleFavCours(coursId,btn){
   });
 }
 
-// ── COMPACT CARD FAVORIS ──
-function _buildFavCompactCard(c){
+// ── CARD FAVORIS 2-COL (style explorer) ──
+function _buildFavCard2Col(c){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   var mat=findMatiere(c.subj||'')||{color:'#7C3AED',bg:'var(--orp)'};
   var dt='';
-  if(c.dt_iso){try{var _d=new Date(c.dt_iso);var _days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var _months=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];dt=_days[_d.getDay()]+' '+_d.getDate()+' '+_months[_d.getMonth()]+' · '+('0'+_d.getHours()).slice(-2)+'h'+('0'+_d.getMinutes()).slice(-2);}catch(e){dt=c.dt||'';}}
-  var div=document.createElement('div');
-  div.className='fav-compact-card';
-  div.onclick=function(){openR(c.id);};
+  if(c.dt_iso){try{var _d=new Date(c.dt_iso);var _days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var _months=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];dt=_days[_d.getDay()]+' '+_d.getDate()+' '+_months[_d.getMonth()];}catch(e){dt=c.dt||'';}}
+  var profNm=c.prof_nm||t('reg_prof');var profIni=(profNm[0]||'?').toUpperCase();
+  var profCol=c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var profPhoto=c.prof_photo||null;
   var modeBg=isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)';
   var modeCo=isV?'#0055B3':'#007A38';
-  div.innerHTML='<div class="fav-compact-card-top" style="background:'+mat.color+'"></div>'
-    +'<div class="fav-compact-card-body">'
-    +'<div class="fav-compact-card-title">'+esc(c.title)+'</div>'
-    +'<div class="fav-compact-card-date">'+esc(dt||c.lc)+'</div>'
-    +'<div class="fav-compact-card-foot">'
-    +(pp?'<div class="fav-compact-card-price">'+pp+'€</div>':'<div></div>')
-    +'<div class="fav-compact-card-badge" style="background:'+modeBg+';color:'+modeCo+'">'+(isV?'Visio':'Présentiel')+'</div>'
+  var div=document.createElement('div');
+  div.className='fav2-card';
+  div.onclick=function(){openR(c.id);};
+  div.innerHTML='<div class="fav2-header" style="background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22)">'
+    +'<span class="fav2-subj">'+esc(c.subj||'Cours')+'</span>'
+    +'</div>'
+    +'<div class="fav2-body">'
+    +'<div class="fav2-title">'+esc(c.title)+'</div>'
+    +'<div class="fav2-meta">'
+    +(profPhoto?'<img src="'+esc(profPhoto)+'" style="width:16px;height:16px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+      :'<div style="width:16px;height:16px;border-radius:50%;background:'+profCol+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0">'+esc(profIni)+'</div>')
+    +'<span style="font-size:10px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(profNm)+'</span>'
+    +'</div>'
+    +'<div class="fav2-foot">'
+    +'<div>'+(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
+    +(dt?'<div class="fav2-date">'+esc(dt)+'</div>':'')+'</div>'
+    +'<div class="fav2-mode" style="background:'+modeBg+';color:'+modeCo+'">'+(isV?'Visio':'Présentiel')+'</div>'
     +'</div>'
     +'</div>';
-  // bouton retirer en overlay (petit ✕ en haut-right)
   var rm=document.createElement('button');
+  rm.className='fav2-rm';
   rm.title='Retirer';
-  rm.style.cssText='position:absolute;top:14px;right:8px;background:rgba(0,0,0,.15);border:none;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:11px;line-height:1;z-index:2';
   rm.innerHTML='✕';
   rm.onclick=function(e){e.stopPropagation();favCours.delete(c.id);saveFavCours();buildFavPage();};
   div.appendChild(rm);
@@ -390,18 +399,17 @@ function buildFavPage(){
         var c=C.find(function(x){return x.id==id;});
         if(!c){
           if(!C.length){
-            var sk=document.createElement('div');sk.className='fav-compact-card';sk.style.cssText='min-height:120px;border-radius:16px;background:var(--bdr);animation:shimmer 1.4s infinite;background-size:200% 100%';_fFrag.appendChild(sk);return;
+            var sk=document.createElement('div');sk.className='fav2-card';sk.style.cssText='min-height:120px;background:var(--bdr);animation:shimmer 1.4s infinite;background-size:200% 100%';_fFrag.appendChild(sk);return;
           }
           var _state=getCourseState(id);
           var ghost=document.createElement('div');
-          ghost.className='fav-compact-card';
-          ghost.style.cssText='align-items:center;justify-content:center;gap:8px;padding:16px 12px;text-align:center;border:1.5px dashed var(--bdr)';
-          ghost.innerHTML='<div class="fav-compact-card-top" style="background:var(--bdr)"></div>'
-            +'<div class="fav-compact-card-body"><div style="font-size:11px;font-weight:600;color:var(--lite)">'+(_state==='past'?t('fav_cours_termine'):t('fav_cours_supprime'))+'</div>'
-            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:4px 10px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;margin-top:6px">'+t('fav_retirer')+'</button></div>';
+          ghost.className='fav2-card';
+          ghost.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px 12px;text-align:center;border:1.5px dashed var(--bdr);min-height:120px';
+          ghost.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--lite)">'+(_state==='past'?t('fav_cours_termine'):t('fav_cours_supprime'))+'</div>'
+            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:4px 10px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;margin-top:4px">'+t('fav_retirer')+'</button>';
           _fFrag.appendChild(ghost);return;
         }
-        _fFrag.appendChild(_buildFavCompactCard(c));
+        _fFrag.appendChild(_buildFavCard2Col(c));
       });
       carousel.appendChild(_fFrag);
     }
@@ -437,7 +445,7 @@ function buildMesProfs(){
       var nmHtml=_fresh?('<span>'+esc(p.nm||t('reg_prof'))+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
       var _now=Date.now();
       var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
-      return'<div class="fav-prof-card" data-fav-pid="'+pid+'" onclick="openPrFull(\''+pid+'\')">'
+      return'<div class="fav-prof-card mp2-card" data-fav-pid="'+pid+'" onclick="openPrFull(\''+pid+'\')">'
         +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildMesProfs();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
         +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
@@ -3830,10 +3838,28 @@ function contPr(){
 
 // ── PROFIL PROF COMPLET (Mes Profs) ──────────────────────────────────────────
 var _curPrFull=null;
+var _curPrEnrolled=false;
+
+function _buildBadges(p,pid){
+  var h='';
+  if(p.verified===true||p.verified==='true')h+='<span onclick="showBadgeInfo(\'identite\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,177,79,.12);border:1px solid rgba(0,177,79,.3);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#007A38;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>'+t('mp_identite')+'</span>';
+  if(p.dv===true||p.dv==='true')h+='<span onclick="showBadgeInfo(\'diplome\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#4F46E5;cursor:pointer">'+t('mp_diplome')+'</span>';
+  if(fol.has(pid))h+='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.1);border:1px solid rgba(255,107,43,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--or)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>Suivi</span>';
+  return h;
+}
+
+function _mpfSetEnrolled(enrolled){
+  _curPrEnrolled=enrolled;
+  var pid=_curPrFull;
+  var tabEspace=g('mpfTabEspace');if(tabEspace)tabEspace.style.display=enrolled?'block':'none';
+  var codeSection=g('mpfCodeSection');if(codeSection)codeSection.style.display=(!enrolled&&user&&!user.guest&&pid&&pid!==user.id)?'block':'none';
+  if(enrolled&&pid)_loadMpfEspace(pid);
+}
 
 function openPrFull(pid){
   _curPrFull=pid;
-  curProf=pid; // partage avec openPr pour les helpers existants
+  _curPrEnrolled=false;
+  curProf=pid;
   if(!P[pid])P[pid]={n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};
   var p=P[pid];
   var cours=C.filter(function(x){return x.pr===pid;});
@@ -3843,25 +3869,17 @@ function openPrFull(pid){
     p.photo=cours[0].prof_photo||null;
   }
   var displayNm=p.nm||t('reg_prof'),displayIni=p.i||'?',displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',displayPhoto=p.photo||null;
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
 
-  // Hero
-  var hero=g('mpfHeroBg');if(hero)hero.style.background=displayCol;
-  var heroWrap=g('mpfHero');if(heroWrap)heroWrap.style.background=displayCol;
+  // Top title
+  var ttEl=g('mpfTopTitle');if(ttEl)ttEl.textContent=displayNm;
   // Avatar
   var avEl=g('mpfAvWrap');if(avEl)setAvatar(avEl,displayPhoto,displayIni,displayCol);
   // Name / role
   var nmEl=g('mpfInfoNm');if(nmEl)nmEl.textContent=displayNm;
-  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
   var rlEl=g('mpfInfoRl');if(rlEl)rlEl.textContent=p.statut?(STATUT[p.statut]||p.statut):(p.niveau||t('reg_prof'));
   // Badges
-  var bdgEl=g('mpfInfoBadges');
-  if(bdgEl){
-    var bdgHtml='';
-    if(p.verified===true||p.verified==='true')bdgHtml+='<span onclick="showBadgeInfo(\'identite\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,177,79,.12);border:1px solid rgba(0,177,79,.3);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#007A38;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>'+t('mp_identite')+'</span>';
-    if(p.dv===true||p.dv==='true')bdgHtml+='<span onclick="showBadgeInfo(\'diplome\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#4F46E5;cursor:pointer">'+t('mp_diplome')+'</span>';
-    if(fol.has(pid))bdgHtml+='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.1);border:1px solid rgba(255,107,43,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--or)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>Suivi</span>';
-    bdgEl.innerHTML=bdgHtml;
-  }
+  var bdgEl=g('mpfInfoBadges');if(bdgEl)bdgEl.innerHTML=_buildBadges(p,pid);
   // Stats
   var _nbCours=cours.filter(function(x){return!_isCoursPass(x);}).length;
   var _nbD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
@@ -3872,7 +3890,7 @@ function openPrFull(pid){
   // Bio
   var bioEl=g('mpfBio');
   if(bioEl){
-    if(p.bio){bioEl.textContent=p.bio;bioEl.style.display='block';}
+    if(p.bio){bioEl.textContent=p.bio;}
     else if(!p._fullFetched){bioEl.innerHTML='<span class="skeleton" style="display:block;height:12px;border-radius:6px;width:90%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:68%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:50%"></span>';}
     else{bioEl.textContent='';}
   }
@@ -3895,16 +3913,22 @@ function openPrFull(pid){
         +'</div>';
     }).join(''):('<div style="font-size:13px;color:var(--lite);padding:10px 0">Aucun cours disponible</div>');
   }
-  // Tabs : Espace visible si follower
-  var _isFol=user&&!user.guest&&fol.has(pid);
-  var tabEspace=g('mpfTabEspace');if(tabEspace)tabEspace.style.display=_isFol?'block':'none';
-  switchMpfTab('profil');
-  if(_isFol){
-    _loadMpfEspace(pid);
-  }
   // Follow button
   var bff=g('bFPFull');if(bff)bff.style.display=(user&&pid===user.id)?'none':'flex';
   _setMpfFollowBtn(fol.has(pid));
+  // Enrollment state: default hidden until check completes
+  var tabEspace=g('mpfTabEspace');if(tabEspace)tabEspace.style.display='none';
+  var codeSection=g('mpfCodeSection');if(codeSection)codeSection.style.display='none';
+  var codeErr=g('mpfCodeError');if(codeErr)codeErr.style.display='none';
+  var codeInput=g('mpfCodeInput');if(codeInput)codeInput.value='';
+  switchMpfTab('profil');
+  // Check enrollment via API (only if logged in + not own profile)
+  if(user&&!user.guest&&pid!==user.id){
+    fetch(API+'/teacher/'+pid+'/is-enrolled',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
+      if(_curPrFull!==pid)return;
+      _mpfSetEnrolled(!!(d&&d.enrolled));
+    }).catch(function(){_mpfSetEnrolled(false);});
+  }
   // Avis
   _loadMpfAvis(pid);
   // Mise à jour API
@@ -3915,7 +3939,7 @@ function openPrFull(pid){
     P[pid]._fresh=true;P[pid]._fullFetched=true;
     ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
-    if(_apiNm){P[pid].nm=_apiNm;if(g('mpfInfoNm'))g('mpfInfoNm').textContent=_apiNm;}
+    if(_apiNm){P[pid].nm=_apiNm;if(g('mpfInfoNm'))g('mpfInfoNm').textContent=_apiNm;if(g('mpfTopTitle'))g('mpfTopTitle').textContent=_apiNm;}
     if(prof.photo_url){P[pid].photo=prof.photo_url;setAvatar(g('mpfAvWrap'),prof.photo_url,P[pid].i||'?',P[pid].col||displayCol);}
     if(prof.bio!==undefined&&g('mpfBio')){var b=prof.bio||'';g('mpfBio').style.transition='opacity .2s';g('mpfBio').style.opacity='0';setTimeout(function(){if(g('mpfBio')){g('mpfBio').textContent=b;g('mpfBio').style.opacity='1';}},180);}
     if(prof.matieres){_renderMpfTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
@@ -3924,19 +3948,34 @@ function openPrFull(pid){
     if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;}
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('mpfStE'))g('mpfStE').textContent=P[pid].e;}
-    // Refresh badges
-    var bdgEl2=g('mpfInfoBadges');
-    if(bdgEl2){
-      var bdg2='';
-      if(P[pid].verified===true||P[pid].verified==='true')bdg2+='<span onclick="showBadgeInfo(\'identite\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(0,177,79,.12);border:1px solid rgba(0,177,79,.3);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#007A38;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>'+t('mp_identite')+'</span>';
-      if(P[pid].dv===true||P[pid].dv==='true')bdg2+='<span onclick="showBadgeInfo(\'diplome\')" style="display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#4F46E5;cursor:pointer">'+t('mp_diplome')+'</span>';
-      if(fol.has(pid))bdg2+='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.1);border:1px solid rgba(255,107,43,.25);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--or)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>Suivi</span>';
-      bdgEl2.innerHTML=bdg2;
-    }
+    var bdgEl2=g('mpfInfoBadges');if(bdgEl2)bdgEl2.innerHTML=_buildBadges(P[pid],pid);
   }).catch(function(){});
   // Afficher
   var el=g('bdPrFull');if(el){el.style.display='flex';el.classList.remove('closing');}
   if(g('mpfScroll'))g('mpfScroll').scrollTop=0;
+}
+
+function enrollWithCode(){
+  var pid=_curPrFull;
+  if(!pid||!user||user.guest){toast(t('t_follow_login'),'');return;}
+  var inp=g('mpfCodeInput');var code=(inp?inp.value.trim().toUpperCase():'');
+  if(!code){var e=g('mpfCodeError');if(e){e.textContent='Veuillez entrer un code.';e.style.display='block';}return;}
+  var btn=document.querySelector('.mpf-code-btn');if(btn)btn.disabled=true;
+  var errEl=g('mpfCodeError');if(errEl)errEl.style.display='none';
+  fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({teacher_id:pid,code:code})})
+    .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+    .then(function(res){
+      if(btn)btn.disabled=false;
+      if(res.ok&&res.d&&res.d.success){
+        toast('Accès débloqué !','');haptic(4);
+        _mpfSetEnrolled(true);
+        var cs=g('mpfCodeSection');if(cs)cs.style.display='none';
+        switchMpfTab('espace');
+      } else {
+        var msg=(res.d&&res.d.error)||'Code incorrect.';
+        if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+      }
+    }).catch(function(){if(btn)btn.disabled=false;if(errEl){errEl.textContent='Erreur réseau.';errEl.style.display='block';}});
 }
 
 function _renderMpfTags(list){

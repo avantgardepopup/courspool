@@ -736,90 +736,123 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
   -webkit-tap-highlight-color:transparent;
 }
 .fav-remove-btn:hover{background:rgba(239,68,68,.8);}
-/* ── COMPACT FAV CARDS (2 colonnes) ── */
-.fav-compact-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 8px;}
-.fav-compact-card{
-  background:var(--wh);border-radius:16px;overflow:hidden;cursor:pointer;
-  box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
-  transition:transform .2s,box-shadow .2s;
-  position:relative;display:flex;flex-direction:column;
+/* ── FAV COURS 2-COL (style explorer) ── */
+.fav2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 8px;}
+.fav2-card{
+  position:relative;background:var(--wh);border-radius:18px;overflow:hidden;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.07),0 6px 22px rgba(0,0,0,.08);
+  transition:transform .2s cubic-bezier(.22,.61,.36,1);
 }
-.fav-compact-card:active{transform:scale(.96);}
-.fav-compact-card-top{height:6px;width:100%;}
-.fav-compact-card-body{padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;gap:4px;}
-.fav-compact-card-title{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.fav-compact-card-date{font-size:11px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
-.fav-compact-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:8px;}
-.fav-compact-card-price{font-size:14px;font-weight:800;color:var(--or);}
-.fav-compact-card-badge{font-size:10px;font-weight:600;border-radius:6px;padding:2px 7px;white-space:nowrap;}
-/* ── FULL PROF PROFILE ── */
+.fav2-card:active,.fav2-card.tapped{transform:scale(.96);}
+.fav2-header{height:56px;position:relative;display:flex;align-items:flex-end;padding:0 8px 7px;}
+.fav2-subj{font-size:9.5px;font-weight:700;color:rgba(0,0,0,.55);background:rgba(255,255,255,.38);border-radius:20px;padding:2px 8px;backdrop-filter:blur(4px);white-space:nowrap;overflow:hidden;max-width:90%;text-overflow:ellipsis;}
+.fav2-body{padding:8px 10px 10px;}
+.fav2-title{font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:5px;letter-spacing:-.01em;}
+.fav2-meta{display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+.fav2-av{width:14px;height:14px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.fav2-prof-nm{font-size:10.5px;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav2-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:4px;}
+.fav2-price{font-size:14px;font-weight:800;color:var(--or);letter-spacing:-.03em;}
+.fav2-date{font-size:9.5px;color:var(--lite);margin-top:1px;}
+.fav2-mode{font-size:9px;font-weight:600;border-radius:6px;padding:2px 6px;white-space:nowrap;}
+.fav2-rm{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.22);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:9px;z-index:2;backdrop-filter:blur(4px);}
+/* ── MES PROFS 2-COL ── */
+.mp2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px 0;}
+.fav-prof-card.mp2-card{flex:none;padding:16px 12px 14px;}
+html.dk .fav2-card{box-shadow:0 1px 2px rgba(0,0,0,.25),0 4px 14px rgba(0,0,0,.35);}
+/* ── PROFIL PROF COMPLET (Avilio style) ── */
 #bdPrFull{
   position:fixed;inset:0;z-index:500;
-  background:var(--wh);overflow:hidden;
+  background:var(--bg);overflow:hidden;
   display:flex;flex-direction:column;
   animation:mpfSlideIn .3s cubic-bezier(.32,1,.6,1);
 }
 @keyframes mpfSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
 @keyframes mpfSlideOut{from{transform:translateX(0)}to{transform:translateX(100%)}}
 #bdPrFull.closing{animation:mpfSlideOut .25s cubic-bezier(.55,0,1,.45) forwards;}
-#mpfScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:100px;}
-#mpfHero{
-  flex-shrink:0;height:200px;position:relative;
-  background:linear-gradient(160deg,#FF8C55,#E04E10);
+/* Barre haut */
+#mpfTopBar{
+  flex-shrink:0;background:var(--wh);
+  display:flex;align-items:center;gap:12px;
+  padding:max(18px,env(safe-area-inset-top,18px)) 16px 14px;
+  border-bottom:1px solid var(--bdr);
 }
-#mpfHeroBg{position:absolute;inset:0;background:inherit;z-index:0;}
-#mpfHero .mpf-deco1{position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.1);top:-80px;right:-50px;z-index:1;}
-#mpfHero .mpf-deco2{position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.07);bottom:-40px;left:-30px;z-index:1;}
-#mpfNavBar{
-  position:absolute;top:0;left:0;right:0;z-index:10;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:max(16px,env(safe-area-inset-top,16px)) 16px 12px;
+#mpfTopTitle{font-size:15px;font-weight:700;color:var(--ink);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Scrollable body */
+#mpfScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:40px;}
+/* Header card: avatar + infos */
+#mpfHeaderCard{
+  background:var(--wh);margin:12px 16px 0;border-radius:20px;
+  padding:16px;display:flex;align-items:center;gap:14px;
 }
 #mpfAvWrap{
-  position:absolute;bottom:-44px;left:50%;transform:translateX(-50%);z-index:5;
-  width:88px;height:88px;border-radius:50%;
-  border:4px solid var(--wh);
-  box-shadow:0 4px 20px rgba(0,0,0,.2);
-  background:linear-gradient(135deg,#FF8C55,#E04E10);
+  width:66px;height:66px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  font-size:28px;font-weight:800;color:#fff;overflow:hidden;
+  font-size:22px;font-weight:800;color:#fff;overflow:hidden;
+  background:linear-gradient(135deg,#FF8C55,#E04E10);
+  box-shadow:0 4px 14px rgba(0,0,0,.14);
 }
-#mpfInfo{text-align:center;padding:54px 20px 0;}
-#mpfInfoNm{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.03em;line-height:1.2;}
-#mpfInfoRl{font-size:13px;color:var(--lite);margin-top:4px;}
-#mpfInfoBadges{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px;}
-#mpfRating{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;}
-#mpfStats{display:flex;margin:16px 16px 0;gap:8px;}
-#mpfStats .mpf-stat{flex:1;background:var(--bg);border-radius:12px;padding:12px 6px;text-align:center;}
-#mpfStats .mpf-stat-num{font-size:20px;font-weight:800;color:var(--ink);}
+#mpfHeaderInfo{flex:1;min-width:0;}
+#mpfInfoNm{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em;line-height:1.2;}
+#mpfInfoRl{font-size:12px;color:var(--lite);margin-top:3px;}
+#mpfRating{display:flex;align-items:center;gap:5px;margin-top:5px;}
+#mpfInfoBadges{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+/* Stats row */
+#mpfStats{display:flex;gap:8px;margin:10px 16px 0;}
+#mpfStats .mpf-stat{flex:1;background:var(--wh);border-radius:14px;padding:10px 6px;text-align:center;}
+#mpfStats .mpf-stat-num{font-size:18px;font-weight:800;color:var(--ink);}
 #mpfStats .mpf-stat-lbl{font-size:10px;color:var(--lite);font-weight:500;margin-top:2px;}
+/* Tabs */
 #mpfTabBar{
-  display:flex;border-bottom:1.5px solid var(--bdr);margin:16px 16px 0;gap:0;
-  position:sticky;top:0;background:var(--wh);z-index:4;padding-bottom:0;
+  flex-shrink:0;display:flex;background:var(--wh);
+  border-bottom:1.5px solid var(--bdr);margin:12px 0 0;
 }
 .mpf-tab{
-  flex:1;background:none;border:none;font-family:inherit;font-size:13px;font-weight:600;
-  color:var(--lite);padding:10px 4px;cursor:pointer;
+  flex:1;background:none;border:none;font-family:inherit;
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--lite);padding:12px 4px;cursor:pointer;
   border-bottom:2px solid transparent;margin-bottom:-2px;
   transition:color .15s,border-color .15s;
 }
 .mpf-tab.on{color:var(--or);border-bottom-color:var(--or);}
-.mpf-panel{padding:16px 16px 0;}
+/* Panels */
 .mpf-panel[hidden]{display:none;}
-#mpfBottomBar{
-  position:fixed;bottom:0;left:0;right:0;
-  background:var(--wh);border-top:1px solid var(--bdr);
-  padding:12px 16px max(16px,env(safe-area-inset-bottom,16px));
-  display:flex;gap:10px;z-index:10;
-  box-shadow:0 -4px 20px rgba(0,0,0,.06);
+/* Titre de section (gros, Avilio) */
+.mpf-section-lbl{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em;padding:18px 16px 8px;}
+/* Item liste blanc (Avilio: row avec texte gauche + action droite) */
+.mpf-list-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--wh);border-radius:16px;padding:14px 16px;
+  margin:0 16px 8px;cursor:pointer;
+  transition:opacity .15s;
 }
+.mpf-list-item:active{opacity:.7;}
+.mpf-list-item-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.mpf-list-item-lbl{font-size:14px;font-weight:500;color:var(--ink);}
+.mpf-list-item-sub{font-size:12px;color:var(--lite);margin-top:2px;}
+.mpf-list-item-action{font-size:12.5px;color:var(--lite);flex-shrink:0;display:flex;align-items:center;gap:2px;white-space:nowrap;}
+/* Bio / notes bloc blanc */
+.mpf-white-block{background:var(--wh);border-radius:16px;padding:14px 16px;margin:0 16px 8px;}
+/* Code enrollment */
+#mpfCodeSection{margin:0 16px 8px;background:var(--wh);border-radius:16px;padding:16px;}
+.mpf-code-input{
+  flex:1;border:1.5px solid var(--bdr);border-radius:12px;padding:10px 12px;
+  font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg);
+  outline:none;letter-spacing:.1em;text-transform:uppercase;
+}
+.mpf-code-input:focus{border-color:var(--or);}
+.mpf-code-btn{
+  background:var(--or);color:#fff;border:none;border-radius:12px;
+  padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;
+}
+/* Cours dans panel Cours */
 .mpf-cours-item{
-  display:flex;align-items:center;gap:12px;padding:12px;
-  background:var(--bg);border-radius:14px;margin-bottom:8px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:var(--wh);border-radius:14px;margin:0 16px 8px;cursor:pointer;
   transition:opacity .15s;
 }
 .mpf-cours-item:active{opacity:.7;}
-.mpf-section-lbl{font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
 /* Heart button — inline à droite du titre du cours */
 .ctitle-row{
   display:flex;align-items:flex-start;justify-content:space-between;

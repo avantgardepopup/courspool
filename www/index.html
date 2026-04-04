@@ -845,7 +845,7 @@
     <!-- Cours sauvegardés -->
     <div id="favCoursSection">
       <div class="fav-section-title" data-i18n="fav_saved">Cours sauvegardés</div>
-      <div id="favCoursCarousel" class="fav-compact-grid"></div>
+      <div id="favCoursCarousel" class="fav2-grid"></div>
     </div>
     <!-- Empty global -->
     <div id="favEmptyAll" style="display:none;text-align:center;padding:60px 24px;width:100%;box-sizing:border-box">
@@ -868,7 +868,7 @@
       <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px" data-i18n="mes_profs_empty_sub">Suivez un professeur depuis son profil pour le retrouver ici.</div>
       <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="fav_explore">Explorer les cours →</button>
     </div>
-    <div id="mesProfsCarousel" class="fav-carousel" style="padding:8px 8px 0"></div>
+    <div id="mesProfsCarousel" class="mp2-grid"></div>
   </div>
 
   <!-- PAGE MESSAGES -->
@@ -1497,39 +1497,35 @@
   </div>
 </div>
 
-<!-- PROFIL PROF COMPLET (Mes Profs) -->
+<!-- PROFIL PROF COMPLET (style Avilio) -->
 <div id="bdPrFull" style="display:none">
-  <!-- Hero gradient -->
-  <div id="mpfHero">
-    <div id="mpfHeroBg"></div>
-    <div class="mpf-deco1"></div>
-    <div class="mpf-deco2"></div>
-    <!-- Top nav bar -->
-    <div id="mpfNavBar">
-      <button onclick="closePrFull()" style="background:rgba(0,0,0,.25);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;backdrop-filter:blur(8px)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div style="display:flex;gap:8px">
-        <button onclick="openSignalement('prof',curProf,g('mpfInfoNm').textContent)" style="background:rgba(0,0,0,.25);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.8);backdrop-filter:blur(8px)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-        </button>
-      </div>
-    </div>
-    <!-- Avatar overlapping hero bottom -->
-    <div id="mpfAvWrap"></div>
+
+  <!-- Barre haut -->
+  <div id="mpfTopBar">
+    <button onclick="closePrFull()" style="background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);flex-shrink:0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div id="mpfTopTitle"></div>
+    <button id="bFPFull" onclick="togFPFull()" style="background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:5px;transition:all .18s;flex-shrink:0">
+      <span id="bFPFullT"></span>
+    </button>
   </div>
 
-  <!-- Scrollable body -->
+  <!-- Contenu scrollable -->
   <div id="mpfScroll">
-    <!-- Name + info -->
-    <div id="mpfInfo">
-      <div id="mpfInfoNm"></div>
-      <div id="mpfInfoRl"></div>
-      <div id="mpfInfoBadges"></div>
-      <div id="mpfRating" style="display:none">
-        <span id="mpfRatingStars" style="color:#FBBF24;font-size:13px"></span>
-        <span id="mpfRatingNum" style="font-size:13px;font-weight:700;color:var(--ink)"></span>
-        <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
+
+    <!-- Header card : avatar + infos (style Avilio) -->
+    <div id="mpfHeaderCard">
+      <div id="mpfAvWrap"></div>
+      <div id="mpfHeaderInfo">
+        <div id="mpfInfoNm"></div>
+        <div id="mpfInfoRl"></div>
+        <div id="mpfRating" style="display:none">
+          <span id="mpfRatingStars" style="color:#FBBF24;font-size:13px"></span>
+          <span id="mpfRatingNum" style="font-size:13px;font-weight:700;color:var(--ink)"></span>
+          <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
+        </div>
+        <div id="mpfInfoBadges"></div>
       </div>
     </div>
 
@@ -1541,64 +1537,76 @@
       <div class="mpf-stat"><div id="mpfStN" class="mpf-stat-num">—</div><div class="mpf-stat-lbl" data-i18n="mp_note">Note</div></div>
     </div>
 
-    <!-- Tab bar (sticky) -->
+    <!-- Tabs collants -->
     <div id="mpfTabBar">
-      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')" data-i18n="mp_tab_profil">Profil</button>
-      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')" data-i18n="mp_prochains">Cours</button>
-      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none" data-i18n="mpf_tab_espace">Espace</button>
+      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')" data-i18n="mp_tab_profil">PROFIL</button>
+      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')" data-i18n="mp_prochains">COURS</button>
+      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none">ESPACE</button>
     </div>
 
-    <!-- Panel Profil -->
-    <div class="mpf-panel" id="mpfPanelProfil">
-      <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.7;margin:0 0 16px"></p>
-      <div id="mpfTagsSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mp_matieres">Matières enseignées</div>
-        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+    <!-- ── PANEL PROFIL ── -->
+    <div id="mpfPanelProfil">
+      <!-- Bio -->
+      <div class="mpf-section-lbl" data-i18n="mp_about">À propos</div>
+      <div class="mpf-white-block">
+        <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.65;margin:0"></p>
       </div>
+      <!-- Matières -->
+      <div id="mpfTagsSection" style="display:none">
+        <div class="mpf-section-lbl" data-i18n="mp_matieres">Matières</div>
+        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px"></div>
+      </div>
+      <!-- Code accès (si pas encore élève) -->
+      <div id="mpfCodeSection" style="display:none">
+        <div class="mpf-section-lbl" data-i18n="mpf_code_titre">Code d'accès</div>
+        <div id="mpfCodeCard" style="background:var(--wh);border-radius:16px;padding:16px;margin:0 16px 8px">
+          <div style="font-size:13px;color:var(--lite);margin-bottom:12px" data-i18n="mpf_code_hint">Entrez le code de votre professeur pour accéder à son espace.</div>
+          <div style="display:flex;gap:8px">
+            <input id="mpfCodeInput" class="mpf-code-input" placeholder="EX: ABC123" maxlength="10">
+            <button onclick="enrollWithCode()" class="mpf-code-btn" data-i18n="mpf_code_btn">Rejoindre</button>
+          </div>
+          <div id="mpfCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:8px"></div>
+        </div>
+      </div>
+      <!-- Avis -->
       <div id="mpfAvisSection" style="display:none">
         <div class="mpf-section-lbl" data-i18n="mp_avis">Avis des élèves</div>
-        <div id="mpfAvis" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="mpfAvis"></div>
       </div>
     </div>
 
-    <!-- Panel Cours -->
-    <div class="mpf-panel" id="mpfPanelCours" hidden>
-      <div id="mpfCrs"></div>
+    <!-- ── PANEL COURS ── -->
+    <div id="mpfPanelCours" hidden>
+      <div id="mpfCrs" style="padding:8px 0 0"></div>
     </div>
 
-    <!-- Panel Espace (followers) -->
-    <div class="mpf-panel" id="mpfPanelEspace" hidden>
-      <div style="margin-bottom:20px">
-        <div class="mpf-section-lbl" data-i18n="mp_annonces">Annonces</div>
-        <div id="mpfEspAnnonces">
-          <div class="skeleton" style="height:60px;border-radius:12px"></div>
+    <!-- ── PANEL ESPACE (élèves inscrits) ── -->
+    <div id="mpfPanelEspace" hidden>
+      <!-- Messagerie (style Avilio) -->
+      <div class="mpf-section-lbl" data-i18n="mpf_esp_messages">Messages</div>
+      <div class="mpf-list-item" onclick="contPrFull()">
+        <div class="mpf-list-item-left">
+          <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div>
+            <div class="mpf-list-item-lbl" data-i18n="mpf_esp_messagerie">Messagerie</div>
+            <div class="mpf-list-item-sub" data-i18n="mp_envoyer_msg">Envoyer un message</div>
+          </div>
         </div>
+        <div class="mpf-list-item-action">Ouvrir <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div style="margin-bottom:20px">
-        <div class="mpf-section-lbl" data-i18n="mp_tab_ressources">Ressources</div>
-        <div id="mpfEspRessources">
-          <div class="skeleton" style="height:54px;border-radius:12px"></div>
-        </div>
-      </div>
-      <div>
-        <div class="mpf-section-lbl" data-i18n="mp_tab_notes">Notes</div>
-        <div style="font-size:13px;color:var(--lite);margin-bottom:8px" data-i18n="mp_notes_hint">Notes partagées par votre professeur</div>
-        <div id="mpfEspNotes" style="font-size:14px;color:var(--ink);line-height:1.7;white-space:pre-wrap">
-          <div class="skeleton" style="height:80px;border-radius:12px"></div>
-        </div>
-      </div>
+      <!-- Annonces -->
+      <div class="mpf-section-lbl" data-i18n="mp_annonces">Annonces</div>
+      <div id="mpfEspAnnonces" style="padding:0 0 4px"></div>
+      <!-- Documents / Ressources -->
+      <div class="mpf-section-lbl" data-i18n="mpf_esp_docs">Documents</div>
+      <div id="mpfEspRessources"></div>
+      <!-- Notes -->
+      <div class="mpf-section-lbl" data-i18n="mp_tab_notes">Notes</div>
+      <div id="mpfEspNotes" class="mpf-white-block" style="font-size:14px;color:var(--ink);line-height:1.65;white-space:pre-wrap;min-height:60px"></div>
     </div>
-  </div>
 
-  <!-- Bottom sticky bar -->
-  <div id="mpfBottomBar">
-    <button onclick="contPrFull()" style="flex:1;background:var(--or);color:#fff;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.3)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      <span data-i18n="mp_contacter">Contacter</span>
-    </button>
-    <button id="bFPFull" onclick="togFPFull()" style="flex:0 0 auto;background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s">
-      <span id="bFPFullT"></span>
-    </button>
   </div>
 </div>
 

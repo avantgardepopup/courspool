@@ -2431,6 +2431,37 @@ app.delete('/teacher/:id/resources/:res_id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── TEACHER ENROLLMENT ────────────────────────────────────────────────────────
+app.get('/teacher/:id/is-enrolled', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    const { data, error } = await supabase.from('teacher_students')
+      .select('id').eq('teacher_id', req.params.id).eq('student_id', req.user.id).maybeSingle();
+    if (error) return res.status(500).json({ error });
+    res.json({ enrolled: !!data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/teacher/enroll', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    const { teacher_id, code } = req.body;
+    if (!teacher_id || !code) return res.status(400).json({ error: 'Données manquantes' });
+    // Vérifier le code du professeur
+    const { data: prof, error: profErr } = await supabase.from('profiles')
+      .select('id, teacher_code').eq('id', teacher_id).maybeSingle();
+    if (profErr || !prof) return res.status(404).json({ error: 'Professeur introuvable' });
+    if (!prof.teacher_code || prof.teacher_code.trim().toUpperCase() !== code.trim().toUpperCase()) {
+      return res.status(400).json({ error: 'Code incorrect' });
+    }
+    // Inscrire l'élève
+    const { error: insErr } = await supabase.from('teacher_students')
+      .upsert({ teacher_id, student_id: req.user.id }, { onConflict: 'teacher_id,student_id' });
+    if (insErr) return res.status(500).json({ error: insErr.message });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── STUDENT NOTES ─────────────────────────────────────────────────────────────
 app.get('/teacher/:id/student-notes/:student_id', async (req, res) => {
   try {
