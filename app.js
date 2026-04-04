@@ -333,7 +333,8 @@ function _buildFavCard2Col(c){
   var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   var mat=findMatiere(c.subj||'')||{color:'#7C3AED',bg:'var(--orp)'};
   var dt='';
-  if(c.dt_iso){try{var _d=new Date(c.dt_iso);var _days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var _months=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];dt=_days[_d.getDay()]+' '+_d.getDate()+' '+_months[_d.getMonth()];}catch(e){dt=c.dt||'';}}
+  if(c.dt_iso){try{var _d=new Date(c.dt_iso);var _days=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];var _months=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];dt=_days[_d.getDay()]+' '+_d.getDate()+' '+_months[_d.getMonth()]+' · '+('0'+_d.getHours()).slice(-2)+'h'+('0'+_d.getMinutes()).slice(-2);}catch(e){dt=c.dt||'';}}
+  if(!dt&&c.dt)dt=c.dt;
   var profNm=c.prof_nm||t('reg_prof');var profIni=(profNm[0]||'?').toUpperCase();
   var profCol=c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)';
   var profPhoto=c.prof_photo||null;
@@ -362,7 +363,14 @@ function _buildFavCard2Col(c){
     +'</div>'
     +'</div>'
     +'</div>';
-  setTimeout(function(){var btn=g(rmId);if(btn)btn.onclick=function(e){e.stopPropagation();favCours.delete(c.id);saveFavCours();buildFavPage();};},0);
+  setTimeout(function(){var btn=g(rmId);if(btn)btn.onclick=function(e){
+    e.stopPropagation();
+    favCours.delete(c.id);
+    saveFavCours();
+    // sync coeur dans l'explorer
+    document.querySelectorAll('[data-cours-id="'+c.id+'"] .card-fav-btn').forEach(function(b){b.classList.remove('saved');});
+    buildFavPage();
+  };},0);
   return div;
 }
 
