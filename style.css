@@ -740,8 +740,8 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 .fav2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 8px;}
 .fav2-card{
   position:relative;background:var(--wh);border-radius:18px;overflow:hidden;cursor:pointer;
-  box-shadow:0 6px 22px rgba(255,107,53,.14),0 2px 6px rgba(255,107,53,.08);
-  border:0.5px solid rgba(255,107,53,.18);
+  box-shadow:0 2px 8px rgba(0,0,0,.07),0 6px 20px rgba(0,0,0,.08);
+  border:0.5px solid var(--bdr);
   transition:transform .18s cubic-bezier(.22,.61,.36,1);
 }
 .fav2-card:active,.fav2-card.tapped{transform:scale(.95);}
@@ -1843,12 +1843,12 @@ html.dk .settings-chevron { color:var(--bdr); }
   background: var(--wh);
   border-radius: 16px;
   margin-bottom: 6px;
-  box-shadow: 0 6px 24px rgba(255,107,53,.16), 0 2px 6px rgba(255,107,53,.09);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.07);
   -webkit-tap-highlight-color: transparent;
 }
 .msg-row:active,
-.msg-row.tapped { transform: translateY(-1px) scale(.995); transition-duration: .1s; box-shadow: 0 3px 12px rgba(255,107,53,.12), 0 1px 3px rgba(255,107,53,.07); }
-.msg-row.active { background: var(--orp); box-shadow: 0 2px 12px rgba(255,107,43,.15); }
+.msg-row.tapped { transform: translateY(-1px) scale(.995); transition-duration: .1s; box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.08); }
+.msg-row.active { background: var(--orp); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
 .msg-av {
   width: 52px;
   height: 52px;
