@@ -1621,7 +1621,7 @@ function navTo(tab,_skipHistory){
   }
   clearTimeout(msgPollTimer);if(tab!=='msg'){msgPollTimer=null;}
 
-  ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  ['bniExp','bniFav','bniMsg','bniProfs','bniMes','bniEsp'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var appEl=g('app');if(appEl)appEl.scrollTop=0;
   var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes'),pgMesProfs=g('pgMesProfs');
   if(pgExp)pgExp.classList.remove('on');
@@ -1707,14 +1707,25 @@ function restoreNav(){
   // Messages
   var bniMsg=g('bniMsg');
   if(bniMsg)bniMsg.style.display=(user&&!user.guest)?'flex':'none';
-  // Mes Profs
-  var bniProfsEl=g('bniProfs');if(bniProfsEl)bniProfsEl.style.display=(user&&!user.guest)?'flex':'none';
+  // Mes Profs — élèves seulement
+  var bniProfsEl=g('bniProfs');if(bniProfsEl)bniProfsEl.style.display=(user&&!user.guest&&user.role!=='professeur')?'flex':'none';
+  // Mon Espace — profs seulement
+  var bniEspEl=g('bniEsp');if(bniEspEl)bniEspEl.style.display=(user&&user.role==='professeur')?'flex':'none';
   // Mes cours — élèves seulement
   var bniMesR=g('bniMes');
   if(bniMesR)bniMesR.style.display=(user&&user.role==='professeur')?'none':'flex';
   // Créer — profs seulement
   var bniAdd=g('bniAdd');
   if(bniAdd)bniAdd.style.display=(user&&user.role==='professeur')?'flex':'none';
+}
+
+function goEspProf(){
+  goAccount();
+  setTimeout(function(){
+    var tab=g('aTabEsp');
+    if(tab)switchATab('Esp',tab);
+    var be=g('bniEsp');if(be)be.classList.add('on');
+  },80);
 }
 
 function goExplore(){
@@ -1725,7 +1736,7 @@ function goExplore(){
   if(pgFav)pgFav.classList.remove('on');
   if(pgMes)pgMes.classList.remove('on');
   if(pgMesProfs)pgMesProfs.classList.remove('on');
-  ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  ['bniExp','bniFav','bniMsg','bniProfs','bniMes','bniEsp'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var b=g('bniExp');if(b)b.classList.add('on');
   restoreNav();
 }
@@ -4057,11 +4068,9 @@ function espLoadCode(){
   var el=g('espCodeDisplay');
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/my-code',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
-    console.log('[espLoadCode] response:',JSON.stringify(d));
-    if(d.error){if(el)el.textContent='ERR:'+d.error.slice(0,30);return;}
     _espCurrentCode=d.teacher_code||null;
     if(el)el.textContent=_espCurrentCode||'Aucun code';
-  }).catch(function(e){console.log('[espLoadCode] catch:',e&&e.message);if(el)el.textContent='Réseau?';});
+  }).catch(function(){if(el)el.textContent='—';});
 }
 
 function espRegenCode(){
@@ -4085,20 +4094,11 @@ function espRegenCode(){
   if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';btn.style.background='';btn.style.color='';}
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
-    console.log('[espRegenCode] response:',JSON.stringify(d));
-    if(d.error){
-      if(el)el.textContent='Erreur';
-      toast('Erreur serveur',d.error.slice(0,60));
-      return;
-    }
+    if(d.error){if(el)el.textContent='—';toast('Erreur',d.error.slice(0,60));return;}
     _espCurrentCode=d.teacher_code||null;
     if(el)el.textContent=_espCurrentCode||'—';
     haptic(8);toast('Code généré !','Partage-le avec tes élèves');
-  }).catch(function(e){
-    console.log('[espRegenCode] catch:',e&&e.message);
-    if(el)el.textContent='—';
-    toast('Erreur réseau','Vérifie ta connexion');
-  });
+  }).catch(function(){if(el)el.textContent='—';toast('Erreur réseau','Vérifie ta connexion');});
 }
 
 function espCopyCode(){
@@ -8704,9 +8704,9 @@ async function subCrStep(){
   var _au=applyUser;
   applyUser=function(){
     _au();
-    // Show "Mes cours" nav for students
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
-    // Show share button for profs
+    var bp=g('bniProfs');if(bp)bp.style.display=(user&&user.role==='professeur')?'none':'flex';
+    var be=g('bniEsp');if(be)be.style.display=(user&&user.role==='professeur')?'flex':'none';
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
   };
@@ -9103,6 +9103,8 @@ function showAccHome(){
     var te=g('aTabEsp');
     if(te)te.style.display=(user&&user.role==='professeur')?'flex':'none';
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
+    var bp=g('bniProfs');if(bp)bp.style.display=(user&&user.role==='professeur')?'none':'flex';
+    var be=g('bniEsp');if(be)be.style.display=(user&&user.role==='professeur')?'flex':'none';
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
