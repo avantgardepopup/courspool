@@ -336,6 +336,47 @@ function toggleFavCours(coursId,btn){
   });
 }
 
+// ── SWIPE-TO-DELETE (fav cards) ──
+function _initFav2Swipe(card,coursId,wrap){
+  var THRESHOLD=90;
+  var startX,startY,curX=0,committed=false,passed=false;
+  card.addEventListener('touchstart',function(e){
+    var t=e.touches[0];startX=t.clientX;startY=t.clientY;
+    curX=0;committed=false;passed=false;
+    card.style.transition='none';
+  },{passive:true});
+  card.addEventListener('touchmove',function(e){
+    var t=e.touches[0];
+    var dx=t.clientX-startX,dy=t.clientY-startY;
+    if(!committed){
+      if(Math.abs(dy)>Math.abs(dx))return;
+      if(Math.abs(dx)>5)committed=true;else return;
+    }
+    e.preventDefault();
+    curX=Math.min(0,dx);
+    card.style.transform='translateX('+curX+'px)';
+    if(!passed&&curX<=-THRESHOLD){
+      passed=true;
+      try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics)Capacitor.Plugins.Haptics.impact({style:'MEDIUM'});}catch(_){}
+    }else if(passed&&curX>-THRESHOLD){passed=false;}
+  },{passive:false});
+  card.addEventListener('touchend',function(){
+    if(!committed)return;
+    if(curX<=-THRESHOLD){
+      card.style.transition='transform .22s cubic-bezier(.4,0,.6,1)';
+      card.style.transform='translateX(-110%)';
+      setTimeout(function(){
+        favCours.delete(coursId);saveFavCours();
+        document.querySelectorAll('[data-cours-id="'+coursId+'"] .card-fav-btn').forEach(function(b){b.classList.remove('saved');});
+        buildFavPage();
+      },210);
+    }else{
+      card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
+      card.style.transform='translateX(0)';
+    }
+  },{passive:true});
+}
+
 // ── CARD FAVORIS 2-COL (style explorer) ──
 function _buildFavCard2Col(c){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
@@ -347,13 +388,19 @@ function _buildFavCard2Col(c){
   var profPhoto=c.prof_photo||null;
   var modeBg=isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)';
   var modeCo=isV?'#0055B3':'#007A38';
+  // Wrapper (clips swipe animation + carries shadow/border)
+  var wrap=document.createElement('div');
+  wrap.className='fav2-swipe-wrap';
+  // Red action behind the card
+  var action=document.createElement('div');
+  action.className='fav2-swipe-action';
+  action.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  wrap.appendChild(action);
   var div=document.createElement('div');
   div.className='fav2-card';
   div.onclick=function(){openR(c.id);};
-  // Subject pill + prof avatar floating (like explorer card)
   var avInner=profPhoto?('<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">')
     :esc(profIni);
-  var rmId='frm-'+c.id;
   div.innerHTML='<span class="fav2-subj" style="background:'+mat.color+'">'+esc(c.subj||'Cours')+'</span>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'
     +avInner
@@ -364,21 +411,12 @@ function _buildFavCard2Col(c){
     +'<div class="fav2-sep"></div>'
     +'<div class="fav2-foot">'
     +(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
-    +'<div style="display:flex;align-items:center;gap:5px">'
     +'<div class="fav2-mode" style="background:'+modeBg+';color:'+modeCo+'">'+(isV?'Visio':'Présentiel')+'</div>'
-    +'<button id="'+rmId+'" class="fav2-rm" title="Retirer">✕</button>'
-    +'</div>'
     +'</div>'
     +'</div>';
-  setTimeout(function(){var btn=g(rmId);if(btn)btn.onclick=function(e){
-    e.stopPropagation();
-    favCours.delete(c.id);
-    saveFavCours();
-    // sync coeur dans l'explorer
-    document.querySelectorAll('[data-cours-id="'+c.id+'"] .card-fav-btn').forEach(function(b){b.classList.remove('saved');});
-    buildFavPage();
-  };},0);
-  return div;
+  wrap.appendChild(div);
+  _initFav2Swipe(div,c.id,wrap);
+  return wrap;
 }
 
 // ── BUILD PAGE FAVORIS ──

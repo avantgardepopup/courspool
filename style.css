@@ -738,14 +738,27 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 .fav-remove-btn:hover{background:rgba(239,68,68,.8);}
 /* ── FAV COURS 2-COL (style explorer) ── */
 .fav2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 8px;}
-.fav2-card{
-  position:relative;background:var(--wh);border-radius:18px;overflow:hidden;cursor:pointer;
+/* Swipe wrapper — clips animation and carries shadow/border */
+.fav2-swipe-wrap{
+  position:relative;overflow:hidden;border-radius:18px;
   box-shadow:0 2px 8px rgba(0,0,0,.07),0 6px 20px rgba(0,0,0,.08);
   border:0.5px solid var(--bdr);
+}
+html.dk .fav2-swipe-wrap{box-shadow:0 2px 10px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);border-color:rgba(255,255,255,.06);}
+/* Red trash revealed on swipe */
+.fav2-swipe-action{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,#FF3B30,#C0392B);
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:22px;border-radius:18px;
+}
+.fav2-card{
+  position:relative;background:var(--wh);border-radius:18px;overflow:hidden;cursor:pointer;
+  will-change:transform;
   transition:transform .18s cubic-bezier(.22,.61,.36,1);
 }
-.fav2-card:active,.fav2-card.tapped{transform:scale(.95);}
-html.dk .fav2-card{box-shadow:0 2px 10px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);border-color:rgba(255,255,255,.06);}
+.fav2-card:active,.fav2-card.tapped{transform:scale(.97);}
+html.dk .fav2-card{background:var(--wh);}
 /* floating subject pill + prof avatar at top (like explorer) */
 .fav2-subj{
   position:absolute;top:9px;left:9px;z-index:2;
@@ -779,8 +792,6 @@ html.dk .fav2-sep{border-top-color:rgba(255,255,255,.1);}
 .fav2-foot{display:flex;align-items:center;justify-content:space-between;gap:4px;}
 .fav2-price{font-size:15px;font-weight:800;color:var(--or);letter-spacing:-.03em;}
 .fav2-mode{font-size:9.5px;font-weight:700;border-radius:6px;padding:3px 7px;white-space:nowrap;}
-.fav2-rm{flex-shrink:0;background:var(--bdr);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--lite);font-size:9px;transition:background .15s;}
-.fav2-rm:active{background:rgba(239,68,68,.18);color:#EF4444;}
 /* ── BADGES VÉRIFICATION (premium) ── */
 .prof-badge{
   position:relative;display:inline-flex;align-items:center;gap:5px;
@@ -805,7 +816,6 @@ html.dk .prof-badge{border-color:rgba(255,255,255,.12);}
 /* ── MES PROFS 2-COL ── */
 .mp2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px 0;}
 .fav-prof-card.mp2-card{flex:none;padding:16px 12px 14px;}
-html.dk .fav2-card{box-shadow:0 1px 2px rgba(0,0,0,.25),0 4px 14px rgba(0,0,0,.35);}
 /* ── PROFIL PROF COMPLET (Avilio style) ── */
 #bdPrFull{
   position:fixed;inset:0;z-index:500;
