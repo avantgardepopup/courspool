@@ -4057,9 +4057,11 @@ function espLoadCode(){
   var el=g('espCodeDisplay');
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/my-code',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
+    console.log('[espLoadCode] response:',JSON.stringify(d));
+    if(d.error){if(el)el.textContent='ERR:'+d.error.slice(0,30);return;}
     _espCurrentCode=d.teacher_code||null;
     if(el)el.textContent=_espCurrentCode||'Aucun code';
-  }).catch(function(){if(el)el.textContent='Erreur';});
+  }).catch(function(e){console.log('[espLoadCode] catch:',e&&e.message);if(el)el.textContent='Réseau?';});
 }
 
 function espRegenCode(){
@@ -4083,10 +4085,20 @@ function espRegenCode(){
   if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';btn.style.background='';btn.style.color='';}
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
+    console.log('[espRegenCode] response:',JSON.stringify(d));
+    if(d.error){
+      if(el)el.textContent='Erreur';
+      toast('Erreur serveur',d.error.slice(0,60));
+      return;
+    }
     _espCurrentCode=d.teacher_code||null;
-    if(el)el.textContent=_espCurrentCode||'Erreur';
+    if(el)el.textContent=_espCurrentCode||'—';
     haptic(8);toast('Code généré !','Partage-le avec tes élèves');
-  }).catch(function(){if(el)el.textContent='Erreur';toast('Erreur','Impossible de générer le code');});
+  }).catch(function(e){
+    console.log('[espRegenCode] catch:',e&&e.message);
+    if(el)el.textContent='—';
+    toast('Erreur réseau','Vérifie ta connexion');
+  });
 }
 
 function espCopyCode(){
