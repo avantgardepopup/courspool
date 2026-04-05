@@ -4449,7 +4449,7 @@ function mpfSubmitDoc(){
   var title=((g('mpfSubTitle')||{}).value||'').trim();
   var url=((g('mpfSubUrl')||{}).value||'').trim();
   if(!title){toast('Donne un nom au document','');return;}
-  var btn=document.querySelector('#mpfEspSubSection .esp-btn-prim');
+  var btn=document.querySelector('.esp2-btn-submit');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||null})})
     .then(function(r){return r.json();}).then(function(d){

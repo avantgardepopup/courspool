@@ -856,13 +856,28 @@ html.dk .prof-badge{border-color:rgba(255,255,255,.12);}
 }
 .esp-input:focus{outline:none;border-color:var(--or);}
 .esp-textarea{resize:none;min-height:72px;line-height:1.5;}
-/* ── ESPACE ÉLÈVE — page scrollable ── */
-.esp-section-sep{
-  display:flex;align-items:center;gap:6px;
-  font-size:11px;font-weight:800;color:var(--lite);
-  text-transform:uppercase;letter-spacing:.07em;
-  padding:12px 0 8px;
+/* ── ESPACE ÉLÈVE v2 — cards ── */
+.esp2-card{
+  background:var(--wh);border-radius:20px;padding:16px;
+  border:1px solid var(--bdr);
+  box-shadow:0 1px 6px rgba(0,0,0,.05);
 }
+html.dk .esp2-card{border-color:rgba(255,255,255,.07);box-shadow:none;}
+.esp2-card-tap{cursor:pointer;transition:opacity .15s,transform .1s;}
+.esp2-card-tap:active{opacity:.7;transform:scale(.98);}
+.esp2-card-hd{display:flex;align-items:center;gap:12px;}
+.esp2-ico{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.esp2-title{font-size:15px;font-weight:700;color:var(--ink);}
+.esp2-sub{font-size:12px;color:var(--lite);margin-top:2px;}
+.esp2-btn-submit{
+  background:var(--or);color:#fff;border:none;
+  border-radius:12px;padding:12px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;width:100%;
+}
+.esp2-btn-submit:active{opacity:.8;}
 /* Feed cards (style réseau social) */
 .feed-card{
   background:var(--wh);border-radius:18px;
