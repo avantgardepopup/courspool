@@ -4063,13 +4063,30 @@ function espLoadCode(){
 }
 
 function espRegenCode(){
-  if(!confirm('Générer un nouveau code ? L\'ancien ne fonctionnera plus.'))return;
-  var el=g('espCodeDisplay');if(el)el.textContent='⋯';
+  var el=g('espCodeDisplay');
+  // Si un code existe déjà, demander confirmation via 2e tap (bouton vire en "Confirmer ?")
+  var btn=document.querySelector('[onclick="espRegenCode()"]');
+  if(_espCurrentCode&&btn&&btn.dataset.confirm!=='1'){
+    btn.dataset.confirm='1';
+    btn.textContent='Confirmer ?';
+    btn.style.background='rgba(239,68,68,.15)';
+    btn.style.color='#EF4444';
+    setTimeout(function(){
+      if(btn.dataset.confirm==='1'){
+        btn.dataset.confirm='';
+        btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';
+        btn.style.background='';btn.style.color='';
+      }
+    },3000);
+    return;
+  }
+  if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';btn.style.background='';btn.style.color='';}
+  if(el)el.textContent='⋯';
   fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
     _espCurrentCode=d.teacher_code||null;
     if(el)el.textContent=_espCurrentCode||'Erreur';
-    haptic(8);toast('Nouveau code généré','Partage-le avec tes élèves');
-  }).catch(function(){if(el)el.textContent='Erreur';});
+    haptic(8);toast('Code généré !','Partage-le avec tes élèves');
+  }).catch(function(){if(el)el.textContent='Erreur';toast('Erreur','Impossible de générer le code');});
 }
 
 function espCopyCode(){
@@ -4140,7 +4157,6 @@ function espLoadResources(){
 }
 
 function espDeleteRes(id){
-  if(!confirm('Supprimer cette ressource ?'))return;
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/resources/'+id,{method:'DELETE',headers:apiH()}).then(function(){
     haptic(4);espLoadResources();
@@ -4199,7 +4215,6 @@ function espLoadAnnonces(){
 }
 
 function espDeleteAnn(id){
-  if(!confirm('Supprimer cette annonce ?'))return;
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'DELETE',headers:apiH()}).then(function(){
     haptic(4);espLoadAnnonces();
