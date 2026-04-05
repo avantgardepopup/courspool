@@ -4060,6 +4060,7 @@ var _espCurrentCode=null;
 function buildEspProf(){
   espLoadCode();
   espLoadStudents();
+  espLoadContenu();
   espLoadResources();
   espLoadAnnonces();
 }
@@ -4310,50 +4311,262 @@ function _loadMpfAvis(pid){
   }).catch(function(){if(g('mpfAvisSection'))g('mpfAvisSection').style.display='none';});
 }
 
+// ── TABS INTERNES ESPACE ÉLÈVE ───────────────────────────────────────────
+var _mpfEspTab='Feed';
+function switchMpfEspTab(tab,btn){
+  _mpfEspTab=tab;
+  ['Feed','Cours','Docs','Moi'].forEach(function(k){
+    var p=g('mpfEspPanel'+k),b=g('mpfEspTab'+k);
+    if(p)p.style.display=k===tab?'block':'none';
+    if(b)b.classList.toggle('on',k===tab);
+  });
+  var pid=_curPrFull;
+  if(tab==='Feed')_loadMpfFeed(pid);
+  if(tab==='Cours')_loadMpfContenu(pid);
+  if(tab==='Docs'){_loadMpfRessourcesEsp(pid);_loadMpfSubmissions(pid);}
+  if(tab==='Moi')_loadMpfNote(pid);
+  haptic(4);
+}
+
 function _loadMpfEspace(pid){
-  // Annonces
-  var elA=g('mpfEspAnnonces');
-  if(elA){
-    elA.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px"></div>';
-    fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-      if(_curPrFull!==pid)return;
-      if(!data||!data.length){elA.innerHTML='<div style="font-size:13px;color:var(--lite)">Aucune annonce pour le moment.</div>';return;}
-      elA.innerHTML=data.map(function(a){
-        return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:8px">'
-          +'<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap">'+esc(a.content)+'</div>'
-          +'<div style="font-size:11px;color:var(--lite);margin-top:6px">'+new Date(a.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+'</div>'
+  _mpfEspTab='Feed';
+  ['Feed','Cours','Docs','Moi'].forEach(function(k){
+    var p=g('mpfEspPanel'+k),b=g('mpfEspTab'+k);
+    if(p)p.style.display=k==='Feed'?'block':'none';
+    if(b)b.classList.toggle('on',k==='Feed');
+  });
+  _loadMpfFeed(pid);
+}
+
+function _loadMpfFeed(pid){
+  var el=g('mpfEspAnnonces');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:80px;border-radius:16px;margin-bottom:10px"></div><div class="skeleton" style="height:60px;border-radius:16px"></div>';
+  var p=P[pid]||{};
+  var profNm=p.nm||'Votre prof';
+  var profIni=(profNm[0]||'?').toUpperCase();
+  var profCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var profPhoto=p.photo||null;
+  fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(_curPrFull!==pid)return;
+    if(!data||!data.length){
+      el.innerHTML='<div style="text-align:center;padding:32px 20px;color:var(--lite)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.3;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>'
+        +'<div style="font-size:14px;font-weight:600">Aucune annonce pour le moment</div>'
+        +'<div style="font-size:12px;margin-top:4px">Le prof n\'a pas encore publié d\'annonces</div></div>';
+      return;
+    }
+    var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:14px;font-weight:800;color:#fff">'+profIni+'</span>';
+    el.innerHTML=data.map(function(a){
+      var d=new Date(a.created_at);
+      var now=new Date();
+      var diff=Math.round((now-d)/86400000);
+      var dateStr=diff===0?'Aujourd\'hui':diff===1?'Hier':diff<7?diff+' jours':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+      return'<div class="feed-card">'
+        +'<div class="feed-card-head">'
+        +'<div class="feed-card-av" style="background:'+profCol+'">'+avInner+'</div>'
+        +'<div><div class="feed-card-nm">'+esc(profNm)+'</div><div class="feed-card-date">'+dateStr+'</div></div>'
+        +'</div>'
+        +'<div class="feed-card-body">'+esc(a.content)+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='';});
+}
+
+function _loadMpfContenu(pid){
+  var el=g('mpfEspContenu');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:90px;border-radius:16px;margin-bottom:10px"></div>';
+  fetch(API+'/teacher/'+pid+'/content',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(_curPrFull!==pid)return;
+    if(!data||!data.length){
+      el.innerHTML='<div style="text-align:center;padding:32px 20px;color:var(--lite)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.3;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>'
+        +'<div style="font-size:14px;font-weight:600">Aucun cours disponible</div>'
+        +'<div style="font-size:12px;margin-top:4px">Le prof n\'a pas encore publié de contenu</div></div>';
+      return;
+    }
+    el.innerHTML=data.map(function(c){
+      var ico=c.access_type==='password'?'🔐':c.access_type==='premium'?'💎':'🔓';
+      var typeIco={text:'📝',video:'🎥',pdf:'📄',link:'🔗'}[c.content_type]||'📚';
+      var isUnlocked=c.is_unlocked;
+      var tag=c.access_type==='password'?'Mot de passe requis':c.access_type==='premium'?'Premium · '+(c.price||'?')+'€/mois':'Accès libre';
+      var tagColor=c.access_type==='password'?'#8B5CF6':c.access_type==='premium'?'#F59E0B':'#10B981';
+      var body='';
+      if(isUnlocked){
+        if(c.description)body+='<div class="contenu-desc">'+esc(c.description)+'</div>';
+        if(c.content_url)body+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" class="contenu-link">'+typeIco+' Voir le contenu</a>';
+      }else if(c.access_type==='password'){
+        body+='<div id="cttPwForm_'+c.id+'" style="display:flex;gap:8px;margin-top:10px">'
+          +'<input type="text" placeholder="Mot de passe" class="esp-input" style="flex:1;font-size:13px;padding:8px 10px" id="cttPwInp_'+c.id+'">'
+          +'<button onclick="mpfUnlockContent(\''+pid+'\',\''+c.id+'\')" class="esp-btn esp-btn-prim" style="font-size:12px;padding:8px 12px">OK</button>'
           +'</div>';
-      }).join('');
+      }else if(c.access_type==='premium'){
+        body+='<div style="margin-top:10px"><button onclick="contPrFull()" class="esp-btn esp-btn-prim" style="font-size:12px">Contacter le prof pour s\'abonner</button></div>';
+      }
+      return'<div class="contenu-card">'
+        +'<div class="contenu-card-head">'
+        +'<span style="font-size:20px">'+ico+'</span>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div class="contenu-title">'+esc(c.title)+'</div>'
+        +'<div class="contenu-tag" style="color:'+tagColor+';background:'+tagColor+'18">'+tag+'</div>'
+        +'</div>'
+        +'</div>'
+        +body
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='';});
+}
+
+function mpfUnlockContent(pid,cid){
+  var inp=g('cttPwInp_'+cid);if(!inp)return;
+  var pw=inp.value.trim();if(!pw)return;
+  fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
+      haptic(8);toast('Contenu débloqué !','');_loadMpfContenu(pid);
     }).catch(function(){});
-  }
-  // Ressources
-  var elR=g('mpfEspRessources');
-  if(elR){
-    elR.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px"></div>';
-    var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
-    fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-      if(_curPrFull!==pid)return;
-      if(!data||!data.length){elR.innerHTML='<div style="font-size:13px;color:var(--lite)">Aucune ressource partagée.</div>';return;}
-      elR.innerHTML=data.map(function(r){
-        return'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;text-decoration:none;margin-bottom:8px">'
-          +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title)+'</div>'
-          +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+esc(r.type)+'</div></div>'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-          +'</a>';
-      }).join('');
-    }).catch(function(){});
-  }
-  // Notes
-  var elN=g('mpfEspNotes');
-  if(elN&&user){
-    elN.innerHTML='<div class="skeleton" style="height:80px;border-radius:12px"></div>';
-    fetch(API+'/teacher/'+pid+'/student-notes/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-      if(_curPrFull!==pid)return;
-      if(!data||!data.content){elN.innerHTML='<div style="font-size:13px;color:var(--lite)">Aucune note de votre professeur pour le moment.</div>';return;}
-      elN.textContent=data.content;
-    }).catch(function(){});
-  }
+}
+
+function _loadMpfRessourcesEsp(pid){
+  var el=g('mpfEspRessources');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:44px;border-radius:12px;margin-bottom:6px"></div>';
+  var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
+  fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(_curPrFull!==pid)return;
+    if(!data||!data.length){el.innerHTML='<div style="font-size:13px;color:var(--lite);margin-bottom:8px">Aucun document partagé.</div>';return;}
+    el.innerHTML=data.map(function(r){
+      return'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;text-decoration:none;margin-bottom:8px">'
+        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+esc(r.type)+'</div></div>'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+        +'</a>';
+    }).join('');
+  }).catch(function(){el.innerHTML='';});
+}
+
+function _loadMpfSubmissions(pid){
+  var el=g('mpfMySubmissions');if(!el||!user)return;
+  fetch(API+'/teacher/'+pid+'/submissions',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(_curPrFull!==pid)return;
+    if(!data||!data.length){el.innerHTML='<div style="font-size:12px;color:var(--lite);padding:4px 0">Aucun dépôt envoyé</div>';return;}
+    el.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Envoyés</div>'
+      +data.map(function(s){
+      var d=new Date(s.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+      return'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.title)+'</div><div style="font-size:11px;color:var(--lite)">'+d+'</div></div>'
+        +(s.url?'<a href="'+esc(s.url)+'" target="_blank" style="font-size:11px;color:var(--or);font-weight:700;flex-shrink:0">Voir</a>':'')
+        +'<button onclick="mpfDeleteSub(\''+pid+'\',\''+s.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){});
+}
+
+function mpfSubmitDoc(){
+  var pid=_curPrFull;if(!pid)return;
+  var title=((g('mpfSubTitle')||{}).value||'').trim();
+  var url=((g('mpfSubUrl')||{}).value||'').trim();
+  if(!title){toast('Donne un nom au document','');return;}
+  var btn=document.querySelector('#mpfEspPanelDocs .esp-btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||null})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Envoyer';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Document envoyé !','');
+      if(g('mpfSubTitle'))g('mpfSubTitle').value='';
+      if(g('mpfSubUrl'))g('mpfSubUrl').value='';
+      _loadMpfSubmissions(pid);
+    }).catch(function(){if(btn){btn.disabled=false;}});
+}
+
+function mpfDeleteSub(pid,sid){
+  fetch(API+'/teacher/'+pid+'/submissions/'+sid,{method:'DELETE',headers:apiH()}).then(function(){
+    haptic(4);_loadMpfSubmissions(pid);
+  });
+}
+
+function _loadMpfNote(pid){
+  var el=g('mpfEspNotes');if(!el||!user)return;
+  el.innerHTML='<div class="skeleton" style="height:80px;border-radius:12px"></div>';
+  fetch(API+'/teacher/'+pid+'/student-notes/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(_curPrFull!==pid)return;
+    if(!data||!data.content){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:8px 0">Aucune note de votre professeur pour le moment.</div>';return;}
+    el.innerHTML='<div style="font-size:14px;color:var(--ink);line-height:1.65;white-space:pre-wrap;padding:4px 0">'+esc(data.content)+'</div>';
+  }).catch(function(){});
+}
+
+// ── GESTION CONTENUS CÔTÉ PROF ───────────────────────────────────────────
+function espCttAccessChange(sel){
+  var pw=g('espCttPwBox'),pr=g('espCttPriceBox');
+  if(pw)pw.style.display=sel.value==='password'?'block':'none';
+  if(pr)pr.style.display=sel.value==='premium'?'block':'none';
+}
+
+function espToggleAddContenu(btn){
+  var f=g('espContenuForm');if(!f)return;
+  var show=f.style.display==='none';
+  f.style.display=show?'flex':'none';
+  if(btn)btn.textContent=show?'Annuler':'+ Ajouter';
+}
+
+function espSubmitContenu(){
+  var uid=user&&user.id;if(!uid)return;
+  var title=((g('espCttTitle')||{}).value||'').trim();
+  if(!title){toast('Titre requis','');return;}
+  var desc=((g('espCttDesc')||{}).value||'').trim();
+  var url=((g('espCttUrl')||{}).value||'').trim();
+  var type=(g('espCttType')||{}).value||'text';
+  var access=(g('espCttAccess')||{}).value||'enrolled';
+  var pw=access==='password'?((g('espCttPw')||{}).value||'').trim():null;
+  var price=access==='premium'?parseInt((g('espCttPrice')||{}).value||'0',10):0;
+  if(access==='password'&&!pw){toast('Mot de passe requis','');return;}
+  var btn=document.querySelector('#espContenuForm .esp-btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/content',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,description:desc,content_url:url||null,content_type:type,access_type:access,password:pw,price:price})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Publier';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(8);toast('Contenu publié !','');
+      if(g('espCttTitle'))g('espCttTitle').value='';
+      if(g('espCttDesc'))g('espCttDesc').value='';
+      if(g('espCttUrl'))g('espCttUrl').value='';
+      var f=g('espContenuForm');if(f)f.style.display='none';
+      var ab=document.querySelector('[onclick="espToggleAddContenu(this)"]');if(ab)ab.textContent='+ Ajouter';
+      espLoadContenu();
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}});
+}
+
+function espLoadContenu(){
+  var uid=user&&user.id;if(!uid)return;
+  var el=g('espContenu');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px"></div>';
+  var ACCESS_LABEL={'enrolled':'🔓 Accès libre','password':'🔐 Mot de passe','premium':'💎 Premium'};
+  var TYPE_ICON={text:'📝',video:'🎥',pdf:'📄',link:'🔗'};
+  fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    if(!list||!list.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun contenu publié.</div>';return;}
+    el.innerHTML=list.map(function(c){
+      var label=ACCESS_LABEL[c.access_type]||c.access_type;
+      var tIco=TYPE_ICON[c.content_type]||'📚';
+      return'<div style="background:var(--wh);border:1px solid var(--bdr);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:18px;flex-shrink:0">'+tIco+'</span>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+label+(c.price?' · '+c.price+'€/mois':'')+'</div>'
+        +'</div>'
+        +'<button onclick="espDeleteContenu(\''+c.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+        +'</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='';});
+}
+
+function espDeleteContenu(id){
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/content/'+id,{method:'DELETE',headers:apiH()}).then(function(){
+    haptic(4);espLoadContenu();
+  });
 }
 
 function switchMpfTab(tab){

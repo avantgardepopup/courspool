@@ -1208,6 +1208,44 @@
             </div>
           </div>
 
+          <!-- Cours & Contenus privés -->
+          <div class="esp-block">
+            <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
+              Cours & Contenus
+              <button class="esp-add-btn" onclick="espToggleAddContenu(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Ajouter
+              </button>
+            </div>
+            <div style="font-size:12px;color:var(--lite);margin-bottom:10px;line-height:1.5">Ajoute du contenu éducatif : vidéos, PDF, textes. Choisis qui peut y accéder.</div>
+            <div id="espContenuForm" style="display:none;background:var(--bg);border-radius:14px;padding:14px;margin-bottom:10px;flex-direction:column;gap:10px">
+              <input id="espCttTitle" type="text" placeholder="Titre (ex: Chapitre 1 — Dérivées)" class="esp-input">
+              <textarea id="espCttDesc" placeholder="Description ou contenu texte (optionnel)" class="esp-input esp-textarea" rows="2"></textarea>
+              <input id="espCttUrl" type="url" placeholder="Lien vidéo / PDF / article (optionnel)" class="esp-input">
+              <select id="espCttType" class="esp-input">
+                <option value="text">Texte / cours écrit</option>
+                <option value="video">Vidéo</option>
+                <option value="pdf">PDF</option>
+                <option value="link">Lien externe</option>
+              </select>
+              <select id="espCttAccess" class="esp-input" onchange="espCttAccessChange(this)">
+                <option value="enrolled">🔓 Accès libre (tous les élèves inscrits)</option>
+                <option value="password">🔐 Protégé par mot de passe</option>
+                <option value="premium">💎 Premium (abonnement)</option>
+              </select>
+              <div id="espCttPwBox" style="display:none">
+                <input id="espCttPw" type="text" placeholder="Mot de passe à donner à tes élèves" class="esp-input">
+              </div>
+              <div id="espCttPriceBox" style="display:none">
+                <input id="espCttPrice" type="number" placeholder="Prix mensuel (€)" class="esp-input" min="1">
+              </div>
+              <button class="esp-btn esp-btn-prim" onclick="espSubmitContenu()" style="justify-content:center">Publier</button>
+            </div>
+            <div id="espContenu">
+              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+            </div>
+          </div>
+
           <!-- Annonces -->
           <div class="esp-block">
             <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
@@ -1680,29 +1718,74 @@
 
     <!-- ── PANEL ESPACE (élèves inscrits) ── -->
     <div id="mpfPanelEspace" hidden>
-      <!-- Messagerie (style Avilio) -->
-      <div class="mpf-section-lbl" data-i18n="mpf_esp_messages">Messages</div>
-      <div class="mpf-list-item" onclick="contPrFull()">
-        <div class="mpf-list-item-left">
-          <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          </div>
-          <div>
-            <div class="mpf-list-item-lbl" data-i18n="mpf_esp_messagerie">Messagerie</div>
-            <div class="mpf-list-item-sub" data-i18n="mp_envoyer_msg">Envoyer un message</div>
-          </div>
-        </div>
-        <div class="mpf-list-item-action">Ouvrir <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg></div>
+
+      <!-- Barre de tabs espace -->
+      <div class="mpf-esp-tabbar">
+        <button class="mpf-esp-tab on" id="mpfEspTabFeed"    onclick="switchMpfEspTab('Feed',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.02 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14z"/></svg>
+          Feed
+        </button>
+        <button class="mpf-esp-tab" id="mpfEspTabCours"   onclick="switchMpfEspTab('Cours',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+          Cours
+        </button>
+        <button class="mpf-esp-tab" id="mpfEspTabDocs"    onclick="switchMpfEspTab('Docs',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Docs
+        </button>
+        <button class="mpf-esp-tab" id="mpfEspTabMoi"     onclick="switchMpfEspTab('Moi',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Moi
+        </button>
       </div>
-      <!-- Annonces -->
-      <div class="mpf-section-lbl" data-i18n="mp_annonces">Annonces</div>
-      <div id="mpfEspAnnonces" style="padding:0 0 4px"></div>
-      <!-- Documents / Ressources -->
-      <div class="mpf-section-lbl" data-i18n="mpf_esp_docs">Documents</div>
-      <div id="mpfEspRessources"></div>
-      <!-- Notes -->
-      <div class="mpf-section-lbl" data-i18n="mp_tab_notes">Notes</div>
-      <div id="mpfEspNotes" class="mpf-white-block" style="font-size:14px;color:var(--ink);line-height:1.65;white-space:pre-wrap;min-height:60px"></div>
+
+      <!-- Tab FEED — annonces style réseau social -->
+      <div id="mpfEspPanelFeed" style="padding:12px 16px 24px">
+        <div id="mpfEspAnnonces"></div>
+      </div>
+
+      <!-- Tab COURS — contenus éducatifs avec contrôle d'accès -->
+      <div id="mpfEspPanelCours" style="display:none;padding:12px 16px 24px">
+        <div id="mpfEspContenu"></div>
+      </div>
+
+      <!-- Tab DOCS — ressources du prof + dépôts élève -->
+      <div id="mpfEspPanelDocs" style="display:none;padding:12px 16px 24px">
+        <!-- Ressources du prof -->
+        <div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Documents du prof</div>
+        <div id="mpfEspRessources" style="margin-bottom:20px"></div>
+        <!-- Déposer un doc -->
+        <div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Mes dépôts</div>
+        <div style="background:var(--wh);border-radius:16px;border:1px solid var(--bdr);padding:14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px">
+          <input id="mpfSubTitle" type="text" placeholder="Nom du document" class="esp-input">
+          <input id="mpfSubUrl" type="url" placeholder="Lien (Google Drive, Notion…)" class="esp-input">
+          <button onclick="mpfSubmitDoc()" class="esp-btn esp-btn-prim" style="justify-content:center;width:100%">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            Envoyer
+          </button>
+        </div>
+        <div id="mpfMySubmissions"></div>
+        <!-- Contact prof -->
+        <div class="mpf-list-item" onclick="contPrFull()" style="margin-top:16px">
+          <div class="mpf-list-item-left">
+            <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div>
+              <div class="mpf-list-item-lbl">Message direct</div>
+              <div class="mpf-list-item-sub">Contacter le professeur</div>
+            </div>
+          </div>
+          <div class="mpf-list-item-action">Ouvrir <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Tab MOI — note du prof -->
+      <div id="mpfEspPanelMoi" style="display:none;padding:12px 16px 24px">
+        <div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Note de mon professeur</div>
+        <div id="mpfEspNotes" class="mpf-white-block" style="font-size:14px;color:var(--ink);line-height:1.65;white-space:pre-wrap;min-height:80px"></div>
+      </div>
+
     </div>
 
   </div>
