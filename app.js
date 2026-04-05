@@ -4311,12 +4311,12 @@ function _loadMpfAvis(pid){
   }).catch(function(){if(g('mpfAvisSection'))g('mpfAvisSection').style.display='none';});
 }
 
-// ── ESPACE ÉLÈVE (page unique scrollable) ────────────────────────────────
+// ── ESPACE ÉLÈVE — chargement initial ────────────────────────────────────
 function _loadMpfEspace(pid){
-  _loadMpfFeed(pid);
-  _loadMpfContenu(pid);
-  _loadMpfRessourcesEsp(pid);
-  _loadMpfSubmissions(pid);
+  // Referme les tiroirs si on change de prof
+  ['espCardCours','espCardDocs'].forEach(function(id){
+    var c=g(id);if(c)c.classList.remove('open');
+  });
   _loadMpfNote(pid);
 }
 
@@ -4558,8 +4558,33 @@ function switchMpfTab(tab){
     var panel=g('mpfPanel'+k[0].toUpperCase()+k.slice(1));
     var on=(k===tab);
     if(btn){if(on)btn.classList.add('on');else btn.classList.remove('on');}
-    if(panel){if(on)panel.removeAttribute('hidden');else panel.setAttribute('hidden','');}
+    if(panel){panel.style.display=on?(k==='espace'?'flex':'block'):'none';}
   });
+}
+
+function toggleEsp2Card(id,section){
+  var card=g(id);if(!card)return;
+  var opening=!card.classList.contains('open');
+  card.classList.toggle('open',opening);
+  haptic(4);
+  if(opening){
+    var pid=_curPrFull;
+    if(section==='cours'){_loadMpfContenu(pid);_loadMpfRessourcesEsp(pid);}
+    if(section==='docs'){_loadMpfSubmissions(pid);}
+  }
+}
+
+function openEspPubs(){
+  var el=g('bdEspPubs');if(!el)return;
+  el.style.display='flex';
+  haptic(4);
+  _loadMpfFeed(_curPrFull);
+}
+
+function closeEspPubs(){
+  var el=g('bdEspPubs');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
 
 function closePrFull(){
