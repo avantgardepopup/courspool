@@ -2488,6 +2488,52 @@ app.post('/teacher/:id/student-notes', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── ESPACE PROFESSEUR — code d'accès + élèves ─────────────────────────────
+app.get('/teacher/my-code', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    const { data, error } = await supabase.from('profiles')
+      .select('teacher_code').eq('id', req.user.id).single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ teacher_code: data?.teacher_code || null });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/teacher/generate-code', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += CHARS[Math.floor(Math.random() * CHARS.length)];
+    const { error } = await supabase.from('profiles').update({ teacher_code: code }).eq('id', req.user.id);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ teacher_code: code });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/teacher/my-students', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    const { data: rows, error } = await supabase.from('teacher_students')
+      .select('student_id, created_at').eq('teacher_id', req.user.id)
+      .order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    if (!rows || !rows.length) return res.json([]);
+    const ids = rows.map(r => r.student_id);
+    const { data: profs } = await supabase.from('profiles')
+      .select('id, prenom, nom, photo_url').in('id', ids);
+    const profMap = {};
+    (profs || []).forEach(p => { profMap[p.id] = p; });
+    res.json(rows.map(r => ({
+      id: r.student_id,
+      prenom: profMap[r.student_id]?.prenom || '',
+      nom: profMap[r.student_id]?.nom || '',
+      photo_url: profMap[r.student_id]?.photo_url || null,
+      enrolled_at: r.created_at,
+    })));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 const PORT = process.env.PORT || 3000;
 // ── KEEP-ALIVE anti-cold-start Railway ──
 const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN

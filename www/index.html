@@ -987,6 +987,15 @@
             <div style="font-size:12px;color:var(--lite);margin-top:3px" data-i18n="acc_infos">Infos &amp; réglages</div>
           </div>
 
+          <!-- Mon Espace (prof seulement) -->
+          <div class="acc-card" id="accCardEsp" onclick="switchATab('Esp',document.getElementById('aTabEsp'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mon Espace</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Élèves &amp; ressources</div>
+          </div>
+
           <!-- Revenus (prof seulement) -->
           <div class="acc-card" id="accCardRev" onclick="switchATab('Rev',document.getElementById('aTabRev'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -1018,6 +1027,7 @@
         <button class="ptab" id="aTabP" onclick="switchATab('P',this)" data-i18n="acc_mon_profil">Profil</button>
         <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none" data-i18n="acc_revenus">Revenus</button>
         <button class="ptab" id="aTabRmb" onclick="switchATab('Rmb',this)" style="display:none">Remboursements</button>
+        <button class="ptab" id="aTabEsp" onclick="switchATab('Esp',this)" style="display:none">Mon Espace</button>
       </div>
 
       <div class="acc-body">
@@ -1131,6 +1141,94 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <div style="font-size:12px;color:var(--mid);line-height:1.5">Les virements sont effectués sous <strong>2 à 7 jours ouvrés</strong> après la confirmation du paiement.</div>
           </div>
+        </div>
+
+        <!-- ESPACE PROFESSEUR -->
+        <div class="asec" id="asecEsp" style="padding:0 20px 32px">
+
+          <!-- Code d'accès -->
+          <div class="esp-block" style="margin-top:20px">
+            <div class="esp-block-label">Code d'accès élèves</div>
+            <div class="esp-code-card">
+              <div id="espCodeDisplay" class="esp-code-digits">——————</div>
+              <div class="esp-code-sub">Partage ce code avec tes élèves</div>
+              <div class="esp-code-btns">
+                <button class="esp-btn esp-btn-sec" onclick="espCopyCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  Copier
+                </button>
+                <button class="esp-btn esp-btn-sec" onclick="espShareCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  Partager
+                </button>
+                <button class="esp-btn esp-btn-prim" onclick="espRegenCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                  Nouveau
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mes élèves -->
+          <div class="esp-block">
+            <div class="esp-block-label" style="display:flex;align-items:center;gap:8px">
+              Mes élèves
+              <span id="espStudentBadge" class="esp-count-badge" style="display:none"></span>
+            </div>
+            <div id="espStudents">
+              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+            </div>
+          </div>
+
+          <!-- Ressources partagées -->
+          <div class="esp-block">
+            <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
+              Ressources partagées
+              <button class="esp-add-btn" onclick="espToggleAddRes(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Ajouter
+              </button>
+            </div>
+            <!-- Formulaire ajout ressource (caché par défaut) -->
+            <div id="espResForm" style="display:none;background:var(--bg);border-radius:14px;padding:14px;margin-bottom:10px;gap:10px;flex-direction:column">
+              <input id="espResTitle" type="text" placeholder="Titre de la ressource" class="esp-input">
+              <input id="espResUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
+              <div style="display:flex;gap:8px;align-items:center">
+                <select id="espResType" class="esp-input" style="flex:1">
+                  <option value="article">Article</option>
+                  <option value="pdf">PDF</option>
+                  <option value="video">Vidéo</option>
+                  <option value="exercice">Exercice</option>
+                </select>
+                <button class="esp-btn esp-btn-prim" onclick="espSubmitRes()">Publier</button>
+              </div>
+            </div>
+            <div id="espResources">
+              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+            </div>
+          </div>
+
+          <!-- Annonces -->
+          <div class="esp-block">
+            <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
+              Annonces
+              <button class="esp-add-btn" onclick="espToggleAddAnn(this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nouvelle
+              </button>
+            </div>
+            <!-- Formulaire ajout annonce -->
+            <div id="espAnnForm" style="display:none;background:var(--bg);border-radius:14px;padding:14px;margin-bottom:10px;gap:10px;flex-direction:column">
+              <textarea id="espAnnText" placeholder="Tape ton annonce ici… (ex: Cours annulé, nouveau document dispo, rappel…)" class="esp-input esp-textarea" rows="3"></textarea>
+              <div style="display:flex;justify-content:flex-end">
+                <button class="esp-btn esp-btn-prim" onclick="espSubmitAnn()">Publier</button>
+              </div>
+            </div>
+            <div id="espAnnonces">
+              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+            </div>
+          </div>
+
         </div>
 
         <!-- HISTORIQUE -->

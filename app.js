@@ -2013,11 +2013,15 @@ function goAccount(){
       buildAccLists();
     }).catch(function(){});
   }
-  // Onglet et carte Revenus visibles uniquement pour les profs
+  // Onglets et cartes visibles uniquement pour les profs
   var tabRev = g('aTabRev');
   if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
   var cr=g('accCardRev');
   if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+  var ce=g('accCardEsp');
+  if(ce)ce.style.display=(user&&user.role==='professeur')?'block':'none';
+  var te=g('aTabEsp');
+  if(te)te.style.display=(user&&user.role==='professeur')?'flex':'none';
   // Statut vérification
   updateVerifStatusBlock();
   updateDiplomeStatusBlock();
@@ -2030,7 +2034,7 @@ function goAccount(){
 }
 
 function switchATab(s,el){
-  ['R','F','H','P','Rev','Rmb'].forEach(function(x){
+  ['R','F','H','P','Rev','Rmb','Esp'].forEach(function(x){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');
     if(tab)tab.classList.remove('on');
@@ -2052,6 +2056,7 @@ function switchATab(s,el){
   if(s==='R'){ buildAccLists(); }
   if(s==='F'){ buildAccLists(); }
   if(s==='Rmb'){loadRemboursements();}
+  if(s==='Esp'){buildEspProf();}
 }
 
 function buildAccLists(){
@@ -4036,6 +4041,195 @@ function enrollWithCode(){
         if(errEl){errEl.textContent=msg;errEl.style.display='block';}
       }
     }).catch(function(){if(btn)btn.disabled=false;if(errEl){errEl.textContent='Erreur réseau.';errEl.style.display='block';}});
+}
+
+// ── ESPACE PROFESSEUR ────────────────────────────────────────────────────────
+var _espCurrentCode=null;
+
+function buildEspProf(){
+  espLoadCode();
+  espLoadStudents();
+  espLoadResources();
+  espLoadAnnonces();
+}
+
+function espLoadCode(){
+  var el=g('espCodeDisplay');
+  if(el)el.textContent='⋯';
+  fetch(API+'/teacher/my-code',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
+    _espCurrentCode=d.teacher_code||null;
+    if(el)el.textContent=_espCurrentCode||'Aucun code';
+  }).catch(function(){if(el)el.textContent='Erreur';});
+}
+
+function espRegenCode(){
+  if(!confirm('Générer un nouveau code ? L\'ancien ne fonctionnera plus.'))return;
+  var el=g('espCodeDisplay');if(el)el.textContent='⋯';
+  fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
+    _espCurrentCode=d.teacher_code||null;
+    if(el)el.textContent=_espCurrentCode||'Erreur';
+    haptic(8);toast('Nouveau code généré','Partage-le avec tes élèves');
+  }).catch(function(){if(el)el.textContent='Erreur';});
+}
+
+function espCopyCode(){
+  if(!_espCurrentCode){toast('Génère un code d\'abord','');return;}
+  try{navigator.clipboard.writeText(_espCurrentCode);toast('Code copié !','');haptic(4);}
+  catch(e){toast(_espCurrentCode,'Copie ce code manuellement');}
+}
+
+function espShareCode(){
+  if(!_espCurrentCode){toast('Génère un code d\'abord','');return;}
+  var txt='Rejoins mon espace sur CoursPool avec le code : '+_espCurrentCode+'\nhttps://courspool.vercel.app';
+  if(navigator.share){navigator.share({title:'Mon code CoursPool',text:txt}).catch(function(){});}
+  else{try{navigator.clipboard.writeText(txt);toast('Lien copié !','');}catch(e){toast(_espCurrentCode,'Copie ce code');}}
+}
+
+function espLoadStudents(){
+  var el=g('espStudents'),badge=g('espStudentBadge');
+  if(el)el.innerHTML='<div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div>';
+  fetch(API+'/teacher/my-students',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    if(!list||!list.length){
+      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun élève inscrit pour l\'instant.<br><span style="font-size:11px;opacity:.7">Partage ton code pour les inviter.</span></div>';
+      if(badge)badge.style.display='none';
+      return;
+    }
+    if(badge){badge.textContent=list.length;badge.style.display='inline-flex';}
+    if(el)el.innerHTML=list.map(function(s){
+      var ini=(s.prenom[0]||'?').toUpperCase();
+      var nm=((s.prenom||'')+' '+(s.nom||'')).trim()||'Élève';
+      var date=new Date(s.enrolled_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+      var av=s.photo_url
+        ?'<img src="'+esc(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover">'
+        :'<span style="font-size:13px;font-weight:800;color:#fff">'+ini+'</span>';
+      return'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr)">'
+        +'<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+av+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--ink)">'+esc(nm)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite)">Inscrit le '+date+'</div>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px">Erreur de chargement</div>';});
+}
+
+function espLoadResources(){
+  var el=g('espResources');
+  if(el)el.innerHTML='<div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:6px"></div>';
+  var uid=user&&user.id;if(!uid)return;
+  var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
+  fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    if(!list||!list.length){
+      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune ressource publiée.</div>';
+      return;
+    }
+    if(el)el.innerHTML=list.map(function(r){
+      return'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)">'
+        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite)">'+esc(r.type)+'</div>'
+        +'</div>'
+        +'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="color:var(--or);font-size:11px;font-weight:700;flex-shrink:0">Voir</a>'
+        +'<button onclick="espDeleteRes(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+        +'</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){if(el)el.innerHTML='';});
+}
+
+function espDeleteRes(id){
+  if(!confirm('Supprimer cette ressource ?'))return;
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/resources/'+id,{method:'DELETE',headers:apiH()}).then(function(){
+    haptic(4);espLoadResources();
+  }).catch(function(){toast('Erreur','Impossible de supprimer');});
+}
+
+function espToggleAddRes(btn){
+  var f=g('espResForm');if(!f)return;
+  var show=f.style.display==='none';
+  f.style.display=show?'flex':'none';
+  if(btn)btn.textContent=show?'Annuler':'+ Ajouter';
+}
+
+function espSubmitRes(){
+  var uid=user&&user.id;if(!uid)return;
+  var title=(g('espResTitle')||{}).value||'';
+  var url=(g('espResUrl')||{}).value||'';
+  var type=(g('espResType')||{}).value||'article';
+  if(!title.trim()||!url.trim()){toast('Titre et lien requis','');return;}
+  var btn=document.querySelector('#espResForm .esp-btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),body:JSON.stringify({title:title.trim(),url:url.trim(),type:type,access_level:'followers'})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){toast('Erreur',d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
+      haptic(4);toast('Ressource publiée !','');
+      if(g('espResTitle'))g('espResTitle').value='';
+      if(g('espResUrl'))g('espResUrl').value='';
+      var f=g('espResForm');if(f)f.style.display='none';
+      var ab=document.querySelector('[onclick="espToggleAddRes(this)"]');
+      if(ab)ab.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter';
+      if(btn){btn.disabled=false;btn.textContent='Publier';}
+      espLoadResources();
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
+}
+
+function espLoadAnnonces(){
+  var el=g('espAnnonces');
+  if(el)el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px"></div>';
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    if(!list||!list.length){
+      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune annonce publiée.</div>';
+      return;
+    }
+    if(el)el.innerHTML=list.map(function(a){
+      var date=new Date(a.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:8px;position:relative">'
+        +'<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap;padding-right:24px">'+esc(a.content)+'</div>'
+        +'<div style="font-size:11px;color:var(--lite);margin-top:6px">'+date+'</div>'
+        +'<button onclick="espDeleteAnn(\''+a.id+'\')" style="position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;padding:4px;color:var(--lite)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+        +'</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){if(el)el.innerHTML='';});
+}
+
+function espDeleteAnn(id){
+  if(!confirm('Supprimer cette annonce ?'))return;
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'DELETE',headers:apiH()}).then(function(){
+    haptic(4);espLoadAnnonces();
+  }).catch(function(){toast('Erreur','Impossible de supprimer');});
+}
+
+function espToggleAddAnn(btn){
+  var f=g('espAnnForm');if(!f)return;
+  var show=f.style.display==='none';
+  f.style.display=show?'flex':'none';
+  if(btn)btn.textContent=show?'Annuler':'+ Nouvelle';
+}
+
+function espSubmitAnn(){
+  var uid=user&&user.id;if(!uid)return;
+  var content=((g('espAnnText')||{}).value||'').trim();
+  if(!content){toast('Écris ton annonce d\'abord','');return;}
+  var btn=document.querySelector('#espAnnForm .esp-btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify({content:content})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){toast('Erreur',d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
+      haptic(4);toast('Annonce publiée !','');
+      if(g('espAnnText'))g('espAnnText').value='';
+      var f=g('espAnnForm');if(f)f.style.display='none';
+      var ab=document.querySelector('[onclick="espToggleAddAnn(this)"]');
+      if(ab)ab.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouvelle';
+      if(btn){btn.disabled=false;btn.textContent='Publier';}
+      espLoadAnnonces();
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
 }
 
 function _renderMpfTags(list){
@@ -8847,7 +9041,7 @@ function showAccHome(){
 
 // Override switchATab to show detail view + update topbar title
 (function(){
-  var _tabTitleKeys={R:'acc_mes_cours',F:'acc_suivis',H:'acc_historique',P:'acc_mon_profil',Rev:'acc_revenus',Rmb:'settings_remb'};
+  var _tabTitleKeys={R:'acc_mes_cours',F:'acc_suivis',H:'acc_historique',P:'acc_mon_profil',Rev:'acc_revenus',Rmb:'settings_remb',Esp:'Mon Espace'};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
@@ -8877,6 +9071,10 @@ function showAccHome(){
     _au2();
     var cr=g('accCardRev');
     if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+    var ce=g('accCardEsp');
+    if(ce)ce.style.display=(user&&user.role==='professeur')?'block':'none';
+    var te=g('aTabEsp');
+    if(te)te.style.display=(user&&user.role==='professeur')?'flex':'none';
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     var sb=g('btnShareCours');
     if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
