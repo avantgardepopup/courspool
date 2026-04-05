@@ -4311,35 +4311,17 @@ function _loadMpfAvis(pid){
   }).catch(function(){if(g('mpfAvisSection'))g('mpfAvisSection').style.display='none';});
 }
 
-// ── TABS INTERNES ESPACE ÉLÈVE ───────────────────────────────────────────
-var _mpfEspTab='Feed';
-function switchMpfEspTab(tab,btn){
-  _mpfEspTab=tab;
-  ['Feed','Cours','Docs','Moi'].forEach(function(k){
-    var p=g('mpfEspPanel'+k),b=g('mpfEspTab'+k);
-    if(p)p.style.display=k===tab?'block':'none';
-    if(b)b.classList.toggle('on',k===tab);
-  });
-  var pid=_curPrFull;
-  if(tab==='Feed')_loadMpfFeed(pid);
-  if(tab==='Cours')_loadMpfContenu(pid);
-  if(tab==='Docs'){_loadMpfRessourcesEsp(pid);_loadMpfSubmissions(pid);}
-  if(tab==='Moi')_loadMpfNote(pid);
-  haptic(4);
-}
-
+// ── ESPACE ÉLÈVE (page unique scrollable) ────────────────────────────────
 function _loadMpfEspace(pid){
-  _mpfEspTab='Feed';
-  ['Feed','Cours','Docs','Moi'].forEach(function(k){
-    var p=g('mpfEspPanel'+k),b=g('mpfEspTab'+k);
-    if(p)p.style.display=k==='Feed'?'block':'none';
-    if(b)b.classList.toggle('on',k==='Feed');
-  });
   _loadMpfFeed(pid);
+  _loadMpfContenu(pid);
+  _loadMpfRessourcesEsp(pid);
+  _loadMpfSubmissions(pid);
+  _loadMpfNote(pid);
 }
 
 function _loadMpfFeed(pid){
-  var el=g('mpfEspAnnonces');if(!el)return;
+  var el=g('mpfEspFil');if(!el)return;
   el.innerHTML='<div class="skeleton" style="height:80px;border-radius:16px;margin-bottom:10px"></div><div class="skeleton" style="height:60px;border-radius:16px"></div>';
   var p=P[pid]||{};
   var profNm=p.nm||'Votre prof';
@@ -4467,7 +4449,7 @@ function mpfSubmitDoc(){
   var title=((g('mpfSubTitle')||{}).value||'').trim();
   var url=((g('mpfSubUrl')||{}).value||'').trim();
   if(!title){toast('Donne un nom au document','');return;}
-  var btn=document.querySelector('#mpfEspPanelDocs .esp-btn-prim');
+  var btn=document.querySelector('#mpfEspSubSection .esp-btn-prim');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||null})})
     .then(function(r){return r.json();}).then(function(d){
@@ -4487,13 +4469,13 @@ function mpfDeleteSub(pid,sid){
 }
 
 function _loadMpfNote(pid){
-  var el=g('mpfEspNotes');if(!el||!user)return;
-  el.innerHTML='<div class="skeleton" style="height:80px;border-radius:12px"></div>';
+  var el=g('mpfEspNotes');var sec=g('mpfEspNoteSection');if(!el||!user)return;
   fetch(API+'/teacher/'+pid+'/student-notes/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
     if(_curPrFull!==pid)return;
-    if(!data||!data.content){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:8px 0">Aucune note de votre professeur pour le moment.</div>';return;}
+    if(!data||!data.content){if(sec)sec.style.display='none';return;}
+    if(sec)sec.style.display='block';
     el.innerHTML='<div style="font-size:14px;color:var(--ink);line-height:1.65;white-space:pre-wrap;padding:4px 0">'+esc(data.content)+'</div>';
-  }).catch(function(){});
+  }).catch(function(){if(sec)sec.style.display='none';});
 }
 
 // ── GESTION CONTENUS CÔTÉ PROF ───────────────────────────────────────────

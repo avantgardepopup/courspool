@@ -856,20 +856,13 @@ html.dk .prof-badge{border-color:rgba(255,255,255,.12);}
 }
 .esp-input:focus{outline:none;border-color:var(--or);}
 .esp-textarea{resize:none;min-height:72px;line-height:1.5;}
-/* ── ESPACE ÉLÈVE — tabs + feed + contenus ── */
-.mpf-esp-tabbar{
-  display:flex;border-bottom:1.5px solid var(--bdr);
-  padding:0 16px;background:var(--wh);position:sticky;top:0;z-index:10;
+/* ── ESPACE ÉLÈVE — page scrollable ── */
+.esp-section-sep{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:800;color:var(--lite);
+  text-transform:uppercase;letter-spacing:.07em;
+  padding:12px 0 8px;
 }
-.mpf-esp-tab{
-  flex:1;background:none;border:none;font-family:inherit;
-  font-size:11px;font-weight:700;color:var(--lite);
-  padding:12px 4px 10px;cursor:pointer;
-  border-bottom:2px solid transparent;margin-bottom:-1.5px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  letter-spacing:.02em;text-transform:uppercase;transition:color .15s;
-}
-.mpf-esp-tab.on{color:var(--or);border-bottom-color:var(--or);}
 /* Feed cards (style réseau social) */
 .feed-card{
   background:var(--wh);border-radius:18px;
