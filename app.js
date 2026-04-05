@@ -3854,17 +3854,18 @@ var _curPrFull=null;
 var _curPrEnrolled=false;
 
 function _buildBadges(p,pid){
-  var chk='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>';
-  var dip='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
-  var shld='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  // icônes spécifiques à chaque badge (pas de checkmark générique)
+  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>';
+  var icoDip='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var icoShld='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   var _isVrf=p.verified===true||p.verified==='true';
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
   var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
   var h='';
-  if(_isVrf)h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+chk+t('mp_identite')+'</span>';
-  if(_isDip)h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+dip+t('mp_diplome')+'</span>';
-  if(_isCas)h+='<span onclick="showBadgeInfo(\'confiance\')" class="prof-badge prof-badge-cas">'+shld+t('mp_confiance')+'</span>';
-  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">'+chk+'Suivi</span>';
+  if(_isVrf)h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+icoId+t('mp_identite')+'</span>';
+  if(_isDip)h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+icoDip+t('mp_diplome')+'</span>';
+  if(_isCas)h+='<span onclick="showBadgeInfo(\'confiance\')" class="prof-badge prof-badge-cas">'+icoShld+t('mp_confiance')+'</span>';
+  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">Suivi</span>';
   return h;
 }
 
@@ -5886,10 +5887,6 @@ function showBadgeInfo(type){
     +'<div style="width:88px;height:88px;background:rgba(255,255,255,.18);border-radius:28px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 0 8px rgba(255,255,255,.08)">'+d.icon+'</div>'
     +'</div>'
     +'<div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:8px;text-shadow:0 1px 8px rgba(0,0,0,.15)">'+d.name+'</div>'
-    // stats pill
-    +'<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);border:1.5px solid rgba(255,255,255,.35);border-radius:50px;padding:5px 14px;font-size:11.5px;font-weight:700;color:#fff">'
-    +'<svg viewBox="0 0 24 24" fill="#fff" width="12" height="12"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
-    +d.badge+'</div>'
     +'</div>'
     // Description
     +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
