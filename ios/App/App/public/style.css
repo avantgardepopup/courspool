@@ -908,7 +908,7 @@ html.dk .esp2-card{border-color:rgba(255,255,255,.07);box-shadow:none;}
 .esp2-btn-submit:active{opacity:.8;}
 /* Popup plein écran publications */
 #bdEspPubs{
-  position:fixed;inset:0;z-index:600;background:var(--bg);
+  position:fixed;inset:0;z-index:600;background:var(--wh);
   display:flex;flex-direction:column;
   animation:mi .3s cubic-bezier(.32,1,.6,1);
 }
@@ -916,7 +916,7 @@ html.dk .esp2-card{border-color:rgba(255,255,255,.07);box-shadow:none;}
 .bdep-top{
   display:flex;align-items:center;gap:10px;
   padding:max(52px,env(safe-area-inset-top,52px)) 16px 14px;
-  background:var(--wh);border-bottom:1px solid var(--bdr);flex-shrink:0;
+  background:var(--wh);border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0;
 }
 html.dk .bdep-top{border-color:rgba(255,255,255,.07);}
 .bdep-scroll{flex:1;overflow-y:auto;padding:16px 16px 40px;-webkit-overflow-scrolling:touch;}
@@ -1598,7 +1598,7 @@ html.dk #bdEspEditor{background:#111;}
 .esp-ed-top{
   display:flex;align-items:center;gap:10px;flex-shrink:0;
   padding:max(52px,env(safe-area-inset-top,52px)) 16px 12px;
-  border-bottom:1px solid var(--bdr);
+  border-bottom:1px solid rgba(0,0,0,.06);
   background:var(--wh);
 }
 html.dk .esp-ed-top{background:#111;border-color:rgba(255,255,255,.08);}
