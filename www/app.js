@@ -1948,6 +1948,8 @@ function goAccount(){
   g('pgExp').classList.remove('on');
   g('pgMsg').classList.remove('on');
   var pgFavEl=g('pgFav');if(pgFavEl)pgFavEl.classList.remove('on');
+  var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.remove('on');
+  var pgMesProfsEl=g('pgMesProfs');if(pgMesProfsEl)pgMesProfsEl.classList.remove('on');
   g('pgAcc').classList.add('on');
   setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.25)');
   var accName=g('accName'); if(accName)accName.textContent=user.pr+(user.nm?' '+user.nm:'');
