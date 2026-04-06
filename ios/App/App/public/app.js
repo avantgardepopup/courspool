@@ -4065,7 +4065,7 @@ var _espCurrentCode=null;
 
 function buildEspProf(){
   // Referme tous les tiroirs
-  ['espCard1','espCard2','espCard3','espCard4','espCard5'].forEach(function(id){
+  ['espCard1','espCard2','espCard3','espCard4','espCard5','espCard6'].forEach(function(id){
     var c=g(id);if(c)c.classList.remove('open');
   });
   // Charge le code (affiché dans le header de la card)
@@ -4659,6 +4659,150 @@ function espDeleteContenu(id){
   });
 }
 
+// ── MES COURS (prof) ──────────────────────────────────────────────────────
+var _espSelCours=null;
+
+function espLoadMesCours(){
+  var uid=user&&user.id;if(!uid)return;
+  var el=g('espMesCoursList');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px;margin-bottom:6px"></div><div class="skeleton" style="height:54px;border-radius:12px"></div>';
+  var now=new Date();
+  var myCours=C.filter(function(c){return c.prof_id===uid||c.teacher_id===uid;});
+  if(!myCours.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours trouvé.</div>';return;}
+  var upcoming=[],past=[];
+  myCours.forEach(function(c){
+    var d=c.date_heure||c.date||c.created_at;
+    if(!d||(new Date(d))>=now)upcoming.push(c);else past.push(c);
+  });
+  upcoming.sort(function(a,b){return new Date(a.date_heure||a.date||0)-new Date(b.date_heure||b.date||0);});
+  past.sort(function(a,b){return new Date(b.date_heure||b.date||0)-new Date(a.date_heure||a.date||0);});
+  var html='';
+  function renderRows(list,tag,label){
+    if(!list.length)return;
+    html+='<div class="esp-mc-section">'+label+'</div>';
+    list.forEach(function(c){
+      var emoji=c.emoji||'📘';
+      var titre=esc(c.titre||c.title||'Cours');
+      var date='';
+      var d=c.date_heure||c.date;
+      if(d){var dd=new Date(d);date=dd.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+(c.heure?' · '+c.heure:'');}
+      html+='<div class="esp-mc-row" onclick="espOpenCourseActions(\''+c.id+'\')">'
+        +'<div style="font-size:22px;flex-shrink:0;width:36px;text-align:center">'+emoji+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+titre+'</div>'
+        +(date?'<div style="font-size:11px;color:var(--lite);margin-top:1px">'+date+'</div>':'')
+        +'</div>'
+        +'<span class="esp-mc-tag '+tag+'">'+label+'</span>'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
+        +'</div>';
+    });
+  }
+  renderRows(upcoming,'upcoming','À venir');
+  renderRows(past,'past','Passés');
+  el.innerHTML=html||'<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours.</div>';
+}
+
+function espOpenCourseActions(id){
+  var c=C.find(function(x){return x.id==id;});
+  if(!c)return;
+  _espSelCours=c;
+  var titleEl=g('espCaTitle'),subEl=g('espCaSub'),iconEl=g('espCaIcon');
+  if(titleEl)titleEl.textContent=c.titre||c.title||'Cours';
+  if(subEl){
+    var d=c.date_heure||c.date;
+    subEl.textContent=d?new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long'}):'';
+  }
+  if(iconEl)iconEl.textContent=c.emoji||'📘';
+  // reset sub-forms
+  ['espCaDocForm','espCaMsgForm','espCaInscList'].forEach(function(id){var el=g(id);if(el)el.style.display='none';});
+  var bd=g('bdEspCourseActions');if(!bd)return;
+  bd.style.display='flex';
+  haptic(4);
+}
+
+function closeEspCourseActions(){
+  var bd=g('bdEspCourseActions');if(!bd)return;
+  bd.style.display='none';
+  _espSelCours=null;
+}
+
+function espCaAddDoc(){
+  var f=g('espCaDocForm');if(!f)return;
+  g('espCaMsgForm').style.display='none';
+  g('espCaInscList').style.display='none';
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function espCaSendMsg(){
+  var f=g('espCaMsgForm');if(!f)return;
+  g('espCaDocForm').style.display='none';
+  g('espCaInscList').style.display='none';
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function espCaManage(){
+  var f=g('espCaInscList');if(!f)return;
+  g('espCaDocForm').style.display='none';
+  g('espCaMsgForm').style.display='none';
+  if(f.style.display!=='none'){f.style.display='none';return;}
+  f.style.display='block';
+  if(!_espSelCours)return;
+  var el=g('espCaInscContent');if(!el)return;
+  el.innerHTML='<div style="color:var(--lite);font-size:13px">Chargement…</div>';
+  fetch(API+'/reservations/cours/'+_espSelCours.id,{headers:apiH()})
+    .then(function(r){return r.json();}).then(function(list){
+      if(!list||!list.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:4px 0">Aucun élève inscrit.</div>';return;}
+      el.innerHTML=list.map(function(r){
+        var name=esc((r.student_name||r.nom||'Élève'));
+        var status=r.status==='confirmed'?'Payé':'En attente';
+        var color=r.status==='confirmed'?'#22C55E':'var(--or)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
+          +'<div style="width:32px;height:32px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--mid);flex-shrink:0">'+name.charAt(0).toUpperCase()+'</div>'
+          +'<div style="flex:1;font-size:13px;font-weight:600;color:var(--ink)">'+name+'</div>'
+          +'<span style="font-size:11px;font-weight:700;color:'+color+'">'+status+'</span>'
+          +'</div>';
+      }).join('');
+    }).catch(function(){el.innerHTML='<div style="color:var(--lite);font-size:13px">Erreur réseau.</div>';});
+}
+
+function espCaDocSubmit(){
+  if(!_espSelCours)return;
+  var uid=user&&user.id;if(!uid)return;
+  var title=(g('espCaDocTitle').value||'').trim();
+  var url=(g('espCaDocUrl').value||'').trim();
+  var type=g('espCaDocType').value;
+  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  var btn=document.querySelector('#espCaDocForm .esp2-btn-submit');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
+    body:JSON.stringify({title:title,url:url,type:type,cours_id:_espSelCours.id})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Document ajouté !','');
+      g('espCaDocTitle').value='';g('espCaDocUrl').value='';
+      g('espCaDocForm').style.display='none';
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}toast('Erreur réseau','');});
+}
+
+function espCaMsgSubmit(){
+  if(!_espSelCours)return;
+  var uid=user&&user.id;if(!uid)return;
+  var msg=(g('espCaMsgText').value||'').trim();
+  if(!msg){toast('Écris un message','');return;}
+  var btn=document.querySelector('#espCaMsgForm .esp2-btn-submit');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),
+    body:JSON.stringify({cours_id:_espSelCours.id,message:msg,sender_id:uid})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Message envoyé à tous les inscrits !','');
+      g('espCaMsgText').value='';
+      g('espCaMsgForm').style.display='none';
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}toast('Erreur réseau','');});
+}
+
 function switchMpfTab(tab){
   var tabs=['profil','cours','espace'];
   tabs.forEach(function(k){
@@ -4686,6 +4830,7 @@ function toggleEsp2Card(id,section){
     if(section==='annonces')espLoadAnnonces();
     if(section==='ressources')espLoadResources();
     if(section==='contenu')espLoadContenu();
+    if(section==='mesCours')espLoadMesCours();
   }
 }
 

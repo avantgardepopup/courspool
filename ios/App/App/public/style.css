@@ -1662,6 +1662,35 @@ html.dk .esp-kb-card.kb-open{box-shadow:0 -1px 0 rgba(255,255,255,.08);}
 .esp-fmt-btn.active{background:rgba(255,107,43,.1);color:var(--or);}
 .esp-fmt-h{font-size:11px;font-weight:800;letter-spacing:-.3px;}
 .esp-fmt-sep{width:1px;height:22px;background:var(--bdr);margin:0 4px;flex-shrink:0;}
+/* Boutons action par cours */
+.esp-ca-btn{
+  display:flex;align-items:center;gap:12px;width:100%;
+  background:none;border:none;cursor:pointer;
+  padding:12px 0;border-bottom:1px solid var(--bdr);
+  text-align:left;-webkit-tap-highlight-color:transparent;
+}
+.esp-ca-btn:last-child{border-bottom:none;}
+.esp-ca-btn:active{opacity:.7;}
+.esp-ca-ico{
+  width:38px;height:38px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+/* Ligne cours dans Mes cours */
+.esp-mc-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--bdr);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.esp-mc-row:last-child{border-bottom:none;}
+.esp-mc-row:active{opacity:.7;}
+.esp-mc-tag{
+  display:inline-block;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:50px;
+  letter-spacing:.03em;text-transform:uppercase;
+}
+.esp-mc-tag.upcoming{background:rgba(255,107,43,.12);color:var(--or);}
+.esp-mc-tag.past{background:var(--bg);color:var(--lite);}
+.esp-mc-section{font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:8px 0 4px;}
 /* Bouton nouvelle publication */
 .esp-editor-new-btn{
   width:100%;background:var(--bg);border:1.5px dashed var(--bdr);
