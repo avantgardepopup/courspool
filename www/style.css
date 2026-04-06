@@ -1456,6 +1456,9 @@ body, input, textarea, button, select {
 #pgAcc.home-mode .acc-body          { display: none; }
 #pgAcc.detail-mode #accHome         { display: none; }
 #pgAcc.detail-mode .acc-body        { display: block; }
+/* Fond blanc en mode détail (topbar mob-header blanche + contenu gris → unifier) */
+#pgAcc.detail-mode > div:first-child { background: var(--wh); }
+html.dk #pgAcc.detail-mode > div:first-child { background: var(--wh); }
 
 /* Remove extra top gap in first section label */
 #pgAcc.detail-mode .asec.on > div:first-child[style*="padding:20px"] {
