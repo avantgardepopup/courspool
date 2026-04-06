@@ -959,9 +959,8 @@ html.dk .contenu-card{border-color:rgba(255,255,255,.08);}
   border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;
   text-decoration:none;
 }
-/* ── MES PROFS 2-COL ── */
-.mp2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px 0;}
-.fav-prof-card.mp2-card{flex:none;padding:16px 12px 14px;}
+/* ── MES PROFS liste verticale ── */
+.mp2-grid{display:flex;flex-direction:column;padding:0 0 100px;}
 /* ── PROFIL PROF COMPLET (Avilio style) ── */
 #bdPrFull{
   position:fixed;inset:0;z-index:500;
