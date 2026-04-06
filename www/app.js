@@ -339,35 +339,32 @@ function toggleFavCours(coursId,btn){
 // ── SWIPE-TO-DELETE (fav cards) ──
 function _initFav2Swipe(card,coursId,wrap){
   var THRESHOLD=90;
-  var startX,startY,curX=0,committed=false,passed=false,isHoriz=false;
-  // Trouver l'action rouge (toujours dans le wrap, avant la card)
+  var startX,startY,startTime,curX=0,committed=false,passed=false;
   var action=wrap.querySelector('.fav2-swipe-action');
   function _snapBack(){
     card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
     card.style.transform='translateX(0)';
     if(action)action.style.opacity='0';
-    committed=false;curX=0;isHoriz=false;
+    committed=false;curX=0;
   }
-  // Cacher l'action par défaut — évite le rouge visible derrière les coins arrondis
   if(action)action.style.opacity='0';
+  // passive:false + preventDefault dès touchstart → iOS ne peut pas démarrer son geste de retour
+  // Le tap est géré manuellement dans touchend (onClick ne se déclenche plus avec preventDefault)
   card.addEventListener('touchstart',function(e){
-    var t=e.touches[0];startX=t.clientX;startY=t.clientY;
-    curX=0;committed=false;passed=false;isHoriz=false;
-    card.style.transition='none';
-    card.style.transform='translateX(0)';
+    e.preventDefault();
+    var t=e.touches[0];startX=t.clientX;startY=t.clientY;startTime=Date.now();
+    curX=0;committed=false;passed=false;
+    card.style.transition='none';card.style.transform='translateX(0)';
     if(action)action.style.opacity='0';
-  },{passive:true});
+    card.classList.add('tapped');
+  },{passive:false});
   card.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    card.classList.remove('tapped');
     var t=e.touches[0];
     var dx=t.clientX-startX,dy=t.clientY-startY;
-    // Détecter direction dès 4px pour bloquer le scroll de page au plus tôt
-    if(!isHoriz&&!committed){
-      if(Math.abs(dy)>Math.abs(dx))return; // vertical → laisser scroll
-      if(Math.abs(dx)>4){isHoriz=true;}else{return;}
-    }
-    // Dès qu'on sait que c'est horizontal : bloquer scroll + navigation iOS
-    e.preventDefault();
-    if(!committed&&Math.abs(dx)>6)committed=true;
+    if(Math.abs(dy)>Math.abs(dx)+8)return; // clairement vertical, on ignore
+    if(Math.abs(dx)>6)committed=true;
     if(!committed)return;
     curX=Math.min(0,dx);
     card.style.transform='translateX('+curX+'px)';
@@ -377,8 +374,16 @@ function _initFav2Swipe(card,coursId,wrap){
       try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics)Capacitor.Plugins.Haptics.impact({style:'MEDIUM'});}catch(_){}
     }else if(passed&&curX>-THRESHOLD){passed=false;}
   },{passive:false});
-  card.addEventListener('touchend',function(){
-    if(!committed){card.style.transform='translateX(0)';if(action)action.style.opacity='0';return;}
+  card.addEventListener('touchend',function(e){
+    card.classList.remove('tapped');
+    if(!committed){
+      // Tap : ouvrir le cours si déplacement minime + durée courte
+      var dx2=e.changedTouches&&e.changedTouches[0]?Math.abs(e.changedTouches[0].clientX-startX):99;
+      if(dx2<10&&(Date.now()-startTime)<300){haptic(4);openR(coursId);}
+      card.style.transform='translateX(0)';
+      if(action)action.style.opacity='0';
+      return;
+    }
     if(curX<=-THRESHOLD){
       card.style.transition='transform .22s cubic-bezier(.4,0,.6,1)';
       card.style.transform='translateX(-110%)';
@@ -389,7 +394,7 @@ function _initFav2Swipe(card,coursId,wrap){
       },210);
     }else{_snapBack();}
   },{passive:true});
-  card.addEventListener('touchcancel',_snapBack,{passive:true});
+  card.addEventListener('touchcancel',function(){card.classList.remove('tapped');_snapBack();},{passive:true});
 }
 
 // ── CARD FAVORIS 2-COL (style explorer) ──
@@ -4102,25 +4107,25 @@ var _espTutoSteps=[
     sub:'Découvre tout ce que tu peux faire pour tes élèves depuis cet espace dédié.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="10" width="36" height="30" rx="4"/><path d="M16 10V8a2 2 0 014 0v2"/><path d="M28 10V8a2 2 0 014 0v2"/><line x1="6" y1="20" x2="42" y2="20"/><circle cx="24" cy="32" r="5" fill="rgba(255,107,43,.15)"/><text x="24" y="36" text-anchor="middle" font-size="8" font-weight="bold" fill="#FF6B2B" stroke="none">KEY</text></svg>',
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="19" cy="21" r="9"/><line x1="28" y1="21" x2="44" y2="21"/><line x1="40" y1="21" x2="40" y2="28"/><line x1="35" y1="21" x2="35" y2="26"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Code d\'accès élèves',
     sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M8 34V14a2 2 0 012-2h28a2 2 0 012 2v14a2 2 0 01-2 2H14l-6 6V34z"/><line x1="16" y1="20" x2="32" y2="20"/><line x1="16" y1="27" x2="26" y2="27"/></svg>',
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M6 10h36a2 2 0 012 2v20a2 2 0 01-2 2H14l-8 7V12a2 2 0 012-2z"/><line x1="15" y1="20" x2="33" y2="20"/><line x1="15" y1="27" x2="27" y2="27"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Publications & Annonces',
     sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M6 40V12a2 2 0 012-2h10a2 2 0 012 2v28"/><path d="M20 40V18a2 2 0 012-2h10a2 2 0 012 2v22"/><path d="M34 40V24a2 2 0 012-2h6a2 2 0 012 2v16"/><line x1="4" y1="40" x2="44" y2="40"/></svg>',
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M10 6h20a2 2 0 012 2v32a2 2 0 01-2 2H10a2 2 0 01-2-2V8a2 2 0 012-2z"/><line x1="15" y1="16" x2="27" y2="16"/><line x1="15" y1="23" x2="27" y2="23"/><line x1="15" y1="30" x2="22" y2="30"/><path d="M32 14l6 0a2 2 0 012 2v24"/><path d="M38 14v24"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Ma bibliothèque',
     sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="18" cy="18" r="8"/><path d="M4 42v-3a8 8 0 018-8h12a8 8 0 018 8v3"/><path d="M32 14a8 8 0 010 8"/><path d="M44 42v-3a8 8 0 00-6-7.7"/></svg>',
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="18" cy="17" r="7"/><path d="M4 42v-2a11 11 0 0111-11h6a11 11 0 0111 11v2"/><circle cx="34" cy="15" r="5"/><path d="M40 38v-2a8 8 0 00-6-7.5"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Mes élèves',
     sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'

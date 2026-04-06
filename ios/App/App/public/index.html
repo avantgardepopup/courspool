@@ -539,7 +539,7 @@
         Messages
         <div class="tnav-badge" id="tnavBadge"></div>
       </div>
-      <div class="tnav-item" id="tnavMes" onclick="navTo('mes')" style="display:none">
+      <div class="tnav-item" id="tnavMes" onclick="goMesCoursPage()" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
         Mes cours
       </div>
@@ -840,13 +840,6 @@
   <!-- PAGE MES COURS — calendrier -->
   <div class="pg" id="pgMes">
     <div id="mesCalHd" class="mes-cal-hd"></div>
-    <!-- Segment Prochains/Passés (profs seulement) -->
-    <div id="mesSegBar" style="display:none;flex-shrink:0;padding:0 16px 10px;background:var(--wh)">
-      <div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">
-        <button id="mesSegUpcoming" class="mes-seg-btn on" onclick="mesSetSeg('upcoming')">À venir</button>
-        <button id="mesSegPast" class="mes-seg-btn" onclick="mesSetSeg('past')">Passés</button>
-      </div>
-    </div>
     <div id="pgMesCnt" class="mes-cal-scroll"></div>
   </div>
 
@@ -962,7 +955,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px">
 
           <!-- Mes cours -->
-          <div class="acc-card" onclick="switchATab('R',document.getElementById('aTabR'))" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+          <div class="acc-card" onclick="goMesCoursPage()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
             </div>
@@ -1156,6 +1149,15 @@
         <!-- ESPACE PROFESSEUR -->
         <div class="asec" id="asecEsp" style="padding:12px 16px 48px;gap:10px">
 
+          <!-- Entête espace + bouton tuto -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 2px">
+            <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Mon Espace</div>
+            <button onclick="openEspTuto()" style="background:var(--bg);border:1px solid var(--bdr);border-radius:50px;padding:6px 12px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Guide
+            </button>
+          </div>
+
           <!-- Card : Code d'accès -->
           <div class="esp2-card" id="espCard1">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard1','code')">
@@ -1168,18 +1170,18 @@
             </div>
             <div class="esp2-card-body">
               <div style="text-align:center;padding:10px 0 6px">
-                <div id="espCodeDisplay" style="font-size:30px;font-weight:900;letter-spacing:.25em;color:var(--or);font-variant-numeric:tabular-nums">——————</div>
+                <div id="espCodeDisplay" style="font-size:clamp(20px,8vw,30px);font-weight:900;letter-spacing:.2em;color:var(--or);font-variant-numeric:tabular-nums;word-break:break-all">——————</div>
                 <div style="font-size:12px;color:var(--lite);margin-top:4px">Partage ce code avec tes élèves</div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:12px">
-                <button class="esp-btn esp-btn-sec" style="flex:1;justify-content:center" onclick="espCopyCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copier
+              <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                <button class="esp-card-btn" onclick="espCopyCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copier
                 </button>
-                <button class="esp-btn esp-btn-sec" style="flex:1;justify-content:center" onclick="espShareCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager
+                <button class="esp-card-btn" onclick="espShareCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager
                 </button>
-                <button class="esp-btn esp-btn-prim" style="flex:1;justify-content:center" onclick="espRegenCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Nouveau
+                <button class="esp-card-btn esp-card-btn-prim" onclick="espRegenCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Nouveau code
                 </button>
               </div>
             </div>
@@ -1255,17 +1257,6 @@
             </div>
           </div>
 
-          <!-- Card : Mes cours (nav) -->
-          <div class="esp2-card esp2-card-nav" id="espCard6" onclick="espGoMesCours()">
-            <div class="esp2-card-hd" style="cursor:pointer">
-              <div class="esp2-ico" style="background:#EFF6FF">🗓️</div>
-              <div style="flex:1">
-                <div class="esp2-title">Mes cours</div>
-                <div class="esp2-sub">Cours à venir et passés</div>
-              </div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
 
 
         </div>
@@ -1809,34 +1800,53 @@
     <input id="espEdTitleInp" type="text" placeholder="Titre de la fiche…" class="esp-ed-title-inp" style="display:none">
     <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…"></div>
   </div>
-  <!-- Toolbar flottante (monte avec le clavier) -->
-  <div class="esp-kb-card" id="espEdToolbar">
-    <!-- Ligne principale (toujours visible) -->
-    <div class="esp-kb-row">
-      <button class="esp-fmt-btn" onclick="espFmt('bold')" id="fmtB" title="Gras"><strong>B</strong></button>
-      <button class="esp-fmt-btn" onclick="espFmt('italic')" id="fmtI" title="Italique"><em style="font-style:italic">I</em></button>
-      <button class="esp-fmt-btn" onclick="espFmt('underline')" id="fmtU" title="Souligné"><u>U</u></button>
-      <button class="esp-fmt-btn" onclick="espFmt('strikeThrough')" id="fmtS" title="Barré"><s>S</s></button>
+  </div>
+</div>
+<!-- Toolbar flottante éditeur (hors bdEspEditor pour que position:fixed soit relatif au viewport, pas à l'animation) -->
+<div class="esp-kb-card" id="espEdToolbar" style="display:none">
+  <!-- Ligne principale (toujours visible) -->
+  <div class="esp-kb-row">
+    <button class="esp-fmt-btn" onclick="espFmt('bold')" id="fmtB" title="Gras"><strong>B</strong></button>
+    <button class="esp-fmt-btn" onclick="espFmt('italic')" id="fmtI" title="Italique"><em style="font-style:italic">I</em></button>
+    <button class="esp-fmt-btn" onclick="espFmt('underline')" id="fmtU" title="Souligné"><u>U</u></button>
+    <button class="esp-fmt-btn" onclick="espFmt('strikeThrough')" id="fmtS" title="Barré"><s>S</s></button>
+    <div class="esp-fmt-sep"></div>
+    <button class="esp-fmt-btn" onclick="espFmt('insertUnorderedList')" title="Liste">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.2" fill="currentColor"/><circle cx="3" cy="12" r="1.2" fill="currentColor"/><circle cx="3" cy="18" r="1.2" fill="currentColor"/></svg>
+    </button>
+    <div style="flex:1"></div>
+    <button class="esp-kb-more-btn" id="espKbMoreBtn" onclick="toggleEspKbExtra()" title="Plus d'options">···</button>
+  </div>
+  <!-- Ligne extra (dépliable avec ···) -->
+  <div class="esp-kb-extra" id="espKbExtra">
+    <div class="esp-kb-row" style="padding-top:6px;border-top:1px solid var(--bdr);margin-top:6px">
+      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','p')">¶</button>
+      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h1')">H1</button>
+      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h2')">H2</button>
+      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h3')">H3</button>
       <div class="esp-fmt-sep"></div>
-      <button class="esp-fmt-btn" onclick="espFmt('insertUnorderedList')" title="Liste">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.2" fill="currentColor"/><circle cx="3" cy="12" r="1.2" fill="currentColor"/><circle cx="3" cy="18" r="1.2" fill="currentColor"/></svg>
+      <button class="esp-fmt-btn" onclick="espFmt('insertOrderedList')" title="Liste numérotée">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
       </button>
-      <div style="flex:1"></div>
-      <button class="esp-kb-more-btn" id="espKbMoreBtn" onclick="toggleEspKbExtra()" title="Plus d'options">···</button>
+      <button class="esp-fmt-btn" onclick="espInsertHR()" title="Séparateur">—</button>
     </div>
-    <!-- Ligne extra (dépliable avec ···) -->
-    <div class="esp-kb-extra" id="espKbExtra">
-      <div class="esp-kb-row" style="padding-top:6px;border-top:1px solid var(--bdr);margin-top:6px">
-        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','p')">¶</button>
-        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h1')">H1</button>
-        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h2')">H2</button>
-        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h3')">H3</button>
-        <div class="esp-fmt-sep"></div>
-        <button class="esp-fmt-btn" onclick="espFmt('insertOrderedList')" title="Liste numérotée">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
-        </button>
-        <button class="esp-fmt-btn" onclick="espInsertHR()" title="Séparateur">—</button>
-      </div>
+  </div>
+</div>
+
+<!-- TUTO PREMIER ACCÈS ESPACE PROF -->
+<div id="bdEspTuto" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)espTutoSkip()">
+  <div id="espTutoSheet" style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,0px));animation:mi .3s cubic-bezier(.32,1,.6,1)">
+    <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
+    <div id="espTutoTrack" style="overflow:hidden;padding:0 24px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px 0;gap:8px">
+      <button id="espTutoBackBtn" onclick="espTutoPrev()" style="background:var(--bg);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;visibility:hidden;-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div id="espTutoDots" style="display:flex;gap:7px;align-items:center;flex:1;justify-content:center"></div>
+      <button id="espTutoBtn" onclick="espTutoNext()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent;flex-shrink:0">Suivant</button>
+    </div>
+    <div style="text-align:center;padding:10px 0 0">
+      <button onclick="espTutoSkip()" style="background:none;border:none;font-size:13px;color:var(--lite);font-family:inherit;cursor:pointer;padding:6px 16px;-webkit-tap-highlight-color:transparent">Passer le tutoriel</button>
     </div>
   </div>
 </div>

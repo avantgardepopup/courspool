@@ -339,35 +339,51 @@ function toggleFavCours(coursId,btn){
 // ── SWIPE-TO-DELETE (fav cards) ──
 function _initFav2Swipe(card,coursId,wrap){
   var THRESHOLD=90;
-  var startX,startY,curX=0,committed=false,passed=false;
+  var startX,startY,startTime,curX=0,committed=false,passed=false;
+  var action=wrap.querySelector('.fav2-swipe-action');
   function _snapBack(){
     card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
     card.style.transform='translateX(0)';
+    if(action)action.style.opacity='0';
     committed=false;curX=0;
   }
+  if(action)action.style.opacity='0';
+  // passive:false + preventDefault dès touchstart → iOS ne peut pas démarrer son geste de retour
+  // Le tap est géré manuellement dans touchend (onClick ne se déclenche plus avec preventDefault)
   card.addEventListener('touchstart',function(e){
-    var t=e.touches[0];startX=t.clientX;startY=t.clientY;
+    e.preventDefault();
+    var t=e.touches[0];startX=t.clientX;startY=t.clientY;startTime=Date.now();
     curX=0;committed=false;passed=false;
-    card.style.transition='none';
-    card.style.transform='translateX(0)'; // reset any stuck state
-  },{passive:true});
+    card.style.transition='none';card.style.transform='translateX(0)';
+    if(action)action.style.opacity='0';
+    card.classList.add('tapped');
+  },{passive:false});
   card.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    card.classList.remove('tapped');
     var t=e.touches[0];
     var dx=t.clientX-startX,dy=t.clientY-startY;
-    if(!committed){
-      if(Math.abs(dy)>Math.abs(dx))return;
-      if(Math.abs(dx)>6)committed=true;else return;
-    }
-    e.preventDefault();
+    if(Math.abs(dy)>Math.abs(dx)+8)return; // clairement vertical, on ignore
+    if(Math.abs(dx)>6)committed=true;
+    if(!committed)return;
     curX=Math.min(0,dx);
     card.style.transform='translateX('+curX+'px)';
+    if(action)action.style.opacity=Math.min(1,Math.abs(curX)/THRESHOLD)+'';
     if(!passed&&curX<=-THRESHOLD){
       passed=true;
       try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics)Capacitor.Plugins.Haptics.impact({style:'MEDIUM'});}catch(_){}
     }else if(passed&&curX>-THRESHOLD){passed=false;}
   },{passive:false});
-  card.addEventListener('touchend',function(){
-    if(!committed){card.style.transform='translateX(0)';return;}
+  card.addEventListener('touchend',function(e){
+    card.classList.remove('tapped');
+    if(!committed){
+      // Tap : ouvrir le cours si déplacement minime + durée courte
+      var dx2=e.changedTouches&&e.changedTouches[0]?Math.abs(e.changedTouches[0].clientX-startX):99;
+      if(dx2<10&&(Date.now()-startTime)<300){haptic(4);openR(coursId);}
+      card.style.transform='translateX(0)';
+      if(action)action.style.opacity='0';
+      return;
+    }
     if(curX<=-THRESHOLD){
       card.style.transition='transform .22s cubic-bezier(.4,0,.6,1)';
       card.style.transform='translateX(-110%)';
@@ -378,7 +394,7 @@ function _initFav2Swipe(card,coursId,wrap){
       },210);
     }else{_snapBack();}
   },{passive:true});
-  card.addEventListener('touchcancel',_snapBack,{passive:true});
+  card.addEventListener('touchcancel',function(){card.classList.remove('tapped');_snapBack();},{passive:true});
 }
 
 // ── CARD FAVORIS 2-COL (style explorer) ──
@@ -448,7 +464,11 @@ function buildFavPage(){
         var c=C.find(function(x){return x.id==id;});
         return!c||!_isCoursPass(c);
       });
-      if(!_favActive.length&&C.length){if(coursSection)coursSection.style.display='none';}
+      if(!_favActive.length&&C.length){
+        if(coursSection)coursSection.style.display='none';
+        if(emptyAll){emptyAll.style.display='flex';emptyAll.style.flexDirection='column';emptyAll.style.alignItems='center';emptyAll.style.justifyContent='center';emptyAll.style.minHeight='60vh';}
+        return;
+      }
       carousel.innerHTML='';
       var _fFrag=document.createDocumentFragment();
       _favActive.forEach(function(id){
@@ -4073,6 +4093,125 @@ function buildEspProf(){
   });
   // Charge le code (affiché dans le header de la card)
   espLoadCode();
+  // Tuto première visite
+  setTimeout(checkEspTuto, 600);
+}
+
+// ── TUTO ESPACE PROF (première visite) ──────────────────────────────────────
+var _espTutoStep=0;
+var _espTutoSteps=[
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Bienvenue dans ton Espace !',
+    sub:'Découvre tout ce que tu peux faire pour tes élèves depuis cet espace dédié.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="19" cy="21" r="9"/><line x1="28" y1="21" x2="44" y2="21"/><line x1="40" y1="21" x2="40" y2="28"/><line x1="35" y1="21" x2="35" y2="26"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Code d\'accès élèves',
+    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M6 10h36a2 2 0 012 2v20a2 2 0 01-2 2H14l-8 7V12a2 2 0 012-2z"/><line x1="15" y1="20" x2="33" y2="20"/><line x1="15" y1="27" x2="27" y2="27"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Publications & Annonces',
+    sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M10 6h20a2 2 0 012 2v32a2 2 0 01-2 2H10a2 2 0 01-2-2V8a2 2 0 012-2z"/><line x1="15" y1="16" x2="27" y2="16"/><line x1="15" y1="23" x2="27" y2="23"/><line x1="15" y1="30" x2="22" y2="30"/><path d="M32 14l6 0a2 2 0 012 2v24"/><path d="M38 14v24"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Ma bibliothèque',
+    sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="18" cy="17" r="7"/><path d="M4 42v-2a11 11 0 0111-11h6a11 11 0 0111 11v2"/><circle cx="34" cy="15" r="5"/><path d="M40 38v-2a8 8 0 00-6-7.5"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Mes élèves',
+    sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'
+  }
+];
+
+function checkEspTuto(){
+  try{if(localStorage.getItem('cp_esp_tuto'))return;}catch(e){}
+  openEspTuto();
+}
+
+function openEspTuto(){
+  _espTutoStep=0;
+  var bd=g('bdEspTuto');if(!bd)return;
+  _espTutoRender();
+  bd.style.display='flex';
+  var sheet=g('espTutoSheet');if(sheet)_espTutoInitSwipe(sheet);
+  haptic(4);
+}
+
+function _espTutoRender(){
+  var s=_espTutoSteps[_espTutoStep];if(!s)return;
+  var track=g('espTutoTrack');
+  var dots=g('espTutoDots');
+  var btn=g('espTutoBtn');
+  var backBtn=g('espTutoBackBtn');
+  var isLast=_espTutoStep===_espTutoSteps.length-1;
+  var isFirst=_espTutoStep===0;
+  if(track){
+    track.innerHTML=''
+      +'<div style="text-align:center;padding:28px 0 20px">'
+      +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+      +'</div>';
+  }
+  if(dots){
+    dots.innerHTML=_espTutoSteps.map(function(_,i){
+      return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
+    }).join('');
+  }
+  if(btn)btn.textContent=isLast?'Commencer\u00a0!':'Suivant';
+  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
+}
+
+function _espTutoInitSwipe(sheet){
+  if(!sheet||sheet._tutoSwipeInit)return;
+  sheet._tutoSwipeInit=true;
+  var sx=0,sy=0;
+  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    var dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
+      if(dx<0)espTutoNext();
+      else if(_espTutoStep>0){_espTutoStep--;_espTutoRender();}
+    }
+  },{passive:true});
+}
+
+function espTutoGoTo(i){
+  _espTutoStep=i;haptic(4);_espTutoRender();
+}
+
+function espTutoPrev(){
+  if(_espTutoStep>0){_espTutoStep--;haptic(4);_espTutoRender();}
+}
+
+function espTutoNext(){
+  haptic(4);
+  if(_espTutoStep<_espTutoSteps.length-1){
+    _espTutoStep++;
+    _espTutoRender();
+  }else{
+    espTutoDone();
+  }
+}
+
+function espTutoSkip(){
+  espTutoDone();
+}
+
+function espTutoDone(){
+  try{localStorage.setItem('cp_esp_tuto','1');}catch(e){}
+  var bd=g('bdEspTuto');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
 }
 
 function espLoadCode(){
@@ -4274,6 +4413,9 @@ function openEspEditor(mode){
   if(ex)ex.classList.remove('open');
   if(btn)btn.classList.remove('open');
   el.style.display='flex';
+  // Toolbar en dehors du bdEspEditor — la rendre visible
+  var bar=g('espEdToolbar');
+  if(bar){bar.style.display='block';bar.style.bottom='';bar.classList.remove('kb-open');}
   haptic(4);
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_espKbUpdate,{passive:true});
@@ -4281,10 +4423,10 @@ function openEspEditor(mode){
   }
   // Fallback : re-calculer quand le focus change (iOS WKWebView)
   var edEl=g('espAnnEditor'),tiEl=g('espEdTitleInp');
-  [edEl,tiEl].forEach(function(el){
-    if(el){
-      el.addEventListener('focus',function(){setTimeout(_espKbUpdate,350);},{once:false});
-      el.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
+  [edEl,tiEl].forEach(function(inp){
+    if(inp){
+      inp.addEventListener('focus',function(){setTimeout(_espKbUpdate,350);},{once:false});
+      inp.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
     }
   });
   setTimeout(function(){
@@ -4300,7 +4442,7 @@ function closeEspEditor(){
     window.visualViewport.removeEventListener('scroll',_espKbUpdate);
   }
   var bar=g('espEdToolbar');
-  if(bar){bar.style.bottom='';bar.classList.remove('kb-open');}
+  if(bar){bar.style.bottom='';bar.classList.remove('kb-open');bar.style.display='none';}
   el.classList.add('closing');
   setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
@@ -4353,11 +4495,8 @@ function espLoadAnnonces(){
   var profPhoto=p.photo||null;
   var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
   fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
-    if(!list||!list.length){
-      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucune publication pour l\'instant.</div>';
-      return;
-    }
-    var filtered=list.filter(function(a){return a.type!=='fiche';});
+    var filtered=(list||[]).filter(function(a){return a.type!=='fiche';});
+    if(!filtered.length){if(el)el.innerHTML='';return;}
     if(el)el.innerHTML=filtered.map(function(a){
       var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
       return'<div class="forum-post">'
@@ -4372,7 +4511,7 @@ function espLoadAnnonces(){
         +'</button>'
         +'</div>'
         +'</div>';
-    }).join('')||'<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucune publication.</div>';
+    }).join('');
   }).catch(function(){if(el)el.innerHTML='';});
 }
 
@@ -4896,6 +5035,11 @@ function espDeleteContenu(id){
 }
 
 // ── MES COURS (prof) ──────────────────────────────────────────────────────
+function goMesCoursPage(){
+  if(user&&user.role==='professeur'){espGoMesCours();}
+  else{switchATab('R',g('aTabR'));}
+}
+
 function espGoMesCours(){
   haptic(4);
   // navTo('mes') bloque les profs → navigation directe
@@ -4906,8 +5050,6 @@ function espGoMesCours(){
   updateMobHeader('mes');
   restoreNav();
   _mesSeg='upcoming';
-  if(g('mesSegUpcoming'))g('mesSegUpcoming').classList.add('on');
-  if(g('mesSegPast'))g('mesSegPast').classList.remove('on');
   buildMesCours();
 }
 
@@ -5790,7 +5932,13 @@ async function loadConversations(){
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px;font-weight:600">'+t('msg_empty_conv')+'</div><div style="font-size:12px;margin-top:6px">'+_emptyDesc+'</div></div>';
+      lm.innerHTML='<div style="text-align:center;padding:56px 24px">'
+        +'<div style="width:72px;height:72px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
+        +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
+        +'</div>';
       _convLoading=false;return;
     }
     // Grouper par interlocuteur
@@ -9404,7 +9552,8 @@ async function subCrStep(){
   var _nt=navTo;
   navTo=function(tab){
     if(tab==='mes'){
-      if(!user||user.guest||user.role==='professeur'){navTo('exp');return;}
+      if(!user||user.guest){navTo('exp');return;}
+      if(user.role==='professeur'){espGoMesCours();return;}
       // Masquer toutes les pages
       ['pgExp','pgMsg','pgAcc','pgFav','pgMes','pgMesProfs'].forEach(function(id){
         var el=g(id);if(el)el.classList.remove('on');
@@ -9511,6 +9660,20 @@ function _calWeekMon(){
 
 function _calBuildHeader(myCours){
   var hd=g('mesCalHd');if(!hd)return;
+  var isProf=user&&user.role==='professeur';
+
+  // Segment bar HTML (profs only) — intégré dans le header pour éviter la double séparation visuelle
+  var segHtml='';
+  if(isProf){
+    segHtml='<div id="mesSegBar" style="padding:8px 0 2px">'
+      +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
+      +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
+      +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+      +'</div></div>';
+  }
+
+  hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
+
   var today=new Date();today.setHours(0,0,0,0);
   var todayYmd=_calYmd(today);
   var mon=_calWeekMon();
@@ -9522,37 +9685,49 @@ function _calBuildHeader(myCours){
   if(!selInWeek)_calSelDay=_calYmd(mon);
 
   var selD=new Date(_calSelDay+'T00:00:00');
-  var titleStr=_CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
+  var titleStr=_mesSeg==='past'
+    ? 'Cours passés'
+    : _CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
 
-  // Compute set of days that have courses
+  // Compute set of days that have courses (only for upcoming mode)
   var daysWithCours={};
-  myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
-
-  // Build 7 day chips
-  var chipsHtml='';
-  for(var i=0;i<7;i++){
-    var d=new Date(mon);d.setDate(mon.getDate()+i);
-    var ymd=_calYmd(d);
-    var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
-    chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
-      +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
-      +'<span class="cal-chip-num">'+d.getDate()+'</span>'
-      +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
-      +'</button>';
+  if(_mesSeg!=='past'){
+    myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
   }
 
-  hd.innerHTML='<div class="mes-cal-top">'
+  // Titre + (date picker uniquement en mode À venir)
+  var topHtml='<div class="mes-cal-top">'
     +'<div class="mes-cal-title">'+titleStr+'</div>'
-    +'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-    +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
-    +'</button>'
-    +'</div>'
-    +'<div class="mes-cal-strip">'
-    +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
-    +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
-    +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+    +(_mesSeg!=='past'
+      ?'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+        +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
+        +'</button>'
+      :'')
     +'</div>';
+
+  // Bande des jours uniquement en mode À venir
+  var stripHtml='';
+  if(_mesSeg!=='past'){
+    var chipsHtml='';
+    for(var i=0;i<7;i++){
+      var d=new Date(mon);d.setDate(mon.getDate()+i);
+      var ymd=_calYmd(d);
+      var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
+      chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
+        +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
+        +'<span class="cal-chip-num">'+d.getDate()+'</span>'
+        +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
+        +'</button>';
+    }
+    stripHtml='<div class="mes-cal-strip">'
+      +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
+      +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      +'</div>';
+  }
+
+  hd.innerHTML=topHtml+segHtml+stripHtml;
 
   // Swipe gauche/droite sur la bande pour changer de semaine
   var chips=g('calChips');
@@ -9629,7 +9804,7 @@ function _renderCalCourses(){
       .sort(function(a,b){return new Date(b.c.dt_iso)-new Date(a.c.dt_iso);});
     if(!pastTagged.length){
       el.innerHTML='<div class="mes-cal-empty">'
-        +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
+        +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours passé</div>'
         +'<div style="font-size:13px;color:var(--lite)">Tes cours terminés apparaîtront ici</div>'
         +'</div>';
@@ -9653,7 +9828,7 @@ function _renderCalCourses(){
 
   if(!dayTagged.length){
     el.innerHTML='<div class="mes-cal-empty">'
-      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
       +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
       +'</div>';
@@ -9674,19 +9849,8 @@ function _bindMesCards(el){
 
 function mesSetSeg(seg){
   _mesSeg=seg;
-  var sb=g('mesSegBar');
-  if(sb){
-    sb.querySelectorAll('.mes-seg-btn').forEach(function(b){b.classList.remove('on');});
-    var btn=g('mesSegUpcoming'+(seg==='upcoming'?'':'Past').replace('upcominPast','Past'));
-    // simpler approach:
-    g('mesSegUpcoming').classList.toggle('on',seg==='upcoming');
-    g('mesSegPast').classList.toggle('on',seg==='past');
-  }
-  // Show/hide calendar header strip for past mode
-  var hd=g('mesCalHd');
-  if(hd)hd.style.display=seg==='past'?'none':'';
   haptic(4);
-  _renderCalCourses();
+  buildMesCours(); // rebuild header (segBar) ET contenu
 }
 
 function buildMesCours(){
@@ -9694,12 +9858,10 @@ function buildMesCours(){
   if(!el)return;
   if(!user||!user.id){
     if(hd)hd.innerHTML='';
-    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
+    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
     return;
   }
   var isProf=user&&user.role==='professeur';
-  var sb=g('mesSegBar');
-  if(sb)sb.style.display=isProf?'flex':'none';
 
   // Tous les cours à afficher (publiés + réservés pour les profs)
   var allCours;
@@ -9714,7 +9876,7 @@ function buildMesCours(){
     allCours=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
   }
 
-  if(hd)hd.style.display=_mesSeg==='past'?'none':'';
+  if(hd)hd.style.display=''; // _calBuildHeader gère le contenu selon _mesSeg
   _calBuildHeader(allCours);
   _renderCalCourses();
 }
