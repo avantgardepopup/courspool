@@ -339,35 +339,46 @@ function toggleFavCours(coursId,btn){
 // ── SWIPE-TO-DELETE (fav cards) ──
 function _initFav2Swipe(card,coursId,wrap){
   var THRESHOLD=90;
-  var startX,startY,curX=0,committed=false,passed=false;
+  var startX,startY,curX=0,committed=false,passed=false,isHoriz=false;
+  // Trouver l'action rouge (toujours dans le wrap, avant la card)
+  var action=wrap.querySelector('.fav2-swipe-action');
   function _snapBack(){
     card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
     card.style.transform='translateX(0)';
-    committed=false;curX=0;
+    if(action)action.style.opacity='0';
+    committed=false;curX=0;isHoriz=false;
   }
+  // Cacher l'action par défaut — évite le rouge visible derrière les coins arrondis
+  if(action)action.style.opacity='0';
   card.addEventListener('touchstart',function(e){
     var t=e.touches[0];startX=t.clientX;startY=t.clientY;
-    curX=0;committed=false;passed=false;
+    curX=0;committed=false;passed=false;isHoriz=false;
     card.style.transition='none';
-    card.style.transform='translateX(0)'; // reset any stuck state
+    card.style.transform='translateX(0)';
+    if(action)action.style.opacity='0';
   },{passive:true});
   card.addEventListener('touchmove',function(e){
     var t=e.touches[0];
     var dx=t.clientX-startX,dy=t.clientY-startY;
-    if(!committed){
-      if(Math.abs(dy)>Math.abs(dx))return;
-      if(Math.abs(dx)>6)committed=true;else return;
+    // Détecter direction dès 4px pour bloquer le scroll de page au plus tôt
+    if(!isHoriz&&!committed){
+      if(Math.abs(dy)>Math.abs(dx))return; // vertical → laisser scroll
+      if(Math.abs(dx)>4){isHoriz=true;}else{return;}
     }
+    // Dès qu'on sait que c'est horizontal : bloquer scroll + navigation iOS
     e.preventDefault();
+    if(!committed&&Math.abs(dx)>6)committed=true;
+    if(!committed)return;
     curX=Math.min(0,dx);
     card.style.transform='translateX('+curX+'px)';
+    if(action)action.style.opacity=Math.min(1,Math.abs(curX)/THRESHOLD)+'';
     if(!passed&&curX<=-THRESHOLD){
       passed=true;
       try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics)Capacitor.Plugins.Haptics.impact({style:'MEDIUM'});}catch(_){}
     }else if(passed&&curX>-THRESHOLD){passed=false;}
   },{passive:false});
   card.addEventListener('touchend',function(){
-    if(!committed){card.style.transform='translateX(0)';return;}
+    if(!committed){card.style.transform='translateX(0)';if(action)action.style.opacity='0';return;}
     if(curX<=-THRESHOLD){
       card.style.transition='transform .22s cubic-bezier(.4,0,.6,1)';
       card.style.transform='translateX(-110%)';
@@ -9526,6 +9537,26 @@ function _calWeekMon(){
 
 function _calBuildHeader(myCours){
   var hd=g('mesCalHd');if(!hd)return;
+  var isProf=user&&user.role==='professeur';
+
+  // Segment bar HTML (profs only) — intégré dans le header pour éviter la double séparation visuelle
+  var segHtml='';
+  if(isProf){
+    segHtml='<div id="mesSegBar" style="padding:8px 0 2px">'
+      +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
+      +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
+      +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+      +'</div></div>';
+  }
+
+  // Mode "Passés" : afficher uniquement la barre de segments (pas le calendrier hebdomadaire)
+  if(isProf&&_mesSeg==='past'){
+    hd.style.padding='max(16px,env(safe-area-inset-top,0px)) 20px 0';
+    hd.innerHTML=segHtml;
+    return;
+  }
+  hd.style.padding=''; // laisser le CSS par défaut
+
   var today=new Date();today.setHours(0,0,0,0);
   var todayYmd=_calYmd(today);
   var mon=_calWeekMon();
@@ -9563,6 +9594,7 @@ function _calBuildHeader(myCours){
     +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
     +'</button>'
     +'</div>'
+    +segHtml
     +'<div class="mes-cal-strip">'
     +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
     +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
@@ -9689,22 +9721,8 @@ function _bindMesCards(el){
 
 function mesSetSeg(seg){
   _mesSeg=seg;
-  var sb=g('mesSegBar');
-  if(sb){
-    sb.querySelectorAll('.mes-seg-btn').forEach(function(b){b.classList.remove('on');});
-    var btn=g('mesSegUpcoming'+(seg==='upcoming'?'':'Past').replace('upcominPast','Past'));
-    // simpler approach:
-    g('mesSegUpcoming').classList.toggle('on',seg==='upcoming');
-    g('mesSegPast').classList.toggle('on',seg==='past');
-  }
-  // Show/hide calendar header strip for past mode
-  var hd=g('mesCalHd');
-  if(hd)hd.style.display=seg==='past'?'none':'';
-  // When calHd is hidden, segBar needs to provide safe-area top spacing (replaces calHd's padding-top)
-  var sb=g('mesSegBar');
-  if(sb)sb.style.paddingTop=seg==='past'?'max(56px,calc(env(safe-area-inset-top,0px) + 54px))':'';
   haptic(4);
-  _renderCalCourses();
+  _renderCalCourses(); // _calBuildHeader gère tout (segBar inclus dans calHd)
 }
 
 function buildMesCours(){
@@ -9732,9 +9750,7 @@ function buildMesCours(){
     allCours=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
   }
 
-  if(hd)hd.style.display=_mesSeg==='past'?'none':'';
-  var _sb=g('mesSegBar');
-  if(_sb)_sb.style.paddingTop=_mesSeg==='past'?'max(56px,calc(env(safe-area-inset-top,0px) + 54px))':'';
+  if(hd)hd.style.display=''; // _calBuildHeader gère le contenu selon _mesSeg
   _calBuildHeader(allCours);
   _renderCalCourses();
 }

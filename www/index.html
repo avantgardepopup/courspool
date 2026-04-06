@@ -840,13 +840,6 @@
   <!-- PAGE MES COURS — calendrier -->
   <div class="pg" id="pgMes">
     <div id="mesCalHd" class="mes-cal-hd"></div>
-    <!-- Segment Prochains/Passés (profs seulement) -->
-    <div id="mesSegBar" style="display:none;flex-shrink:0;padding:0 16px 10px;background:var(--wh)">
-      <div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">
-        <button id="mesSegUpcoming" class="mes-seg-btn on" onclick="mesSetSeg('upcoming')">À venir</button>
-        <button id="mesSegPast" class="mes-seg-btn" onclick="mesSetSeg('past')">Passés</button>
-      </div>
-    </div>
     <div id="pgMesCnt" class="mes-cal-scroll"></div>
   </div>
 
@@ -1255,17 +1248,6 @@
             </div>
           </div>
 
-          <!-- Card : Mes cours (nav) -->
-          <div class="esp2-card esp2-card-nav" id="espCard6" onclick="espGoMesCours()">
-            <div class="esp2-card-hd" style="cursor:pointer">
-              <div class="esp2-ico" style="background:#EFF6FF">🗓️</div>
-              <div style="flex:1">
-                <div class="esp2-title">Mes cours</div>
-                <div class="esp2-sub">Cours à venir et passés</div>
-              </div>
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
 
 
         </div>
