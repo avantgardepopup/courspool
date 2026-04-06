@@ -4245,10 +4245,12 @@ var _espEdMode='annonce'; // 'annonce' | 'fiche'
 
 function _espKbUpdate(){
   var bar=g('espEdToolbar');if(!bar)return;
-  var kbH=window.visualViewport
-    ?Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop)
-    :0;
-  if(kbH>50){
+  var kbH=0;
+  if(window.visualViewport){
+    // Ne pas soustraire offsetTop — peut fausser le calcul sur iOS WKWebView
+    kbH=Math.max(0,window.innerHeight-window.visualViewport.height);
+  }
+  if(kbH>100){
     bar.style.bottom=kbH+'px';
     bar.classList.add('kb-open');
   }else{
@@ -4275,6 +4277,14 @@ function openEspEditor(mode){
     window.visualViewport.addEventListener('resize',_espKbUpdate,{passive:true});
     window.visualViewport.addEventListener('scroll',_espKbUpdate,{passive:true});
   }
+  // Fallback : re-calculer quand le focus change (iOS WKWebView)
+  var edEl=g('espAnnEditor'),tiEl=g('espEdTitleInp');
+  [edEl,tiEl].forEach(function(el){
+    if(el){
+      el.addEventListener('focus',function(){setTimeout(_espKbUpdate,350);},{once:false});
+      el.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
+    }
+  });
   setTimeout(function(){
     if(_espEdMode==='fiche'&&ti){ti.focus();}
     else if(ed){ed.focus();}
@@ -4388,9 +4398,121 @@ function espLoadFiches(){
 }
 
 function espOpenFiche(id){
-  // Afficher la fiche dans l'éditeur en lecture seule (ou un popup)
-  // Pour l'instant, ouvre juste l'éditeur pour édition future
   toast('Ouverture de la fiche…','');
+}
+
+// ── BIBLIOTHÈQUE ──────────────────────────────────────────────────────────
+function openBibliotheque(){
+  var el=g('bdBibliotheque');if(!el)return;
+  el.style.display='flex';
+  haptic(4);
+  loadBibliotheque();
+}
+
+function closeBibliotheque(){
+  var el=g('bdBibliotheque');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
+}
+
+function loadBibliotheque(){
+  var uid=user&&user.id;if(!uid)return;
+  var grid=g('biblioGrid');if(!grid)return;
+  grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
+  var ACCESS_ICON={enrolled:'🔓',password:'🔐',share:'🔗'};
+  var ACCESS_LABEL={enrolled:'Tous',password:'Mot de passe',share:'Via partage'};
+  var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  // Fetch announcements (fiches) + resources
+  Promise.all([
+    fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+  ]).then(function(results){
+    var fiches=(results[0]||[]).filter(function(a){return a.type==='fiche';});
+    var resources=results[1]||[];
+    var content=results[2]||[];
+    var items=[];
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',icon:'📋',access:f.access_type||'enrolled',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',icon:TYPE_ICON[r.type]||'📎',access:r.access_type||'enrolled',created_at:r.created_at});});
+    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',icon:TYPE_ICON[c.content_type]||'📚',access:c.access_type||'enrolled',created_at:c.created_at});});
+    items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
+    if(!items.length){
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--lite)">'
+        +'<div style="font-size:40px;margin-bottom:12px">📚</div>'
+        +'<div style="font-size:15px;font-weight:700;color:var(--ink)">Bibliothèque vide</div>'
+        +'<div style="font-size:13px;margin-top:6px">Crée ta première fiche ou ajoute un document</div>'
+        +'</div>';
+      return;
+    }
+    grid.innerHTML=items.map(function(item){
+      var acc=item.access||'enrolled';
+      var badge='<span class="biblio-access-badge '+acc+'">'+ACCESS_ICON[acc]+' '+ACCESS_LABEL[acc]+'</span>';
+      return'<div class="biblio-card" onclick="biblioOpenItem(\''+item.kind+'\',\''+item.id+'\')">'
+        +'<div class="biblio-card-ico">'+item.icon+'</div>'
+        +'<div class="biblio-card-body">'
+        +'<div class="biblio-card-title">'+esc(item.title)+'</div>'
+        +badge
+        +'</div>'
+        +'<div class="biblio-card-actions">'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'enrolled\')" class="biblio-act-btn'+(acc==='enrolled'?' active':'')+'">🔓 Tous</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'password\')" class="biblio-act-btn'+(acc==='password'?' active':'')+'">🔐 MDP</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'share\')" class="biblio-act-btn'+(acc==='share'?' active':'')+'">🔗</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  });
+}
+
+function biblioOpenItem(kind,id){
+  if(kind==='fiche')espOpenFiche(id);
+}
+
+function biblioSetAccess(kind,id,access){
+  var uid=user&&user.id;if(!uid)return;
+  var endpoints={resource:'/teacher/'+uid+'/resources/'+id,content:'/teacher/'+uid+'/content/'+id,fiche:'/teacher/'+uid+'/announcements/'+id};
+  var ep=endpoints[kind];if(!ep)return;
+  haptic(4);
+  fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
+    .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
+    .catch(function(){toast('Erreur réseau','');});
+}
+
+// ── AJOUTER UN DOCUMENT ───────────────────────────────────────────────────
+function openAddDoc(){
+  var el=g('bdAddDoc');if(!el)return;
+  el.style.display='flex';
+  var sel=g('addDocAccess');
+  if(sel)sel.addEventListener('change',function(){
+    var pw=g('addDocPwBox');if(pw)pw.style.display=sel.value==='password'?'block':'none';
+  },{once:false});
+  haptic(4);
+}
+
+function closeAddDoc(){
+  var el=g('bdAddDoc');if(!el)return;
+  el.style.display='none';
+}
+
+function addDocSubmit(){
+  var uid=user&&user.id;if(!uid)return;
+  var title=(g('addDocTitle').value||'').trim();
+  var url=(g('addDocUrl').value||'').trim();
+  var type=g('addDocType').value;
+  var access=g('addDocAccess').value;
+  var pw=access==='password'?(g('addDocPw').value||'').trim():'';
+  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  var btn=g('addDocBtn');if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
+    body:JSON.stringify({title:title,url:url,type:type,access_type:access,password:pw||undefined})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Ajouter';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Document ajouté !','');
+      g('addDocTitle').value='';g('addDocUrl').value='';
+      closeAddDoc();
+      // Refresh la bibliothèque si ouverte
+      if(g('bdBibliotheque')&&g('bdBibliotheque').style.display!=='none')loadBibliotheque();
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter';}toast('Erreur réseau','');});
 }
 
 function espDeleteAnn(id){
@@ -4713,7 +4835,17 @@ function espDeleteContenu(id){
 // ── MES COURS (prof) ──────────────────────────────────────────────────────
 function espGoMesCours(){
   haptic(4);
-  navTo('mes');
+  // navTo('mes') bloque les profs → navigation directe
+  var pages=['pgExp','pgMsg','pgAcc','pgFav','pgMes','pgMesProfs'];
+  pages.forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+  var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.add('on');
+  ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  updateMobHeader('mes');
+  restoreNav();
+  _mesSeg='upcoming';
+  if(g('mesSegUpcoming'))g('mesSegUpcoming').classList.add('on');
+  if(g('mesSegPast'))g('mesSegPast').classList.remove('on');
+  buildMesCours();
 }
 
 var _espSelCours=null;

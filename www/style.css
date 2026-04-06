@@ -1755,6 +1755,59 @@ html.dk .mes-seg-btn.on{background:#2C2C2E;box-shadow:none;}
 /* esp2-card-nav : pas de chevron rotatif */
 .esp2-card-nav{cursor:pointer;}
 .esp2-card-nav:active{opacity:.8;}
+/* Boutons bibliothèque */
+.esp-biblio-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  border:none;cursor:pointer;border-radius:14px;
+  font-family:inherit;font-size:13px;font-weight:700;
+  padding:11px 14px;width:100%;-webkit-tap-highlight-color:transparent;
+  transition:opacity .15s;
+}
+.esp-biblio-btn:active{opacity:.8;}
+.esp-biblio-btn-sec{background:var(--bg);color:var(--ink);border:1.5px solid var(--bdr);}
+html.dk .esp-biblio-btn-sec{border-color:rgba(255,255,255,.1);}
+.esp-biblio-btn-prim{background:linear-gradient(135deg,#FF8C55,#FF4500);color:#fff;margin-top:8px;box-shadow:0 3px 12px rgba(255,107,43,.3);}
+/* Grille bibliothèque — style Pinterest 2 colonnes */
+.biblio-grid{
+  columns:2;column-gap:10px;
+}
+.biblio-card{
+  break-inside:avoid;
+  background:var(--wh);border-radius:18px;
+  overflow:hidden;margin-bottom:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.08);
+  border:1px solid rgba(0,0,0,.04);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+html.dk .biblio-card{background:#1C1C1E;border-color:rgba(255,255,255,.06);box-shadow:none;}
+.biblio-card:active{opacity:.85;}
+.biblio-card-ico{
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;height:90px;
+  background:var(--bg);
+}
+.biblio-card-body{padding:10px 12px 12px;}
+.biblio-card-title{font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;margin-bottom:6px;word-break:break-word;}
+.biblio-access-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;
+}
+.biblio-access-badge.enrolled{background:rgba(34,197,94,.12);color:#16A34A;}
+.biblio-access-badge.password{background:rgba(59,130,246,.1);color:#2563EB;}
+.biblio-access-badge.share{background:rgba(255,107,43,.1);color:var(--or);}
+html.dk .biblio-access-badge.enrolled{background:rgba(34,197,94,.18);}
+html.dk .biblio-access-badge.password{background:rgba(59,130,246,.18);}
+html.dk .biblio-access-badge.share{background:rgba(255,107,43,.18);}
+.biblio-card-actions{
+  display:flex;gap:4px;padding:0 8px 10px;
+}
+.biblio-act-btn{
+  flex:1;background:var(--bg);border:none;border-radius:9px;
+  padding:6px 4px;font-size:10px;font-weight:600;color:var(--mid);
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.biblio-act-btn.active{background:var(--or);color:#fff;}
+.biblio-act-btn:active{opacity:.8;}
 .esp-ann-date{font-size:11px;color:var(--lite);}
 
 /* ── MES COURS CARDS ── */

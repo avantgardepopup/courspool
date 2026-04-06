@@ -1230,26 +1230,22 @@
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
             <div class="esp2-card-body">
-              <!-- Créer une fiche de cours (éditeur rich text) -->
-              <button onclick="openEspEditor('fiche')" class="esp-editor-new-btn" style="margin-bottom:14px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                Créer une fiche de cours
-              </button>
-              <div id="espFiches" style="margin-bottom:14px"></div>
-              <!-- Ajouter un lien rapide -->
-              <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Liens & ressources</div>
-              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-                <input id="espResTitle" type="text" placeholder="Titre" class="esp-input">
-                <input id="espResUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
-                <select id="espResType" class="esp-input">
-                  <option value="article">Article</option>
-                  <option value="pdf">PDF</option>
-                  <option value="video">Vidéo</option>
-                  <option value="exercice">Exercice</option>
-                </select>
-                <button onclick="espSubmitRes()" class="esp2-btn-submit">Ajouter</button>
+              <!-- Actions rapides -->
+              <div style="display:flex;gap:8px;margin-bottom:14px">
+                <button onclick="openEspEditor('fiche')" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Créer une fiche
+                </button>
+                <button onclick="openAddDoc()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Ajouter un doc
+                </button>
               </div>
-              <div id="espResources"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
+              <!-- Bouton Voir ma bibliothèque -->
+              <button onclick="openBibliotheque()" class="esp-biblio-btn esp-biblio-btn-prim">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+                Voir ma bibliothèque
+              </button>
             </div>
           </div>
 
@@ -1265,39 +1261,6 @@
             </div>
           </div>
 
-          <!-- Card : Cours & Contenus -->
-          <div class="esp2-card" id="espCard5">
-            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard5','contenu')">
-              <div class="esp2-ico" style="background:#EEF2FF">📚</div>
-              <div style="flex:1">
-                <div class="esp2-title">Cours & Contenus</div>
-                <div class="esp2-sub">Contenu éducatif avec contrôle d'accès</div>
-              </div>
-              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="esp2-card-body">
-              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-                <input id="espCttTitle" type="text" placeholder="Titre (ex: Chapitre 1 — Dérivées)" class="esp-input">
-                <textarea id="espCttDesc" placeholder="Description (optionnel)" class="esp-input esp-textarea" rows="2"></textarea>
-                <input id="espCttUrl" type="url" placeholder="Lien vidéo / PDF / article (optionnel)" class="esp-input">
-                <select id="espCttType" class="esp-input">
-                  <option value="text">Texte / cours écrit</option>
-                  <option value="video">Vidéo</option>
-                  <option value="pdf">PDF</option>
-                  <option value="link">Lien externe</option>
-                </select>
-                <select id="espCttAccess" class="esp-input" onchange="espCttAccessChange(this)">
-                  <option value="enrolled">🔓 Accès libre (tous les élèves inscrits)</option>
-                  <option value="password">🔐 Protégé par mot de passe</option>
-                  <option value="premium">💎 Premium (abonnement)</option>
-                </select>
-                <div id="espCttPwBox" style="display:none"><input id="espCttPw" type="text" placeholder="Mot de passe à donner à tes élèves" class="esp-input"></div>
-                <div id="espCttPriceBox" style="display:none"><input id="espCttPrice" type="number" placeholder="Prix mensuel (€)" class="esp-input" min="1"></div>
-                <button onclick="espSubmitContenu()" class="esp2-btn-submit">Publier</button>
-              </div>
-              <div id="espContenu"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
-            </div>
-          </div>
 
         </div>
 
@@ -1938,6 +1901,51 @@
       <div id="espCaInscContent"><div style="color:var(--lite);font-size:13px;padding:4px 0">Chargement…</div></div>
     </div>
     <div style="padding-bottom:max(24px,env(safe-area-inset-bottom,24px))"></div>
+  </div>
+</div>
+
+<!-- BIBLIOTHÈQUE — plein écran Pinterest -->
+<div id="bdBibliotheque" style="display:none;position:fixed;inset:0;z-index:700;background:var(--bg);flex-direction:column;animation:mpfSlideIn .3s cubic-bezier(.32,1,.6,1)">
+  <div class="esp-ed-top">
+    <button onclick="closeBibliotheque()" class="esp-ed-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Ma bibliothèque</div>
+    <button onclick="openAddDoc()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ Ajouter</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 12px 48px">
+    <div id="biblioGrid" class="biblio-grid"></div>
+  </div>
+</div>
+<!-- MODAL AJOUTER UN DOCUMENT -->
+<div id="bdAddDoc" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:800;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAddDoc()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .25s ease">
+    <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
+    <div style="padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Ajouter un document</div>
+      <button onclick="closeAddDoc()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)">✕</button>
+    </div>
+    <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">
+      <input id="addDocTitle" type="text" placeholder="Titre du document" class="esp-input">
+      <input id="addDocUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
+      <select id="addDocType" class="esp-input">
+        <option value="pdf">PDF</option>
+        <option value="video">Vidéo</option>
+        <option value="article">Article / lien</option>
+        <option value="exercice">Exercice</option>
+      </select>
+      <select id="addDocAccess" class="esp-input">
+        <option value="enrolled">🔓 Visible par tous les inscrits</option>
+        <option value="password">🔐 Protégé par mot de passe</option>
+        <option value="share">🔗 Visible uniquement via partage</option>
+      </select>
+      <div id="addDocPwBox" style="display:none">
+        <input id="addDocPw" type="text" placeholder="Mot de passe à donner" class="esp-input">
+      </div>
+    </div>
+    <div style="padding:16px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px))">
+      <button onclick="addDocSubmit()" id="addDocBtn" class="esp2-btn-submit" style="width:100%">Ajouter</button>
+    </div>
   </div>
 </div>
 
