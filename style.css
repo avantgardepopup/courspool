@@ -857,8 +857,7 @@ html.dk .prof-badge{border-color:rgba(255,255,255,.12);}
 .esp-input:focus{outline:none;border-color:var(--or);}
 .esp-textarea{resize:none;min-height:72px;line-height:1.5;}
 /* ── ESPACE ÉLÈVE v2 — panel + cards ── */
-#mpfPanelEspace{display:flex;flex-direction:column;gap:10px;padding:12px 16px 48px;}
-#mpfPanelEspace[hidden]{display:none!important;}
+#mpfPanelEspace:not([hidden]){display:flex;flex-direction:column;gap:10px;padding:12px 16px 48px;}
 .esp2-card{
   background:var(--wh);border-radius:20px;
   border:1px solid var(--bdr);

@@ -4558,7 +4558,7 @@ function switchMpfTab(tab){
     var panel=g('mpfPanel'+k[0].toUpperCase()+k.slice(1));
     var on=(k===tab);
     if(btn){if(on)btn.classList.add('on');else btn.classList.remove('on');}
-    if(panel){panel.style.display=on?(k==='espace'?'flex':'block'):'none';}
+    if(panel){if(on)panel.removeAttribute('hidden');else panel.setAttribute('hidden','');}
   });
 }
 
