@@ -7698,6 +7698,21 @@ async function submitPayment(){
         haptic(6);
         toast(t('t_res_confirmed'),t('t_res_confirmed_msg'));
         setTimeout(function(){loadData(1).then(function(){buildCards();updateMesRes();});},800);
+        // Proposer les notifications push après le premier paiement réussi
+        try{
+          if(!_payPourAmi&&typeof Notification!=='undefined'&&Notification.permission==='default'&&!_pushSubscription){
+            setTimeout(function(){
+              var bd=document.createElement('div');
+              bd.id='pushNudge';
+              bd.style.cssText='position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+90px);left:50%;transform:translateX(-50%);width:calc(100%-40px);max-width:380px;background:var(--wh);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.16);padding:16px 18px;z-index:600;display:flex;align-items:center;gap:14px;animation:mi .3s cubic-bezier(.32,1,.6,1)';
+              bd.innerHTML='<div style="width:44px;height:44px;background:rgba(255,107,43,.1);border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>'
+                +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px">Rappels de cours</div><div style="font-size:12px;color:var(--lite)">Reçois une notification avant chaque cours</div></div>'
+                +'<div style="display:flex;flex-direction:column;gap:6px"><button onclick="subscribePush();document.getElementById(\'pushNudge\').remove()" style="background:var(--or);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Activer</button><button onclick="document.getElementById(\'pushNudge\').remove()" style="background:none;border:none;font-size:11px;color:var(--lite);cursor:pointer;font-family:inherit;padding:0">Plus tard</button></div>';
+              document.body.appendChild(bd);
+              setTimeout(function(){var n=document.getElementById('pushNudge');if(n)n.remove();},10000);
+            },2000);
+          }
+        }catch(_){}
       }else{
         toast(t('t_error'),d2.error||t('t_try_again'),true);
         btn.disabled=false;btn.style.opacity='1';

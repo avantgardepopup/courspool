@@ -589,8 +589,8 @@ html.dk .bni.on { color: #FF6B2B; }
 html.dk #bniFav.on { color: #FF375F; }
 html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 
-/* Desktop ≥ 769px : pill flottante */
-@media (min-width: 769px) {
+/* Desktop ≥ 1200px : pill flottante (iPad garde la barre pleine largeur) */
+@media (min-width: 1200px) {
   .bnav {
     bottom: max(24px, env(safe-area-inset-bottom, 24px));
     left: 50%; right: auto;

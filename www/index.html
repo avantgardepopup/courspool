@@ -80,9 +80,12 @@
 (function(){
   function checkDesktop(){
     var el=document.getElementById('desktopBlock');
-    if(el)el.style.display='none';
+    if(!el)return;
+    var isDesk=window.innerWidth>=1200&&navigator.maxTouchPoints===0;
+    el.style.display=isDesk?'flex':'none';
   }
   checkDesktop();
+  window.addEventListener('resize',checkDesktop);
 })();
 </script>
 
@@ -1025,8 +1028,7 @@
       <!-- Hidden tabs (needed for JS) -->
       <div style="display:none">
         <button class="ptab on" id="aTabR" onclick="switchATab('R',this)" data-i18n="acc_mes_cours">Mes cours</button>
-        <button class="ptab" id="aTabF" onclick="switchATab('F',this)" data-i18n="acc_suivis">Suivis</button>
-        <button class="ptab" id="aTabH" onclick="switchATab('H',this)" data-i18n="acc_historique">Historique</button>
+<button class="ptab" id="aTabH" onclick="switchATab('H',this)" data-i18n="acc_historique">Historique</button>
         <button class="ptab" id="aTabP" onclick="switchATab('P',this)" data-i18n="acc_mon_profil">Profil</button>
         <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none" data-i18n="acc_revenus">Revenus</button>
         <button class="ptab" id="aTabRmb" onclick="switchATab('Rmb',this)" style="display:none">Remboursements</button>
@@ -1039,14 +1041,6 @@
         <div class="asec on" id="asecR">
           <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 24px 10px" data-i18n="acc_cours_avenir">Cours à venir</div>
           <div id="listR"></div>
-        </div>
-
-        <!-- PROFS SUIVIS -->
-        <div class="asec" id="asecF" style="overflow:visible">
-          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px" data-i18n="acc_profs_suivis">Professeurs suivis</div>
-          <div id="listF">
-            <!-- Contenu rempli dynamiquement par buildAccLists() -->
-          </div>
         </div>
 
         <!-- PAIEMENTS PROF -->
@@ -1161,7 +1155,7 @@
           <!-- Card : Code d'accès -->
           <div class="esp2-card" id="espCard1">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard1','code')">
-              <div class="esp2-ico" style="background:#FFF0E8">🔑</div>
+              <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Code d'accès élèves</div>
                 <div class="esp2-sub">Partage ce code pour donner accès à ton espace</div>
@@ -1190,7 +1184,7 @@
           <!-- Card : Mes élèves -->
           <div class="esp2-card" id="espCard2">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard2','eleves')">
-              <div class="esp2-ico" style="background:#EEF2FF">👥</div>
+              <div class="esp2-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Mes élèves <span id="espStudentBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
                 <div class="esp2-sub">Élèves inscrits à ton espace</div>
@@ -1205,7 +1199,7 @@
           <!-- Card : Annonces -->
           <div class="esp2-card" id="espCard3">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard3','annonces')">
-              <div class="esp2-ico" style="background:#FFF7ED">📣</div>
+              <div class="esp2-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Publications</div>
                 <div class="esp2-sub">Annonces visibles par tes élèves</div>
@@ -1230,7 +1224,7 @@
           <!-- Card : Ma bibliothèque -->
           <div class="esp2-card" id="espCard4">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard4','ressources')">
-              <div class="esp2-ico" style="background:#F0FDF4">📚</div>
+              <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Ma bibliothèque</div>
                 <div class="esp2-sub">Fiches de cours et documents partagés</div>
