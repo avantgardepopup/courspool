@@ -919,7 +919,7 @@ html.dk .esp2-card{border-color:rgba(255,255,255,.07);box-shadow:none;}
   background:var(--wh);border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0;
 }
 html.dk .bdep-top{border-color:rgba(255,255,255,.07);}
-.bdep-scroll{flex:1;overflow-y:auto;padding:16px 16px 40px;-webkit-overflow-scrolling:touch;}
+.bdep-scroll{flex:1;overflow-y:auto;padding:16px 16px 40px;-webkit-overflow-scrolling:touch;background:var(--wh);}
 /* Feed cards (style réseau social) */
 .feed-card{
   background:var(--wh);border-radius:18px;
@@ -1614,12 +1614,12 @@ html.dk .esp-ed-top{background:#111;border-color:rgba(255,255,255,.08);}
 .esp-ed-publish:active{opacity:.8;}
 .esp-ed-scroll{
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:20px 20px 120px;
+  padding:20px 20px 120px;background:var(--wh);
 }
 .esp-ed-content{
   min-height:60px;outline:none;font-size:16px;
   line-height:1.7;color:var(--ink);caret-color:var(--or);
-  word-break:break-word;
+  word-break:break-word;background:var(--wh);
 }
 .esp-ed-content:empty:before{
   content:attr(data-placeholder);color:var(--lite);
