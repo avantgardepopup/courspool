@@ -339,35 +339,51 @@ function toggleFavCours(coursId,btn){
 // ── SWIPE-TO-DELETE (fav cards) ──
 function _initFav2Swipe(card,coursId,wrap){
   var THRESHOLD=90;
-  var startX,startY,curX=0,committed=false,passed=false;
+  var startX,startY,startTime,curX=0,committed=false,passed=false;
+  var action=wrap.querySelector('.fav2-swipe-action');
   function _snapBack(){
     card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
     card.style.transform='translateX(0)';
+    if(action)action.style.opacity='0';
     committed=false;curX=0;
   }
+  if(action)action.style.opacity='0';
+  // passive:false + preventDefault dès touchstart → iOS ne peut pas démarrer son geste de retour
+  // Le tap est géré manuellement dans touchend (onClick ne se déclenche plus avec preventDefault)
   card.addEventListener('touchstart',function(e){
-    var t=e.touches[0];startX=t.clientX;startY=t.clientY;
+    e.preventDefault();
+    var t=e.touches[0];startX=t.clientX;startY=t.clientY;startTime=Date.now();
     curX=0;committed=false;passed=false;
-    card.style.transition='none';
-    card.style.transform='translateX(0)'; // reset any stuck state
-  },{passive:true});
+    card.style.transition='none';card.style.transform='translateX(0)';
+    if(action)action.style.opacity='0';
+    card.classList.add('tapped');
+  },{passive:false});
   card.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    card.classList.remove('tapped');
     var t=e.touches[0];
     var dx=t.clientX-startX,dy=t.clientY-startY;
-    if(!committed){
-      if(Math.abs(dy)>Math.abs(dx))return;
-      if(Math.abs(dx)>6)committed=true;else return;
-    }
-    e.preventDefault();
+    if(Math.abs(dy)>Math.abs(dx)+8)return; // clairement vertical, on ignore
+    if(Math.abs(dx)>6)committed=true;
+    if(!committed)return;
     curX=Math.min(0,dx);
     card.style.transform='translateX('+curX+'px)';
+    if(action)action.style.opacity=Math.min(1,Math.abs(curX)/THRESHOLD)+'';
     if(!passed&&curX<=-THRESHOLD){
       passed=true;
       try{if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics)Capacitor.Plugins.Haptics.impact({style:'MEDIUM'});}catch(_){}
     }else if(passed&&curX>-THRESHOLD){passed=false;}
   },{passive:false});
-  card.addEventListener('touchend',function(){
-    if(!committed){card.style.transform='translateX(0)';return;}
+  card.addEventListener('touchend',function(e){
+    card.classList.remove('tapped');
+    if(!committed){
+      // Tap : ouvrir le cours si déplacement minime + durée courte
+      var dx2=e.changedTouches&&e.changedTouches[0]?Math.abs(e.changedTouches[0].clientX-startX):99;
+      if(dx2<10&&(Date.now()-startTime)<300){haptic(4);openR(coursId);}
+      card.style.transform='translateX(0)';
+      if(action)action.style.opacity='0';
+      return;
+    }
     if(curX<=-THRESHOLD){
       card.style.transition='transform .22s cubic-bezier(.4,0,.6,1)';
       card.style.transform='translateX(-110%)';
@@ -378,7 +394,7 @@ function _initFav2Swipe(card,coursId,wrap){
       },210);
     }else{_snapBack();}
   },{passive:true});
-  card.addEventListener('touchcancel',_snapBack,{passive:true});
+  card.addEventListener('touchcancel',function(){card.classList.remove('tapped');_snapBack();},{passive:true});
 }
 
 // ── CARD FAVORIS 2-COL (style explorer) ──
@@ -448,7 +464,11 @@ function buildFavPage(){
         var c=C.find(function(x){return x.id==id;});
         return!c||!_isCoursPass(c);
       });
-      if(!_favActive.length&&C.length){if(coursSection)coursSection.style.display='none';}
+      if(!_favActive.length&&C.length){
+        if(coursSection)coursSection.style.display='none';
+        if(emptyAll){emptyAll.style.display='flex';emptyAll.style.flexDirection='column';emptyAll.style.alignItems='center';emptyAll.style.justifyContent='center';emptyAll.style.minHeight='60vh';}
+        return;
+      }
       carousel.innerHTML='';
       var _fFrag=document.createDocumentFragment();
       _favActive.forEach(function(id){
@@ -479,13 +499,13 @@ function buildMesProfs(){
   var empty=g('mesProfsEmpty');
   var carousel=g('mesProfsCarousel');
   if(!folIds.length){
-    if(empty)empty.style.display='flex';
+    if(empty){empty.style.display='flex';empty.style.flexDirection='column';empty.style.alignItems='center';empty.style.justifyContent='center';empty.style.minHeight='70vh';}
     if(carousel)carousel.innerHTML='';
     return;
   }
   if(empty)empty.style.display='none';
   if(carousel){
-    carousel.innerHTML=folIds.map(function(pid){
+    var rows=folIds.map(function(pid,idx){
       var p=P[pid]||{};
       var cours=C.filter(function(x){return x.pr===pid;});
       if(cours.length&&!p.nm){
@@ -498,16 +518,22 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(_fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(_fresh&&p.photo)?'none':col;
-      var nmHtml=_fresh?('<span>'+esc(p.nm||t('reg_prof'))+'</span>'):'<span class="skeleton" style="display:inline-block;height:12px;width:80px;border-radius:4px;vertical-align:middle"></span>';
       var _now=Date.now();
       var nbCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now);}).length;
-      return'<div class="fav-prof-card mp2-card" data-fav-pid="'+pid+'" onclick="openPrFull(\''+pid+'\')">'
-        +'<button class="fav-remove-btn" onclick="event.stopPropagation();var _c=this.closest(\'.fav-prof-card\');_c.style.transition=\'all .18s\';_c.style.opacity=\'0\';_c.style.transform=\'scale(.88)\';unfollowProf(\''+pid+'\');setTimeout(function(){buildMesProfs();},180);" title="Ne plus suivre" style="top:8px;right:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-        +'<div class="fav-prof-av" data-prof="'+pid+'" style="background:'+avBg+'">'+av+'</div>'
-        +'<div class="fav-prof-name" data-profnm="'+pid+'">'+nmHtml+'</div>'
-        +'<div class="fav-prof-role">'+esc(p.rl||t('reg_prof'))+(nbCours?' · '+nbCours+' '+t('cours_dispo'):'')+'</div>'
+      var nmHtml=_fresh?esc(p.nm||t('reg_prof')):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>';
+      var subHtml=_fresh?(esc(p.rl||t('reg_prof'))+(nbCours?' &middot; '+nbCours+' cours':'')):('<span class="skeleton" style="display:inline-block;height:11px;width:70px;border-radius:4px;margin-top:4px"></span>');
+      var border=idx<folIds.length-1?'border-bottom:1px solid var(--bdr)':'';
+      return'<div onclick="openPrFull(\''+pid+'\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;'+border+';-webkit-tap-highlight-color:transparent" onmousedown="this.style.opacity=\'.85\'" onmouseup="this.style.opacity=\'1\'" onmouseleave="this.style.opacity=\'1\'">'
+        +'<div style="width:52px;height:52px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden" data-prof="'+pid+'">'+av+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" data-profnm="'+pid+'">'+nmHtml+'</div>'
+        +'<div style="font-size:13px;color:var(--lite);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+subHtml+'</div>'
+        +'</div>'
+        +'<button onclick="event.stopPropagation();var _el=this.closest(\'[onclick]\');_el.style.transition=\'opacity .18s,max-height .22s\';_el.style.opacity=\'0\';unfollowProf(\''+pid+'\');setTimeout(function(){buildMesProfs();},200);" title="Ne plus suivre" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
         +'</div>';
-    }).join('');
+    });
+    carousel.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 16px 10px">'+folIds.length+' professeur'+(folIds.length>1?'s':'')+' suivi'+(folIds.length>1?'s':'')+'</div>'
+      +'<div style="background:var(--wh);border-radius:20px;overflow:hidden;margin:0 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">'+rows.join('')+'</div>';
   }
 }
 
@@ -525,6 +551,7 @@ var curId=null,curProf=null,folPr=null,actF='tous',user=null;
 var _mesViewMode='liste';
 var _calWeekOffset=0;
 var _calSelDay=null;
+var _mesSeg='upcoming';
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
@@ -1727,11 +1754,9 @@ function restoreNav(){
 
 function goEspProf(){
   goAccount();
-  setTimeout(function(){
-    var tab=g('aTabEsp');
-    if(tab)switchATab('Esp',tab);
-    var be=g('bniEsp');if(be)be.classList.add('on');
-  },80);
+  var tab=g('aTabEsp');
+  if(tab)switchATab('Esp',tab);
+  var be=g('bniEsp');if(be)be.classList.add('on');
 }
 
 function goExplore(){
@@ -1947,6 +1972,8 @@ function goAccount(){
   g('pgExp').classList.remove('on');
   g('pgMsg').classList.remove('on');
   var pgFavEl=g('pgFav');if(pgFavEl)pgFavEl.classList.remove('on');
+  var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.remove('on');
+  var pgMesProfsEl=g('pgMesProfs');if(pgMesProfsEl)pgMesProfsEl.classList.remove('on');
   g('pgAcc').classList.add('on');
   setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.25)');
   var accName=g('accName'); if(accName)accName.textContent=user.pr+(user.nm?' '+user.nm:'');
@@ -4070,6 +4097,125 @@ function buildEspProf(){
   });
   // Charge le code (affiché dans le header de la card)
   espLoadCode();
+  // Tuto première visite
+  setTimeout(checkEspTuto, 600);
+}
+
+// ── TUTO ESPACE PROF (première visite) ──────────────────────────────────────
+var _espTutoStep=0;
+var _espTutoSteps=[
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Bienvenue dans ton Espace !',
+    sub:'Découvre tout ce que tu peux faire pour tes élèves depuis cet espace dédié.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Code d\'accès élèves',
+    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Publications & Annonces',
+    sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Ma bibliothèque',
+    sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Mes élèves',
+    sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'
+  }
+];
+
+function checkEspTuto(){
+  try{if(localStorage.getItem('cp_esp_tuto'))return;}catch(e){}
+  openEspTuto();
+}
+
+function openEspTuto(){
+  _espTutoStep=0;
+  var bd=g('bdEspTuto');if(!bd)return;
+  _espTutoRender();
+  bd.style.display='flex';
+  var sheet=g('espTutoSheet');if(sheet)_espTutoInitSwipe(sheet);
+  haptic(4);
+}
+
+function _espTutoRender(){
+  var s=_espTutoSteps[_espTutoStep];if(!s)return;
+  var track=g('espTutoTrack');
+  var dots=g('espTutoDots');
+  var btn=g('espTutoBtn');
+  var backBtn=g('espTutoBackBtn');
+  var isLast=_espTutoStep===_espTutoSteps.length-1;
+  var isFirst=_espTutoStep===0;
+  if(track){
+    track.innerHTML=''
+      +'<div style="text-align:center;padding:28px 0 20px">'
+      +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+      +'</div>';
+  }
+  if(dots){
+    dots.innerHTML=_espTutoSteps.map(function(_,i){
+      return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
+    }).join('');
+  }
+  if(btn)btn.textContent=isLast?'Commencer\u00a0!':'Suivant';
+  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
+}
+
+function _espTutoInitSwipe(sheet){
+  if(!sheet||sheet._tutoSwipeInit)return;
+  sheet._tutoSwipeInit=true;
+  var sx=0,sy=0;
+  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    var dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
+      if(dx<0)espTutoNext();
+      else if(_espTutoStep>0){_espTutoStep--;_espTutoRender();}
+    }
+  },{passive:true});
+}
+
+function espTutoGoTo(i){
+  _espTutoStep=i;haptic(4);_espTutoRender();
+}
+
+function espTutoPrev(){
+  if(_espTutoStep>0){_espTutoStep--;haptic(4);_espTutoRender();}
+}
+
+function espTutoNext(){
+  haptic(4);
+  if(_espTutoStep<_espTutoSteps.length-1){
+    _espTutoStep++;
+    _espTutoRender();
+  }else{
+    espTutoDone();
+  }
+}
+
+function espTutoSkip(){
+  espTutoDone();
+}
+
+function espTutoDone(){
+  try{localStorage.setItem('cp_esp_tuto','1');}catch(e){}
+  var bd=g('bdEspTuto');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
 }
 
 function espLoadCode(){
@@ -4240,26 +4386,196 @@ function espSubmitRes(){
 }
 
 // ── ÉDITEUR RICH TEXT ────────────────────────────────────────────────────
-function openEspEditor(){
+var _espEdMode='annonce'; // 'annonce' | 'fiche'
+
+var _espKbH=0;
+function _espKbApply(){
+  var bar=g('espEdToolbar');if(!bar)return;
+  if(_espKbH>50){
+    bar.style.bottom=_espKbH+'px';
+    bar.classList.add('kb-open');
+  }else{
+    bar.style.bottom='';
+    bar.classList.remove('kb-open');
+  }
+}
+function _espKbUpdate(){
+  // Fallback visualViewport (web) — resize:body sur Capacitor garde innerHeight fixe, donc kbH≈0 → ignoré
+  if(window.visualViewport){
+    var vp=Math.max(0,window.innerHeight-window.visualViewport.height);
+    if(vp>50){_espKbH=vp;_espKbApply();}
+  }
+}
+var _espKbShowFn=null,_espKbHideFn=null;
+
+function openEspEditor(mode){
+  _espEdMode=mode||'annonce';
   var el=g('bdEspEditor');if(!el)return;
   var ed=g('espAnnEditor');
-  if(ed){ed.innerHTML='';ed.focus();}
+  var ti=g('espEdTitleInp');
+  var lbl=g('espEdModeTitle');
+  if(ed){ed.innerHTML='';}
+  if(ti){ti.value='';ti.style.display=_espEdMode==='fiche'?'block':'none';}
+  if(lbl)lbl.textContent=_espEdMode==='fiche'?'Nouvelle fiche de cours':'Nouvelle publication';
+  var badge=g('espEdTypeBadge');
+  if(badge){
+    badge.textContent=_espEdMode==='fiche'?'Fiche de cours':'Publication';
+    badge.style.background=_espEdMode==='fiche'?'rgba(16,185,129,.12)':'rgba(59,130,246,.1)';
+    badge.style.color=_espEdMode==='fiche'?'#059669':'#3182CE';
+  }
+  var btn=g('espEdPublishBtn');
+  if(btn)btn.textContent=_espEdMode==='fiche'?'Enregistrer':'Publier';
+  var ed2=g('espAnnEditor');
+  if(ed2)ed2.setAttribute('data-placeholder',_espEdMode==='fiche'?'Contenu de la fiche…':'Écris quelque chose pour tes élèves…');
   el.style.display='flex';
+  // Toolbar en dehors du bdEspEditor — la rendre visible
+  _espKbH=0;
+  var bar=g('espEdToolbar');
+  if(bar){bar.style.display='block';bar.style.bottom='';bar.classList.remove('kb-open');}
   haptic(4);
-  setTimeout(function(){if(ed)ed.focus();},200);
+  // Capacitor native keyboard events (iOS WKWebView + resize:body)
+  _espKbShowFn=function(e){_espKbH=(e&&e.keyboardHeight)||0;_espKbApply();};
+  _espKbHideFn=function(){_espKbH=0;_espKbApply();};
+  window.addEventListener('keyboardWillShow',_espKbShowFn);
+  window.addEventListener('keyboardWillHide',_espKbHideFn);
+  // Fallback visualViewport pour le web
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',_espKbUpdate,{passive:true});
+    window.visualViewport.addEventListener('scroll',_espKbUpdate,{passive:true});
+  }
+  setTimeout(function(){
+    if(_espEdMode==='fiche'&&ti){ti.focus();}
+    else if(ed){ed.focus();}
+  },200);
 }
 
 function closeEspEditor(){
   var el=g('bdEspEditor');if(!el)return;
+  if(_espKbShowFn){window.removeEventListener('keyboardWillShow',_espKbShowFn);_espKbShowFn=null;}
+  if(_espKbHideFn){window.removeEventListener('keyboardWillHide',_espKbHideFn);_espKbHideFn=null;}
+  if(window.visualViewport){
+    window.visualViewport.removeEventListener('resize',_espKbUpdate);
+    window.visualViewport.removeEventListener('scroll',_espKbUpdate);
+  }
+  var bar=g('espEdToolbar');
+  if(bar){bar.style.bottom='';bar.classList.remove('kb-open');bar.style.display='none';}
+  var cp=g('espColorPanel');if(cp)cp.style.display='none';
+  var hp=g('espHilitePanel');if(hp)hp.style.display='none';
   el.classList.add('closing');
   setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
 
 function espFmt(cmd,val){
   var ed=g('espAnnEditor');if(!ed)return;
-  ed.focus();
+  if(document.activeElement!==ed)ed.focus();
   try{document.execCommand(cmd,false,val||null);}catch(e){}
   _espUpdateToolbar();
+}
+
+function espSetBlock(tag){
+  var ed=g('espAnnEditor');if(!ed)return;
+  if(document.activeElement!==ed)ed.focus();
+  var sel=window.getSelection();
+  if(!sel||!sel.rangeCount)return;
+  var node=sel.anchorNode;
+  // Partir de l'élément (pas du nœud texte)
+  if(node&&node.nodeType===3)node=node.parentNode;
+  // Remonter jusqu'au premier élément bloc dans l'éditeur
+  while(node&&node!==ed&&!/^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(node.nodeName)){
+    node=node.parentNode;
+  }
+  if(!node||node===ed){
+    // Fallback : WKWebView nécessite les chevrons
+    try{document.execCommand('formatBlock',false,'<'+tag+'>');}catch(e){
+      try{document.execCommand('formatBlock',false,tag);}catch(e2){}
+    }
+    return;
+  }
+  // Toggle : même tag → revenir en <p>
+  if(node.nodeName.toLowerCase()===tag)tag='p';
+  var newEl=document.createElement(tag);
+  while(node.firstChild)newEl.appendChild(node.firstChild);
+  node.parentNode.replaceChild(newEl,node);
+  var r=document.createRange();
+  r.selectNodeContents(newEl);r.collapse(false);
+  sel.removeAllRanges();sel.addRange(r);
+  _espUpdateToolbar();
+}
+
+function espApplyColor(type,color){
+  var ed=g('espAnnEditor');if(!ed)return;
+  if(document.activeElement!==ed)ed.focus();
+  if(type==='fore'){
+    if(color==='default'){
+      var def=window.getComputedStyle(ed).color;
+      try{document.execCommand('foreColor',false,def);}catch(e){}
+    }else{
+      try{document.execCommand('foreColor',false,color);}catch(e){}
+    }
+    var bar=g('espColorBar');
+    if(bar)bar.style.background=color==='default'?'var(--or)':color;
+  }else{
+    if(color==='none'){
+      try{document.execCommand('hiliteColor',false,'transparent');}catch(e){}
+    }else{
+      try{document.execCommand('hiliteColor',false,color);}catch(e){}
+    }
+  }
+  // Fermer le panel après application
+  var p=g('espColorPanel');if(p)p.style.display='none';
+  var tb=g('espColorToggle');if(tb)tb.classList.remove('active');
+}
+
+function toggleEspColorPanel(){
+  var p=g('espColorPanel');if(!p)return;
+  var open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  var tb=g('espColorToggle');if(tb)tb.classList.toggle('active',open);
+  if(open){var hp=g('espHilitePanel');if(hp)hp.style.display='none';var hb=g('espHiliteToggle');if(hb)hb.classList.remove('active');}
+  haptic(4);
+}
+
+function toggleEspHilitePanel(){
+  var p=g('espHilitePanel');if(!p)return;
+  var open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  var tb=g('espHiliteToggle');if(tb)tb.classList.toggle('active',open);
+  if(open){var cp=g('espColorPanel');if(cp)cp.style.display='none';var cb=g('espColorToggle');if(cb)cb.classList.remove('active');}
+  haptic(4);
+}
+
+function espApplyHighlight(color){
+  var ed=g('espAnnEditor');if(!ed)return;
+  if(document.activeElement!==ed)ed.focus();
+  var sel=window.getSelection();
+  // Fermer le panel
+  var p=g('espHilitePanel');if(p)p.style.display='none';
+  var tb=g('espHiliteToggle');if(tb)tb.classList.remove('active');
+  if(!sel||!sel.rangeCount||sel.isCollapsed){return;}
+  var range=sel.getRangeAt(0);
+  if(color==='none'){
+    // Supprimer le surlignage : déballer les spans de surligneur dans la sélection
+    var frag=range.extractContents();
+    var tmp=document.createElement('div');tmp.appendChild(frag);
+    tmp.querySelectorAll('span[data-hl]').forEach(function(s){
+      while(s.firstChild)s.parentNode.insertBefore(s.firstChild,s);
+      s.parentNode.removeChild(s);
+    });
+    range.insertNode(tmp.firstChild||document.createTextNode(''));
+    return;
+  }
+  var span=document.createElement('span');
+  span.setAttribute('data-hl','1');
+  span.style.backgroundColor=color;
+  span.style.borderRadius='3px';
+  span.style.padding='0 1px';
+  try{range.surroundContents(span);}catch(e){
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+  }
+  // Mettre à jour l'indicateur couleur
+  var bar=g('espHiliteBar');if(bar)bar.style.background=color;
+  sel.removeAllRanges();
 }
 
 function espInsertHR(){
@@ -4269,42 +4585,258 @@ function espInsertHR(){
 }
 
 function _espUpdateToolbar(){
-  var cmds=['bold','italic','underline','strikeThrough'];
-  cmds.forEach(function(cmd){
-    var btn=document.querySelector('.esp-ed-toolbar [onclick="espFmt(\''+cmd+'\')"]');
+  var map={bold:'fmtB',italic:'fmtI',underline:'fmtU',strikeThrough:'fmtS'};
+  Object.keys(map).forEach(function(cmd){
+    var btn=g(map[cmd]);
     if(btn)btn.classList.toggle('active',document.queryCommandState(cmd));
   });
 }
 
+
+function _espAnnDateStr(created_at){
+  var d=new Date(created_at);var now=new Date();
+  var diff=Math.round((now-d)/86400000);
+  return diff===0?'Aujourd\'hui':diff===1?'Hier':diff<7?diff+' j':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+}
+
 function espLoadAnnonces(){
   var el=g('espAnnonces');
-  if(el)el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px"></div>';
+  if(el)el.innerHTML='<div class="skeleton" style="height:80px;border-radius:16px;margin-bottom:10px"></div>';
   var uid=user&&user.id;if(!uid)return;
+  var p=P[uid]||{};
+  var profNm=p.nm||user.prenom||'Moi';
+  var profIni=(profNm[0]||'?').toUpperCase();
+  var profCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var profPhoto=p.photo||null;
+  var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
   fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
-    if(!list||!list.length){
-      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune publication pour l\'instant.</div>';
-      return;
-    }
-    if(el)el.innerHTML=list.map(function(a){
-      var d=new Date(a.created_at);
-      var now=new Date();
-      var diff=Math.round((now-d)/86400000);
-      var dateStr=diff===0?'Aujourd\'hui':diff===1?'Hier':diff<7?diff+' jours':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-      // Contenu : HTML si commence par <, sinon text préformaté
-      var body=a.content&&a.content.trim().startsWith('<')
-        ?a.content
-        :'<p>'+esc(a.content)+'</p>';
-      return'<div class="esp-ann-item">'
-        +'<div class="esp-ann-body">'+body+'</div>'
-        +'<div class="esp-ann-meta">'
-        +'<span class="esp-ann-date">'+dateStr+'</span>'
-        +'<button onclick="espDeleteAnn(\''+escH(a.id)+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+    var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
+    var filtered=(list||[]).filter(function(a){return a.type!=='fiche'&&!_fIds.has(String(a.id));});
+    if(!filtered.length){if(el)el.innerHTML='';return;}
+    if(el)el.innerHTML=filtered.map(function(a){
+      var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
+      return'<div class="forum-post">'
+        +'<div class="forum-post-hd">'
+        +'<div class="forum-post-av" style="background:'+profCol+'">'+avInner+'</div>'
+        +'<div><div class="forum-post-nm">'+esc(profNm)+'</div><div class="forum-post-date">'+_espAnnDateStr(a.created_at)+'</div></div>'
+        +'</div>'
+        +'<div class="forum-post-body">'+body+'</div>'
+        +'<div class="forum-post-ft">'
+        +'<button onclick="espDeleteAnn(\''+escH(a.id)+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);display:flex;align-items:center;gap:4px;font-size:12px">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>Supprimer'
         +'</button>'
         +'</div>'
         +'</div>';
     }).join('');
   }).catch(function(){if(el)el.innerHTML='';});
+}
+
+function espLoadFiches(){
+  var el=g('espFiches');if(!el)return;
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    var fiches=(list||[]).filter(function(a){return a.type==='fiche';});
+    if(!fiches.length){el.innerHTML='<div style="color:var(--lite);font-size:12px;padding:4px 0">Aucune fiche créée.</div>';return;}
+    el.innerHTML=fiches.map(function(a){
+      var titre=a.title||'Fiche sans titre';
+      return'<div class="fiche-item" onclick="espOpenFiche(\''+escH(a.id)+'\')">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between">'
+        +'<div>'
+        +'<div class="fiche-item-title">📄 '+esc(titre)+'</div>'
+        +'<div class="fiche-item-date">'+_espAnnDateStr(a.created_at)+'</div>'
+        +'</div>'
+        +'<button onclick="event.stopPropagation();espDeleteAnn(\''+escH(a.id)+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+        +'</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='';});
+}
+
+function espOpenFiche(id){
+  toast('Ouverture de la fiche…','');
+}
+
+// ── MES PUBLICATIONS ─────────────────────────────────────────────────────
+function openMesPublications(){
+  var el=g('bdMesPublications');if(!el)return;
+  el.style.display='flex';haptic(4);
+  loadMesPublications();
+}
+
+function closeMesPublications(){
+  var el=g('bdMesPublications');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
+}
+
+function loadMesPublications(){
+  var uid=user&&user.id;if(!uid)return;
+  var el=g('mesPubsList');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:90px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:70px;border-radius:18px;margin-bottom:10px"></div>';
+  var p=P[uid]||{};
+  var profNm=p.nm||user.prenom||'Moi';
+  var profIni=(profNm[0]||'?').toUpperCase();
+  var profCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var profPhoto=p.photo||null;
+  var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
+  fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
+    var pubs=(list||[]).filter(function(a){return a.type!=='fiche'&&!_fIds.has(String(a.id));});
+    if(!pubs.length){
+      el.innerHTML='<div style="text-align:center;padding:60px 24px">'
+        +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Aucune publication</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Crée ta première publication pour tes élèves.</div>'
+        +'</div>';return;
+    }
+    el.innerHTML=pubs.map(function(a){
+      var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
+      var acc=a.access_type||'enrolled';
+      var accLabel=acc==='enrolled'?'Visible par tous':'Privé (toi seul)';
+      var accIcon=acc==='enrolled'?'🔓':'🔒';
+      return'<div class="forum-post" style="margin-bottom:12px">'
+        +'<div class="forum-post-hd">'
+        +'<div class="forum-post-av" style="background:'+profCol+'">'+avInner+'</div>'
+        +'<div style="flex:1"><div class="forum-post-nm">'+esc(profNm)+'</div><div class="forum-post-date">'+_espAnnDateStr(a.created_at)+'</div></div>'
+        +'</div>'
+        +'<div class="forum-post-body">'+body+'</div>'
+        +'<div class="forum-post-ft" style="gap:8px">'
+        // Bouton visibilité
+        +'<button onclick="pubSetVisibility(\''+escH(a.id)+'\','+(acc==='enrolled'?'\'private\'':'\'enrolled\'')+')" style="display:flex;align-items:center;gap:5px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;font-family:inherit">'+accIcon+' '+accLabel+'</button>'
+        +'<div style="flex:1"></div>'
+        +'<button onclick="espDeleteAnn(\''+escH(a.id)+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);display:flex;align-items:center;gap:4px;font-size:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px">Erreur chargement.</div>';});
+}
+
+function pubSetVisibility(id,access){
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
+    .then(function(r){return r.json();}).then(function(){haptic(4);loadMesPublications();espLoadAnnonces();})
+    .catch(function(){toast('Erreur réseau','');});
+}
+
+// ── BIBLIOTHÈQUE ──────────────────────────────────────────────────────────
+function openBibliotheque(){
+  var el=g('bdBibliotheque');if(!el)return;
+  el.style.display='flex';
+  haptic(4);
+  loadBibliotheque();
+}
+
+function closeBibliotheque(){
+  var el=g('bdBibliotheque');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
+}
+
+function loadBibliotheque(){
+  var uid=user&&user.id;if(!uid)return;
+  var grid=g('biblioGrid');if(!grid)return;
+  grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
+  var ACCESS_ICON={enrolled:'🔓',password:'🔐',share:'🔗'};
+  var ACCESS_LABEL={enrolled:'Tous',password:'Mot de passe',share:'Via partage'};
+  var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  // Fetch announcements (fiches) + resources
+  Promise.all([
+    fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+  ]).then(function(results){
+    var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
+    var fiches=(results[0]||[]).filter(function(a){return a.type==='fiche'||_fIds.has(String(a.id));});
+    var resources=results[1]||[];
+    var content=results[2]||[];
+    var items=[];
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',icon:'📋',access:f.access_type||'enrolled',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',icon:TYPE_ICON[r.type]||'📎',access:r.access_type||'enrolled',created_at:r.created_at});});
+    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',icon:TYPE_ICON[c.content_type]||'📚',access:c.access_type||'enrolled',created_at:c.created_at});});
+    items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
+    if(!items.length){
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
+        +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Bibliothèque vide</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Crée ta première fiche ou ajoute un document.</div>'
+        +'</div>';
+      return;
+    }
+    grid.innerHTML=items.map(function(item){
+      var acc=item.access||'enrolled';
+      var badge='<span class="biblio-access-badge '+acc+'">'+ACCESS_ICON[acc]+' '+ACCESS_LABEL[acc]+'</span>';
+      return'<div class="biblio-card" onclick="biblioOpenItem(\''+item.kind+'\',\''+item.id+'\')">'
+        +'<div class="biblio-card-ico">'+item.icon+'</div>'
+        +'<div class="biblio-card-body">'
+        +'<div class="biblio-card-title">'+esc(item.title)+'</div>'
+        +badge
+        +'</div>'
+        +'<div class="biblio-card-actions">'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'enrolled\')" class="biblio-act-btn'+(acc==='enrolled'?' active':'')+'">🔓 Tous</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'password\')" class="biblio-act-btn'+(acc==='password'?' active':'')+'">🔐 MDP</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'share\')" class="biblio-act-btn'+(acc==='share'?' active':'')+'">🔗</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  });
+}
+
+function biblioOpenItem(kind,id){
+  if(kind==='fiche')espOpenFiche(id);
+}
+
+function biblioSetAccess(kind,id,access){
+  var uid=user&&user.id;if(!uid)return;
+  var endpoints={resource:'/teacher/'+uid+'/resources/'+id,content:'/teacher/'+uid+'/content/'+id,fiche:'/teacher/'+uid+'/announcements/'+id};
+  var ep=endpoints[kind];if(!ep)return;
+  haptic(4);
+  fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
+    .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
+    .catch(function(){toast('Erreur réseau','');});
+}
+
+// ── AJOUTER UN DOCUMENT ───────────────────────────────────────────────────
+function openAddDoc(){
+  var el=g('bdAddDoc');if(!el)return;
+  el.style.display='flex';
+  var sel=g('addDocAccess');
+  if(sel)sel.addEventListener('change',function(){
+    var pw=g('addDocPwBox');if(pw)pw.style.display=sel.value==='password'?'block':'none';
+  },{once:false});
+  haptic(4);
+}
+
+function closeAddDoc(){
+  var el=g('bdAddDoc');if(!el)return;
+  el.style.display='none';
+}
+
+function addDocSubmit(){
+  var uid=user&&user.id;if(!uid)return;
+  var title=(g('addDocTitle').value||'').trim();
+  var url=(g('addDocUrl').value||'').trim();
+  var type=g('addDocType').value;
+  var access=g('addDocAccess').value;
+  var pw=access==='password'?(g('addDocPw').value||'').trim():'';
+  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  var btn=g('addDocBtn');if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
+    body:JSON.stringify({title:title,url:url,type:type,access_type:access,password:pw||undefined})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Ajouter';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Document ajouté !','');
+      g('addDocTitle').value='';g('addDocUrl').value='';
+      closeAddDoc();
+      // Refresh la bibliothèque si ouverte
+      if(g('bdBibliotheque')&&g('bdBibliotheque').style.display!=='none')loadBibliotheque();
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter';}toast('Erreur réseau','');});
 }
 
 function espDeleteAnn(id){
@@ -4321,14 +4853,21 @@ function espSubmitAnn(){
   if(!content||content==='<br>'||content==='<p><br></p>'){toast('Écris quelque chose d\'abord','');return;}
   var btn=g('espEdPublishBtn');
   if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify({content:content})})
+  var isFiche=_espEdMode==='fiche';
+  var title=isFiche?(g('espEdTitleInp')?g('espEdTitleInp').value.trim():''):'';
+  var body={content:content};
+  if(isFiche)body.type='fiche';
+  if(title)body.title=title;
+  fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.textContent='Publier';}
+      if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}
       if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Publié !','');
+      // Cache l'ID comme fiche dans localStorage (fallback si le backend ne retourne pas type='fiche')
+      if(isFiche&&d.id){try{var ids=JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]');if(!ids.includes(String(d.id))){ids.push(String(d.id));localStorage.setItem('cp_fiche_ids',JSON.stringify(ids));};}catch(e){}}
+      haptic(4);toast(isFiche?'Fiche enregistrée !':'Publié !','');
       closeEspEditor();
-      espLoadAnnonces();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
+      if(isFiche){loadBibliotheque();openBibliotheque();}else{espLoadAnnonces();}
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}toast('Erreur réseau','');});
 }
 
 function _renderMpfTags(list){
@@ -4408,20 +4947,17 @@ function _loadMpfFeed(pid){
         +'<div style="font-size:12px;margin-top:4px">Le prof n\'a pas encore publié d\'annonces</div></div>';
       return;
     }
-    var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:14px;font-weight:800;color:#fff">'+profIni+'</span>';
-    el.innerHTML=data.map(function(a){
-      var d=new Date(a.created_at);
-      var now=new Date();
-      var diff=Math.round((now-d)/86400000);
-      var dateStr=diff===0?'Aujourd\'hui':diff===1?'Hier':diff<7?diff+' jours':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-      return'<div class="feed-card">'
-        +'<div class="feed-card-head">'
-        +'<div class="feed-card-av" style="background:'+profCol+'">'+avInner+'</div>'
-        +'<div><div class="feed-card-nm">'+esc(profNm)+'</div><div class="feed-card-date">'+dateStr+'</div></div>'
+    var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
+    el.innerHTML=data.filter(function(a){return a.type!=='fiche';}).map(function(a){
+      var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
+      return'<div class="forum-post">'
+        +'<div class="forum-post-hd">'
+        +'<div class="forum-post-av" style="background:'+profCol+'">'+avInner+'</div>'
+        +'<div><div class="forum-post-nm">'+esc(profNm)+'</div><div class="forum-post-date">'+_espAnnDateStr(a.created_at)+'</div></div>'
         +'</div>'
-        +'<div class="feed-card-body">'+esc(a.content)+'</div>'
+        +'<div class="forum-post-body">'+body+'</div>'
         +'</div>';
-    }).join('');
+    }).join('')||'<div style="text-align:center;padding:32px 20px;color:var(--lite)"><div style="font-size:14px;font-weight:600">Aucune annonce pour le moment</div></div>';
   }).catch(function(){el.innerHTML='';});
 }
 
@@ -4622,6 +5158,168 @@ function espDeleteContenu(id){
   });
 }
 
+// ── MES COURS (prof) ──────────────────────────────────────────────────────
+function goMesCoursPage(){
+  if(user&&user.role==='professeur'){espGoMesCours();}
+  else{navTo('mes');}
+}
+
+function espGoMesCours(){
+  haptic(4);
+  // navTo('mes') bloque les profs → navigation directe
+  var pages=['pgExp','pgMsg','pgAcc','pgFav','pgMes','pgMesProfs'];
+  pages.forEach(function(id){var el=g(id);if(el)el.classList.remove('on');});
+  var pgMesEl=g('pgMes');if(pgMesEl)pgMesEl.classList.add('on');
+  ['bniExp','bniFav','bniMsg','bniProfs','bniMes'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
+  updateMobHeader('mes');
+  restoreNav();
+  _mesSeg='upcoming';
+  buildMesCours();
+}
+
+var _espSelCours=null;
+
+function espLoadMesCours(){
+  var uid=user&&user.id;if(!uid)return;
+  var el=g('espMesCoursList');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px;margin-bottom:6px"></div><div class="skeleton" style="height:54px;border-radius:12px"></div>';
+  var now=new Date();
+  var myCours=C.filter(function(c){return c.prof_id===uid||c.teacher_id===uid;});
+  if(!myCours.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours trouvé.</div>';return;}
+  var upcoming=[],past=[];
+  myCours.forEach(function(c){
+    var d=c.date_heure||c.date||c.created_at;
+    if(!d||(new Date(d))>=now)upcoming.push(c);else past.push(c);
+  });
+  upcoming.sort(function(a,b){return new Date(a.date_heure||a.date||0)-new Date(b.date_heure||b.date||0);});
+  past.sort(function(a,b){return new Date(b.date_heure||b.date||0)-new Date(a.date_heure||a.date||0);});
+  var html='';
+  function renderRows(list,tag,label){
+    if(!list.length)return;
+    html+='<div class="esp-mc-section">'+label+'</div>';
+    list.forEach(function(c){
+      var emoji=c.emoji||'📘';
+      var titre=esc(c.titre||c.title||'Cours');
+      var date='';
+      var d=c.date_heure||c.date;
+      if(d){var dd=new Date(d);date=dd.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+(c.heure?' · '+c.heure:'');}
+      html+='<div class="esp-mc-row" onclick="espOpenCourseActions(\''+c.id+'\')">'
+        +'<div style="font-size:22px;flex-shrink:0;width:36px;text-align:center">'+emoji+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+titre+'</div>'
+        +(date?'<div style="font-size:11px;color:var(--lite);margin-top:1px">'+date+'</div>':'')
+        +'</div>'
+        +'<span class="esp-mc-tag '+tag+'">'+label+'</span>'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--bdr)" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
+        +'</div>';
+    });
+  }
+  renderRows(upcoming,'upcoming','À venir');
+  renderRows(past,'past','Passés');
+  el.innerHTML=html||'<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours.</div>';
+}
+
+function espOpenCourseActions(id){
+  var c=C.find(function(x){return x.id==id;});
+  if(!c)return;
+  _espSelCours=c;
+  var titleEl=g('espCaTitle'),subEl=g('espCaSub'),iconEl=g('espCaIcon');
+  if(titleEl)titleEl.textContent=c.titre||c.title||'Cours';
+  if(subEl){
+    var d=c.date_heure||c.date;
+    subEl.textContent=d?new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long'}):'';
+  }
+  if(iconEl)iconEl.textContent=c.emoji||'📘';
+  // reset sub-forms
+  ['espCaDocForm','espCaMsgForm','espCaInscList'].forEach(function(id){var el=g(id);if(el)el.style.display='none';});
+  var bd=g('bdEspCourseActions');if(!bd)return;
+  bd.style.display='flex';
+  haptic(4);
+}
+
+function closeEspCourseActions(){
+  var bd=g('bdEspCourseActions');if(!bd)return;
+  bd.style.display='none';
+  _espSelCours=null;
+}
+
+function espCaAddDoc(){
+  var f=g('espCaDocForm');if(!f)return;
+  g('espCaMsgForm').style.display='none';
+  g('espCaInscList').style.display='none';
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function espCaSendMsg(){
+  var f=g('espCaMsgForm');if(!f)return;
+  g('espCaDocForm').style.display='none';
+  g('espCaInscList').style.display='none';
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function espCaManage(){
+  var f=g('espCaInscList');if(!f)return;
+  g('espCaDocForm').style.display='none';
+  g('espCaMsgForm').style.display='none';
+  if(f.style.display!=='none'){f.style.display='none';return;}
+  f.style.display='block';
+  if(!_espSelCours)return;
+  var el=g('espCaInscContent');if(!el)return;
+  el.innerHTML='<div style="color:var(--lite);font-size:13px">Chargement…</div>';
+  fetch(API+'/reservations/cours/'+_espSelCours.id,{headers:apiH()})
+    .then(function(r){return r.json();}).then(function(list){
+      if(!list||!list.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:4px 0">Aucun élève inscrit.</div>';return;}
+      el.innerHTML=list.map(function(r){
+        var name=esc((r.student_name||r.nom||'Élève'));
+        var status=r.status==='confirmed'?'Payé':'En attente';
+        var color=r.status==='confirmed'?'#22C55E':'var(--or)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
+          +'<div style="width:32px;height:32px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--mid);flex-shrink:0">'+name.charAt(0).toUpperCase()+'</div>'
+          +'<div style="flex:1;font-size:13px;font-weight:600;color:var(--ink)">'+name+'</div>'
+          +'<span style="font-size:11px;font-weight:700;color:'+color+'">'+status+'</span>'
+          +'</div>';
+      }).join('');
+    }).catch(function(){el.innerHTML='<div style="color:var(--lite);font-size:13px">Erreur réseau.</div>';});
+}
+
+function espCaDocSubmit(){
+  if(!_espSelCours)return;
+  var uid=user&&user.id;if(!uid)return;
+  var title=(g('espCaDocTitle').value||'').trim();
+  var url=(g('espCaDocUrl').value||'').trim();
+  var type=g('espCaDocType').value;
+  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  var btn=document.querySelector('#espCaDocForm .esp2-btn-submit');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
+    body:JSON.stringify({title:title,url:url,type:type,cours_id:_espSelCours.id})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Document ajouté !','');
+      g('espCaDocTitle').value='';g('espCaDocUrl').value='';
+      g('espCaDocForm').style.display='none';
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}toast('Erreur réseau','');});
+}
+
+function espCaMsgSubmit(){
+  if(!_espSelCours)return;
+  var uid=user&&user.id;if(!uid)return;
+  var msg=(g('espCaMsgText').value||'').trim();
+  if(!msg){toast('Écris un message','');return;}
+  var btn=document.querySelector('#espCaMsgForm .esp2-btn-submit');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),
+    body:JSON.stringify({cours_id:_espSelCours.id,message:msg,sender_id:uid})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Message envoyé à tous les inscrits !','');
+      g('espCaMsgText').value='';
+      g('espCaMsgForm').style.display='none';
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}toast('Erreur réseau','');});
+}
+
 function switchMpfTab(tab){
   var tabs=['profil','cours','espace'];
   tabs.forEach(function(k){
@@ -4647,8 +5345,9 @@ function toggleEsp2Card(id,section){
     if(section==='code')espLoadCode();
     if(section==='eleves')espLoadStudents();
     if(section==='annonces')espLoadAnnonces();
-    if(section==='ressources')espLoadResources();
+    if(section==='ressources'){espLoadResources();espLoadFiches();}
     if(section==='contenu')espLoadContenu();
+    if(section==='mesCours')espLoadMesCours();
   }
 }
 
@@ -5357,7 +6056,13 @@ async function loadConversations(){
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px;font-weight:600">'+t('msg_empty_conv')+'</div><div style="font-size:12px;margin-top:6px">'+_emptyDesc+'</div></div>';
+      lm.innerHTML='<div style="text-align:center;padding:56px 24px">'
+        +'<div style="width:72px;height:72px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
+        +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
+        +'</div>';
       _convLoading=false;return;
     }
     // Grouper par interlocuteur
@@ -7119,6 +7824,21 @@ async function submitPayment(){
         haptic(6);
         toast(t('t_res_confirmed'),t('t_res_confirmed_msg'));
         setTimeout(function(){loadData(1).then(function(){buildCards();updateMesRes();});},800);
+        // Proposer les notifications push après le premier paiement réussi
+        try{
+          if(!_payPourAmi&&typeof Notification!=='undefined'&&Notification.permission==='default'&&!_pushSubscription){
+            setTimeout(function(){
+              var bd=document.createElement('div');
+              bd.id='pushNudge';
+              bd.style.cssText='position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+90px);left:50%;transform:translateX(-50%);width:calc(100%-40px);max-width:380px;background:var(--wh);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.16);padding:16px 18px;z-index:600;display:flex;align-items:center;gap:14px;animation:mi .3s cubic-bezier(.32,1,.6,1)';
+              bd.innerHTML='<div style="width:44px;height:44px;background:rgba(255,107,43,.1);border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>'
+                +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px">Rappels de cours</div><div style="font-size:12px;color:var(--lite)">Reçois une notification avant chaque cours</div></div>'
+                +'<div style="display:flex;flex-direction:column;gap:6px"><button onclick="subscribePush();document.getElementById(\'pushNudge\').remove()" style="background:var(--or);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Activer</button><button onclick="document.getElementById(\'pushNudge\').remove()" style="background:none;border:none;font-size:11px;color:var(--lite);cursor:pointer;font-family:inherit;padding:0">Plus tard</button></div>';
+              document.body.appendChild(bd);
+              setTimeout(function(){var n=document.getElementById('pushNudge');if(n)n.remove();},10000);
+            },2000);
+          }
+        }catch(_){}
       }else{
         toast(t('t_error'),d2.error||t('t_try_again'),true);
         btn.disabled=false;btn.style.opacity='1';
@@ -8971,7 +9691,8 @@ async function subCrStep(){
   var _nt=navTo;
   navTo=function(tab){
     if(tab==='mes'){
-      if(!user||user.guest||user.role==='professeur'){navTo('exp');return;}
+      if(!user||user.guest){navTo('exp');return;}
+      if(user.role==='professeur'){espGoMesCours();return;}
       // Masquer toutes les pages
       ['pgExp','pgMsg','pgAcc','pgFav','pgMes','pgMesProfs'].forEach(function(id){
         var el=g(id);if(el)el.classList.remove('on');
@@ -9078,6 +9799,20 @@ function _calWeekMon(){
 
 function _calBuildHeader(myCours){
   var hd=g('mesCalHd');if(!hd)return;
+  var isProf=user&&user.role==='professeur';
+
+  // Segment bar HTML (profs only) — intégré dans le header pour éviter la double séparation visuelle
+  var segHtml='';
+  if(isProf){
+    segHtml='<div id="mesSegBar" style="padding:8px 0 2px">'
+      +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
+      +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
+      +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+      +'</div></div>';
+  }
+
+  hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
+
   var today=new Date();today.setHours(0,0,0,0);
   var todayYmd=_calYmd(today);
   var mon=_calWeekMon();
@@ -9089,37 +9824,49 @@ function _calBuildHeader(myCours){
   if(!selInWeek)_calSelDay=_calYmd(mon);
 
   var selD=new Date(_calSelDay+'T00:00:00');
-  var titleStr=_CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
+  var titleStr=_mesSeg==='past'
+    ? 'Cours passés'
+    : _CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
 
-  // Compute set of days that have courses
+  // Compute set of days that have courses (only for upcoming mode)
   var daysWithCours={};
-  myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
-
-  // Build 7 day chips
-  var chipsHtml='';
-  for(var i=0;i<7;i++){
-    var d=new Date(mon);d.setDate(mon.getDate()+i);
-    var ymd=_calYmd(d);
-    var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
-    chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
-      +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
-      +'<span class="cal-chip-num">'+d.getDate()+'</span>'
-      +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
-      +'</button>';
+  if(_mesSeg!=='past'){
+    myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
   }
 
-  hd.innerHTML='<div class="mes-cal-top">'
+  // Titre + (date picker uniquement en mode À venir)
+  var topHtml='<div class="mes-cal-top">'
     +'<div class="mes-cal-title">'+titleStr+'</div>'
-    +'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-    +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
-    +'</button>'
-    +'</div>'
-    +'<div class="mes-cal-strip">'
-    +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
-    +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
-    +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+    +(_mesSeg!=='past'
+      ?'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+        +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
+        +'</button>'
+      :'')
     +'</div>';
+
+  // Bande des jours uniquement en mode À venir
+  var stripHtml='';
+  if(_mesSeg!=='past'){
+    var chipsHtml='';
+    for(var i=0;i<7;i++){
+      var d=new Date(mon);d.setDate(mon.getDate()+i);
+      var ymd=_calYmd(d);
+      var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
+      chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
+        +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
+        +'<span class="cal-chip-num">'+d.getDate()+'</span>'
+        +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
+        +'</button>';
+    }
+    stripHtml='<div class="mes-cal-strip">'
+      +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
+      +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      +'</div>';
+  }
+
+  hd.innerHTML=topHtml+segHtml+stripHtml;
 
   // Swipe gauche/droite sur la bande pour changer de semaine
   var chips=g('calChips');
@@ -9175,31 +9922,59 @@ function calPickDate(val){
 function _renderCalCourses(){
   var el=g('pgMesCnt');if(!el)return;
   var isProf=user&&user.role==='professeur';
-  var myCours=isProf
-    ?C.filter(function(c){return c.pr===user.id;})
-    :Object.keys(res).map(function(id){return C.find(function(c){return c.id===id;});}).filter(Boolean);
+
+  // Pour les profs : cours publiés ET cours réservés (en tant qu'élève)
+  // Chaque entrée : {c: course, kind: 'published'|'reserved'}
+  var tagged=[];
+  if(isProf){
+    C.filter(function(c){return c.pr===user.id;}).forEach(function(c){tagged.push({c:c,kind:'published'});});
+    Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean).forEach(function(c){
+      if(!tagged.some(function(t){return t.c.id===c.id;}))tagged.push({c:c,kind:'reserved'});
+    });
+  } else {
+    Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean).forEach(function(c){tagged.push({c:c,kind:'reserved'});});
+  }
+  var myCours=tagged.map(function(t){return t.c;});
+
+  // Mode Passés
+  if(_mesSeg==='past'){
+    var now=new Date();
+    var pastTagged=tagged.filter(function(t){return t.c.dt_iso&&new Date(t.c.dt_iso)<now;})
+      .sort(function(a,b){return new Date(b.c.dt_iso)-new Date(a.c.dt_iso);});
+    if(!pastTagged.length){
+      el.innerHTML='<div class="mes-cal-empty">'
+        +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours passé</div>'
+        +'<div style="font-size:13px;color:var(--lite)">Tes cours terminés apparaîtront ici</div>'
+        +'</div>';
+      return;
+    }
+    var h='';
+    pastTagged.forEach(function(t){h+=buildMesCard(t.c,true,isProf,t.kind);});
+    el.innerHTML=h;_bindMesCards(el);return;
+  }
 
   var ymd=_calSelDay;
   var dayStart=ymd?new Date(ymd+'T00:00:00'):null;
   var dayEnd=dayStart?new Date(dayStart.getTime()+86400000):null;
 
-  var dayCours=myCours.filter(function(c){
+  var dayTagged=tagged.filter(function(t){
     if(!dayStart)return true;
-    if(!c.dt_iso)return false;
-    var t=new Date(c.dt_iso).getTime();
-    return t>=dayStart.getTime()&&t<dayEnd.getTime();
-  }).sort(function(a,b){return new Date(a.dt_iso||0)-new Date(b.dt_iso||0);});
+    if(!t.c.dt_iso)return false;
+    var ts=new Date(t.c.dt_iso).getTime();
+    return ts>=dayStart.getTime()&&ts<dayEnd.getTime();
+  }).sort(function(a,b){return new Date(a.c.dt_iso||0)-new Date(b.c.dt_iso||0);});
 
-  if(!dayCours.length){
+  if(!dayTagged.length){
     el.innerHTML='<div class="mes-cal-empty">'
-      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
-      +'<div style="font-size:13px;color:var(--lite)">Pas de cours réservé pour cette date</div>'
+      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
       +'</div>';
     return;
   }
   var h='';
-  dayCours.forEach(function(c){h+=buildMesCard(c,_isCoursPass(c),isProf);});
+  dayTagged.forEach(function(t){h+=buildMesCard(t.c,_isCoursPass(t.c),isProf,t.kind);});
   el.innerHTML=h;
   _bindMesCards(el);
 }
@@ -9211,24 +9986,48 @@ function _bindMesCards(el){
   el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('Lien copié\u00a0!','');});}};});
 }
 
+function mesSetSeg(seg){
+  _mesSeg=seg;
+  haptic(4);
+  buildMesCours(); // rebuild header (segBar) ET contenu
+}
+
 function buildMesCours(){
   var hd=g('mesCalHd');var el=g('pgMesCnt');
   if(!el)return;
   if(!user||!user.id){
     if(hd)hd.innerHTML='';
-    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
+    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
     return;
   }
   var isProf=user&&user.role==='professeur';
-  var myCours=isProf
-    ?C.filter(function(c){return c.pr===user.id;})
-    :Object.keys(res).map(function(id){return C.find(function(c){return c.id===id;});}).filter(Boolean);
 
-  _calBuildHeader(myCours);
+  // Tous les cours à afficher (publiés + réservés pour les profs)
+  var allCours;
+  if(isProf){
+    var published=C.filter(function(c){return c.pr===user.id;});
+    var reserved=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
+    // Dédoublonner
+    var seen={};
+    allCours=[];
+    published.concat(reserved).forEach(function(c){if(c&&!seen[c.id]){seen[c.id]=true;allCours.push(c);}});
+  } else {
+    allCours=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
+  }
+
+  if(hd)hd.style.display=''; // _calBuildHeader gère le contenu selon _mesSeg
+  _calBuildHeader(allCours);
   _renderCalCourses();
 }
 
-function buildMesCard(c,isPast,isProf){
+function buildMesCard(c,isPast,isProf,kind){
+  // Badge type : 'published' = cours que le prof a créé, 'reserved' = cours réservé
+  var kindBadge='';
+  if(kind==='published'){
+    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.12);color:var(--or);border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">📌 Mon cours</span>';
+  }else if(kind==='reserved'){
+    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(59,130,246,.1);color:#2563EB;border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">🎓 Réservé</span>';
+  }
   var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   var mL=c.mode==='visio'?'Visio':'Pr\u00e9sentiel';
@@ -9258,6 +10057,7 @@ function buildMesCard(c,isPast,isProf){
     heartBtn='<button class="card-heart-btn'+(isFavMes?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+escH(c.id)+'\',this)" title="Sauvegarder" style="position:static;width:34px;height:34px;border-radius:50%;background:'+(isFavMes?'rgba(255,60,100,.12)':'var(--bg)')+';border:1.5px solid '+(isFavMes?'#FFB3CB':'var(--bdr)')+';backdrop-filter:none;-webkit-backdrop-filter:none;color:'+(isFavMes?'#E01060':'var(--lite)')+';flex-shrink:0"><svg viewBox="0 0 24 24" fill="'+(isFavMes?'#E01060':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
   }
   return '<div class="mes-card" data-cid="'+escH(c.id)+'"'+(isPast?' style="opacity:.65"':'')+' >'
+    +(kindBadge?'<div>'+kindBadge+'</div>':'')
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
     +'<div style="width:44px;height:44px;border-radius:14px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+mf.color+'"></div></div>'
     +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(c.title)+'</div>'
