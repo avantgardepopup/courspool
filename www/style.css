@@ -37,7 +37,7 @@ html.dk{
   color-scheme:dark;
 }
 /* Nav en dark */
-html.dk .mob-header{background:rgba(18,17,16,.97);border-bottom:1px solid #2E2B28;}
+html.dk .mob-header{background:#131110;border-bottom:1px solid #2E2B28;}
 html.dk .mob-search{background:#1C1917;border-bottom:1px solid #2E2B28;}
 html.dk .mob-search input{background:#1C1917;color:var(--ink);}
 html.dk #verifBand{background:#2A2018;border-color:#4A3820;}
@@ -256,9 +256,9 @@ html.dk .lreg-back{background:#1C1917;border-color:var(--bdr);}
   display:block;
   padding:14px 20px 10px;
   padding-top:max(20px,env(safe-area-inset-top,0px));
-  background:rgba(255,255,255,.97);
-  backdrop-filter:blur(28px) saturate(1.8);
-  -webkit-backdrop-filter:blur(28px) saturate(1.8);
+  background:#fff;
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
   border-bottom:1px solid transparent;
   position:-webkit-sticky;
   position:sticky;top:0;z-index:50;
@@ -661,7 +661,7 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 
 
 /* ── FAVORITES PAGE ── */
-#pgFav{padding-top:max(env(safe-area-inset-top,0px),0px);padding-bottom:120px;}
+#pgFav{padding-top:0;padding-bottom:120px;}
 .fav-section-title{
   font-size:18px;font-weight:700;color:var(--ink);
   letter-spacing:-.02em;padding:8px 20px 10px;
