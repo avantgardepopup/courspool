@@ -1576,7 +1576,7 @@ function updateMobHeader(tab){
   if(user)setAvatar(g('tavMob'),user.photo,user.ini||'?','linear-gradient(135deg,#FF8C55,var(--ord))');
   // Cacher mob-header sur la page messages (la conv a son propre header)
   var mh=g('mobHeader');
-  if(mh)mh.style.display=tab==='msg'?'none':'block';
+  if(mh)mh.style.display=(tab==='msg'||tab==='mes')?'none':'block';
 }
 
 function navTo(tab,_skipHistory){
@@ -9116,7 +9116,7 @@ function _renderCalCourses(){
 
   if(!dayCours.length){
     el.innerHTML='<div class="mes-cal-empty">'
-      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
       +'<div style="font-size:13px;color:var(--lite)">Pas de cours réservé pour cette date</div>'
       +'</div>';
@@ -9140,7 +9140,7 @@ function buildMesCours(){
   if(!el)return;
   if(!user||!user.id){
     if(hd)hd.innerHTML='';
-    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
+    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
     return;
   }
   var isProf=user&&user.role==='professeur';
