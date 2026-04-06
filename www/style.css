@@ -2706,7 +2706,7 @@ html.dk .msg-bubble-time.them { color: #fff; }
   align-items:stretch;
   padding:8px 0 4px;
   gap:0;
-  background:var(--bg);
+  background:var(--wh);
 }
 .filter-fixed {
   display:flex;
