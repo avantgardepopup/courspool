@@ -459,7 +459,11 @@ function buildFavPage(){
         var c=C.find(function(x){return x.id==id;});
         return!c||!_isCoursPass(c);
       });
-      if(!_favActive.length&&C.length){if(coursSection)coursSection.style.display='none';}
+      if(!_favActive.length&&C.length){
+        if(coursSection)coursSection.style.display='none';
+        if(emptyAll){emptyAll.style.display='flex';emptyAll.style.flexDirection='column';emptyAll.style.alignItems='center';emptyAll.style.justifyContent='center';emptyAll.style.minHeight='60vh';}
+        return;
+      }
       carousel.innerHTML='';
       var _fFrag=document.createDocumentFragment();
       _favActive.forEach(function(id){
@@ -4084,6 +4088,69 @@ function buildEspProf(){
   });
   // Charge le code (affiché dans le header de la card)
   espLoadCode();
+  // Tuto première visite
+  setTimeout(checkEspTuto, 600);
+}
+
+// ── TUTO ESPACE PROF (première visite) ──────────────────────────────────────
+var _espTutoStep=0;
+var _espTutoSteps=[
+  {ico:'🏫',title:'Bienvenue dans ton Espace !',sub:'Découvre en quelques secondes tout ce que tu peux faire pour tes élèves depuis cet espace.'},
+  {ico:'🔑',title:'Code d\'accès élèves',sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'},
+  {ico:'📣',title:'Publications & Annonces',sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'},
+  {ico:'📚',title:'Ma bibliothèque',sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'},
+  {ico:'👥',title:'Mes élèves',sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'}
+];
+
+function checkEspTuto(){
+  try{if(localStorage.getItem('cp_esp_tuto'))return;}catch(e){}
+  _espTutoStep=0;
+  var bd=g('bdEspTuto');if(!bd)return;
+  _espTutoRender();
+  bd.style.display='flex';
+  haptic(4);
+}
+
+function _espTutoRender(){
+  var s=_espTutoSteps[_espTutoStep];if(!s)return;
+  var track=g('espTutoTrack');
+  var dots=g('espTutoDots');
+  var btn=g('espTutoBtn');
+  var isLast=_espTutoStep===_espTutoSteps.length-1;
+  if(track){
+    track.innerHTML=''
+      +'<div style="text-align:center;padding:24px 0 16px">'
+      +'<div style="font-size:52px;margin-bottom:16px;line-height:1">'+s.ico+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.65">'+s.sub+'</div>'
+      +'</div>';
+  }
+  if(dots){
+    dots.innerHTML=_espTutoSteps.map(function(_,i){
+      return'<div style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s"></div>';
+    }).join('');
+  }
+  if(btn)btn.textContent=isLast?'Commencer !':'Suivant';
+}
+
+function espTutoNext(){
+  haptic(4);
+  if(_espTutoStep<_espTutoSteps.length-1){
+    _espTutoStep++;
+    _espTutoRender();
+  }else{
+    espTutoDone();
+  }
+}
+
+function espTutoSkip(){
+  espTutoDone();
+}
+
+function espTutoDone(){
+  try{localStorage.setItem('cp_esp_tuto','1');}catch(e){}
+  var bd=g('bdEspTuto');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
 }
 
 function espLoadCode(){
@@ -4925,8 +4992,6 @@ function espGoMesCours(){
   updateMobHeader('mes');
   restoreNav();
   _mesSeg='upcoming';
-  if(g('mesSegUpcoming'))g('mesSegUpcoming').classList.add('on');
-  if(g('mesSegPast'))g('mesSegPast').classList.remove('on');
   buildMesCours();
 }
 
@@ -9722,7 +9787,7 @@ function _bindMesCards(el){
 function mesSetSeg(seg){
   _mesSeg=seg;
   haptic(4);
-  _renderCalCourses(); // _calBuildHeader gère tout (segBar inclus dans calHd)
+  buildMesCours(); // rebuild header (segBar) ET contenu
 }
 
 function buildMesCours(){
@@ -9734,8 +9799,6 @@ function buildMesCours(){
     return;
   }
   var isProf=user&&user.role==='professeur';
-  var sb=g('mesSegBar');
-  if(sb)sb.style.display=isProf?'flex':'none';
 
   // Tous les cours à afficher (publiés + réservés pour les profs)
   var allCours;

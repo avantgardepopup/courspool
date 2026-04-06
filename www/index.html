@@ -1161,18 +1161,18 @@
             </div>
             <div class="esp2-card-body">
               <div style="text-align:center;padding:10px 0 6px">
-                <div id="espCodeDisplay" style="font-size:30px;font-weight:900;letter-spacing:.25em;color:var(--or);font-variant-numeric:tabular-nums">——————</div>
+                <div id="espCodeDisplay" style="font-size:clamp(20px,8vw,30px);font-weight:900;letter-spacing:.2em;color:var(--or);font-variant-numeric:tabular-nums;word-break:break-all">——————</div>
                 <div style="font-size:12px;color:var(--lite);margin-top:4px">Partage ce code avec tes élèves</div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:12px">
-                <button class="esp-btn esp-btn-sec" style="flex:1;justify-content:center" onclick="espCopyCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copier
+              <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                <button class="esp-card-btn" onclick="espCopyCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copier
                 </button>
-                <button class="esp-btn esp-btn-sec" style="flex:1;justify-content:center" onclick="espShareCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager
+                <button class="esp-card-btn" onclick="espShareCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager
                 </button>
-                <button class="esp-btn esp-btn-prim" style="flex:1;justify-content:center" onclick="espRegenCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Nouveau
+                <button class="esp-card-btn esp-card-btn-prim" onclick="espRegenCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Nouveau code
                 </button>
               </div>
             </div>
@@ -1820,6 +1820,19 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
       </button>
       <button class="esp-fmt-btn" onclick="espInsertHR()" title="Séparateur">—</button>
+    </div>
+  </div>
+</div>
+
+<!-- TUTO PREMIER ACCÈS ESPACE PROF -->
+<div id="bdEspTuto" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)espTutoSkip()">
+  <div style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,0px));animation:mi .3s cubic-bezier(.32,1,.6,1)">
+    <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
+    <div id="espTutoTrack" style="overflow:hidden;padding:0 24px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px 0">
+      <button onclick="espTutoSkip()" style="background:none;border:none;font-size:13px;color:var(--lite);font-family:inherit;cursor:pointer;padding:8px 0;-webkit-tap-highlight-color:transparent">Passer</button>
+      <div id="espTutoDots" style="display:flex;gap:7px;align-items:center"></div>
+      <button id="espTutoBtn" onclick="espTutoNext()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">Suivant</button>
     </div>
   </div>
 </div>
