@@ -1785,7 +1785,10 @@
     <button onclick="closeEspEditor()" class="esp-ed-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div id="espEdModeTitle" style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+      <div id="espEdModeTitle" style="font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
+      <span id="espEdTypeBadge" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;background:rgba(59,130,246,.1);color:#3182CE;letter-spacing:.02em;align-self:flex-start">Publication</span>
+    </div>
     <button onclick="espSubmitAnn()" id="espEdPublishBtn" class="esp-ed-publish">Publier</button>
   </div>
   <!-- Zone édition -->
@@ -1797,6 +1800,19 @@
 </div>
 <!-- Toolbar flottante éditeur (hors bdEspEditor pour que position:fixed soit relatif au viewport, pas à l'animation) -->
 <div class="esp-kb-card" id="espEdToolbar" style="display:none">
+  <!-- Palette surlignage -->
+  <div id="espHilitePanel" style="display:none;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--bdr)">
+    <div style="display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px 0">
+      <span style="font-size:10px;font-weight:700;color:var(--lite);flex-shrink:0">Surligner</span>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyHighlight('none')" title="Effacer"><svg viewBox="0 0 16 16" fill="none" width="10" height="10"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyHighlight('#FEF08A')" style="background:#FEF08A"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyHighlight('#BBF7D0')" style="background:#BBF7D0"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyHighlight('#BFDBFE')" style="background:#BFDBFE"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyHighlight('#FBD5D5')" style="background:#FBD5D5"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyHighlight('#E9D8FD')" style="background:#E9D8FD"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyHighlight('#FED7AA')" style="background:#FED7AA"></button>
+    </div>
+  </div>
   <!-- Palette couleurs (masquée par défaut) -->
   <div id="espColorPanel" style="display:none;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--bdr)">
     <div style="display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px 0">
@@ -1807,14 +1823,6 @@
       <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#3182CE')" style="background:#3182CE"></button>
       <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#38A169')" style="background:#38A169"></button>
       <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#805AD5')" style="background:#805AD5"></button>
-      <div class="esp-fmt-sep"></div>
-      <span style="font-size:10px;font-weight:700;color:var(--lite);flex-shrink:0;letter-spacing:.02em">Fond</span>
-      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','none')" title="Aucun fond"><svg viewBox="0 0 16 16" fill="none" width="10" height="10"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#FEF08A')" style="background:#FEF08A"></button>
-      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#BBF7D0')" style="background:#BBF7D0"></button>
-      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#BFDBFE')" style="background:#BFDBFE"></button>
-      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#FBD5D5')" style="background:#FBD5D5"></button>
-      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#E9D8FD')" style="background:#E9D8FD"></button>
     </div>
   </div>
   <!-- Ligne principale scrollable -->
@@ -1837,7 +1845,13 @@
     </button>
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espInsertHR()" title="Séparateur">—</button>
     <div class="esp-fmt-sep"></div>
-    <button class="esp-fmt-btn" id="espColorToggle" onmousedown="event.preventDefault()" onclick="toggleEspColorPanel()" title="Couleurs">
+    <button class="esp-fmt-btn" id="espHiliteToggle" onmousedown="event.preventDefault()" onclick="toggleEspHilitePanel()" title="Surligner">
+      <span style="display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1">
+        <span style="font-size:13px;font-weight:900">S</span>
+        <span id="espHiliteBar" style="width:14px;height:3px;border-radius:2px;background:#FEF08A"></span>
+      </span>
+    </button>
+    <button class="esp-fmt-btn" id="espColorToggle" onmousedown="event.preventDefault()" onclick="toggleEspColorPanel()" title="Couleur texte">
       <span style="display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1">
         <span style="font-size:13px;font-weight:900">A</span>
         <span id="espColorBar" style="width:14px;height:3px;border-radius:2px;background:var(--or)"></span>

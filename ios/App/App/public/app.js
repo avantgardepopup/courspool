@@ -4417,6 +4417,16 @@ function openEspEditor(mode){
   if(ed){ed.innerHTML='';}
   if(ti){ti.value='';ti.style.display=_espEdMode==='fiche'?'block':'none';}
   if(lbl)lbl.textContent=_espEdMode==='fiche'?'Nouvelle fiche de cours':'Nouvelle publication';
+  var badge=g('espEdTypeBadge');
+  if(badge){
+    badge.textContent=_espEdMode==='fiche'?'Fiche de cours':'Publication';
+    badge.style.background=_espEdMode==='fiche'?'rgba(16,185,129,.12)':'rgba(59,130,246,.1)';
+    badge.style.color=_espEdMode==='fiche'?'#059669':'#3182CE';
+  }
+  var btn=g('espEdPublishBtn');
+  if(btn)btn.textContent=_espEdMode==='fiche'?'Enregistrer':'Publier';
+  var ed2=g('espAnnEditor');
+  if(ed2)ed2.setAttribute('data-placeholder',_espEdMode==='fiche'?'Contenu de la fiche…':'Écris quelque chose pour tes élèves…');
   el.style.display='flex';
   // Toolbar en dehors du bdEspEditor — la rendre visible
   _espKbH=0;
@@ -4450,6 +4460,7 @@ function closeEspEditor(){
   var bar=g('espEdToolbar');
   if(bar){bar.style.bottom='';bar.classList.remove('kb-open');bar.style.display='none';}
   var cp=g('espColorPanel');if(cp)cp.style.display='none';
+  var hp=g('espHilitePanel');if(hp)hp.style.display='none';
   el.classList.add('closing');
   setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
@@ -4520,7 +4531,51 @@ function toggleEspColorPanel(){
   var open=p.style.display==='none';
   p.style.display=open?'block':'none';
   var tb=g('espColorToggle');if(tb)tb.classList.toggle('active',open);
+  if(open){var hp=g('espHilitePanel');if(hp)hp.style.display='none';var hb=g('espHiliteToggle');if(hb)hb.classList.remove('active');}
   haptic(4);
+}
+
+function toggleEspHilitePanel(){
+  var p=g('espHilitePanel');if(!p)return;
+  var open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  var tb=g('espHiliteToggle');if(tb)tb.classList.toggle('active',open);
+  if(open){var cp=g('espColorPanel');if(cp)cp.style.display='none';var cb=g('espColorToggle');if(cb)cb.classList.remove('active');}
+  haptic(4);
+}
+
+function espApplyHighlight(color){
+  var ed=g('espAnnEditor');if(!ed)return;
+  if(document.activeElement!==ed)ed.focus();
+  var sel=window.getSelection();
+  // Fermer le panel
+  var p=g('espHilitePanel');if(p)p.style.display='none';
+  var tb=g('espHiliteToggle');if(tb)tb.classList.remove('active');
+  if(!sel||!sel.rangeCount||sel.isCollapsed){return;}
+  var range=sel.getRangeAt(0);
+  if(color==='none'){
+    // Supprimer le surlignage : déballer les spans de surligneur dans la sélection
+    var frag=range.extractContents();
+    var tmp=document.createElement('div');tmp.appendChild(frag);
+    tmp.querySelectorAll('span[data-hl]').forEach(function(s){
+      while(s.firstChild)s.parentNode.insertBefore(s.firstChild,s);
+      s.parentNode.removeChild(s);
+    });
+    range.insertNode(tmp.firstChild||document.createTextNode(''));
+    return;
+  }
+  var span=document.createElement('span');
+  span.setAttribute('data-hl','1');
+  span.style.backgroundColor=color;
+  span.style.borderRadius='3px';
+  span.style.padding='0 1px';
+  try{range.surroundContents(span);}catch(e){
+    span.appendChild(range.extractContents());
+    range.insertNode(span);
+  }
+  // Mettre à jour l'indicateur couleur
+  var bar=g('espHiliteBar');if(bar)bar.style.background=color;
+  sel.removeAllRanges();
 }
 
 function espInsertHR(){
