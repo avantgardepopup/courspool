@@ -4395,7 +4395,7 @@ function _espKbUpdate(){
     // Ne pas soustraire offsetTop — peut fausser le calcul sur iOS WKWebView
     kbH=Math.max(0,window.innerHeight-window.visualViewport.height);
   }
-  if(kbH>100){
+  if(kbH>50){
     bar.style.bottom=kbH+'px';
     bar.classList.add('kb-open');
   }else{
@@ -4426,7 +4426,7 @@ function openEspEditor(mode){
   var edEl=g('espAnnEditor'),tiEl=g('espEdTitleInp');
   [edEl,tiEl].forEach(function(inp){
     if(inp){
-      inp.addEventListener('focus',function(){setTimeout(_espKbUpdate,350);},{once:false});
+      inp.addEventListener('focus',function(){setTimeout(_espKbUpdate,150);setTimeout(_espKbUpdate,450);setTimeout(_espKbUpdate,750);},{once:false});
       inp.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
     }
   });
@@ -4631,10 +4631,12 @@ function loadBibliotheque(){
     content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',icon:TYPE_ICON[c.content_type]||'📚',access:c.access_type||'enrolled',created_at:c.created_at});});
     items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
     if(!items.length){
-      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--lite)">'
-        +'<div style="font-size:40px;margin-bottom:12px">📚</div>'
-        +'<div style="font-size:15px;font-weight:700;color:var(--ink)">Bibliothèque vide</div>'
-        +'<div style="font-size:13px;margin-top:6px">Crée ta première fiche ou ajoute un document</div>'
+      grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
+        +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Bibliothèque vide</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Crée ta première fiche ou ajoute un document.</div>'
         +'</div>';
       return;
     }
