@@ -499,7 +499,7 @@ function buildMesProfs(){
   var empty=g('mesProfsEmpty');
   var carousel=g('mesProfsCarousel');
   if(!folIds.length){
-    if(empty){empty.style.display='flex';empty.style.flexDirection='column';empty.style.alignItems='center';}
+    if(empty){empty.style.display='flex';empty.style.flexDirection='column';empty.style.alignItems='center';empty.style.justifyContent='center';empty.style.minHeight='70vh';}
     if(carousel)carousel.innerHTML='';
     return;
   }
