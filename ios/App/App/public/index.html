@@ -840,6 +840,13 @@
   <!-- PAGE MES COURS — calendrier -->
   <div class="pg" id="pgMes">
     <div id="mesCalHd" class="mes-cal-hd"></div>
+    <!-- Segment Prochains/Passés (profs seulement) -->
+    <div id="mesSegBar" style="display:none;flex-shrink:0;padding:0 16px 10px;background:var(--wh)">
+      <div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">
+        <button id="mesSegUpcoming" class="mes-seg-btn on" onclick="mesSetSeg('upcoming')">À venir</button>
+        <button id="mesSegPast" class="mes-seg-btn" onclick="mesSetSeg('past')">Passés</button>
+      </div>
+    </div>
     <div id="pgMesCnt" class="mes-cal-scroll"></div>
   </div>
 
@@ -1223,8 +1230,16 @@
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
             <div class="esp2-card-body">
+              <!-- Créer une fiche de cours (éditeur rich text) -->
+              <button onclick="openEspEditor('fiche')" class="esp-editor-new-btn" style="margin-bottom:14px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                Créer une fiche de cours
+              </button>
+              <div id="espFiches" style="margin-bottom:14px"></div>
+              <!-- Ajouter un lien rapide -->
+              <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Liens & ressources</div>
               <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-                <input id="espResTitle" type="text" placeholder="Titre de la ressource" class="esp-input">
+                <input id="espResTitle" type="text" placeholder="Titre" class="esp-input">
                 <input id="espResUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
                 <select id="espResType" class="esp-input">
                   <option value="article">Article</option>
@@ -1238,18 +1253,15 @@
             </div>
           </div>
 
-          <!-- Card : Mes cours -->
-          <div class="esp2-card" id="espCard6">
-            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard6','mesCours')">
+          <!-- Card : Mes cours (nav) -->
+          <div class="esp2-card esp2-card-nav" id="espCard6" onclick="espGoMesCours()">
+            <div class="esp2-card-hd" style="cursor:pointer">
               <div class="esp2-ico" style="background:#EFF6FF">🗓️</div>
               <div style="flex:1">
                 <div class="esp2-title">Mes cours</div>
-                <div class="esp2-sub">Cours à venir et passés, gestion des inscrits</div>
+                <div class="esp2-sub">Cours à venir et passés</div>
               </div>
-              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-            <div class="esp2-card-body">
-              <div id="espMesCoursList"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
 
@@ -1820,11 +1832,12 @@
     <button onclick="closeEspEditor()" class="esp-ed-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
+    <div id="espEdModeTitle" style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
     <button onclick="espSubmitAnn()" id="espEdPublishBtn" class="esp-ed-publish">Publier</button>
   </div>
   <!-- Zone édition -->
   <div class="esp-ed-scroll">
+    <input id="espEdTitleInp" type="text" placeholder="Titre de la fiche…" class="esp-ed-title-inp" style="display:none">
     <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…"></div>
   </div>
   <!-- Toolbar flottante (monte avec le clavier) -->

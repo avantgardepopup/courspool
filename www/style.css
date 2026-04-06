@@ -1700,18 +1700,61 @@ html.dk .esp-kb-card.kb-open{box-shadow:0 -1px 0 rgba(255,255,255,.08);}
   cursor:pointer;transition:background .15s;
 }
 .esp-editor-new-btn:active{background:rgba(255,107,43,.06);}
-/* Annonces rendues (HTML) dans le feed prof */
-.esp-ann-item{
-  background:var(--bg);border-radius:14px;padding:12px 14px;
-  margin-bottom:10px;
+/* ── FORUM POSTS (Publications prof & vue élève) ── */
+.forum-post{
+  background:var(--wh);border-radius:18px;padding:14px 16px;
+  margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
+  border:1px solid rgba(0,0,0,.04);
 }
-.esp-ann-item h1{font-size:20px;font-weight:800;margin:0 0 6px;letter-spacing:-.3px;}
-.esp-ann-item h2{font-size:16px;font-weight:700;margin:0 0 4px;}
-.esp-ann-item h3{font-size:14px;font-weight:700;margin:0 0 4px;}
-.esp-ann-item p{font-size:14px;color:var(--mid);line-height:1.65;margin:0 0 6px;}
-.esp-ann-item ul,.esp-ann-item ol{font-size:14px;color:var(--mid);padding-left:18px;margin:4px 0;}
-.esp-ann-item hr{border:none;border-top:1.5px solid var(--bdr);margin:8px 0;}
-.esp-ann-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+html.dk .forum-post{background:#1C1C1E;border-color:rgba(255,255,255,.06);box-shadow:none;}
+.forum-post-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.forum-post-av{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;overflow:hidden;
+}
+.forum-post-av img{width:100%;height:100%;object-fit:cover;}
+.forum-post-nm{font-size:13px;font-weight:700;color:var(--ink);}
+.forum-post-date{font-size:11px;color:var(--lite);margin-top:1px;}
+.forum-post-body{font-size:14px;color:var(--ink);line-height:1.65;}
+.forum-post-body h1{font-size:20px;font-weight:800;margin:0 0 6px;letter-spacing:-.3px;}
+.forum-post-body h2{font-size:16px;font-weight:700;margin:0 0 4px;}
+.forum-post-body h3{font-size:14px;font-weight:700;margin:0 0 4px;}
+.forum-post-body p{margin:0 0 6px;color:var(--mid);}
+.forum-post-body ul,.forum-post-body ol{padding-left:18px;margin:4px 0;color:var(--mid);}
+.forum-post-body hr{border:none;border-top:1.5px solid var(--bdr);margin:8px 0;}
+.forum-post-body strong{color:var(--ink);}
+.forum-post-ft{display:flex;align-items:center;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);}
+/* Fiche de cours dans la bibliothèque */
+.fiche-item{
+  background:var(--bg);border-radius:14px;padding:12px 14px;
+  margin-bottom:8px;cursor:pointer;
+  border-left:3px solid var(--or);
+}
+.fiche-item-title{font-size:13px;font-weight:700;color:var(--ink);}
+.fiche-item-date{font-size:11px;color:var(--lite);margin-top:2px;}
+/* Segment bar Prochains/Passés */
+.mes-seg-btn{
+  flex:1;background:none;border:none;cursor:pointer;
+  padding:8px 12px;border-radius:9px;
+  font-size:13px;font-weight:600;color:var(--lite);font-family:inherit;
+  transition:background .15s,color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mes-seg-btn.on{background:var(--wh);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+html.dk .mes-seg-btn.on{background:#2C2C2E;box-shadow:none;}
+/* Champ titre dans l'éditeur fiche */
+.esp-ed-title-inp{
+  width:100%;border:none;border-bottom:1.5px solid var(--bdr);
+  background:none;font-family:inherit;font-size:20px;font-weight:800;
+  color:var(--ink);padding:0 0 10px;margin-bottom:12px;outline:none;
+  letter-spacing:-.03em;
+}
+.esp-ed-title-inp::placeholder{color:var(--bdr);}
+/* esp2-card-nav : pas de chevron rotatif */
+.esp2-card-nav{cursor:pointer;}
+.esp2-card-nav:active{opacity:.8;}
 .esp-ann-date{font-size:11px;color:var(--lite);}
 
 /* ── MES COURS CARDS ── */
