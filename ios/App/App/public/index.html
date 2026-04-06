@@ -837,8 +837,11 @@
     </div>
   </div>
 
-  <!-- PAGE MES COURS -->
-  <div class="pg" id="pgMes"><div class="cnt" id="pgMesCnt" style="padding-top:20px"></div></div>
+  <!-- PAGE MES COURS — calendrier -->
+  <div class="pg" id="pgMes">
+    <div id="mesCalHd" class="mes-cal-hd"></div>
+    <div id="pgMesCnt" class="mes-cal-scroll"></div>
+  </div>
 
   <!-- PAGE FAVORIS -->
   <div class="pg" id="pgFav">
@@ -1144,126 +1147,128 @@
         </div>
 
         <!-- ESPACE PROFESSEUR -->
-        <div class="asec" id="asecEsp" style="padding:0 20px 32px">
+        <div class="asec" id="asecEsp" style="padding:12px 16px 48px;display:flex;flex-direction:column;gap:10px">
 
-          <!-- Code d'accès -->
-          <div class="esp-block" style="margin-top:20px">
-            <div class="esp-block-label">Code d'accès élèves</div>
-            <div class="esp-code-card">
-              <div id="espCodeDisplay" class="esp-code-digits">——————</div>
-              <div class="esp-code-sub">Partage ce code avec tes élèves</div>
-              <div class="esp-code-btns">
-                <button class="esp-btn esp-btn-sec" onclick="espCopyCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                  Copier
+          <!-- Card : Code d'accès -->
+          <div class="esp2-card" id="espCard1">
+            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard1','code')">
+              <div class="esp2-ico" style="background:#FFF0E8">🔑</div>
+              <div style="flex:1">
+                <div class="esp2-title">Code d'accès élèves</div>
+                <div class="esp2-sub">Partage ce code pour donner accès à ton espace</div>
+              </div>
+              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="esp2-card-body">
+              <div style="text-align:center;padding:10px 0 6px">
+                <div id="espCodeDisplay" style="font-size:30px;font-weight:900;letter-spacing:.25em;color:var(--or);font-variant-numeric:tabular-nums">——————</div>
+                <div style="font-size:12px;color:var(--lite);margin-top:4px">Partage ce code avec tes élèves</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="esp-btn esp-btn-sec" style="flex:1;justify-content:center" onclick="espCopyCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copier
                 </button>
-                <button class="esp-btn esp-btn-sec" onclick="espShareCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                  Partager
+                <button class="esp-btn esp-btn-sec" style="flex:1;justify-content:center" onclick="espShareCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager
                 </button>
-                <button class="esp-btn esp-btn-prim" onclick="espRegenCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                  Nouveau
+                <button class="esp-btn esp-btn-prim" style="flex:1;justify-content:center" onclick="espRegenCode()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Nouveau
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- Mes élèves -->
-          <div class="esp-block">
-            <div class="esp-block-label" style="display:flex;align-items:center;gap:8px">
-              Mes élèves
-              <span id="espStudentBadge" class="esp-count-badge" style="display:none"></span>
+          <!-- Card : Mes élèves -->
+          <div class="esp2-card" id="espCard2">
+            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard2','eleves')">
+              <div class="esp2-ico" style="background:#EEF2FF">👥</div>
+              <div style="flex:1">
+                <div class="esp2-title">Mes élèves <span id="espStudentBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
+                <div class="esp2-sub">Élèves inscrits à ton espace</div>
+              </div>
+              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div id="espStudents">
-              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+            <div class="esp2-card-body">
+              <div id="espStudents"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
             </div>
           </div>
 
-          <!-- Ressources partagées -->
-          <div class="esp-block">
-            <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
-              Ressources partagées
-              <button class="esp-add-btn" onclick="espToggleAddRes(this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Ajouter
-              </button>
+          <!-- Card : Annonces -->
+          <div class="esp2-card" id="espCard3">
+            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard3','annonces')">
+              <div class="esp2-ico" style="background:#FFF7ED">📣</div>
+              <div style="flex:1">
+                <div class="esp2-title">Publications</div>
+                <div class="esp2-sub">Annonces visibles par tes élèves</div>
+              </div>
+              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <!-- Formulaire ajout ressource (caché par défaut) -->
-            <div id="espResForm" style="display:none;background:var(--bg);border-radius:14px;padding:14px;margin-bottom:10px;gap:10px;flex-direction:column">
-              <input id="espResTitle" type="text" placeholder="Titre de la ressource" class="esp-input">
-              <input id="espResUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
-              <div style="display:flex;gap:8px;align-items:center">
-                <select id="espResType" class="esp-input" style="flex:1">
+            <div class="esp2-card-body">
+              <button onclick="openEspEditor()" class="esp-editor-new-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Nouvelle publication
+              </button>
+              <div id="espAnnonces" style="margin-top:4px"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
+            </div>
+          </div>
+
+          <!-- Card : Ressources -->
+          <div class="esp2-card" id="espCard4">
+            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard4','ressources')">
+              <div class="esp2-ico" style="background:#F0FDF4">📎</div>
+              <div style="flex:1">
+                <div class="esp2-title">Ressources partagées</div>
+                <div class="esp2-sub">Fichiers et liens pour tes élèves</div>
+              </div>
+              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="esp2-card-body">
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+                <input id="espResTitle" type="text" placeholder="Titre de la ressource" class="esp-input">
+                <input id="espResUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
+                <select id="espResType" class="esp-input">
                   <option value="article">Article</option>
                   <option value="pdf">PDF</option>
                   <option value="video">Vidéo</option>
                   <option value="exercice">Exercice</option>
                 </select>
-                <button class="esp-btn esp-btn-prim" onclick="espSubmitRes()">Publier</button>
+                <button onclick="espSubmitRes()" class="esp2-btn-submit">Ajouter</button>
               </div>
-            </div>
-            <div id="espResources">
-              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+              <div id="espResources"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
             </div>
           </div>
 
-          <!-- Cours & Contenus privés -->
-          <div class="esp-block">
-            <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
-              Cours & Contenus
-              <button class="esp-add-btn" onclick="espToggleAddContenu(this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Ajouter
-              </button>
-            </div>
-            <div style="font-size:12px;color:var(--lite);margin-bottom:10px;line-height:1.5">Ajoute du contenu éducatif : vidéos, PDF, textes. Choisis qui peut y accéder.</div>
-            <div id="espContenuForm" style="display:none;background:var(--bg);border-radius:14px;padding:14px;margin-bottom:10px;flex-direction:column;gap:10px">
-              <input id="espCttTitle" type="text" placeholder="Titre (ex: Chapitre 1 — Dérivées)" class="esp-input">
-              <textarea id="espCttDesc" placeholder="Description ou contenu texte (optionnel)" class="esp-input esp-textarea" rows="2"></textarea>
-              <input id="espCttUrl" type="url" placeholder="Lien vidéo / PDF / article (optionnel)" class="esp-input">
-              <select id="espCttType" class="esp-input">
-                <option value="text">Texte / cours écrit</option>
-                <option value="video">Vidéo</option>
-                <option value="pdf">PDF</option>
-                <option value="link">Lien externe</option>
-              </select>
-              <select id="espCttAccess" class="esp-input" onchange="espCttAccessChange(this)">
-                <option value="enrolled">🔓 Accès libre (tous les élèves inscrits)</option>
-                <option value="password">🔐 Protégé par mot de passe</option>
-                <option value="premium">💎 Premium (abonnement)</option>
-              </select>
-              <div id="espCttPwBox" style="display:none">
-                <input id="espCttPw" type="text" placeholder="Mot de passe à donner à tes élèves" class="esp-input">
+          <!-- Card : Cours & Contenus -->
+          <div class="esp2-card" id="espCard5">
+            <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard5','contenu')">
+              <div class="esp2-ico" style="background:#EEF2FF">📚</div>
+              <div style="flex:1">
+                <div class="esp2-title">Cours & Contenus</div>
+                <div class="esp2-sub">Contenu éducatif avec contrôle d'accès</div>
               </div>
-              <div id="espCttPriceBox" style="display:none">
-                <input id="espCttPrice" type="number" placeholder="Prix mensuel (€)" class="esp-input" min="1">
+              <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="esp2-card-body">
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+                <input id="espCttTitle" type="text" placeholder="Titre (ex: Chapitre 1 — Dérivées)" class="esp-input">
+                <textarea id="espCttDesc" placeholder="Description (optionnel)" class="esp-input esp-textarea" rows="2"></textarea>
+                <input id="espCttUrl" type="url" placeholder="Lien vidéo / PDF / article (optionnel)" class="esp-input">
+                <select id="espCttType" class="esp-input">
+                  <option value="text">Texte / cours écrit</option>
+                  <option value="video">Vidéo</option>
+                  <option value="pdf">PDF</option>
+                  <option value="link">Lien externe</option>
+                </select>
+                <select id="espCttAccess" class="esp-input" onchange="espCttAccessChange(this)">
+                  <option value="enrolled">🔓 Accès libre (tous les élèves inscrits)</option>
+                  <option value="password">🔐 Protégé par mot de passe</option>
+                  <option value="premium">💎 Premium (abonnement)</option>
+                </select>
+                <div id="espCttPwBox" style="display:none"><input id="espCttPw" type="text" placeholder="Mot de passe à donner à tes élèves" class="esp-input"></div>
+                <div id="espCttPriceBox" style="display:none"><input id="espCttPrice" type="number" placeholder="Prix mensuel (€)" class="esp-input" min="1"></div>
+                <button onclick="espSubmitContenu()" class="esp2-btn-submit">Publier</button>
               </div>
-              <button class="esp-btn esp-btn-prim" onclick="espSubmitContenu()" style="justify-content:center">Publier</button>
-            </div>
-            <div id="espContenu">
-              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
-            </div>
-          </div>
-
-          <!-- Annonces -->
-          <div class="esp-block">
-            <div class="esp-block-label" style="display:flex;align-items:center;justify-content:space-between">
-              Annonces
-              <button class="esp-add-btn" onclick="espToggleAddAnn(this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Nouvelle
-              </button>
-            </div>
-            <!-- Formulaire ajout annonce -->
-            <div id="espAnnForm" style="display:none;background:var(--bg);border-radius:14px;padding:14px;margin-bottom:10px;gap:10px;flex-direction:column">
-              <textarea id="espAnnText" placeholder="Tape ton annonce ici… (ex: Cours annulé, nouveau document dispo, rappel…)" class="esp-input esp-textarea" rows="3"></textarea>
-              <div style="display:flex;justify-content:flex-end">
-                <button class="esp-btn esp-btn-prim" onclick="espSubmitAnn()">Publier</button>
-              </div>
-            </div>
-            <div id="espAnnonces">
-              <div style="color:var(--lite);font-size:13px;padding:12px 0">Chargement…</div>
+              <div id="espContenu"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
             </div>
           </div>
 
@@ -1719,75 +1724,136 @@
     <!-- ── PANEL ESPACE (élèves inscrits) ── -->
     <div id="mpfPanelEspace" hidden>
 
-      <!-- Barre de tabs espace -->
-      <div class="mpf-esp-tabbar">
-        <button class="mpf-esp-tab on" id="mpfEspTabFeed"    onclick="switchMpfEspTab('Feed',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.02 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14z"/></svg>
-          Feed
-        </button>
-        <button class="mpf-esp-tab" id="mpfEspTabCours"   onclick="switchMpfEspTab('Cours',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-          Cours
-        </button>
-        <button class="mpf-esp-tab" id="mpfEspTabDocs"    onclick="switchMpfEspTab('Docs',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Docs
-        </button>
-        <button class="mpf-esp-tab" id="mpfEspTabMoi"     onclick="switchMpfEspTab('Moi',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Moi
-        </button>
-      </div>
-
-      <!-- Tab FEED — annonces style réseau social -->
-      <div id="mpfEspPanelFeed" style="padding:12px 16px 24px">
-        <div id="mpfEspAnnonces"></div>
-      </div>
-
-      <!-- Tab COURS — contenus éducatifs avec contrôle d'accès -->
-      <div id="mpfEspPanelCours" style="display:none;padding:12px 16px 24px">
-        <div id="mpfEspContenu"></div>
-      </div>
-
-      <!-- Tab DOCS — ressources du prof + dépôts élève -->
-      <div id="mpfEspPanelDocs" style="display:none;padding:12px 16px 24px">
-        <!-- Ressources du prof -->
-        <div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Documents du prof</div>
-        <div id="mpfEspRessources" style="margin-bottom:20px"></div>
-        <!-- Déposer un doc -->
-        <div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Mes dépôts</div>
-        <div style="background:var(--wh);border-radius:16px;border:1px solid var(--bdr);padding:14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px">
-          <input id="mpfSubTitle" type="text" placeholder="Nom du document" class="esp-input">
-          <input id="mpfSubUrl" type="url" placeholder="Lien (Google Drive, Notion…)" class="esp-input">
-          <button onclick="mpfSubmitDoc()" class="esp-btn esp-btn-prim" style="justify-content:center;width:100%">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-            Envoyer
-          </button>
-        </div>
-        <div id="mpfMySubmissions"></div>
-        <!-- Contact prof -->
-        <div class="mpf-list-item" onclick="contPrFull()" style="margin-top:16px">
-          <div class="mpf-list-item-left">
-            <div style="width:38px;height:38px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            </div>
-            <div>
-              <div class="mpf-list-item-lbl">Message direct</div>
-              <div class="mpf-list-item-sub">Contacter le professeur</div>
-            </div>
+      <!-- Card : Publications → ouvre popup plein écran -->
+      <div class="esp2-card" onclick="openEspPubs()">
+        <div class="esp2-card-hd" style="cursor:pointer">
+          <div class="esp2-ico" style="background:#FFF0E8">📣</div>
+          <div style="flex:1">
+            <div class="esp2-title">Publications</div>
+            <div class="esp2-sub">Annonces de votre professeur</div>
           </div>
-          <div class="mpf-list-item-action">Ouvrir <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
 
-      <!-- Tab MOI — note du prof -->
-      <div id="mpfEspPanelMoi" style="display:none;padding:12px 16px 24px">
-        <div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Note de mon professeur</div>
-        <div id="mpfEspNotes" class="mpf-white-block" style="font-size:14px;color:var(--ink);line-height:1.65;white-space:pre-wrap;min-height:80px"></div>
+      <!-- Card tiroir : Cours & Ressources -->
+      <div class="esp2-card" id="espCardCours">
+        <div class="esp2-card-hd" onclick="toggleEsp2Card('espCardCours','cours')">
+          <div class="esp2-ico" style="background:#EEF2FF">📚</div>
+          <div style="flex:1">
+            <div class="esp2-title">Cours & Ressources</div>
+            <div class="esp2-sub">Contenus partagés par le prof</div>
+          </div>
+          <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="esp2-card-body">
+          <div id="mpfEspContenu"></div>
+          <div id="mpfEspRessources"></div>
+        </div>
+      </div>
+
+      <!-- Card tiroir : Envoyer un document -->
+      <div class="esp2-card" id="espCardDocs">
+        <div class="esp2-card-hd" onclick="toggleEsp2Card('espCardDocs','docs')">
+          <div class="esp2-ico" style="background:#F0FDF4">📎</div>
+          <div style="flex:1">
+            <div class="esp2-title">Envoyer un document</div>
+            <div class="esp2-sub">Partagez un fichier avec votre prof</div>
+          </div>
+          <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="esp2-card-body">
+          <input id="mpfSubTitle" type="text" placeholder="Nom du document" class="esp-input" style="margin-bottom:8px">
+          <input id="mpfSubUrl" type="url" placeholder="Lien (Drive, Notion…)" class="esp-input">
+          <button onclick="mpfSubmitDoc()" class="esp2-btn-submit">Envoyer</button>
+          <div id="mpfMySubmissions" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- Card : Note du prof (masquée si vide) -->
+      <div id="mpfEspNoteSection" style="display:none">
+        <div class="esp2-card">
+          <div class="esp2-card-hd" style="cursor:default">
+            <div class="esp2-ico" style="background:#F5F3FF">✏️</div>
+            <div><div class="esp2-title">Note de votre prof</div></div>
+          </div>
+          <div id="mpfEspNotes" style="padding:0 16px 16px;font-size:14px;color:var(--mid);line-height:1.65;white-space:pre-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Card : Écrire au prof -->
+      <div class="esp2-card" onclick="contPrFull()">
+        <div class="esp2-card-hd" style="cursor:pointer">
+          <div class="esp2-ico" style="background:#FFF7ED">💬</div>
+          <div style="flex:1">
+            <div class="esp2-title">Écrire au professeur</div>
+            <div class="esp2-sub">Envoyer un message direct</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
       </div>
 
     </div>
 
+  </div>
+</div>
+
+<!-- ÉDITEUR RICH TEXT PUBLICATIONS -->
+<div id="bdEspEditor" style="display:none">
+  <!-- Header -->
+  <div class="esp-ed-top">
+    <button onclick="closeEspEditor()" class="esp-ed-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
+    <button onclick="espSubmitAnn()" id="espEdPublishBtn" class="esp-ed-publish">Publier</button>
+  </div>
+  <!-- Zone édition -->
+  <div class="esp-ed-scroll">
+    <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…"></div>
+  </div>
+  <!-- Toolbar flottante (monte avec le clavier) -->
+  <div class="esp-kb-card" id="espEdToolbar">
+    <!-- Ligne principale (toujours visible) -->
+    <div class="esp-kb-row">
+      <button class="esp-fmt-btn" onclick="espFmt('bold')" id="fmtB" title="Gras"><strong>B</strong></button>
+      <button class="esp-fmt-btn" onclick="espFmt('italic')" id="fmtI" title="Italique"><em style="font-style:italic">I</em></button>
+      <button class="esp-fmt-btn" onclick="espFmt('underline')" id="fmtU" title="Souligné"><u>U</u></button>
+      <button class="esp-fmt-btn" onclick="espFmt('strikeThrough')" id="fmtS" title="Barré"><s>S</s></button>
+      <div class="esp-fmt-sep"></div>
+      <button class="esp-fmt-btn" onclick="espFmt('insertUnorderedList')" title="Liste">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.2" fill="currentColor"/><circle cx="3" cy="12" r="1.2" fill="currentColor"/><circle cx="3" cy="18" r="1.2" fill="currentColor"/></svg>
+      </button>
+      <div style="flex:1"></div>
+      <button class="esp-kb-more-btn" id="espKbMoreBtn" onclick="toggleEspKbExtra()" title="Plus d'options">···</button>
+    </div>
+    <!-- Ligne extra (dépliable avec ···) -->
+    <div class="esp-kb-extra" id="espKbExtra">
+      <div class="esp-kb-row" style="padding-top:6px;border-top:1px solid var(--bdr);margin-top:6px">
+        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','p')">¶</button>
+        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h1')">H1</button>
+        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h2')">H2</button>
+        <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h3')">H3</button>
+        <div class="esp-fmt-sep"></div>
+        <button class="esp-fmt-btn" onclick="espFmt('insertOrderedList')" title="Liste numérotée">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+        </button>
+        <button class="esp-fmt-btn" onclick="espInsertHR()" title="Séparateur">—</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- POPUP PUBLICATIONS DU PROF -->
+<div id="bdEspPubs" style="display:none">
+  <div class="bdep-top">
+    <button onclick="closeEspPubs()" style="background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);flex-shrink:0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;font-size:16px;font-weight:800;color:var(--ink)">Publications</div>
+  </div>
+  <div class="bdep-scroll">
+    <div id="mpfEspFil"></div>
   </div>
 </div>
 
