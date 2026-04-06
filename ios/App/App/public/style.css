@@ -1598,9 +1598,14 @@ html.dk #bdEspEditor{background:#111;}
 .esp-ed-top{
   display:flex;align-items:center;gap:10px;flex-shrink:0;
   padding:max(52px,env(safe-area-inset-top,52px)) 16px 12px;
-  border-bottom:1px solid var(--bdr);
+  border-bottom:none;
   background:var(--wh);
 }
+.esp-top-fade{
+  height:20px;flex-shrink:0;
+  background:linear-gradient(var(--wh),var(--bg));
+}
+html.dk .esp-top-fade{background:linear-gradient(#1C1917,#131110);}
 html.dk .esp-ed-top{background:#111;border-color:rgba(255,255,255,.08);}
 .esp-ed-back{
   background:none;border:none;cursor:pointer;
@@ -1776,26 +1781,24 @@ html.dk .mes-seg-btn.on{background:#2C2C2E;box-shadow:none;}
 html.dk .esp-biblio-btn-sec{border-color:rgba(255,255,255,.1);}
 .esp-biblio-btn-prim{background:linear-gradient(135deg,#FF8C55,#FF4500);color:#fff;margin-top:8px;box-shadow:0 3px 12px rgba(255,107,43,.3);}
 /* Grille bibliothèque — style Pinterest 2 colonnes */
-.biblio-grid{
-  columns:2;column-gap:10px;
-}
+.biblio-grid{display:flex;flex-direction:column;gap:8px;}
 .biblio-card{
-  break-inside:avoid;
-  background:var(--wh);border-radius:18px;
-  overflow:hidden;margin-bottom:10px;
-  box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.08);
+  display:flex;align-items:center;gap:12px;
+  background:var(--wh);border-radius:16px;
+  padding:12px 14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
   border:1px solid rgba(0,0,0,.04);cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
 html.dk .biblio-card{background:#1C1C1E;border-color:rgba(255,255,255,.06);box-shadow:none;}
-.biblio-card:active{opacity:.85;}
+.biblio-card:active{opacity:.82;}
 .biblio-card-ico{
+  width:44px;height:44px;min-width:44px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;
-  font-size:36px;height:90px;
-  background:var(--bg);
+  font-size:22px;background:var(--bg);flex-shrink:0;
 }
-.biblio-card-body{padding:10px 12px 12px;}
-.biblio-card-title{font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;margin-bottom:6px;word-break:break-word;}
+.biblio-card-body{flex:1;min-width:0;padding:0;}
+.biblio-card-title{font-size:14px;font-weight:700;color:var(--ink);line-height:1.4;margin-bottom:5px;word-break:break-word;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .biblio-access-badge{
   display:inline-flex;align-items:center;gap:4px;
   font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;
@@ -1806,13 +1809,11 @@ html.dk .biblio-card{background:#1C1C1E;border-color:rgba(255,255,255,.06);box-s
 html.dk .biblio-access-badge.enrolled{background:rgba(34,197,94,.18);}
 html.dk .biblio-access-badge.password{background:rgba(59,130,246,.18);}
 html.dk .biblio-access-badge.share{background:rgba(255,107,43,.18);}
-.biblio-card-actions{
-  display:flex;gap:4px;padding:0 8px 10px;
-}
+.biblio-card-actions{display:flex;gap:4px;flex-shrink:0;}
 .biblio-act-btn{
-  flex:1;background:var(--bg);border:none;border-radius:9px;
-  padding:6px 4px;font-size:10px;font-weight:600;color:var(--mid);
-  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
+  background:var(--bg);border:none;border-radius:9px;
+  padding:5px 7px;font-size:11px;font-weight:600;color:var(--mid);
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;white-space:nowrap;
 }
 .biblio-act-btn.active{background:var(--or);color:#fff;}
 .biblio-act-btn:active{opacity:.8;}

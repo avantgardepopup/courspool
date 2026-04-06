@@ -4467,22 +4467,24 @@ function espSetBlock(tag){
   var sel=window.getSelection();
   if(!sel||!sel.rangeCount)return;
   var node=sel.anchorNode;
-  // Remonter jusqu'au premier élément bloc enfant direct de l'éditeur
-  while(node&&node!==ed){
-    if(node.nodeType===1&&/^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(node.nodeName))break;
+  // Partir de l'élément (pas du nœud texte)
+  if(node&&node.nodeType===3)node=node.parentNode;
+  // Remonter jusqu'au premier élément bloc dans l'éditeur
+  while(node&&node!==ed&&!/^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(node.nodeName)){
     node=node.parentNode;
   }
   if(!node||node===ed){
-    // Pas de bloc trouvé : fallback execCommand
-    try{document.execCommand('formatBlock',false,tag);}catch(e){}
+    // Fallback : WKWebView nécessite les chevrons
+    try{document.execCommand('formatBlock',false,'<'+tag+'>');}catch(e){
+      try{document.execCommand('formatBlock',false,tag);}catch(e2){}
+    }
     return;
   }
-  // Toggle : si même tag, revenir en <p>
+  // Toggle : même tag → revenir en <p>
   if(node.nodeName.toLowerCase()===tag)tag='p';
   var newEl=document.createElement(tag);
   while(node.firstChild)newEl.appendChild(node.firstChild);
   node.parentNode.replaceChild(newEl,node);
-  // Repositionner le curseur à la fin
   var r=document.createRange();
   r.selectNodeContents(newEl);r.collapse(false);
   sel.removeAllRanges();sel.addRange(r);
