@@ -4060,11 +4060,12 @@ function enrollWithCode(){
 var _espCurrentCode=null;
 
 function buildEspProf(){
+  // Referme tous les tiroirs
+  ['espCard1','espCard2','espCard3','espCard4','espCard5'].forEach(function(id){
+    var c=g(id);if(c)c.classList.remove('open');
+  });
+  // Charge le code (affiché dans le header de la card)
   espLoadCode();
-  espLoadStudents();
-  espLoadContenu();
-  espLoadResources();
-  espLoadAnnonces();
 }
 
 function espLoadCode(){
@@ -4570,9 +4571,16 @@ function toggleEsp2Card(id,section){
   card.classList.toggle('open',opening);
   haptic(4);
   if(opening){
+    // Côté élève
     var pid=_curPrFull;
     if(section==='cours'){_loadMpfContenu(pid);_loadMpfRessourcesEsp(pid);}
     if(section==='docs'){_loadMpfSubmissions(pid);}
+    // Côté prof
+    if(section==='code')espLoadCode();
+    if(section==='eleves')espLoadStudents();
+    if(section==='annonces')espLoadAnnonces();
+    if(section==='ressources')espLoadResources();
+    if(section==='contenu')espLoadContenu();
   }
 }
 
