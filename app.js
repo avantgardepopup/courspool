@@ -519,6 +519,8 @@ function unfollowProf(pid){
 }
 var curId=null,curProf=null,folPr=null,actF='tous',user=null;
 var _mesViewMode='liste';
+var _calWeekOffset=0;
+var _calSelDay=null;
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
@@ -8985,11 +8987,160 @@ function filterConversations(q){
   });
 }
 
-// ---- Mes cours ----
-function buildMesCours(){
+// ---- Mes cours — Calendrier ----
+var _CAL_DAYS=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+var _CAL_MONTHS=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
+function _calYmd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+function _calWeekMon(){
+  var n=new Date();n.setHours(0,0,0,0);
+  var wd=n.getDay();var diff=wd===0?-6:1-wd;
+  var mon=new Date(n);mon.setDate(n.getDate()+diff+_calWeekOffset*7);
+  return mon;
+}
+
+function _calBuildHeader(myCours){
+  var hd=g('mesCalHd');if(!hd)return;
+  var today=new Date();today.setHours(0,0,0,0);
+  var todayYmd=_calYmd(today);
+  var mon=_calWeekMon();
+
+  // Default selected day = today if in this week, else monday of week
+  if(!_calSelDay){_calSelDay=todayYmd;}
+  var selInWeek=false;
+  for(var i=0;i<7;i++){var td=new Date(mon);td.setDate(mon.getDate()+i);if(_calYmd(td)===_calSelDay){selInWeek=true;break;}}
+  if(!selInWeek)_calSelDay=_calYmd(mon);
+
+  var selD=new Date(_calSelDay+'T00:00:00');
+  var titleStr=_CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
+
+  // Compute set of days that have courses
+  var daysWithCours={};
+  myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
+
+  // Build 7 day chips
+  var chipsHtml='';
+  for(var i=0;i<7;i++){
+    var d=new Date(mon);d.setDate(mon.getDate()+i);
+    var ymd=_calYmd(d);
+    var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
+    chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
+      +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
+      +'<span class="cal-chip-num">'+d.getDate()+'</span>'
+      +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
+      +'</button>';
+  }
+
+  hd.innerHTML='<div class="mes-cal-top">'
+    +'<div class="mes-cal-title">'+titleStr+'</div>'
+    +'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+    +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
+    +'</button>'
+    +'</div>'
+    +'<div class="mes-cal-strip">'
+    +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
+    +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
+    +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+    +'</div>';
+
+  // Swipe gauche/droite sur la bande pour changer de semaine
+  var chips=g('calChips');
+  if(chips){
+    var _sx=0;
+    chips.addEventListener('touchstart',function(e){_sx=e.touches[0].clientX;},{passive:true});
+    chips.addEventListener('touchend',function(e){
+      var dx=e.changedTouches[0].clientX-_sx;
+      if(Math.abs(dx)>50){calChangeWeek(dx<0?1:-1);}
+    },{passive:true});
+  }
+}
+
+function calSelectDay(ymd){
+  _calSelDay=ymd;
+  // Update header title
+  var titleEl=document.querySelector('.mes-cal-title');
+  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_CAL_DAYS[d.getDay()]+' '+d.getDate()+' '+_CAL_MONTHS[d.getMonth()];}
+  // Update chips
+  document.querySelectorAll('.cal-chip').forEach(function(c){
+    var on=c.dataset.ymd===ymd;
+    c.classList.toggle('cal-sel',on);
+  });
+  haptic(4);
+  _renderCalCourses();
+}
+
+function calChangeWeek(delta){
+  _calWeekOffset+=delta;
+  buildMesCours();
+  haptic(4);
+}
+
+function calOpenPicker(){
+  var inp=g('calDateInp');
+  if(inp){inp.value=_calSelDay||'';inp.showPicker?inp.showPicker():inp.click();}
+}
+
+function calPickDate(val){
+  if(!val)return;
+  // Compute which week contains this date
+  var target=new Date(val+'T00:00:00');
+  var today=new Date();today.setHours(0,0,0,0);
+  var wd=today.getDay();var diff=wd===0?-6:1-wd;
+  var thisMonday=new Date(today);thisMonday.setDate(today.getDate()+diff);
+  var tMonday=new Date(target);var twd=target.getDay();var tdiff=twd===0?-6:1-twd;tMonday.setDate(target.getDate()+tdiff);
+  var weekDiff=Math.round((tMonday-thisMonday)/(7*86400000));
+  _calWeekOffset=weekDiff;
+  _calSelDay=val;
+  buildMesCours();
+}
+
+function _renderCalCourses(){
   var el=g('pgMesCnt');if(!el)return;
+  var isProf=user&&user.role==='professeur';
+  var myCours=isProf
+    ?C.filter(function(c){return c.pr===user.id;})
+    :Object.keys(res).map(function(id){return C.find(function(c){return c.id===id;});}).filter(Boolean);
+
+  var ymd=_calSelDay;
+  var dayStart=ymd?new Date(ymd+'T00:00:00'):null;
+  var dayEnd=dayStart?new Date(dayStart.getTime()+86400000):null;
+
+  var dayCours=myCours.filter(function(c){
+    if(!dayStart)return true;
+    if(!c.dt_iso)return false;
+    var t=new Date(c.dt_iso).getTime();
+    return t>=dayStart.getTime()&&t<dayEnd.getTime();
+  }).sort(function(a,b){return new Date(a.dt_iso||0)-new Date(b.dt_iso||0);});
+
+  if(!dayCours.length){
+    el.innerHTML='<div class="mes-cal-empty">'
+      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
+      +'<div style="font-size:13px;color:var(--lite)">Pas de cours réservé pour cette date</div>'
+      +'</div>';
+    return;
+  }
+  var h='';
+  dayCours.forEach(function(c){h+=buildMesCard(c,_isCoursPass(c),isProf);});
+  el.innerHTML=h;
+  _bindMesCards(el);
+}
+
+function _bindMesCards(el){
+  el.querySelectorAll('.mes-card').forEach(function(card){card.onclick=function(){openR(card.dataset.cid);};});
+  el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast('Copié\u00a0!','');});};});
+  el.querySelectorAll('.mes-visio-add').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();openAddVisioLink(btn.dataset.cid);};});
+  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('Lien copié\u00a0!','');});}};});
+}
+
+function buildMesCours(){
+  var hd=g('mesCalHd');var el=g('pgMesCnt');
+  if(!el)return;
   if(!user||!user.id){
-    el.innerHTML='<div style="text-align:center;padding:60px 24px"><div class="bempty-icon" style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.22)"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="36" height="36"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px">Connexion requise</div></div>';
+    if(hd)hd.innerHTML='';
+    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
     return;
   }
   var isProf=user&&user.role==='professeur';
@@ -8997,55 +9148,8 @@ function buildMesCours(){
     ?C.filter(function(c){return c.pr===user.id;})
     :Object.keys(res).map(function(id){return C.find(function(c){return c.id===id;});}).filter(Boolean);
 
-  if(!myCours.length){
-    var eL=isProf?'Aucun cours publi\u00e9':'Aucun cours r\u00e9serv\u00e9';
-    var eS=isProf?'Cr\u00e9ez votre premier cours':'Explorez et r\u00e9servez votre premier cours';
-    el.innerHTML='<div style="text-align:center;padding:60px 24px"><div class="bempty-icon" style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.22)"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" width="36" height="36"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div><div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:6px">'+eL+'</div><div style="font-size:14px;color:var(--lite);margin-bottom:20px">'+eS+'</div><button onclick="navTo(\'exp\')" class="pb pri" style="margin:0 auto">Explorer</button></div>';
-    return;
-  }
-  var upcoming=[],past=[];
-  myCours.forEach(function(c){
-    (_isCoursPass(c)?past:upcoming).push(c);
-  });
-  // Toggle liste / agenda
-  var _mesView=typeof _mesViewMode!=='undefined'?_mesViewMode:'liste';
-  var toggleHtml='<div style="display:flex;gap:6px;padding:0 16px 14px;margin-top:4px">'
-    +'<button id="mesToggleListe" onclick="_mesViewMode=\'liste\';buildMesCours()" style="flex:1;padding:9px 0;border-radius:50px;border:1.5px solid '+((_mesView==='liste')?'#FF6B2B':'var(--bdr)')+';background:'+((_mesView==='liste')?'rgba(255,107,43,.08)':'var(--bg)')+';color:'+((_mesView==='liste')?'#FF6B2B':'var(--mid)')+';font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Liste</button>'
-    +'<button id="mesToggleAgenda" onclick="_mesViewMode=\'agenda\';buildMesCours()" style="flex:1;padding:9px 0;border-radius:50px;border:1.5px solid '+((_mesView==='agenda')?'#FF6B2B':'var(--bdr)')+';background:'+((_mesView==='agenda')?'rgba(255,107,43,.08)':'var(--bg)')+';color:'+((_mesView==='agenda')?'#FF6B2B':'var(--mid)')+';font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Agenda</button>'
-    +'</div>';
-  var h='<div style="padding-bottom:120px">'+toggleHtml;
-  if(_mesView==='agenda'){
-    // Vue agenda : cours à venir groupés par jour
-    var _byDay={};
-    upcoming.forEach(function(c){
-      var _d=c.dt_iso?new Date(c.dt_iso).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}):(c.dt||'Date inconnue');
-      if(!_byDay[_d])_byDay[_d]=[];
-      _byDay[_d].push(c);
-    });
-    var _days=Object.keys(_byDay);
-    if(!_days.length){
-      h+='<div style="text-align:center;padding:40px 24px;color:var(--lite);font-size:14px">Aucun cours à venir</div>';
-    } else {
-      _days.forEach(function(day){
-        h+='<div style="padding:10px 16px 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--or)">'
-          +day.charAt(0).toUpperCase()+day.slice(1)+'</div>';
-        _byDay[day].forEach(function(c){h+=buildMesCard(c,false,isProf);});
-      });
-    }
-    if(past.length){
-      h+='<div class="mes-section-title" style="margin-top:8px">Passés &middot; '+past.length+'</div>';
-      past.forEach(function(c){h+=buildMesCard(c,true,isProf);});
-    }
-  } else {
-    if(upcoming.length){h+='<div class="mes-section-title">À venir &middot; '+upcoming.length+'</div>';upcoming.forEach(function(c){h+=buildMesCard(c,false,isProf);});}
-    if(past.length){h+='<div class="mes-section-title">Passés &middot; '+past.length+'</div>';past.forEach(function(c){h+=buildMesCard(c,true,isProf);});}
-  }
-  h+='</div>';
-  el.innerHTML=h;
-  el.querySelectorAll('.mes-card').forEach(function(card){card.onclick=function(){openR(card.dataset.cid);};});
-  el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast('Copi\u00e9\u00a0!','');});};});
-  el.querySelectorAll('.mes-visio-add').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();openAddVisioLink(btn.dataset.cid);};});
-  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('Lien copi\u00e9\u00a0!','');});}else{toast('Lien copi\u00e9\u00a0!','');}};});
+  _calBuildHeader(myCours);
+  _renderCalCourses();
 }
 
 function buildMesCard(c,isPast,isProf){
