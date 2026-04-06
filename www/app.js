@@ -4274,6 +4274,9 @@ function openEspEditor(mode){
   if(ex)ex.classList.remove('open');
   if(btn)btn.classList.remove('open');
   el.style.display='flex';
+  // Toolbar en dehors du bdEspEditor — la rendre visible
+  var bar=g('espEdToolbar');
+  if(bar){bar.style.display='block';bar.style.bottom='';bar.classList.remove('kb-open');}
   haptic(4);
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_espKbUpdate,{passive:true});
@@ -4281,10 +4284,10 @@ function openEspEditor(mode){
   }
   // Fallback : re-calculer quand le focus change (iOS WKWebView)
   var edEl=g('espAnnEditor'),tiEl=g('espEdTitleInp');
-  [edEl,tiEl].forEach(function(el){
-    if(el){
-      el.addEventListener('focus',function(){setTimeout(_espKbUpdate,350);},{once:false});
-      el.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
+  [edEl,tiEl].forEach(function(inp){
+    if(inp){
+      inp.addEventListener('focus',function(){setTimeout(_espKbUpdate,350);},{once:false});
+      inp.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
     }
   });
   setTimeout(function(){
@@ -4300,7 +4303,7 @@ function closeEspEditor(){
     window.visualViewport.removeEventListener('scroll',_espKbUpdate);
   }
   var bar=g('espEdToolbar');
-  if(bar){bar.style.bottom='';bar.classList.remove('kb-open');}
+  if(bar){bar.style.bottom='';bar.classList.remove('kb-open');bar.style.display='none';}
   el.classList.add('closing');
   setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
@@ -4896,6 +4899,11 @@ function espDeleteContenu(id){
 }
 
 // ── MES COURS (prof) ──────────────────────────────────────────────────────
+function goMesCoursPage(){
+  if(user&&user.role==='professeur'){espGoMesCours();}
+  else{switchATab('R',g('aTabR'));}
+}
+
 function espGoMesCours(){
   haptic(4);
   // navTo('mes') bloque les profs → navigation directe
@@ -5790,7 +5798,13 @@ async function loadConversations(){
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--lite)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:48px;height:48px;margin:0 auto 12px;display:block;color:var(--bdr)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div style="font-size:14px;font-weight:600">'+t('msg_empty_conv')+'</div><div style="font-size:12px;margin-top:6px">'+_emptyDesc+'</div></div>';
+      lm.innerHTML='<div style="text-align:center;padding:56px 24px">'
+        +'<div style="width:72px;height:72px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
+        +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
+        +'</div>';
       _convLoading=false;return;
     }
     // Grouper par interlocuteur
@@ -9404,7 +9418,8 @@ async function subCrStep(){
   var _nt=navTo;
   navTo=function(tab){
     if(tab==='mes'){
-      if(!user||user.guest||user.role==='professeur'){navTo('exp');return;}
+      if(!user||user.guest){navTo('exp');return;}
+      if(user.role==='professeur'){espGoMesCours();return;}
       // Masquer toutes les pages
       ['pgExp','pgMsg','pgAcc','pgFav','pgMes','pgMesProfs'].forEach(function(id){
         var el=g(id);if(el)el.classList.remove('on');
@@ -9629,7 +9644,7 @@ function _renderCalCourses(){
       .sort(function(a,b){return new Date(b.c.dt_iso)-new Date(a.c.dt_iso);});
     if(!pastTagged.length){
       el.innerHTML='<div class="mes-cal-empty">'
-        +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
+        +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours passé</div>'
         +'<div style="font-size:13px;color:var(--lite)">Tes cours terminés apparaîtront ici</div>'
         +'</div>';
@@ -9653,7 +9668,7 @@ function _renderCalCourses(){
 
   if(!dayTagged.length){
     el.innerHTML='<div class="mes-cal-empty">'
-      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
       +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
       +'</div>';
@@ -9685,6 +9700,9 @@ function mesSetSeg(seg){
   // Show/hide calendar header strip for past mode
   var hd=g('mesCalHd');
   if(hd)hd.style.display=seg==='past'?'none':'';
+  // When calHd is hidden, segBar needs to provide safe-area top spacing (replaces calHd's padding-top)
+  var sb=g('mesSegBar');
+  if(sb)sb.style.paddingTop=seg==='past'?'max(56px,calc(env(safe-area-inset-top,0px) + 54px))':'';
   haptic(4);
   _renderCalCourses();
 }
@@ -9694,7 +9712,7 @@ function buildMesCours(){
   if(!el)return;
   if(!user||!user.id){
     if(hd)hd.innerHTML='';
-    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
+    el.innerHTML='<div class="mes-cal-empty"><div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink)">Connexion requise</div></div>';
     return;
   }
   var isProf=user&&user.role==='professeur';
@@ -9715,6 +9733,8 @@ function buildMesCours(){
   }
 
   if(hd)hd.style.display=_mesSeg==='past'?'none':'';
+  var _sb=g('mesSegBar');
+  if(_sb)_sb.style.paddingTop=_mesSeg==='past'?'max(56px,calc(env(safe-area-inset-top,0px) + 54px))':'';
   _calBuildHeader(allCours);
   _renderCalCourses();
 }

@@ -1567,8 +1567,13 @@ html.dk .mes-cal-hd{background:#1C1C1E;border-color:rgba(255,255,255,.08);}
   text-align:center;padding:56px 24px;
 }
 .mes-cal-empty-ico{
+  width:72px;height:72px;
+  background:linear-gradient(135deg,#FFF0E6,#FFD0A8);
+  border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  margin:0 auto 14px;opacity:.35;
+  margin:0 auto 18px;
+  animation:emptyFloat 3s ease-in-out infinite;
+  box-shadow:0 8px 28px rgba(255,107,43,.22);
 }
 
 /* ── ÉDITEUR RICH TEXT PUBLICATIONS ── */
