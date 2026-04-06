@@ -4095,19 +4095,49 @@ function buildEspProf(){
 // ── TUTO ESPACE PROF (première visite) ──────────────────────────────────────
 var _espTutoStep=0;
 var _espTutoSteps=[
-  {ico:'🏫',title:'Bienvenue dans ton Espace !',sub:'Découvre en quelques secondes tout ce que tu peux faire pour tes élèves depuis cet espace.'},
-  {ico:'🔑',title:'Code d\'accès élèves',sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'},
-  {ico:'📣',title:'Publications & Annonces',sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'},
-  {ico:'📚',title:'Ma bibliothèque',sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'},
-  {ico:'👥',title:'Mes élèves',sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'}
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Bienvenue dans ton Espace !',
+    sub:'Découvre tout ce que tu peux faire pour tes élèves depuis cet espace dédié.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="10" width="36" height="30" rx="4"/><path d="M16 10V8a2 2 0 014 0v2"/><path d="M28 10V8a2 2 0 014 0v2"/><line x1="6" y1="20" x2="42" y2="20"/><circle cx="24" cy="32" r="5" fill="rgba(255,107,43,.15)"/><text x="24" y="36" text-anchor="middle" font-size="8" font-weight="bold" fill="#FF6B2B" stroke="none">KEY</text></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Code d\'accès élèves',
+    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M8 34V14a2 2 0 012-2h28a2 2 0 012 2v14a2 2 0 01-2 2H14l-6 6V34z"/><line x1="16" y1="20" x2="32" y2="20"/><line x1="16" y1="27" x2="26" y2="27"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Publications & Annonces',
+    sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M6 40V12a2 2 0 012-2h10a2 2 0 012 2v28"/><path d="M20 40V18a2 2 0 012-2h10a2 2 0 012 2v22"/><path d="M34 40V24a2 2 0 012-2h6a2 2 0 012 2v16"/><line x1="4" y1="40" x2="44" y2="40"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Ma bibliothèque',
+    sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'
+  },
+  {
+    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="18" cy="18" r="8"/><path d="M4 42v-3a8 8 0 018-8h12a8 8 0 018 8v3"/><path d="M32 14a8 8 0 010 8"/><path d="M44 42v-3a8 8 0 00-6-7.7"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Mes élèves',
+    sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'
+  }
 ];
 
 function checkEspTuto(){
   try{if(localStorage.getItem('cp_esp_tuto'))return;}catch(e){}
+  openEspTuto();
+}
+
+function openEspTuto(){
   _espTutoStep=0;
   var bd=g('bdEspTuto');if(!bd)return;
   _espTutoRender();
   bd.style.display='flex';
+  var sheet=g('espTutoSheet');if(sheet)_espTutoInitSwipe(sheet);
   haptic(4);
 }
 
@@ -4116,21 +4146,47 @@ function _espTutoRender(){
   var track=g('espTutoTrack');
   var dots=g('espTutoDots');
   var btn=g('espTutoBtn');
+  var backBtn=g('espTutoBackBtn');
   var isLast=_espTutoStep===_espTutoSteps.length-1;
+  var isFirst=_espTutoStep===0;
   if(track){
     track.innerHTML=''
-      +'<div style="text-align:center;padding:24px 0 16px">'
-      +'<div style="font-size:52px;margin-bottom:16px;line-height:1">'+s.ico+'</div>'
+      +'<div style="text-align:center;padding:28px 0 20px">'
+      +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
       +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.65">'+s.sub+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
       +'</div>';
   }
   if(dots){
     dots.innerHTML=_espTutoSteps.map(function(_,i){
-      return'<div style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s"></div>';
+      return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
-  if(btn)btn.textContent=isLast?'Commencer !':'Suivant';
+  if(btn)btn.textContent=isLast?'Commencer\u00a0!':'Suivant';
+  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
+}
+
+function _espTutoInitSwipe(sheet){
+  if(!sheet||sheet._tutoSwipeInit)return;
+  sheet._tutoSwipeInit=true;
+  var sx=0,sy=0;
+  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    var dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
+      if(dx<0)espTutoNext();
+      else if(_espTutoStep>0){_espTutoStep--;_espTutoRender();}
+    }
+  },{passive:true});
+}
+
+function espTutoGoTo(i){
+  _espTutoStep=i;haptic(4);_espTutoRender();
+}
+
+function espTutoPrev(){
+  if(_espTutoStep>0){_espTutoStep--;haptic(4);_espTutoRender();}
 }
 
 function espTutoNext(){
@@ -4434,11 +4490,8 @@ function espLoadAnnonces(){
   var profPhoto=p.photo||null;
   var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
   fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
-    if(!list||!list.length){
-      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucune publication pour l\'instant.</div>';
-      return;
-    }
-    var filtered=list.filter(function(a){return a.type!=='fiche';});
+    var filtered=(list||[]).filter(function(a){return a.type!=='fiche';});
+    if(!filtered.length){if(el)el.innerHTML='';return;}
     if(el)el.innerHTML=filtered.map(function(a){
       var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
       return'<div class="forum-post">'
@@ -4453,7 +4506,7 @@ function espLoadAnnonces(){
         +'</button>'
         +'</div>'
         +'</div>';
-    }).join('')||'<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucune publication.</div>';
+    }).join('');
   }).catch(function(){if(el)el.innerHTML='';});
 }
 
@@ -9614,13 +9667,7 @@ function _calBuildHeader(myCours){
       +'</div></div>';
   }
 
-  // Mode "Passés" : afficher uniquement la barre de segments (pas le calendrier hebdomadaire)
-  if(isProf&&_mesSeg==='past'){
-    hd.style.padding='max(16px,env(safe-area-inset-top,0px)) 20px 0';
-    hd.innerHTML=segHtml;
-    return;
-  }
-  hd.style.padding=''; // laisser le CSS par défaut
+  hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
 
   var today=new Date();today.setHours(0,0,0,0);
   var todayYmd=_calYmd(today);
@@ -9633,38 +9680,49 @@ function _calBuildHeader(myCours){
   if(!selInWeek)_calSelDay=_calYmd(mon);
 
   var selD=new Date(_calSelDay+'T00:00:00');
-  var titleStr=_CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
+  var titleStr=_mesSeg==='past'
+    ? 'Cours passés'
+    : _CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
 
-  // Compute set of days that have courses
+  // Compute set of days that have courses (only for upcoming mode)
   var daysWithCours={};
-  myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
-
-  // Build 7 day chips
-  var chipsHtml='';
-  for(var i=0;i<7;i++){
-    var d=new Date(mon);d.setDate(mon.getDate()+i);
-    var ymd=_calYmd(d);
-    var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
-    chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
-      +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
-      +'<span class="cal-chip-num">'+d.getDate()+'</span>'
-      +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
-      +'</button>';
+  if(_mesSeg!=='past'){
+    myCours.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);d.setHours(0,0,0,0);daysWithCours[_calYmd(d)]=true;}});
   }
 
-  hd.innerHTML='<div class="mes-cal-top">'
+  // Titre + (date picker uniquement en mode À venir)
+  var topHtml='<div class="mes-cal-top">'
     +'<div class="mes-cal-title">'+titleStr+'</div>'
-    +'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-    +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
-    +'</button>'
-    +'</div>'
-    +segHtml
-    +'<div class="mes-cal-strip">'
-    +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
-    +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
-    +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+    +(_mesSeg!=='past'
+      ?'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+        +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
+        +'</button>'
+      :'')
     +'</div>';
+
+  // Bande des jours uniquement en mode À venir
+  var stripHtml='';
+  if(_mesSeg!=='past'){
+    var chipsHtml='';
+    for(var i=0;i<7;i++){
+      var d=new Date(mon);d.setDate(mon.getDate()+i);
+      var ymd=_calYmd(d);
+      var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
+      chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
+        +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
+        +'<span class="cal-chip-num">'+d.getDate()+'</span>'
+        +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
+        +'</button>';
+    }
+    stripHtml='<div class="mes-cal-strip">'
+      +'<button class="cal-nav-btn" onclick="calChangeWeek(-1)" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      +'<div class="cal-chips" id="calChips">'+chipsHtml+'</div>'
+      +'<button class="cal-nav-btn" onclick="calChangeWeek(1)" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>'
+      +'</div>';
+  }
+
+  hd.innerHTML=topHtml+segHtml+stripHtml;
 
   // Swipe gauche/droite sur la bande pour changer de semaine
   var chips=g('calChips');
