@@ -1797,32 +1797,24 @@
 </div>
 <!-- Toolbar flottante éditeur (hors bdEspEditor pour que position:fixed soit relatif au viewport, pas à l'animation) -->
 <div class="esp-kb-card" id="espEdToolbar" style="display:none">
-  <!-- Ligne principale (toujours visible) -->
   <div class="esp-kb-row">
-    <button class="esp-fmt-btn" onclick="espFmt('bold')" id="fmtB" title="Gras"><strong>B</strong></button>
-    <button class="esp-fmt-btn" onclick="espFmt('italic')" id="fmtI" title="Italique"><em style="font-style:italic">I</em></button>
-    <button class="esp-fmt-btn" onclick="espFmt('underline')" id="fmtU" title="Souligné"><u>U</u></button>
-    <button class="esp-fmt-btn" onclick="espFmt('strikeThrough')" id="fmtS" title="Barré"><s>S</s></button>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('bold')" id="fmtB" title="Gras"><strong>B</strong></button>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('italic')" id="fmtI" title="Italique"><em style="font-style:italic">I</em></button>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('underline')" id="fmtU" title="Souligné"><u>U</u></button>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('strikeThrough')" id="fmtS" title="Barré"><s>S</s></button>
     <div class="esp-fmt-sep"></div>
-    <button class="esp-fmt-btn" onclick="espFmt('insertUnorderedList')" title="Liste">
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','p')">¶</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','h1')">H1</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','h2')">H2</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','h3')">H3</button>
+    <div class="esp-fmt-sep"></div>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('insertUnorderedList')" title="Liste">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.2" fill="currentColor"/><circle cx="3" cy="12" r="1.2" fill="currentColor"/><circle cx="3" cy="18" r="1.2" fill="currentColor"/></svg>
     </button>
-    <div style="flex:1"></div>
-    <button class="esp-kb-more-btn" id="espKbMoreBtn" onclick="toggleEspKbExtra()" title="Plus d'options">···</button>
-  </div>
-  <!-- Ligne extra (dépliable avec ···) -->
-  <div class="esp-kb-extra" id="espKbExtra">
-    <div class="esp-kb-row" style="padding-top:6px;border-top:1px solid var(--bdr);margin-top:6px">
-      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','p')">¶</button>
-      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h1')">H1</button>
-      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h2')">H2</button>
-      <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h3')">H3</button>
-      <div class="esp-fmt-sep"></div>
-      <button class="esp-fmt-btn" onclick="espFmt('insertOrderedList')" title="Liste numérotée">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
-      </button>
-      <button class="esp-fmt-btn" onclick="espInsertHR()" title="Séparateur">—</button>
-    </div>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('insertOrderedList')" title="Liste numérotée">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+    </button>
+    <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espInsertHR()" title="Séparateur">—</button>
   </div>
 </div>
 

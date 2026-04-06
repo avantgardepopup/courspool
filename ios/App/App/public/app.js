@@ -4413,9 +4413,6 @@ function openEspEditor(mode){
   if(ed){ed.innerHTML='';}
   if(ti){ti.value='';ti.style.display=_espEdMode==='fiche'?'block':'none';}
   if(lbl)lbl.textContent=_espEdMode==='fiche'?'Nouvelle fiche de cours':'Nouvelle publication';
-  var ex=g('espKbExtra');var btn=g('espKbMoreBtn');
-  if(ex)ex.classList.remove('open');
-  if(btn)btn.classList.remove('open');
   el.style.display='flex';
   // Toolbar en dehors du bdEspEditor — la rendre visible
   var bar=g('espEdToolbar');
@@ -4472,15 +4469,6 @@ function _espUpdateToolbar(){
   });
 }
 
-function toggleEspKbExtra(){
-  var ex=g('espKbExtra');
-  var btn=g('espKbMoreBtn');
-  if(!ex)return;
-  var opening=!ex.classList.contains('open');
-  ex.classList.toggle('open',opening);
-  if(btn)btn.classList.toggle('open',opening);
-  haptic(4);
-}
 
 function _espAnnDateStr(created_at){
   var d=new Date(created_at);var now=new Date();
