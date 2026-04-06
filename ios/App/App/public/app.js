@@ -1748,11 +1748,9 @@ function restoreNav(){
 
 function goEspProf(){
   goAccount();
-  setTimeout(function(){
-    var tab=g('aTabEsp');
-    if(tab)switchATab('Esp',tab);
-    var be=g('bniEsp');if(be)be.classList.add('on');
-  },80);
+  var tab=g('aTabEsp');
+  if(tab)switchATab('Esp',tab);
+  var be=g('bniEsp');if(be)be.classList.add('on');
 }
 
 function goExplore(){
@@ -4107,25 +4105,25 @@ var _espTutoSteps=[
     sub:'Découvre tout ce que tu peux faire pour tes élèves depuis cet espace dédié.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="19" cy="21" r="9"/><line x1="28" y1="21" x2="44" y2="21"/><line x1="40" y1="21" x2="40" y2="28"/><line x1="35" y1="21" x2="35" y2="26"/></svg>',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Code d\'accès élèves',
     sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M6 10h36a2 2 0 012 2v20a2 2 0 01-2 2H14l-8 7V12a2 2 0 012-2z"/><line x1="15" y1="20" x2="33" y2="20"/><line x1="15" y1="27" x2="27" y2="27"/></svg>',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Publications & Annonces',
     sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M10 6h20a2 2 0 012 2v32a2 2 0 01-2 2H10a2 2 0 01-2-2V8a2 2 0 012-2z"/><line x1="15" y1="16" x2="27" y2="16"/><line x1="15" y1="23" x2="27" y2="23"/><line x1="15" y1="30" x2="22" y2="30"/><path d="M32 14l6 0a2 2 0 012 2v24"/><path d="M38 14v24"/></svg>',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Ma bibliothèque',
     sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'
   },
   {
-    svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="18" cy="17" r="7"/><path d="M4 42v-2a11 11 0 0111-11h6a11 11 0 0111 11v2"/><circle cx="34" cy="15" r="5"/><path d="M40 38v-2a8 8 0 00-6-7.5"/></svg>',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Mes élèves',
     sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'
