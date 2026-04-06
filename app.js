@@ -4239,23 +4239,69 @@ function espSubmitRes(){
     }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
 }
 
+// ── ÉDITEUR RICH TEXT ────────────────────────────────────────────────────
+function openEspEditor(){
+  var el=g('bdEspEditor');if(!el)return;
+  var ed=g('espAnnEditor');
+  if(ed){ed.innerHTML='';ed.focus();}
+  el.style.display='flex';
+  haptic(4);
+  setTimeout(function(){if(ed)ed.focus();},200);
+}
+
+function closeEspEditor(){
+  var el=g('bdEspEditor');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
+}
+
+function espFmt(cmd,val){
+  var ed=g('espAnnEditor');if(!ed)return;
+  ed.focus();
+  try{document.execCommand(cmd,false,val||null);}catch(e){}
+  _espUpdateToolbar();
+}
+
+function espInsertHR(){
+  var ed=g('espAnnEditor');if(!ed)return;
+  ed.focus();
+  try{document.execCommand('insertHTML',false,'<hr>');}catch(e){}
+}
+
+function _espUpdateToolbar(){
+  var cmds=['bold','italic','underline','strikeThrough'];
+  cmds.forEach(function(cmd){
+    var btn=document.querySelector('.esp-ed-toolbar [onclick="espFmt(\''+cmd+'\')"]');
+    if(btn)btn.classList.toggle('active',document.queryCommandState(cmd));
+  });
+}
+
 function espLoadAnnonces(){
   var el=g('espAnnonces');
   if(el)el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px"></div>';
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
     if(!list||!list.length){
-      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune annonce publiée.</div>';
+      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune publication pour l\'instant.</div>';
       return;
     }
     if(el)el.innerHTML=list.map(function(a){
-      var date=new Date(a.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-      return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:8px;position:relative">'
-        +'<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap;padding-right:24px">'+esc(a.content)+'</div>'
-        +'<div style="font-size:11px;color:var(--lite);margin-top:6px">'+date+'</div>'
-        +'<button onclick="espDeleteAnn(\''+a.id+'\')" style="position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;padding:4px;color:var(--lite)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
+      var d=new Date(a.created_at);
+      var now=new Date();
+      var diff=Math.round((now-d)/86400000);
+      var dateStr=diff===0?'Aujourd\'hui':diff===1?'Hier':diff<7?diff+' jours':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+      // Contenu : HTML si commence par <, sinon text préformaté
+      var body=a.content&&a.content.trim().startsWith('<')
+        ?a.content
+        :'<p>'+esc(a.content)+'</p>';
+      return'<div class="esp-ann-item">'
+        +'<div class="esp-ann-body">'+body+'</div>'
+        +'<div class="esp-ann-meta">'
+        +'<span class="esp-ann-date">'+dateStr+'</span>'
+        +'<button onclick="espDeleteAnn(\''+escH(a.id)+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
         +'</button>'
+        +'</div>'
         +'</div>';
     }).join('');
   }).catch(function(){if(el)el.innerHTML='';});
@@ -4268,28 +4314,19 @@ function espDeleteAnn(id){
   }).catch(function(){toast('Erreur','Impossible de supprimer');});
 }
 
-function espToggleAddAnn(btn){
-  var f=g('espAnnForm');if(!f)return;
-  var show=f.style.display==='none';
-  f.style.display=show?'flex':'none';
-  if(btn)btn.textContent=show?'Annuler':'+ Nouvelle';
-}
-
 function espSubmitAnn(){
   var uid=user&&user.id;if(!uid)return;
-  var content=((g('espAnnText')||{}).value||'').trim();
-  if(!content){toast('Écris ton annonce d\'abord','');return;}
-  var btn=document.querySelector('#espAnnForm .esp-btn-prim');
+  var ed=g('espAnnEditor');
+  var content=ed?ed.innerHTML.trim():'';
+  if(!content||content==='<br>'||content==='<p><br></p>'){toast('Écris quelque chose d\'abord','');return;}
+  var btn=g('espEdPublishBtn');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify({content:content})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Erreur',d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
-      haptic(4);toast('Annonce publiée !','');
-      if(g('espAnnText'))g('espAnnText').value='';
-      var f=g('espAnnForm');if(f)f.style.display='none';
-      var ab=document.querySelector('[onclick="espToggleAddAnn(this)"]');
-      if(ab)ab.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Nouvelle';
       if(btn){btn.disabled=false;btn.textContent='Publier';}
+      if(d.error){toast('Erreur',d.error);return;}
+      haptic(4);toast('Publié !','');
+      closeEspEditor();
       espLoadAnnonces();
     }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
 }

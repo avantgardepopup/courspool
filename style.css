@@ -1571,6 +1571,98 @@ html.dk .mes-cal-hd{background:#1C1C1E;border-color:rgba(255,255,255,.08);}
   margin:0 auto 14px;opacity:.35;
 }
 
+/* ── ÉDITEUR RICH TEXT PUBLICATIONS ── */
+#bdEspEditor{
+  position:fixed;inset:0;z-index:700;
+  background:var(--wh);
+  display:flex;flex-direction:column;
+  animation:mpfSlideIn .3s cubic-bezier(.32,1,.6,1);
+}
+html.dk #bdEspEditor{background:#111;}
+#bdEspEditor.closing{animation:mpfSlideOut .25s cubic-bezier(.55,0,1,.45) forwards;}
+.esp-ed-top{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  padding:max(52px,env(safe-area-inset-top,52px)) 16px 12px;
+  border-bottom:1px solid var(--bdr);
+  background:var(--wh);
+}
+html.dk .esp-ed-top{background:#111;border-color:rgba(255,255,255,.08);}
+.esp-ed-back{
+  background:none;border:none;cursor:pointer;
+  color:var(--ink);padding:4px;display:flex;align-items:center;
+}
+.esp-ed-publish{
+  background:var(--or);color:#fff;border:none;
+  border-radius:50px;padding:8px 18px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+}
+.esp-ed-publish:active{opacity:.8;}
+.esp-ed-scroll{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:20px 20px 120px;
+}
+.esp-ed-content{
+  min-height:60px;outline:none;font-size:16px;
+  line-height:1.7;color:var(--ink);caret-color:var(--or);
+  word-break:break-word;
+}
+.esp-ed-content:empty:before{
+  content:attr(data-placeholder);color:var(--lite);
+  pointer-events:none;
+}
+/* Formatage dans l'éditeur */
+.esp-ed-content h1{font-size:26px;font-weight:800;line-height:1.2;margin:16px 0 8px;letter-spacing:-.5px;}
+.esp-ed-content h2{font-size:20px;font-weight:700;line-height:1.3;margin:14px 0 6px;}
+.esp-ed-content h3{font-size:16px;font-weight:700;line-height:1.4;margin:12px 0 4px;}
+.esp-ed-content p{margin:0 0 8px;}
+.esp-ed-content ul,.esp-ed-content ol{padding-left:20px;margin:8px 0;}
+.esp-ed-content li{margin-bottom:4px;}
+.esp-ed-content hr{border:none;border-top:2px solid var(--bdr);margin:16px 0;}
+/* Toolbar */
+.esp-ed-toolbar{
+  display:flex;align-items:center;gap:2px;
+  padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom,12px));
+  background:var(--wh);
+  border-top:1px solid var(--bdr);
+  overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+}
+html.dk .esp-ed-toolbar{background:#1C1C1E;border-color:rgba(255,255,255,.08);}
+.esp-ed-toolbar::-webkit-scrollbar{display:none;}
+.esp-fmt-btn{
+  background:none;border:none;cursor:pointer;
+  min-width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-family:inherit;color:var(--ink);
+  flex-shrink:0;transition:background .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.esp-fmt-btn:active{background:var(--bg);}
+.esp-fmt-btn.active{background:rgba(255,107,43,.1);color:var(--or);}
+.esp-fmt-h{font-size:11px;font-weight:800;letter-spacing:-.3px;}
+.esp-fmt-sep{width:1px;height:22px;background:var(--bdr);margin:0 4px;flex-shrink:0;}
+/* Bouton nouvelle publication */
+.esp-editor-new-btn{
+  width:100%;background:var(--bg);border:1.5px dashed var(--bdr);
+  border-radius:14px;padding:12px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:inherit;font-size:14px;font-weight:600;color:var(--or);
+  cursor:pointer;transition:background .15s;
+}
+.esp-editor-new-btn:active{background:rgba(255,107,43,.06);}
+/* Annonces rendues (HTML) dans le feed prof */
+.esp-ann-item{
+  background:var(--bg);border-radius:14px;padding:12px 14px;
+  margin-bottom:10px;
+}
+.esp-ann-item h1{font-size:20px;font-weight:800;margin:0 0 6px;letter-spacing:-.3px;}
+.esp-ann-item h2{font-size:16px;font-weight:700;margin:0 0 4px;}
+.esp-ann-item h3{font-size:14px;font-weight:700;margin:0 0 4px;}
+.esp-ann-item p{font-size:14px;color:var(--mid);line-height:1.65;margin:0 0 6px;}
+.esp-ann-item ul,.esp-ann-item ol{font-size:14px;color:var(--mid);padding-left:18px;margin:4px 0;}
+.esp-ann-item hr{border:none;border-top:1.5px solid var(--bdr);margin:8px 0;}
+.esp-ann-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.esp-ann-date{font-size:11px;color:var(--lite);}
+
 /* ── MES COURS CARDS ── */
 .mes-card { background: var(--wh); border-radius: 22px; border: none; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 18px rgba(0,0,0,.07); cursor: pointer; padding: 16px; margin-bottom: 12px; transition: transform .25s cubic-bezier(.22,.61,.36,1), box-shadow .25s; }
 .mes-card:hover { transform: translateY(-3px); box-shadow: 0 4px 24px rgba(0,0,0,.11); }

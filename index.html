@@ -1204,11 +1204,11 @@
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
             <div class="esp2-card-body">
-              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-                <textarea id="espAnnText" placeholder="Écris une annonce pour tes élèves…" class="esp-input esp-textarea" rows="3"></textarea>
-                <button onclick="espSubmitAnn()" class="esp2-btn-submit">Publier</button>
-              </div>
-              <div id="espAnnonces"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
+              <button onclick="openEspEditor()" class="esp-editor-new-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Nouvelle publication
+              </button>
+              <div id="espAnnonces" style="margin-top:4px"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
             </div>
           </div>
 
@@ -1795,6 +1795,45 @@
 
     </div>
 
+  </div>
+</div>
+
+<!-- ÉDITEUR RICH TEXT PUBLICATIONS -->
+<div id="bdEspEditor" style="display:none">
+  <!-- Header -->
+  <div class="esp-ed-top">
+    <button onclick="closeEspEditor()" class="esp-ed-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
+    <button onclick="espSubmitAnn()" id="espEdPublishBtn" class="esp-ed-publish">Publier</button>
+  </div>
+  <!-- Zone édition -->
+  <div class="esp-ed-scroll">
+    <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…"></div>
+  </div>
+  <!-- Toolbar formatage -->
+  <div class="esp-ed-toolbar" id="espEdToolbar">
+    <!-- Blocs texte -->
+    <button class="esp-fmt-btn" onclick="espFmt('formatBlock','p')" title="Texte normal">¶</button>
+    <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h1')" title="Titre H1">H1</button>
+    <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h2')" title="Titre H2">H2</button>
+    <button class="esp-fmt-btn esp-fmt-h" onclick="espFmt('formatBlock','h3')" title="Titre H3">H3</button>
+    <div class="esp-fmt-sep"></div>
+    <!-- Styles inline -->
+    <button class="esp-fmt-btn" onclick="espFmt('bold')" title="Gras"><strong>B</strong></button>
+    <button class="esp-fmt-btn" onclick="espFmt('italic')" title="Italique"><em>I</em></button>
+    <button class="esp-fmt-btn" onclick="espFmt('underline')" title="Souligné"><u>U</u></button>
+    <button class="esp-fmt-btn" onclick="espFmt('strikeThrough')" title="Barré"><s>S</s></button>
+    <div class="esp-fmt-sep"></div>
+    <!-- Listes & blocs -->
+    <button class="esp-fmt-btn" onclick="espFmt('insertUnorderedList')" title="Liste à puces">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></svg>
+    </button>
+    <button class="esp-fmt-btn" onclick="espFmt('insertOrderedList')" title="Liste numérotée">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+    </button>
+    <button class="esp-fmt-btn" onclick="espInsertHR()" title="Ligne séparatrice">—</button>
   </div>
 </div>
 
