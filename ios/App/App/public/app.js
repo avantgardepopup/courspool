@@ -4628,10 +4628,12 @@ function loadMesPublications(){
   fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
     var pubs=(list||[]).filter(function(a){return a.type!=='fiche';});
     if(!pubs.length){
-      el.innerHTML='<div style="text-align:center;padding:48px 20px;color:var(--lite)">'
-        +'<div style="font-size:40px;margin-bottom:12px">📣</div>'
-        +'<div style="font-size:15px;font-weight:700;color:var(--ink)">Aucune publication</div>'
-        +'<div style="font-size:13px;margin-top:6px">Crée ta première publication</div>'
+      el.innerHTML='<div style="text-align:center;padding:60px 24px">'
+        +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Aucune publication</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Crée ta première publication pour tes élèves.</div>'
         +'</div>';return;
     }
     el.innerHTML=pubs.map(function(a){

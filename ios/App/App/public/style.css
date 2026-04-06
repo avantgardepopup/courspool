@@ -1598,14 +1598,9 @@ html.dk #bdEspEditor{background:#111;}
 .esp-ed-top{
   display:flex;align-items:center;gap:10px;flex-shrink:0;
   padding:max(52px,env(safe-area-inset-top,52px)) 16px 12px;
-  border-bottom:none;
+  border-bottom:1px solid var(--bdr);
   background:var(--wh);
 }
-.esp-top-fade{
-  height:20px;flex-shrink:0;
-  background:linear-gradient(var(--wh),var(--bg));
-}
-html.dk .esp-top-fade{background:linear-gradient(#1C1917,#131110);}
 html.dk .esp-ed-top{background:#111;border-color:rgba(255,255,255,.08);}
 .esp-ed-back{
   background:none;border:none;cursor:pointer;
