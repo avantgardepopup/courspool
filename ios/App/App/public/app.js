@@ -4388,21 +4388,25 @@ function espSubmitRes(){
 // ── ÉDITEUR RICH TEXT ────────────────────────────────────────────────────
 var _espEdMode='annonce'; // 'annonce' | 'fiche'
 
-function _espKbUpdate(){
+var _espKbH=0;
+function _espKbApply(){
   var bar=g('espEdToolbar');if(!bar)return;
-  var kbH=0;
-  if(window.visualViewport){
-    // Ne pas soustraire offsetTop — peut fausser le calcul sur iOS WKWebView
-    kbH=Math.max(0,window.innerHeight-window.visualViewport.height);
-  }
-  if(kbH>50){
-    bar.style.bottom=kbH+'px';
+  if(_espKbH>50){
+    bar.style.bottom=_espKbH+'px';
     bar.classList.add('kb-open');
   }else{
     bar.style.bottom='';
     bar.classList.remove('kb-open');
   }
 }
+function _espKbUpdate(){
+  // Fallback visualViewport (web) — resize:body sur Capacitor garde innerHeight fixe, donc kbH≈0 → ignoré
+  if(window.visualViewport){
+    var vp=Math.max(0,window.innerHeight-window.visualViewport.height);
+    if(vp>50){_espKbH=vp;_espKbApply();}
+  }
+}
+var _espKbShowFn=null,_espKbHideFn=null;
 
 function openEspEditor(mode){
   _espEdMode=mode||'annonce';
@@ -4415,21 +4419,20 @@ function openEspEditor(mode){
   if(lbl)lbl.textContent=_espEdMode==='fiche'?'Nouvelle fiche de cours':'Nouvelle publication';
   el.style.display='flex';
   // Toolbar en dehors du bdEspEditor — la rendre visible
+  _espKbH=0;
   var bar=g('espEdToolbar');
   if(bar){bar.style.display='block';bar.style.bottom='';bar.classList.remove('kb-open');}
   haptic(4);
+  // Capacitor native keyboard events (iOS WKWebView + resize:body)
+  _espKbShowFn=function(e){_espKbH=(e&&e.keyboardHeight)||0;_espKbApply();};
+  _espKbHideFn=function(){_espKbH=0;_espKbApply();};
+  window.addEventListener('keyboardWillShow',_espKbShowFn);
+  window.addEventListener('keyboardWillHide',_espKbHideFn);
+  // Fallback visualViewport pour le web
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_espKbUpdate,{passive:true});
     window.visualViewport.addEventListener('scroll',_espKbUpdate,{passive:true});
   }
-  // Fallback : re-calculer quand le focus change (iOS WKWebView)
-  var edEl=g('espAnnEditor'),tiEl=g('espEdTitleInp');
-  [edEl,tiEl].forEach(function(inp){
-    if(inp){
-      inp.addEventListener('focus',function(){setTimeout(_espKbUpdate,150);setTimeout(_espKbUpdate,450);setTimeout(_espKbUpdate,750);},{once:false});
-      inp.addEventListener('blur',function(){setTimeout(_espKbUpdate,350);},{once:false});
-    }
-  });
   setTimeout(function(){
     if(_espEdMode==='fiche'&&ti){ti.focus();}
     else if(ed){ed.focus();}
@@ -4438,6 +4441,8 @@ function openEspEditor(mode){
 
 function closeEspEditor(){
   var el=g('bdEspEditor');if(!el)return;
+  if(_espKbShowFn){window.removeEventListener('keyboardWillShow',_espKbShowFn);_espKbShowFn=null;}
+  if(_espKbHideFn){window.removeEventListener('keyboardWillHide',_espKbHideFn);_espKbHideFn=null;}
   if(window.visualViewport){
     window.visualViewport.removeEventListener('resize',_espKbUpdate);
     window.visualViewport.removeEventListener('scroll',_espKbUpdate);
