@@ -4401,6 +4401,67 @@ function espOpenFiche(id){
   toast('Ouverture de la fiche…','');
 }
 
+// ── MES PUBLICATIONS ─────────────────────────────────────────────────────
+function openMesPublications(){
+  var el=g('bdMesPublications');if(!el)return;
+  el.style.display='flex';haptic(4);
+  loadMesPublications();
+}
+
+function closeMesPublications(){
+  var el=g('bdMesPublications');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
+}
+
+function loadMesPublications(){
+  var uid=user&&user.id;if(!uid)return;
+  var el=g('mesPubsList');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:90px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:70px;border-radius:18px;margin-bottom:10px"></div>';
+  var p=P[uid]||{};
+  var profNm=p.nm||user.prenom||'Moi';
+  var profIni=(profNm[0]||'?').toUpperCase();
+  var profCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var profPhoto=p.photo||null;
+  var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
+  fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    var pubs=(list||[]).filter(function(a){return a.type!=='fiche';});
+    if(!pubs.length){
+      el.innerHTML='<div style="text-align:center;padding:48px 20px;color:var(--lite)">'
+        +'<div style="font-size:40px;margin-bottom:12px">📣</div>'
+        +'<div style="font-size:15px;font-weight:700;color:var(--ink)">Aucune publication</div>'
+        +'<div style="font-size:13px;margin-top:6px">Crée ta première publication</div>'
+        +'</div>';return;
+    }
+    el.innerHTML=pubs.map(function(a){
+      var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
+      var acc=a.access_type||'enrolled';
+      var accLabel=acc==='enrolled'?'Visible par tous':'Privé (toi seul)';
+      var accIcon=acc==='enrolled'?'🔓':'🔒';
+      return'<div class="forum-post" style="margin-bottom:12px">'
+        +'<div class="forum-post-hd">'
+        +'<div class="forum-post-av" style="background:'+profCol+'">'+avInner+'</div>'
+        +'<div style="flex:1"><div class="forum-post-nm">'+esc(profNm)+'</div><div class="forum-post-date">'+_espAnnDateStr(a.created_at)+'</div></div>'
+        +'</div>'
+        +'<div class="forum-post-body">'+body+'</div>'
+        +'<div class="forum-post-ft" style="gap:8px">'
+        // Bouton visibilité
+        +'<button onclick="pubSetVisibility(\''+escH(a.id)+'\','+(acc==='enrolled'?'\'private\'':'\'enrolled\'')+')" style="display:flex;align-items:center;gap:5px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;font-family:inherit">'+accIcon+' '+accLabel+'</button>'
+        +'<div style="flex:1"></div>'
+        +'<button onclick="espDeleteAnn(\''+escH(a.id)+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);display:flex;align-items:center;gap:4px;font-size:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px">Erreur chargement.</div>';});
+}
+
+function pubSetVisibility(id,access){
+  var uid=user&&user.id;if(!uid)return;
+  fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
+    .then(function(r){return r.json();}).then(function(){haptic(4);loadMesPublications();espLoadAnnonces();})
+    .catch(function(){toast('Erreur réseau','');});
+}
+
 // ── BIBLIOTHÈQUE ──────────────────────────────────────────────────────────
 function openBibliotheque(){
   var el=g('bdBibliotheque');if(!el)return;
@@ -9545,16 +9606,26 @@ function calPickDate(val){
 function _renderCalCourses(){
   var el=g('pgMesCnt');if(!el)return;
   var isProf=user&&user.role==='professeur';
-  var myCours=isProf
-    ?C.filter(function(c){return c.pr===user.id;})
-    :Object.keys(res).map(function(id){return C.find(function(c){return c.id===id;});}).filter(Boolean);
 
-  // Mode Passés : tous les cours passés, sans filtre par jour
-  if(isProf&&_mesSeg==='past'){
+  // Pour les profs : cours publiés ET cours réservés (en tant qu'élève)
+  // Chaque entrée : {c: course, kind: 'published'|'reserved'}
+  var tagged=[];
+  if(isProf){
+    C.filter(function(c){return c.pr===user.id;}).forEach(function(c){tagged.push({c:c,kind:'published'});});
+    Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean).forEach(function(c){
+      if(!tagged.some(function(t){return t.c.id===c.id;}))tagged.push({c:c,kind:'reserved'});
+    });
+  } else {
+    Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean).forEach(function(c){tagged.push({c:c,kind:'reserved'});});
+  }
+  var myCours=tagged.map(function(t){return t.c;});
+
+  // Mode Passés
+  if(_mesSeg==='past'){
     var now=new Date();
-    var past=myCours.filter(function(c){return c.dt_iso&&new Date(c.dt_iso)<now;})
-      .sort(function(a,b){return new Date(b.dt_iso)-new Date(a.dt_iso);});
-    if(!past.length){
+    var pastTagged=tagged.filter(function(t){return t.c.dt_iso&&new Date(t.c.dt_iso)<now;})
+      .sort(function(a,b){return new Date(b.c.dt_iso)-new Date(a.c.dt_iso);});
+    if(!pastTagged.length){
       el.innerHTML='<div class="mes-cal-empty">'
         +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours passé</div>'
@@ -9563,33 +9634,31 @@ function _renderCalCourses(){
       return;
     }
     var h='';
-    past.forEach(function(c){h+=buildMesCard(c,true,true);});
-    el.innerHTML=h;
-    _bindMesCards(el);
-    return;
+    pastTagged.forEach(function(t){h+=buildMesCard(t.c,true,isProf,t.kind);});
+    el.innerHTML=h;_bindMesCards(el);return;
   }
 
   var ymd=_calSelDay;
   var dayStart=ymd?new Date(ymd+'T00:00:00'):null;
   var dayEnd=dayStart?new Date(dayStart.getTime()+86400000):null;
 
-  var dayCours=myCours.filter(function(c){
+  var dayTagged=tagged.filter(function(t){
     if(!dayStart)return true;
-    if(!c.dt_iso)return false;
-    var t=new Date(c.dt_iso).getTime();
-    return t>=dayStart.getTime()&&t<dayEnd.getTime();
-  }).sort(function(a,b){return new Date(a.dt_iso||0)-new Date(b.dt_iso||0);});
+    if(!t.c.dt_iso)return false;
+    var ts=new Date(t.c.dt_iso).getTime();
+    return ts>=dayStart.getTime()&&ts<dayEnd.getTime();
+  }).sort(function(a,b){return new Date(a.c.dt_iso||0)-new Date(b.c.dt_iso||0);});
 
-  if(!dayCours.length){
+  if(!dayTagged.length){
     el.innerHTML='<div class="mes-cal-empty">'
       +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.4" width="54" height="54"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
-      +'<div style="font-size:13px;color:var(--lite)">Pas de cours réservé pour cette date</div>'
+      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
       +'</div>';
     return;
   }
   var h='';
-  dayCours.forEach(function(c){h+=buildMesCard(c,_isCoursPass(c),isProf);});
+  dayTagged.forEach(function(t){h+=buildMesCard(t.c,_isCoursPass(t.c),isProf,t.kind);});
   el.innerHTML=h;
   _bindMesCards(el);
 }
@@ -9627,20 +9696,35 @@ function buildMesCours(){
     return;
   }
   var isProf=user&&user.role==='professeur';
-  // Show segment bar only for profs
   var sb=g('mesSegBar');
   if(sb)sb.style.display=isProf?'flex':'none';
 
-  var myCours=isProf
-    ?C.filter(function(c){return c.pr===user.id;})
-    :Object.keys(res).map(function(id){return C.find(function(c){return c.id===id;});}).filter(Boolean);
+  // Tous les cours à afficher (publiés + réservés pour les profs)
+  var allCours;
+  if(isProf){
+    var published=C.filter(function(c){return c.pr===user.id;});
+    var reserved=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
+    // Dédoublonner
+    var seen={};
+    allCours=[];
+    published.concat(reserved).forEach(function(c){if(c&&!seen[c.id]){seen[c.id]=true;allCours.push(c);}});
+  } else {
+    allCours=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
+  }
 
   if(hd)hd.style.display=_mesSeg==='past'?'none':'';
-  _calBuildHeader(myCours);
+  _calBuildHeader(allCours);
   _renderCalCourses();
 }
 
-function buildMesCard(c,isPast,isProf){
+function buildMesCard(c,isPast,isProf,kind){
+  // Badge type : 'published' = cours que le prof a créé, 'reserved' = cours réservé
+  var kindBadge='';
+  if(kind==='published'){
+    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.12);color:var(--or);border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">📌 Mon cours</span>';
+  }else if(kind==='reserved'){
+    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(59,130,246,.1);color:#2563EB;border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">🎓 Réservé</span>';
+  }
   var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   var mL=c.mode==='visio'?'Visio':'Pr\u00e9sentiel';
@@ -9670,6 +9754,7 @@ function buildMesCard(c,isPast,isProf){
     heartBtn='<button class="card-heart-btn'+(isFavMes?' saved':'')+'" onclick="event.stopPropagation();toggleFavCours(\''+escH(c.id)+'\',this)" title="Sauvegarder" style="position:static;width:34px;height:34px;border-radius:50%;background:'+(isFavMes?'rgba(255,60,100,.12)':'var(--bg)')+';border:1.5px solid '+(isFavMes?'#FFB3CB':'var(--bdr)')+';backdrop-filter:none;-webkit-backdrop-filter:none;color:'+(isFavMes?'#E01060':'var(--lite)')+';flex-shrink:0"><svg viewBox="0 0 24 24" fill="'+(isFavMes?'#E01060':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>';
   }
   return '<div class="mes-card" data-cid="'+escH(c.id)+'"'+(isPast?' style="opacity:.65"':'')+' >'
+    +(kindBadge?'<div>'+kindBadge+'</div>':'')
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
     +'<div style="width:44px;height:44px;border-radius:14px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+mf.color+'"></div></div>'
     +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(c.title)+'</div>'
