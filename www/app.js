@@ -4449,15 +4449,76 @@ function closeEspEditor(){
   }
   var bar=g('espEdToolbar');
   if(bar){bar.style.bottom='';bar.classList.remove('kb-open');bar.style.display='none';}
+  var cp=g('espColorPanel');if(cp)cp.style.display='none';
   el.classList.add('closing');
   setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
 
 function espFmt(cmd,val){
   var ed=g('espAnnEditor');if(!ed)return;
-  ed.focus();
+  if(document.activeElement!==ed)ed.focus();
   try{document.execCommand(cmd,false,val||null);}catch(e){}
   _espUpdateToolbar();
+}
+
+function espSetBlock(tag){
+  var ed=g('espAnnEditor');if(!ed)return;
+  if(document.activeElement!==ed)ed.focus();
+  var sel=window.getSelection();
+  if(!sel||!sel.rangeCount)return;
+  var node=sel.anchorNode;
+  // Remonter jusqu'au premier élément bloc enfant direct de l'éditeur
+  while(node&&node!==ed){
+    if(node.nodeType===1&&/^(P|H[1-6]|DIV|BLOCKQUOTE|LI)$/.test(node.nodeName))break;
+    node=node.parentNode;
+  }
+  if(!node||node===ed){
+    // Pas de bloc trouvé : fallback execCommand
+    try{document.execCommand('formatBlock',false,tag);}catch(e){}
+    return;
+  }
+  // Toggle : si même tag, revenir en <p>
+  if(node.nodeName.toLowerCase()===tag)tag='p';
+  var newEl=document.createElement(tag);
+  while(node.firstChild)newEl.appendChild(node.firstChild);
+  node.parentNode.replaceChild(newEl,node);
+  // Repositionner le curseur à la fin
+  var r=document.createRange();
+  r.selectNodeContents(newEl);r.collapse(false);
+  sel.removeAllRanges();sel.addRange(r);
+  _espUpdateToolbar();
+}
+
+function espApplyColor(type,color){
+  var ed=g('espAnnEditor');if(!ed)return;
+  if(document.activeElement!==ed)ed.focus();
+  if(type==='fore'){
+    if(color==='default'){
+      var def=window.getComputedStyle(ed).color;
+      try{document.execCommand('foreColor',false,def);}catch(e){}
+    }else{
+      try{document.execCommand('foreColor',false,color);}catch(e){}
+    }
+    var bar=g('espColorBar');
+    if(bar)bar.style.background=color==='default'?'var(--or)':color;
+  }else{
+    if(color==='none'){
+      try{document.execCommand('hiliteColor',false,'transparent');}catch(e){}
+    }else{
+      try{document.execCommand('hiliteColor',false,color);}catch(e){}
+    }
+  }
+  // Fermer le panel après application
+  var p=g('espColorPanel');if(p)p.style.display='none';
+  var tb=g('espColorToggle');if(tb)tb.classList.remove('active');
+}
+
+function toggleEspColorPanel(){
+  var p=g('espColorPanel');if(!p)return;
+  var open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  var tb=g('espColorToggle');if(tb)tb.classList.toggle('active',open);
+  haptic(4);
 }
 
 function espInsertHR(){

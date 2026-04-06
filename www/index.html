@@ -1797,16 +1797,37 @@
 </div>
 <!-- Toolbar flottante éditeur (hors bdEspEditor pour que position:fixed soit relatif au viewport, pas à l'animation) -->
 <div class="esp-kb-card" id="espEdToolbar" style="display:none">
+  <!-- Palette couleurs (masquée par défaut) -->
+  <div id="espColorPanel" style="display:none;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--bdr)">
+    <div style="display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none;padding:2px 0">
+      <span style="font-size:10px;font-weight:700;color:var(--lite);flex-shrink:0;letter-spacing:.02em">Texte</span>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','default')" title="Par défaut"><svg viewBox="0 0 16 16" fill="none" width="10" height="10"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#FF6B2B')" style="background:#FF6B2B"></button>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#E53E3E')" style="background:#E53E3E"></button>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#3182CE')" style="background:#3182CE"></button>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#38A169')" style="background:#38A169"></button>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('fore','#805AD5')" style="background:#805AD5"></button>
+      <div class="esp-fmt-sep"></div>
+      <span style="font-size:10px;font-weight:700;color:var(--lite);flex-shrink:0;letter-spacing:.02em">Fond</span>
+      <button class="esp-csw" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','none')" title="Aucun fond"><svg viewBox="0 0 16 16" fill="none" width="10" height="10"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#FEF08A')" style="background:#FEF08A"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#BBF7D0')" style="background:#BBF7D0"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#BFDBFE')" style="background:#BFDBFE"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#FBD5D5')" style="background:#FBD5D5"></button>
+      <button class="esp-csw esp-csw-hl" onmousedown="event.preventDefault()" onclick="espApplyColor('hilite','#E9D8FD')" style="background:#E9D8FD"></button>
+    </div>
+  </div>
+  <!-- Ligne principale scrollable -->
   <div class="esp-kb-row">
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('bold')" id="fmtB" title="Gras"><strong>B</strong></button>
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('italic')" id="fmtI" title="Italique"><em style="font-style:italic">I</em></button>
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('underline')" id="fmtU" title="Souligné"><u>U</u></button>
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('strikeThrough')" id="fmtS" title="Barré"><s>S</s></button>
     <div class="esp-fmt-sep"></div>
-    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','p')">¶</button>
-    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','h1')">H1</button>
-    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','h2')">H2</button>
-    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espFmt('formatBlock','h3')">H3</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espSetBlock('p')">¶</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espSetBlock('h1')" id="fmtH1">H1</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espSetBlock('h2')" id="fmtH2">H2</button>
+    <button class="esp-fmt-btn esp-fmt-h" onmousedown="event.preventDefault()" onclick="espSetBlock('h3')" id="fmtH3">H3</button>
     <div class="esp-fmt-sep"></div>
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espFmt('insertUnorderedList')" title="Liste">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.2" fill="currentColor"/><circle cx="3" cy="12" r="1.2" fill="currentColor"/><circle cx="3" cy="18" r="1.2" fill="currentColor"/></svg>
@@ -1815,6 +1836,13 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
     </button>
     <button class="esp-fmt-btn" onmousedown="event.preventDefault()" onclick="espInsertHR()" title="Séparateur">—</button>
+    <div class="esp-fmt-sep"></div>
+    <button class="esp-fmt-btn" id="espColorToggle" onmousedown="event.preventDefault()" onclick="toggleEspColorPanel()" title="Couleurs">
+      <span style="display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1">
+        <span style="font-size:13px;font-weight:900">A</span>
+        <span id="espColorBar" style="width:14px;height:3px;border-radius:2px;background:var(--or)"></span>
+      </span>
+    </button>
   </div>
 </div>
 
