@@ -340,17 +340,23 @@ function toggleFavCours(coursId,btn){
 function _initFav2Swipe(card,coursId,wrap){
   var THRESHOLD=90;
   var startX,startY,curX=0,committed=false,passed=false;
+  function _snapBack(){
+    card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
+    card.style.transform='translateX(0)';
+    committed=false;curX=0;
+  }
   card.addEventListener('touchstart',function(e){
     var t=e.touches[0];startX=t.clientX;startY=t.clientY;
     curX=0;committed=false;passed=false;
     card.style.transition='none';
+    card.style.transform='translateX(0)'; // reset any stuck state
   },{passive:true});
   card.addEventListener('touchmove',function(e){
     var t=e.touches[0];
     var dx=t.clientX-startX,dy=t.clientY-startY;
     if(!committed){
       if(Math.abs(dy)>Math.abs(dx))return;
-      if(Math.abs(dx)>5)committed=true;else return;
+      if(Math.abs(dx)>6)committed=true;else return;
     }
     e.preventDefault();
     curX=Math.min(0,dx);
@@ -361,7 +367,7 @@ function _initFav2Swipe(card,coursId,wrap){
     }else if(passed&&curX>-THRESHOLD){passed=false;}
   },{passive:false});
   card.addEventListener('touchend',function(){
-    if(!committed)return;
+    if(!committed){card.style.transform='translateX(0)';return;}
     if(curX<=-THRESHOLD){
       card.style.transition='transform .22s cubic-bezier(.4,0,.6,1)';
       card.style.transform='translateX(-110%)';
@@ -370,11 +376,9 @@ function _initFav2Swipe(card,coursId,wrap){
         document.querySelectorAll('[data-cours-id="'+coursId+'"] .card-fav-btn').forEach(function(b){b.classList.remove('saved');});
         buildFavPage();
       },210);
-    }else{
-      card.style.transition='transform .35s cubic-bezier(.34,1.56,.64,1)';
-      card.style.transform='translateX(0)';
-    }
+    }else{_snapBack();}
   },{passive:true});
+  card.addEventListener('touchcancel',_snapBack,{passive:true});
 }
 
 // ── CARD FAVORIS 2-COL (style explorer) ──
@@ -4120,30 +4124,57 @@ function espShareCode(){
 
 function espLoadStudents(){
   var el=g('espStudents'),badge=g('espStudentBadge');
-  if(el)el.innerHTML='<div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div>';
-  fetch(API+'/teacher/my-students',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
-    if(!list||!list.length){
-      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun élève inscrit pour l\'instant.<br><span style="font-size:11px;opacity:.7">Partage ton code pour les inviter.</span></div>';
-      if(badge)badge.style.display='none';
+  if(!el)return;
+  var uid=user&&user.id;if(!uid)return;
+  var myCours=C.filter(function(c){return c.pr===uid&&!_isCoursPass(c);});
+  if(!myCours.length){
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun cours publié pour l\'instant.</div>';
+    if(badge)badge.style.display='none';
+    return;
+  }
+  el.innerHTML='<div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div><div class="skeleton" style="height:44px;border-radius:12px"></div>';
+  Promise.all(myCours.map(function(c){
+    return fetch(API+'/reservations/cours/'+c.id,{headers:apiH()})
+      .then(function(r){return r.json();})
+      .then(function(list){return{cours:c,list:Array.isArray(list)?list:[]};})
+      .catch(function(){return{cours:c,list:[]};});
+  })).then(function(results){
+    var total=results.reduce(function(s,r){return s+r.list.length;},0);
+    if(badge){badge.textContent=total>0?total+'':'';badge.style.display=total>0?'inline-flex':'none';}
+    var withStudents=results.filter(function(r){return r.list.length>0;});
+    if(!withStudents.length){
+      el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun élève inscrit à tes cours pour l\'instant.</div>';
       return;
     }
-    if(badge){badge.textContent=list.length;badge.style.display='inline-flex';}
-    if(el)el.innerHTML=list.map(function(s){
-      var ini=(s.prenom[0]||'?').toUpperCase();
-      var nm=((s.prenom||'')+' '+(s.nom||'')).trim()||'Élève';
-      var date=new Date(s.enrolled_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
-      var av=s.photo_url
-        ?'<img src="'+esc(s.photo_url)+'" style="width:100%;height:100%;object-fit:cover">'
-        :'<span style="font-size:13px;font-weight:800;color:#fff">'+ini+'</span>';
-      return'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bdr)">'
-        +'<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,#E04E10);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+av+'</div>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:14px;font-weight:700;color:var(--ink)">'+esc(nm)+'</div>'
-        +'<div style="font-size:11px;color:var(--lite)">Inscrit le '+date+'</div>'
+    el.innerHTML=withStudents.map(function(r){
+      var c=r.cours;
+      var nb=r.list.length;
+      var dt=c.dt_iso?new Date(c.dt_iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
+      var rows=r.list.map(function(rsv){
+        var pid=rsv.user_id||rsv.userId||rsv.uid;
+        var p=P[pid]||{};
+        var nm=((p.pr||'')+' '+(p.nm||'')).trim()||(rsv.user_nm)||'Élève';
+        var ini=(nm[0]||'?').toUpperCase();
+        var bg=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+        var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:11px;font-weight:800;color:#fff">'+ini+'</span>';
+        var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+        var paid=rsv.paid||rsv.status==='paid';
+        return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr)">'
+          +'<div style="width:32px;height:32px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+av+'</div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div></div>'
+          +(paid?'<span style="font-size:10px;font-weight:700;background:rgba(16,185,129,.12);color:#059669;border-radius:50px;padding:2px 8px;flex-shrink:0">Payé</span>':'<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#D97706;border-radius:50px;padding:2px 8px;flex-shrink:0">En attente</span>')
+          +'</div>';
+      }).join('');
+      return'<div style="margin-bottom:12px;background:var(--bg);border-radius:14px;padding:10px 12px">'
+        +'<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px">'
+        +'<div style="font-size:13px;font-weight:800;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
+        +(dt?'<span style="font-size:11px;color:var(--lite);flex-shrink:0">'+dt+'</span>':'')
+        +'<span style="font-size:11px;font-weight:700;color:var(--or);flex-shrink:0">'+nb+' élève'+(nb>1?'s':'')+'</span>'
         +'</div>'
+        +rows
         +'</div>';
     }).join('');
-  }).catch(function(){if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px">Erreur de chargement</div>';});
+  });
 }
 
 function espLoadResources(){
