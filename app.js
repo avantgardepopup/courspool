@@ -6803,7 +6803,7 @@ function openMsg(profNm,destId,avatar){
 function closeMsgConv(){
   // Hide conv pane, stay on messages list
   var convPane=g('msgConvPane');
-  if(convPane)convPane.style.display='none';
+  if(convPane){convPane.style.display='none';convPane.style.bottom='';}
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
   // Restaurer la nav (iPad: retirer ipad-back + cacher bouton rond ; mobile: retirer conv-mode)
@@ -10900,7 +10900,7 @@ function _renderCalCourses(){
   // Chaque entrée : {c: course, kind: 'published'|'reserved'}
   var tagged=[];
   if(isProf){
-    C.filter(function(c){return c.pr===user.id;}).forEach(function(c){tagged.push({c:c,kind:'published'});});
+    C.filter(function(c){return String(c.pr)===String(user.id);}).forEach(function(c){tagged.push({c:c,kind:'published'});});
     Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean).forEach(function(c){
       if(!tagged.some(function(t){return t.c.id===c.id;}))tagged.push({c:c,kind:'reserved'});
     });
@@ -10978,7 +10978,7 @@ function buildMesCours(){
   // Tous les cours à afficher (publiés + réservés pour les profs)
   var allCours;
   if(isProf){
-    var published=C.filter(function(c){return c.pr===user.id;});
+    var published=C.filter(function(c){return String(c.pr)===String(user.id);});
     var reserved=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
     // Dédoublonner
     var seen={};
@@ -12223,15 +12223,30 @@ function initSwipeNav(){
 }
 
 // ── Keyboard / visualViewport ──────────────────────────────────────────────
-// Keeps the search modal body scrollable above the keyboard on iOS
+// Keeps the search modal body, create-course sheet, and message pane above the keyboard on iOS
 (function(){
   if(!window.visualViewport)return;
   function _onVpResize(){
-    var ov=g('smartSearchOverlay');
-    if(!ov||!ov.classList.contains('open'))return;
-    var body=g('ssBody');if(!body)return;
     var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
-    body.style.paddingBottom=kbH>30?(kbH+20+'px'):'20px';
+
+    // Search modal
+    var ov=g('smartSearchOverlay');
+    if(ov&&ov.classList.contains('open')){
+      var body=g('ssBody');if(body)body.style.paddingBottom=kbH>30?(kbH+20+'px'):'20px';
+    }
+
+    // Create-course sheet (#bdCr)
+    var bdCr=g('bdCr');
+    if(bdCr&&bdCr.classList.contains('on')){
+      // Shift the sheet up by adding bottom padding to the flex overlay
+      bdCr.style.paddingBottom=kbH>30?kbH+'px':'0px';
+    }
+
+    // Message conversation pane (#msgConvPane)
+    var mp=g('msgConvPane');
+    if(mp&&mp.style.display==='flex'){
+      mp.style.bottom=kbH>30?kbH+'px':'0px';
+    }
   }
   window.visualViewport.addEventListener('resize',_onVpResize,{passive:true});
   window.visualViewport.addEventListener('scroll',_onVpResize,{passive:true});
