@@ -760,41 +760,39 @@ function submitEnrollSheet(){
   if(!user||user.guest){toast('Connecte-toi d\'abord','');return;}
   if(btn)btn.disabled=true;
   if(errEl)errEl.style.display='none';
-  // Étape 1 : résoudre teacher_id depuis le code
-  function _doEnroll(teacherId){
-    var body=teacherId?{teacher_id:teacherId,code:code}:{code:code};
-    fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify(body)})
-      .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
-      .then(function(res){
-        if(btn)btn.disabled=false;
-        if(res.ok&&(res.d&&res.d.success)){
-          var pid=res.d.teacher_id||res.d.professeur_id||teacherId||null;
-          if(pid){
-            var profData={nm:res.d.prof_nm||res.d.teacher_name||'',ini:res.d.prof_ini||(res.d.teacher_name?res.d.teacher_name[0]:'?'),col:res.d.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:res.d.prof_photo||null};
-            _saveEnrolledProf(String(pid),profData);
-            if(!P[pid])P[pid]={};
-            if(profData.nm)P[pid].nm=profData.nm;
-            if(profData.col)P[pid].col=profData.col;
-            if(profData.photo)P[pid].photo=profData.photo;
-          }
-          haptic(4);toast('Espace rejoint !','');
-          var bd=document.getElementById('_enrollCodeInp');if(bd)bd.closest('[style*="inset:0"]').remove();
-          buildMesProfs();
-          if(pid){setTimeout(function(){openProfEspace(String(pid));},300);}
-        } else {
-          var msg=(res.d&&(res.d.error||res.d.message))||'Code incorrect ou expiré.';
-          if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+  // Essai 1 : POST /teacher/enroll  {code} — si le backend résout le teacher depuis le code
+  fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
+    .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+    .then(function(res){
+      if(btn)btn.disabled=false;
+      if(res.ok&&res.d&&res.d.success){
+        var pid=res.d.teacher_id||res.d.professeur_id||res.d.id||null;
+        if(pid){
+          var profData={nm:res.d.prof_nm||res.d.teacher_name||'',ini:res.d.prof_ini||(res.d.teacher_name?res.d.teacher_name[0]:'?'),col:res.d.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:res.d.prof_photo||null};
+          _saveEnrolledProf(String(pid),profData);
+          if(!P[pid])P[pid]={};
+          if(profData.nm)P[pid].nm=profData.nm;
+          if(profData.col)P[pid].col=profData.col;
+          if(profData.photo)P[pid].photo=profData.photo;
         }
-      }).catch(function(){if(btn)btn.disabled=false;if(errEl){errEl.textContent='Erreur réseau.';errEl.style.display='block';}});
-  }
-  // Lookup teacher by code first to get teacher_id
-  fetch(API+'/teacher/by-code/'+encodeURIComponent(code),{headers:apiH()})
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){
-      var tid=d&&(d.teacher_id||d.professeur_id||d.id)||null;
-      _doEnroll(tid);
-    })
-    .catch(function(){_doEnroll(null);});
+        haptic(4);toast('Espace rejoint !','');
+        var bd=document.getElementById('_enrollCodeInp');if(bd)bd.closest('[style*="inset:0"]').remove();
+        buildMesProfs();
+        if(pid){setTimeout(function(){openProfEspace(String(pid));},300);}
+      } else {
+        // Données manquantes → le backend a besoin de teacher_id, qu'on ne peut pas résoudre ici
+        var errMsg=(res.d&&(res.d.error||res.d.message))||'';
+        var needsTeacher=errMsg.toLowerCase().includes('manquant')||errMsg.toLowerCase().includes('missing')||errMsg.toLowerCase().includes('required');
+        if(needsTeacher||!res.ok){
+          if(errEl){
+            errEl.innerHTML='Code non reconnu. Pour rejoindre l\'espace d\'un prof, retrouve-le dans <strong>l\'Explorateur</strong> et entre le code depuis sa fiche.';
+            errEl.style.display='block';
+          }
+        } else {
+          if(errEl){errEl.textContent=errMsg||'Code incorrect ou expiré.';errEl.style.display='block';}
+        }
+      }
+    }).catch(function(){if(btn)btn.disabled=false;if(errEl){errEl.textContent='Erreur réseau.';errEl.style.display='block';}});
 }
 
 // ── TUTO ÉLÈVE (Mes Profs) ──────────────────────────────────────────────────
@@ -2940,6 +2938,8 @@ function _fetchProf(pid){
     }
     // Rafraîchir la liste des suivis si l'onglet est visible (profs fantômes)
     if(g('asecF')&&g('asecF').classList.contains('on'))buildAccLists();
+    // Rafraîchir Mes Profs si l'onglet est visible (cartes skeleton)
+    if(g('pgMesProfs')&&g('pgMesProfs').classList.contains('on'))buildMesProfs();
     // Invalider le cache conversations (photo/nom mis à jour → forcer re-rendu)
     _convCache='';
   }).catch(function(){});
@@ -4466,23 +4466,32 @@ function enrollWithCode(){
   if(!code){var e=g('mpfCodeError');if(e){e.textContent='Veuillez entrer un code.';e.style.display='block';}return;}
   var btn=document.querySelector('.mpf-code-btn');if(btn)btn.disabled=true;
   var errEl=g('mpfCodeError');if(errEl)errEl.style.display='none';
-  fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({teacher_id:pid,code:code})})
+  var numPid=parseInt(pid)||pid;
+  function _onSuccess(){
+    toast('Accès débloqué !','');haptic(4);
+    var _ep=P[pid]||{};
+    _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
+    _mpfSetEnrolled(true);
+    var cs=g('mpfCodeSection');if(cs)cs.style.display='none';
+    switchMpfTab('espace');
+  }
+  function _onError(msg){
+    if(btn)btn.disabled=false;
+    if(errEl){errEl.textContent=msg||'Code incorrect.';errEl.style.display='block';}
+  }
+  // Tenter via URL-path : POST /teacher/{pid}/enroll  {code}
+  fetch(API+'/teacher/'+pid+'/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
     .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
     .then(function(res){
-      if(btn)btn.disabled=false;
-      if(res.ok&&res.d&&res.d.success){
-        toast('Accès débloqué !','');haptic(4);
-        // Sauvegarder le prof comme inscrit
-        var _ep=P[pid]||{};
-        _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
-        _mpfSetEnrolled(true);
-        var cs=g('mpfCodeSection');if(cs)cs.style.display='none';
-        switchMpfTab('espace');
-      } else {
-        var msg=(res.d&&res.d.error)||'Code incorrect.';
-        if(errEl){errEl.textContent=msg;errEl.style.display='block';}
-      }
-    }).catch(function(){if(btn)btn.disabled=false;if(errEl){errEl.textContent='Erreur réseau.';errEl.style.display='block';}});
+      if(res.ok&&res.d&&res.d.success){_onSuccess();return;}
+      // Fallback : POST /teacher/enroll  {teacher_id, code}
+      return fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({teacher_id:numPid,code:code})})
+        .then(function(r2){return r2.json().then(function(d2){return{ok:r2.ok,d:d2};});})
+        .then(function(res2){
+          if(res2.ok&&res2.d&&res2.d.success){_onSuccess();}
+          else{_onError((res2.d&&(res2.d.error||res2.d.message))||(res.d&&(res.d.error||res.d.message))||'Code incorrect.');}
+        });
+    }).catch(function(){_onError('Erreur réseau.');});
 }
 
 // ── ESPACE PROFESSEUR ────────────────────────────────────────────────────────
