@@ -3025,15 +3025,20 @@ html.dk .ss-pill-chevron { color:#636366; }
   background:#ffffff !important;-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:16px;font-weight:400;
-  color:#222 !important;-webkit-text-fill-color:#222 !important;
+  /* Empty = gray like the Matière label; typed text = dark */
+  color:#aaa !important;-webkit-text-fill-color:#aaa !important;
   -webkit-tap-highlight-color:transparent;min-width:0;
 }
-.ss-pill-input::placeholder { color:#bbb !important;-webkit-text-fill-color:#bbb !important;opacity:1; }
+.ss-pill-input:not(:placeholder-shown) {
+  color:#222 !important;-webkit-text-fill-color:#222 !important;
+}
 html.dk .ss-pill-input {
   background:#1C1C1E !important;
+  color:#636366 !important;-webkit-text-fill-color:#636366 !important;
+}
+html.dk .ss-pill-input:not(:placeholder-shown) {
   color:#fff !important;-webkit-text-fill-color:#fff !important;
 }
-html.dk .ss-pill-input::placeholder { color:#636366 !important;-webkit-text-fill-color:#636366 !important; }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.06em; }
 
 /* ── Dropdown matière (expandable) ── */

@@ -11709,6 +11709,16 @@ var _ssTimer=null;
 
 var _ssGeoActive=false;
 
+var _ssScrollListenersAdded=false;
+function _ssScrollToCard(card){
+  var ov=g('smartSearchOverlay');if(!ov||!card)return;
+  // Use getBoundingClientRect for accurate position regardless of current scroll
+  var ovRect=ov.getBoundingClientRect();
+  var cardRect=card.getBoundingClientRect();
+  // Target: place card 72px below overlay top (below header bar)
+  var delta=cardRect.top-ovRect.top-72;
+  ov.scrollTop+=delta;
+}
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
   ov.style.display='flex';
@@ -11719,18 +11729,18 @@ function openSmartSearch(){
   if(existing){var mi=g('ssMatiereInput');if(mi&&!mi.value)mi.value=existing;}
   _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
   setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},220);
-  // Scroll: place the focused card near the top so all subsequent cards are visible below
-  function _ssScrollToCard(card){
-    if(!card)return;
-    // card.offsetTop is relative to the overlay (first positioned ancestor)
-    var target=card.offsetTop-72; // 72px ≈ top bar height + small margin
-    ov.scrollTo({top:Math.max(0,target),behavior:'smooth'});
+  // Add scroll-on-focus listeners only once (they persist in the DOM)
+  if(!_ssScrollListenersAdded){
+    _ssScrollListenersAdded=true;
+    ov.addEventListener('focusin',function(e){
+      var inp=e.target;
+      if(!inp||(!inp.classList.contains('ss-pill-input')&&!inp.classList.contains('ss-sec-input')))return;
+      var card=inp.closest('.ss-card');if(!card)return;
+      // Scroll immediately, then again after keyboard animation
+      _ssScrollToCard(card);
+      setTimeout(function(){_ssScrollToCard(card);},380);
+    });
   }
-  ov.querySelectorAll('.ss-pill-input,.ss-sec-input').forEach(function(inp){
-    inp.addEventListener('focus',function(){
-      setTimeout(function(){_ssScrollToCard(inp.closest('.ss-card'));},280);
-    },{passive:true});
-  });
   document.body.style.overflow='hidden';
   haptic(4);
 }
