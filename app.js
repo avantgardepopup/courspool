@@ -537,7 +537,7 @@ function buildMesProfs(){
       var photo=p.photo||ep.photo||null;
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
-      html+='<div onclick="openEspaceEleve(\''+ep.id+'\')" class="cp-prof-card" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
