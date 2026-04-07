@@ -20,7 +20,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" id="themeColorMeta" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
 <title>CoursPool</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -1288,17 +1288,20 @@
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
             <div class="esp2-card-body">
-              <div style="display:flex;gap:8px;margin-bottom:10px">
+              <div style="display:flex;gap:8px;margin-bottom:8px">
                 <button onclick="openEspEditor()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                  Nouvelle
+                  Publier
                 </button>
-                <button onclick="openMesPublications()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  Voir tout
+                <button onclick="openSondageSheet()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                  Sondage
                 </button>
               </div>
-              <div id="espAnnonces"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
+              <button onclick="openMesPublications()" class="esp-biblio-btn esp-biblio-btn-prim">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Voir mes publications
+              </button>
             </div>
           </div>
 
@@ -1441,6 +1444,29 @@
                 <input type="hidden" id="pfMatieresVal">
               </div>
 
+            </div>
+          </div>
+
+          <!-- Formations & Expériences -->
+          <div id="pfFormationsExtra" style="display:none">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Parcours</div>
+            <div class="pref-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:14px">
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <div class="pref-icon" style="background:#EEF2FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Formations & Diplômes</span>
+                </div>
+                <textarea id="pfFormations" rows="3" placeholder="Une formation par ligne&#10;Ex: Master Mathématiques – Sorbonne&#10;Ex: CAPES Mathématiques" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;outline:none;background:var(--bg);resize:none;color:var(--ink);line-height:1.6;box-sizing:border-box;transition:border-color .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+                <div style="font-size:11px;color:var(--lite);margin-top:4px">Une formation par ligne</div>
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Expériences</span>
+                </div>
+                <textarea id="pfExperiences" rows="3" placeholder="Une expérience par ligne&#10;Ex: Professeur au lycée Carnot – 5 ans&#10;Ex: Formateur en entreprise" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;outline:none;background:var(--bg);resize:none;color:var(--ink);line-height:1.6;box-sizing:border-box;transition:border-color .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+                <div style="font-size:11px;color:var(--lite);margin-top:4px">Une expérience par ligne</div>
+              </div>
             </div>
           </div>
 
@@ -1866,7 +1892,8 @@
   <!-- Zone édition -->
   <div class="esp-ed-scroll">
     <input id="espEdTitleInp" type="text" placeholder="Titre de la fiche…" class="esp-ed-title-inp" style="display:none">
-    <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…"></div>
+    <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…" oninput="espUpdateCounter()"></div>
+    <div id="espAnnCounter" style="font-size:11px;color:var(--lite);text-align:right;padding:4px 18px 0;transition:color .15s">0 / 1500</div>
   </div>
   </div>
 </div>

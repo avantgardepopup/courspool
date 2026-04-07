@@ -796,25 +796,21 @@ html.dk .fav2-sep{border-top-color:rgba(255,255,255,.1);}
 .fav2-mode{font-size:9.5px;font-weight:700;border-radius:6px;padding:3px 7px;white-space:nowrap;}
 /* ── BADGES VÉRIFICATION (premium) ── */
 .prof-badge{
-  position:relative;display:inline-flex;align-items:center;gap:5px;
-  border-radius:9px;padding:6px 11px 6px 9px;
-  font-size:10px;font-weight:800;color:#fff;cursor:pointer;
-  white-space:nowrap;letter-spacing:.06em;text-transform:uppercase;
-  overflow:hidden;transition:transform .15s,filter .15s;
-  border:1px solid rgba(255,255,255,.18);
+  display:inline-flex;align-items:center;gap:5px;
+  border-radius:20px;padding:5px 10px 5px 8px;
+  font-size:11.5px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:opacity .15s,transform .15s;
+  border:1.5px solid transparent;
 }
-/* shine highlight au top */
-.prof-badge::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:45%;
-  background:linear-gradient(to bottom,rgba(255,255,255,.22),rgba(255,255,255,0));
-  pointer-events:none;
-}
-.prof-badge:active{transform:scale(.91);filter:brightness(.88);}
-.prof-badge-vrf{background:linear-gradient(150deg,#22D76A,#00A340);box-shadow:0 3px 14px rgba(0,180,80,.42),0 1px 4px rgba(0,0,0,.12);}
-.prof-badge-dip{background:linear-gradient(150deg,#9B8FFF,#4338CA);box-shadow:0 3px 14px rgba(99,102,241,.42),0 1px 4px rgba(0,0,0,.12);}
-.prof-badge-cas{background:linear-gradient(150deg,#3EDEA0,#049C6A);box-shadow:0 3px 14px rgba(16,185,129,.38),0 1px 4px rgba(0,0,0,.12);}
-.prof-badge-fol{background:linear-gradient(150deg,#FF9A6C,#FF4D00);box-shadow:0 3px 14px rgba(255,107,43,.38),0 1px 4px rgba(0,0,0,.12);}
-html.dk .prof-badge{border-color:rgba(255,255,255,.12);}
+.prof-badge:active{opacity:.7;transform:scale(.95);}
+.prof-badge-vrf{background:#ECFDF5;color:#059669;border-color:#A7F3D0;}
+.prof-badge-dip{background:#EEF2FF;color:#4F46E5;border-color:#C7D2FE;}
+.prof-badge-cas{background:#F0FDF4;color:#16A34A;border-color:#BBF7D0;}
+.prof-badge-fol{background:var(--orp);color:var(--or);border-color:rgba(255,107,43,.25);}
+html.dk .prof-badge-vrf{background:rgba(5,150,105,.12);border-color:rgba(167,243,208,.2);}
+html.dk .prof-badge-dip{background:rgba(79,70,229,.12);border-color:rgba(199,210,254,.2);}
+html.dk .prof-badge-cas{background:rgba(22,163,74,.12);border-color:rgba(187,247,208,.2);}
+html.dk .prof-badge-fol{background:var(--orp);border-color:rgba(255,107,43,.2);}
 /* ── ESPACE PROFESSEUR ── */
 .esp-block{margin-top:24px;}
 .esp-block-label{font-size:11.5px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}

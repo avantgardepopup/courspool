@@ -1345,7 +1345,9 @@ app.patch('/profiles/:id', async (req, res) => {
   // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS niveau_etudes TEXT;
   // ALTER TABLE profiles ADD COLUMN IF NOT EXISTS ville_visible BOOLEAN DEFAULT false;
   const userFields = ['prenom', 'nom', 'matieres', 'niveau', 'statut', 'bio', 'ville', 'photo_url',
-    'pour_enfant', 'niveau_enfant', 'age_enfant', 'is_mineur', 'mode_cours', 'niveau_etudes', 'ville_visible'];
+    'pour_enfant', 'niveau_enfant', 'age_enfant', 'is_mineur', 'mode_cours', 'niveau_etudes', 'ville_visible',
+    'lieu', 'lieu_visible', 'contact_pref', 'search_visible', 'adresse_auto', 'is_tuteur',
+    'formations', 'experiences'];
   const updates = {};
   userFields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Aucun champ valide' });

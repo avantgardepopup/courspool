@@ -2345,8 +2345,13 @@ function goAccount(){
     // Initialiser les chips matières
     initMatieresChips(user.matieres||'');
     if(pfMat&&user.matieres)pfMat.value=user.matieres;
+    // Formations & Expériences
+    var pfFormEx=g('pfFormationsExtra');if(pfFormEx)pfFormEx.style.display='block';
+    var pfFm=g('pfFormations');if(pfFm)pfFm.value=user.formations||'';
+    var pfXp=g('pfExperiences');if(pfXp)pfXp.value=user.experiences||'';
   } else {
     if(pfProfExtra)pfProfExtra.style.display='none';
+    var pfFormEx2=g('pfFormationsExtra');if(pfFormEx2)pfFormEx2.style.display='none';
   }
   buildAccLists();
   // Refresh stats depuis le serveur (background) — données fraîches à chaque visite
@@ -2368,6 +2373,8 @@ function goAccount(){
         if(prof.statut!==undefined){user.statut=prof.statut||'';_updatePfVilleLabel();}
         if(prof.niveau!==undefined)user.niveau=prof.niveau||'';
         if(prof.matieres!==undefined)user.matieres=prof.matieres||'';
+        if(prof.formations!==undefined){user.formations=prof.formations||'';var _pfFm=g('pfFormations');if(_pfFm)_pfFm.value=user.formations;}
+        if(prof.experiences!==undefined){user.experiences=prof.experiences||'';var _pfXp=g('pfExperiences');if(_pfXp)_pfXp.value=user.experiences;}
         user.nbEleves=prof.nb_eleves||0;
         user.noteMoyenne=prof.note_moyenne?parseFloat(prof.note_moyenne).toFixed(1):null;
         user.ini=((user.pr&&user.pr[0]?user.pr[0]:'')+(user.nm&&user.nm[0]?user.nm[0]:'')).toUpperCase()||'U';
@@ -2683,6 +2690,8 @@ function saveProf(){
     // Lire les matières depuis les chips (source de vérité = _matieres[])
     user.matieres=_matieres.join(', ');
     var matHid=g('pfMatieresVal');if(matHid)matHid.value=user.matieres;
+    if(g('pfFormations'))user.formations=g('pfFormations').value.trim();
+    if(g('pfExperiences'))user.experiences=g('pfExperiences').value.trim();
   }
   // Sync P[] et C[] immédiatement pour que openPr() reflète les changements sans rechargement
   if(user.id){
@@ -2712,6 +2721,8 @@ function saveProf(){
       payload.statut=user.statut||'';
       payload.niveau=user.niveau||'';
       payload.matieres=user.matieres||'';
+      payload.formations=user.formations||'';
+      payload.experiences=user.experiences||'';
     }
     fetch(API+'/profiles/'+user.id,{
       method:'PATCH',
@@ -4329,10 +4340,10 @@ var _curPrFull=null;
 var _curPrEnrolled=false;
 
 function _buildBadges(p,pid){
-  // icônes spécifiques à chaque badge (pas de checkmark générique)
-  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>';
-  var icoDip='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
-  var icoShld='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>';
+  var icoDip='<svg viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var icoShld='<svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var icoFol='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>';
   var _isVrf=p.verified===true||p.verified==='true';
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
   var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
@@ -4340,7 +4351,7 @@ function _buildBadges(p,pid){
   if(_isVrf)h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+icoId+t('mp_identite')+'</span>';
   if(_isDip)h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+icoDip+t('mp_diplome')+'</span>';
   if(_isCas)h+='<span onclick="showBadgeInfo(\'confiance\')" class="prof-badge prof-badge-cas">'+icoShld+t('mp_confiance')+'</span>';
-  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">Suivi</span>';
+  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">'+icoFol+'Suivi</span>';
   return h;
 }
 
@@ -4828,6 +4839,7 @@ function openEspEditor(mode){
   var ti=g('espEdTitleInp');
   var lbl=g('espEdModeTitle');
   if(ed){ed.innerHTML='';}
+  var _ctr=g('espAnnCounter');if(_ctr){_ctr.textContent='0 / 1500';_ctr.style.color='var(--lite)';}
   if(ti){ti.value='';ti.style.display=_espEdMode==='fiche'?'block':'none';}
   if(lbl)lbl.textContent=_espEdMode==='fiche'?'Nouvelle fiche de cours':'Nouvelle publication';
   var badge=g('espEdTypeBadge');
@@ -5575,11 +5587,21 @@ function espDeleteAnn(id){
   }).catch(function(){toast('Erreur','Impossible de supprimer');});
 }
 
+function espUpdateCounter(){
+  var ed=g('espAnnEditor');if(!ed)return;
+  var len=(ed.innerText||ed.textContent||'').replace(/\n/g,'').length;
+  var ctr=g('espAnnCounter');if(!ctr)return;
+  var max=1500;
+  ctr.textContent=len+' / '+max;
+  ctr.style.color=len>max?'#EF4444':len>max*0.85?'#F97316':'var(--lite)';
+}
 function espSubmitAnn(){
   var uid=user&&user.id;if(!uid)return;
   var ed=g('espAnnEditor');
   var content=ed?ed.innerHTML.trim():'';
   if(!content||content==='<br>'||content==='<p><br></p>'){toast('Écris quelque chose d\'abord','');return;}
+  var _rawLen=(ed?(ed.innerText||ed.textContent||''):'').replace(/\n/g,'').length;
+  if(_rawLen>1500){toast('Trop long','Limite de 1500 caractères');return;}
   var btn=g('espEdPublishBtn');
   if(btn){btn.disabled=true;btn.textContent='…';}
   var isFiche=_espEdMode==='fiche';
@@ -11185,7 +11207,7 @@ document.addEventListener('click',function(e){
 
 
 // ---- Settings sheet ----
-var _msgContactLabels={all:function(){return t('msg_pref_all');},enrolled:function(){return t('msg_pref_enrolled');},none:function(){return t('msg_pref_none');}};
+var _msgContactLabels={all:function(){return t('msg_pref_all');},enrolled:function(){return t('msg_pref_enrolled');},enrolled_space:function(){return t('msg_pref_enrolled_space');},none:function(){return t('msg_pref_none');}};
 function openSettings(){
   var bd=document.getElementById('bdSettings');
   if(bd){bd.classList.add('on');document.body.style.overflow='hidden';}
@@ -11267,6 +11289,8 @@ function openMsgContactSheet(){
      l:t('msg_pref_all'), s:t('msg_pref_all_sub')},
     {k:'enrolled',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>',
      l:t('msg_pref_enrolled'), s:t('msg_pref_enrolled_sub')},
+    {k:'enrolled_space',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><rect x="14" y="14" width="8" height="8" rx="1"/><path d="M16 18h4M18 16v4"/>',
+     l:t('msg_pref_enrolled_space'), s:t('msg_pref_enrolled_space_sub')},
     {k:'none',   icon:'<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
      l:t('msg_pref_none'), s:t('msg_pref_none_sub')}
   ];
