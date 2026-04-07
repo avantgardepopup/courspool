@@ -1715,164 +1715,150 @@
   </div>
 </div>
 
-<!-- PROFIL PROF COMPLET (style Avilio) -->
 <div id="bdPrFull" style="display:none">
 
-  <!-- Barre haut : retour + nom centré + suivre -->
-  <div id="mpfTopBar">
-    <button onclick="closePrFull()" class="mpf-back-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+  <!-- TOPBAR -->
+  <div class="tp-topbar">
+    <button onclick="closePrFull()" class="tp-topbar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div id="mpfTopTitle" class="mpf-top-title"></div>
-    <button id="bFPFull" onclick="togFPFull()" class="mpf-follow-topbtn">
-      <span id="bFPFullT"></span>
+    <div style="flex:1"></div>
+    <button class="tp-topbar-btn" onclick="_tpShare()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
     </button>
   </div>
 
-  <!-- Contenu scrollable -->
-  <div id="mpfScroll">
+  <!-- Scrollable content -->
+  <div id="tpScroll" class="tp-scroll">
 
-    <!-- HERO : avatar centré + nom + rôle + rating + badges -->
-    <div class="mpf-hero">
-      <div id="mpfAvWrap" class="mpf-hero-av"></div>
-      <div id="mpfInfoNm" class="mpf-hero-nm"></div>
-      <div id="mpfInfoRl" class="mpf-hero-rl"></div>
-      <div id="mpfRating" style="display:none;align-items:center;justify-content:center;gap:6px;margin-top:8px">
-        <span id="mpfRatingStars" style="color:#FBBF24;font-size:14px;letter-spacing:.03em"></span>
-        <span id="mpfRatingNum" style="font-size:14px;font-weight:700;color:var(--ink)"></span>
-        <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
+    <!-- HERO -->
+    <div class="tp-hero">
+      <div class="tp-av-wrap">
+        <div id="tpAvWrap" class="tp-avatar"></div>
+        <div id="tpVerifBadge" class="tp-verifbadge" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
       </div>
-      <div id="mpfInfoBadges" class="mpf-hero-badges"></div>
-      <!-- Action buttons iOS-style -->
-      <div id="mpfHeroActions" class="mpf-hero-actions">
-        <button id="mpfMsgBtn" onclick="openMsg(g('mpfInfoNm').textContent,_curPrFull,(g('mpfAvWrap')._photo||null));closePrFull()" class="mpf-action-btn mpf-action-sec">
+      <div id="tpName" class="tp-name"></div>
+      <div id="tpSince" class="tp-since"></div>
+      <div id="tpHeroActions" class="tp-hero-actions">
+        <button id="tpMsgBtn" onclick="_tpContact()" class="tp-action-btn tp-action-sec">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           Message
         </button>
-        <button id="mpfHeroFollowBtn" onclick="togFPFull()" class="mpf-action-btn mpf-action-pri">
-          <svg id="mpfHeroFollowIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          <span id="mpfHeroFollowLbl">Suivre</span>
+        <button id="tpFollowBtn" onclick="togFPFull()" class="tp-action-btn tp-action-pri">
+          <svg id="tpFollowIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <span id="tpFollowLbl">Suivre</span>
         </button>
       </div>
     </div>
 
-    <!-- STATS : 4 colonnes séparées -->
-    <div id="mpfStats">
-      <div class="mpf-stat"><div id="mpfStC" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_cours">Cours</div></div>
-      <div class="mpf-stat"><div id="mpfStE" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_eleves">Élèves</div></div>
-      <div class="mpf-stat"><div id="mpfStD" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_donnes">Donnés</div></div>
-      <div class="mpf-stat"><div id="mpfStN" class="mpf-stat-num">—</div><div class="mpf-stat-lbl" data-i18n="mp_note">Note</div></div>
+    <!-- STATS BAR -->
+    <div class="tp-stats-bar">
+      <div class="tp-stat"><div id="tpStRating" class="tp-stat-num tp-stat-rating">—</div><div class="tp-stat-lbl">Note</div></div>
+      <div class="tp-stat-sep"></div>
+      <div class="tp-stat"><div id="tpStAvis" class="tp-stat-num">0</div><div class="tp-stat-lbl">Avis</div></div>
+      <div class="tp-stat-sep"></div>
+      <div class="tp-stat"><div id="tpStCours" class="tp-stat-num">0</div><div class="tp-stat-lbl">Cours</div></div>
+      <div class="tp-stat-sep"></div>
+      <div class="tp-stat"><div id="tpStEleves" class="tp-stat-num">0</div><div class="tp-stat-lbl">Élèves</div></div>
     </div>
 
-    <!-- TABS : style segment pill -->
-    <div id="mpfTabBar">
-      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')">Profil</button>
-      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')">Cours</button>
-      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none">Espace</button>
+    <!-- TABS -->
+    <div class="tp-tab-bar" id="tpTabBar">
+      <button class="tp-tab on" id="tpTabPresentation" onclick="switchTpTab('presentation')">Présentation</button>
+      <button class="tp-tab" id="tpTabCours" onclick="switchTpTab('cours')">Cours</button>
+      <button class="tp-tab" id="tpTabAvis" onclick="switchTpTab('avis')">Avis</button>
+      <button class="tp-tab" id="tpTabEspace" onclick="switchTpTab('espace')" style="display:none">Espace</button>
     </div>
 
-    <!-- ── PANEL PROFIL ── -->
-    <div id="mpfPanelProfil" style="padding-bottom:20px">
-      <!-- Bio -->
-      <div class="mpf-sec-lbl">À propos</div>
-      <div style="background:var(--wh);border-radius:16px;padding:14px 16px;margin:0 16px 6px">
-        <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.7;margin:0"></p>
+    <!-- PANEL: Présentation -->
+    <div id="tpPanelPresentation" class="tp-panel">
+      <div class="tp-sec-title">Profil de confiance</div>
+      <div id="tpTrustCards" class="tp-trust-wrap"></div>
+
+      <div id="tpBioSection" style="display:none;padding:0 16px 16px">
+        <div id="tpBio" class="tp-bio"></div>
       </div>
-      <!-- Matières (chips style explorer) -->
-      <div id="mpfTagsSection" style="display:none;padding:0 16px 4px">
-        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:7px;padding-top:10px"></div>
+
+      <div id="tpStatutSection" style="display:none;padding:0 16px 8px">
+        <div class="tp-sec-label">Statut &amp; formation</div>
+        <div class="tp-card-list" id="tpStatutList"></div>
       </div>
-      <!-- Infos pro (formations, expériences, lieu, statut) -->
-      <div id="mpfExtraInfo"></div>
-      <!-- Code accès -->
-      <div id="mpfCodeSection" style="display:none;margin:8px 16px 0">
-        <div class="mpf-sec-lbl" style="padding-left:0" data-i18n="mpf_code_titre">Code d'accès</div>
-        <div id="mpfCodeCard" style="background:var(--wh);border-radius:16px;padding:16px">
-          <div style="font-size:13px;color:var(--lite);margin-bottom:12px" data-i18n="mpf_code_hint">Entrez le code de votre professeur pour accéder à son espace.</div>
-          <div style="display:flex;gap:8px">
-            <input id="mpfCodeInput" class="mpf-code-input" placeholder="EX: ABC123" maxlength="10">
-            <button onclick="enrollWithCode()" class="mpf-code-btn" data-i18n="mpf_code_btn">Rejoindre</button>
-          </div>
-          <div id="mpfCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:8px"></div>
-        </div>
+
+      <div id="tpMatiereSection" style="display:none;padding:0 16px 16px">
+        <div class="tp-sec-label">Matières enseignées</div>
+        <div id="tpMatiereChips" class="tp-chips-wrap"></div>
       </div>
-      <!-- Avis -->
-      <div id="mpfAvisSection" style="display:none">
-        <div class="mpf-sec-lbl">Avis des élèves</div>
-        <div id="mpfAvis" style="padding:0 16px"></div>
+
+      <div class="tp-contact-wrap">
+        <button onclick="_tpContact()" class="tp-contact-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span id="tpContactLabel">Contacter</span>
+        </button>
       </div>
     </div>
 
-    <!-- ── PANEL COURS ── -->
-    <div id="mpfPanelCours" hidden style="padding:8px 16px 20px">
-      <div id="mpfCrs"></div>
+    <!-- PANEL: Cours -->
+    <div id="tpPanelCours" class="tp-panel" hidden style="padding:16px">
+      <div id="tpCoursList"></div>
     </div>
 
-    <!-- ── PANEL ESPACE (élèves inscrits) ── -->
-    <div id="mpfPanelEspace" hidden>
-
-      <!-- Card : Publications → ouvre popup plein écran -->
-      <div class="esp2-card" onclick="openEspPubs()">
-        <div class="esp2-card-hd" style="cursor:pointer">
-          <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
-          <div style="flex:1">
-            <div class="esp2-title">Publications</div>
-            <div class="esp2-sub">Annonces de votre professeur</div>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-
-      <!-- Card : Bibliothèque → ouvre vue plein écran -->
-      <div class="esp2-card" onclick="openElveBibliotheque(_curPrFull)" style="cursor:pointer">
-        <div class="esp2-card-hd" style="pointer-events:none">
-          <div class="esp2-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
-          <div style="flex:1">
-            <div class="esp2-title">Bibliothèque</div>
-            <div class="esp2-sub">Fiches et ressources du prof</div>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-
-      <!-- Card : Envoyer un document → ouvre sheet -->
-      <div class="esp2-card" onclick="openSendDocSheet()" style="cursor:pointer">
-        <div class="esp2-card-hd" style="pointer-events:none">
-          <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-          <div style="flex:1">
-            <div class="esp2-title">Envoyer un document</div>
-            <div class="esp2-sub">Partagez un fichier avec votre prof</div>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-
-      <!-- Card : Note du prof (masquée si vide) -->
-      <div id="mpfEspNoteSection" style="display:none">
-        <div class="esp2-card">
-          <div class="esp2-card-hd" style="cursor:default">
-            <div class="esp2-ico" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-            <div><div class="esp2-title">Note de votre prof</div></div>
-          </div>
-          <div id="mpfEspNotes" style="padding:0 16px 16px;font-size:14px;color:var(--mid);line-height:1.65;white-space:pre-wrap"></div>
-        </div>
-      </div>
-
-      <!-- Card : Écrire au prof -->
-      <div class="esp2-card" onclick="contPrFull()">
-        <div class="esp2-card-hd" style="cursor:pointer">
-          <div class="esp2-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-          <div style="flex:1">
-            <div class="esp2-title">Écrire au professeur</div>
-            <div class="esp2-sub">Envoyer un message direct</div>
-          </div>
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-
+    <!-- PANEL: Avis -->
+    <div id="tpPanelAvis" class="tp-panel" hidden>
+      <div id="tpAvisList"></div>
     </div>
 
-  </div>
+    <!-- PANEL: Espace -->
+    <div id="tpPanelEspace" class="tp-panel" hidden>
+      <!-- Code input (when not enrolled) -->
+      <div id="tpEspaceCode" style="padding:16px">
+        <div class="tp-espace-card">
+          <div id="tpEspaceTitle" class="tp-espace-title"></div>
+          <div class="tp-espace-desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
+          <div class="tp-espace-row">
+            <input id="tpCodeInput" type="text" placeholder="Ex: ABC123" class="tp-code-input"
+              oninput="this.value=this.value.toUpperCase()"
+              onfocus="this.style.background='#fff'" onblur="this.style.background='#F7F7F7'">
+            <button onclick="tpEnterCode()" class="tp-code-btn">Entrer</button>
+          </div>
+          <div id="tpCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:6px"></div>
+        </div>
+      </div>
+      <!-- Espace content (when enrolled) -->
+      <div id="tpEspaceContent" style="display:none">
+        <div class="esp2-card" onclick="openEspPubs()">
+          <div class="esp2-card-hd" style="cursor:pointer">
+            <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
+            <div style="flex:1"><div class="esp2-title">Publications</div><div class="esp2-sub">Annonces de votre professeur</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <div class="esp2-card" onclick="openElveBibliotheque(_curPrFull)" style="cursor:pointer">
+          <div class="esp2-card-hd" style="pointer-events:none">
+            <div class="esp2-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+            <div style="flex:1"><div class="esp2-title">Bibliothèque</div><div class="esp2-sub">Fiches et ressources du prof</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <div class="esp2-card" onclick="openSendDocSheet()" style="cursor:pointer">
+          <div class="esp2-card-hd" style="pointer-events:none">
+            <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div style="flex:1"><div class="esp2-title">Envoyer un document</div><div class="esp2-sub">Partagez un fichier avec votre prof</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <div class="esp2-card" onclick="contPrFull()">
+          <div class="esp2-card-hd" style="cursor:pointer">
+            <div class="esp2-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+            <div style="flex:1"><div class="esp2-title">Écrire au professeur</div><div class="esp2-sub">Envoyer un message direct</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tpScroll -->
 </div>
 
 <!-- ÉDITEUR RICH TEXT PUBLICATIONS -->
