@@ -4528,9 +4528,10 @@ function _tpRenderStatut(p){
 function _tpRenderMatieres(list,primary){
   var sect=g('tpMatiereSection'),chips=g('tpMatiereChips');if(!sect||!chips)return;
   if(!list||!list.length){sect.style.display='none';return;}
-  var primarySet={};(primary||[]).forEach(function(m){primarySet[m]=1;});
   chips.innerHTML=list.map(function(m){
-    return'<span class="tp-chip'+(primarySet[m]?' tp-chip-primary':'')+'">'+esc(m)+'</span>';
+    var mat=findMatiere(m);
+    var col=mat?mat.color:'#9CA3AF';
+    return'<span style="background:'+col+';color:#fff;border-radius:50px;padding:5px 13px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,.15)">'+esc(m)+'</span>';
   }).join('');
   sect.style.display='block';
 }
