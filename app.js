@@ -11718,6 +11718,7 @@ function _ssOnFocus(inp){
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
   ov.style.display='flex';
+  ov.style.bottom='0px';
   ov.offsetHeight;
   ov.classList.add('open');
   ov.scrollTop=0;
@@ -11732,7 +11733,8 @@ function openSmartSearch(){
 
 function closeSmartSearch(){
   var ov=g('smartSearchOverlay');
-  if(ov){ov.classList.remove('open');setTimeout(function(){ov.style.display='none';},380);}
+  if(ov){ov.classList.remove('open');ov.style.bottom='';setTimeout(function(){ov.style.display='none';},380);}
+  _ssFocusedCard=null;
   document.body.style.overflow='';
 }
 // ── ACCORDÉON MATIÈRE ──
@@ -12236,14 +12238,15 @@ function initSwipeNav(){
   function _onVpResize(){
     var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
 
-    // Search modal
+    // Search modal — shrink overlay above keyboard so scrollTop works on iOS
     var ov=g('smartSearchOverlay');
     if(ov&&ov.classList.contains('open')){
-      var body=g('ssBody');if(body)body.style.paddingBottom=kbH>30?(kbH+20+'px'):'20px';
-      // Scroll the focused card to be visible above the keyboard
+      ov.style.bottom=kbH>30?kbH+'px':'0px';
       if(kbH>30&&_ssFocusedCard&&ov.contains(_ssFocusedCard)){
         var target=Math.max(0,_ssFocusedCard.offsetTop-80);
         ov.scrollTop=target;
+      } else if(kbH<=30){
+        ov.scrollTop=0;
       }
     }
 
