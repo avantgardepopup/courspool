@@ -4514,17 +4514,14 @@ function _tpBuildTrustCards(p,pid){
 function _tpRenderStatut(p){
   var sect=g('tpStatutSection'),list=g('tpStatutList');if(!sect||!list)return;
   var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
-  var chev='<svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>';
   var rows='';
-  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Statut</div><div class="tp-card-row-val">'+esc(p.statut?(STATUT[p.statut]||p.statut):'—')+'</div></div>'+chev+'</div>';
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Statut</div><div class="tp-card-row-val">'+esc(p.statut?(STATUT[p.statut]||p.statut):'—')+'</div></div></div>';
   var dip=p.diplome||p.niveau||null;
-  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Diplôme</div><div class="tp-card-row-val">'+esc(dip||'—')+'</div></div>'+chev+'</div>';
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Diplôme</div><div class="tp-card-row-val">'+esc(dip||'—')+'</div></div></div>';
   var exp=p.experiences||p.experience||null;
-  var eleves=p.e||0;
-  var expVal=(exp?esc(String(exp).split('\n')[0]):'')+(eleves?' · '+eleves+' élève'+(eleves>1?'s':''):'');
-  if(expVal){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Expérience</div><div class="tp-card-row-val">'+expVal+'</div></div>'+chev+'</div>';}
+  if(exp){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Expérience</div><div class="tp-card-row-val">'+esc(String(exp).split('\n')[0])+'</div></div></div>';}
   var lieu=p.lieu_enseignement||p.lieu||null;
-  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Lieu d\'enseignement</div><div class="tp-card-row-val">'+esc(lieu||'—')+'</div></div>'+chev+'</div>';
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Lieu d\'enseignement</div><div class="tp-card-row-val">'+esc(lieu||'—')+'</div></div></div>';
   list.innerHTML=rows;sect.style.display='block';
 }
 

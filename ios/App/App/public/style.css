@@ -958,7 +958,7 @@ html.dk .contenu-card{border-color:rgba(255,255,255,.08);}
 /* ── FICHE PROF UNIFIÉE ── */
 #bdPrFull{
   position:fixed;inset:0;z-index:500;
-  background:var(--bg);overflow:hidden;
+  background:#fff;overflow:hidden;
   display:flex;flex-direction:column;
   animation:mpfSlideIn .28s cubic-bezier(.32,1,.6,1);
 }
@@ -3312,3 +3312,191 @@ html.cap-ios #bnavIpadBack.visible {
   .card-price-block { margin-right: 0; }
   .card-btn-reserve { flex: none; width: 100%; min-width: 0; order: 4; }
 }
+
+/* ═══════════════════════════════════════════════
+   TEACHER PROFILE PAGE (tp-*)
+   ═══════════════════════════════════════════════ */
+.tp-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:max(52px,calc(env(safe-area-inset-top,0px) + 14px)) 16px 12px;
+  background:#fff;flex-shrink:0;
+}
+.tp-topbar-btn{
+  width:32px;height:32px;border-radius:50%;
+  border:0.5px solid #ddd;display:flex;align-items:center;justify-content:center;
+  background:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.tp-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:env(safe-area-inset-bottom,24px);}
+
+/* Hero */
+.tp-hero{text-align:center;padding:20px 24px 16px;background:#fff;}
+.tp-av-wrap{position:relative;width:84px;margin:0 auto 14px;}
+.tp-avatar{
+  width:84px;height:84px;border-radius:50%;
+  background:linear-gradient(135deg,#FF8C55,#E04E10);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:800;color:#fff;overflow:hidden;
+}
+.tp-verifbadge{
+  position:absolute;bottom:0;right:0;width:28px;height:28px;
+  border-radius:50%;background:#E8611A;border:3px solid #fff;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:opacity .15s,transform .1s;
+}
+.tp-verifbadge:active{opacity:.8;transform:scale(.92);}
+.tp-verifbadge.following{background:#fff;border-color:#E8611A;}
+.tp-name{font-size:22px;font-weight:700;color:#222;letter-spacing:-0.5px;line-height:1.2;}
+.tp-since{font-size:12px;color:#717171;margin-top:5px;}
+.tp-hero-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;}
+.tp-action-btn{
+  display:flex;align-items:center;gap:7px;
+  border-radius:50px;padding:10px 20px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;
+  min-width:100px;justify-content:center;
+  -webkit-tap-highlight-color:transparent;border:1px solid transparent;
+}
+.tp-action-sec{background:#fff;border-color:#ddd;color:#222;}
+.tp-action-sec:active{opacity:.7;}
+.tp-action-pri{background:#222;border-color:#222;color:#fff;}
+.tp-action-pri:active{opacity:.8;}
+.tp-action-pri.following{background:#fff;border-color:#ddd;color:#222;}
+
+/* Stats bar */
+.tp-stats-bar{
+  display:flex;align-items:center;
+  border-top:0.5px solid #F0F0F0;border-bottom:0.5px solid #F0F0F0;
+  padding:12px 0;background:#fff;
+}
+.tp-stat{flex:1;text-align:center;}
+.tp-stat-num{font-size:18px;font-weight:700;color:#222;line-height:1;}
+.tp-stat-rating{color:#FF9500;}
+.tp-stat-lbl{font-size:10px;color:#717171;margin-top:3px;font-weight:500;}
+.tp-stat-sep{width:0.5px;height:30px;background:#E0E0E0;flex-shrink:0;}
+
+/* Tabs — iOS segmented style */
+.tp-tab-bar{
+  display:flex;background:#fff;border-bottom:0.5px solid #E5E5E5;
+  padding:0;position:sticky;top:0;z-index:2;
+}
+.tp-tab{
+  flex:1;background:none;border:none;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  font-size:13px;font-weight:500;color:#8E8E93;
+  padding:13px 0;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-0.5px;
+  white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  transition:color .15s,border-color .15s;letter-spacing:-0.1px;
+}
+.tp-tab.on{color:#000;font-weight:600;border-bottom-color:#000;}
+
+/* Panel */
+.tp-panel{padding:0;}
+
+/* Trust cards */
+.tp-sec-title{font-size:15px;font-weight:700;color:#222;padding:18px 16px 10px;}
+.tp-trust-wrap{display:flex;flex-direction:column;gap:8px;padding:0 16px 16px;}
+.tp-trust-card{
+  display:flex;align-items:center;gap:12px;
+  border:0.5px solid #E5E5E5;border-radius:12px;padding:11px 14px;
+}
+.tp-trust-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.tp-trust-text{flex:1;}
+.tp-trust-lbl{font-size:13px;font-weight:600;color:#222;line-height:1.3;}
+.tp-trust-sub{font-size:11px;color:#717171;margin-top:2px;}
+.tp-trust-badge{
+  font-size:11px;font-weight:600;border-radius:50px;
+  padding:3px 9px;white-space:nowrap;flex-shrink:0;
+}
+
+/* Bio */
+.tp-bio{
+  background:#F7F7F7;border-radius:12px;padding:14px;
+  font-style:italic;font-size:13px;color:#555;line-height:1.65;
+}
+
+/* Statut section */
+.tp-sec-label{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:#aaa;margin-bottom:8px;
+}
+.tp-card-list{border:0.5px solid #E5E5E5;border-radius:12px;overflow:hidden;}
+.tp-card-row{
+  display:flex;align-items:center;
+  padding:11px 14px;border-bottom:0.5px solid #F0F0F0;
+}
+.tp-card-row:last-child{border-bottom:none;}
+.tp-card-row-left{flex:1;}
+.tp-card-row-lbl{font-size:11px;color:#aaa;margin-bottom:2px;}
+.tp-card-row-val{font-size:13px;font-weight:500;color:#222;}
+
+/* Chips matières */
+.tp-chips-wrap{display:flex;flex-wrap:wrap;gap:7px;}
+.tp-chip{
+  background:#F2F2F7;color:#222;border-radius:20px;
+  padding:5px 12px;font-size:12px;font-weight:600;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+}
+.tp-chip-primary{background:#FFF0E8;color:#E8611A;}
+
+/* Contact bottom */
+.tp-contact-wrap{padding:12px 16px 32px;}
+.tp-contact-btn{
+  width:100%;height:48px;border-radius:12px;
+  background:#222;color:#fff;border:none;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  font-size:15px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Espace */
+.tp-espace-card{border:0.5px solid #E5E5E5;border-radius:14px;padding:16px;}
+.tp-espace-title{font-size:15px;font-weight:700;color:#222;margin-bottom:6px;}
+.tp-espace-desc{font-size:13px;color:#717171;line-height:1.5;margin-bottom:14px;}
+.tp-espace-row{display:flex;gap:8px;align-items:center;}
+.tp-code-input{
+  flex:1;background:#F7F7F7;border:none;border-radius:10px;
+  height:46px;padding:0 14px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  font-size:15px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;outline:none;color:#222;transition:background .15s;
+}
+.tp-code-btn{
+  background:#222;color:#fff;border:none;border-radius:10px;
+  height:46px;padding:0 18px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  font-weight:600;font-size:14px;cursor:pointer;
+  white-space:nowrap;-webkit-tap-highlight-color:transparent;flex-shrink:0;
+}
+
+/* Dark mode overrides */
+html.dk #bdPrFull{background:var(--bg);}
+html.dk .tp-topbar{background:var(--wh);}
+html.dk .tp-topbar-btn{background:var(--wh);border-color:var(--bdr);}
+html.dk .tp-topbar-btn svg{stroke:var(--ink);}
+html.dk .tp-hero{background:var(--wh);}
+html.dk .tp-name{color:var(--ink);}
+html.dk .tp-stats-bar{background:var(--wh);border-color:var(--bdr);}
+html.dk .tp-stat-num{color:var(--ink);}
+html.dk .tp-tab-bar{background:var(--wh);border-color:var(--bdr);}
+html.dk .tp-tab.on{color:var(--ink);font-weight:600;border-color:var(--ink);}
+html.dk .tp-sec-title{color:var(--ink);}
+html.dk .tp-trust-card{border-color:var(--bdr);}
+html.dk .tp-trust-lbl{color:var(--ink);}
+html.dk .tp-bio{background:var(--bg);color:var(--mid);}
+html.dk .tp-card-list{border-color:var(--bdr);}
+html.dk .tp-card-row{border-color:var(--bdr);}
+html.dk .tp-card-row-val{color:var(--ink);}
+html.dk .tp-chip{background:var(--bg);color:var(--ink);}
+html.dk .tp-contact-btn{background:var(--ink);color:var(--bg);}
+html.dk .tp-action-sec{background:var(--wh);border-color:var(--bdr);color:var(--ink);}
+html.dk .tp-action-pri{background:var(--ink);border-color:var(--ink);color:var(--bg);}
+html.dk .tp-espace-card{border-color:var(--bdr);}
+html.dk .tp-espace-title{color:var(--ink);}
+html.dk .tp-code-input{background:var(--bg);color:var(--ink);}
+html.dk .tp-code-btn{background:var(--ink);color:var(--bg);}
