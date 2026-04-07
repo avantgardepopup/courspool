@@ -2901,146 +2901,151 @@ html.dk .pill-filter-btn { border-color:var(--bdr); }
 html.dk .pill-filter-btn svg { color:var(--ink); }
 html.dk .pill-icon { color:var(--ink); }
 
-/* ════ SMART SEARCH MODAL — 4 sections accordéon ════ */
+/* ════ SMART SEARCH MODAL — 4 cards flottantes ════ */
 
 :root {
-  --modal-bg: #ffffff;
-  --modal-surface: #F2F2F7;
-  --modal-border: #EBEBEB;
-  --modal-border-alpha: rgba(0,0,0,0.08);
-  --modal-text: #222222;
-  --modal-text-secondary: #717171;
-  --modal-shadow: rgba(0,0,0,0.08);
+  --sc-bg: #ffffff;
+  --sc-text: #222222;
+  --sc-sub: #888888;
+  --sc-border: rgba(0,0,0,0.07);
+  --sc-sep: rgba(0,0,0,0.07);
+  --sc-shadow: 0 3px 14px rgba(0,0,0,0.11),0 0 0 0.5px rgba(0,0,0,0.06);
+  --sc-icon: #555555;
+  --sc-surface: #F2F2F7;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --modal-bg: #1C1C1E;
-    --modal-surface: #2C2C2E;
-    --modal-border: rgba(255,255,255,0.12);
-    --modal-border-alpha: rgba(255,255,255,0.12);
-    --modal-text: #FFFFFF;
-    --modal-text-secondary: #8E8E93;
-    --modal-shadow: rgba(0,0,0,0.4);
+    --sc-bg: #1C1C1E;
+    --sc-text: #FFFFFF;
+    --sc-sub: #8E8E93;
+    --sc-border: rgba(255,255,255,0.08);
+    --sc-sep: rgba(255,255,255,0.08);
+    --sc-shadow: 0 3px 16px rgba(0,0,0,0.55),0 0 0 0.5px rgba(255,255,255,0.07);
+    --sc-icon: #8E8E93;
+    --sc-surface: #2C2C2E;
   }
 }
 
 /* ── Overlay ── */
 .ss-overlay {
   position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,0.5);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  display:flex;align-items:flex-end;
+  background:rgba(0,0,0,0.42);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
   opacity:0;pointer-events:none;
-  transition:opacity .3s ease;
+  transition:opacity .28s ease;
 }
 .ss-overlay.open { opacity:1;pointer-events:all; }
 
-/* ── Panneau ── */
-.ss-modal {
-  position:relative;background:var(--modal-bg);
-  border-radius:24px 24px 0 0;
-  width:100%;max-width:600px;margin:0 auto;
-  max-height:90vh;display:flex;flex-direction:column;overflow:hidden;
-  transform:translateY(44px);opacity:0;
-  transition:transform .36s cubic-bezier(0.32,0.72,0,1),opacity .26s ease;
-  box-shadow:0 -4px 40px rgba(0,0,0,0.14);
+/* Scroller centré */
+.ss-scroller {
+  min-height:100%;
+  width:100%;max-width:480px;margin:0 auto;
+  padding:env(safe-area-inset-top,24px) 16px calc(env(safe-area-inset-bottom,0px) + 80px);
+  padding-top:calc(env(safe-area-inset-top,0px) + 56px);
+  display:flex;flex-direction:column;gap:12px;
+  box-sizing:border-box;
 }
-.ss-overlay.open .ss-modal { transform:translateY(0);opacity:1; }
 
-/* Handle */
-.ss-grabber {
-  width:36px;height:4px;border-radius:2px;background:var(--modal-border);
-  margin:12px auto 0;flex-shrink:0;
+/* Barre titre + fermer */
+.ss-top-bar {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4px;margin-bottom:4px;
 }
-/* Bouton fermer */
+.ss-top-title {
+  font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em;
+}
 .ss-close-btn {
-  position:absolute;top:10px;right:16px;width:30px;height:30px;
-  border-radius:50%;background:var(--modal-surface);border:none;cursor:pointer;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.22);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;color:var(--modal-text);
+  -webkit-tap-highlight-color:transparent;color:#fff;flex-shrink:0;
 }
 
-/* Corps scrollable */
-.ss-body {
-  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
-  display:flex;flex-direction:column;gap:0;
+/* ── Carte individuelle ── */
+.ss-card {
+  width:100%;
+  background:var(--sc-bg);
+  border-radius:20px;
+  box-shadow:var(--sc-shadow);
+  overflow:hidden;
 }
 
-/* ════ ACCORDÉON — carte unique 4 sections ════ */
-.ss-accordion {
-  border:1px solid var(--modal-border);
-  border-radius:16px;overflow:hidden;
-  background:var(--modal-bg);
-  box-shadow:0 4px 20px var(--modal-shadow);
-}
-/* Séparateur horizontal entre sections */
-.ss-acc-sep {
-  height:1px;background:var(--modal-border);margin:0;
-}
-/* Ligne de section (header compact) */
-.ss-acc-row {
-  display:flex;align-items:center;gap:12px;
-  padding:17px 20px;cursor:pointer;
-  background:var(--modal-bg);
-  transition:background .15s;min-height:58px;
+/* Ligne principale d'une carte (style pill) */
+.ss-pill-row {
+  display:flex;align-items:center;gap:13px;
+  padding:17px 18px;
   -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
 }
-.ss-acc-row:active { background:var(--modal-surface); }
-/* Label (Matière / Lieu / Professeur / Code privé) */
-.ss-acc-lbl {
-  font-size:16px;font-weight:600;color:var(--modal-text);
-  white-space:nowrap;min-width:104px;flex-shrink:0;
+.ss-pill-row:active { opacity:.75; }
+
+/* Icône à gauche */
+.ss-pill-icon {
+  display:flex;align-items:center;justify-content:center;
+  color:var(--sc-icon);flex-shrink:0;
 }
-/* Valeur affichée / placeholder à droite */
-.ss-acc-val {
-  flex:1;font-size:15px;font-weight:400;color:var(--modal-text-secondary);
-  text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+
+/* Label / placeholder (matière) */
+.ss-pill-lbl {
+  flex:1;font-size:16px;font-weight:500;color:var(--sc-sub);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.ss-acc-val.selected { color:var(--modal-text);font-weight:500; }
-/* Input inline (Lieu / Prof / Code) */
-.ss-acc-input {
+.ss-pill-lbl.selected { color:var(--sc-text);font-weight:600; }
+
+/* Chevron matière */
+.ss-pill-chevron {
+  display:flex;align-items:center;color:var(--sc-icon);flex-shrink:0;
+  transition:transform .38s cubic-bezier(0.4,0,0.2,1);
+}
+.ss-card:has(.ss-mat-dropdown.open) .ss-pill-chevron { transform:rotate(180deg); }
+
+/* Input pill (Lieu / Prof / Code) */
+.ss-pill-input {
   flex:1;border:none;outline:none;background:transparent;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:15px;font-weight:400;color:var(--modal-text);text-align:right;
+  font-size:16px;font-weight:500;color:var(--sc-text);
   -webkit-tap-highlight-color:transparent;min-width:0;
 }
-.ss-acc-input::placeholder { color:var(--modal-text-secondary); }
+.ss-pill-input::placeholder { color:var(--sc-sub); }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.06em; }
 
-/* ════ PANEL DÉPLOYABLE (Section Matière) ════ */
-.ss-acc-panel {
+/* ── Dropdown matière (expandable) ── */
+.ss-mat-dropdown {
   max-height:0;overflow:hidden;
   transition:max-height .38s cubic-bezier(0.4,0,0.2,1);
-  background:var(--modal-bg);
 }
-.ss-acc-panel.open { max-height:680px; }
+.ss-mat-dropdown.open {
+  max-height:240px;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
 
-/* Ligne de séparation en haut du panel */
-.ss-panel-top-sep { height:1px;background:var(--modal-border); }
+/* Séparateur en haut du dropdown */
+.ss-dropdown-sep { height:0.5px;background:var(--sc-sep); }
 
-/* Champ de recherche dans le panel */
-.ss-panel-search {
+/* Champ de recherche dans le dropdown */
+.ss-dropdown-search {
   display:flex;align-items:center;gap:10px;
-  background:var(--modal-surface);border-radius:12px;
-  padding:10px 14px;margin:14px 16px 8px;
-  color:var(--modal-text-secondary);
+  padding:11px 16px;
+  border-bottom:0.5px solid var(--sc-sep);
+  color:var(--sc-icon);position:sticky;top:0;
+  background:var(--sc-bg);
 }
-.ss-panel-search svg { flex-shrink:0; }
+.ss-dropdown-search svg { flex-shrink:0; }
 .ss-sec-input {
-  border:none;outline:none;background:transparent;flex:1;
+  flex:1;border:none;outline:none;background:transparent;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:15px;font-weight:400;color:var(--modal-text);
+  font-size:15px;color:var(--sc-text);
 }
-.ss-sec-input::placeholder { color:var(--modal-text-secondary); }
+.ss-sec-input::placeholder { color:var(--sc-sub); }
 
-/* Chips (JS) — rows dans le panel */
+/* Chips filtrées (JS) */
 .ss-mat-chips { display:flex;flex-direction:column;margin:0 16px 6px; }
 .ss-mat-chip {
   display:flex !important;align-items:center;gap:14px;
   padding:10px 0;width:100%;text-align:left;cursor:pointer;
-  background:transparent !important;color:var(--modal-text) !important;
-  border:none !important;border-bottom:0.5px solid var(--modal-border) !important;
+  background:transparent !important;color:var(--sc-text) !important;
+  border:none !important;border-bottom:0.5px solid var(--sc-sep) !important;
   font-size:15px;font-weight:500;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   -webkit-tap-highlight-color:transparent;
@@ -3053,7 +3058,7 @@ html.dk .pill-icon { color:var(--ink); }
 .ss-subject-row {
   display:flex;align-items:center;gap:14px;
   padding:10px 0;background:transparent;border:none;
-  border-bottom:0.5px solid var(--modal-border);
+  border-bottom:0.5px solid var(--sc-sep);
   cursor:pointer;text-align:left;width:100%;
   -webkit-tap-highlight-color:transparent;
 }
@@ -3061,50 +3066,50 @@ html.dk .pill-icon { color:var(--ink); }
 .ss-subject-row:active { opacity:.6; }
 .ss-subject-icon {
   width:38px;height:38px;border-radius:10px;
-  background:var(--modal-surface);flex-shrink:0;
+  background:var(--sc-surface);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  color:var(--modal-text);
+  color:var(--sc-icon);
 }
 .ss-subject-info { display:flex;flex-direction:column;gap:1px;flex:1;min-width:0; }
-.ss-subject-name { font-size:15px;font-weight:600;color:var(--modal-text); }
-.ss-subject-desc { font-size:12px;color:var(--modal-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ss-subject-name { font-size:15px;font-weight:600;color:var(--sc-text); }
+.ss-subject-desc { font-size:12px;color:var(--sc-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
-/* Toggle CSS : liste statique ↔ chips selon valeur input (via :has) */
-.ss-acc-panel:has(#ssMatiereInput:placeholder-shown) .ss-mat-chips { display:none; }
-.ss-acc-panel:has(#ssMatiereInput:not(:placeholder-shown)) .ss-mat-chips { display:flex; }
-.ss-acc-panel:has(#ssMatiereInput:placeholder-shown) .ss-subject-list { display:flex; }
-.ss-acc-panel:has(#ssMatiereInput:not(:placeholder-shown)) .ss-subject-list { display:none; }
+/* Toggle CSS : liste ↔ chips selon valeur input */
+.ss-mat-dropdown:has(#ssMatiereInput:placeholder-shown) .ss-mat-chips { display:none; }
+.ss-mat-dropdown:has(#ssMatiereInput:not(:placeholder-shown)) .ss-mat-chips { display:flex; }
+.ss-mat-dropdown:has(#ssMatiereInput:placeholder-shown) .ss-subject-list { display:flex; }
+.ss-mat-dropdown:has(#ssMatiereInput:not(:placeholder-shown)) .ss-subject-list { display:none; }
 
 /* Bouton géoloc */
 .ss-geo-btn {
-  width:36px;height:36px;border-radius:50%;
-  background:var(--modal-surface);border:none;cursor:pointer;
+  width:34px;height:34px;border-radius:50%;
+  background:var(--sc-surface);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;color:var(--modal-text);
+  flex-shrink:0;color:var(--sc-icon);
   transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;
 }
 .ss-geo-btn.active { background:#E8611A;color:#fff; }
 
 /* ── Footer ── */
 .ss-footer {
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 0 0;margin-top:16px;
-}
-.ss-clear-btn {
-  background:transparent;border:none;cursor:pointer;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:14px;color:var(--modal-text);text-decoration:underline;
-  -webkit-tap-highlight-color:transparent;padding:0;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  padding:4px 0;
 }
 .ss-search-btn {
   display:flex;align-items:center;justify-content:center;gap:8px;
   background:#E8611A;color:#fff;border:none;border-radius:50px;
-  padding:13px 24px;font-size:16px;font-weight:700;cursor:pointer;
+  padding:16px 0;font-size:16px;font-weight:700;cursor:pointer;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  -webkit-tap-highlight-color:transparent;
-  box-shadow:0 4px 14px rgba(232,97,26,0.35);
+  -webkit-tap-highlight-color:transparent;width:100%;
+  box-shadow:0 4px 16px rgba(232,97,26,0.38);
 }
 .ss-search-btn:active { opacity:.9; }
+.ss-clear-btn {
+  background:transparent;border:none;cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:14px;color:rgba(255,255,255,0.75);text-decoration:underline;
+  -webkit-tap-highlight-color:transparent;padding:0;
+}
 
 /* Subject items (compat) */
 .subject-item {
