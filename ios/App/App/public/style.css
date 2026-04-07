@@ -2654,7 +2654,7 @@ html.dk .msg-bubble-time.them { color: #fff; }
 #msgInput {
   flex: 1;
   border: none;
-  background: var(--bg);
+  background: transparent !important;
   -webkit-appearance: none;
   font-family: inherit;
   font-size: 15px;
@@ -3014,12 +3014,13 @@ html.dk {
 /* Input pill (Lieu / Prof / Code) */
 .ss-pill-input {
   flex:1;border:none;outline:none;
-  background:var(--sc-bg);-webkit-appearance:none;
+  background:var(--sc-bg) !important;-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:16px;font-weight:500;color:var(--sc-text);
+  font-size:16px;font-weight:500;
+  color:var(--sc-text) !important;-webkit-text-fill-color:var(--sc-text) !important;
   -webkit-tap-highlight-color:transparent;min-width:0;
 }
-.ss-pill-input::placeholder { color:var(--sc-sub); }
+.ss-pill-input::placeholder { color:var(--sc-sub) !important;opacity:1; }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.06em; }
 
 /* ── Dropdown matière (expandable) ── */
@@ -3046,11 +3047,12 @@ html.dk {
 .ss-dropdown-search svg { flex-shrink:0; }
 .ss-sec-input {
   flex:1;border:none;outline:none;
-  background:var(--sc-bg);-webkit-appearance:none;
+  background:var(--sc-bg) !important;-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:15px;color:var(--sc-text);
+  font-size:15px;
+  color:var(--sc-text) !important;-webkit-text-fill-color:var(--sc-text) !important;
 }
-.ss-sec-input::placeholder { color:var(--sc-sub); }
+.ss-sec-input::placeholder { color:var(--sc-sub) !important;opacity:1; }
 
 /* Chips filtrées (JS) */
 .ss-mat-chips { display:flex;flex-direction:column;margin:0 16px 6px; }
