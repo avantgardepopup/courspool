@@ -4108,31 +4108,37 @@ var _espTutoSteps=[
     svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Bienvenue dans ton Espace !',
-    sub:'Découvre tout ce que tu peux faire pour tes élèves depuis cet espace dédié.'
+    sub:'Tout ce dont tu as besoin pour gérer tes cours et tes élèves est ici, en un seul endroit.'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Code d\'accès élèves',
-    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et voir tes contenus.'
+    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et accéder à tes contenus.'
   },
   {
-    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Publications & Annonces',
-    sub:'Écris des annonces ou des fiches de cours. Tes élèves les retrouvent directement sur ton profil.'
+    title:'Mes cours',
+    sub:'Retrouve ici tous tes cours à venir et passés. Les cours que tu as créés sont distingués de ceux que tu as réservés.'
   },
   {
-    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Ma bibliothèque',
-    sub:'Stocke tes fiches de cours et documents. Tu choisis quels élèves y ont accès.'
-  },
-  {
-    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-    bg:'rgba(255,107,43,.08)',
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+    bg:'rgba(99,102,241,.08)',
     title:'Mes élèves',
-    sub:'Retrouve ici tous les élèves inscrits à ton espace et valide les nouvelles demandes d\'accès.'
+    sub:'Retrouve tous les élèves inscrits à ton espace. Valide ou refuse les nouvelles demandes d\'accès.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    bg:'rgba(249,115,22,.08)',
+    title:'Publications',
+    sub:'Écris des annonces pour tes élèves : infos de cours, rappels, messages importants. Tes élèves les voient directement sur ton profil.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
+    bg:'rgba(34,192,105,.08)',
+    title:'Ma bibliothèque',
+    sub:'Crée des fiches de cours et ajoute des documents. Tu choisis quels élèves y ont accès — différent des publications !'
   }
 ];
 
