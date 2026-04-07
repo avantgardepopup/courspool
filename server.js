@@ -2419,6 +2419,27 @@ app.delete('/teacher/:id/announcements/:ann_id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post('/teacher/:id/announcements/:ann_id/vote', async (req, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
+    const { option_index } = req.body;
+    if (option_index === undefined || typeof option_index !== 'number') return res.status(400).json({ error: 'option_index manquant' });
+    const { data: ann, error: fetchErr } = await supabase.from('teacher_announcements')
+      .select('content,type').eq('id', req.params.ann_id).single();
+    if (fetchErr || !ann) return res.status(404).json({ error: 'Introuvable' });
+    if (ann.type !== 'poll') return res.status(400).json({ error: 'Pas un sondage' });
+    let poll;
+    try { poll = JSON.parse(ann.content); } catch(e) { return res.status(400).json({ error: 'Format invalide' }); }
+    if (option_index < 0 || option_index >= (poll.options||[]).length) return res.status(400).json({ error: 'Option invalide' });
+    if (!poll.votes) poll.votes = {};
+    poll.votes[req.user.id] = option_index;
+    const { data, error } = await supabase.from('teacher_announcements')
+      .update({ content: JSON.stringify(poll) }).eq('id', req.params.ann_id).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── TEACHER RESOURCES ─────────────────────────────────────────────────────────
 app.get('/teacher/:id/resources', async (req, res) => {
   try {

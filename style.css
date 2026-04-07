@@ -1853,6 +1853,17 @@ html.dk .fol-row      { border-bottom-color: rgba(255,255,255,.08) !important; }
 html.dk .mob-search { background: var(--bg); }
 html.dk .mob-header { background: var(--bg); }
 
+/* ── SÉPARATEURS DE DATE (messagerie style) ── */
+.ann-day-sep{display:flex;align-items:center;gap:10px;margin:18px 0 12px;font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;}
+.ann-day-sep::before,.ann-day-sep::after{content:'';flex:1;height:1px;background:var(--bdr);}
+/* ── SONDAGES ── */
+.poll-wrap{padding:4px 0 2px;}
+.poll-question{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px;line-height:1.45;}
+.poll-vote-btn{width:100%;text-align:left;padding:12px 16px;margin-bottom:6px;background:var(--wh);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s;}
+.poll-vote-btn:active{border-color:var(--or);background:rgba(255,107,43,.06);}
+html.dk .poll-vote-btn{background:var(--bg);}
+.poll-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--or);background:rgba(255,107,43,.1);border-radius:8px;padding:3px 8px;flex-shrink:0;}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
