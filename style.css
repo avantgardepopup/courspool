@@ -2901,12 +2901,13 @@ html.dk .pill-filter-btn { border-color:var(--bdr); }
 html.dk .pill-filter-btn svg { color:var(--ink); }
 html.dk .pill-icon { color:var(--ink); }
 
-/* ════ SMART SEARCH MODAL — style Airbnb ════ */
+/* ════ SMART SEARCH MODAL — 4 sections accordéon ════ */
 
 :root {
   --modal-bg: #ffffff;
   --modal-surface: #F2F2F7;
-  --modal-border: rgba(0,0,0,0.1);
+  --modal-border: #EBEBEB;
+  --modal-border-alpha: rgba(0,0,0,0.08);
   --modal-text: #222222;
   --modal-text-secondary: #717171;
   --modal-shadow: rgba(0,0,0,0.08);
@@ -2915,14 +2916,15 @@ html.dk .pill-icon { color:var(--ink); }
   :root {
     --modal-bg: #1C1C1E;
     --modal-surface: #2C2C2E;
-    --modal-border: rgba(255,255,255,0.1);
+    --modal-border: rgba(255,255,255,0.12);
+    --modal-border-alpha: rgba(255,255,255,0.12);
     --modal-text: #FFFFFF;
     --modal-text-secondary: #8E8E93;
-    --modal-shadow: rgba(0,0,0,0.3);
+    --modal-shadow: rgba(0,0,0,0.4);
   }
 }
 
-/* Overlay */
+/* ── Overlay ── */
 .ss-overlay {
   position:fixed;inset:0;z-index:1000;
   background:rgba(0,0,0,0.5);
@@ -2933,23 +2935,24 @@ html.dk .pill-icon { color:var(--ink); }
 }
 .ss-overlay.open { opacity:1;pointer-events:all; }
 
-/* Panneau */
+/* ── Panneau ── */
 .ss-modal {
   position:relative;background:var(--modal-bg);
   border-radius:24px 24px 0 0;
   width:100%;max-width:600px;margin:0 auto;
-  max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
-  transform:translateY(40px);opacity:0;
-  transition:transform .35s cubic-bezier(0.32,0.72,0,1),opacity .25s ease;
-  box-shadow:0 -4px 40px rgba(0,0,0,0.12);
+  max-height:90vh;display:flex;flex-direction:column;overflow:hidden;
+  transform:translateY(44px);opacity:0;
+  transition:transform .36s cubic-bezier(0.32,0.72,0,1),opacity .26s ease;
+  box-shadow:0 -4px 40px rgba(0,0,0,0.14);
 }
 .ss-overlay.open .ss-modal { transform:translateY(0);opacity:1; }
 
-/* Handle + header */
+/* Handle */
 .ss-grabber {
   width:36px;height:4px;border-radius:2px;background:var(--modal-border);
   margin:12px auto 0;flex-shrink:0;
 }
+/* Bouton fermer */
 .ss-close-btn {
   position:absolute;top:10px;right:16px;width:30px;height:30px;
   border-radius:50%;background:var(--modal-surface);border:none;cursor:pointer;
@@ -2960,37 +2963,82 @@ html.dk .pill-icon { color:var(--ink); }
 /* Corps scrollable */
 .ss-body {
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
-  display:flex;flex-direction:column;
+  padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
+  display:flex;flex-direction:column;gap:0;
 }
 
-/* ── Section MATIÈRE ── */
-.ss-matiere-section { padding:20px 16px 0; }
-.ss-title {
-  font-size:26px;font-weight:800;letter-spacing:-.03em;
-  color:var(--modal-text);margin:0 0 14px;
+/* ════ ACCORDÉON — carte unique 4 sections ════ */
+.ss-accordion {
+  border:1px solid var(--modal-border);
+  border-radius:16px;overflow:hidden;
+  background:var(--modal-bg);
+  box-shadow:0 4px 20px var(--modal-shadow);
 }
-.ss-input-wrap {
+/* Séparateur horizontal entre sections */
+.ss-acc-sep {
+  height:1px;background:var(--modal-border);margin:0;
+}
+/* Ligne de section (header compact) */
+.ss-acc-row {
+  display:flex;align-items:center;gap:12px;
+  padding:17px 20px;cursor:pointer;
+  background:var(--modal-bg);
+  transition:background .15s;min-height:58px;
+  -webkit-tap-highlight-color:transparent;
+}
+.ss-acc-row:active { background:var(--modal-surface); }
+/* Label (Matière / Lieu / Professeur / Code privé) */
+.ss-acc-lbl {
+  font-size:16px;font-weight:600;color:var(--modal-text);
+  white-space:nowrap;min-width:104px;flex-shrink:0;
+}
+/* Valeur affichée / placeholder à droite */
+.ss-acc-val {
+  flex:1;font-size:15px;font-weight:400;color:var(--modal-text-secondary);
+  text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ss-acc-val.selected { color:var(--modal-text);font-weight:500; }
+/* Input inline (Lieu / Prof / Code) */
+.ss-acc-input {
+  flex:1;border:none;outline:none;background:transparent;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15px;font-weight:400;color:var(--modal-text);text-align:right;
+  -webkit-tap-highlight-color:transparent;min-width:0;
+}
+.ss-acc-input::placeholder { color:var(--modal-text-secondary); }
+.ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.06em; }
+
+/* ════ PANEL DÉPLOYABLE (Section Matière) ════ */
+.ss-acc-panel {
+  max-height:0;overflow:hidden;
+  transition:max-height .38s cubic-bezier(0.4,0,0.2,1);
+  background:var(--modal-bg);
+}
+.ss-acc-panel.open { max-height:680px; }
+
+/* Ligne de séparation en haut du panel */
+.ss-panel-top-sep { height:1px;background:var(--modal-border); }
+
+/* Champ de recherche dans le panel */
+.ss-panel-search {
   display:flex;align-items:center;gap:10px;
-  background:var(--modal-surface);border-radius:14px;
-  padding:11px 14px;margin-bottom:4px;
+  background:var(--modal-surface);border-radius:12px;
+  padding:10px 14px;margin:14px 16px 8px;
+  color:var(--modal-text-secondary);
 }
-.ss-input-wrap svg { flex-shrink:0;color:var(--modal-text-secondary); }
+.ss-panel-search svg { flex-shrink:0; }
 .ss-sec-input {
   border:none;outline:none;background:transparent;flex:1;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:16px;font-weight:500;color:var(--modal-text);width:100%;
+  font-size:15px;font-weight:400;color:var(--modal-text);
 }
 .ss-sec-input::placeholder { color:var(--modal-text-secondary); }
-.ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.08em; }
 
-/* Chips dynamiques (JS) — stylées en rows quand visibles */
-.ss-mat-chips {
-  display:flex;flex-direction:column;gap:0;margin-top:6px;
-}
+/* Chips (JS) — rows dans le panel */
+.ss-mat-chips { display:flex;flex-direction:column;margin:0 16px 6px; }
 .ss-mat-chip {
-  display:flex !important;align-items:center;
-  padding:12px 0;width:100%;text-align:left;cursor:pointer;
+  display:flex !important;align-items:center;gap:14px;
+  padding:10px 0;width:100%;text-align:left;cursor:pointer;
   background:transparent !important;color:var(--modal-text) !important;
   border:none !important;border-bottom:0.5px solid var(--modal-border) !important;
   font-size:15px;font-weight:500;
@@ -3000,10 +3048,8 @@ html.dk .pill-icon { color:var(--ink); }
 .ss-mat-chip:last-child { border-bottom:none !important; }
 .ss-mat-chip:active { opacity:.6; }
 
-/* Liste statique (affichée par défaut, cachée quand input a une valeur) */
-.ss-subject-list {
-  display:flex;flex-direction:column;margin-top:6px;
-}
+/* Liste statique avec icônes */
+.ss-subject-list { display:flex;flex-direction:column;margin:0 16px 8px; }
 .ss-subject-row {
   display:flex;align-items:center;gap:14px;
   padding:10px 0;background:transparent;border:none;
@@ -3023,37 +3069,11 @@ html.dk .pill-icon { color:var(--ink); }
 .ss-subject-name { font-size:15px;font-weight:600;color:var(--modal-text); }
 .ss-subject-desc { font-size:12px;color:var(--modal-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
-/* Toggle : liste statique ↔ chips filtrées selon valeur de l'input */
-#ssMatiereInput:placeholder-shown ~ .ss-mat-chips { display:none; }
-#ssMatiereInput:not(:placeholder-shown) ~ .ss-mat-chips { display:flex; }
-#ssMatiereInput:placeholder-shown ~ .ss-subject-list { display:flex; }
-#ssMatiereInput:not(:placeholder-shown) ~ .ss-subject-list { display:none; }
-
-/* ── Séparateur entre sections ── */
-.ss-divider { height:1px;background:var(--modal-border);margin:16px 16px 0; }
-
-/* ── Sections compactes (Prof / Lieu / Code) ── */
-.ss-compact-group {
-  display:flex;flex-direction:column;margin:12px 16px 0;
-  border-radius:16px;overflow:hidden;
-  box-shadow:0 4px 16px var(--modal-shadow),0 0 0 0.5px var(--modal-border);
-}
-.ss-compact-row {
-  display:flex;align-items:center;gap:12px;padding:14px 16px;
-  background:var(--modal-bg);border-bottom:0.5px solid var(--modal-border);
-}
-.ss-compact-row:last-child { border-bottom:none; }
-.ss-compact-lbl {
-  font-size:14px;font-weight:600;color:var(--modal-text);
-  white-space:nowrap;min-width:88px;flex-shrink:0;
-}
-.ss-compact-divider { width:1px;height:20px;background:var(--modal-border);flex-shrink:0; }
-.ss-compact-input {
-  flex:1;border:none;outline:none;background:transparent;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:15px;font-weight:400;color:var(--modal-text);
-}
-.ss-compact-input::placeholder { color:var(--modal-text-secondary); }
+/* Toggle CSS : liste statique ↔ chips selon valeur input (via :has) */
+.ss-acc-panel:has(#ssMatiereInput:placeholder-shown) .ss-mat-chips { display:none; }
+.ss-acc-panel:has(#ssMatiereInput:not(:placeholder-shown)) .ss-mat-chips { display:flex; }
+.ss-acc-panel:has(#ssMatiereInput:placeholder-shown) .ss-subject-list { display:flex; }
+.ss-acc-panel:has(#ssMatiereInput:not(:placeholder-shown)) .ss-subject-list { display:none; }
 
 /* Bouton géoloc */
 .ss-geo-btn {
@@ -3068,8 +3088,7 @@ html.dk .pill-icon { color:var(--ink); }
 /* ── Footer ── */
 .ss-footer {
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
-  margin-top:auto;
+  padding:14px 0 0;margin-top:16px;
 }
 .ss-clear-btn {
   background:transparent;border:none;cursor:pointer;

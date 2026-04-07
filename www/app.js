@@ -11718,6 +11718,31 @@ function closeSmartSearch(){
   if(ov){ov.classList.remove('open');setTimeout(function(){ov.style.display='none';},380);}
   document.body.style.overflow='';
 }
+// ── ACCORDÉON MATIÈRE ──
+function _ssToggleMatiere(){
+  var panel=g('ssPanelMatiere');if(!panel)return;
+  var opening=!panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if(opening){
+    setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},340);
+    _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
+  }
+}
+function _ssEnsureMatiereOpen(){
+  var panel=g('ssPanelMatiere');
+  if(panel&&!panel.classList.contains('open'))_ssToggleMatiere();
+}
+function _ssSelectMatiere(label){
+  _ssPickMatiere(label);
+  _ssUpdateMatLabel(label);
+  var panel=g('ssPanelMatiere');
+  if(panel){panel.classList.remove('open');}
+}
+function _ssUpdateMatLabel(val){
+  var el=g('ssMatLabel');if(!el)return;
+  if(val){el.textContent=val;el.classList.add('selected');}
+  else{el.textContent='Quelle matière\u00a0?';el.classList.remove('selected');}
+}
 
 function _ssSearch(){
   var mat=(g('ssMatiereInput')?g('ssMatiereInput').value.trim():'');
