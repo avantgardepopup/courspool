@@ -4366,7 +4366,7 @@ function _mpfSetEnrolled(enrolled){
   var tpTabEsp=g('tpTabEspace');
   var tpCode=g('tpEspaceCode');
   var tpContent=g('tpEspaceContent');
-  if(tpTabEsp)tpTabEsp.style.display=enrolled?'block':'none';
+  // tpTabEspace toujours visible, seul le contenu change
   if(tpCode)tpCode.style.display=enrolled?'none':'block';
   if(tpContent)tpContent.style.display=enrolled?'block':'none';
   if(enrolled&&pid){
@@ -4404,8 +4404,10 @@ function openPrFull(pid){
   var cl=g('tpContactLabel');if(cl){var _pr=displayNm.split(' ')[0];cl.textContent='Contacter '+(_pr||displayNm);}
   // Espace title
   var et=g('tpEspaceTitle');if(et){var _pr2=displayNm.split(' ')[0];et.textContent='Espace privé de '+(_pr2||displayNm);}
-  // Verified badge
-  var vb=g('tpVerifBadge');if(vb)vb.style.display=(p.verified===true||p.verified==='true')?'flex':'none';
+  // Follow badge (show for all profiles except own)
+  var isOwnProfile=!!(user&&pid===user.id);
+  var vb=g('tpVerifBadge');if(vb)vb.style.display=isOwnProfile?'none':'flex';
+  _setMpfFollowBtn(fol.has(pid));
   // Stats
   var _nbCours=cours.filter(function(x){return!_isCoursPass(x);}).length;
   var _nbD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
@@ -4467,8 +4469,6 @@ function openPrFull(pid){
     if(prof.statut&&g('tpSince')){g('tpSince').textContent=(STATUT[prof.statut]||prof.statut)+(prof.created_at?' · Membre depuis '+new Date(prof.created_at).getFullYear():'');}
     _tpRenderStatut(P[pid]);
     _tpBuildTrustCards(P[pid],pid);
-    // Verified badge update
-    if(g('tpVerifBadge'))g('tpVerifBadge').style.display=(prof.verified===true||prof.verified==='true')?'flex':'none';
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('tpStEleves'))g('tpStEleves').textContent=P[pid].e;}
     var _cl=g('tpContactLabel');if(_cl){var _pr3=(prof.prenom||_apiNm||displayNm).split(' ')[0];_cl.textContent='Contacter '+_pr3;}
@@ -6302,14 +6302,16 @@ function _setMpfFollowBtn(isFollowed){
       btn.style.background='';btn.style.borderColor='';btn.style.color='';
     }
   }
-  // New hero follow button
-  var heroBtn=g('tpFollowBtn'),heroLbl=g('tpFollowLbl'),heroIco=g('tpFollowIco');
-  if(heroBtn){
-    heroBtn.classList.toggle('following',isFollowed);
-    if(heroLbl)heroLbl.textContent=isFollowed?'Suivi':'Suivre';
-    if(heroIco){heroIco.innerHTML=isFollowed
-      ?'<polyline points="20 6 9 17 4 12"/>'
-      :'<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>';}
+  // Avatar follow badge
+  var badge=g('tpVerifBadge'),badgeIco=g('tpFollowBadgeIco');
+  if(badge){
+    badge.classList.toggle('following',isFollowed);
+    if(badgeIco){
+      badgeIco.innerHTML=isFollowed
+        ?'<polyline points="20 6 9 17 4 12"/>'
+        :'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+      badgeIco.setAttribute('stroke',isFollowed?'#E8611A':'#fff');
+    }
   }
 }
 

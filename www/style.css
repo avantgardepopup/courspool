@@ -3338,10 +3338,14 @@ html.cap-ios #bnavIpadBack.visible {
   font-size:26px;font-weight:800;color:#fff;overflow:hidden;
 }
 .tp-verifbadge{
-  position:absolute;bottom:0;right:0;width:24px;height:24px;
+  position:absolute;bottom:0;right:0;width:28px;height:28px;
   border-radius:50%;background:#E8611A;border:3px solid #fff;
   display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:opacity .15s,transform .1s;
 }
+.tp-verifbadge:active{opacity:.8;transform:scale(.92);}
+.tp-verifbadge.following{background:#fff;border-color:#E8611A;}
 .tp-name{font-size:22px;font-weight:700;color:#222;letter-spacing:-0.5px;line-height:1.2;}
 .tp-since{font-size:12px;color:#717171;margin-top:5px;}
 .tp-hero-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;}
