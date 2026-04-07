@@ -3162,86 +3162,57 @@
   </div>
 </div>
 
-<!-- ════ SMART SEARCH OVERLAY ════ -->
-<!-- Smart Search — Bottom Sheet -->
-<div id="smartSearchOverlay" class="search-overlay" style="display:none" onclick="if(event.target===this)closeSmartSearch()">
-  <div id="ssSheet" class="search-sheet">
+<!-- ════ SMART SEARCH MODAL ════ -->
+<div id="smartSearchOverlay" class="ss-overlay" style="display:none" onclick="if(event.target===this)closeSmartSearch()">
+  <div id="ssModal" class="ss-modal">
+    <div class="ss-grabber"></div>
+    <button class="ss-close-btn" onclick="closeSmartSearch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="ss-body" id="ssBody">
 
-    <!-- Grabber -->
-    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 16px"></div>
+      <!-- Section 1 : Matière -->
+      <div class="ss-section">
+        <div class="ss-sec-lbl">Matière
+          <svg viewBox="0 0 24 24" fill="none" stroke="#c0c0c0" stroke-width="2.5" stroke-linecap="round" width="10" height="10" style="margin-left:3px;vertical-align:middle"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <input id="ssMatiereInput" type="text" placeholder="Quelle matière ?" class="ss-sec-input" autocomplete="off" oninput="_ssOnMatiereInput(this.value)">
+        <div id="ssMatChips" class="ss-mat-chips"></div>
+      </div>
 
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 14px">
-      <div style="font-size:15px;font-weight:500;color:#222">Que cherches-tu ?</div>
-      <button onclick="closeSmartSearch()" style="width:28px;height:28px;border-radius:50%;background:#f2f2f2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
+      <!-- Section 2 : Professeur -->
+      <div class="ss-section">
+        <div class="ss-sec-lbl">Professeur</div>
+        <input id="ssProfInput" type="text" placeholder="Nom du professeur" class="ss-sec-input" autocomplete="off">
+      </div>
 
-    <!-- Input -->
-    <div id="ssInputSection" style="padding:0 16px 12px">
-      <div style="display:flex;align-items:center;gap:10px;border:0.5px solid #ccc;border-radius:10px;padding:10px 14px;background:#fff;transition:border-color .18s" id="ssInputWrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.2" stroke-linecap="round" width="15" height="15" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
-        <input id="ssInput" type="text" placeholder="Matière, professeur, mots-clés..."
-          style="flex:1;border:none;background:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-size:14px;color:#222;outline:none;min-width:0"
-          autocomplete="off" oninput="_ssOnInput(this.value)"
-          onfocus="g('ssInputWrap').style.borderColor='#E8611A'" onblur="g('ssInputWrap').style.borderColor='#ccc'">
-        <button id="ssClearBtn" onclick="_ssOnClear()" style="display:none;width:18px;height:18px;border-radius:50%;background:#bbb;border:none;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <!-- Section 3 : Lieu -->
+      <div class="ss-section">
+        <div class="ss-sec-lbl">Lieu</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="ssLieuInput" type="text" placeholder="Où ?" class="ss-sec-input" style="flex:1" autocomplete="off">
+          <button id="ssGeoBtn" class="ss-geo-btn" onclick="_ssRequestGeoloc()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 4 : Code privé -->
+      <div class="ss-section">
+        <div class="ss-sec-lbl">Code privé</div>
+        <input id="ssCodeInput" type="text" placeholder="Ex: ABC123" class="ss-sec-input ss-mono" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+      </div>
+
+      <!-- Footer -->
+      <div class="ss-footer">
+        <button class="ss-clear-btn" onclick="_ssClearAll()">Tout effacer</button>
+        <button class="ss-search-btn" onclick="_ssSearch()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="17" height="17"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+          Rechercher
         </button>
       </div>
+
     </div>
-
-    <!-- Panel Code privé -->
-    <div id="ssCodeSection" style="display:none;padding:0 16px 12px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="ssCodeInput" type="text" placeholder="Ex: ABC123"
-          style="flex:1;border:0.5px solid #ccc;border-radius:10px;padding:12px 14px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-size:16px;font-weight:700;outline:none;text-transform:uppercase;letter-spacing:.1em;text-align:center;color:#222;transition:border-color .18s"
-          oninput="this.value=this.value.toUpperCase()"
-          onfocus="this.style.borderColor='#E8611A'" onblur="this.style.borderColor='#ccc'">
-        <button onclick="_ssSubmitCode()" style="background:#E8611A;color:#fff;border:none;border-radius:10px;padding:12px 16px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-weight:500;font-size:14px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent">
-          Rejoindre
-        </button>
-      </div>
-    </div>
-
-    <!-- Géolocalisation -->
-    <div id="ssGeoRow" style="padding:0 16px 10px">
-      <button onclick="_ssUseGeoloc()" style="display:flex;align-items:center;gap:12px;background:none;border:0.5px solid #ddd;border-radius:10px;padding:10px 14px;width:100%;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;text-align:left;-webkit-tap-highlight-color:transparent">
-        <div style="width:36px;height:36px;border-radius:9px;background:#FFF0E8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
-        <div>
-          <div style="font-size:13px;font-weight:500;color:#222">Près de moi</div>
-          <div style="font-size:11px;color:#888;margin-top:1px">Utiliser ma position</div>
-        </div>
-      </button>
-    </div>
-
-    <!-- Label Matières -->
-    <div id="ssMatiereLabel" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;padding:0 16px;margin-bottom:8px">Matières populaires</div>
-
-    <!-- Suggestions / résultats -->
-    <div id="ssSuggestions" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
-      <div id="ssResultInfo" style="display:none;font-size:13px;color:#888;padding:8px 16px;text-align:center"></div>
-      <div id="ssQuickSugg"></div>
-    </div>
-
-    <!-- Lien Code privé -->
-    <div id="ssCodeLink" style="padding:8px 16px 4px;text-align:center">
-      <button onclick="_setSearchTab('code')" style="background:none;border:none;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-size:13px;color:#666;-webkit-tap-highlight-color:transparent">
-        Tu as un code privé ?&nbsp;<span style="color:#E8611A;font-weight:500">Entrer le code →</span>
-      </button>
-    </div>
-
-    <!-- Bouton Rechercher -->
-    <div style="padding:8px 16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px))">
-      <button onclick="closeSmartSearch()" style="width:100%;background:#E8611A;color:#fff;border:none;border-radius:12px;height:48px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-weight:500;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
-        <span id="ssResultBtn">Rechercher</span>
-      </button>
-    </div>
-
   </div>
 </div>
 
