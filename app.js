@@ -11719,11 +11719,16 @@ function openSmartSearch(){
   if(existing){var mi=g('ssMatiereInput');if(mi&&!mi.value)mi.value=existing;}
   _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
   setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},220);
-  // Scroll focused card into view above keyboard
-  ov.querySelectorAll('.ss-pill-input').forEach(function(inp){
+  // Scroll: place the focused card near the top so all subsequent cards are visible below
+  function _ssScrollToCard(card){
+    if(!card)return;
+    // card.offsetTop is relative to the overlay (first positioned ancestor)
+    var target=card.offsetTop-72; // 72px ≈ top bar height + small margin
+    ov.scrollTo({top:Math.max(0,target),behavior:'smooth'});
+  }
+  ov.querySelectorAll('.ss-pill-input,.ss-sec-input').forEach(function(inp){
     inp.addEventListener('focus',function(){
-      var card=inp.closest('.ss-card');if(!card)return;
-      setTimeout(function(){card.scrollIntoView({block:'nearest',behavior:'smooth'});},320);
+      setTimeout(function(){_ssScrollToCard(inp.closest('.ss-card'));},280);
     },{passive:true});
   });
   document.body.style.overflow='hidden';
