@@ -528,9 +528,8 @@ function buildMesProfs(){
   var html='';
   // Section : inscrits via code
   if(enrolledProfs.length){
-    html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 20px 8px">Espaces rejoints</div>'
-      +'<div style="background:var(--wh);border-radius:20px;overflow:hidden;margin:0 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">';
-    enrolledProfs.forEach(function(ep,idx){
+    html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 20px 8px">Espaces rejoints</div>';
+    enrolledProfs.forEach(function(ep){
       var p=P[ep.id]||{};
       var nm=p.nm||ep.nm||'Professeur';
       var ini=(p.i||ep.ini||nm[0]||'?').toUpperCase();
@@ -538,26 +537,21 @@ function buildMesProfs(){
       var photo=p.photo||ep.photo||null;
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
-      var cours=C.filter(function(x){return x.pr===ep.id;});
-      var nbNext=cours.filter(function(c){return!_isCoursPass(c)&&c.fl<c.sp;}).length;
-      var border=idx<enrolledProfs.length-1?'border-bottom:1px solid rgba(0,0,0,.05)':'';
-      html+='<div onclick="openProfEspace(\''+ep.id+'\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;'+border+';-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openEspaceEleve(\''+ep.id+'\')" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
-        +'<div style="font-size:12px;color:var(--or);margin-top:3px;font-weight:600">Espace inscrit'+(nbNext?' &middot; '+nbNext+' cours à venir':'')+'</div>'
+        +'<div style="font-size:12px;color:var(--or);margin-top:3px;font-weight:600">Espace inscrit</div>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>'
         +'</div>';
       _fetchProf(ep.id);
     });
-    html+='</div>';
   }
   // Section : suivis (sans espace)
   if(folIds.length){
-    html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 20px 8px">Suivis</div>'
-      +'<div style="background:var(--wh);border-radius:20px;overflow:hidden;margin:0 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)">';
-    folIds.forEach(function(pid,idx){
+    html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 20px 8px">Suivis</div>';
+    folIds.forEach(function(pid){
       var p=P[pid]||{};
       var cours=C.filter(function(x){return x.pr===pid;});
       if(cours.length&&!p.nm){p={nm:cours[0].prof_nm||'Professeur',i:cours[0].prof_ini||'?',col:cours[0].prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:cours[0].prof_photo||null};P[pid]=p;}
@@ -566,8 +560,7 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
-      var border=idx<folIds.length-1?'border-bottom:1px solid rgba(0,0,0,.05)':'';
-      html+='<div onclick="openPrFull(\''+pid+'\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;'+border+';-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openPrFull(\''+pid+'\')" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(fresh?esc(p.nm||'Professeur'):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>')+'</div>'
@@ -577,7 +570,6 @@ function buildMesProfs(){
         +'</div>';
       _fetchProf(pid);
     });
-    html+='</div>';
   }
   carousel.innerHTML=html;
 }
@@ -585,6 +577,138 @@ function buildMesProfs(){
 function openProfEspace(pid){
   _mpfAutoSwitchEspace=true;
   openPrFull(pid);
+}
+
+var _eleveEspPid=null;
+
+function openEspaceEleve(pid){
+  _eleveEspPid=pid;
+  haptic(4);
+  // Reset cards
+  ['eleveCard1','eleveCard2','eleveCard3'].forEach(function(id){var c=g(id);if(c)c.classList.remove('open');});
+  // Prof header
+  var p=P[pid]||{};
+  var nm=p.nm||'Professeur';
+  var ini=(p.i||nm[0]||'?').toUpperCase();
+  var col=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var photo=p.photo||null;
+  var avHtml=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':ini;
+  var avBg=photo?'none':col;
+  var nmEl=g('eleveEspNm');if(nmEl)nmEl.textContent=nm;
+  var hdEl=g('eleveEspProfHd');
+  if(hdEl){
+    hdEl.innerHTML='<div style="width:52px;height:52px;border-radius:50%;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0">'+avHtml+'</div>'
+      +'<div><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+esc(nm)+'</div>'
+      +'<div style="font-size:13px;color:var(--or);font-weight:600;margin-top:2px">Espace inscrit</div></div>';
+  }
+  // Show page
+  var bd=g('bdEspaceEleve');if(bd){bd.style.display='flex';}
+  _fetchProf(pid);
+}
+
+function closeEspaceEleve(){
+  var bd=g('bdEspaceEleve');
+  if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
+}
+
+function toggleEleveCard(id,section){
+  var card=g(id);if(!card)return;
+  var opening=!card.classList.contains('open');
+  card.classList.toggle('open',opening);
+  haptic(4);
+  var pid=_eleveEspPid;if(!pid)return;
+  if(opening){
+    if(section==='cours')_loadEleveEspCours(pid);
+    if(section==='pubs')_loadEleveEspPubs(pid);
+    if(section==='fiches')_loadEleveEspFiches(pid);
+  }
+}
+
+function _loadEleveEspCours(pid){
+  var el=g('eleveEspCours');if(!el)return;
+  var cours=C.filter(function(c){return c.pr===pid&&!_isCoursPass(c)&&c.fl<c.sp;});
+  if(!cours.length){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--lite);font-size:13px">Aucun cours disponible pour le moment</div>';return;}
+  el.innerHTML=cours.map(function(c){
+    var mat=findMatiere(c.subj||'')||{color:'var(--or)',bg:'var(--orp)'};
+    var isV=c.mode==='visio';
+    var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
+    return'<div onclick="closeEspaceEleve();setTimeout(function(){openR(\''+escH(c.id)+'\');},250);" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05);cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      +'<div style="width:40px;height:40px;border-radius:12px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mat.color+'"></div></div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
+      +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(c.dt)+'</div></div>'
+      +'<div style="font-size:15px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'€</div>'
+      +'<span style="font-size:10px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 8px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+function _loadEleveEspPubs(pid){
+  var el=g('eleveEspPubs');if(!el)return;
+  var p=P[pid]||{};
+  var profNm=p.nm||'Prof';
+  var profIni=(profNm[0]||'?').toUpperCase();
+  var profCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
+  var profPhoto=p.photo||null;
+  var avInner=profPhoto?'<img src="'+esc(profPhoto)+'" alt="">':'<span>'+profIni+'</span>';
+  el.innerHTML='<div class="skeleton" style="height:70px;border-radius:12px;margin-bottom:8px"></div>';
+  fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    if(_eleveEspPid!==pid)return;
+    var pubs=(list||[]).filter(function(a){return a.type!=='fiche';});
+    if(!pubs.length){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--lite);font-size:13px">Aucune publication pour le moment</div>';return;}
+    el.innerHTML=pubs.slice(0,5).map(function(a){
+      var body=a.content&&a.content.trim().startsWith('<')?a.content:'<p>'+esc(a.content)+'</p>';
+      return'<div class="forum-post" style="margin-bottom:8px">'
+        +'<div class="forum-post-hd"><div class="forum-post-av" style="background:'+profCol+'">'+avInner+'</div>'
+        +'<div><div class="forum-post-nm">'+esc(profNm)+'</div><div class="forum-post-date">'+_espAnnDateStr(a.created_at)+'</div></div></div>'
+        +'<div class="forum-post-body">'+body+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:8px 0">Erreur de chargement</div>';});
+}
+
+function _loadEleveEspFiches(pid){
+  var el=g('eleveEspFiches');if(!el)return;
+  el.innerHTML='<div class="skeleton" style="height:50px;border-radius:12px;margin-bottom:8px"></div>';
+  fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    if(_eleveEspPid!==pid)return;
+    var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
+    var fiches=(list||[]).filter(function(a){return a.type==='fiche'||_fIds.has(String(a.id));});
+    if(!fiches.length){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--lite);font-size:13px">Aucune fiche disponible</div>';return;}
+    el.innerHTML=fiches.map(function(f){
+      var titre=f.title||'Fiche de cours';
+      return'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05);cursor:pointer;-webkit-tap-highlight-color:transparent" onclick="espOpenFicheEleve(\''+pid+'\',\''+escH(f.id)+'\')">'
+        +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(titre)+'</div></div>'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:8px 0">Erreur de chargement</div>';});
+}
+
+function espOpenFicheEleve(pid,id){
+  haptic(4);
+  var bd=document.createElement('div');
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;animation:mi .28s cubic-bezier(.32,1,.6,1)';
+  sheet.innerHTML='<div style="padding:12px 16px 0;text-align:center"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="padding:16px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0">'
+    +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+    +'<div id="_ficheELTitle" style="flex:1;font-size:16px;font-weight:800;color:var(--ink)">Chargement\u2026</div>'
+    +'<button onclick="this.closest(\'[style*=inset:0]\').remove()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div>'
+    +'<div id="_ficheELBody" style="flex:1;overflow-y:auto;padding:20px;-webkit-overflow-scrolling:touch"><div style="display:flex;justify-content:center;padding:40px"><div class="cp-loader"></div></div></div>'
+    +'<div style="padding:12px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px));flex-shrink:0"></div>';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  bd.appendChild(sheet);document.body.appendChild(bd);
+  fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
+    var f=(list||[]).find(function(a){return String(a.id)===String(id);});
+    var titleEl=document.getElementById('_ficheELTitle');
+    var bodyEl=document.getElementById('_ficheELBody');
+    if(!f){if(bodyEl)bodyEl.innerHTML='<div style="text-align:center;padding:32px;color:var(--lite)">Fiche introuvable</div>';return;}
+    if(titleEl)titleEl.textContent=f.title||'Fiche de cours';
+    if(bodyEl)bodyEl.innerHTML=f.content||'<div style="text-align:center;padding:32px;color:var(--lite)">Fiche vide</div>';
+  }).catch(function(){var bodyEl=document.getElementById('_ficheELBody');if(bodyEl)bodyEl.innerHTML='<div style="text-align:center;padding:32px;color:var(--lite)">Erreur</div>';});
 }
 
 function openEnrollSheet(){
@@ -608,6 +732,14 @@ function openEnrollSheet(){
   inp&&inp.addEventListener('focus',function(){inp.style.borderColor='var(--or)';});
   inp&&inp.addEventListener('blur',function(){inp.style.borderColor='var(--bdr)';});
   bd.appendChild(sheet);document.body.appendChild(bd);
+  // Keyboard responsiveness
+  var _ekbShow=function(e){var h=(e&&e.keyboardHeight)||0;sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s';};
+  var _ekbHide=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';sheet.style.transition='padding-bottom .22s';};
+  window.addEventListener('keyboardWillShow',_ekbShow);
+  window.addEventListener('keyboardWillHide',_ekbHide);
+  if(window.visualViewport){window.visualViewport.addEventListener('resize',function(){var vh=window.visualViewport.height;var diff=window.innerHeight-vh;if(diff>100){sheet.style.paddingBottom=(diff+16)+'px';}else{sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';}},{passive:true});}
+  var _origClose=function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);};
+  bd.addEventListener('click',function(e){if(e.target===bd)_origClose();});
 }
 
 function submitEnrollSheet(){
