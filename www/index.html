@@ -1817,32 +1817,29 @@
       </div>
       <!-- Espace content (when enrolled) -->
       <div id="tpEspaceContent" style="display:none">
-        <div class="esp2-card" onclick="openEspPubs()">
-          <div class="esp2-card-hd" style="cursor:pointer">
-            <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
-            <div style="flex:1"><div class="esp2-title">Publications</div><div class="esp2-sub">Annonces de votre professeur</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+        <div class="tp-esp-group">
+          <div class="tp-esp-row" onclick="openEspPubs()">
+            <div class="tp-esp-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
+            <div class="tp-esp-text"><div class="tp-esp-title">Publications</div><div class="tp-esp-sub">Annonces de votre professeur</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-        </div>
-        <div class="esp2-card" onclick="openElveBibliotheque(_curPrFull)" style="cursor:pointer">
-          <div class="esp2-card-hd" style="pointer-events:none">
-            <div class="esp2-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
-            <div style="flex:1"><div class="esp2-title">Bibliothèque</div><div class="esp2-sub">Fiches et ressources du prof</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="tp-esp-sep"></div>
+          <div class="tp-esp-row" onclick="openElveBibliotheque(_curPrFull)">
+            <div class="tp-esp-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+            <div class="tp-esp-text"><div class="tp-esp-title">Bibliothèque</div><div class="tp-esp-sub">Fiches et ressources du prof</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-        </div>
-        <div class="esp2-card" onclick="openSendDocSheet()" style="cursor:pointer">
-          <div class="esp2-card-hd" style="pointer-events:none">
-            <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-            <div style="flex:1"><div class="esp2-title">Envoyer un document</div><div class="esp2-sub">Partagez un fichier avec votre prof</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="tp-esp-sep"></div>
+          <div class="tp-esp-row" onclick="openSendDocSheet()">
+            <div class="tp-esp-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="tp-esp-text"><div class="tp-esp-title">Envoyer un document</div><div class="tp-esp-sub">Partagez un fichier avec votre prof</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-        </div>
-        <div class="esp2-card" onclick="contPrFull()">
-          <div class="esp2-card-hd" style="cursor:pointer">
-            <div class="esp2-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-            <div style="flex:1"><div class="esp2-title">Écrire au professeur</div><div class="esp2-sub">Envoyer un message direct</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="tp-esp-sep"></div>
+          <div class="tp-esp-row" onclick="contPrFull()">
+            <div class="tp-esp-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+            <div class="tp-esp-text"><div class="tp-esp-title">Écrire au professeur</div><div class="tp-esp-sub">Message direct</div></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>
       </div>
