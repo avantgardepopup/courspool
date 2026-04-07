@@ -864,15 +864,7 @@
   </div>
 
   <!-- PAGE MES PROFS -->
-  <div class="pg" id="pgMesProfs" style="padding-top:0">
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 8px">
-      <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Mes Profs</div>
-      <button onclick="openEnrollSheet()" style="display:flex;align-items:center;gap:6px;background:var(--or);color:#fff;border:none;border-radius:50px;padding:9px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Rejoindre
-      </button>
-    </div>
+  <div class="pg" id="pgMesProfs" style="padding-top:0;padding-bottom:100px">
     <!-- Empty state -->
     <div id="mesProfsEmpty" style="display:none;text-align:center;padding:48px 24px 32px;width:100%;box-sizing:border-box">
       <div style="width:88px;height:88px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">
@@ -884,6 +876,13 @@
     </div>
     <!-- Liste des profs -->
     <div id="mesProfsCarousel"></div>
+    <!-- Bouton flottant -->
+    <div style="position:fixed;bottom:0;left:0;right:0;z-index:50;display:flex;justify-content:center;padding-bottom:max(18px,calc(env(safe-area-inset-bottom,0px) + 68px));pointer-events:none">
+      <button onclick="openEnrollSheet()" style="pointer-events:all;display:flex;align-items:center;gap:7px;background:var(--or);color:#fff;border:none;border-radius:50px;padding:11px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.4);-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Rejoindre un espace
+      </button>
+    </div>
   </div>
 
   <!-- ESPACE ÉLÈVE (vue d'un espace prof) -->
@@ -921,7 +920,7 @@
       <div class="esp2-card" id="eleveCard3">
         <div class="esp2-card-hd" onclick="toggleEleveCard('eleveCard3','fiches')">
           <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
-          <div style="flex:1"><div class="esp2-title">Fiches de cours</div><div class="esp2-sub">Documents partagés par ton prof</div></div>
+          <div style="flex:1"><div class="esp2-title">Bibliothèque</div><div class="esp2-sub">Documents partagés par ton prof</div></div>
           <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="esp2-card-body"><div id="eleveEspFiches"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div></div>
@@ -1753,6 +1752,8 @@
       <div class="mpf-white-block">
         <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.65;margin:0"></p>
       </div>
+      <!-- Infos pro (formations, expériences, lieu, statut) -->
+      <div id="mpfExtraInfo"></div>
       <!-- Matières -->
       <div id="mpfTagsSection" style="display:none">
         <div class="mpf-section-lbl" data-i18n="mp_matieres">Matières</div>
@@ -1802,8 +1803,8 @@
         <div class="esp2-card-hd" onclick="toggleEsp2Card('espCardCours','cours')">
           <div class="esp2-ico" style="background:#EEF2FF">📚</div>
           <div style="flex:1">
-            <div class="esp2-title">Cours & Ressources</div>
-            <div class="esp2-sub">Contenus partagés par le prof</div>
+            <div class="esp2-title">Bibliothèque</div>
+            <div class="esp2-sub">Fiches et ressources du prof</div>
           </div>
           <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
