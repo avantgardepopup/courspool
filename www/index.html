@@ -20,7 +20,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" id="themeColorMeta" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#131110" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
 <title>CoursPool</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
@@ -561,42 +561,34 @@
         <div class="mob-sub" id="mobSub" data-i18n="exp_subtitle">Cours près de vous</div>
       </div>
       <div class="mob-actions">
-        <button id="btnRefresh" onclick="haptic([10,40,10]);var ico=this.querySelector('svg');ico.style.animation='cpSpin .6s linear';loadData().then(function(){buildCards();ico.style.animation='';toast('Actualisé','');})" style="display:none;background:var(--bg);color:var(--mid);border:1px solid var(--bdr);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;margin-right:4px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        </button>
         <button id="btnProposerMob" style="display:none!important"></button>
         <div class="tav-btn" id="tavMob" onclick="navTo('acc')" title="Mon compte" style="width:36px;height:36px;">?</div>
       </div>
     </div>
-    <!-- Barre de recherche — dans le header sticky pour ne jamais être cachée -->
-    <div id="mobSearch" style="padding:8px 0 4px">
-      <div class="search-bar-premium">
-        <div class="search-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <!-- Barre de recherche — dans le header sticky -->
+    <div id="mobSearch" style="padding:8px 0 6px">
+      <!-- Inputs cachés maintenus pour compatibilité avec doFilter(), clearSearch(), etc. -->
+      <input type="text" id="mobSearchInput" style="display:none" autocomplete="off"
+        oninput="this._t=this.value;var s=g('srch');if(s)s.value=this._t;doFilter();">
+      <button id="searchClearBtn" style="display:none"></button>
+      <div id="searchCodeSuggestion" style="display:none"></div>
+      <div id="searchAliasSuggestion" style="display:none"></div>
+
+      <div style="display:flex;align-items:center;gap:10px">
+        <!-- Pill de recherche cliquable -->
+        <div id="searchPill" onclick="openSmartSearch('cours')" style="flex:1;display:flex;align-items:center;gap:10px;background:var(--wh);border-radius:18px;padding:11px 14px;border:1.5px solid var(--bdr);box-shadow:0 2px 10px rgba(0,0,0,.07);cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;min-width:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.2" stroke-linecap="round" width="17" height="17" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <div id="searchPillMain" style="flex:1;font-size:15px;font-weight:500;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rechercher un cours...</div>
+          <button id="searchPillClear" onclick="event.stopPropagation();clearSearchPill()" style="display:none;width:22px;height:22px;border-radius:50%;background:var(--bdr);border:none;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
-        <input type="text" id="mobSearchInput" class="search-input-premium"
-          data-i18n-ph="exp_search_ph" placeholder="Matière, professeur, code privé…"
-          autocomplete="off"
-          oninput="this._t=this.value;var s=document.getElementById('srch');if(s)s.value=this._t;doFilter();document.getElementById('searchClearBtn').style.display=this._t?'flex':'none'">
-        <button id="searchClearBtn" class="search-clear-btn" onclick="clearSearch()" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <!-- Bouton Filtres -->
+        <button id="filtersBtn" onclick="openAllFiltersSheet()" style="position:relative;background:var(--wh);border:1.5px solid var(--bdr);border-radius:14px;padding:10px 13px;display:flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.05);font-family:inherit;flex-shrink:0;transition:all .18s;-webkit-tap-highlight-color:transparent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          <span style="font-size:13px;font-weight:600;color:var(--mid)">Filtres</span>
+          <div id="filtersBadge" style="display:none;position:absolute;top:-7px;right:-7px;background:var(--or);color:#fff;font-size:9px;font-weight:800;min-width:17px;height:17px;border-radius:50%;align-items:center;justify-content:center;border:2px solid var(--wh);padding:0 2px">0</div>
         </button>
-      </div>
-      <!-- Suggestion code privé -->
-      <div id="searchCodeSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin:4px 4px 0;border:1px solid rgba(255,107,43,.2)">
-        <span class="code-label" style="font-size:13px;color:var(--mid);flex:1">🔒 <span data-i18n="exp_private">Code privé détecté</span></span>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="acceptCodeSearch()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent" data-i18n="exp_join">Rejoindre</button>
-          <button onclick="denyCodeSearch()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent" data-i18n="exp_ignore">Ignorer</button>
-        </div>
-      </div>
-      <!-- Suggestion alias recherche -->
-      <div id="searchAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin:4px 4px 0;border:1px solid rgba(255,107,43,.2)">
-        <span class="alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="acceptAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Oui</button>
-          <button onclick="denyAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent">Non</button>
-        </div>
       </div>
     </div>
   </div>
@@ -1288,17 +1280,20 @@
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
             <div class="esp2-card-body">
-              <div style="display:flex;gap:8px;margin-bottom:10px">
+              <div style="display:flex;gap:8px;margin-bottom:8px">
                 <button onclick="openEspEditor()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                  Nouvelle
+                  Publier
                 </button>
-                <button onclick="openMesPublications()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  Voir tout
+                <button onclick="openSondageSheet()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                  Sondage
                 </button>
               </div>
-              <div id="espAnnonces"><div style="color:var(--lite);font-size:13px;padding:8px 0">Chargement…</div></div>
+              <button onclick="openMesPublications()" class="esp-biblio-btn esp-biblio-btn-prim">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Voir mes publications
+              </button>
             </div>
           </div>
 
@@ -1441,6 +1436,29 @@
                 <input type="hidden" id="pfMatieresVal">
               </div>
 
+            </div>
+          </div>
+
+          <!-- Formations & Expériences -->
+          <div id="pfFormationsExtra" style="display:none">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Parcours</div>
+            <div class="pref-group" style="padding:14px 16px;display:flex;flex-direction:column;gap:14px">
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <div class="pref-icon" style="background:#EEF2FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Formations & Diplômes</span>
+                </div>
+                <textarea id="pfFormations" rows="3" placeholder="Une formation par ligne&#10;Ex: Master Mathématiques – Sorbonne&#10;Ex: CAPES Mathématiques" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;outline:none;background:var(--bg);resize:none;color:var(--ink);line-height:1.6;box-sizing:border-box;transition:border-color .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+                <div style="font-size:11px;color:var(--lite);margin-top:4px">Une formation par ligne</div>
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>
+                  <span style="font-size:15px;font-weight:500;color:var(--ink)">Expériences</span>
+                </div>
+                <textarea id="pfExperiences" rows="3" placeholder="Une expérience par ligne&#10;Ex: Professeur au lycée Carnot – 5 ans&#10;Ex: Formateur en entreprise" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;outline:none;background:var(--bg);resize:none;color:var(--ink);line-height:1.6;box-sizing:border-box;transition:border-color .18s" onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'"></textarea>
+                <div style="font-size:11px;color:var(--lite);margin-top:4px">Une expérience par ligne</div>
+              </div>
             </div>
           </div>
 
@@ -1701,13 +1719,13 @@
 <!-- PROFIL PROF COMPLET (style Avilio) -->
 <div id="bdPrFull" style="display:none">
 
-  <!-- Barre haut -->
+  <!-- Barre haut : retour + nom centré + suivre -->
   <div id="mpfTopBar">
-    <button onclick="closePrFull()" style="background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);flex-shrink:0">
+    <button onclick="closePrFull()" class="mpf-back-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div id="mpfTopTitle"></div>
-    <button id="bFPFull" onclick="togFPFull()" style="background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:5px;transition:all .18s;flex-shrink:0">
+    <div id="mpfTopTitle" class="mpf-top-title"></div>
+    <button id="bFPFull" onclick="togFPFull()" class="mpf-follow-topbtn">
       <span id="bFPFullT"></span>
     </button>
   </div>
@@ -1715,22 +1733,31 @@
   <!-- Contenu scrollable -->
   <div id="mpfScroll">
 
-    <!-- Header card : avatar + infos (style Avilio) -->
-    <div id="mpfHeaderCard">
-      <div id="mpfAvWrap"></div>
-      <div id="mpfHeaderInfo">
-        <div id="mpfInfoNm"></div>
-        <div id="mpfInfoRl"></div>
-        <div id="mpfRating" style="display:none">
-          <span id="mpfRatingStars" style="color:#FBBF24;font-size:13px"></span>
-          <span id="mpfRatingNum" style="font-size:13px;font-weight:700;color:var(--ink)"></span>
-          <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
-        </div>
-        <div id="mpfInfoBadges"></div>
+    <!-- HERO : avatar centré + nom + rôle + rating + badges -->
+    <div class="mpf-hero">
+      <div id="mpfAvWrap" class="mpf-hero-av"></div>
+      <div id="mpfInfoNm" class="mpf-hero-nm"></div>
+      <div id="mpfInfoRl" class="mpf-hero-rl"></div>
+      <div id="mpfRating" style="display:none;align-items:center;justify-content:center;gap:6px;margin-top:8px">
+        <span id="mpfRatingStars" style="color:#FBBF24;font-size:14px;letter-spacing:.03em"></span>
+        <span id="mpfRatingNum" style="font-size:14px;font-weight:700;color:var(--ink)"></span>
+        <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
+      </div>
+      <div id="mpfInfoBadges" class="mpf-hero-badges"></div>
+      <!-- Action buttons iOS-style -->
+      <div id="mpfHeroActions" class="mpf-hero-actions">
+        <button id="mpfMsgBtn" onclick="openMsg(g('mpfInfoNm').textContent,_curPrFull,(g('mpfAvWrap')._photo||null));closePrFull()" class="mpf-action-btn mpf-action-sec">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Message
+        </button>
+        <button id="mpfHeroFollowBtn" onclick="togFPFull()" class="mpf-action-btn mpf-action-pri">
+          <svg id="mpfHeroFollowIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <span id="mpfHeroFollowLbl">Suivre</span>
+        </button>
       </div>
     </div>
 
-    <!-- Stats -->
+    <!-- STATS : 4 colonnes séparées -->
     <div id="mpfStats">
       <div class="mpf-stat"><div id="mpfStC" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_cours">Cours</div></div>
       <div class="mpf-stat"><div id="mpfStE" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_eleves">Élèves</div></div>
@@ -1738,31 +1765,30 @@
       <div class="mpf-stat"><div id="mpfStN" class="mpf-stat-num">—</div><div class="mpf-stat-lbl" data-i18n="mp_note">Note</div></div>
     </div>
 
-    <!-- Tabs collants -->
+    <!-- TABS : style segment pill -->
     <div id="mpfTabBar">
-      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')" data-i18n="mp_tab_profil">PROFIL</button>
-      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')" data-i18n="mp_prochains">COURS</button>
-      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none">ESPACE</button>
+      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')">Profil</button>
+      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')">Cours</button>
+      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none">Espace</button>
     </div>
 
     <!-- ── PANEL PROFIL ── -->
-    <div id="mpfPanelProfil">
+    <div id="mpfPanelProfil" style="padding-bottom:20px">
       <!-- Bio -->
-      <div class="mpf-section-lbl" data-i18n="mp_about">À propos</div>
-      <div class="mpf-white-block">
-        <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.65;margin:0"></p>
+      <div class="mpf-sec-lbl">À propos</div>
+      <div style="background:var(--wh);border-radius:16px;padding:14px 16px;margin:0 16px 6px">
+        <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.7;margin:0"></p>
+      </div>
+      <!-- Matières (chips style explorer) -->
+      <div id="mpfTagsSection" style="display:none;padding:0 16px 4px">
+        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:7px;padding-top:10px"></div>
       </div>
       <!-- Infos pro (formations, expériences, lieu, statut) -->
       <div id="mpfExtraInfo"></div>
-      <!-- Matières -->
-      <div id="mpfTagsSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mp_matieres">Matières</div>
-        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px"></div>
-      </div>
-      <!-- Code accès (si pas encore élève) -->
-      <div id="mpfCodeSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mpf_code_titre">Code d'accès</div>
-        <div id="mpfCodeCard" style="background:var(--wh);border-radius:16px;padding:16px;margin:0 16px 8px">
+      <!-- Code accès -->
+      <div id="mpfCodeSection" style="display:none;margin:8px 16px 0">
+        <div class="mpf-sec-lbl" style="padding-left:0" data-i18n="mpf_code_titre">Code d'accès</div>
+        <div id="mpfCodeCard" style="background:var(--wh);border-radius:16px;padding:16px">
           <div style="font-size:13px;color:var(--lite);margin-bottom:12px" data-i18n="mpf_code_hint">Entrez le code de votre professeur pour accéder à son espace.</div>
           <div style="display:flex;gap:8px">
             <input id="mpfCodeInput" class="mpf-code-input" placeholder="EX: ABC123" maxlength="10">
@@ -1773,14 +1799,14 @@
       </div>
       <!-- Avis -->
       <div id="mpfAvisSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mp_avis">Avis des élèves</div>
-        <div id="mpfAvis"></div>
+        <div class="mpf-sec-lbl">Avis des élèves</div>
+        <div id="mpfAvis" style="padding:0 16px"></div>
       </div>
     </div>
 
     <!-- ── PANEL COURS ── -->
-    <div id="mpfPanelCours" hidden>
-      <div id="mpfCrs" style="padding:8px 0 0"></div>
+    <div id="mpfPanelCours" hidden style="padding:8px 16px 20px">
+      <div id="mpfCrs"></div>
     </div>
 
     <!-- ── PANEL ESPACE (élèves inscrits) ── -->
@@ -1866,7 +1892,8 @@
   <!-- Zone édition -->
   <div class="esp-ed-scroll">
     <input id="espEdTitleInp" type="text" placeholder="Titre de la fiche…" class="esp-ed-title-inp" style="display:none">
-    <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…"></div>
+    <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…" oninput="espUpdateCounter()"></div>
+    <div id="espAnnCounter" style="font-size:11px;color:var(--lite);text-align:right;padding:4px 18px 0;transition:color .15s">0 / 1500</div>
   </div>
   </div>
 </div>
@@ -3160,6 +3187,156 @@
       </button>
     </div>
     <div id="langPickerList" style="padding:0 0 max(20px,env(safe-area-inset-bottom,20px))"></div>
+  </div>
+</div>
+
+<!-- ════ SMART SEARCH OVERLAY ════ -->
+<!-- Smart Search — Bottom Sheet (Airbnb-style) -->
+<div id="smartSearchOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent" onclick="if(event.target===this)closeSmartSearch()">
+  <div id="ssSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--wh);border-radius:24px 24px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden">
+
+    <!-- Handle -->
+    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:12px auto 0;flex-shrink:0"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;flex-shrink:0">
+      <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Que cherches-tu ?</div>
+      <button onclick="closeSmartSearch()" style="width:32px;height:32px;border:none;border-radius:50%;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Input de recherche -->
+    <div id="ssInputSection" style="padding:0 16px 8px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:12px 14px;border:1.5px solid var(--bdr);transition:border-color .18s" id="ssInputWrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="ssInput" type="text" placeholder="Matière, professeur, mots-clés…"
+          style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;color:var(--ink);outline:none;min-width:0"
+          autocomplete="off" oninput="_ssOnInput(this.value)"
+          onfocus="g('ssInputWrap').style.borderColor='var(--or)'" onblur="g('ssInputWrap').style.borderColor='var(--bdr)'">
+        <button id="ssClearBtn" onclick="_ssOnClear()" style="display:none;width:20px;height:20px;border-radius:50%;background:var(--bdr);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel Code privé -->
+    <div id="ssCodeSection" style="display:none;padding:0 16px 8px;flex-shrink:0">
+      <div style="display:flex;gap:10px;align-items:center">
+        <input id="ssCodeInput" type="text" placeholder="Ex: ABC123"
+          style="flex:1;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 14px;font-family:inherit;font-size:17px;font-weight:700;outline:none;text-transform:uppercase;letter-spacing:.1em;text-align:center;background:var(--bg);color:var(--ink);transition:border-color .18s"
+          oninput="this.value=this.value.toUpperCase()"
+          onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
+        <button onclick="_ssSubmitCode()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">
+          Rejoindre
+        </button>
+      </div>
+    </div>
+
+    <!-- Suggestions / résultats (scrollable) -->
+    <div id="ssSuggestions" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 4px">
+      <div id="ssResultInfo" style="display:none;font-size:13px;color:var(--lite);margin-bottom:10px;text-align:center;background:var(--bg);border-radius:10px;padding:8px 12px;margin-top:4px"></div>
+      <div id="ssQuickSugg"></div>
+    </div>
+
+    <!-- Lien Code privé -->
+    <div id="ssCodeLink" style="padding:6px 16px 2px;flex-shrink:0;text-align:center">
+      <button onclick="_setSearchTab('code')" style="background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--mid);padding:6px;-webkit-tap-highlight-color:transparent">
+        Tu as un code privé ?&nbsp;<span style="color:var(--or);font-weight:600">Entrer le code →</span>
+      </button>
+    </div>
+
+    <!-- Footer : bouton Rechercher -->
+    <div style="padding:10px 16px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));flex-shrink:0">
+      <button onclick="closeSmartSearch()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span id="ssResultBtn">Rechercher</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ ALL FILTERS SHEET ════ -->
+<div id="bdAllFilters" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:600;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAllFiltersSheet()">
+  <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:mi .25s ease">
+    <!-- Handle + titre -->
+    <div style="position:sticky;top:0;background:var(--wh);z-index:2;border-radius:24px 24px 0 0;border-bottom:1px solid var(--bdr)">
+      <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px">
+        <div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Filtres</div>
+        <button onclick="closeAllFiltersSheet()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 0">
+      <!-- Format -->
+      <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Format du cours</div>
+        <div style="display:flex;gap:8px" id="afModeRow">
+          <button class="af-pill on" data-val="" onclick="afSetMode('',this)">Tous</button>
+          <button class="af-pill" data-val="presentiel" onclick="afSetMode('presentiel',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Présentiel
+          </button>
+          <button class="af-pill" data-val="visio" onclick="afSetMode('visio',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            Visio
+          </button>
+        </div>
+      </div>
+
+      <!-- Niveau -->
+      <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Niveau</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="afNivRow">
+          <button class="af-pill on" data-val="" onclick="afSetNiv('',this)">Tous</button>
+          <button class="af-pill" data-val="Primaire" onclick="afSetNiv('Primaire',this)">Primaire</button>
+          <button class="af-pill" data-val="Collège" onclick="afSetNiv('Collège',this)">Collège</button>
+          <button class="af-pill" data-val="Lycée" onclick="afSetNiv('Lycée',this)">Lycée</button>
+          <button class="af-pill" data-val="Bac+1/2" onclick="afSetNiv('Bac+1/2',this)">Bac+1/2</button>
+          <button class="af-pill" data-val="Bac+3/4" onclick="afSetNiv('Bac+3/4',this)">Bac+3/4</button>
+          <button class="af-pill" data-val="Bac+5" onclick="afSetNiv('Bac+5',this)">Bac+5</button>
+        </div>
+      </div>
+
+      <!-- Ville -->
+      <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Ville</div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:11px 14px;border:1.5px solid var(--bdr);transition:border-color .18s" id="afVilleWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input id="afVilleInput" type="text" placeholder="Ville, code postal…" autocomplete="off"
+            style="flex:1;border:none;outline:none;font-family:inherit;font-size:14px;background:transparent;color:var(--ink)"
+            onfocus="g('afVilleWrap').style.borderColor='var(--or)'" onblur="g('afVilleWrap').style.borderColor='var(--bdr)'"
+            oninput="var li=g('locInput');if(li){li.value=this.value;}filterByLoc(this.value)">
+          <button onclick="g('afVilleInput').value='';var li=g('locInput');if(li)li.value='';filterByLoc('');" style="background:none;border:none;cursor:pointer;color:var(--lite);line-height:0;padding:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tri -->
+      <div style="padding:18px 0 14px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Trier par</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="afSortRow">
+          <button class="af-pill on" data-val="0" onclick="afSetSort(0,this)">Date</button>
+          <button class="af-pill" data-val="1" onclick="afSetSort(1,this)">Prix</button>
+          <button class="af-pill" data-val="2" onclick="afSetSort(2,this)">Récents</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:12px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));border-top:1px solid var(--bdr);display:flex;gap:10px;position:sticky;bottom:0;background:var(--wh)">
+      <button onclick="afResetAll()" style="flex:1;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">
+        Réinitialiser
+      </button>
+      <button onclick="closeAllFiltersSheet()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3)">
+        Voir les cours
+      </button>
+    </div>
   </div>
 </div>
 
