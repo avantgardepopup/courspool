@@ -11710,23 +11710,36 @@ var _ssTimer=null;
 var _ssGeoActive=false;
 
 var _ssFocusedCard=null;
+var _ssKbShowFn=null,_ssKbHideFn=null;
 function _ssOnFocus(inp){
-  // Store the focused card — _onVpResize will scroll to it once keyboard is up
-  var card=inp.closest('.ss-card');
-  _ssFocusedCard=card||null;
+  _ssFocusedCard=inp.closest('.ss-card')||null;
+}
+function _ssApplyKb(kbH){
+  var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
+  ov.style.bottom=kbH>0?kbH+'px':'0px';
+  if(kbH>0&&_ssFocusedCard){
+    // Give browser one frame to reflow after bottom change, then scroll
+    requestAnimationFrame(function(){
+      var target=Math.max(0,_ssFocusedCard.offsetTop-80);
+      ov.scrollTop=target;
+    });
+  }
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
-  ov.style.display='flex';
-  ov.style.bottom='0px';
+  ov.style.display='flex';ov.style.bottom='0px';ov.scrollTop=0;
   ov.offsetHeight;
   ov.classList.add('open');
-  ov.scrollTop=0;
   // Pré-remplir depuis la recherche en cours
   var existing=g('mobSearchInput')?g('mobSearchInput').value.trim():'';
   if(existing){var mi=g('ssMatiereInput');if(mi&&!mi.value)mi.value=existing;}
   _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
   setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},220);
+  // Keyboard listeners via Capacitor Keyboard plugin (reliable on WKWebView)
+  _ssKbShowFn=function(e){_ssApplyKb((e&&e.keyboardHeight)||0);};
+  _ssKbHideFn=function(){_ssApplyKb(0);};
+  window.addEventListener('keyboardWillShow',_ssKbShowFn);
+  window.addEventListener('keyboardWillHide',_ssKbHideFn);
   document.body.style.overflow='hidden';
   haptic(4);
 }
@@ -11734,6 +11747,8 @@ function openSmartSearch(){
 function closeSmartSearch(){
   var ov=g('smartSearchOverlay');
   if(ov){ov.classList.remove('open');ov.style.bottom='';setTimeout(function(){ov.style.display='none';},380);}
+  if(_ssKbShowFn){window.removeEventListener('keyboardWillShow',_ssKbShowFn);_ssKbShowFn=null;}
+  if(_ssKbHideFn){window.removeEventListener('keyboardWillHide',_ssKbHideFn);_ssKbHideFn=null;}
   _ssFocusedCard=null;
   document.body.style.overflow='';
 }
@@ -12238,17 +12253,7 @@ function initSwipeNav(){
   function _onVpResize(){
     var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
 
-    // Search modal — shrink overlay above keyboard so scrollTop works on iOS
-    var ov=g('smartSearchOverlay');
-    if(ov&&ov.classList.contains('open')){
-      ov.style.bottom=kbH>30?kbH+'px':'0px';
-      if(kbH>30&&_ssFocusedCard&&ov.contains(_ssFocusedCard)){
-        var target=Math.max(0,_ssFocusedCard.offsetTop-80);
-        ov.scrollTop=target;
-      } else if(kbH<=30){
-        ov.scrollTop=0;
-      }
-    }
+    // Search modal is handled via keyboardWillShow/Hide (Capacitor), not visualViewport
 
     // Create-course sheet (#bdCr)
     var bdCr=g('bdCr');
