@@ -2901,9 +2901,8 @@ html.dk .pill-filter-btn { border-color:var(--bdr); }
 html.dk .pill-filter-btn svg { color:var(--ink); }
 html.dk .pill-icon { color:var(--ink); }
 
-/* ════ SMART SEARCH MODAL ════ */
+/* ════ SMART SEARCH MODAL — style Airbnb ════ */
 
-/* Variables système iOS — switchent automatiquement avec le thème */
 :root {
   --modal-bg: #ffffff;
   --modal-surface: #F2F2F7;
@@ -2923,103 +2922,170 @@ html.dk .pill-icon { color:var(--ink); }
   }
 }
 
+/* Overlay */
 .ss-overlay {
   position:fixed;inset:0;z-index:1000;
   background:rgba(0,0,0,0.5);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   display:flex;align-items:flex-end;
   opacity:0;pointer-events:none;
-  transition:opacity .25s ease;
+  transition:opacity .3s ease;
 }
 .ss-overlay.open { opacity:1;pointer-events:all; }
+
+/* Panneau */
 .ss-modal {
   position:relative;background:var(--modal-bg);
   border-radius:24px 24px 0 0;
-  width:100%;max-height:88vh;
-  display:flex;flex-direction:column;overflow:hidden;
-  transform:translateY(60px);opacity:0;
-  transition:transform .35s cubic-bezier(0.32,0.72,0,1),
-             opacity .25s ease;
+  width:100%;max-width:600px;margin:0 auto;
+  max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+  transform:translateY(40px);opacity:0;
+  transition:transform .35s cubic-bezier(0.32,0.72,0,1),opacity .25s ease;
+  box-shadow:0 -4px 40px rgba(0,0,0,0.12);
 }
 .ss-overlay.open .ss-modal { transform:translateY(0);opacity:1; }
+
+/* Handle + header */
 .ss-grabber {
-  width:36px;height:4px;border-radius:2px;
-  background:var(--modal-border);
-  margin:12px auto 16px;flex-shrink:0;
+  width:36px;height:4px;border-radius:2px;background:var(--modal-border);
+  margin:12px auto 0;flex-shrink:0;
 }
 .ss-close-btn {
-  position:absolute;top:14px;right:16px;width:30px;height:30px;
+  position:absolute;top:10px;right:16px;width:30px;height:30px;
   border-radius:50%;background:var(--modal-surface);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  -webkit-tap-highlight-color:transparent;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;color:var(--modal-text);
 }
+
+/* Corps scrollable */
 .ss-body {
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:0 0 20px;display:flex;flex-direction:column;gap:10px;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+  display:flex;flex-direction:column;
 }
-.ss-section {
-  background:var(--modal-bg);
-  border-radius:16px;padding:14px 16px;margin:0 16px;
-  box-shadow:0 2px 8px var(--modal-shadow),
-             0 0 0 0.5px var(--modal-border);
-  display:flex;flex-direction:column;gap:6px;
+
+/* ── Section MATIÈRE ── */
+.ss-matiere-section { padding:20px 16px 0; }
+.ss-title {
+  font-size:26px;font-weight:800;letter-spacing:-.03em;
+  color:var(--modal-text);margin:0 0 14px;
 }
-.ss-sec-lbl {
-  font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.07em;color:var(--modal-text-secondary);
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  margin-bottom:2px;
+.ss-input-wrap {
+  display:flex;align-items:center;gap:10px;
+  background:var(--modal-surface);border-radius:14px;
+  padding:11px 14px;margin-bottom:4px;
 }
+.ss-input-wrap svg { flex-shrink:0;color:var(--modal-text-secondary); }
 .ss-sec-input {
-  border:none;outline:none;background:transparent;
+  border:none;outline:none;background:transparent;flex:1;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:16px;font-weight:500;color:var(--modal-text);width:100%;
 }
 .ss-sec-input::placeholder { color:var(--modal-text-secondary); }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.08em; }
-.ss-mat-chips { display:flex;flex-wrap:wrap;gap:6px;margin-top:2px; }
-.ss-mat-chip {
-  display:inline-flex;align-items:center;padding:6px 14px;
-  border-radius:50px;font-size:13px;font-weight:500;
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-  white-space:nowrap;transition:background .15s,color .15s;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  /* Override JS inline colors — système switch automatiquement */
-  background:var(--modal-surface) !important;
-  color:var(--modal-text) !important;
-  border:none !important;
+
+/* Chips dynamiques (JS) — stylées en rows quand visibles */
+.ss-mat-chips {
+  display:flex;flex-direction:column;gap:0;margin-top:6px;
 }
-.ss-mat-chip:active { opacity:.7; }
+.ss-mat-chip {
+  display:flex !important;align-items:center;
+  padding:12px 0;width:100%;text-align:left;cursor:pointer;
+  background:transparent !important;color:var(--modal-text) !important;
+  border:none !important;border-bottom:0.5px solid var(--modal-border) !important;
+  font-size:15px;font-weight:500;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.ss-mat-chip:last-child { border-bottom:none !important; }
+.ss-mat-chip:active { opacity:.6; }
+
+/* Liste statique (affichée par défaut, cachée quand input a une valeur) */
+.ss-subject-list {
+  display:flex;flex-direction:column;margin-top:6px;
+}
+.ss-subject-row {
+  display:flex;align-items:center;gap:14px;
+  padding:10px 0;background:transparent;border:none;
+  border-bottom:0.5px solid var(--modal-border);
+  cursor:pointer;text-align:left;width:100%;
+  -webkit-tap-highlight-color:transparent;
+}
+.ss-subject-row:last-child { border-bottom:none; }
+.ss-subject-row:active { opacity:.6; }
+.ss-subject-icon {
+  width:38px;height:38px;border-radius:10px;
+  background:var(--modal-surface);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--modal-text);
+}
+.ss-subject-info { display:flex;flex-direction:column;gap:1px;flex:1;min-width:0; }
+.ss-subject-name { font-size:15px;font-weight:600;color:var(--modal-text); }
+.ss-subject-desc { font-size:12px;color:var(--modal-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
+/* Toggle : liste statique ↔ chips filtrées selon valeur de l'input */
+#ssMatiereInput:placeholder-shown ~ .ss-mat-chips { display:none; }
+#ssMatiereInput:not(:placeholder-shown) ~ .ss-mat-chips { display:flex; }
+#ssMatiereInput:placeholder-shown ~ .ss-subject-list { display:flex; }
+#ssMatiereInput:not(:placeholder-shown) ~ .ss-subject-list { display:none; }
+
+/* ── Séparateur entre sections ── */
+.ss-divider { height:1px;background:var(--modal-border);margin:16px 16px 0; }
+
+/* ── Sections compactes (Prof / Lieu / Code) ── */
+.ss-compact-group {
+  display:flex;flex-direction:column;margin:12px 16px 0;
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 4px 16px var(--modal-shadow),0 0 0 0.5px var(--modal-border);
+}
+.ss-compact-row {
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  background:var(--modal-bg);border-bottom:0.5px solid var(--modal-border);
+}
+.ss-compact-row:last-child { border-bottom:none; }
+.ss-compact-lbl {
+  font-size:14px;font-weight:600;color:var(--modal-text);
+  white-space:nowrap;min-width:88px;flex-shrink:0;
+}
+.ss-compact-divider { width:1px;height:20px;background:var(--modal-border);flex-shrink:0; }
+.ss-compact-input {
+  flex:1;border:none;outline:none;background:transparent;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:15px;font-weight:400;color:var(--modal-text);
+}
+.ss-compact-input::placeholder { color:var(--modal-text-secondary); }
+
+/* Bouton géoloc */
 .ss-geo-btn {
-  width:40px;height:40px;border-radius:50%;
-  background:var(--modal-surface);border:none;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:50%;
+  background:var(--modal-surface);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
   flex-shrink:0;color:var(--modal-text);
   transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;
 }
 .ss-geo-btn.active { background:#E8611A;color:#fff; }
+
+/* ── Footer ── */
 .ss-footer {
-  display:flex;flex-direction:column;align-items:center;
-  padding:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
+  margin-top:auto;
 }
-.ss-search-btn {
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:calc(100% - 32px);height:52px;border-radius:14px;
-  background:#E8611A;color:#fff;border:none;cursor:pointer;
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:16px;font-weight:700;
-  margin:14px 16px 0;
-  -webkit-tap-highlight-color:transparent;
-}
-.ss-search-btn:active { opacity:.9; }
 .ss-clear-btn {
   background:transparent;border:none;cursor:pointer;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:14px;color:var(--modal-text);
-  text-decoration:underline;text-align:center;
-  margin:10px auto 4px;display:block;
-  -webkit-tap-highlight-color:transparent;
+  font-size:14px;color:var(--modal-text);text-decoration:underline;
+  -webkit-tap-highlight-color:transparent;padding:0;
 }
+.ss-search-btn {
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:#E8611A;color:#fff;border:none;border-radius:50px;
+  padding:13px 24px;font-size:16px;font-weight:700;cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 4px 14px rgba(232,97,26,0.35);
+}
+.ss-search-btn:active { opacity:.9; }
 
 /* Subject items (compat) */
 .subject-item {
