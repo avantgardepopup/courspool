@@ -90,11 +90,11 @@ html.dk .pref-icon[style*="var(--orp)"]{background:#2A1F14!important;}
 html.dk div[style*="background:#F0FDF4"]{background:#1E2620!important;color:#4ADE80!important;}
 html.dk div[style*="background:#FEF3C7"]{background:#2A2010!important;color:#FCD34D!important;}
 html.dk div[style*="background:#FEF2F2"]{background:#261A1A!important;color:#F87171!important;}
-html.dk div[style*="background:#EFF6FF"]{background:#1E2028!important;color:#93C5FD!important;}
-html.dk div[style*="background:#F0F9FF"]{background:#1E2028!important;color:#93C5FD!important;}
-html.dk div[style*="background:#FEE2E2"]{background:#261A1A!important;color:#F87171!important;}
-html.dk div[style*="background:#FFF0F0"]{background:#261A1A!important;color:#F87171!important;}
-html.dk div[style*="background:#F5F3FF"]{background:#22202A!important;color:#C4B5FD!important;}
+html.dk div[style*="background:#EFF6FF"]{background:#252220!important;color:#93C5FD!important;}
+html.dk div[style*="background:#F0F9FF"]{background:#252220!important;color:#93C5FD!important;}
+html.dk div[style*="background:#FEE2E2"]{background:#252220!important;color:#F87171!important;}
+html.dk div[style*="background:#FFF0F0"]{background:#252220!important;color:#F87171!important;}
+html.dk div[style*="background:#F5F3FF"]{background:#252220!important;color:#C4B5FD!important;}
 html.dk div[style*="background:#FFF4EE"]{background:#2A1F14!important;color:#FB923C!important;}
 html.dk div[style*="background:#F8FAFC"]{background:#252220!important;color:#A8A29E!important;}
 html.dk div[style*="background:var(--orp)"]{background:#2A1F14!important;}
@@ -1837,16 +1837,18 @@ html.dk .biblio-access-badge.share{background:rgba(255,107,43,.18);}
   border: 1.5px solid #FECACA;
 }
 
-/* ── DARK MODE OVERRIDES ── */
-html.dk .card       { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 18px rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08) !important; }
-html.dk .rrow       { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08) !important; }
-html.dk .pref-group { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .msg-row    { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .cp-prof-card { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .acc-card     { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .cp-stat-card { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .cp-fol-list  { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .fol-row      { border-bottom-color: rgba(255,255,255,.06) !important; }
+/* ── DARK MODE CARD VISIBILITY ──
+   Technique: inset box-shadow = bordure interne non coupée par overflow:hidden
+   et non écrasable par le border inline des éléments dynamiques.       */
+html.dk .card       { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; }
+html.dk .rrow       { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .pref-group { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .msg-row    { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .cp-prof-card { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .acc-card     { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .cp-stat-card { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .cp-fol-list  { box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 4px 20px rgba(0,0,0,.5) !important; border-color: transparent !important; }
+html.dk .fol-row      { border-bottom-color: rgba(255,255,255,.08) !important; }
 html.dk .mob-search { background: #1C1917; }
 html.dk .mob-header { background: #131110; }
 
