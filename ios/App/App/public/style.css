@@ -2902,18 +2902,38 @@ html.dk .pill-filter-btn svg { color:var(--ink); }
 html.dk .pill-icon { color:var(--ink); }
 
 /* ════ SMART SEARCH MODAL ════ */
-/* ── SEARCH MODAL (Airbnb style) ── */
+
+/* Variables système iOS — switchent automatiquement avec le thème */
+:root {
+  --modal-bg: #ffffff;
+  --modal-surface: #F2F2F7;
+  --modal-border: rgba(0,0,0,0.1);
+  --modal-text: #222222;
+  --modal-text-secondary: #717171;
+  --modal-shadow: rgba(0,0,0,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --modal-bg: #1C1C1E;
+    --modal-surface: #2C2C2E;
+    --modal-border: rgba(255,255,255,0.1);
+    --modal-text: #FFFFFF;
+    --modal-text-secondary: #8E8E93;
+    --modal-shadow: rgba(0,0,0,0.3);
+  }
+}
+
 .ss-overlay {
   position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,0.45);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   display:flex;align-items:flex-end;
   opacity:0;pointer-events:none;
   transition:opacity .25s ease;
 }
 .ss-overlay.open { opacity:1;pointer-events:all; }
 .ss-modal {
-  position:relative;background:#ffffff;
+  position:relative;background:var(--modal-bg);
   border-radius:24px 24px 0 0;
   width:100%;max-height:88vh;
   display:flex;flex-direction:column;overflow:hidden;
@@ -2923,12 +2943,13 @@ html.dk .pill-icon { color:var(--ink); }
 }
 .ss-overlay.open .ss-modal { transform:translateY(0);opacity:1; }
 .ss-grabber {
-  width:36px;height:4px;border-radius:2px;background:#e0e0e0;
+  width:36px;height:4px;border-radius:2px;
+  background:var(--modal-border);
   margin:12px auto 16px;flex-shrink:0;
 }
 .ss-close-btn {
   position:absolute;top:14px;right:16px;width:30px;height:30px;
-  border-radius:50%;background:#F2F2F7;border:none;cursor:pointer;
+  border-radius:50%;background:var(--modal-surface);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   -webkit-tap-highlight-color:transparent;flex-shrink:0;
 }
@@ -2937,21 +2958,24 @@ html.dk .pill-icon { color:var(--ink); }
   padding:0 0 20px;display:flex;flex-direction:column;gap:10px;
 }
 .ss-section {
-  background:#ffffff;border:0.5px solid #e0e0e0;border-radius:16px;
-  padding:14px 16px;margin:0 16px;
+  background:var(--modal-bg);
+  border-radius:16px;padding:14px 16px;margin:0 16px;
+  box-shadow:0 2px 8px var(--modal-shadow),
+             0 0 0 0.5px var(--modal-border);
   display:flex;flex-direction:column;gap:6px;
 }
 .ss-sec-lbl {
   font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.06em;color:#717171;
+  letter-spacing:.07em;color:var(--modal-text-secondary);
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  margin-bottom:2px;
 }
 .ss-sec-input {
   border:none;outline:none;background:transparent;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:16px;font-weight:500;color:#222;width:100%;
+  font-size:16px;font-weight:500;color:var(--modal-text);width:100%;
 }
-.ss-sec-input::placeholder { color:#b0b0b0; }
+.ss-sec-input::placeholder { color:var(--modal-text-secondary); }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.08em; }
 .ss-mat-chips { display:flex;flex-wrap:wrap;gap:6px;margin-top:2px; }
 .ss-mat-chip {
@@ -2960,20 +2984,23 @@ html.dk .pill-icon { color:var(--ink); }
   cursor:pointer;-webkit-tap-highlight-color:transparent;
   white-space:nowrap;transition:background .15s,color .15s;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  /* Override JS inline colors */
-  background:#F2F2F7 !important;color:#222 !important;border:none !important;
+  /* Override JS inline colors — système switch automatiquement */
+  background:var(--modal-surface) !important;
+  color:var(--modal-text) !important;
+  border:none !important;
 }
 .ss-mat-chip:active { opacity:.7; }
 .ss-geo-btn {
-  width:40px;height:40px;border-radius:50%;background:#F2F2F7;border:none;
+  width:40px;height:40px;border-radius:50%;
+  background:var(--modal-surface);border:none;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;color:#222;
+  flex-shrink:0;color:var(--modal-text);
   transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;
 }
 .ss-geo-btn.active { background:#E8611A;color:#fff; }
 .ss-footer {
-  display:flex;flex-direction:column;align-items:center;gap:0;
-  padding:0;margin-top:2px;
+  display:flex;flex-direction:column;align-items:center;
+  padding:0;
 }
 .ss-search-btn {
   display:flex;align-items:center;justify-content:center;gap:8px;
@@ -2981,20 +3008,18 @@ html.dk .pill-icon { color:var(--ink); }
   background:#E8611A;color:#fff;border:none;cursor:pointer;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:16px;font-weight:700;
-  margin:12px 16px 0;
+  margin:14px 16px 0;
   -webkit-tap-highlight-color:transparent;
 }
 .ss-search-btn:active { opacity:.9; }
 .ss-clear-btn {
-  background:none;border:none;cursor:pointer;
+  background:transparent;border:none;cursor:pointer;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:14px;color:#222;text-decoration:underline;text-align:center;
-  margin:10px auto 0;display:block;
+  font-size:14px;color:var(--modal-text);
+  text-decoration:underline;text-align:center;
+  margin:10px auto 4px;display:block;
   -webkit-tap-highlight-color:transparent;
 }
-/* Dark mode — modal reste blanc même en dark */
-html.dk .ss-overlay { background:rgba(0,0,0,0.6); }
-html.dk .ss-section { border-color:rgba(255,255,255,.12); }
 
 /* Subject items (compat) */
 .subject-item {
