@@ -566,7 +566,7 @@
       </div>
     </div>
     <!-- Barre de recherche — dans le header sticky -->
-    <div id="mobSearch" style="padding:6px 0 10px">
+    <div id="mobSearch" style="padding:4px 0 6px">
       <!-- Inputs cachés maintenus pour compatibilité avec doFilter(), clearSearch(), etc. -->
       <input type="text" id="mobSearchInput" style="display:none" autocomplete="off"
         oninput="this._t=this.value;var s=g('srch');if(s)s.value=this._t;doFilter();">
@@ -595,7 +595,7 @@
 
   <!-- PAGE EXPLORER -->
   <div class="pg on" id="pgExp">
-    <div class="cnt" style="position:relative;padding-top:16px">
+    <div class="cnt" style="position:relative;padding-top:6px">
       <div class="ptr-indicator" id="ptrIndicator" style="opacity:0;position:absolute;top:-44px;left:0;right:0">
         <svg id="ptrSpinner" class="ptr-spinner" viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2.5" stroke-linecap="round" width="22" height="22">
           <path d="M12 2a10 10 0 0 1 10 10"/>
@@ -3230,6 +3230,19 @@
           Rejoindre
         </button>
       </div>
+    </div>
+
+    <!-- Géolocalisation -->
+    <div id="ssGeoRow" style="padding:0 16px 10px">
+      <button onclick="_ssUseGeoloc()" style="display:flex;align-items:center;gap:12px;background:none;border:0.5px solid #ddd;border-radius:10px;padding:10px 14px;width:100%;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;text-align:left;-webkit-tap-highlight-color:transparent">
+        <div style="width:36px;height:36px;border-radius:9px;background:#FFF0E8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:#222">Près de moi</div>
+          <div style="font-size:11px;color:#888;margin-top:1px">Utiliser ma position</div>
+        </div>
+      </button>
     </div>
 
     <!-- Label Matières -->

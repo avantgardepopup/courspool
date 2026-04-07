@@ -11546,6 +11546,7 @@ function openSmartSearch(tab){
 
 function closeSmartSearch(){
   var ov=g('smartSearchOverlay');
+  var sheet=g('ssSheet');if(sheet)sheet.style.paddingBottom='';
   if(ov){
     ov.classList.remove('open');
     setTimeout(function(){ov.style.display='none';},380);
@@ -11561,17 +11562,19 @@ function closeSmartSearch(){
 
 function _setSearchTab(tab){
   _ssTab=tab;
-  var inputSec=g('ssInputSection'),codeSec=g('ssCodeSection'),codeLink=g('ssCodeLink'),matLbl=g('ssMatiereLabel'),ssInp=g('ssInput');
+  var inputSec=g('ssInputSection'),codeSec=g('ssCodeSection'),codeLink=g('ssCodeLink'),matLbl=g('ssMatiereLabel'),geoRow=g('ssGeoRow'),ssInp=g('ssInput');
   if(tab==='code'){
     if(inputSec)inputSec.style.display='none';
     if(codeSec)codeSec.style.display='block';
     if(codeLink)codeLink.style.display='none';
     if(matLbl)matLbl.style.display='none';
+    if(geoRow)geoRow.style.display='none';
     setTimeout(function(){var ci=g('ssCodeInput');if(ci)ci.focus();},80);
   } else {
     if(inputSec)inputSec.style.display='block';
     if(codeSec)codeSec.style.display='none';
     if(codeLink)codeLink.style.display='block';
+    if(geoRow)geoRow.style.display='block';
     var ph={cours:'Matière, professeur, mots-clés...',prof:'Nom du professeur...'};
     if(ssInp){ssInp.setAttribute('placeholder',ph[tab]||'Rechercher...');setTimeout(function(){ssInp.focus();},80);}
   }
@@ -11659,6 +11662,13 @@ function _ssBuildSuggestions(val){
       +'<div style="font-size:11px;color:#888">'+m.sub+'</div></div></div>';
   });
   box.innerHTML=h2;
+}
+
+function _ssUseGeoloc(){
+  closeSmartSearch();
+  // Open locbar first so requestGeoloc shows the result
+  var lb=g('locInput');if(lb)lb.closest('.locbar')&&lb.closest('.locbar').classList.add('open');
+  requestGeoloc();
 }
 
 function _ssPickMatiere(label){
@@ -12024,6 +12034,21 @@ function initSwipeNav(){
     }
   },{passive:true});
 }
+
+// ── Keyboard / visualViewport ──────────────────────────────────────────────
+// Keeps the search bottom sheet above the software keyboard on iOS
+(function(){
+  if(!window.visualViewport)return;
+  function _onVpResize(){
+    var ov=g('smartSearchOverlay');
+    if(!ov||!ov.classList.contains('open'))return;
+    var sheet=g('ssSheet');if(!sheet)return;
+    var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    sheet.style.paddingBottom=kbH>30?(kbH+'px'):'';
+  }
+  window.visualViewport.addEventListener('resize',_onVpResize);
+  window.visualViewport.addEventListener('scroll',_onVpResize);
+})();
 
 // ── Pull-to-refresh ────────────────────────────────────────────────────────
 (function(){

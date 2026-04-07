@@ -2042,7 +2042,7 @@ html.dk .home-search{background:var(--bg);}
 
 /* ── FILTER BAR — shadow fix ── */
 .filter-bar {
-  padding:10px 16px 14px !important;   /* extra bottom padding so shadow isn't clipped */
+  padding:6px 16px 18px !important;   /* balanced: matches gap above chips */
   overflow-y:visible !important;
 }
 /* Ensure parent doesn't clip */
