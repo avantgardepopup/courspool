@@ -2446,19 +2446,26 @@ app.post('/teacher/enroll', async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { teacher_id, code } = req.body;
-    if (!teacher_id || !code) return res.status(400).json({ error: 'Données manquantes' });
-    // Vérifier le code du professeur
-    const { data: prof, error: profErr } = await supabase.from('profiles')
-      .select('id, teacher_code').eq('id', teacher_id).maybeSingle();
-    if (profErr || !prof) return res.status(404).json({ error: 'Professeur introuvable' });
+    if (!code) return res.status(400).json({ error: 'Données manquantes' });
+    // Vérifier le code du professeur — résolution par code seul si teacher_id absent
+    let prof, profErr;
+    if (teacher_id) {
+      ({ data: prof, error: profErr } = await supabase.from('profiles')
+        .select('id, teacher_code').eq('id', teacher_id).maybeSingle());
+    } else {
+      ({ data: prof, error: profErr } = await supabase.from('profiles')
+        .select('id, teacher_code').eq('teacher_code', code.trim().toUpperCase()).maybeSingle());
+    }
+    if (profErr || !prof) return res.status(404).json({ error: 'Code introuvable' });
     if (!prof.teacher_code || prof.teacher_code.trim().toUpperCase() !== code.trim().toUpperCase()) {
       return res.status(400).json({ error: 'Code incorrect' });
     }
+    const resolvedTeacherId = prof.id;
     // Inscrire l'élève
     const { error: insErr } = await supabase.from('teacher_students')
-      .upsert({ teacher_id, student_id: req.user.id }, { onConflict: 'teacher_id,student_id' });
+      .upsert({ teacher_id: resolvedTeacherId, student_id: req.user.id }, { onConflict: 'teacher_id,student_id' });
     if (insErr) return res.status(500).json({ error: insErr.message });
-    res.json({ success: true });
+    res.json({ success: true, teacher_id: resolvedTeacherId });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
