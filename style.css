@@ -32,7 +32,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--wh);color:var(-
 /* === DARK MODE — via classe .dk sur <html> === */
 html.dk{
   --ink:#E8E4DF;--mid:#8A837C;--lite:#4A4540;
-  --bg:#131110;--wh:#1C1917;--bdr:#2E2B28;
+  --bg:#131110;--wh:#262220;--bdr:#2E2B28;
   --orp:#2A1A0F;--sh:0 6px 28px rgba(0,0,0,.6);
   color-scheme:dark;
 }
@@ -866,6 +866,7 @@ html.dk .prof-badge{border-color:rgba(255,255,255,.12);}
   box-shadow:0 1px 6px rgba(0,0,0,.05);overflow:hidden;
 }
 html.dk .esp2-card{border-color:rgba(255,255,255,.07);box-shadow:none;}
+#bdBibliotheque.closing,#bdElveBibliotheque.closing{animation:mpfSlideOut .25s cubic-bezier(.55,0,1,.45) forwards;}
 /* Header cliquable d'une card tiroir */
 .esp2-card-hd{
   display:flex;align-items:center;gap:12px;

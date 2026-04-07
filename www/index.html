@@ -1789,7 +1789,7 @@
       <!-- Card : Publications → ouvre popup plein écran -->
       <div class="esp2-card" onclick="openEspPubs()">
         <div class="esp2-card-hd" style="cursor:pointer">
-          <div class="esp2-ico" style="background:#FFF0E8">📣</div>
+          <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
           <div style="flex:1">
             <div class="esp2-title">Publications</div>
             <div class="esp2-sub">Annonces de votre professeur</div>
@@ -1798,37 +1798,27 @@
         </div>
       </div>
 
-      <!-- Card tiroir : Cours & Ressources -->
-      <div class="esp2-card" id="espCardCours">
-        <div class="esp2-card-hd" onclick="toggleEsp2Card('espCardCours','cours')">
-          <div class="esp2-ico" style="background:#EEF2FF">📚</div>
+      <!-- Card : Bibliothèque → ouvre vue plein écran -->
+      <div class="esp2-card" onclick="openElveBibliotheque(_curPrFull)" style="cursor:pointer">
+        <div class="esp2-card-hd" style="pointer-events:none">
+          <div class="esp2-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
           <div style="flex:1">
             <div class="esp2-title">Bibliothèque</div>
             <div class="esp2-sub">Fiches et ressources du prof</div>
           </div>
-          <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="esp2-card-body">
-          <div id="mpfEspContenu"></div>
-          <div id="mpfEspRessources"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
 
-      <!-- Card tiroir : Envoyer un document -->
-      <div class="esp2-card" id="espCardDocs">
-        <div class="esp2-card-hd" onclick="toggleEsp2Card('espCardDocs','docs')">
-          <div class="esp2-ico" style="background:#F0FDF4">📎</div>
+      <!-- Card : Envoyer un document → ouvre sheet -->
+      <div class="esp2-card" onclick="openSendDocSheet()" style="cursor:pointer">
+        <div class="esp2-card-hd" style="pointer-events:none">
+          <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
           <div style="flex:1">
             <div class="esp2-title">Envoyer un document</div>
             <div class="esp2-sub">Partagez un fichier avec votre prof</div>
           </div>
-          <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="esp2-card-body">
-          <input id="mpfSubTitle" type="text" placeholder="Nom du document" class="esp-input" style="margin-bottom:8px">
-          <input id="mpfSubUrl" type="url" placeholder="Lien (Drive, Notion…)" class="esp-input">
-          <button onclick="mpfSubmitDoc()" class="esp2-btn-submit">Envoyer</button>
-          <div id="mpfMySubmissions" style="margin-top:10px"></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
 
@@ -1836,7 +1826,7 @@
       <div id="mpfEspNoteSection" style="display:none">
         <div class="esp2-card">
           <div class="esp2-card-hd" style="cursor:default">
-            <div class="esp2-ico" style="background:#F5F3FF">✏️</div>
+            <div class="esp2-ico" style="background:#F5F3FF"><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
             <div><div class="esp2-title">Note de votre prof</div></div>
           </div>
           <div id="mpfEspNotes" style="padding:0 16px 16px;font-size:14px;color:var(--mid);line-height:1.65;white-space:pre-wrap"></div>
@@ -1846,7 +1836,7 @@
       <!-- Card : Écrire au prof -->
       <div class="esp2-card" onclick="contPrFull()">
         <div class="esp2-card-hd" style="cursor:pointer">
-          <div class="esp2-ico" style="background:#FFF7ED">💬</div>
+          <div class="esp2-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
           <div style="flex:1">
             <div class="esp2-title">Écrire au professeur</div>
             <div class="esp2-sub">Envoyer un message direct</div>
@@ -2056,6 +2046,19 @@
     <div id="biblioGrid" class="biblio-grid"></div>
   </div>
 </div>
+<!-- BIBLIOTHÈQUE ÉLÈVE (vue du contenu d'un prof, lecture seule) -->
+<div id="bdElveBibliotheque" style="display:none;position:fixed;inset:0;z-index:700;background:var(--wh);flex-direction:column;animation:mpfSlideIn .3s cubic-bezier(.32,1,.6,1)">
+  <div class="esp-ed-top">
+    <button onclick="closeElveBibliotheque()" class="esp-ed-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Bibliothèque</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 48px;background:var(--wh)">
+    <div id="elveBiblioList"></div>
+  </div>
+</div>
+
 <!-- MODAL AJOUTER UN DOCUMENT -->
 <div id="bdAddDoc" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:800;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeAddDoc()">
   <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .25s ease">

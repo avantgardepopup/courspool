@@ -5202,6 +5202,139 @@ function closeBibliotheque(){
   setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
 }
 
+// ── BIBLIOTHÈQUE ÉLÈVE (lecture seule) ────────────────────────────────────
+function openElveBibliotheque(pid){
+  if(!pid)return;
+  var el=g('bdElveBibliotheque');if(!el)return;
+  el.style.display='flex';
+  haptic(4);
+  loadElveBibliotheque(pid);
+}
+
+function closeElveBibliotheque(){
+  var el=g('bdElveBibliotheque');if(!el)return;
+  el.classList.add('closing');
+  setTimeout(function(){el.style.display='none';el.classList.remove('closing');},240);
+}
+
+function loadElveBibliotheque(pid){
+  var grid=g('elveBiblioList');if(!grid)return;
+  grid.innerHTML='<div class="skeleton" style="height:68px;border-radius:16px;margin-bottom:8px"></div>'
+    +'<div class="skeleton" style="height:68px;border-radius:16px;margin-bottom:8px"></div>'
+    +'<div class="skeleton" style="height:68px;border-radius:16px"></div>';
+  var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  Promise.all([
+    fetch(API+'/teacher/'+pid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(API+'/teacher/'+pid+'/content',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+  ]).then(function(results){
+    var fiches=(results[0]||[]).filter(function(a){return a.type==='fiche';});
+    var resources=results[1]||[];
+    var content=results[2]||[];
+    if(!fiches.length&&!resources.length&&!content.length){
+      grid.innerHTML='<div style="text-align:center;padding:60px 24px">'
+        +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+        +'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Bibliothèque vide</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Ton prof n\'a pas encore partagé de contenu.</div></div>';
+      return;
+    }
+    var html='';
+    if(fiches.length){
+      html+='<div class="mes-section-title" style="padding:4px 4px 8px">Fiches de cours</div>';
+      html+=fiches.map(function(f){
+        return'<div onclick="espOpenFicheEleve(\''+pid+'\',\''+escH(f.id)+'\')" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:1px solid var(--bdr);border-radius:16px;padding:14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+          +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.title||'Fiche sans titre')+'</div>'
+          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">Fiche de cours</div></div>'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
+          +'</div>';
+      }).join('');
+    }
+    if(resources.length||content.length){
+      html+='<div class="mes-section-title" style="padding:'+(fiches.length?'16px':'4px')+' 4px 8px">Ressources</div>';
+      resources.forEach(function(r){
+        html+='<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:1px solid var(--bdr);border-radius:16px;padding:14px;margin-bottom:8px;text-decoration:none;-webkit-tap-highlight-color:transparent">'
+          +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+(TYPE_ICON[r.type]||'📎')+'</div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title||'Document')+'</div>'
+          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(r.type||'document')+'</div></div>'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+          +'</a>';
+      });
+      content.forEach(function(c){
+        var typeIco={text:'📝',video:'🎥',pdf:'📄',link:'🔗'}[c.content_type]||'📚';
+        var isUnlocked=c.is_unlocked;
+        var tag=c.access_type==='password'?'Mot de passe requis':c.access_type==='premium'?'Premium':'Accès libre';
+        var tagColor=c.access_type==='password'?'#8B5CF6':c.access_type==='premium'?'#F59E0B':'#10B981';
+        html+='<div style="background:var(--wh);border:1px solid var(--bdr);border-radius:16px;padding:14px;margin-bottom:8px">'
+          +'<div style="display:flex;align-items:center;gap:12px">'
+          +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+typeIco+'</div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title||'Contenu')+'</div>'
+          +'<div style="font-size:11px;font-weight:600;color:'+tagColor+';margin-top:2px">'+tag+'</div></div>'
+          +'</div>';
+        if(isUnlocked&&c.content_url){
+          html+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;padding:9px;background:rgba(99,102,241,.08);border-radius:10px;text-align:center;font-size:13px;font-weight:700;color:#6366F1;text-decoration:none">'+typeIco+' Voir le contenu</a>';
+        }else if(c.access_type==='password'){
+          html+='<div id="_elvePwRow_'+c.id+'" style="display:flex;gap:8px;margin-top:10px"><input type="password" placeholder="Mot de passe" class="esp-input" style="flex:1;font-size:13px;padding:8px 10px" id="_elvePwInp_'+c.id+'"><button onclick="elveBiblioUnlock(\''+pid+'\',\''+escH(c.id)+'\')" class="esp-btn esp-btn-prim" style="font-size:12px;padding:8px 12px">OK</button></div>';
+        }
+        html+='</div>';
+      });
+    }
+    grid.innerHTML=html;
+  }).catch(function(){grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite)">Erreur de chargement</div>';});
+}
+
+function elveBiblioUnlock(pid,cid){
+  var inp=document.getElementById('_elvePwInp_'+cid);if(!inp)return;
+  var pw=inp.value.trim();if(!pw)return;
+  fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
+      haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
+    }).catch(function(){});
+}
+
+// ── ENVOYER UN DOCUMENT (sheet) ───────────────────────────────────────────
+function openSendDocSheet(){
+  var pid=_curPrFull;if(!pid)return;
+  haptic(4);
+  var bd=document.createElement('div');
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
+  sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
+    +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+    +'</div>'
+    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Envoyer un document</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Partagez un fichier avec votre prof</div></div>'
+    +'</div>'
+    +'<input id="_sendDocTitle" type="text" placeholder="Nom du document" class="esp-input" style="margin-bottom:10px">'
+    +'<input id="_sendDocUrl" type="url" placeholder="Lien (Drive, Notion, Dropbox…)" class="esp-input" style="margin-bottom:16px">'
+    +'<button onclick="mpfSubmitDocSheet(this)" class="esp2-btn-submit" style="width:100%">Envoyer</button>'
+    +'<button onclick="this.closest(\'[style*=rgba\\(0\\,0\\,0\\,.5\\)]\').remove()" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  bd.appendChild(sheet);document.body.appendChild(bd);
+  setTimeout(function(){var inp=document.getElementById('_sendDocTitle');if(inp)inp.focus();},200);
+}
+
+function mpfSubmitDocSheet(btn){
+  var pid=_curPrFull;if(!pid)return;
+  var title=(document.getElementById('_sendDocTitle')||{value:''}).value.trim();
+  var url=(document.getElementById('_sendDocUrl')||{value:''}).value.trim();
+  if(!title){toast('Donne un nom au document','');return;}
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||undefined})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast('Erreur',d.error);return;}
+      haptic(8);toast('Document envoyé !','');
+      var bd=btn&&btn.parentElement;while(bd&&!bd.style.cssText.includes('rgba(0,0,0,.5)'))bd=bd.parentElement;
+      if(bd)bd.remove();
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast('Erreur réseau','');});
+}
+
 function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
   var grid=g('biblioGrid');if(!grid)return;
