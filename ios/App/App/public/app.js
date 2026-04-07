@@ -11709,17 +11709,11 @@ var _ssTimer=null;
 
 var _ssGeoActive=false;
 
+var _ssFocusedCard=null;
 function _ssOnFocus(inp){
-  // Called via onfocus="..." on each ss-pill-input — scroll overlay so focused
-  // card sits near the top and subsequent cards are visible below
-  var ov=g('smartSearchOverlay');if(!ov)return;
-  var card=inp.closest('.ss-card');if(!card)return;
-  // card.offsetTop is relative to the overlay (its offsetParent = position:fixed ancestor)
-  // Set scrollTop directly so the card sits 80px from the visible top
-  var target=Math.max(0,card.offsetTop-80);
-  ov.scrollTop=target;
-  // Fire again after keyboard finishes rising
-  setTimeout(function(){ov.scrollTop=target;},400);
+  // Store the focused card — _onVpResize will scroll to it once keyboard is up
+  var card=inp.closest('.ss-card');
+  _ssFocusedCard=card||null;
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
@@ -12246,6 +12240,11 @@ function initSwipeNav(){
     var ov=g('smartSearchOverlay');
     if(ov&&ov.classList.contains('open')){
       var body=g('ssBody');if(body)body.style.paddingBottom=kbH>30?(kbH+20+'px'):'20px';
+      // Scroll the focused card to be visible above the keyboard
+      if(kbH>30&&_ssFocusedCard&&ov.contains(_ssFocusedCard)){
+        var target=Math.max(0,_ssFocusedCard.offsetTop-80);
+        ov.scrollTop=target;
+      }
     }
 
     // Create-course sheet (#bdCr)
