@@ -2632,7 +2632,7 @@ function buildAccLists(){
         +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
         +'</div>';
     } else {
-      lf.innerHTML='<div style="background:var(--wh);border-radius:16px;overflow:hidden">'+folRows+'</div>';
+      lf.innerHTML='<div class="cp-fol-list" style="background:var(--wh);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04)">'+folRows+'</div>';
     }
   }
 }

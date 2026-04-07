@@ -1843,8 +1843,10 @@ html.dk .rrow       { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,
 html.dk .pref-group { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1) !important; }
 html.dk .msg-row    { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1) !important; }
 html.dk .cp-prof-card { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
-html.dk .acc-card   { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
+html.dk .acc-card     { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
 html.dk .cp-stat-card { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
+html.dk .cp-fol-list  { box-shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5) !important; border: 1px solid rgba(255,255,255,.1) !important; }
+html.dk .fol-row      { border-bottom-color: rgba(255,255,255,.06) !important; }
 html.dk .mob-search { background: #1C1917; }
 html.dk .mob-header { background: #131110; }
 
