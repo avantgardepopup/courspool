@@ -2794,6 +2794,67 @@ html.dk .search-bar-premium { background:var(--wh); border-color:var(--bdr); }
 html.dk .search-input-premium { background:transparent; -webkit-text-fill-color:var(--ink); }
 html.dk .filter-pill-btn { background:var(--wh); }
 
+/* ════ FILTER BAR : hide filter-fixed pills (now in AllFilters sheet) ════ */
+.filter-fixed { display:none !important; }
+.filter-sep { display:none; }
+.filter-bar-wrap { padding:0; background:transparent; }
+.filter-bar { border-top:none; padding:4px 16px 6px; }
+
+/* ════ SEARCH PILL (top bar) ════ */
+#searchPill:active { opacity:.8; transform:scale(.98); }
+#filtersBtn:active { opacity:.8; }
+
+/* ════ SMART SEARCH OVERLAY ════ */
+#smartSearchOverlay { animation:ssIn .22s cubic-bezier(.32,.72,0,1); }
+@keyframes ssIn { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* Segment tabs */
+.ss-tab {
+  flex:1;padding:7px 6px;border:none;border-radius:9px;
+  background:transparent;font-family:inherit;font-size:12.5px;
+  font-weight:600;color:var(--lite);cursor:pointer;
+  transition:all .18s;white-space:nowrap;outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.ss-tab.on {
+  background:var(--wh);color:var(--ink);
+  box-shadow:0 1px 5px rgba(0,0,0,.1);
+}
+html.dk .ss-tab.on { background:var(--wh); }
+
+/* Suggestion rows */
+.ss-sugg-item {
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;cursor:pointer;
+  border-bottom:1px solid var(--bdr);
+  transition:opacity .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.ss-sugg-item:last-child { border-bottom:none; }
+.ss-sugg-item:active { opacity:.6; }
+.ss-sugg-icon {
+  width:46px;height:46px;border-radius:13px;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+
+/* AllFilters sheet pills */
+.af-pill {
+  display:inline-flex;align-items:center;gap:5px;
+  padding:8px 15px;border-radius:50px;
+  border:1.5px solid var(--bdr);background:var(--wh);
+  color:var(--mid);font-family:inherit;font-size:13px;
+  font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:all .18s;outline:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.af-pill.on {
+  background:var(--or);border-color:var(--or);color:#fff;
+  box-shadow:0 3px 10px rgba(255,107,43,.25);
+}
+html.dk .af-pill { background:var(--wh); }
+html.dk #bdAllFilters > div { background:var(--wh); }
+html.dk #smartSearchOverlay { background:var(--bg); }
+
 @keyframes accIconPop {
   0%   { transform: scale(1) rotate(0deg); }
   35%  { transform: scale(1.35) rotate(-8deg); }
