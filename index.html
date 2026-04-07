@@ -1727,13 +1727,13 @@
 <!-- PROFIL PROF COMPLET (style Avilio) -->
 <div id="bdPrFull" style="display:none">
 
-  <!-- Barre haut -->
+  <!-- Barre haut : retour + nom centré + suivre -->
   <div id="mpfTopBar">
-    <button onclick="closePrFull()" style="background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);flex-shrink:0">
+    <button onclick="closePrFull()" class="mpf-back-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div id="mpfTopTitle"></div>
-    <button id="bFPFull" onclick="togFPFull()" style="background:none;border:1.5px solid var(--bdr);border-radius:50px;padding:6px 14px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:5px;transition:all .18s;flex-shrink:0">
+    <div id="mpfTopTitle" class="mpf-top-title"></div>
+    <button id="bFPFull" onclick="togFPFull()" class="mpf-follow-topbtn">
       <span id="bFPFullT"></span>
     </button>
   </div>
@@ -1741,22 +1741,20 @@
   <!-- Contenu scrollable -->
   <div id="mpfScroll">
 
-    <!-- Header card : avatar + infos (style Avilio) -->
-    <div id="mpfHeaderCard">
-      <div id="mpfAvWrap"></div>
-      <div id="mpfHeaderInfo">
-        <div id="mpfInfoNm"></div>
-        <div id="mpfInfoRl"></div>
-        <div id="mpfRating" style="display:none">
-          <span id="mpfRatingStars" style="color:#FBBF24;font-size:13px"></span>
-          <span id="mpfRatingNum" style="font-size:13px;font-weight:700;color:var(--ink)"></span>
-          <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
-        </div>
-        <div id="mpfInfoBadges"></div>
+    <!-- HERO : avatar centré + nom + rôle + rating + badges -->
+    <div class="mpf-hero">
+      <div id="mpfAvWrap" class="mpf-hero-av"></div>
+      <div id="mpfInfoNm" class="mpf-hero-nm"></div>
+      <div id="mpfInfoRl" class="mpf-hero-rl"></div>
+      <div id="mpfRating" style="display:none;align-items:center;justify-content:center;gap:6px;margin-top:8px">
+        <span id="mpfRatingStars" style="color:#FBBF24;font-size:14px;letter-spacing:.03em"></span>
+        <span id="mpfRatingNum" style="font-size:14px;font-weight:700;color:var(--ink)"></span>
+        <span id="mpfRatingCount" style="font-size:12px;color:var(--lite)"></span>
       </div>
+      <div id="mpfInfoBadges" class="mpf-hero-badges"></div>
     </div>
 
-    <!-- Stats -->
+    <!-- STATS : 4 colonnes séparées -->
     <div id="mpfStats">
       <div class="mpf-stat"><div id="mpfStC" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_cours">Cours</div></div>
       <div class="mpf-stat"><div id="mpfStE" class="mpf-stat-num">0</div><div class="mpf-stat-lbl" data-i18n="mp_eleves">Élèves</div></div>
@@ -1764,31 +1762,30 @@
       <div class="mpf-stat"><div id="mpfStN" class="mpf-stat-num">—</div><div class="mpf-stat-lbl" data-i18n="mp_note">Note</div></div>
     </div>
 
-    <!-- Tabs collants -->
+    <!-- TABS : style segment pill -->
     <div id="mpfTabBar">
-      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')" data-i18n="mp_tab_profil">PROFIL</button>
-      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')" data-i18n="mp_prochains">COURS</button>
-      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none">ESPACE</button>
+      <button class="mpf-tab on" id="mpfTabProfil" onclick="switchMpfTab('profil')">Profil</button>
+      <button class="mpf-tab" id="mpfTabCours" onclick="switchMpfTab('cours')">Cours</button>
+      <button class="mpf-tab" id="mpfTabEspace" onclick="switchMpfTab('espace')" style="display:none">Espace</button>
     </div>
 
     <!-- ── PANEL PROFIL ── -->
-    <div id="mpfPanelProfil">
+    <div id="mpfPanelProfil" style="padding-bottom:20px">
       <!-- Bio -->
-      <div class="mpf-section-lbl" data-i18n="mp_about">À propos</div>
-      <div class="mpf-white-block">
-        <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.65;margin:0"></p>
+      <div class="mpf-sec-lbl">À propos</div>
+      <div style="background:var(--wh);border-radius:16px;padding:14px 16px;margin:0 16px 6px">
+        <p id="mpfBio" style="font-size:14px;color:var(--mid);line-height:1.7;margin:0"></p>
+      </div>
+      <!-- Matières (chips style explorer) -->
+      <div id="mpfTagsSection" style="display:none;padding:0 16px 4px">
+        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:7px;padding-top:10px"></div>
       </div>
       <!-- Infos pro (formations, expériences, lieu, statut) -->
       <div id="mpfExtraInfo"></div>
-      <!-- Matières -->
-      <div id="mpfTagsSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mp_matieres">Matières</div>
-        <div id="mpfTags" style="display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 8px"></div>
-      </div>
-      <!-- Code accès (si pas encore élève) -->
-      <div id="mpfCodeSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mpf_code_titre">Code d'accès</div>
-        <div id="mpfCodeCard" style="background:var(--wh);border-radius:16px;padding:16px;margin:0 16px 8px">
+      <!-- Code accès -->
+      <div id="mpfCodeSection" style="display:none;margin:8px 16px 0">
+        <div class="mpf-sec-lbl" style="padding-left:0" data-i18n="mpf_code_titre">Code d'accès</div>
+        <div id="mpfCodeCard" style="background:var(--wh);border-radius:16px;padding:16px">
           <div style="font-size:13px;color:var(--lite);margin-bottom:12px" data-i18n="mpf_code_hint">Entrez le code de votre professeur pour accéder à son espace.</div>
           <div style="display:flex;gap:8px">
             <input id="mpfCodeInput" class="mpf-code-input" placeholder="EX: ABC123" maxlength="10">
@@ -1799,14 +1796,14 @@
       </div>
       <!-- Avis -->
       <div id="mpfAvisSection" style="display:none">
-        <div class="mpf-section-lbl" data-i18n="mp_avis">Avis des élèves</div>
-        <div id="mpfAvis"></div>
+        <div class="mpf-sec-lbl">Avis des élèves</div>
+        <div id="mpfAvis" style="padding:0 16px"></div>
       </div>
     </div>
 
     <!-- ── PANEL COURS ── -->
-    <div id="mpfPanelCours" hidden>
-      <div id="mpfCrs" style="padding:8px 0 0"></div>
+    <div id="mpfPanelCours" hidden style="padding:8px 16px 20px">
+      <div id="mpfCrs"></div>
     </div>
 
     <!-- ── PANEL ESPACE (élèves inscrits) ── -->

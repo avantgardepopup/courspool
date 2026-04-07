@@ -3947,6 +3947,10 @@ function confF(){
 
 // PROFIL PROF
 function openPr(pid){
+  // Redirige vers la fiche prof unifiée
+  openPrFull(pid);
+}
+function _openPrLegacy(pid){
   curProf=pid;
   var _ts=g('mpTagsSection');if(_ts)_ts.style.display='none';
   var cours=C.filter(function(x){return x.pr===pid;});
@@ -4220,7 +4224,7 @@ function openPr(pid){
     try{var _pc=JSON.parse(localStorage.getItem('cp_profs')||'{}');_pc[pid]={ts:Date.now(),nm:P[pid].nm||'',i:P[pid].i||'',photo:P[pid].photo||'',e:_eSave};localStorage.setItem('cp_profs',JSON.stringify(_pc));}catch(ex){}
   }).catch(function(){});
 }
-function closePr(){var el=g('bdPr');if(el)el.style.display='none';}
+function closePr(){var el=g('bdPr');if(el)el.style.display='none';closePrFull();}
 
 function switchMpTab(tab){
   var tabs=['accueil','ressources','notes'];
@@ -4416,15 +4420,19 @@ function openPrFull(pid){
     mpfCrs.innerHTML=prochains.length?prochains.map(function(c){
       var isV=c.mode==='visio'||!!c.visio_url;
       var mat=findMatiere(c.subj||'')||{color:'var(--or)',bg:'var(--orp)'};
+      var places=c.sp-c.fl;
       return'<div class="mpf-cours-item" onclick="closePrFull();openR(\''+escH(c.id)+'\')">'
-        +'<div style="width:40px;height:40px;border-radius:10px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mat.color+'"></div></div>'
+        +'<div style="width:44px;height:44px;border-radius:12px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:9px;height:9px;border-radius:50%;background:'+mat.color+'"></div></div>'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
-        +'<div style="font-size:11.5px;color:var(--mid);margin-top:2px">'+esc(fmtDt(c.dt))+'</div>'
-        +'</div>'
-        +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
+        +'<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
+        +'<div style="font-size:12px;color:var(--mid);margin-top:3px;display:flex;align-items:center;gap:8px">'
+        +'<span>'+esc(fmtDt(c.dt))+'</span>'
+        +(c.pr2?'<span style="font-size:12px;font-weight:700;color:var(--or)">'+c.pr2+'€</span>':'')
+        +(places>0&&places<=3?'<span style="font-size:11px;color:#EF4444;font-weight:600">'+places+' place'+(places>1?'s':'')+'</span>':'')
+        +'</div></div>'
+        +'<span style="font-size:11px;font-weight:600;background:'+(isV?'rgba(0,113,227,.08)':'rgba(0,177,79,.08)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:4px 10px;flex-shrink:0;white-space:nowrap">'+(isV?'Visio':'Présentiel')+'</span>'
         +'</div>';
-    }).join(''):('<div style="text-align:center;padding:28px 16px 16px"><div style="width:48px;height:48px;background:var(--bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>');
+    }).join(''):('<div style="text-align:center;padding:32px 20px"><div style="width:52px;height:52px;background:var(--wh);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>');
   }
   // Follow button
   var bff=g('bFPFull');if(bff)bff.style.display=(user&&pid===user.id)?'none':'flex';
