@@ -11709,38 +11709,29 @@ var _ssTimer=null;
 
 var _ssGeoActive=false;
 
-var _ssScrollListenersAdded=false;
-function _ssScrollToCard(card){
-  var ov=g('smartSearchOverlay');if(!ov||!card)return;
-  // Use getBoundingClientRect for accurate position regardless of current scroll
-  var ovRect=ov.getBoundingClientRect();
-  var cardRect=card.getBoundingClientRect();
-  // Target: place card 72px below overlay top (below header bar)
-  var delta=cardRect.top-ovRect.top-72;
-  ov.scrollTop+=delta;
+function _ssOnFocus(inp){
+  // Called via onfocus="..." on each ss-pill-input — scroll overlay so focused
+  // card sits near the top and subsequent cards are visible below
+  var ov=g('smartSearchOverlay');if(!ov)return;
+  var card=inp.closest('.ss-card');if(!card)return;
+  // card.offsetTop is relative to the overlay (its offsetParent = position:fixed ancestor)
+  // Set scrollTop directly so the card sits 80px from the visible top
+  var target=Math.max(0,card.offsetTop-80);
+  ov.scrollTop=target;
+  // Fire again after keyboard finishes rising
+  setTimeout(function(){ov.scrollTop=target;},400);
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
   ov.style.display='flex';
   ov.offsetHeight;
   ov.classList.add('open');
+  ov.scrollTop=0;
   // Pré-remplir depuis la recherche en cours
   var existing=g('mobSearchInput')?g('mobSearchInput').value.trim():'';
   if(existing){var mi=g('ssMatiereInput');if(mi&&!mi.value)mi.value=existing;}
   _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
   setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},220);
-  // Add scroll-on-focus listeners only once (they persist in the DOM)
-  if(!_ssScrollListenersAdded){
-    _ssScrollListenersAdded=true;
-    ov.addEventListener('focusin',function(e){
-      var inp=e.target;
-      if(!inp||(!inp.classList.contains('ss-pill-input')&&!inp.classList.contains('ss-sec-input')))return;
-      var card=inp.closest('.ss-card');if(!card)return;
-      // Scroll immediately, then again after keyboard animation
-      _ssScrollToCard(card);
-      setTimeout(function(){_ssScrollToCard(card);},380);
-    });
-  }
   document.body.style.overflow='hidden';
   haptic(4);
 }
