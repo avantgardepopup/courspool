@@ -2377,11 +2377,34 @@ app.get('/teacher/:id/announcements', async (req, res) => {
 app.post('/teacher/:id/announcements', async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
-    const { content } = req.body;
+    const { content, type, title, access_type } = req.body;
     if (!content || !content.trim()) return res.status(400).json({ error: 'Contenu manquant' });
+    const row = { teacher_id: req.params.id, content: content.trim() };
+    if (type) row.type = type;
+    if (title) row.title = title.trim();
+    if (access_type) row.access_type = access_type;
     const { data, error } = await supabase.from('teacher_announcements')
-      .insert({ teacher_id: req.params.id, content: content.trim() }).select().single();
-    if (error) return res.status(500).json({ error });
+      .insert(row).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/teacher/:id/announcements/:ann_id', async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { access_type, title, content } = req.body;
+    const updates = {};
+    if (access_type !== undefined) {
+      if (!['enrolled','private','public'].includes(access_type)) return res.status(400).json({ error: 'Valeur invalide' });
+      updates.access_type = access_type;
+    }
+    if (title !== undefined) updates.title = title;
+    if (content !== undefined) updates.content = content;
+    if (!Object.keys(updates).length) return res.status(400).json({ error: 'Rien à mettre à jour' });
+    const { data, error } = await supabase.from('teacher_announcements')
+      .update(updates).eq('id', req.params.ann_id).eq('teacher_id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: error.message });
     res.json(data);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
