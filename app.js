@@ -397,8 +397,8 @@ function _initFav2Swipe(card,coursId,wrap){
   card.addEventListener('touchcancel',function(){card.classList.remove('tapped');_snapBack();},{passive:true});
 }
 
-// ── CARD FAVORIS 2-COL (style explorer) ──
-function _buildFavCard2Col(c){
+// ── CARD FAVORIS 2-COL masonry (Pinterest) ──
+function _buildFavCard2Col(c,idx){
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
   var mat=findMatiere(c.subj||'')||{color:'#7C3AED',bg:'var(--orp)'};
@@ -408,6 +408,8 @@ function _buildFavCard2Col(c){
   var profPhoto=c.prof_photo||null;
   var modeBg=isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)';
   var modeCo=isV?'#0055B3':'#007A38';
+  // Variable height image zone (cycles for masonry rhythm)
+  var imgH=[90,120,100][(idx||0)%3];
   // Wrapper (clips swipe animation + carries shadow/border)
   var wrap=document.createElement('div');
   wrap.className='fav2-swipe-wrap';
@@ -421,9 +423,9 @@ function _buildFavCard2Col(c){
   div.onclick=function(){openR(c.id);};
   var avInner=profPhoto?('<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">')
     :esc(profIni);
-  div.innerHTML='<span class="fav2-subj" style="background:'+mat.color+'">'+esc(c.subj||'Cours')+'</span>'
-    +'<div class="fav2-av-wrap" style="background:'+profCol+'">'
-    +avInner
+  div.innerHTML='<div class="fav2-img" style="height:'+imgH+'px;background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22);position:relative;overflow:hidden">'
+    +'<span class="fav2-subj" style="background:'+mat.color+'">'+esc(c.subj||'Cours')+'</span>'
+    +'<div class="fav2-av-wrap" style="background:'+profCol+'">'+avInner+'</div>'
     +'</div>'
     +'<div class="fav2-body">'
     +'<div class="fav2-title">'+esc(c.title)+'</div>'
@@ -470,24 +472,32 @@ function buildFavPage(){
         return;
       }
       carousel.innerHTML='';
-      var _fFrag=document.createDocumentFragment();
+      // Masonry: two columns, right column offset by 20px
+      var colL=document.createElement('div');colL.className='fav2-col';
+      var colR=document.createElement('div');colR.className='fav2-col';colR.style.marginTop='20px';
+      var _cardIdx=0;
       _favActive.forEach(function(id){
         var c=C.find(function(x){return x.id==id;});
+        var el;
         if(!c){
           if(!C.length){
-            var sk=document.createElement('div');sk.className='fav2-card';sk.style.cssText='min-height:120px;background:var(--bdr);animation:shimmer 1.4s infinite;background-size:200% 100%';_fFrag.appendChild(sk);return;
+            el=document.createElement('div');el.className='fav2-card';el.style.cssText='min-height:120px;background:var(--bdr);animation:shimmer 1.4s infinite;background-size:200% 100%';
+          } else {
+            var _state=getCourseState(id);
+            el=document.createElement('div');
+            el.className='fav2-swipe-wrap';
+            el.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px 12px;text-align:center;border:1.5px dashed var(--bdr);min-height:120px;border-radius:18px;';
+            el.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--lite)">'+(_state==='past'?t('fav_cours_termine'):t('fav_cours_supprime'))+'</div>'
+              +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:4px 10px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;margin-top:4px">'+t('fav_retirer')+'</button>';
           }
-          var _state=getCourseState(id);
-          var ghost=document.createElement('div');
-          ghost.className='fav2-card';
-          ghost.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px 12px;text-align:center;border:1.5px dashed var(--bdr);min-height:120px';
-          ghost.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--lite)">'+(_state==='past'?t('fav_cours_termine'):t('fav_cours_supprime'))+'</div>'
-            +'<button onclick="event.stopPropagation();favCours.delete(\''+id+'\');saveFavCours();buildFavPage();" style="background:var(--orp);color:var(--or);border:none;border-radius:50px;padding:4px 10px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;margin-top:4px">'+t('fav_retirer')+'</button>';
-          _fFrag.appendChild(ghost);return;
+        } else {
+          el=_buildFavCard2Col(c,_cardIdx);
         }
-        _fFrag.appendChild(_buildFavCard2Col(c));
+        (_cardIdx%2===0?colL:colR).appendChild(el);
+        _cardIdx++;
       });
-      carousel.appendChild(_fFrag);
+      carousel.appendChild(colL);
+      carousel.appendChild(colR);
     }
   }
 
@@ -2401,14 +2411,23 @@ function goAccount(){
     }).catch(function(){});
   }
   // Onglets et cartes visibles uniquement pour les profs
+  var isProf2=user&&user.role==='professeur';
   var tabRev = g('aTabRev');
-  if(tabRev)tabRev.style.display=(user&&user.role==='professeur')?'flex':'none';
+  if(tabRev)tabRev.style.display=isProf2?'flex':'none';
   var cr=g('accCardRev');
-  if(cr)cr.style.display=(user&&user.role==='professeur')?'block':'none';
+  if(cr)cr.style.display=isProf2?'block':'none';
   var ce=g('accCardEsp');
-  if(ce)ce.style.display=(user&&user.role==='professeur')?'block':'none';
+  if(ce)ce.style.display=isProf2?'block':'none';
   var te=g('aTabEsp');
-  if(te)te.style.display=(user&&user.role==='professeur')?'flex':'none';
+  if(te)te.style.display=isProf2?'flex':'none';
+  // Carte "Mes avis" uniquement pour les profs
+  var ca=g('accCardAvis');
+  if(ca)ca.style.display=isProf2?'block':'none';
+  var ta=g('aTabAvis');
+  if(ta)ta.style.display=isProf2?'flex':'none';
+  // Carte "Mes cours" masquée pour les profs
+  var cm=g('accCardMesCours');
+  if(cm)cm.style.display=isProf2?'none':'block';
   // Statut vérification
   updateVerifStatusBlock();
   updateDiplomeStatusBlock();
@@ -2421,7 +2440,7 @@ function goAccount(){
 }
 
 function switchATab(s,el){
-  ['R','F','H','P','Rev','Rmb','Esp'].forEach(function(x){
+  ['R','F','H','P','Rev','Rmb','Esp','Avis'].forEach(function(x){
     var sec=g('asec'+x),tab=g('aTab'+x);
     if(sec)sec.classList.remove('on');
     if(tab)tab.classList.remove('on');
@@ -2444,6 +2463,7 @@ function switchATab(s,el){
   if(s==='F'){ buildAccLists(); }
   if(s==='Rmb'){loadRemboursements();}
   if(s==='Esp'){buildEspProf();}
+  if(s==='Avis'){_loadProfAvis();}
 }
 
 function buildAccLists(){
@@ -2469,9 +2489,9 @@ function buildAccLists(){
   var rp=g('accRolePill');
   if(rp)rp.textContent=isProf?'👨‍🏫 '+t('reg_prof'):'👤 '+t('reg_eleve');
   var lr=g('listR');
-  // ── Section "Mes cours créés" pour les professeurs ──
+  // ── Section réservations (profs n'ont pas de section "Mes cours" ici) ──
   var profCoursHtml='';
-  if(isProf){
+  if(false&&isProf){
     var _allMyC=C.filter(function(c){return c.pr===user.id;});
     var myC=_allMyC.filter(function(c){return !_isCoursPass(c);});
     var _pastCnt=_allMyC.filter(function(c){return _isCoursPass(c);}).length;
@@ -5801,6 +5821,45 @@ function _loadMpfAvis(pid){
     }).join('');
   }).catch(function(){
     var c=g('tpAvisList');if(c)c.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Pas encore d\'avis pour le moment.</div>';
+  });
+}
+
+// ── MES AVIS (compte prof) ──────────────────────────────────────────────
+function _loadProfAvis(){
+  if(!user)return;
+  var listEl=g('profAvisList');
+  var avgEl=g('profAvisAvg');
+  var starsEl=g('profAvisStars');
+  var countEl=g('profAvisCount');
+  if(listEl)listEl.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px;margin:14px 16px"></div>';
+  fetch(API+'/notations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(notes){
+    if(!notes||!notes.length){
+      if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
+      if(avgEl)avgEl.textContent='—';
+      if(starsEl)starsEl.textContent='☆☆☆☆☆';
+      if(countEl)countEl.textContent='Aucun avis pour le moment';
+      return;
+    }
+    var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
+    if(avgEl){avgEl.textContent=avg;}
+    var starsHtml=function(n){var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;};
+    if(starsEl)starsEl.textContent=starsHtml(avg);
+    if(countEl)countEl.textContent=notes.length+' avis';
+    var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
+    if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
+      var initial=a.prenom?a.prenom[0].toUpperCase():'?';
+      var col=COLORS[idx%COLORS.length];
+      return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--bdr)">'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+(a.prenom||'Élève')+'</div>'
+        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Impossible de charger les avis.</div>';
   });
 }
 
@@ -11155,7 +11214,7 @@ async function sendCoursCardMsg(c){
 // ============================================================
 // PROFILE — Home grid + Detail view navigation
 // ============================================================
-var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus','Rmb':'Remboursements'};
+var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus','Rmb':'Remboursements','Avis':'Mes avis'};
 
 function showAccHome(){
   var pg=g('pgAcc');

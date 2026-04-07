@@ -1018,7 +1018,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px">
 
           <!-- Mes cours -->
-          <div class="acc-card" onclick="goMesCoursPage()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+          <div id="accCardMesCours" class="acc-card" onclick="goMesCoursPage()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
             </div>
@@ -1071,6 +1071,15 @@
             <div style="font-size:12px;color:var(--lite);margin-top:3px" data-i18n="acc_paiements">Paiements reçus</div>
           </div>
 
+          <!-- Mes avis (prof seulement) -->
+          <div class="acc-card" id="accCardAvis" onclick="switchATab('Avis',document.getElementById('aTabAvis'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,149,0,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes avis</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px">Notes &amp; commentaires</div>
+          </div>
+
           <!-- Paramètres -->
           <div class="acc-card" id="accCardParams" onclick="openSettings()" style="background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -1093,6 +1102,7 @@
         <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none" data-i18n="acc_revenus">Revenus</button>
         <button class="ptab" id="aTabRmb" onclick="switchATab('Rmb',this)" style="display:none">Remboursements</button>
         <button class="ptab" id="aTabEsp" onclick="switchATab('Esp',this)" style="display:none">Mon Espace</button>
+        <button class="ptab" id="aTabAvis" onclick="switchATab('Avis',this)" style="display:none">Mes avis</button>
       </div>
 
       <div class="acc-body">
@@ -1339,6 +1349,25 @@
           <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 10px">Remboursements</div>
           <div id="listRmb">
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span></div>
+          </div>
+        </div>
+
+        <!-- MES AVIS (prof seulement) -->
+        <div class="asec" id="asecAvis" style="padding:0 16px 48px">
+          <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 16px">Mes avis</div>
+          <!-- Score global -->
+          <div id="profAvisScore" style="display:flex;align-items:center;gap:16px;background:var(--wh);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid var(--bdr)">
+            <div style="text-align:center;flex-shrink:0">
+              <div id="profAvisAvg" style="font-size:40px;font-weight:900;color:#FF9500;letter-spacing:-.04em">—</div>
+              <div id="profAvisStars" style="font-size:18px;color:#FF9500;letter-spacing:.05em;margin-top:-4px">☆☆☆☆☆</div>
+            </div>
+            <div style="flex:1">
+              <div id="profAvisCount" style="font-size:13px;color:var(--lite);font-weight:600">Aucun avis pour le moment</div>
+            </div>
+          </div>
+          <!-- Liste des avis -->
+          <div id="profAvisList" style="background:var(--wh);border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid var(--bdr)">
+            <div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">Chargement…</div>
           </div>
         </div>
 

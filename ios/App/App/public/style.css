@@ -734,8 +734,11 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
   -webkit-tap-highlight-color:transparent;
 }
 .fav-remove-btn:hover{background:rgba(239,68,68,.8);}
-/* ── FAV COURS 2-COL (style explorer) ── */
-.fav2-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 8px;}
+/* ── FAV COURS 2-COL masonry (Pinterest) ── */
+.fav2-grid{display:flex;gap:10px;padding:0 16px 8px;align-items:flex-start;}
+.fav2-col{flex:1;display:flex;flex-direction:column;gap:10px;}
+.fav2-img{width:100%;border-radius:0;overflow:hidden;flex-shrink:0;}
+.fav2-img-inner{width:100%;height:100%;}
 /* Swipe wrapper — clips animation and carries shadow/border */
 .fav2-swipe-wrap{
   position:relative;overflow:hidden;border-radius:18px;
@@ -776,7 +779,7 @@ html.dk .fav2-card{background:var(--wh);}
   box-shadow:0 2px 8px rgba(0,0,0,.2);
   flex-shrink:0;
 }
-.fav2-body{padding:44px 10px 10px;}
+.fav2-body{padding:10px 10px 10px;}
 .fav2-title{font-size:13px;font-weight:700;color:var(--ink);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px;letter-spacing:-.01em;}
 .fav2-sched{
   display:inline-flex;align-items:center;gap:5px;
