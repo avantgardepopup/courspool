@@ -566,29 +566,27 @@
       </div>
     </div>
     <!-- Barre de recherche — dans le header sticky -->
-    <div id="mobSearch" style="padding:8px 0 6px">
+    <div id="mobSearch" style="padding:6px 0 10px">
       <!-- Inputs cachés maintenus pour compatibilité avec doFilter(), clearSearch(), etc. -->
       <input type="text" id="mobSearchInput" style="display:none" autocomplete="off"
         oninput="this._t=this.value;var s=g('srch');if(s)s.value=this._t;doFilter();">
       <button id="searchClearBtn" style="display:none"></button>
       <div id="searchCodeSuggestion" style="display:none"></div>
       <div id="searchAliasSuggestion" style="display:none"></div>
+      <button id="searchPillClear" style="display:none"></button>
 
-      <div style="display:flex;align-items:center;gap:10px">
-        <!-- Pill de recherche cliquable -->
-        <div id="searchPill" onclick="openSmartSearch('cours')" style="flex:1;display:flex;align-items:center;gap:10px;background:var(--wh);border-radius:18px;padding:11px 14px;border:1.5px solid var(--bdr);box-shadow:0 2px 10px rgba(0,0,0,.07);cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;min-width:0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.2" stroke-linecap="round" width="17" height="17" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <div id="searchPillMain" style="flex:1;font-size:15px;font-weight:500;color:var(--lite);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rechercher un cours...</div>
-          <button id="searchPillClear" onclick="event.stopPropagation();clearSearchPill()" style="display:none;width:22px;height:22px;border-radius:50%;background:var(--bdr);border:none;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+      <!-- Pill Airbnb-style -->
+      <div class="search-pill" id="searchPill" onclick="openSmartSearch('cours')">
+        <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+        <div class="pill-text">
+          <div class="pill-main" id="searchPillMain">Que cherches-tu ?</div>
+          <div class="pill-sub" id="searchPillSub">Matière · Professeur · Code privé</div>
         </div>
-        <!-- Bouton Filtres -->
-        <button id="filtersBtn" onclick="openAllFiltersSheet()" style="position:relative;background:var(--wh);border:1.5px solid var(--bdr);border-radius:14px;padding:10px 13px;display:flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.05);font-family:inherit;flex-shrink:0;transition:all .18s;-webkit-tap-highlight-color:transparent">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-          <span style="font-size:13px;font-weight:600;color:var(--mid)">Filtres</span>
-          <div id="filtersBadge" style="display:none;position:absolute;top:-7px;right:-7px;background:var(--or);color:#fff;font-size:9px;font-weight:800;min-width:17px;height:17px;border-radius:50%;align-items:center;justify-content:center;border:2px solid var(--wh);padding:0 2px">0</div>
-        </button>
+        <div class="pill-divider"></div>
+        <div class="pill-filter-btn" id="filtersBtn" onclick="event.stopPropagation();openAllFiltersSheet()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+          <div id="filtersBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#E8611A;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;border:1.5px solid #fff;padding:0 2px">0</div>
+        </div>
       </div>
     </div>
   </div>
@@ -598,9 +596,10 @@
   <!-- PAGE EXPLORER -->
   <div class="pg on" id="pgExp">
     <div class="cnt" style="position:relative;padding-top:16px">
-      <div class="ptr-indicator" id="ptrIndicator" style="opacity:0;position:absolute;top:-40px;left:0;right:0">
-        <div class="ptr-spinner" id="ptrSpinner"></div>
-        <span id="ptrText" data-i18n="exp_pull">Tirer pour actualiser</span>
+      <div class="ptr-indicator" id="ptrIndicator" style="opacity:0;position:absolute;top:-44px;left:0;right:0">
+        <svg id="ptrSpinner" class="ptr-spinner" viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2.5" stroke-linecap="round" width="22" height="22">
+          <path d="M12 2a10 10 0 0 1 10 10"/>
+        </svg>
       </div>
       <!-- Bandeau vérification identité — discret, natif -->
       <div id="verifBand" style="display:none;align-items:center;gap:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer" onclick="openCniSheet()">
@@ -3191,65 +3190,68 @@
 </div>
 
 <!-- ════ SMART SEARCH OVERLAY ════ -->
-<!-- Smart Search — Bottom Sheet (Airbnb-style) -->
-<div id="smartSearchOverlay" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.45);-webkit-tap-highlight-color:transparent" onclick="if(event.target===this)closeSmartSearch()">
-  <div id="ssSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--wh);border-radius:24px 24px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden">
+<!-- Smart Search — Bottom Sheet -->
+<div id="smartSearchOverlay" class="search-overlay" style="display:none" onclick="if(event.target===this)closeSmartSearch()">
+  <div id="ssSheet" class="search-sheet">
 
-    <!-- Handle -->
-    <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:12px auto 0;flex-shrink:0"></div>
+    <!-- Grabber -->
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 16px"></div>
 
     <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;flex-shrink:0">
-      <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Que cherches-tu ?</div>
-      <button onclick="closeSmartSearch()" style="width:32px;height:32px;border:none;border-radius:50%;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);-webkit-tap-highlight-color:transparent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 14px">
+      <div style="font-size:15px;font-weight:500;color:#222">Que cherches-tu ?</div>
+      <button onclick="closeSmartSearch()" style="width:28px;height:28px;border-radius:50%;background:#f2f2f2;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
 
-    <!-- Input de recherche -->
-    <div id="ssInputSection" style="padding:0 16px 8px;flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:12px 14px;border:1.5px solid var(--bdr);transition:border-color .18s" id="ssInputWrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="ssInput" type="text" placeholder="Matière, professeur, mots-clés…"
-          style="flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;color:var(--ink);outline:none;min-width:0"
+    <!-- Input -->
+    <div id="ssInputSection" style="padding:0 16px 12px">
+      <div style="display:flex;align-items:center;gap:10px;border:0.5px solid #ccc;border-radius:10px;padding:10px 14px;background:#fff;transition:border-color .18s" id="ssInputWrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.2" stroke-linecap="round" width="15" height="15" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+        <input id="ssInput" type="text" placeholder="Matière, professeur, mots-clés..."
+          style="flex:1;border:none;background:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-size:14px;color:#222;outline:none;min-width:0"
           autocomplete="off" oninput="_ssOnInput(this.value)"
-          onfocus="g('ssInputWrap').style.borderColor='var(--or)'" onblur="g('ssInputWrap').style.borderColor='var(--bdr)'">
-        <button id="ssClearBtn" onclick="_ssOnClear()" style="display:none;width:20px;height:20px;border-radius:50%;background:var(--bdr);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          onfocus="g('ssInputWrap').style.borderColor='#E8611A'" onblur="g('ssInputWrap').style.borderColor='#ccc'">
+        <button id="ssClearBtn" onclick="_ssOnClear()" style="display:none;width:18px;height:18px;border-radius:50%;background:#bbb;border:none;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
     </div>
 
     <!-- Panel Code privé -->
-    <div id="ssCodeSection" style="display:none;padding:0 16px 8px;flex-shrink:0">
-      <div style="display:flex;gap:10px;align-items:center">
+    <div id="ssCodeSection" style="display:none;padding:0 16px 12px">
+      <div style="display:flex;gap:8px;align-items:center">
         <input id="ssCodeInput" type="text" placeholder="Ex: ABC123"
-          style="flex:1;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 14px;font-family:inherit;font-size:17px;font-weight:700;outline:none;text-transform:uppercase;letter-spacing:.1em;text-align:center;background:var(--bg);color:var(--ink);transition:border-color .18s"
+          style="flex:1;border:0.5px solid #ccc;border-radius:10px;padding:12px 14px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-size:16px;font-weight:700;outline:none;text-transform:uppercase;letter-spacing:.1em;text-align:center;color:#222;transition:border-color .18s"
           oninput="this.value=this.value.toUpperCase()"
-          onfocus="this.style.borderColor='var(--or)'" onblur="this.style.borderColor='var(--bdr)'">
-        <button onclick="_ssSubmitCode()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">
+          onfocus="this.style.borderColor='#E8611A'" onblur="this.style.borderColor='#ccc'">
+        <button onclick="_ssSubmitCode()" style="background:#E8611A;color:#fff;border:none;border-radius:10px;padding:12px 16px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-weight:500;font-size:14px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent">
           Rejoindre
         </button>
       </div>
     </div>
 
-    <!-- Suggestions / résultats (scrollable) -->
-    <div id="ssSuggestions" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 4px">
-      <div id="ssResultInfo" style="display:none;font-size:13px;color:var(--lite);margin-bottom:10px;text-align:center;background:var(--bg);border-radius:10px;padding:8px 12px;margin-top:4px"></div>
+    <!-- Label Matières -->
+    <div id="ssMatiereLabel" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;padding:0 16px;margin-bottom:8px">Matières populaires</div>
+
+    <!-- Suggestions / résultats -->
+    <div id="ssSuggestions" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div id="ssResultInfo" style="display:none;font-size:13px;color:#888;padding:8px 16px;text-align:center"></div>
       <div id="ssQuickSugg"></div>
     </div>
 
     <!-- Lien Code privé -->
-    <div id="ssCodeLink" style="padding:6px 16px 2px;flex-shrink:0;text-align:center">
-      <button onclick="_setSearchTab('code')" style="background:none;border:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--mid);padding:6px;-webkit-tap-highlight-color:transparent">
-        Tu as un code privé ?&nbsp;<span style="color:var(--or);font-weight:600">Entrer le code →</span>
+    <div id="ssCodeLink" style="padding:8px 16px 4px;text-align:center">
+      <button onclick="_setSearchTab('code')" style="background:none;border:none;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-size:13px;color:#666;-webkit-tap-highlight-color:transparent">
+        Tu as un code privé ?&nbsp;<span style="color:#E8611A;font-weight:500">Entrer le code →</span>
       </button>
     </div>
 
-    <!-- Footer : bouton Rechercher -->
-    <div style="padding:10px 16px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));flex-shrink:0">
-      <button onclick="closeSmartSearch()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 14px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <!-- Bouton Rechercher -->
+    <div style="padding:8px 16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px))">
+      <button onclick="closeSmartSearch()" style="width:100%;background:#E8611A;color:#fff;border:none;border-radius:12px;height:48px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;font-weight:500;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
         <span id="ssResultBtn">Rechercher</span>
       </button>
     </div>

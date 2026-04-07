@@ -11527,9 +11527,9 @@ var _ssTimer=null;
 function openSmartSearch(tab){
   _ssTab=tab||'cours';
   var ov=g('smartSearchOverlay');if(!ov)return;
-  ov.style.display='block';
-  ov.style.animation='ssBdIn .22s ease forwards';
-  var sheet=g('ssSheet');if(sheet){sheet.style.animation='ssSheetUp .32s cubic-bezier(.32,.72,0,1)';}
+  ov.style.display='flex';
+  ov.offsetHeight; // force reflow
+  ov.classList.add('open');
   _setSearchTab(_ssTab);
   setTimeout(function(){
     var inp=g('ssInput');
@@ -11545,11 +11545,12 @@ function openSmartSearch(tab){
 }
 
 function closeSmartSearch(){
-  var ov=g('smartSearchOverlay'),sheet=g('ssSheet');
-  if(sheet){sheet.style.animation='ssSheetDown .25s cubic-bezier(.4,0,1,1) forwards';}
-  if(ov){ov.style.animation='ssBdOut .25s ease forwards';setTimeout(function(){ov.style.display='none';ov.style.animation='';if(sheet){sheet.style.animation='';}},230);}
+  var ov=g('smartSearchOverlay');
+  if(ov){
+    ov.classList.remove('open');
+    setTimeout(function(){ov.style.display='none';},380);
+  }
   document.body.style.overflow='';
-  // Apply search term to main inputs
   var ssInp=g('ssInput');
   var val=ssInp?ssInp.value.trim():'';
   var mobInp=g('mobSearchInput');if(mobInp)mobInp.value=val;
@@ -11560,18 +11561,19 @@ function closeSmartSearch(){
 
 function _setSearchTab(tab){
   _ssTab=tab;
-  var inputSec=g('ssInputSection'),codeSec=g('ssCodeSection'),codeLink=g('ssCodeLink'),ssInp=g('ssInput');
+  var inputSec=g('ssInputSection'),codeSec=g('ssCodeSection'),codeLink=g('ssCodeLink'),matLbl=g('ssMatiereLabel'),ssInp=g('ssInput');
   if(tab==='code'){
     if(inputSec)inputSec.style.display='none';
     if(codeSec)codeSec.style.display='block';
     if(codeLink)codeLink.style.display='none';
+    if(matLbl)matLbl.style.display='none';
     setTimeout(function(){var ci=g('ssCodeInput');if(ci)ci.focus();},80);
   } else {
     if(inputSec)inputSec.style.display='block';
     if(codeSec)codeSec.style.display='none';
     if(codeLink)codeLink.style.display='block';
-    var ph={cours:'Matière, professeur, mots-clés…',prof:'Nom du professeur…'};
-    if(ssInp){ssInp.setAttribute('placeholder',ph[tab]||'Rechercher…');setTimeout(function(){ssInp.focus();},80);}
+    var ph={cours:'Matière, professeur, mots-clés...',prof:'Nom du professeur...'};
+    if(ssInp){ssInp.setAttribute('placeholder',ph[tab]||'Rechercher...');setTimeout(function(){ssInp.focus();},80);}
   }
   _ssBuildSuggestions(ssInp?ssInp.value:'');
 }
@@ -11609,44 +11611,52 @@ function _ssUpdateResultCount(){
 
 function _ssBuildSuggestions(val){
   var box=g('ssQuickSugg');if(!box)return;
+  var matLbl=g('ssMatiereLabel');
   var MAT_SUGG=[
-    {label:'Mathématiques',sub:'Algèbre, analyse, géométrie',col:'#3B82F6',bg:'#EFF6FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/><path d="M5 5l14 14M5 19L19 5" stroke-width="1.5"/></svg>'},
-    {label:'Physique-Chimie',sub:'Mécanique, thermodynamique, chimie',col:'#8B5CF6',bg:'#F5F3FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>'},
-    {label:'Anglais',sub:'Oral, écrit, grammaire, TOEFL',col:'#F59E0B',bg:'#FFFBEB',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'},
-    {label:'Français',sub:'Littérature, dissertation, expression',col:'#6366F1',bg:'#EEF2FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'},
-    {label:'Histoire-Géo',sub:'Chronologie, géopolitique, cartes',col:'#10B981',bg:'#ECFDF5',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>'},
+    {label:'Mathématiques',sub:'Algèbre, analyse, géométrie',col:'#6366F1',bg:'#EEF2FF',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/><path d="M5 5l14 14M5 19L19 5" stroke-width="1.5"/></svg>'},
+    {label:'Physique-Chimie',sub:'Mécanique, thermodynamique, chimie',col:'#22C55E',bg:'#F0FDF4',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>'},
+    {label:'Anglais',sub:'Oral, écrit, grammaire, TOEFL',col:'#F97316',bg:'#FFF7ED',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'},
+    {label:'Français',sub:'Littérature, dissertation, expression',col:'#F43F5E',bg:'#FFF0F3',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#F43F5E" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'},
+    {label:'Histoire-Géo',sub:'Chronologie, géopolitique, cartes',col:'#A78BFA',bg:'#F5F0FF',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>'},
     {label:'Informatique',sub:'Algorithmes, code, IA, data',col:'#0EA5E9',bg:'#F0F9FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="20" height="20"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'},
-    {label:'Espagnol',sub:'Grammaire, oral, DELE',col:'#EF4444',bg:'#FEF2F2',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'},
-    {label:'Musique',sub:'Solfège, instrument, théorie',col:'#EC4899',bg:'#FDF2F8',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="18" height="18"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'},
+    {label:'Espagnol',sub:'Grammaire, oral, DELE',col:'#FB923C',bg:'#FFF8F0',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'},
+    {label:'Musique',sub:'Solfège, instrument, théorie',col:'#D946EF',bg:'#FDF4FF',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#D946EF" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},
   ];
   if(_ssTab==='prof'&&(!val||val.length<1)){
     var profs=Object.keys(P).filter(function(pid){
       return P[pid]&&P[pid].nm&&(!user||pid!==user.id);
     }).slice(0,7);
-    if(!profs.length){box.innerHTML='<div style="font-size:13px;color:var(--lite);text-align:center;padding:24px 0">Aucun professeur à afficher</div>';return;}
-    var h='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:8px">Professeurs</div>';
+    if(matLbl)matLbl.style.display='none';
+    if(!profs.length){box.innerHTML='<div style="font-size:13px;color:#888;text-align:center;padding:24px 0">Aucun professeur à afficher</div>';return;}
+    var h='';
     profs.forEach(function(pid){
       var p=P[pid];var _nm=(p&&p.nm)||'—';var _ini=(p&&p.i)||'?';var _col=(p&&p.col)||'linear-gradient(135deg,#FF8C55,#E04E10)';
-      var _inner=(p&&p.photo)?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:13px">':'<span style="color:#fff;font-weight:800;font-size:17px">'+esc(_ini)+'</span>';
-      h+='<div class="ss-sugg-item" onclick="closeSmartSearch();openPrFull(\''+pid+'\')"><div class="ss-sugg-icon" style="background:'+_col+'">'+_inner+'</div><div><div style="font-size:15px;font-weight:600;color:var(--ink)">'+esc(_nm)+'</div>'+(p&&p.matieres?'<div style="font-size:12px;color:var(--lite)">'+esc(p.matieres.split(',').slice(0,2).join(', '))+'</div>':'')+'</div></div>';
+      var _inner=(p&&p.photo)?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px">':'<span style="color:#fff;font-weight:700;font-size:15px">'+esc(_ini)+'</span>';
+      h+='<div class="subject-item" onclick="closeSmartSearch();openPrFull(\''+pid+'\')">'
+        +'<div style="width:40px;height:40px;border-radius:10px;background:'+_col+';display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">'+_inner+'</div>'
+        +'<div><div style="font-size:13px;font-weight:500;color:#222">'+esc(_nm)+'</div>'+(p&&p.matieres?'<div style="font-size:11px;color:#888">'+esc(p.matieres.split(',').slice(0,2).join(', '))+'</div>':'')+'</div></div>';
     });
     box.innerHTML=h;return;
   }
-  if(val&&val.length>0){box.innerHTML='';return;}
-  var h2='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:8px">Matières populaires</div>';
+  if(val&&val.length>0){
+    if(matLbl)matLbl.style.display='none';
+    box.innerHTML='';return;
+  }
+  if(matLbl)matLbl.style.display='block';
+  var h2='';
   MAT_SUGG.forEach(function(m){
-    h2+='<div class="ss-sugg-item" onclick="_ssPickMatiere(\''+m.label+'\')">'
-      +'<div class="ss-sugg-icon" style="background:'+m.bg+'">'+m.ico+'</div>'
-      +'<div><div style="font-size:15px;font-weight:600;color:var(--ink)">'+m.label+'</div>'
-      +'<div style="font-size:12px;color:var(--lite)">'+m.sub+'</div></div></div>';
+    h2+='<div class="subject-item" onclick="_ssPickMatiere(\''+m.label+'\')">'
+      +'<div style="background:'+m.bg+';width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+m.ico+'</div>'
+      +'<div><div style="font-size:13px;font-weight:500;color:#222">'+m.label+'</div>'
+      +'<div style="font-size:11px;color:#888">'+m.sub+'</div></div></div>';
   });
   box.innerHTML=h2;
 }
@@ -11672,17 +11682,19 @@ function _ssSubmitCode(){
 }
 
 function _updateSearchPill(val){
-  var main=g('searchPillMain'),clr=g('searchPillClear');
+  var main=g('searchPillMain'),sub=g('searchPillSub'),clr=g('searchPillClear');
   if(val){
-    if(main){main.textContent=val;main.style.color='var(--ink)';main.style.fontWeight='600';}
+    if(main){main.textContent=val;main.style.color='#222';}
+    if(sub)sub.style.display='none';
     if(clr)clr.style.display='flex';
     var pill=g('searchPill');
-    if(pill){pill.style.borderColor='var(--or)';pill.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)';}
+    if(pill)pill.style.boxShadow='0 2px 8px rgba(232,97,26,.18),0 0 0 1.5px rgba(232,97,26,.35)';
   } else {
-    if(main){main.textContent='Rechercher un cours...';main.style.color='var(--lite)';main.style.fontWeight='500';}
+    if(main){main.textContent='Que cherches-tu ?';main.style.color='#222';}
+    if(sub)sub.style.display='block';
     if(clr)clr.style.display='none';
     var pill2=g('searchPill');
-    if(pill2){pill2.style.borderColor='';pill2.style.boxShadow='';}
+    if(pill2)pill2.style.boxShadow='0 2px 8px rgba(0,0,0,.10),0 0 0 0.5px rgba(0,0,0,.07)';
   }
 }
 
@@ -11763,10 +11775,10 @@ function _updateFiltersBadge(){
   if(!badge)return;
   if(count>0){
     badge.textContent=count;badge.style.display='flex';
-    if(btn){btn.style.borderColor='rgba(255,107,43,.4)';btn.style.color='var(--or)';}
+    if(btn){btn.style.borderColor='#E8611A';btn.style.background='rgba(232,97,26,.08)';}
   } else {
     badge.style.display='none';
-    if(btn){btn.style.borderColor='';btn.style.color='';}
+    if(btn){btn.style.borderColor='';btn.style.background='';}
   }
 }
 

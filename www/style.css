@@ -276,15 +276,12 @@ html.dk .lreg-back{background:var(--wh);border-color:var(--bdr);}
 #mobSearch { padding-left: 0; padding-right: 0; }
 #mobSearch .search-bar-premium { margin: 0; }
 .mob-title{
-  transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s;
-  transform-origin:left center;
-  font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--ink);line-height:1;
+  font-size:18px;font-weight:500;color:var(--ink);line-height:1.3;
   display:block;
-  will-change:transform;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
 }
-.mob-header.scrolled .mob-title{transform:scale(.70);font-weight:700;}
 .mob-header-inner{display:flex;align-items:flex-start;justify-content:space-between;}
-.mob-sub{font-size:13px;color:var(--lite);margin-top:3px;font-weight:400;}
+.mob-sub{font-size:12px;color:var(--lite);margin-top:3px;font-weight:400;}
 .mob-actions{display:flex;align-items:center;gap:10px;}
 #btnProposerMob{display:none !important;}
 .mob-search{display:block;padding:8px 20px 12px;background:var(--wh);border-bottom:1px solid var(--bdr);position:-webkit-sticky;position:sticky;top:0;z-index:49;-webkit-transform:translateZ(0);transform:translateZ(0);}
@@ -307,10 +304,10 @@ html.dk .lreg-back{background:var(--wh);border-color:var(--bdr);}
   
 }
 .cnt{padding:20px 16px;max-width:1200px;overflow:visible;}
-.ptr-indicator{position:absolute;top:-50px;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;color:var(--lite);font-size:13px;font-weight:500;gap:8px;transition:opacity .2s;}
-.ptr-spinner{width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--or);border-radius:50%;}
+.ptr-indicator{position:absolute;top:-50px;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;transition:opacity .2s;}
+.ptr-spinner{display:block;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ptr-spinner.spinning{animation:spin .7s linear infinite;}
+.ptr-spinner.spinning{animation:spin .8s linear infinite;}
 .locbar{background:var(--wh);border-radius:16px;border:1.5px solid var(--bdr);padding:11px 14px;display:none;align-items:center;gap:8px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .18s,box-shadow .18s;}
 .locbar.open{display:flex;}
 .locbar:focus-within{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,107,43,.08);}
@@ -2819,14 +2816,15 @@ html.dk .msg-bubble-time.them { color: #fff; }
   display:inline-flex;
   align-items:center;
   gap:5px;
-  padding:7px 14px;
-  border-radius:50px;
-  border:1.5px solid var(--bdr);
-  background:var(--wh);
-  color:var(--mid);
-  font-family:inherit;
-  font-size:13px;
-  font-weight:600;
+  padding:0 14px;
+  height:34px;
+  border-radius:20px;
+  border:1px solid #ddd;
+  background:#fff;
+  color:#222;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
+  font-size:12px;
+  font-weight:500;
   cursor:pointer;
   white-space:nowrap;
   flex-shrink:0;
@@ -2835,14 +2833,13 @@ html.dk .msg-bubble-time.them { color: #fff; }
   -webkit-tap-highlight-color:transparent;
 }
 .filter-pill-btn:hover {
-  border-color:var(--or);
-  color:var(--or);
+  border-color:#aaa;
 }
 .filter-pill-btn.active, .filter-pill-btn.on {
-  background:var(--or);
-  border-color:var(--or);
+  background:#222;
+  border-color:#222;
   color:#fff;
-  box-shadow:0 3px 10px rgba(255,107,43,.25);
+  box-shadow:none;
 }
 .filter-pill-add {
   border-style:dashed;
@@ -2857,7 +2854,8 @@ html.dk .msg-bubble-time.them { color: #fff; }
 /* Dark mode */
 html.dk .search-bar-premium { background:var(--wh); border-color:var(--bdr); }
 html.dk .search-input-premium { background:transparent; -webkit-text-fill-color:var(--ink); }
-html.dk .filter-pill-btn { background:var(--wh); }
+html.dk .filter-pill-btn { background:var(--wh);border-color:var(--bdr);color:var(--ink); }
+html.dk .filter-pill-btn.active, html.dk .filter-pill-btn.on { background:var(--ink);border-color:var(--ink);color:var(--bg); }
 
 /* ════ FILTER BAR : hide filter-fixed pills (now in AllFilters sheet) ════ */
 .filter-fixed { display:none !important; }
@@ -2869,13 +2867,65 @@ html.dk .filter-pill-btn { background:var(--wh); }
 #searchPill:active { opacity:.8; transform:scale(.98); }
 #filtersBtn:active { opacity:.8; }
 
+/* ════ SEARCH PILL (Airbnb-style) ════ */
+.search-pill {
+  display:flex;align-items:center;
+  background:#fff;border-radius:40px;
+  padding:10px 12px 10px 16px;margin:0;gap:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.10),0 0 0 0.5px rgba(0,0,0,.07);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pill-icon { width:17px;height:17px;color:#222;flex-shrink:0; }
+.pill-text { flex:1;min-width:0; }
+.pill-main { font-size:13px;font-weight:600;color:#222;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.pill-sub { font-size:11px;color:#888;margin-top:2px; }
+.pill-divider { width:0.5px;height:26px;background:#ddd;flex-shrink:0; }
+.pill-filter-btn {
+  width:32px;height:32px;border-radius:50%;border:0.5px solid #ccc;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;
+}
+.pill-filter-btn svg { width:14px;height:14px;color:#222; }
+
+html.dk .search-pill { background:var(--wh);box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05); }
+html.dk .pill-main { color:var(--ink); }
+html.dk .pill-sub { color:var(--lite); }
+html.dk .pill-divider { background:var(--bdr); }
+html.dk .pill-filter-btn { border-color:var(--bdr); }
+html.dk .pill-filter-btn svg { color:var(--ink); }
+html.dk .pill-icon { color:var(--ink); }
+
 /* ════ SMART SEARCH BOTTOM SHEET ════ */
-#smartSearchOverlay { animation:ssBdIn .22s ease forwards; }
-@keyframes ssBdIn { from{opacity:0} to{opacity:1} }
-@keyframes ssBdOut { from{opacity:1} to{opacity:0} }
-#ssSheet { animation:ssSheetUp .32s cubic-bezier(.32,.72,0,1); }
-@keyframes ssSheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-@keyframes ssSheetDown { from{transform:translateY(0)} to{transform:translateY(100%)} }
+.search-overlay {
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.35);
+  display:flex;flex-direction:column;justify-content:flex-end;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s;
+  z-index:1000;
+}
+.search-overlay.open { opacity:1;pointer-events:all; }
+.search-sheet {
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  max-height:92vh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transform:translateY(100%);
+  transition:transform .38s cubic-bezier(.32,.72,0,1);
+}
+.search-overlay.open .search-sheet { transform:translateY(0); }
+html.dk .search-sheet { background:var(--wh); }
+html.dk .search-sheet input { color:var(--ink);background:var(--bg); }
+html.dk #ssInputWrap { background:var(--bg);border-color:var(--bdr); }
+
+/* Subject items dans le bottom sheet */
+.subject-item {
+  display:flex;align-items:center;gap:12px;
+  padding:10px 16px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.subject-item:active { opacity:.7; }
 
 /* Segment tabs */
 .ss-tab {
