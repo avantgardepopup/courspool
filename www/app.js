@@ -5587,7 +5587,7 @@ function openSendDocSheet(){
   var pid=_curPrFull;if(!pid)return;
   haptic(4);
   var bd=document.createElement('div');
-  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center;transition:padding-bottom .18s';
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
   sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
@@ -5602,6 +5602,16 @@ function openSendDocSheet(){
     +'<input id="_sendDocUrl" type="url" placeholder="Lien (Drive, Notion, Dropbox…)" class="esp-input" style="margin-bottom:16px">'
     +'<button onclick="mpfSubmitDocSheet(this)" class="esp2-btn-submit" style="width:100%">Envoyer</button>'
     +'<button onclick="this.closest(\'[style*=rgba\\(0\\,0\\,0\\,.5\\)]\').remove()" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+  // Keyboard avoidance — push sheet up when iOS keyboard opens
+  function _kbAdjust(){
+    if(!document.body.contains(bd))return;
+    var kbH=window.visualViewport?Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop):0;
+    bd.style.paddingBottom=kbH>30?kbH+'px':'0px';
+  }
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',_kbAdjust,{passive:true});
+    window.visualViewport.addEventListener('scroll',_kbAdjust,{passive:true});
+  }
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
   bd.appendChild(sheet);document.body.appendChild(bd);
   setTimeout(function(){var inp=document.getElementById('_sendDocTitle');if(inp)inp.focus();},200);
