@@ -864,16 +864,44 @@
   </div>
 
   <!-- PAGE MES PROFS -->
-  <div class="pg" id="pgMesProfs">
-    <div id="mesProfsEmpty" style="display:none;text-align:center;padding:60px 24px;width:100%;box-sizing:border-box">
-      <div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em" data-i18n="mes_profs_empty_title">Aucun professeur suivi</div>
-      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px" data-i18n="mes_profs_empty_sub">Suivez un professeur depuis son profil pour le retrouver ici.</div>
-      <button onclick="navTo('exp')" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="fav_explore">Explorer les cours →</button>
+  <div class="pg" id="pgMesProfs" style="padding-top:0">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 8px">
+      <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Mes Profs</div>
+      <button onclick="openEnrollSheet()" style="display:flex;align-items:center;gap:6px;background:var(--or);color:#fff;border:none;border-radius:50px;padding:9px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Rejoindre
+      </button>
     </div>
-    <div id="mesProfsCarousel" class="mp2-grid"></div>
+    <!-- Empty state -->
+    <div id="mesProfsEmpty" style="display:none;text-align:center;padding:48px 24px 32px;width:100%;box-sizing:border-box">
+      <div style="width:88px;height:88px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" stroke-linecap="round" width="38" height="38"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Rejoins l'espace de ton prof</div>
+      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px">Demande à ton professeur son code d'accès et entre-le ici pour accéder à son espace.</div>
+      <button onclick="openEnrollSheet()" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Entrer un code →</button>
+    </div>
+    <!-- Liste des profs -->
+    <div id="mesProfsCarousel"></div>
+  </div>
+
+  <!-- TUTO ÉLÈVE (Mes Profs) -->
+  <div id="bdMesProfsTuto" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);align-items:flex-end;justify-content:center" onclick="if(event.target===this)mptSkip()">
+    <div id="mptSheet" style="background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,0px));animation:mi .3s cubic-bezier(.32,1,.6,1)">
+      <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
+      <div id="mptTrack" style="overflow:hidden;padding:0 24px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px 0;gap:8px">
+        <button id="mptBackBtn" onclick="mptPrev()" style="background:var(--bg);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;visibility:hidden;-webkit-tap-highlight-color:transparent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div id="mptDots" style="display:flex;gap:7px;align-items:center;flex:1;justify-content:center"></div>
+        <button id="mptBtn" onclick="mptNext()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3);-webkit-tap-highlight-color:transparent;flex-shrink:0">Suivant</button>
+      </div>
+      <div style="text-align:center;padding:10px 0 0">
+        <button onclick="mptSkip()" style="background:none;border:none;font-size:13px;color:var(--lite);font-family:inherit;cursor:pointer;padding:6px 16px;-webkit-tap-highlight-color:transparent">Passer</button>
+      </div>
+    </div>
   </div>
 
   <!-- PAGE MESSAGES -->
