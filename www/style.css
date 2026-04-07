@@ -958,7 +958,7 @@ html.dk .contenu-card{border-color:rgba(255,255,255,.08);}
 /* ── FICHE PROF UNIFIÉE ── */
 #bdPrFull{
   position:fixed;inset:0;z-index:500;
-  background:var(--bg);overflow:hidden;
+  background:#fff;overflow:hidden;
   display:flex;flex-direction:column;
   animation:mpfSlideIn .28s cubic-bezier(.32,1,.6,1);
 }
@@ -3473,6 +3473,7 @@ html.cap-ios #bnavIpadBack.visible {
 }
 
 /* Dark mode overrides */
+html.dk #bdPrFull{background:var(--bg);}
 html.dk .tp-topbar{background:var(--wh);}
 html.dk .tp-topbar-btn{background:var(--wh);border-color:var(--bdr);}
 html.dk .tp-topbar-btn svg{stroke:var(--ink);}

@@ -4411,7 +4411,7 @@ function openPrFull(pid){
   var _nbD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
   if(g('tpStCours'))g('tpStCours').textContent=_nbCours;
   if(g('tpStEleves'))g('tpStEleves').textContent=p.e||0;
-  if(g('tpStRating'))g('tpStRating').textContent=p.n&&p.n!=='—'?p.n+'★':'—';
+  var _rtEl=g('tpStRating');if(_rtEl){var _hasRt=p.n&&p.n!=='—';_rtEl.textContent=_hasRt?p.n+'★':'—';_rtEl.style.color=_hasRt?'#FF9500':'#aaa';}
   if(g('tpStAvis'))g('tpStAvis').textContent=p.nb_avis||0;
   // Trust cards
   _tpBuildTrustCards(p,pid);
@@ -4429,12 +4429,7 @@ function openPrFull(pid){
   _tpRenderMatieres(_mats,_mats.slice(0,2));
   // Courses tab
   _tpBuildCourses(pid);
-  // Follow button
-  var isOwnProfile=!!(user&&pid===user.id);
-  var ha=g('tpHeroActions');if(ha)ha.style.display=isOwnProfile?'none':'flex';
-  _setMpfFollowBtn(fol.has(pid));
   // Enrollment
-  var tpTabEsp=g('tpTabEspace');if(tpTabEsp)tpTabEsp.style.display='none';
   var tpCode=g('tpEspaceCode');if(tpCode)tpCode.style.display='block';
   var tpEspC=g('tpEspaceContent');if(tpEspC)tpEspC.style.display='none';
   var tpCodeErr=g('tpCodeError');if(tpCodeErr)tpCodeErr.style.display='none';
@@ -4488,47 +4483,44 @@ function _tpBuildTrustCards(p,pid){
   var _isVrf=p.verified===true||p.verified==='true';
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
   var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
+  var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
   var h='';
-  if(_isVrf){
-    h+='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
-      +'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>'
-      +'</div>';
-  }
-  if(_isDip){
-    var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
-    h+='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3C3489" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
-      +'</div>';
-  }
-  if(_isCas||(!_isVrf&&!_isDip)){
-    h+='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>'
-      +'</div>';
-  }
-  box.innerHTML=h||'<div class="tp-trust-card"><div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div><div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div></div>';
+  // Card 1: Identité — toujours affichée
+  h+='<div class="tp-trust-card">'
+    +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+    +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
+    +(_isVrf?'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>':'<div class="tp-trust-badge" style="background:#F3F4F6;color:#9CA3AF">En attente</div>')
+    +'</div>';
+  // Card 2: Diplôme — toujours affichée
+  h+='<div class="tp-trust-card">'
+    +'<div class="tp-trust-icon" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3C3489" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
+    +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
+    +(_isDip?'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>':'<div class="tp-trust-badge" style="background:#F3F4F6;color:#9CA3AF">En attente</div>')
+    +'</div>';
+  // Card 3: Badge de confiance — toujours affichée
+  h+='<div class="tp-trust-card">'
+    +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
+    +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
+    +(_isCas?'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>':'<div class="tp-trust-badge" style="background:#F3F4F6;color:#9CA3AF">En attente</div>')
+    +'</div>';
+  box.innerHTML=h;
 }
 
 function _tpRenderStatut(p){
   var sect=g('tpStatutSection'),list=g('tpStatutList');if(!sect||!list)return;
   var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
-  var rows='';
   var chev='<svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>';
-  if(p.statut){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Statut</div><div class="tp-card-row-val">'+esc(STATUT[p.statut]||p.statut)+'</div></div>'+chev+'</div>';}
+  var rows='';
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Statut</div><div class="tp-card-row-val">'+esc(p.statut?(STATUT[p.statut]||p.statut):'—')+'</div></div>'+chev+'</div>';
   var dip=p.diplome||p.niveau||null;
-  if(dip){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Diplôme</div><div class="tp-card-row-val">'+esc(dip)+'</div></div>'+chev+'</div>';}
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Diplôme</div><div class="tp-card-row-val">'+esc(dip||'—')+'</div></div>'+chev+'</div>';
   var exp=p.experiences||p.experience||null;
   var eleves=p.e||0;
-  if(exp||eleves){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Expérience</div><div class="tp-card-row-val">'+(exp?esc(String(exp).split('\n')[0]):'')+(eleves?' · '+eleves+' élève'+(eleves>1?'s':''):'')+'</div></div>'+chev+'</div>';}
+  var expVal=(exp?esc(String(exp).split('\n')[0]):'')+(eleves?' · '+eleves+' élève'+(eleves>1?'s':''):'');
+  if(expVal){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Expérience</div><div class="tp-card-row-val">'+expVal+'</div></div>'+chev+'</div>';}
   var lieu=p.lieu_enseignement||p.lieu||null;
-  if(lieu){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Lieu d\'enseignement</div><div class="tp-card-row-val">'+esc(lieu)+'</div></div>'+chev+'</div>';}
-  if(rows){list.innerHTML=rows;sect.style.display='block';}
-  else{sect.style.display='none';}
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Lieu d\'enseignement</div><div class="tp-card-row-val">'+esc(lieu||'—')+'</div></div>'+chev+'</div>';
+  list.innerHTML=rows;sect.style.display='block';
 }
 
 function _tpRenderMatieres(list,primary){
@@ -5786,7 +5778,7 @@ function _loadMpfAvis(pid){
     var _avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(P[pid])P[pid].n=_avg;
     if(P[pid])P[pid].nb_avis=notes.length;
-    if(g('tpStRating'))g('tpStRating').textContent=_avg+'★';
+    var _rtEl2=g('tpStRating');if(_rtEl2){_rtEl2.textContent=_avg+'★';_rtEl2.style.color='#FF9500';}
     if(g('tpStAvis'))g('tpStAvis').textContent=notes.length;
     var starsHtml=function(n){
       var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;
