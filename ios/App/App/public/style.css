@@ -35,7 +35,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--wh);color:var(-
    --wh  : fond des cards/surfaces (plus clair)
    body en dark → var(--bg) pour que les cards ressortent   */
 html.dk{
-  --ink:#E5E5EA;--mid:#8E8E93;--lite:#3A3A3C;
+  --ink:#E5E5EA;--mid:#AEAEB2;--lite:#8E8E93;
   --bg:#111111;--wh:#1C1C1E;--bdr:#2C2C2E;
   --orp:#25180A;--sh:0 6px 28px rgba(0,0,0,.65);
   color-scheme:dark;
