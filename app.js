@@ -630,15 +630,24 @@ function _loadEleveEspCours(pid){
   if(!cours.length){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--lite);font-size:13px">Aucun cours disponible pour le moment</div>';return;}
   el.innerHTML=cours.map(function(c){
     var mat=findMatiere(c.subj||'')||{color:'var(--or)',bg:'var(--orp)'};
-    var isV=c.mode==='visio';
+    var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-    return'<div onclick="closeEspaceEleve();setTimeout(function(){openR(\''+escH(c.id)+'\');},250);" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05);cursor:pointer;-webkit-tap-highlight-color:transparent">'
-      +'<div style="width:40px;height:40px;border-radius:12px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:8px;height:8px;border-radius:50%;background:'+mat.color+'"></div></div>'
-      +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
-      +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(c.dt)+'</div></div>'
-      +'<div style="font-size:15px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'€</div>'
-      +'<span style="font-size:10px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 8px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
-      +'</div>';
+    var spots=c.sp-c.fl;
+    var spotsHtml=spots<=3&&spots>0?'<span style="font-size:10px;font-weight:700;background:#FFF0E8;color:#E04E10;border-radius:50px;padding:2px 7px">'+spots+' place'+(spots>1?'s':'')+' restante'+(spots>1?'s':'')+'</span>':'';
+    return'<div onclick="closeEspaceEleve();setTimeout(function(){openR(\''+escH(c.id)+'\');},250);"'
+      +' style="background:var(--wh);border-radius:16px;padding:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;-webkit-tap-highlight-color:transparent">'
+      +'<div style="display:flex;align-items:flex-start;gap:12px">'
+      +'<div style="width:44px;height:44px;border-radius:14px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      +'<div style="width:10px;height:10px;border-radius:50%;background:'+mat.color+'"></div></div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px">'+esc(c.title)+'</div>'
+      +'<div style="font-size:12px;color:var(--mid);margin-bottom:6px">'+esc(c.dt)+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      +'<span style="font-size:10px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 8px">'+(isV?'Visio':'Présentiel')+'</span>'
+      +spotsHtml
+      +'</div></div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--or);flex-shrink:0;padding-top:2px">'+pp+'€</div>'
+      +'</div></div>';
   }).join('');
 }
 
@@ -4256,6 +4265,56 @@ function contPr(){
 }
 
 // ── PROFIL PROF COMPLET (Mes Profs) ──────────────────────────────────────────
+
+function _renderMpfExtraInfo(p){
+  var el=g('mpfExtraInfo');if(!el)return;
+  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var rows='';
+  // Statut + lieu
+  var statutLabel=p.statut?(STATUT[p.statut]||p.statut):null;
+  var lieu=p.lieu_enseignement||p.lieu||null;
+  if(statutLabel||lieu){
+    rows+='<div style="background:var(--wh);border-radius:16px;padding:12px 14px;margin:0 16px 8px;display:flex;flex-direction:column;gap:10px">';
+    if(statutLabel)rows+='<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="width:32px;height:32px;border-radius:10px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
+      +'<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lite);margin-bottom:1px">Statut</div>'
+      +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+esc(statutLabel)+'</div></div></div>';
+    if(lieu)rows+='<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="width:32px;height:32px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
+      +'<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lite);margin-bottom:1px">Lieu d\'enseignement</div>'
+      +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+esc(lieu)+'</div></div></div>';
+    rows+='</div>';
+  }
+  // Formations
+  var formations=p.formations||null;
+  if(formations){
+    rows+='<div class="mpf-section-lbl">Formations & Diplômes</div>'
+      +'<div style="background:var(--wh);border-radius:16px;padding:14px;margin:0 16px 8px">'
+      +(typeof formations==='string'?formations.split('\n').filter(Boolean).map(function(f){
+          return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">'
+            +'<div style="width:6px;height:6px;border-radius:50%;background:var(--or);margin-top:6px;flex-shrink:0"></div>'
+            +'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+esc(f.trim())+'</div></div>';
+        }).join('')
+        :'<div style="font-size:13px;color:var(--mid);line-height:1.6">'+esc(String(formations))+'</div>')
+      +'</div>';
+  }
+  // Expériences
+  var experiences=p.experiences||p.experience||null;
+  if(experiences){
+    rows+='<div class="mpf-section-lbl">Expériences</div>'
+      +'<div style="background:var(--wh);border-radius:16px;padding:14px;margin:0 16px 8px">'
+      +(typeof experiences==='string'?experiences.split('\n').filter(Boolean).map(function(e){
+          return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">'
+            +'<div style="width:6px;height:6px;border-radius:50%;background:#8B5CF6;margin-top:6px;flex-shrink:0"></div>'
+            +'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+esc(e.trim())+'</div></div>';
+        }).join('')
+        :'<div style="font-size:13px;color:var(--mid);line-height:1.6">'+esc(String(experiences))+'</div>')
+      +'</div>';
+  }
+  el.innerHTML=rows;
+}
 var _curPrFull=null;
 var _curPrEnrolled=false;
 
@@ -4325,6 +4384,8 @@ function openPrFull(pid){
     else if(!p._fullFetched){bioEl.innerHTML='<span class="skeleton" style="display:block;height:12px;border-radius:6px;width:90%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:68%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:50%"></span>';}
     else{bioEl.textContent='';}
   }
+  // Extra info (statut, lieu, formations, expériences)
+  _renderMpfExtraInfo(p);
   // Tags
   _renderMpfTags(p.matieres?p.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean):(cours.length?(function(){var s={};cours.forEach(function(c){if(c.subj)s[c.subj]=1;});return Object.keys(s);})():[]));
   // Cours à venir
@@ -4368,13 +4429,14 @@ function openPrFull(pid){
     if(_curPrFull!==pid)return;
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;P[pid]._fullFetched=true;
-    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie','formations','experiences','experience','lieu_enseignement','lieu'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
     if(_apiNm){P[pid].nm=_apiNm;if(g('mpfInfoNm'))g('mpfInfoNm').textContent=_apiNm;if(g('mpfTopTitle'))g('mpfTopTitle').textContent=_apiNm;}
     if(prof.photo_url){P[pid].photo=prof.photo_url;setAvatar(g('mpfAvWrap'),prof.photo_url,P[pid].i||'?',P[pid].col||displayCol);}
     if(prof.bio!==undefined&&g('mpfBio')){var b=prof.bio||'';g('mpfBio').style.transition='opacity .2s';g('mpfBio').style.opacity='0';setTimeout(function(){if(g('mpfBio')){g('mpfBio').textContent=b;g('mpfBio').style.opacity='1';}},180);}
     if(prof.matieres){_renderMpfTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
     if(prof.statut&&g('mpfInfoRl')){g('mpfInfoRl').textContent=STATUT[prof.statut]||prof.statut;}
+    _renderMpfExtraInfo(P[pid]);
     if(prof.verified!==undefined){P[pid].verified=prof.verified;}
     if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;}
     if(prof.casier_verifie!==undefined){P[pid].cv=prof.casier_verifie;}
@@ -10203,15 +10265,12 @@ function _calBuildHeader(myCours){
   var hd=g('mesCalHd');if(!hd)return;
   var isProf=user&&user.role==='professeur';
 
-  // Segment bar HTML (profs only) — intégré dans le header pour éviter la double séparation visuelle
-  var segHtml='';
-  if(isProf){
-    segHtml='<div id="mesSegBar" style="padding:8px 0 2px">'
-      +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
-      +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
-      +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
-      +'</div></div>';
-  }
+  // Segment bar HTML (tous les utilisateurs)
+  var segHtml='<div id="mesSegBar" style="padding:8px 0 2px">'
+    +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
+    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
+    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+    +'</div></div>';
 
   hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
 
