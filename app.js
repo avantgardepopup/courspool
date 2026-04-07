@@ -720,35 +720,94 @@ function espOpenFicheEleve(pid,id){
   }).catch(function(){var bodyEl=document.getElementById('_ficheELBody');if(bodyEl)bodyEl.innerHTML='<div style="text-align:center;padding:32px;color:var(--lite)">Erreur</div>';});
 }
 
+var _enrollBd=null,_enrollSelectedPid=null;
+
 function openEnrollSheet(){
   haptic(4);
+  if(_enrollBd){_enrollBd.remove();_enrollBd=null;}
   var bd=document.createElement('div');
+  _enrollBd=bd;
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
-  bd.onclick=function(e){if(e.target===bd)bd.remove();};
   var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1)';
-  sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
-    +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Rejoindre un espace</div><div style="font-size:13px;color:var(--lite);margin-top:2px">Entre le code que ton prof t\'a donné</div></div>'
-    +'</div>'
-    +'<input id="_enrollCodeInp" type="text" placeholder="Code (ex\u00a0: ABC123)" maxlength="10" style="width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:18px;font-weight:700;text-align:center;letter-spacing:.12em;outline:none;box-sizing:border-box;text-transform:uppercase;margin-bottom:6px;transition:border-color .18s" oninput="this.value=this.value.toUpperCase()">'
-    +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;text-align:center;margin-bottom:10px"></div>'
-    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:8px">Rejoindre</button>'
-    +'<button onclick="this.closest(\'[style*=inset:0]\').remove()" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:4px">Annuler</button>';
-  var inp=sheet.querySelector('#_enrollCodeInp');
-  setTimeout(function(){if(inp)inp.focus();},300);
-  inp&&inp.addEventListener('focus',function(){inp.style.borderColor='var(--or)';});
-  inp&&inp.addEventListener('blur',function(){inp.style.borderColor='var(--bdr)';});
+  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
   bd.appendChild(sheet);document.body.appendChild(bd);
-  // Keyboard responsiveness
-  var _ekbShow=function(e){var h=(e&&e.keyboardHeight)||0;sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s';};
-  var _ekbHide=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';sheet.style.transition='padding-bottom .22s';};
+  bd.onclick=function(e){if(e.target===bd){bd.remove();_enrollBd=null;}};
+  _enrollSelectedPid=null;
+  _enrollRenderStep1(sheet);
+  var _ekbShow=function(e){var h=(e&&e.keyboardHeight)||0;if(h>0)sheet.style.paddingBottom=(h+16)+'px';};
+  var _ekbHide=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';};
   window.addEventListener('keyboardWillShow',_ekbShow);
   window.addEventListener('keyboardWillHide',_ekbHide);
-  if(window.visualViewport){window.visualViewport.addEventListener('resize',function(){var vh=window.visualViewport.height;var diff=window.innerHeight-vh;if(diff>100){sheet.style.paddingBottom=(diff+16)+'px';}else{sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';}},{passive:true});}
-  var _origClose=function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);};
-  bd.addEventListener('click',function(e){if(e.target===bd)_origClose();});
+  bd.addEventListener('remove',function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);});
+}
+
+function _enrollRenderStep1(sheet){
+  // Construire la liste des profs dédupliqués depuis C[]
+  var profMap={};
+  C.forEach(function(c){
+    if(!c.pr)return;
+    var p=P[c.pr]||{};
+    if(!profMap[c.pr]){profMap[c.pr]={id:c.pr,nm:p.nm||c.prof_nm||'Professeur',ini:p.i||c.prof_ini||'?',col:p.col||c.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:p.photo||c.prof_photo||null};}
+  });
+  // Ajouter les suivis même sans cours
+  fol.forEach(function(pid){
+    if(!profMap[pid]){var p=P[pid]||{};profMap[pid]={id:pid,nm:p.nm||'Professeur',ini:p.i||'?',col:p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:p.photo||null};}
+  });
+  var allProfs=Object.values(profMap).sort(function(a,b){return a.nm.localeCompare(b.nm);});
+
+  function render(list){
+    var rows=list.slice(0,12).map(function(p){
+      var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':(p.ini||'?');
+      var avBg=p.photo?'none':p.col;
+      return'<div onclick="_enrollSelectProf(\''+escH(p.id)+'\',\''+escH(p.nm)+'\',\''+escH(p.ini)+'\',\''+escH(p.col)+'\',\''+escH(p.photo||'')+'\',this.closest(\'[style*=border-radius]\'))" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05);cursor:pointer;-webkit-tap-highlight-color:transparent">'
+        +'<div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.nm)+'</div></div>'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
+        +'</div>';
+    }).join('');
+    var listEl=sheet.querySelector('#_esList');
+    if(listEl)listEl.innerHTML=rows||(list.length?'':'<div style="text-align:center;padding:24px 0;color:var(--lite);font-size:13px">Aucun professeur trouvé.<br>Explore les cours pour en trouver un.</div>');
+  }
+
+  sheet.innerHTML='<div style="text-align:center;margin-bottom:16px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin-bottom:4px">Rejoindre un espace</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:16px">Sélectionne ton professeur</div>'
+    +'<input id="_esSearch" type="search" placeholder="Rechercher un prof…" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box;background:var(--bg);color:var(--ink);margin-bottom:4px" autocomplete="off">'
+    +'<div id="_esList" style="max-height:45vh;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:4px"></div>'
+    +'<button onclick="if(_enrollBd){_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:14px 0;margin-top:4px">Annuler</button>';
+
+  render(allProfs);
+  var srch=sheet.querySelector('#_esSearch');
+  if(srch){
+    srch.addEventListener('input',function(){
+      var q=srch.value.trim().toLowerCase();
+      render(q?allProfs.filter(function(p){return p.nm.toLowerCase().includes(q);}):allProfs);
+    });
+    setTimeout(function(){srch.focus();},300);
+  }
+}
+
+function _enrollSelectProf(pid,nm,ini,col,photo,sheet){
+  _enrollSelectedPid=pid;
+  haptic(4);
+  var avBg=photo?'none':col;
+  var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':(ini||'?');
+  sheet.innerHTML='<div style="text-align:center;margin-bottom:16px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
+    +'<div style="width:46px;height:46px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
+    +'<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lite);margin-bottom:2px">Professeur sélectionné</div><div style="font-size:16px;font-weight:800;color:var(--ink)">'+esc(nm)+'</div></div>'
+    +'<button onclick="_enrollRenderStep1(this.closest(\'[style*=border-radius]\'))" style="background:var(--bg);border:none;border-radius:50px;padding:6px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--lite);cursor:pointer;flex-shrink:0">Changer</button>'
+    +'</div>'
+    +'<input id="_enrollCodeInp" type="text" placeholder="Code (ex\u00a0: ABC123)" maxlength="10" autocomplete="off" style="width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:20px;font-weight:800;text-align:center;letter-spacing:.16em;outline:none;box-sizing:border-box;text-transform:uppercase;margin-bottom:6px;transition:border-color .18s;background:var(--bg);color:var(--ink)" oninput="this.value=this.value.toUpperCase()">'
+    +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;text-align:center;margin-bottom:6px;line-height:1.5"></div>'
+    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:8px">Rejoindre</button>'
+    +'<button onclick="if(_enrollBd){_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
+  var inp=sheet.querySelector('#_enrollCodeInp');
+  if(inp){
+    inp.addEventListener('focus',function(){inp.style.borderColor='var(--or)';});
+    inp.addEventListener('blur',function(){inp.style.borderColor='var(--bdr)';});
+    setTimeout(function(){inp.focus();},200);
+  }
 }
 
 function submitEnrollSheet(){
@@ -756,43 +815,37 @@ function submitEnrollSheet(){
   var errEl=document.getElementById('_enrollErr');
   var btn=document.getElementById('_enrollBtn');
   var code=(inp?inp.value.trim().toUpperCase():'');
+  var pid=_enrollSelectedPid;
   if(!code){if(errEl){errEl.textContent='Veuillez entrer un code.';errEl.style.display='block';}return;}
+  if(!pid){if(errEl){errEl.textContent='Sélectionne d\'abord un professeur.';errEl.style.display='block';}return;}
   if(!user||user.guest){toast('Connecte-toi d\'abord','');return;}
   if(btn)btn.disabled=true;
   if(errEl)errEl.style.display='none';
-  // Essai 1 : POST /teacher/enroll  {code} — si le backend résout le teacher depuis le code
-  fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
+  var numPid=parseInt(pid)||pid;
+  function _onOk(d){
+    if(btn)btn.disabled=false;
+    var foundPid=d&&(d.teacher_id||d.professeur_id)||pid;
+    var profData={nm:(P[pid]&&P[pid].nm)||'',ini:(P[pid]&&P[pid].i)||'?',col:(P[pid]&&P[pid].col)||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:(P[pid]&&P[pid].photo)||null};
+    _saveEnrolledProf(String(foundPid),profData);
+    haptic(4);toast('Espace rejoint !','');
+    if(_enrollBd){_enrollBd.remove();_enrollBd=null;}
+    buildMesProfs();
+    setTimeout(function(){openProfEspace(String(foundPid));},300);
+  }
+  function _onErr(msg){if(btn)btn.disabled=false;if(errEl){errEl.textContent=msg||'Code incorrect.';errEl.style.display='block';}}
+  // Essai 1 : POST /teacher/{pid}/enroll  {code}
+  fetch(API+'/teacher/'+pid+'/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
     .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
     .then(function(res){
-      if(btn)btn.disabled=false;
-      if(res.ok&&res.d&&res.d.success){
-        var pid=res.d.teacher_id||res.d.professeur_id||res.d.id||null;
-        if(pid){
-          var profData={nm:res.d.prof_nm||res.d.teacher_name||'',ini:res.d.prof_ini||(res.d.teacher_name?res.d.teacher_name[0]:'?'),col:res.d.prof_col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:res.d.prof_photo||null};
-          _saveEnrolledProf(String(pid),profData);
-          if(!P[pid])P[pid]={};
-          if(profData.nm)P[pid].nm=profData.nm;
-          if(profData.col)P[pid].col=profData.col;
-          if(profData.photo)P[pid].photo=profData.photo;
-        }
-        haptic(4);toast('Espace rejoint !','');
-        var bd=document.getElementById('_enrollCodeInp');if(bd)bd.closest('[style*="inset:0"]').remove();
-        buildMesProfs();
-        if(pid){setTimeout(function(){openProfEspace(String(pid));},300);}
-      } else {
-        // Données manquantes → le backend a besoin de teacher_id, qu'on ne peut pas résoudre ici
-        var errMsg=(res.d&&(res.d.error||res.d.message))||'';
-        var needsTeacher=errMsg.toLowerCase().includes('manquant')||errMsg.toLowerCase().includes('missing')||errMsg.toLowerCase().includes('required');
-        if(needsTeacher||!res.ok){
-          if(errEl){
-            errEl.innerHTML='Code non reconnu. Pour rejoindre l\'espace d\'un prof, retrouve-le dans <strong>l\'Explorateur</strong> et entre le code depuis sa fiche.';
-            errEl.style.display='block';
-          }
-        } else {
-          if(errEl){errEl.textContent=errMsg||'Code incorrect ou expiré.';errEl.style.display='block';}
-        }
-      }
-    }).catch(function(){if(btn)btn.disabled=false;if(errEl){errEl.textContent='Erreur réseau.';errEl.style.display='block';}});
+      if(res.ok&&res.d&&res.d.success){_onOk(res.d);return;}
+      // Essai 2 : POST /teacher/enroll  {teacher_id, code}
+      return fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({teacher_id:numPid,code:code})})
+        .then(function(r2){return r2.json().then(function(d2){return{ok:r2.ok,d:d2};});})
+        .then(function(res2){
+          if(res2.ok&&res2.d&&res2.d.success){_onOk(res2.d);}
+          else{_onErr((res2.d&&(res2.d.error||res2.d.message))||(res.d&&(res.d.error||res.d.message))||'Code incorrect ou expiré.');}
+        });
+    }).catch(function(){_onErr('Erreur réseau.');});
 }
 
 // ── TUTO ÉLÈVE (Mes Profs) ──────────────────────────────────────────────────
