@@ -2976,10 +2976,14 @@ html.dk {
 /* ── Carte individuelle ── */
 .ss-card {
   width:100%;
-  background:var(--sc-bg);
+  background:#ffffff;
   border-radius:20px;
-  box-shadow:var(--sc-shadow);
+  box-shadow:0 3px 14px rgba(0,0,0,0.11),0 0 0 0.5px rgba(0,0,0,0.06);
   overflow:hidden;
+}
+html.dk .ss-card {
+  background:#1C1C1E;
+  box-shadow:0 3px 16px rgba(0,0,0,0.55),0 0 0 0.5px rgba(255,255,255,0.07);
 }
 
 /* Ligne principale d'une carte (style pill) */
@@ -2994,33 +2998,42 @@ html.dk {
 /* Icône à gauche */
 .ss-pill-icon {
   display:flex;align-items:center;justify-content:center;
-  color:var(--sc-icon);flex-shrink:0;
+  color:#888;flex-shrink:0;
 }
+html.dk .ss-pill-icon { color:#8E8E93; }
 
 /* Label / placeholder (matière) */
 .ss-pill-lbl {
-  flex:1;font-size:16px;font-weight:500;color:var(--sc-sub);
+  flex:1;font-size:16px;font-weight:400;color:#aaa;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.ss-pill-lbl.selected { color:var(--sc-text);font-weight:600; }
+.ss-pill-lbl.selected { color:#222;font-weight:600; }
+html.dk .ss-pill-lbl { color:#636366; }
+html.dk .ss-pill-lbl.selected { color:#fff; }
 
 /* Chevron matière */
 .ss-pill-chevron {
-  display:flex;align-items:center;color:var(--sc-icon);flex-shrink:0;
+  display:flex;align-items:center;color:#aaa;flex-shrink:0;
   transition:transform .38s cubic-bezier(0.4,0,0.2,1);
 }
+html.dk .ss-pill-chevron { color:#636366; }
 .ss-card:has(.ss-mat-dropdown.open) .ss-pill-chevron { transform:rotate(180deg); }
 
 /* Input pill (Lieu / Prof / Code) */
 .ss-pill-input {
   flex:1;border:none;outline:none;
-  background:var(--sc-bg) !important;-webkit-appearance:none;
+  background:#ffffff !important;-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:16px;font-weight:500;
-  color:var(--sc-text) !important;-webkit-text-fill-color:var(--sc-text) !important;
+  font-size:16px;font-weight:400;
+  color:#222 !important;-webkit-text-fill-color:#222 !important;
   -webkit-tap-highlight-color:transparent;min-width:0;
 }
-.ss-pill-input::placeholder { color:var(--sc-sub) !important;opacity:1; }
+.ss-pill-input::placeholder { color:#bbb !important;opacity:1; }
+html.dk .ss-pill-input {
+  background:#1C1C1E !important;
+  color:#fff !important;-webkit-text-fill-color:#fff !important;
+}
+html.dk .ss-pill-input::placeholder { color:#636366 !important; }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.06em; }
 
 /* ── Dropdown matière (expandable) ── */
@@ -3034,37 +3047,45 @@ html.dk {
 }
 
 /* Séparateur en haut du dropdown */
-.ss-dropdown-sep { height:0.5px;background:var(--sc-sep); }
+.ss-dropdown-sep { height:0.5px;background:rgba(0,0,0,0.08); }
+html.dk .ss-dropdown-sep { background:rgba(255,255,255,0.08); }
 
 /* Champ de recherche dans le dropdown */
 .ss-dropdown-search {
   display:flex;align-items:center;gap:10px;
   padding:11px 16px;
-  border-bottom:0.5px solid var(--sc-sep);
-  color:var(--sc-icon);position:sticky;top:0;
-  background:var(--sc-bg);
+  border-bottom:0.5px solid rgba(0,0,0,0.08);
+  color:#888;position:sticky;top:0;
+  background:#ffffff;
 }
+html.dk .ss-dropdown-search { background:#1C1C1E;color:#8E8E93;border-bottom-color:rgba(255,255,255,0.08); }
 .ss-dropdown-search svg { flex-shrink:0; }
 .ss-sec-input {
   flex:1;border:none;outline:none;
-  background:var(--sc-bg) !important;-webkit-appearance:none;
+  background:#ffffff !important;-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:15px;
-  color:var(--sc-text) !important;-webkit-text-fill-color:var(--sc-text) !important;
+  color:#222 !important;-webkit-text-fill-color:#222 !important;
 }
-.ss-sec-input::placeholder { color:var(--sc-sub) !important;opacity:1; }
+.ss-sec-input::placeholder { color:#bbb !important;opacity:1; }
+html.dk .ss-sec-input {
+  background:#1C1C1E !important;
+  color:#fff !important;-webkit-text-fill-color:#fff !important;
+}
+html.dk .ss-sec-input::placeholder { color:#636366 !important; }
 
 /* Chips filtrées (JS) */
 .ss-mat-chips { display:flex;flex-direction:column;margin:0 16px 6px; }
 .ss-mat-chip {
   display:flex !important;align-items:center;gap:14px;
   padding:10px 0;width:100%;text-align:left;cursor:pointer;
-  background:transparent !important;color:var(--sc-text) !important;
-  border:none !important;border-bottom:0.5px solid var(--sc-sep) !important;
+  background:transparent !important;color:#222 !important;
+  border:none !important;border-bottom:0.5px solid rgba(0,0,0,0.08) !important;
   font-size:15px;font-weight:500;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   -webkit-tap-highlight-color:transparent;
 }
+html.dk .ss-mat-chip { color:#fff !important;border-bottom-color:rgba(255,255,255,0.08) !important; }
 .ss-mat-chip:last-child { border-bottom:none !important; }
 .ss-mat-chip:active { opacity:.6; }
 
@@ -3073,7 +3094,7 @@ html.dk {
 .ss-subject-row {
   display:flex;align-items:center;gap:14px;
   padding:10px 0;background:transparent;border:none;
-  border-bottom:0.5px solid var(--sc-sep);
+  border-bottom:0.5px solid rgba(0,0,0,0.08);
   cursor:pointer;text-align:left;width:100%;
   -webkit-tap-highlight-color:transparent;
 }
@@ -3081,13 +3102,17 @@ html.dk {
 .ss-subject-row:active { opacity:.6; }
 .ss-subject-icon {
   width:38px;height:38px;border-radius:10px;
-  background:var(--sc-surface);flex-shrink:0;
+  background:#F2F2F7;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  color:var(--sc-icon);
+  color:#555;
 }
+html.dk .ss-subject-icon { background:#2C2C2E;color:#8E8E93; }
 .ss-subject-info { display:flex;flex-direction:column;gap:1px;flex:1;min-width:0; }
-.ss-subject-name { font-size:15px;font-weight:600;color:var(--sc-text); }
-.ss-subject-desc { font-size:12px;color:var(--sc-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.ss-subject-name { font-size:15px;font-weight:600;color:#222; }
+.ss-subject-desc { font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+html.dk .ss-subject-name { color:#fff; }
+html.dk .ss-subject-desc { color:#8E8E93; }
+html.dk .ss-subject-row { border-bottom-color:rgba(255,255,255,0.08); }
 
 /* Toggle CSS : liste ↔ chips selon valeur input */
 .ss-mat-dropdown:has(#ssMatiereInput:placeholder-shown) .ss-mat-chips { display:none; }
@@ -3098,11 +3123,12 @@ html.dk {
 /* Bouton géoloc */
 .ss-geo-btn {
   width:34px;height:34px;border-radius:50%;
-  background:var(--sc-surface);border:none;cursor:pointer;
+  background:#F2F2F7;border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;color:var(--sc-icon);
+  flex-shrink:0;color:#555;
   transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;
 }
+html.dk .ss-geo-btn { background:#2C2C2E;color:#8E8E93; }
 .ss-geo-btn.active { background:#E8611A;color:#fff; }
 
 /* ── Footer ── */
