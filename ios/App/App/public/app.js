@@ -11719,6 +11719,13 @@ function openSmartSearch(){
   if(existing){var mi=g('ssMatiereInput');if(mi&&!mi.value)mi.value=existing;}
   _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
   setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},220);
+  // Scroll focused card into view above keyboard
+  ov.querySelectorAll('.ss-pill-input').forEach(function(inp){
+    inp.addEventListener('focus',function(){
+      var card=inp.closest('.ss-card');if(!card)return;
+      setTimeout(function(){card.scrollIntoView({block:'nearest',behavior:'smooth'});},320);
+    },{passive:true});
+  });
   document.body.style.overflow='hidden';
   haptic(4);
 }

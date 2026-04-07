@@ -3028,12 +3028,12 @@ html.dk .ss-pill-chevron { color:#636366; }
   color:#222 !important;-webkit-text-fill-color:#222 !important;
   -webkit-tap-highlight-color:transparent;min-width:0;
 }
-.ss-pill-input::placeholder { color:#bbb !important;opacity:1; }
+.ss-pill-input::placeholder { color:#bbb !important;-webkit-text-fill-color:#bbb !important;opacity:1; }
 html.dk .ss-pill-input {
   background:#1C1C1E !important;
   color:#fff !important;-webkit-text-fill-color:#fff !important;
 }
-html.dk .ss-pill-input::placeholder { color:#636366 !important; }
+html.dk .ss-pill-input::placeholder { color:#636366 !important;-webkit-text-fill-color:#636366 !important; }
 .ss-mono { font-family:'SF Mono',Menlo,Monaco,Courier,monospace;letter-spacing:.06em; }
 
 /* ── Dropdown matière (expandable) ── */
@@ -3257,6 +3257,8 @@ html.dk #bdAllFilters > div { background:var(--wh); }
   transform: translateY(-1px) scale(.997);
   transition-duration: .08s;
 }
+/* Prof profile courses list — vertical stack with proper spacing */
+#tpCoursList { display: flex; flex-direction: column; gap: 16px; }
 .card.card-new {
   animation: none;
   overflow: hidden;
