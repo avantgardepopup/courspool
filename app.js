@@ -9009,7 +9009,7 @@ function toggleDarkMode(){
   _syncStatusBar();
   updateDarkBtn();
   var tm=document.getElementById('themeColorMeta');
-  if(tm)tm.content=_darkMode?'#131110':'#ffffff';
+  if(tm)tm.content=_darkMode?'#111111':'#ffffff';
   haptic([10,40,10]);
   // Rebuild cards so bg colors update instantly
   if(C&&C.length)buildCards();
@@ -9591,7 +9591,7 @@ function initLargeTitle(){
     var y=app.scrollTop;
     if(header){if(y>40){header.classList.add('scrolled');}else{header.classList.remove('scrolled');}}
     var tm=document.getElementById('themeColorMeta');
-    if(tm)tm.content=_darkMode?'#131110':'#ffffff';
+    if(tm)tm.content=_darkMode?'#111111':'#ffffff';
     // Infinite scroll — charger la page suivante si on approche du bas
     if(!_allLoaded&&!_loadingMore&&(app.scrollTop+app.clientHeight>=app.scrollHeight-200)){
       if(typeof loadMore==='function')loadMore();
