@@ -3371,23 +3371,21 @@ html.cap-ios #bnavIpadBack.visible {
 .tp-stat-lbl{font-size:10px;color:#717171;margin-top:3px;font-weight:500;}
 .tp-stat-sep{width:0.5px;height:30px;background:#E0E0E0;flex-shrink:0;}
 
-/* Tabs */
+/* Tabs — iOS segmented style */
 .tp-tab-bar{
-  display:flex;background:#fff;border-bottom:0.5px solid #F0F0F0;
-  padding:0 8px;position:sticky;top:0;z-index:2;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  display:flex;background:#fff;border-bottom:0.5px solid #E5E5E5;
+  padding:0;position:sticky;top:0;z-index:2;
 }
-.tp-tab-bar::-webkit-scrollbar{display:none;}
 .tp-tab{
-  flex:none;background:none;border:none;
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;
-  font-size:11px;font-weight:600;color:#aaa;
-  padding:12px 10px;cursor:pointer;
+  flex:1;background:none;border:none;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  font-size:13px;font-weight:500;color:#8E8E93;
+  padding:13px 0;cursor:pointer;
   border-bottom:2px solid transparent;margin-bottom:-0.5px;
   white-space:nowrap;-webkit-tap-highlight-color:transparent;
-  transition:color .15s,border-color .15s;
+  transition:color .15s,border-color .15s;letter-spacing:-0.1px;
 }
-.tp-tab.on{color:#222;border-bottom-color:#222;}
+.tp-tab.on{color:#000;font-weight:600;border-bottom-color:#000;}
 
 /* Panel */
 .tp-panel{padding:0;}
@@ -3482,7 +3480,7 @@ html.dk .tp-name{color:var(--ink);}
 html.dk .tp-stats-bar{background:var(--wh);border-color:var(--bdr);}
 html.dk .tp-stat-num{color:var(--ink);}
 html.dk .tp-tab-bar{background:var(--wh);border-color:var(--bdr);}
-html.dk .tp-tab.on{color:var(--ink);border-color:var(--ink);}
+html.dk .tp-tab.on{color:var(--ink);font-weight:600;border-color:var(--ink);}
 html.dk .tp-sec-title{color:var(--ink);}
 html.dk .tp-trust-card{border-color:var(--bdr);}
 html.dk .tp-trust-lbl{color:var(--ink);}
