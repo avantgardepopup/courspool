@@ -2642,30 +2642,34 @@ html.dk .msg-bubble-time.them { color: #fff; }
 }
 .msg-input-wrap {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: flex-end;
-  background: var(--bg);
+  background: var(--sc-bg);
   border-radius: 24px;
-  padding: 8px 8px 8px 16px;
-  border: 1.5px solid var(--bdr);
-  transition: border-color .18s;
+  padding: 10px 10px 10px 16px;
+  box-shadow: var(--sc-shadow);
+  transition: box-shadow .18s;
 }
-.msg-input-wrap:focus-within { border-color: var(--or); }
+.msg-input-wrap:focus-within {
+  box-shadow: 0 0 0 2px var(--or), 0 3px 14px rgba(0,0,0,0.11);
+}
 #msgInput {
   flex: 1;
   border: none;
-  background: transparent !important;
+  background: var(--sc-bg) !important;
   -webkit-appearance: none;
+  -webkit-text-fill-color: var(--sc-text) !important;
   font-family: inherit;
   font-size: 15px;
   outline: none;
   resize: none;
   max-height: 120px;
   line-height: 1.45;
-  padding: 2px 0;
+  padding: 4px 0;
   overflow-y: auto;
-  color: var(--ink);
+  color: var(--sc-text) !important;
 }
+#msgInput::placeholder { color: var(--sc-sub) !important; opacity: 1; }
 .msg-send-btn {
   background: var(--or);
   border: none;
