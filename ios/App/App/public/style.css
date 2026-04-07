@@ -2926,18 +2926,6 @@ html.dk .pill-icon { color:var(--ink); }
   --sc-icon: #555555;
   --sc-surface: #F2F2F7;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --sc-bg: #1C1C1E;
-    --sc-text: #FFFFFF;
-    --sc-sub: #8E8E93;
-    --sc-border: rgba(255,255,255,0.08);
-    --sc-sep: rgba(255,255,255,0.08);
-    --sc-shadow: 0 3px 16px rgba(0,0,0,0.55),0 0 0 0.5px rgba(255,255,255,0.07);
-    --sc-icon: #8E8E93;
-    --sc-surface: #2C2C2E;
-  }
-}
 html.dk {
   --sc-bg: #1C1C1E;
   --sc-text: #FFFFFF;
