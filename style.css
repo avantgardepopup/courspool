@@ -2654,9 +2654,8 @@ html.dk .msg-bubble-time.them { color: #fff; }
 #msgInput {
   flex: 1;
   border: none;
-  background: transparent;
+  background: var(--bg);
   -webkit-appearance: none;
-  color-scheme: light dark;
   font-family: inherit;
   font-size: 15px;
   outline: none;
@@ -3014,8 +3013,8 @@ html.dk {
 
 /* Input pill (Lieu / Prof / Code) */
 .ss-pill-input {
-  flex:1;border:none;outline:none;background:transparent;
-  -webkit-appearance:none;color-scheme:light dark;
+  flex:1;border:none;outline:none;
+  background:var(--sc-bg);-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:16px;font-weight:500;color:var(--sc-text);
   -webkit-tap-highlight-color:transparent;min-width:0;
@@ -3046,8 +3045,8 @@ html.dk {
 }
 .ss-dropdown-search svg { flex-shrink:0; }
 .ss-sec-input {
-  flex:1;border:none;outline:none;background:transparent;
-  -webkit-appearance:none;color-scheme:light dark;
+  flex:1;border:none;outline:none;
+  background:var(--sc-bg);-webkit-appearance:none;
   font-family:-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:15px;color:var(--sc-text);
 }
