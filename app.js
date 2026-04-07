@@ -4362,12 +4362,16 @@ function _buildBadges(p,pid){
 function _mpfSetEnrolled(enrolled){
   _curPrEnrolled=enrolled;
   var pid=_curPrFull;
-  var tabEspace=g('mpfTabEspace');if(tabEspace)tabEspace.style.display=enrolled?'block':'none';
-  var codeSection=g('mpfCodeSection');if(codeSection)codeSection.style.display=(!enrolled&&user&&!user.guest&&pid&&pid!==user.id)?'block':'none';
+  // New tp-* elements
+  var tpTabEsp=g('tpTabEspace');
+  var tpCode=g('tpEspaceCode');
+  var tpContent=g('tpEspaceContent');
+  // tpTabEspace toujours visible, seul le contenu change
+  if(tpCode)tpCode.style.display=enrolled?'none':'block';
+  if(tpContent)tpContent.style.display=enrolled?'block':'none';
   if(enrolled&&pid){
     _loadMpfEspace(pid);
-    // Auto-switch vers espace si ouvert depuis Mes Profs
-    if(_mpfAutoSwitchEspace){_mpfAutoSwitchEspace=false;switchMpfTab('espace');}
+    if(_mpfAutoSwitchEspace){_mpfAutoSwitchEspace=false;switchTpTab('espace');}
   }
 }
 
@@ -4384,66 +4388,56 @@ function openPrFull(pid){
     p.photo=cours[0].prof_photo||null;
   }
   var displayNm=p.nm||t('reg_prof'),displayIni=p.i||'?',displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',displayPhoto=p.photo||null;
-  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
+  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
 
-  // Top title
-  var ttEl=g('mpfTopTitle');if(ttEl)ttEl.textContent=displayNm;
   // Avatar
-  var avEl=g('mpfAvWrap');if(avEl)setAvatar(avEl,displayPhoto,displayIni,displayCol);
-  // Name / role
-  var nmEl=g('mpfInfoNm');if(nmEl)nmEl.textContent=displayNm;
-  var rlEl=g('mpfInfoRl');if(rlEl)rlEl.textContent=p.statut?(STATUT[p.statut]||p.statut):(p.niveau||t('reg_prof'));
-  // Badges
-  var bdgEl=g('mpfInfoBadges');if(bdgEl)bdgEl.innerHTML=_buildBadges(p,pid);
+  var avEl=g('tpAvWrap');if(avEl){setAvatar(avEl,displayPhoto,displayIni,displayCol);avEl._photo=displayPhoto;}
+  // Name
+  var nmEl=g('tpName');if(nmEl)nmEl.textContent=displayNm;
+  // Since / role
+  var sinceEl=g('tpSince');
+  if(sinceEl){
+    var roleStr=p.statut?(STATUT[p.statut]||p.statut):'Enseignant';
+    sinceEl.textContent=roleStr+(p.created_at||p.since?' · Membre depuis '+(new Date(p.created_at||p.since)).getFullYear():'');
+  }
+  // Contact button label
+  var cl=g('tpContactLabel');if(cl){var _pr=displayNm.split(' ')[0];cl.textContent='Contacter '+(_pr||displayNm);}
+  // Espace title
+  var et=g('tpEspaceTitle');if(et){var _pr2=displayNm.split(' ')[0];et.textContent='Espace privé de '+(_pr2||displayNm);}
+  // Follow badge (show for all profiles except own)
+  var isOwnProfile=!!(user&&pid===user.id);
+  var vb=g('tpVerifBadge');if(vb)vb.style.display=isOwnProfile?'none':'flex';
+  _setMpfFollowBtn(fol.has(pid));
   // Stats
   var _nbCours=cours.filter(function(x){return!_isCoursPass(x);}).length;
   var _nbD=cours.filter(function(x){return _isCoursPass(x)&&x.fl>=1;}).length;
-  if(g('mpfStC'))g('mpfStC').textContent=_nbCours;
-  if(g('mpfStE'))g('mpfStE').textContent=p.e||0;
-  if(g('mpfStD'))g('mpfStD').textContent=_nbD;
-  if(g('mpfStN'))g('mpfStN').textContent=p.n&&p.n!=='—'?'★ '+p.n:'—';
+  if(g('tpStCours'))g('tpStCours').textContent=_nbCours;
+  if(g('tpStEleves'))g('tpStEleves').textContent=p.e||0;
+  var _rtEl=g('tpStRating');if(_rtEl){var _hasRt=p.n&&p.n!=='—';_rtEl.textContent=_hasRt?p.n+'★':'—';_rtEl.style.color=_hasRt?'#FF9500':'#aaa';}
+  if(g('tpStAvis'))g('tpStAvis').textContent=p.nb_avis||0;
+  // Trust cards
+  _tpBuildTrustCards(p,pid);
   // Bio
-  var bioEl=g('mpfBio');
+  var bioSect=g('tpBioSection'),bioEl=g('tpBio');
   if(bioEl){
-    if(p.bio){bioEl.textContent=p.bio;}
-    else if(!p._fullFetched){bioEl.innerHTML='<span class="skeleton" style="display:block;height:12px;border-radius:6px;width:90%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:68%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:50%"></span>';}
-    else{bioEl.textContent='';}
+    if(p.bio){bioEl.textContent=p.bio;if(bioSect)bioSect.style.display='block';}
+    else if(!p._fullFetched&&bioSect){bioSect.style.display='block';bioEl.innerHTML='<span class="skeleton" style="display:block;height:12px;border-radius:6px;width:90%;margin-bottom:8px"></span><span class="skeleton" style="display:block;height:12px;border-radius:6px;width:68%"></span>';}
+    else if(bioSect){bioSect.style.display='none';}
   }
-  // Extra info (statut, lieu, formations, expériences)
-  _renderMpfExtraInfo(p);
-  // Tags
-  _renderMpfTags(p.matieres?p.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean):(cours.length?(function(){var s={};cours.forEach(function(c){if(c.subj)s[c.subj]=1;});return Object.keys(s);})():[]));
-  // Cours à venir
-  var mpfCrs=g('mpfCrs');
-  if(mpfCrs){
-    var prochains=cours.filter(function(c){return!_isCoursPass(c)&&c.fl<c.sp;});
-    mpfCrs.innerHTML=prochains.length?prochains.map(function(c){
-      var isV=c.mode==='visio'||!!c.visio_url;
-      var mat=findMatiere(c.subj||'')||{color:'var(--or)',bg:'var(--orp)'};
-      var places=c.sp-c.fl;
-      return'<div class="mpf-cours-item" onclick="closePrFull();openR(\''+escH(c.id)+'\')">'
-        +'<div style="width:44px;height:44px;border-radius:12px;background:'+mat.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:9px;height:9px;border-radius:50%;background:'+mat.color+'"></div></div>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
-        +'<div style="font-size:12px;color:var(--mid);margin-top:3px;display:flex;align-items:center;gap:8px">'
-        +'<span>'+esc(fmtDt(c.dt))+'</span>'
-        +(c.pr2?'<span style="font-size:12px;font-weight:700;color:var(--or)">'+c.pr2+'€</span>':'')
-        +(places>0&&places<=3?'<span style="font-size:11px;color:#EF4444;font-weight:600">'+places+' place'+(places>1?'s':'')+'</span>':'')
-        +'</div></div>'
-        +'<span style="font-size:11px;font-weight:600;background:'+(isV?'rgba(0,113,227,.08)':'rgba(0,177,79,.08)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:4px 10px;flex-shrink:0;white-space:nowrap">'+(isV?'Visio':'Présentiel')+'</span>'
-        +'</div>';
-    }).join(''):('<div style="text-align:center;padding:32px 20px"><div style="width:52px;height:52px;background:var(--wh);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>');
-  }
-  // Follow button
-  var bff=g('bFPFull');if(bff)bff.style.display=(user&&pid===user.id)?'none':'flex';
-  _setMpfFollowBtn(fol.has(pid));
-  // Enrollment state: default hidden until check completes
-  var tabEspace=g('mpfTabEspace');if(tabEspace)tabEspace.style.display='none';
-  var codeSection=g('mpfCodeSection');if(codeSection)codeSection.style.display='none';
-  var codeErr=g('mpfCodeError');if(codeErr)codeErr.style.display='none';
-  var codeInput=g('mpfCodeInput');if(codeInput)codeInput.value='';
-  switchMpfTab('profil');
-  // Check enrollment via API (only if logged in + not own profile)
+  // Statut rows
+  _tpRenderStatut(p);
+  // Matières
+  var _mats=p.matieres?p.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean):(cours.length?(function(){var s={};cours.forEach(function(c){if(c.subj)s[c.subj]=1;});return Object.keys(s);})():[]);
+  _tpRenderMatieres(_mats,_mats.slice(0,2));
+  // Courses tab
+  _tpBuildCourses(pid);
+  // Enrollment
+  var tpCode=g('tpEspaceCode');if(tpCode)tpCode.style.display='block';
+  var tpEspC=g('tpEspaceContent');if(tpEspC)tpEspC.style.display='none';
+  var tpCodeErr=g('tpCodeError');if(tpCodeErr)tpCodeErr.style.display='none';
+  var tpCodeInp=g('tpCodeInput');if(tpCodeInp)tpCodeInp.value='';
+  switchTpTab('presentation');
+  // Check enrollment
   if(user&&!user.guest&&pid!==user.id){
     fetch(API+'/teacher/'+pid+'/is-enrolled',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
       if(_curPrFull!==pid)return;
@@ -4452,30 +4446,154 @@ function openPrFull(pid){
   }
   // Avis
   _loadMpfAvis(pid);
-  // Mise à jour API
+  // API profile fetch
   _fetchProf(pid);
   fetch(API+'/profiles/'+pid+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(prof){
     if(_curPrFull!==pid)return;
     if(!P[pid])P[pid]={};
     P[pid]._fresh=true;P[pid]._fullFetched=true;
-    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie','formations','experiences','experience','lieu_enseignement','lieu'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
+    ['bio','matieres','niveau','statut','verified','diplome_verifie','casier_verifie','formations','experiences','experience','lieu_enseignement','lieu','created_at'].forEach(function(k){if(prof[k]!==undefined)P[pid][k]=prof[k];});
     var _pr2=prof.prenom||'';var _no2=prof.nom||'';var _apiNm=(_pr2+(_no2?' '+_no2:'')).trim();
-    if(_apiNm){P[pid].nm=_apiNm;if(g('mpfInfoNm'))g('mpfInfoNm').textContent=_apiNm;if(g('mpfTopTitle'))g('mpfTopTitle').textContent=_apiNm;}
-    if(prof.photo_url){P[pid].photo=prof.photo_url;setAvatar(g('mpfAvWrap'),prof.photo_url,P[pid].i||'?',P[pid].col||displayCol);}
-    if(prof.bio!==undefined&&g('mpfBio')){var b=prof.bio||'';g('mpfBio').style.transition='opacity .2s';g('mpfBio').style.opacity='0';setTimeout(function(){if(g('mpfBio')){g('mpfBio').textContent=b;g('mpfBio').style.opacity='1';}},180);}
-    if(prof.matieres){_renderMpfTags(prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean));}
-    if(prof.statut&&g('mpfInfoRl')){g('mpfInfoRl').textContent=STATUT[prof.statut]||prof.statut;}
-    _renderMpfExtraInfo(P[pid]);
-    if(prof.verified!==undefined){P[pid].verified=prof.verified;}
-    if(prof.diplome_verifie!==undefined){P[pid].dv=prof.diplome_verifie;}
-    if(prof.casier_verifie!==undefined){P[pid].cv=prof.casier_verifie;}
+    if(_apiNm){P[pid].nm=_apiNm;if(g('tpName'))g('tpName').textContent=_apiNm;}
+    if(prof.photo_url){P[pid].photo=prof.photo_url;var av2=g('tpAvWrap');if(av2){setAvatar(av2,prof.photo_url,P[pid].i||'?',P[pid].col||displayCol);av2._photo=prof.photo_url;}}
+    if(prof.bio!==undefined&&g('tpBio')){
+      var b=prof.bio||'';
+      var bs=g('tpBioSection');
+      if(b){g('tpBio').textContent=b;if(bs)bs.style.display='block';}
+      else{if(bs)bs.style.display='none';}
+    }
+    if(prof.matieres){
+      var mats=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
+      _tpRenderMatieres(mats,mats.slice(0,2));
+    }
+    if(prof.statut&&g('tpSince')){g('tpSince').textContent=(STATUT[prof.statut]||prof.statut)+(prof.created_at?' · Membre depuis '+new Date(prof.created_at).getFullYear():'');}
+    _tpRenderStatut(P[pid]);
+    _tpBuildTrustCards(P[pid],pid);
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
-    if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('mpfStE'))g('mpfStE').textContent=P[pid].e;}
-    var bdgEl2=g('mpfInfoBadges');if(bdgEl2)bdgEl2.innerHTML=_buildBadges(P[pid],pid);
+    if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('tpStEleves'))g('tpStEleves').textContent=P[pid].e;}
+    var _cl=g('tpContactLabel');if(_cl){var _pr3=(prof.prenom||_apiNm||displayNm).split(' ')[0];_cl.textContent='Contacter '+_pr3;}
+    var _et=g('tpEspaceTitle');if(_et){var _pr4=(prof.prenom||_apiNm||displayNm).split(' ')[0];_et.textContent='Espace privé de '+_pr4;}
   }).catch(function(){});
-  // Afficher
   var el=g('bdPrFull');if(el){el.style.display='flex';el.classList.remove('closing');}
-  if(g('mpfScroll'))g('mpfScroll').scrollTop=0;
+  if(g('tpScroll'))g('tpScroll').scrollTop=0;
+}
+
+function _tpBuildTrustCards(p,pid){
+  var box=g('tpTrustCards');if(!box)return;
+  var title=g('tpCertTitle');
+  var _isVrf=p.verified===true||p.verified==='true';
+  var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
+  var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
+  var h='';
+  if(_isVrf){
+    h+='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
+      +'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>'
+      +'</div>';
+  }
+  if(_isDip){
+    var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
+    h+='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3C3489" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
+      +'</div>';
+  }
+  if(_isCas){
+    h+='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>'
+      +'</div>';
+  }
+  box.innerHTML=h;
+  if(title)title.style.display=h?'block':'none';
+}
+
+function _tpRenderStatut(p){
+  var sect=g('tpStatutSection'),list=g('tpStatutList');if(!sect||!list)return;
+  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var rows='';
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Statut</div><div class="tp-card-row-val">'+esc(p.statut?(STATUT[p.statut]||p.statut):'—')+'</div></div></div>';
+  var dip=p.diplome||p.niveau||null;
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Diplôme</div><div class="tp-card-row-val">'+esc(dip||'—')+'</div></div></div>';
+  var exp=p.experiences||p.experience||null;
+  if(exp){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Expérience</div><div class="tp-card-row-val">'+esc(String(exp).split('\n')[0])+'</div></div></div>';}
+  var lieu=p.lieu_enseignement||p.lieu||null;
+  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Lieu d\'enseignement</div><div class="tp-card-row-val">'+esc(lieu||'—')+'</div></div></div>';
+  list.innerHTML=rows;sect.style.display='block';
+}
+
+function _tpRenderMatieres(list,primary){
+  var sect=g('tpMatiereSection'),chips=g('tpMatiereChips');if(!sect||!chips)return;
+  if(!list||!list.length){sect.style.display='none';return;}
+  var primarySet={};(primary||[]).forEach(function(m){primarySet[m]=1;});
+  chips.innerHTML=list.map(function(m){
+    return'<span class="tp-chip'+(primarySet[m]?' tp-chip-primary':'')+'">'+esc(m)+'</span>';
+  }).join('');
+  sect.style.display='block';
+}
+
+function _tpBuildCourses(pid){
+  var container=g('tpCoursList');if(!container)return;
+  var cours=C.filter(function(c){return c.pr===pid&&!_isCoursPass(c)&&c.fl<c.sp;});
+  if(!cours.length){
+    container.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Aucun cours disponible pour le moment.</div>';
+    return;
+  }
+  container.innerHTML='';
+  cours.forEach(function(c){var w=_buildCourseCard(c);if(w)container.appendChild(w);});
+}
+
+function switchTpTab(tab){
+  var tabs=['presentation','cours','avis','espace'];
+  tabs.forEach(function(k){
+    var btn=g('tpTab'+k[0].toUpperCase()+k.slice(1));
+    var panel=g('tpPanel'+k[0].toUpperCase()+k.slice(1));
+    var on=(k===tab);
+    if(btn){if(on)btn.classList.add('on');else btn.classList.remove('on');}
+    if(panel){if(on)panel.removeAttribute('hidden');else panel.setAttribute('hidden','');}
+  });
+}
+
+function tpEnterCode(){
+  var pid=_curPrFull;
+  if(!pid||!user||user.guest){toast(t('t_follow_login'),'');return;}
+  var inp=g('tpCodeInput');var code=(inp?inp.value.trim().toUpperCase():'');
+  if(!code){var e=g('tpCodeError');if(e){e.textContent='Veuillez entrer un code.';e.style.display='block';}return;}
+  var errEl=g('tpCodeError');if(errEl)errEl.style.display='none';
+  var numPid=parseInt(pid)||pid;
+  function _onSuccess(){
+    toast('Accès débloqué !','');haptic(4);
+    var _ep=P[pid]||{};
+    _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
+    _mpfSetEnrolled(true);
+  }
+  function _onError(msg){if(errEl){errEl.textContent=msg||'Code incorrect.';errEl.style.display='block';}}
+  fetch(API+'/teacher/'+pid+'/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
+    .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+    .then(function(res){
+      if(res.ok&&res.d&&res.d.success){_onSuccess();return;}
+      return fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({teacher_id:numPid,code:code})})
+        .then(function(r2){return r2.json().then(function(d2){return{ok:r2.ok,d:d2};});})
+        .then(function(res2){if(res2.ok&&res2.d&&res2.d.success){_onSuccess();}else{_onError(res2.d&&res2.d.error);}});
+    }).catch(function(){_onError();});
+}
+
+function _tpContact(){
+  var pid=_curPrFull;if(!pid)return;
+  var p=P[pid]||{};
+  var av=g('tpAvWrap');
+  openMsg(p.nm||'le professeur',pid,av?av._photo:null);
+  closePrFull();
+}
+
+function _tpShare(){
+  var pid=_curPrFull;var p=P[pid]||{};
+  var nm=p.nm||'un professeur';
+  if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:window.location.href}).catch(function(){});}
+  else{toast('Lien copié','');try{navigator.clipboard.writeText(window.location.href);}catch(e){}}
 }
 
 function enrollWithCode(){
@@ -5651,39 +5769,38 @@ function _renderMpfTags(list){
 }
 
 function _loadMpfAvis(pid){
-  var avisSection=g('mpfAvisSection'),avisContainer=g('mpfAvis');if(!avisSection||!avisContainer)return;
-  avisContainer.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px"></div>';
+  var avisContainer=g('tpAvisList');if(!avisContainer)return;
+  avisContainer.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px;margin:14px 16px"></div>';
   fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
     if(_curPrFull!==pid)return;
-    if(!notes||!notes.length){avisSection.style.display='none';return;}
+    if(!notes||!notes.length){
+      avisContainer.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Pas encore d\'avis pour le moment.</div>';
+      return;
+    }
     var _avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(P[pid])P[pid].n=_avg;
-    if(g('mpfStN'))g('mpfStN').textContent='★ '+_avg;
-    var ratingEl=g('mpfRating');
-    if(ratingEl){
-      ratingEl.style.display='flex';
-      var stars='';for(var i=1;i<=5;i++)stars+=(i<=Math.round(parseFloat(_avg)))?'★':'☆';
-      if(g('mpfRatingStars'))g('mpfRatingStars').textContent=stars;
-      if(g('mpfRatingNum'))g('mpfRatingNum').textContent=_avg;
-      if(g('mpfRatingCount'))g('mpfRatingCount').textContent='('+notes.length+' avis)';
-    }
-    var stars=function(n){var s='';for(var i=1;i<=5;i++)s+='<svg viewBox="0 0 24 24" width="13" height="13" fill="'+(i<=n?'#FBBF24':'none')+'" stroke="'+(i<=n?'#FBBF24':'#D1D5DB')+'" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';return s;};
-    avisSection.style.display='block';
-    avisContainer.innerHTML=notes.slice(0,5).map(function(a){
-      var initial=a.prenom?a.prenom[0].toUpperCase()+'.':null;
-      var roleLabel=a.is_tuteur?t('role_tuteur'):t('role_eleve');
-      var roleColor=a.is_tuteur?'#8B5CF6':'#3B82F6';
-      var roleBg=a.is_tuteur?'#F5F3FF':'#EFF6FF';
-      return'<div style="background:var(--bg);border-radius:14px;padding:14px">'
-        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:'+(a.commentaire?'8':'2')+'px">'
-        +'<div style="width:34px;height:34px;border-radius:50%;background:'+roleColor+'20;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:'+roleColor+';flex-shrink:0">'+(initial||'?')+'</div>'
-        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--ink)">'+(initial?initial+' — ':'')+roleLabel+'</div>'
-        +'<div style="display:flex;align-items:center;gap:6px;margin-top:2px"><span>'+stars(a.note)+'</span><span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'')+'</span></div>'
-        +'</div></div>'
-        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55">'+esc(a.commentaire)+'</div>':'')
+    if(P[pid])P[pid].nb_avis=notes.length;
+    var _rtEl2=g('tpStRating');if(_rtEl2){_rtEl2.textContent=_avg+'★';_rtEl2.style.color='#FF9500';}
+    if(g('tpStAvis'))g('tpStAvis').textContent=notes.length;
+    var starsHtml=function(n){
+      var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;
+    };
+    var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
+    avisContainer.innerHTML=notes.slice(0,10).map(function(a,idx){
+      var initial=a.prenom?a.prenom[0].toUpperCase():'?';
+      var col=COLORS[idx%COLORS.length];
+      return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid #F0F0F0">'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:600;color:#222">'+(a.prenom||'Élève')+'</div>'
+        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +'</div>'
         +'</div>';
     }).join('');
-  }).catch(function(){if(g('mpfAvisSection'))g('mpfAvisSection').style.display='none';});
+  }).catch(function(){
+    var c=g('tpAvisList');if(c)c.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Pas encore d\'avis pour le moment.</div>';
+  });
 }
 
 // ── ESPACE ÉLÈVE — chargement initial ────────────────────────────────────
@@ -6098,14 +6215,9 @@ function espCaMsgSubmit(){
 }
 
 function switchMpfTab(tab){
-  var tabs=['profil','cours','espace'];
-  tabs.forEach(function(k){
-    var btn=g('mpfTab'+k[0].toUpperCase()+k.slice(1));
-    var panel=g('mpfPanel'+k[0].toUpperCase()+k.slice(1));
-    var on=(k===tab);
-    if(btn){if(on)btn.classList.add('on');else btn.classList.remove('on');}
-    if(panel){if(on)panel.removeAttribute('hidden');else panel.setAttribute('hidden','');}
-  });
+  // Delegate to new tab system
+  var tpMap={profil:'presentation',cours:'cours',espace:'espace'};
+  if(tpMap[tab])switchTpTab(tpMap[tab]);
 }
 
 function toggleEsp2Card(id,section){
@@ -6176,13 +6288,27 @@ function togFPFull(){
 }
 
 function _setMpfFollowBtn(isFollowed){
-  var t2=g('bFPFullT'),btn=g('bFPFull');if(!t2||!btn)return;
-  if(isFollowed){
-    t2.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
-    btn.style.background='rgba(255,107,43,.08)';btn.style.borderColor='rgba(255,107,43,.3)';btn.style.color='#FF6B2B';
-  } else {
-    t2.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
-    btn.style.background='';btn.style.borderColor='';btn.style.color='';
+  // Top bar follow button (compat — may not exist in new design)
+  var t2=g('bFPFullT'),btn=g('bFPFull');
+  if(t2&&btn){
+    if(isFollowed){
+      t2.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>';
+      btn.style.background='rgba(255,107,43,.08)';btn.style.borderColor='rgba(255,107,43,.3)';btn.style.color='#FF6B2B';
+    } else {
+      t2.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
+      btn.style.background='';btn.style.borderColor='';btn.style.color='';
+    }
+  }
+  // Avatar follow badge
+  var badge=g('tpVerifBadge'),badgeIco=g('tpFollowBadgeIco');
+  if(badge){
+    badge.classList.toggle('following',isFollowed);
+    if(badgeIco){
+      badgeIco.innerHTML=isFollowed
+        ?'<polyline points="20 6 9 17 4 12"/>'
+        :'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+      badgeIco.setAttribute('stroke',isFollowed?'#E8611A':'#fff');
+    }
   }
 }
 
@@ -11515,6 +11641,8 @@ function openSmartSearch(tab){
   _ssTab=tab||'cours';
   var ov=g('smartSearchOverlay');if(!ov)return;
   ov.style.display='flex';
+  ov.offsetHeight; // force reflow
+  ov.classList.add('open');
   _setSearchTab(_ssTab);
   setTimeout(function(){
     var inp=g('ssInput');
@@ -11523,7 +11651,7 @@ function openSmartSearch(tab){
       if(cur&&cur.value){inp.value=cur.value;var cb=g('ssClearBtn');if(cb)cb.style.display='flex';}
       inp.focus();
     }
-  },180);
+  },200);
   _ssBuildSuggestions(g('ssInput')?g('ssInput').value:'');
   document.body.style.overflow='hidden';
   haptic(4);
@@ -11531,9 +11659,12 @@ function openSmartSearch(tab){
 
 function closeSmartSearch(){
   var ov=g('smartSearchOverlay');
-  if(ov){ov.style.animation='ssIn .15s reverse forwards';setTimeout(function(){ov.style.display='none';ov.style.animation='';},140);}
+  var sheet=g('ssSheet');if(sheet)sheet.style.paddingBottom='';
+  if(ov){
+    ov.classList.remove('open');
+    setTimeout(function(){ov.style.display='none';},380);
+  }
   document.body.style.overflow='';
-  // Apply search term to main inputs
   var ssInp=g('ssInput');
   var val=ssInp?ssInp.value.trim():'';
   var mobInp=g('mobSearchInput');if(mobInp)mobInp.value=val;
@@ -11544,20 +11675,21 @@ function closeSmartSearch(){
 
 function _setSearchTab(tab){
   _ssTab=tab;
-  ['cours','prof','code'].forEach(function(t){
-    var el=g('ssTab'+t.charAt(0).toUpperCase()+t.slice(1));
-    if(el)el.classList.toggle('on',t===tab);
-  });
-  var inputSec=g('ssInputSection'),codeSec=g('ssCodeSection'),ssInp=g('ssInput');
+  var inputSec=g('ssInputSection'),codeSec=g('ssCodeSection'),codeLink=g('ssCodeLink'),matLbl=g('ssMatiereLabel'),geoRow=g('ssGeoRow'),ssInp=g('ssInput');
   if(tab==='code'){
     if(inputSec)inputSec.style.display='none';
     if(codeSec)codeSec.style.display='block';
+    if(codeLink)codeLink.style.display='none';
+    if(matLbl)matLbl.style.display='none';
+    if(geoRow)geoRow.style.display='none';
     setTimeout(function(){var ci=g('ssCodeInput');if(ci)ci.focus();},80);
   } else {
     if(inputSec)inputSec.style.display='block';
     if(codeSec)codeSec.style.display='none';
-    var ph={cours:'Matière, mots-clés…',prof:'Nom du professeur…'};
-    if(ssInp){ssInp.setAttribute('placeholder',ph[tab]||'Rechercher…');setTimeout(function(){ssInp.focus();},80);}
+    if(codeLink)codeLink.style.display='block';
+    if(geoRow)geoRow.style.display='block';
+    var ph={cours:'Matière, professeur, mots-clés...',prof:'Nom du professeur...'};
+    if(ssInp){ssInp.setAttribute('placeholder',ph[tab]||'Rechercher...');setTimeout(function(){ssInp.focus();},80);}
   }
   _ssBuildSuggestions(ssInp?ssInp.value:'');
 }
@@ -11595,46 +11727,61 @@ function _ssUpdateResultCount(){
 
 function _ssBuildSuggestions(val){
   var box=g('ssQuickSugg');if(!box)return;
+  var matLbl=g('ssMatiereLabel');
   var MAT_SUGG=[
-    {label:'Mathématiques',sub:'Algèbre, analyse, géométrie',col:'#3B82F6',bg:'#EFF6FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/><path d="M5 5l14 14M5 19L19 5" stroke-width="1.5"/></svg>'},
-    {label:'Physique-Chimie',sub:'Mécanique, thermodynamique, chimie',col:'#8B5CF6',bg:'#F5F3FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>'},
-    {label:'Anglais',sub:'Oral, écrit, grammaire, TOEFL',col:'#F59E0B',bg:'#FFFBEB',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'},
-    {label:'Français',sub:'Littérature, dissertation, expression',col:'#6366F1',bg:'#EEF2FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'},
-    {label:'Histoire-Géo',sub:'Chronologie, géopolitique, cartes',col:'#10B981',bg:'#ECFDF5',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>'},
+    {label:'Mathématiques',sub:'Algèbre, analyse, géométrie',col:'#6366F1',bg:'#EEF2FF',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" width="18" height="18"><line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/><path d="M5 5l14 14M5 19L19 5" stroke-width="1.5"/></svg>'},
+    {label:'Physique-Chimie',sub:'Mécanique, thermodynamique, chimie',col:'#22C55E',bg:'#F0FDF4',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>'},
+    {label:'Anglais',sub:'Oral, écrit, grammaire, TOEFL',col:'#F97316',bg:'#FFF7ED',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'},
+    {label:'Français',sub:'Littérature, dissertation, expression',col:'#F43F5E',bg:'#FFF0F3',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#F43F5E" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>'},
+    {label:'Histoire-Géo',sub:'Chronologie, géopolitique, cartes',col:'#A78BFA',bg:'#F5F0FF',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>'},
     {label:'Informatique',sub:'Algorithmes, code, IA, data',col:'#0EA5E9',bg:'#F0F9FF',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="20" height="20"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'},
-    {label:'Espagnol',sub:'Grammaire, oral, DELE',col:'#EF4444',bg:'#FEF2F2',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'},
-    {label:'Musique',sub:'Solfège, instrument, théorie',col:'#EC4899',bg:'#FDF2F8',
-     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" stroke-width="2" stroke-linecap="round" width="18" height="18"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>'},
+    {label:'Espagnol',sub:'Grammaire, oral, DELE',col:'#FB923C',bg:'#FFF8F0',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'},
+    {label:'Musique',sub:'Solfège, instrument, théorie',col:'#D946EF',bg:'#FDF4FF',
+     ico:'<svg viewBox="0 0 24 24" fill="none" stroke="#D946EF" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'},
   ];
   if(_ssTab==='prof'&&(!val||val.length<1)){
     var profs=Object.keys(P).filter(function(pid){
       return P[pid]&&P[pid].nm&&(!user||pid!==user.id);
     }).slice(0,7);
-    if(!profs.length){box.innerHTML='<div style="font-size:13px;color:var(--lite);text-align:center;padding:24px 0">Aucun professeur à afficher</div>';return;}
-    var h='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:8px">Professeurs</div>';
+    if(matLbl)matLbl.style.display='none';
+    if(!profs.length){box.innerHTML='<div style="font-size:13px;color:#888;text-align:center;padding:24px 0">Aucun professeur à afficher</div>';return;}
+    var h='';
     profs.forEach(function(pid){
       var p=P[pid];var _nm=(p&&p.nm)||'—';var _ini=(p&&p.i)||'?';var _col=(p&&p.col)||'linear-gradient(135deg,#FF8C55,#E04E10)';
-      var _inner=(p&&p.photo)?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:13px">':'<span style="color:#fff;font-weight:800;font-size:17px">'+esc(_ini)+'</span>';
-      h+='<div class="ss-sugg-item" onclick="closeSmartSearch();openPrFull(\''+pid+'\')"><div class="ss-sugg-icon" style="background:'+_col+'">'+_inner+'</div><div><div style="font-size:15px;font-weight:600;color:var(--ink)">'+esc(_nm)+'</div>'+(p&&p.matieres?'<div style="font-size:12px;color:var(--lite)">'+esc(p.matieres.split(',').slice(0,2).join(', '))+'</div>':'')+'</div></div>';
+      var _inner=(p&&p.photo)?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px">':'<span style="color:#fff;font-weight:700;font-size:15px">'+esc(_ini)+'</span>';
+      h+='<div class="subject-item" onclick="closeSmartSearch();openPrFull(\''+pid+'\')">'
+        +'<div style="width:40px;height:40px;border-radius:10px;background:'+_col+';display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">'+_inner+'</div>'
+        +'<div><div style="font-size:13px;font-weight:500;color:#222">'+esc(_nm)+'</div>'+(p&&p.matieres?'<div style="font-size:11px;color:#888">'+esc(p.matieres.split(',').slice(0,2).join(', '))+'</div>':'')+'</div></div>';
     });
     box.innerHTML=h;return;
   }
-  if(val&&val.length>0){box.innerHTML='';return;}
-  var h2='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:8px">Matières populaires</div>';
+  if(val&&val.length>0){
+    if(matLbl)matLbl.style.display='none';
+    box.innerHTML='';return;
+  }
+  if(matLbl)matLbl.style.display='block';
+  var h2='';
   MAT_SUGG.forEach(function(m){
-    h2+='<div class="ss-sugg-item" onclick="_ssPickMatiere(\''+m.label+'\')">'
-      +'<div class="ss-sugg-icon" style="background:'+m.bg+'">'+m.ico+'</div>'
-      +'<div><div style="font-size:15px;font-weight:600;color:var(--ink)">'+m.label+'</div>'
-      +'<div style="font-size:12px;color:var(--lite)">'+m.sub+'</div></div></div>';
+    h2+='<div class="subject-item" onclick="_ssPickMatiere(\''+m.label+'\')">'
+      +'<div style="background:'+m.bg+';width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+m.ico+'</div>'
+      +'<div><div style="font-size:13px;font-weight:500;color:#222">'+m.label+'</div>'
+      +'<div style="font-size:11px;color:#888">'+m.sub+'</div></div></div>';
   });
   box.innerHTML=h2;
+}
+
+function _ssUseGeoloc(){
+  closeSmartSearch();
+  // Open locbar first so requestGeoloc shows the result
+  var lb=g('locInput');if(lb)lb.closest('.locbar')&&lb.closest('.locbar').classList.add('open');
+  requestGeoloc();
 }
 
 function _ssPickMatiere(label){
@@ -11660,17 +11807,17 @@ function _ssSubmitCode(){
 function _updateSearchPill(val){
   var main=g('searchPillMain'),sub=g('searchPillSub'),clr=g('searchPillClear');
   if(val){
-    if(main){main.textContent=val;main.style.color='var(--ink)';}
+    if(main){main.textContent=val;main.style.color='#222';}
     if(sub)sub.style.display='none';
     if(clr)clr.style.display='flex';
     var pill=g('searchPill');
-    if(pill){pill.style.borderColor='var(--or)';pill.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)';}
+    if(pill)pill.style.boxShadow='0 2px 8px rgba(232,97,26,.18),0 0 0 1.5px rgba(232,97,26,.35)';
   } else {
-    if(main){main.textContent='Rechercher';main.style.color='var(--lite)';}
+    if(main){main.textContent='Que cherches-tu ?';main.style.color='#222';}
     if(sub)sub.style.display='block';
     if(clr)clr.style.display='none';
     var pill2=g('searchPill');
-    if(pill2){pill2.style.borderColor='';pill2.style.boxShadow='';}
+    if(pill2)pill2.style.boxShadow='0 2px 8px rgba(0,0,0,.10),0 0 0 0.5px rgba(0,0,0,.07)';
   }
 }
 
@@ -11751,10 +11898,10 @@ function _updateFiltersBadge(){
   if(!badge)return;
   if(count>0){
     badge.textContent=count;badge.style.display='flex';
-    if(btn){btn.style.borderColor='rgba(255,107,43,.4)';btn.style.color='var(--or)';}
+    if(btn){btn.style.borderColor='#E8611A';btn.style.background='rgba(232,97,26,.08)';}
   } else {
     badge.style.display='none';
-    if(btn){btn.style.borderColor='';btn.style.color='';}
+    if(btn){btn.style.borderColor='';btn.style.background='';}
   }
 }
 
@@ -12000,6 +12147,84 @@ function initSwipeNav(){
     }
   },{passive:true});
 }
+
+// ── Keyboard / visualViewport ──────────────────────────────────────────────
+// Keeps the search bottom sheet above the software keyboard on iOS
+(function(){
+  if(!window.visualViewport)return;
+  function _onVpResize(){
+    var ov=g('smartSearchOverlay');
+    if(!ov||!ov.classList.contains('open'))return;
+    var sheet=g('ssSheet');if(!sheet)return;
+    var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    sheet.style.paddingBottom=kbH>30?(kbH+'px'):'';
+  }
+  window.visualViewport.addEventListener('resize',_onVpResize);
+  window.visualViewport.addEventListener('scroll',_onVpResize);
+})();
+
+// ── Pull-to-refresh ────────────────────────────────────────────────────────
+(function(){
+  var _ptrStartY=0,_ptrCurY=0,_ptrActive=false,_ptrTriggered=false;
+  var THRESHOLD=72; // px à tirer avant le déclenchement
+
+  function _pgExpVisible(){
+    var pg=g('pgExp');return pg&&pg.classList.contains('on');
+  }
+  function _isAtTop(){
+    var app=g('app');return !app||app.scrollTop===0;
+  }
+  function _showPtrIndicator(ratio){
+    var ind=g('ptrIndicator'),sp=g('ptrSpinner');
+    if(!ind)return;
+    ind.style.opacity=Math.min(ratio,1).toFixed(2);
+    var tr=Math.min(ratio*THRESHOLD,THRESHOLD)+'px';
+    ind.style.transform='translateY('+tr+')';
+    if(sp&&ratio>=1&&!sp.classList.contains('spinning'))sp.classList.add('spinning');
+    else if(sp&&ratio<1)sp.classList.remove('spinning');
+  }
+  function _hidePtrIndicator(){
+    var ind=g('ptrIndicator'),sp=g('ptrSpinner');
+    if(ind){ind.style.opacity='0';ind.style.transform='';}
+    if(sp)sp.classList.remove('spinning');
+  }
+
+  document.addEventListener('touchstart',function(e){
+    if(!_pgExpVisible()||!_isAtTop())return;
+    _ptrStartY=e.touches[0].clientY;
+    _ptrActive=true;_ptrTriggered=false;
+  },{passive:true});
+
+  document.addEventListener('touchmove',function(e){
+    if(!_ptrActive)return;
+    _ptrCurY=e.touches[0].clientY;
+    var dy=_ptrCurY-_ptrStartY;
+    if(dy<=0){_hidePtrIndicator();return;}
+    // Resistance rubber-band: pull feels heavier as it goes
+    var pull=dy*0.45;
+    _showPtrIndicator(pull/THRESHOLD);
+  },{passive:true});
+
+  document.addEventListener('touchend',function(){
+    if(!_ptrActive)return;
+    _ptrActive=false;
+    var dy=(_ptrCurY-_ptrStartY)*0.45;
+    if(dy>=THRESHOLD&&!_ptrTriggered){
+      _ptrTriggered=true;
+      haptic([10,30,10]);
+      var ind=g('ptrIndicator');
+      if(ind){ind.style.opacity='1';ind.style.transform='translateY('+THRESHOLD+'px)';}
+      loadData().then(function(){
+        buildCards();
+        _hidePtrIndicator();
+        toast('Actualisé','');
+      }).catch(function(){_hidePtrIndicator();});
+    } else {
+      _hidePtrIndicator();
+    }
+    _ptrStartY=0;_ptrCurY=0;
+  },{passive:true});
+})();
 
 // Render filter bar once all variables are initialized
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',renderFilterBar);}
