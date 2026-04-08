@@ -11732,7 +11732,7 @@ function _calBuildHeader(myCours){
   var isProf=user&&user.role==='professeur';
 
   // Segment bar HTML (tous les utilisateurs)
-  var segHtml='<div id="mesSegBar" style="padding:8px 0 2px">'
+  var segHtml='<div id="mesSegBar" style="padding:8px 0 14px">'
     +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
     +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
     +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
