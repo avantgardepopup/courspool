@@ -627,12 +627,11 @@
         <div id="geoControls" style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           <!-- Bouton activer/désactiver géoloc -->
           <!-- Géoloc : icône seule quand actif pour économiser l'espace -->
-          <button onclick="requestGeoloc()" id="locGeoBtn" style="background:var(--orp);color:var(--or);border:none;border-radius:8px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:all .2s;flex-shrink:0">
+          <button onclick="requestGeoloc()" id="locGeoBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
             <span id="geoBtnLabel" data-i18n="exp_around_me">Autour de moi</span>
           </button>
-          <!-- Distance : compact, max-width fixe -->
-          <button id="geoDistBtn" onclick="openDistFilter()" style="display:none;background:var(--or);color:#fff;border:none;border-radius:8px;padding:5px 8px;font-family:inherit;font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;min-width:0">
+          <button id="geoDistBtn" onclick="openDistFilter()" style="display:none">
             <span id="geoDistLabel">10 km</span>
           </button>
         </div>
