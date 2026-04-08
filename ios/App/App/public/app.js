@@ -11718,12 +11718,13 @@ function _ssApplyKb(kbH){
   var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
   var body=g('ssBody');if(!body)return;
   if(kbH>0&&_ssFocusedCard){
-    // Scroll enough to show the last card (Code), not just the focused one
     var cards=ov.querySelectorAll('.ss-card');
     var lastCard=cards.length?cards[cards.length-1]:_ssFocusedCard;
     var lastRect=lastCard.getBoundingClientRect();
-    var visibleBottom=window.innerHeight-kbH-16;
-    var shift=Math.max(0,lastRect.bottom-visibleBottom);
+    var focusedRect=_ssFocusedCard.getBoundingClientRect();
+    var visibleBottom=window.innerHeight-kbH-24;
+    // Shift enough to: show last card fully AND give focused card 60px above keyboard
+    var shift=Math.max(0,lastRect.bottom-visibleBottom,focusedRect.bottom-(visibleBottom-60));
     body.style.transform='translateY(-'+shift+'px)';
     body.style.transition='transform .22s ease';
   } else {
