@@ -2742,8 +2742,8 @@ function buildAccLists(){
   if(!_showRIds.length){lr.innerHTML+=isProf
     ?'<div style="padding:0 20px 20px;font-size:13px;color:var(--lite)">Aucune réservation à venir</div>'
     :'<div style="text-align:center;padding:40px 20px">'
-    +'<div style="width:72px;height:72px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
+    +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
     +'</div>'
     +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours à venir</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Réservez votre premier cours<br>et retrouvez-le ici</div>'
@@ -7471,6 +7471,7 @@ async function loadConversations(){
   var lm=g('listM');
   if(!lm)return;
   // Afficher le cache immédiatement si disponible, sinon spinner
+  lm.style.cssText='';
   if(_convCache){lm.innerHTML=_convCache;}
   else{lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';}
   if(_convLoading)return; // refresh déjà en cours, cache affiché suffit
@@ -7490,7 +7491,8 @@ async function loadConversations(){
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 220px);padding:24px">'
+      lm.style.padding='0';lm.style.display='flex';lm.style.alignItems='center';lm.style.justifyContent='center';
+      lm.innerHTML='<div style="text-align:center;padding:24px">'
         +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
         +'</div>'
@@ -7544,7 +7546,7 @@ async function loadConversations(){
       return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
     var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">'+t('msg_empty_conv')+'</div>';
-    lm.innerHTML=_convHtml;
+    lm.style.cssText='';lm.innerHTML=_convHtml;
     lm.querySelectorAll('.msg-row').forEach(function(r){
       r.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
       r.addEventListener('touchend',function(){this.classList.remove('tapped');});
@@ -7563,18 +7565,18 @@ async function loadConversations(){
     var _httpM=e.message&&e.message.match(/HTTP (\d+)/);var _httpC=_httpM?parseInt(_httpM[1]):0;
     if(_httpC>=400&&_httpC<500){
       clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;
-      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_connection')+' <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
+      if(lm){lm.style.cssText='';lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_connection')+' <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';}
       return;
     }
     _convRetries++;
     if(_convRetries<4){
       // Retry silencieux (cold start Railway / timeout réseau iOS) — max 3 tentatives
-      if(lm&&!_convCache)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('msg_reconnecting')+'</div>';
+      if(lm&&!_convCache){lm.style.cssText='';lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('msg_reconnecting')+'</div>';}
       clearTimeout(_convRetryTimer);
       _convRetryTimer=setTimeout(function(){_convRetryTimer=null;loadConversations();},_convRetries*4000);
     }else{
       _convRetries=0;
-      if(lm)lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_load_fail')+' <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
+      if(lm){lm.style.cssText='';lm.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px">'+t('err_load_fail')+' <a onclick="_convRetries=0;loadConversations()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';}
     }
   }finally{
     clearTimeout(_convTimeout);_convLoading=false;
@@ -11649,7 +11651,7 @@ function _renderCalCourses(){
 
   if(!dayTagged.length){
     el.innerHTML='<div class="mes-cal-empty">'
-      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
+      +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
       +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
       +'</div>';
