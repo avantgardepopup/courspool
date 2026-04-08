@@ -53,7 +53,7 @@
 <!-- Lib paiement sécurisé — chargé en async pour ne pas bloquer le démarrage -->
 <script async src="https://js.stripe.com/v3/"></script>
 <link rel="stylesheet" href="/fonts.css">
-<link rel="stylesheet" href="/style.css?v=20260408h">
+<link rel="stylesheet" href="/style.css?v=20260408i">
 </head>
 <body>
 
@@ -1151,8 +1151,8 @@
 
           <!-- Mes avis (prof seulement) -->
           <div class="acc-card" id="accCardAvis" onclick="switchATab('Avis',document.getElementById('aTabAvis'))" style="display:none;background:var(--wh);border-radius:20px;padding:20px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);transition:transform .2s cubic-bezier(.22,.61,.36,1),box-shadow .2s;border:1px solid rgba(0,0,0,.05);-webkit-tap-highlight-color:transparent">
-            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,149,0,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes avis</div>
             <div style="font-size:12px;color:var(--lite);margin-top:3px">Notes &amp; commentaires</div>
@@ -1344,7 +1344,7 @@
           <!-- Card : Mes élèves -->
           <div class="esp2-card" id="espCard2">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard2','eleves')">
-              <div class="esp2-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+              <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Mes élèves <span id="espStudentBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
                 <div class="esp2-sub">Élèves inscrits à ton espace</div>
@@ -1359,7 +1359,7 @@
           <!-- Card : Publications -->
           <div class="esp2-card" id="espCard3">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard3','annonces')">
-              <div class="esp2-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+              <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Publications</div>
                 <div class="esp2-sub">Annonces visibles par tes élèves</div>
@@ -1387,7 +1387,7 @@
           <!-- Card : Documents reçus (prof) -->
           <div class="esp2-card" id="espCard5">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard5','received')">
-              <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+              <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Documents reçus <span id="espReceivedBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
                 <div class="esp2-sub">Fichiers envoyés par tes élèves</div>
@@ -1402,7 +1402,7 @@
           <!-- Card : Ma bibliothèque -->
           <div class="esp2-card" id="espCard4">
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard4','ressources')">
-              <div class="esp2-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+              <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
               <div style="flex:1">
                 <div class="esp2-title">Ma bibliothèque</div>
                 <div class="esp2-sub">Fiches de cours et documents partagés</div>
@@ -3164,7 +3164,7 @@
 <script src="/sentry-init.js" defer></script>
 <script src="/search-aliases.js" defer></script>
 <script src="/lang.js"></script>
-<script src="/app.js?v=20260408h" defer></script>
+<script src="/app.js?v=20260408i" defer></script>
 <!-- SETTINGS SHEET -->
 <div id="bdSettings" onclick="if(event.target===this)closeSettings()">
   <div class="settings-sheet" id="settingsSheet">
