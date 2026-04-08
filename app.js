@@ -1762,6 +1762,13 @@ async function saveProfCompletion(){
     if(_pcMode)payload.mode_cours=_pcMode;
   }else{
     payload.pour_enfant=(_pcPour==='enfant');
+    if(_pcPour==='enfant'){
+      payload.is_tuteur=true;
+      if(user)user.is_tuteur=true;
+      try{localStorage.setItem('cp_is_tuteur','1');}catch(e){}
+      var enfPrenom=(g('pcEnfantPrenom')&&g('pcEnfantPrenom').value||'').trim();
+      if(enfPrenom){payload.enfant_prenom=enfPrenom;if(user)user.enfant_prenom=enfPrenom;try{localStorage.setItem('cp_enfant_prenom',enfPrenom);}catch(e){}}
+    }
     if(_pcNivEleve&&_pcNivEleve!=='no_answer'){
       if(_pcPour==='enfant')payload.niveau_enfant=_pcNivEleve;
       else payload.niveau=_pcNivEleve;
@@ -1989,8 +1996,11 @@ function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
 
 function applyUser(){
   var _l=g('login');if(_l){_l.style.display='none';_l.style.pointerEvents='none';_l.style.zIndex='-1';}g('app').style.display='block';
-  // Restaurer is_tuteur depuis localStorage si non fourni par le backend
+  // Restaurer is_tuteur et enfant_prenom depuis localStorage si non fournis par le backend
   if(user&&user.is_tuteur===undefined){try{user.is_tuteur=localStorage.getItem('cp_is_tuteur')==='1';}catch(e){}}
+  if(user&&!user.enfant_prenom){try{user.enfant_prenom=localStorage.getItem('cp_enfant_prenom')||'';}catch(e){}}
+  // Badge tuteur dans la messagerie
+  var _tb=g('msgTuteurBadge');if(_tb)_tb.style.display=(user&&user.is_tuteur)?'block':'none';
   // Greeting dynamique
   try{
     var h=new Date().getHours();
@@ -5031,9 +5041,11 @@ function espLoadStudents(){
         var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:11px;font-weight:800;color:#fff">'+ini+'</span>';
         var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
         var paid=rsv.paid||rsv.status==='paid';
+        var isTut=!!(rsv.is_tuteur);
+        var enfNm=rsv.enfant_prenom||'';
         return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr)">'
           +'<div style="width:32px;height:32px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+av+'</div>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div></div>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+(isTut?'<span style="font-size:9px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">Tuteur</span>':'')+'</div>'+(enfNm?'<div style="font-size:11px;color:var(--lite);margin-top:1px">👧 Pour '+esc(enfNm)+'</div>':'')+'</div>'
           +(paid?'<span style="font-size:10px;font-weight:700;background:rgba(16,185,129,.12);color:#059669;border-radius:50px;padding:2px 8px;flex-shrink:0">Payé</span>':'<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#D97706;border-radius:50px;padding:2px 8px;flex-shrink:0">En attente</span>')
           +'</div>';
       }).join('');
@@ -11820,7 +11832,13 @@ function openSettings(){
   var tutSec=g('settingsTuteurSection'),tutGrp=g('settingsTuteurGroup');
   if(tutSec)tutSec.style.display=isEleve?'block':'none';
   if(tutGrp)tutGrp.style.display=isEleve?'flex':'none';
-  if(isEleve){var tutTog=g('tuteurToggle');if(tutTog)tutTog.classList.toggle('on',!!(user&&user.is_tuteur));}
+  if(isEleve){
+    var tutTog=g('tuteurToggle');if(tutTog)tutTog.classList.toggle('on',!!(user&&user.is_tuteur));
+    var _isTut=!!(user&&user.is_tuteur);
+    var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display=_isTut?'flex':'none';
+    var ep=g('enfantPrenomInput');
+    if(ep){var _ep=user.enfant_prenom||(function(){try{return localStorage.getItem('cp_enfant_prenom')||'';}catch(e){return '';}}());ep.value=_ep;if(user)user.enfant_prenom=_ep;}
+  }
   updateDarkBtn();
   setTimeout(renderNotifStatus,50);
   haptic(6);
@@ -11863,10 +11881,21 @@ async function toggleTuteurMode(){
   user.is_tuteur=!user.is_tuteur;
   var tog=g('tuteurToggle');if(tog)tog.classList.toggle('on',user.is_tuteur);
   try{localStorage.setItem('cp_is_tuteur',user.is_tuteur?'1':'0');}catch(e){}
+  var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display=user.is_tuteur?'flex':'none';
+  var tb=g('msgTuteurBadge');if(tb)tb.style.display=user.is_tuteur?'block':'none';
   // Sync backend si possible
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:user.is_tuteur})});}catch(e){}
   haptic(6);
-  toast(user.is_tuteur?'Mode tuteur activé':'Mode tuteur désactivé',user.is_tuteur?'Vos avis seront identifiés "Tuteur"':'Vos avis seront identifiés "Élève"');
+  toast(user.is_tuteur?'Mode tuteur activé':'Mode tuteur désactivé',user.is_tuteur?'Les profs voient votre statut Tuteur':'Statut Tuteur désactivé');
+}
+
+function saveEnfantPrenom(val){
+  if(!user)return;
+  user.enfant_prenom=val.trim();
+  try{localStorage.setItem('cp_enfant_prenom',val.trim());}catch(e){}
+  fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({enfant_prenom:val.trim()})}).catch(function(){});
+  haptic(4);
+  toast('Prénom enregistré','');
 }
 function openMsgContactSheet(){
   var opts=[

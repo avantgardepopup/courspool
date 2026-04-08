@@ -424,6 +424,10 @@
         <div class="lniv-chip" onclick="pickPcNiv(this,'terminale')">Terminale</div>
       </div>
       <div class="lfield" style="margin-top:4px">
+        <label>Prénom de l'enfant (optionnel)</label>
+        <input id="pcEnfantPrenom" type="text" placeholder="Ex : Lucas">
+      </div>
+      <div class="lfield" style="margin-top:4px">
         <label>Age de l'enfant (optionnel)</label>
         <input id="pcEnfantAge" type="number" placeholder="10" min="4" max="17">
       </div>
@@ -1013,6 +1017,7 @@
         <div id="msgConvAv" class="msg-conv-av" onclick="if(msgDestId)openPrFull(msgDestId)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div>
         <div class="msg-conv-info">
           <div id="msgConvName" class="msg-conv-name"></div>
+          <div id="msgTuteurBadge" style="display:none;font-size:10px;font-weight:700;color:#8B5CF6;margin-top:2px;line-height:1">👨‍👧 Vous : Tuteur</div>
         </div>
         <button id="btnShareCours" onclick="openShareCoursSheet()" class="msg-share-btn" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
@@ -3223,6 +3228,15 @@
           <div class="settings-sub" data-i18n="settings_tuteur_sub">Les professeurs voient votre statut sur vos réservations, messages et avis</div>
         </div>
         <div class="ntog" id="tuteurToggle"></div>
+      </div>
+      <div class="settings-row" id="enfantPrenomRow" style="display:none">
+        <div style="flex:1">
+          <div class="settings-label">Prénom de l'enfant</div>
+          <div class="settings-sub">Affiché aux professeurs sur vos réservations</div>
+        </div>
+        <input id="enfantPrenomInput" type="text" placeholder="Ex : Lucas"
+          style="border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:right;outline:none;width:120px;-webkit-text-fill-color:var(--ink);-webkit-appearance:none"
+          onchange="saveEnfantPrenom(this.value)">
       </div>
     </div>
 
