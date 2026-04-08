@@ -548,6 +548,7 @@ function _doUnenrollProf(pid){
 }
 function _initProfCardSwipe(cardEl,type,pid){
   var sx=0,sy=0,swiping=false,acted=false;
+  var indicator=cardEl.previousElementSibling;// red zone sibling before card
   cardEl.addEventListener('touchstart',function(e){
     if(acted)return;
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;swiping=false;
@@ -557,22 +558,33 @@ function _initProfCardSwipe(cardEl,type,pid){
     var dx=e.touches[0].clientX-sx;
     var dy=Math.abs(e.touches[0].clientY-sy);
     if(!swiping&&Math.abs(dx)>8&&Math.abs(dx)>dy)swiping=true;
-    if(swiping&&dx<0){e.preventDefault();cardEl.style.transform='translateX('+Math.max(dx,-96)+'px)';cardEl.style.transition='none';}
+    if(swiping&&dx<0){
+      e.preventDefault();
+      var t=Math.max(dx,-88);
+      cardEl.style.transform='translateX('+t+'px)';
+      cardEl.style.transition='none';
+      // reveal indicator proportionally
+      if(indicator){var ratio=Math.min(Math.abs(t)/88,1);indicator.style.opacity=String(ratio);}
+    }
   },{passive:false});
   cardEl.addEventListener('touchend',function(e){
     if(acted||!swiping)return;
     var dx=e.changedTouches[0].clientX-sx;
     swiping=false;
-    if(dx<-80){
+    if(dx<-60){
       if(type==='enrolled'){
         cardEl.style.transform='';cardEl.style.transition='transform .2s';
+        if(indicator){indicator.style.opacity='0';}
         _confirmUnenroll(pid);
       }else{
         acted=true;
         cardEl.style.transform='translateX(-110%)';cardEl.style.transition='transform .25s ease';cardEl.style.opacity='0';
         setTimeout(function(){unfollowProf(pid);buildMesProfs();},260);
       }
-    }else{cardEl.style.transform='';cardEl.style.transition='transform .2s';}
+    }else{
+      cardEl.style.transform='';cardEl.style.transition='transform .2s';
+      if(indicator){indicator.style.opacity='0';indicator.style.transition='opacity .2s';}
+    }
   },{passive:true});
 }
 
@@ -592,6 +604,16 @@ function buildMesProfs(){
   }
   if(empty)empty.style.display='none';
   if(!carousel)return;
+  var _STATUT_LBL={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  var _delZone='<div style="position:absolute;right:0;top:0;bottom:0;width:88px;background:#FF3B30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:0 20px 20px 0;opacity:0;pointer-events:none">'+_trashSvg+'<span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.01em">Retirer</span></div>';
+  function _profCardWrap(cardHtml){
+    // Couche externe : ombre (pas overflow:hidden pour ne pas clipper l'ombre)
+    // Couche interne : overflow:hidden pour clipper la zone rouge
+    return '<div style="margin:0 16px 10px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.07)">'
+      +'<div style="position:relative;overflow:hidden;border-radius:20px">'+_delZone+cardHtml+'</div>'
+      +'</div>';
+  }
   var html='';
   // Section : inscrits via code
   if(enrolledProfs.length){
@@ -604,14 +626,17 @@ function buildMesProfs(){
       var photo=p.photo||ep.photo||null;
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
-      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      var statut=_STATUT_LBL[p.statut]||null;
+      var subLine='<span style="color:var(--or);font-weight:600">Espace inscrit</span>'+(statut?'<span style="color:var(--lite)"> · '+esc(statut)+'</span>':'');
+      var card='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
-        +'<div style="font-size:12px;color:var(--or);margin-top:3px;font-weight:600">Espace inscrit</div>'
+        +'<div style="font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+subLine+'</div>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>'
         +'</div>';
+      html+=_profCardWrap(card);
       _fetchProf(ep.id);
     });
   }
@@ -627,14 +652,16 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
-      html+='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      var statut=fresh?(_STATUT_LBL[p.statut]||p.rl||'Professeur'):'';
+      var card='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(fresh?esc(p.nm||'Professeur'):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>')+'</div>'
-        +'<div style="font-size:12px;color:var(--lite);margin-top:3px">'+(fresh?esc(p.rl||'Professeur'):'<span class="skeleton" style="display:inline-block;height:11px;width:70px;border-radius:4px"></span>')+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:3px">'+(fresh?esc(statut):'<span class="skeleton" style="display:inline-block;height:11px;width:70px;border-radius:4px"></span>')+'</div>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>'
         +'</div>';
+      html+=_profCardWrap(card);
       _fetchProf(pid);
     });
   }
@@ -803,33 +830,48 @@ var _enrollBd=null;
 
 function openEnrollSheet(){
   haptic(4);
-  if(_enrollBd){_enrollBd.remove();_enrollBd=null;}
+  if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}
+  var isDk=document.documentElement.classList.contains('dk');
+  var cardBg=isDk?'#1C1C1E':'#ffffff';
+  var cardShadow=isDk?'0 3px 16px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.07)':'0 3px 14px rgba(0,0,0,.11),0 0 0 .5px rgba(0,0,0,.06)';
+  var inpColor=isDk?'#ffffff':'#111111';
+  // Placeholder très clair pour bien distinguer texte saisi vs placeholder
+  var phColor=isDk?'#48484A':'#C7C7CC';
   var bd=document.createElement('div');
   _enrollBd=bd;
-  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
-  sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
-    +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Rejoindre un espace</div><div style="font-size:13px;color:var(--lite);margin-top:2px">Entre le code que ton prof t\'a donné</div></div>'
+  sheet.style.cssText='background:var(--bg);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(36px,env(safe-area-inset-bottom,36px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
+  sheet.innerHTML=
+    '<style>#_enrollCodeInp::placeholder{color:'+phColor+' !important;-webkit-text-fill-color:'+phColor+' !important;opacity:1;letter-spacing:.04em;font-family:inherit;font-size:16px;font-weight:400;text-transform:none;}</style>'
+    +'<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Rejoindre un espace</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Entre le code partagé par ton professeur</div>'
+    // Carte code — style ss-card, clean et premium
+    +'<div style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:10px;box-sizing:border-box">'
+      +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="12" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
     +'</div>'
-    +'<input id="_enrollCodeInp" type="text" placeholder="Code (ex\u00a0: ABC123)" maxlength="10" autocomplete="off" style="width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:20px;font-weight:800;text-align:center;letter-spacing:.16em;outline:none;box-sizing:border-box;text-transform:uppercase;margin-bottom:6px;transition:border-color .18s;background:var(--bg);color:var(--ink)" oninput="this.value=this.value.toUpperCase()">'
-    +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;text-align:center;margin-bottom:6px;line-height:1.5"></div>'
-    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:8px">Rejoindre</button>'
-    +'<button onclick="if(_enrollBd){_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
+    +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;line-height:1.5;padding:0 4px;margin-bottom:8px"></div>'
+    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:4px">Rejoindre</button>'
+    +'<button onclick="if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
   bd.appendChild(sheet);document.body.appendChild(bd);
-  bd.onclick=function(e){if(e.target===bd){bd.remove();_enrollBd=null;}};
-  var inp=sheet.querySelector('#_enrollCodeInp');
-  if(inp){
-    inp.addEventListener('focus',function(){inp.style.borderColor='var(--or)';});
-    inp.addEventListener('blur',function(){inp.style.borderColor='var(--bdr)';});
-    setTimeout(function(){inp.focus();},300);
+  bd.onclick=function(e){if(e.target===bd){if(bd._cleanupKb)bd._cleanupKb();bd.remove();_enrollBd=null;}};
+  var codeInp=document.getElementById('_enrollCodeInp');
+  if(codeInp){
+    codeInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();submitEnrollSheet();}});
   }
-  var _ekbShow=function(e){var h=(e&&e.keyboardHeight)||0;if(h>0)sheet.style.paddingBottom=(h+16)+'px';};
-  var _ekbHide=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';};
+  setTimeout(function(){if(codeInp)codeInp.focus();},320);
+  var _ekbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;
+    if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}
+  };
+  var _ekbHide=function(){
+    sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';
+    sheet.style.transition='padding-bottom .18s ease';
+  };
   window.addEventListener('keyboardWillShow',_ekbShow);
   window.addEventListener('keyboardWillHide',_ekbHide);
+  bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);};
 }
 
 function submitEnrollSheet(){
@@ -856,7 +898,31 @@ function submitEnrollSheet(){
     buildMesProfs();
     if(pid)setTimeout(function(){openProfEspace(String(pid));},300);
   }
-  function _onErr(msg){if(btn)btn.disabled=false;if(errEl){errEl.textContent=msg||'Code incorrect.';errEl.style.display='block';}}
+  function _onErr(msg){
+    // Fallback : tenter d'ouvrir le cours privé avec ce code (code_acces de cours)
+    if(btn)btn.disabled=false;
+    fetch(API+'/cours/code/'+code).then(function(r){return r.json();}).then(function(data){
+      if(data&&data.id){
+        // C'est un code de cours privé
+        if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}
+        var nc={id:data.id,t:((data.titre||'')+' '+(data.sujet||'')).toLowerCase(),
+          subj:data.sujet||'Autre',sc:data.couleur_sujet||'#7C3AED',
+          bg:data.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)',bgDark:data.bg_dark||'',
+          title:data.titre||'',dt:data.date_heure||'',dt_iso:data.date_iso||'',lc:data.lieu||'',
+          mode:data.mode||'presentiel',visio_url:data.visio_url||'',
+          tot:data.prix_total||0,sp:data.places_max||5,fl:data.places_prises||0,
+          pr:data.professeur_id,prof_ini:data.prof_initiales||'?',
+          prof_col:data.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
+          prof_nm:data.prof_nom||'',prof_photo:data.prof_photo||null,
+          description:data.description||'',code:data.code_acces||'',prive:true};
+        if(!C.find(function(x){return x.id==nc.id;}))C.unshift(nc);
+        openR(nc.id);
+        toast('Cours trouvé !',nc.title);
+      } else {
+        if(errEl){errEl.textContent=msg||'Code incorrect ou expiré.';errEl.style.display='block';}
+      }
+    }).catch(function(){if(errEl){errEl.textContent=msg||'Code incorrect ou expiré.';errEl.style.display='block';}});
+  }
   fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
     .then(function(r){var ok=r.ok;return _safeJson(r).then(function(d){return{ok:ok,d:d||{}};});})
     .then(function(res){
@@ -3006,6 +3072,7 @@ function _fetchProf(pid){
     if(prof.verified!==undefined)P[pid].verified=prof.verified;
     if(prof.diplome_verifie!==undefined)P[pid].dv=prof.diplome_verifie;
     if(prof.casier_verifie!==undefined)P[pid].cv=prof.casier_verifie;
+    if(prof.statut!==undefined)P[pid].statut=prof.statut;
     if(nm2){
       P[pid].nm=nm2;
       P[pid].i=((pr2[0]||'')+(no2[0]||'')).toUpperCase()||'?';
@@ -11966,32 +12033,44 @@ var _ssFocusedCard=null,_ssCurrentKbH=0;
 var _ssKbShowFn=null,_ssKbHideFn=null;
 function _ssOnFocus(inp){
   _ssFocusedCard=inp.closest('.ss-card')||null;
-  // Keyboard already visible → re-apply shift for new focused card
-  if(_ssCurrentKbH>0)_ssApplyKb(_ssCurrentKbH);
+  // Keyboard already visible → re-scroll for new focused card
+  if(_ssCurrentKbH>0)_ssScrollToFocused(_ssCurrentKbH);
 }
 function _ssApplyKb(kbH){
   _ssCurrentKbH=kbH;
   var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
   var body=g('ssBody');if(!body)return;
-  if(kbH>0&&_ssFocusedCard){
-    var cards=ov.querySelectorAll('.ss-card');
-    var lastCard=cards.length?cards[cards.length-1]:_ssFocusedCard;
-    var lastRect=lastCard.getBoundingClientRect();
-    var focusedRect=_ssFocusedCard.getBoundingClientRect();
-    var visibleBottom=window.innerHeight-kbH-24;
-    // Shift enough to: show last card fully AND give focused card 60px above keyboard
-    var shift=Math.max(0,lastRect.bottom-visibleBottom,focusedRect.bottom-(visibleBottom-60));
-    body.style.transform='translateY(-'+shift+'px)';
-    body.style.transition='transform .22s ease';
-  } else {
-    body.style.transform='';
-    body.style.transition='';
+  // Abandon translateY — expand paddingBottom so content can scroll above keyboard
+  body.style.transform='';body.style.transition='';
+  if(kbH>0){
+    body.style.paddingBottom=(kbH+80)+'px';
+    _ssScrollToFocused(kbH);
+  }else{
+    body.style.paddingBottom='';
   }
+}
+function _ssScrollToFocused(kbH){
+  if(!_ssFocusedCard)return;
+  var ov=g('smartSearchOverlay');if(!ov)return;
+  // Delay 80ms for padding reflow before reading rects
+  setTimeout(function(){
+    if(!_ssFocusedCard||!ov.classList.contains('open'))return;
+    var rect=_ssFocusedCard.getBoundingClientRect();
+    var visBottom=window.innerHeight-kbH-12;
+    // Scroll just enough to show the focused card 12px above keyboard
+    if(rect.bottom>visBottom){
+      ov.scrollTop=ov.scrollTop+(rect.bottom-visBottom);
+    }
+    // Also make sure card top hasn't scrolled off screen
+    var rect2=_ssFocusedCard.getBoundingClientRect();
+    var minTop=60;// below the ss-top-bar (~56px)
+    if(rect2.top<minTop){ov.scrollTop=Math.max(0,ov.scrollTop-(minTop-rect2.top));}
+  },80);
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
   ov.style.display='flex';ov.scrollTop=0;
-  var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';}
+  var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';_ssB.style.paddingBottom='';}
   ov.offsetHeight;
   ov.classList.add('open');
   // Pré-remplir depuis la recherche en cours

@@ -843,20 +843,13 @@ function openEnrollSheet(){
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--bg);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(36px,env(safe-area-inset-bottom,36px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
   sheet.innerHTML=
-    '<style>#_enrollCodeInp::placeholder{color:'+phColor+' !important;-webkit-text-fill-color:'+phColor+' !important;opacity:1;letter-spacing:.18em;}</style>'
-    +'<div style="text-align:center;margin-bottom:22px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    // Titre centré
-    +'<div style="text-align:center;margin-bottom:28px">'
-      +'<div style="width:56px;height:56px;border-radius:18px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
-      +'</div>'
-      +'<div style="font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Entrer un code</div>'
-      +'<div style="font-size:13px;color:var(--lite);margin-top:4px">Espace privé ou cours privé</div>'
-    +'</div>'
-    // Carte code — grand, centré, clair
-    +'<div style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';padding:6px 20px 8px;margin-bottom:10px">'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#aaa;margin-bottom:6px;margin-top:10px">Code</div>'
-      +'<input id="_enrollCodeInp" type="text" placeholder="ABC\u200B1\u200B2\u200B3" maxlength="10" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()" style="width:100%;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:32px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:4px 0 14px;box-sizing:border-box;caret-color:var(--or)">'
+    '<style>#_enrollCodeInp::placeholder{color:'+phColor+' !important;-webkit-text-fill-color:'+phColor+' !important;opacity:1;letter-spacing:.04em;font-family:inherit;font-size:16px;font-weight:400;text-transform:none;}</style>'
+    +'<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Rejoindre un espace</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Entre le code partagé par ton professeur</div>'
+    // Carte code — style ss-card, clean et premium
+    +'<div style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:10px;box-sizing:border-box">'
+      +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="12" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
     +'</div>'
     +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;line-height:1.5;padding:0 4px;margin-bottom:8px"></div>'
     +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:4px">Rejoindre</button>'
