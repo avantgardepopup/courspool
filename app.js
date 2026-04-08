@@ -1150,7 +1150,7 @@ async function loadData(page,silent){
         sc:(function(){var m=findMatiere(c.sujet||'');return m?m.color:(c.couleur_sujet||'#7C3AED');}()),
         bg:(function(){var m=findMatiere(c.sujet||'');return m?m.bg:(c.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)');}()),
         bgDark:(function(){var m=findMatiere(c.sujet||'');return m&&m.bgDark?m.bgDark:'linear-gradient(135deg,#1A1A2E,#16213E)';}()),
-        title:c.titre||'',dt:c.date_heure||'',dt_iso:c.date_iso||'',lc:c.lieu||'',mode:c.mode||'presentiel',visio_url:c.visio_url||'',code:c.code_acces||'',prive:c.prive||false,
+        title:c.titre||'',dt:c.date_heure||'',dt_iso:c.date_iso||c.date_heure||'',lc:c.lieu||'',mode:c.mode||'presentiel',visio_url:c.visio_url||'',code:c.code_acces||'',prive:c.prive||false,
         tot:c.prix_total||0,sp:c.places_max||5,fl:c.places_prises||0,
         pr:c.professeur_id,em:c.emoji||'📚',
         prof_ini:c.prof_initiales||'?',
