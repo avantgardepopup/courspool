@@ -426,10 +426,11 @@ function _buildFavCard2Col(c,idx){
   var modeIco=isV
     ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="10" height="10"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
     :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var modeSolid=isV?'#0071E3':'#00A550';
   div.innerHTML='<div class="fav2-img" style="height:'+imgH+'px;background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22);position:relative;overflow:hidden">'
-    +'<div style="position:absolute;top:9px;left:9px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:5px">'
-    +'<span class="fav2-subj" style="background:'+mat.color+';position:static">'+esc(c.subj||'Cours')+'</span>'
-    +'<span style="display:inline-flex;align-items:center;gap:4px;background:'+modeBg+';color:'+modeCo+';font-size:9px;font-weight:700;border-radius:50px;padding:3px 7px 3px 5px">'+modeIco+(isV?'Visio':'Présentiel')+'</span>'
+    +'<div style="position:absolute;top:9px;left:9px;right:44px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:5px">'
+    +'<span class="fav2-subj" style="background:'+mat.color+';position:static;max-width:100%">'+esc(c.subj||'Cours')+'</span>'
+    +'<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;color:'+modeSolid+';font-size:9px;font-weight:700;border-radius:50px;padding:3px 7px 3px 5px;box-shadow:0 1px 4px rgba(0,0,0,.15)">'+modeIco+(isV?'Visio':'Présentiel')+'</span>'
     +'</div>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'+avInner+'</div>'
     +'</div>'
