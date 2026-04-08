@@ -6807,16 +6807,7 @@ function togFP(){
 }
 
 // CRÉER COURS
-function openCr(){
-  if(!user||user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
-  if(user.verified===false){
-    if(getCniStatus()==='none'){toast(t('t_cni_req'),'');openCniSheet();}
-    else{toast(t('exp_verif'),t('exp_verif_sub'));}
-    return;
-  }
-  var today=new Date().toLocaleDateString('fr-CA',{timeZone:'Europe/Paris'});
-  g('crDate').min=today;buildCrMatCircles();openM('bdCr');
-}
+function openCr(){openCrStep();}
 function closeCr(){closeM('bdCr');}
 
 // ── Icônes matières (SVG path strings) ──────────────────────────────────────
@@ -10995,43 +10986,25 @@ function stepRender(idx){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
-    var _isDkM=document.documentElement.classList.contains('dk');
-    var _matCats=[
-      {lbl:t('mat_cat_sciences'),  items:['Maths','Statistiques','Physique','Chimie','SVT / Biologie','Astronomie','G\u00e9ologie','M\u00e9decine / Sant\u00e9','\u00c9cologie']},
-      {lbl:t('mat_cat_numerique'), items:['Informatique','Python','JavaScript','D\u00e9veloppement web','Data Science','IA & Machine Learning','\u00c9lectronique','Design / UI','Cybers\u00e9curit\u00e9','No-code','Blockchain']},
-      {lbl:t('mat_cat_langues'),   items:['Fran\u00e7ais','Anglais','Espagnol','Allemand','Italien','Portugais','Arabe','Chinois','Japonais','Russe','Cor\u00e9en','Hindi','Latin','Langue des signes']},
-      {lbl:t('mat_cat_lettres'),   items:['\u00c9criture cr\u00e9ative','Philosophie','Th\u00e9\u00e2tre','Cin\u00e9ma / Vid\u00e9o','BD / Manga']},
-      {lbl:t('mat_cat_arts'),      items:['Dessin','Peinture','Aquarelle','Arts plastiques','Illustration','Calligraphie','Photographie']},
-      {lbl:t('mat_cat_musique'),   items:['Musique','Piano','Guitare','Chant','Batterie','Violon','Saxophone']},
-      {lbl:t('mat_cat_humaines'),  items:['Histoire-G\u00e9o','Psychologie','Sociologie','G\u00e9ographie','Sciences politiques','Anthropologie']},
-      {lbl:t('mat_cat_business'),  items:['\u00c9conomie','Comptabilit\u00e9','Finance','Marketing','Droit','Entrepreneuriat','Gestion de projet','Communication','RH & Recrutement','Immobilier','Architecture']},
-      {lbl:t('mat_cat_prepa'),     items:['CPGE / Pr\u00e9pa','M\u00e9decine (PASS/LAS)','Sciences Po','TOEFL / IELTS','GMAT / GRE']},
-      {lbl:t('mat_cat_sport'),     items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
-      {lbl:t('mat_cat_bienetre'),  items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso']},
-      {lbl:t('mat_cat_cuisine'),   items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique']},
-      {lbl:t('mat_cat_jeux'),      items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
-      {lbl:t('mat_cat_autre'),     items:['Autre']},
-    ];
-    html+='<div style="width:100%;margin-bottom:4px;position:relative">'
-      +'<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
-      +'<input id="stepMatSearch" type="text" placeholder="Rechercher une mati\u00e8re\u2026" style="width:100%;box-sizing:border-box;padding:11px 14px 11px 38px;border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none" oninput="_matSearchFilter(this.value)">'
-      +'</div>';
-    html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%">';
-    _matCats.forEach(function(cat){
-      html+='<div data-cat>'
-        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
-      cat.items.forEach(function(m){
-        var mo=MATIERES.find(function(x){return x.label===m;})||{color:'#9CA3AF',bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'};
-        var isSel=_sd.matiere===m;
-        var chipBg=isSel?(_isDkM?(mo.bgDark||mo.bg):mo.bg):'var(--wh)';
-        var chipBorder=isSel?mo.color:'var(--bdr)';
-        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="matiere" data-sv="'+escH(m)+'" data-color="'+escH(mo.color)+'" data-bg="'+escH(mo.bg)+'" data-bgdark="'+escH(mo.bgDark||mo.bg)+'" style="background:'+chipBg+';border:2px solid '+chipBorder+';border-radius:50px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
-          +'<div style="width:9px;height:9px;border-radius:50%;background:'+mo.color+';flex-shrink:0"></div>'
-          +'<span style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap">'+m+'</span>'
+    html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%;padding-bottom:8px">';
+    CR_CATEGORIES.forEach(function(cat){
+      var items=cat.keys.map(function(key){
+        var mat=MATIERES.find(function(m){return m.key===key;});
+        if(!mat)return'';
+        var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
+        var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+        if(lbl.length>9)lbl=lbl.slice(0,8)+'\u2026';
+        var isSel=_sd.matiere_key===key;
+        return'<div class="cr-mat-item'+(isSel?' on':'')+'" data-key="'+key+'" onclick="_stepPickMat(\''+key+'\',\''+escH(mat.label)+'\')" style="-webkit-tap-highlight-color:transparent">'
+          +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+          +'<span class="cr-mat-lbl">'+lbl+'</span>'
           +'</div>';
-      });
-      html+='</div></div>';
+      }).join('');
+      if(!items.trim())return;
+      html+='<div data-cat>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.label+'</div>'
+        +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
+        +'</div>';
     });
     html+='</div>';
 
@@ -11239,6 +11212,16 @@ function _matSearchFilter(q){
     });
     cat.style.display=visible?'':'none';
   });
+}
+
+function _stepPickMat(key,label){
+  _sd.matiere_key=key;
+  _sd.matiere=label;
+  var bd=g('bdCrStep');
+  if(bd)bd.querySelectorAll('.cr-mat-item').forEach(function(el){
+    el.classList.toggle('on',el.dataset.key===key);
+  });
+  haptic(8);
 }
 
 function sOpt(a,v,l,s,sel,bg,ex){
