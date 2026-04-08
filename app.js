@@ -4568,7 +4568,7 @@ var _curPrFull=null;
 var _curPrEnrolled=false;
 
 function _buildBadges(p,pid){
-  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>';
+  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
   var icoDip='<svg viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
   var icoShld='<svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   var icoFol='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -4715,7 +4715,7 @@ function _tpBuildTrustCards(p,pid){
   var _tcSty='cursor:pointer;-webkit-tap-highlight-color:transparent';
   if(_isVrf){
     h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'identite\')">'
-      +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+      +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
       +'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>'
       +'</div>';
@@ -4730,9 +4730,9 @@ function _tpBuildTrustCards(p,pid){
   }
   if(_isCas){
     h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'confiance\')">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>'
+      +'<div class="tp-trust-icon" style="background:#ECFDF5"><svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Casier judiciaire vérifié</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Certifié</div>'
       +'</div>';
   }
   box.innerHTML=h;
