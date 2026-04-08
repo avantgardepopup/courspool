@@ -548,6 +548,7 @@ function _doUnenrollProf(pid){
 }
 function _initProfCardSwipe(cardEl,type,pid){
   var sx=0,sy=0,swiping=false,acted=false;
+  var indicator=cardEl.previousElementSibling;// red zone sibling before card
   cardEl.addEventListener('touchstart',function(e){
     if(acted)return;
     sx=e.touches[0].clientX;sy=e.touches[0].clientY;swiping=false;
@@ -557,22 +558,33 @@ function _initProfCardSwipe(cardEl,type,pid){
     var dx=e.touches[0].clientX-sx;
     var dy=Math.abs(e.touches[0].clientY-sy);
     if(!swiping&&Math.abs(dx)>8&&Math.abs(dx)>dy)swiping=true;
-    if(swiping&&dx<0){e.preventDefault();cardEl.style.transform='translateX('+Math.max(dx,-96)+'px)';cardEl.style.transition='none';}
+    if(swiping&&dx<0){
+      e.preventDefault();
+      var t=Math.max(dx,-88);
+      cardEl.style.transform='translateX('+t+'px)';
+      cardEl.style.transition='none';
+      // reveal indicator proportionally
+      if(indicator){var ratio=Math.min(Math.abs(t)/88,1);indicator.style.opacity=String(ratio);}
+    }
   },{passive:false});
   cardEl.addEventListener('touchend',function(e){
     if(acted||!swiping)return;
     var dx=e.changedTouches[0].clientX-sx;
     swiping=false;
-    if(dx<-80){
+    if(dx<-60){
       if(type==='enrolled'){
         cardEl.style.transform='';cardEl.style.transition='transform .2s';
+        if(indicator){indicator.style.opacity='0';}
         _confirmUnenroll(pid);
       }else{
         acted=true;
         cardEl.style.transform='translateX(-110%)';cardEl.style.transition='transform .25s ease';cardEl.style.opacity='0';
         setTimeout(function(){unfollowProf(pid);buildMesProfs();},260);
       }
-    }else{cardEl.style.transform='';cardEl.style.transition='transform .2s';}
+    }else{
+      cardEl.style.transform='';cardEl.style.transition='transform .2s';
+      if(indicator){indicator.style.opacity='0';indicator.style.transition='opacity .2s';}
+    }
   },{passive:true});
 }
 
@@ -592,6 +604,12 @@ function buildMesProfs(){
   }
   if(empty)empty.style.display='none';
   if(!carousel)return;
+  var _STATUT_LBL={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  var _delZone='<div style="position:absolute;right:0;top:0;bottom:0;width:88px;background:#FF3B30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:0 20px 20px 0;opacity:0;pointer-events:none">'+_trashSvg+'<span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.01em">Retirer</span></div>';
+  function _profCardWrap(cardHtml){
+    return '<div style="position:relative;overflow:hidden;margin:0 16px 10px;border-radius:20px">'+_delZone+cardHtml+'</div>';
+  }
   var html='';
   // Section : inscrits via code
   if(enrolledProfs.length){
@@ -604,14 +622,17 @@ function buildMesProfs(){
       var photo=p.photo||ep.photo||null;
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
-      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      var statut=_STATUT_LBL[p.statut]||null;
+      var subLine='<span style="color:var(--or);font-weight:600">Espace inscrit</span>'+(statut?'<span style="color:var(--lite)"> · '+esc(statut)+'</span>':'');
+      var card='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
-        +'<div style="font-size:12px;color:var(--or);margin-top:3px;font-weight:600">Espace inscrit</div>'
+        +'<div style="font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+subLine+'</div>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>'
         +'</div>';
+      html+=_profCardWrap(card);
       _fetchProf(ep.id);
     });
   }
@@ -627,14 +648,16 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
-      html+='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      var statut=fresh?(_STATUT_LBL[p.statut]||p.rl||'Professeur'):'';
+      var card='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(fresh?esc(p.nm||'Professeur'):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>')+'</div>'
-        +'<div style="font-size:12px;color:var(--lite);margin-top:3px">'+(fresh?esc(p.rl||'Professeur'):'<span class="skeleton" style="display:inline-block;height:11px;width:70px;border-radius:4px"></span>')+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:3px">'+(fresh?esc(statut):'<span class="skeleton" style="display:inline-block;height:11px;width:70px;border-radius:4px"></span>')+'</div>'
         +'</div>'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>'
         +'</div>';
+      html+=_profCardWrap(card);
       _fetchProf(pid);
     });
   }
@@ -3006,6 +3029,7 @@ function _fetchProf(pid){
     if(prof.verified!==undefined)P[pid].verified=prof.verified;
     if(prof.diplome_verifie!==undefined)P[pid].dv=prof.diplome_verifie;
     if(prof.casier_verifie!==undefined)P[pid].cv=prof.casier_verifie;
+    if(prof.statut!==undefined)P[pid].statut=prof.statut;
     if(nm2){
       P[pid].nm=nm2;
       P[pid].i=((pr2[0]||'')+(no2[0]||'')).toUpperCase()||'?';
