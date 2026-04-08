@@ -3753,8 +3753,9 @@ function showAliasSuggestion(val){
 function acceptAlias(){
   if(!_pendingAlias)return;
   var box=g('searchAliasSuggestion');if(box)box.style.display='none';
-  var mobInp=g('mobSearchInput');if(mobInp){mobInp.value=_pendingAlias;var cb=g('searchClearBtn');if(cb)cb.style.display='flex';}
+  var mobInp=g('mobSearchInput');if(mobInp)mobInp.value=_pendingAlias;
   var srch=g('srch');if(srch)srch.value=_pendingAlias;
+  var pi=g('pillSearchInput');if(pi&&pi.style.display!=='none')pi.value=_pendingAlias;
   _pendingAlias=null;
   currentPage=1;applyFilter();
 }
@@ -10626,10 +10627,14 @@ function closeInlineSearch(){
   if(bar)bar.style.display='';
   if(pill)pill.onclick=function(){openInlineSearch();};
   var srch=g('srch');if(srch)srch.value='';
+  var mob=g('mobSearchInput');if(mob)mob.value='';
+  var as=g('searchAliasSuggestion');if(as)as.style.display='none';
+  var cs=g('searchCodeSuggestion');if(cs)cs.style.display='none';
   applyFilter();
 }
 function _pillDoFilter(val){
   var srch=g('srch');if(srch)srch.value=val;
+  var mob=g('mobSearchInput');if(mob)mob.value=val;
   doFilter();
 }
 
