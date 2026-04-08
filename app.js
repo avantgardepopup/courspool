@@ -4653,8 +4653,9 @@ function _tpBuildTrustCards(p,pid){
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
   var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
   var h='';
+  var _tcSty='cursor:pointer;-webkit-tap-highlight-color:transparent';
   if(_isVrf){
-    h+='<div class="tp-trust-card">'
+    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'identite\')">'
       +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
       +'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>'
@@ -4662,14 +4663,14 @@ function _tpBuildTrustCards(p,pid){
   }
   if(_isDip){
     var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
-    h+='<div class="tp-trust-card">'
+    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'diplome\')">'
       +'<div class="tp-trust-icon" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3C3489" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
       +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
       +'</div>';
   }
   if(_isCas){
-    h+='<div class="tp-trust-card">'
+    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'confiance\')">'
       +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>'
