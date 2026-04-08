@@ -466,8 +466,8 @@ html.dk .locbar input::placeholder{color:#636366;-webkit-text-fill-color:#636366
 @keyframes mi{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 .mhd{padding:20px 20px 4px;display:flex;align-items:flex-start;justify-content:space-between;}
 .mbd{padding:20px 20px 24px;}
-.mcl{width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--mid);transition:all .18s;}
-.mcl:hover{background:var(--orp);color:var(--or);}
+.mcl{width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);-webkit-text-fill-color:var(--lite);transition:all .18s;-webkit-tap-highlight-color:transparent;}
+.mcl:hover{background:var(--orp);color:var(--or);-webkit-text-fill-color:var(--or);}
 .pb{display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:50px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:all .22s cubic-bezier(.34,1.56,.64,1);border:none;letter-spacing:-.01em;}
 .pb.pri{background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 4px 16px rgba(255,69,0,.25);}
 .pb.pri:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,69,0,.35);}
@@ -2490,10 +2490,7 @@ html.dk #msgConvPane { background: #1C1C1E; }
   align-items: center;
   gap: 10px;
   padding: max(env(safe-area-inset-top,44px),44px) 12px 12px;
-  background: rgba(255,255,255,.88);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 0.5px solid rgba(0,0,0,.12);
+  background: var(--wh);
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -2559,8 +2556,7 @@ html.dk #msgConvPane { background: #1C1C1E; }
   letter-spacing: -.01em;
 }
 html.dk .msg-conv-header {
-  background: rgba(28,28,30,.88);
-  border-bottom-color: rgba(255,255,255,.08);
+  background: #1C1C1E;
 }
 
 /* Zone messages */
