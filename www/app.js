@@ -5938,6 +5938,15 @@ function elveUnlockSheet(pid,kind,id,extra){
       bd.remove();loadElveBibliotheque(pid);
     }
   };
+  var _kbS=function(e){var h=(e&&e.keyboardHeight)||0;if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}};
+  var _kbH=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';sheet.style.transition='padding-bottom .18s ease';};
+  window.addEventListener('keyboardWillShow',_kbS);
+  window.addEventListener('keyboardWillHide',_kbH);
+  function _cleanup(){window.removeEventListener('keyboardWillShow',_kbS);window.removeEventListener('keyboardWillHide',_kbH);}
+  bd.onclick=function(e){if(e.target!==bd)return;_cleanup();bd.remove();};
+  var origOnClick=btn.onclick;
+  // Patch bd.remove calls inside btn.onclick to also cleanup
+  sheet.querySelector('button:last-child').onclick=function(){_cleanup();bd.remove();};
   bd.appendChild(sheet);document.body.appendChild(bd);
   setTimeout(function(){var inp=document.getElementById('_elveUnlockInp');if(inp)inp.focus();},150);
   haptic(4);
@@ -6135,6 +6144,11 @@ function _biblioAskPassword(onDone){
     if(!v){document.getElementById('_biblioPwInp').style.boxShadow='0 0 0 2px #EF4444';return;}
     bd2.remove();onDone(v);
   };
+  var _kbShow=function(e){var h=(e&&e.keyboardHeight)||0;if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}};
+  var _kbHide=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';sheet.style.transition='padding-bottom .18s ease';};
+  window.addEventListener('keyboardWillShow',_kbShow);
+  window.addEventListener('keyboardWillHide',_kbHide);
+  bd2.onclick=function(e){if(e.target!==bd2)return;window.removeEventListener('keyboardWillShow',_kbShow);window.removeEventListener('keyboardWillHide',_kbHide);bd2.remove();};
   bd2.appendChild(sheet);document.body.appendChild(bd2);
   setTimeout(function(){var inp=document.getElementById('_biblioPwInp');if(inp)inp.focus();},150);
   haptic(4);
