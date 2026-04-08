@@ -1835,6 +1835,8 @@ function doGuest(){
 }
 
 function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
+  // Clear enrolled profs if switching to a different user account
+  try{var _prev=JSON.parse(localStorage.getItem('cp_user')||'{}');if(_prev.id&&String(_prev.id)!==String(uid))localStorage.removeItem('cp_enrolled_profs');}catch(e){}
   user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined,refresh_token:refreshToken||undefined,token_exp:tokenExp||undefined};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   _scheduleTokenRefresh();
@@ -2791,6 +2793,7 @@ function doLogout(){
   try{localStorage.removeItem(_COURS_CACHE_KEY);}catch(e){}
   try{if(_fkLogout)localStorage.removeItem(_fkLogout);}catch(e){}
   try{localStorage.removeItem('cp_fav_cours');}catch(e){} // nettoyer la clé fallback sans user.id
+  try{localStorage.removeItem('cp_enrolled_profs');}catch(e){}
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
   // Restaurer les items bnav pour la prochaine connexion
@@ -4461,7 +4464,10 @@ function openPrFull(pid){
   if(user&&!user.guest&&pid!==user.id){
     fetch(API+'/teacher/'+pid+'/is-enrolled',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
       if(_curPrFull!==pid)return;
-      _mpfSetEnrolled(!!(d&&d.enrolled));
+      var enrolled=!!(d&&d.enrolled);
+      _mpfSetEnrolled(enrolled);
+      // Persist to localStorage so enrollment survives re-login on same device
+      if(enrolled){var _p=P[pid]||{};_saveEnrolledProf(String(pid),{nm:_p.nm||'',ini:_p.i||'?',col:_p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_p.photo||null});}
     }).catch(function(){_mpfSetEnrolled(false);});
   }
   // Avis
@@ -6803,7 +6809,7 @@ function openMsg(profNm,destId,avatar){
 function closeMsgConv(){
   // Hide conv pane, stay on messages list
   var convPane=g('msgConvPane');
-  if(convPane)convPane.style.display='none';
+  if(convPane){convPane.style.display='none';convPane.style.bottom='';}
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
   // Restaurer la nav (iPad: retirer ipad-back + cacher bouton rond ; mobile: retirer conv-mode)
@@ -9252,23 +9258,36 @@ function setNivFilter(niv, el){
   applyFilter();
 }
 
+var _locKbShowFn=null,_locKbHideFn=null;
 function openVilleFilter(){
   var bar=document.querySelector('.locbar');
   if(!bar)return;
   var isOpen=bar.classList.contains('open');
   if(isOpen){
-    // deuxième clic : fermer si pas de valeur
-    if(!actLoc){bar.classList.remove('open');var pill=g('pillVille');if(pill)pill.classList.remove('on');}
+    if(!actLoc){closeVilleFilter();}
     else{var inp=g('locInput');if(inp)inp.focus();}
     return;
   }
   bar.classList.add('open');
   var pill=g('pillVille');if(pill)pill.classList.add('on');
   setTimeout(function(){var inp=g('locInput');if(inp)inp.focus();},80);
+  // Keyboard avoidance
+  _locKbShowFn=function(e){
+    var kbH=(e&&e.keyboardHeight)||0;if(kbH<=0)return;
+    var b=document.querySelector('.locbar');var app=g('app');if(!b||!app)return;
+    var bRect=b.getBoundingClientRect();
+    var visBot=window.innerHeight-kbH-16;
+    if(bRect.bottom>visBot)app.scrollTop+=bRect.bottom-visBot;
+  };
+  _locKbHideFn=function(){};
+  window.addEventListener('keyboardWillShow',_locKbShowFn);
+  window.addEventListener('keyboardWillHide',_locKbHideFn);
 }
 function closeVilleFilter(){
   var bar=document.querySelector('.locbar');
   if(bar)bar.classList.remove('open');
+  if(_locKbShowFn){window.removeEventListener('keyboardWillShow',_locKbShowFn);_locKbShowFn=null;}
+  if(_locKbHideFn){window.removeEventListener('keyboardWillHide',_locKbHideFn);_locKbHideFn=null;}
 }
 function applyVilleFilter(){}
 function clearVilleFilter(){
@@ -10900,7 +10919,7 @@ function _renderCalCourses(){
   // Chaque entrée : {c: course, kind: 'published'|'reserved'}
   var tagged=[];
   if(isProf){
-    C.filter(function(c){return c.pr===user.id;}).forEach(function(c){tagged.push({c:c,kind:'published'});});
+    C.filter(function(c){return String(c.pr)===String(user.id);}).forEach(function(c){tagged.push({c:c,kind:'published'});});
     Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean).forEach(function(c){
       if(!tagged.some(function(t){return t.c.id===c.id;}))tagged.push({c:c,kind:'reserved'});
     });
@@ -10978,7 +10997,7 @@ function buildMesCours(){
   // Tous les cours à afficher (publiés + réservés pour les profs)
   var allCours;
   if(isProf){
-    var published=C.filter(function(c){return c.pr===user.id;});
+    var published=C.filter(function(c){return String(c.pr)===String(user.id);});
     var reserved=Object.keys(res).map(function(id){return C.find(function(c){return c.id==id;});}).filter(Boolean);
     // Dédoublonner
     var seen={};
@@ -11440,8 +11459,8 @@ function openSettings(){
   // Tuteur / parent — visible pour les élèves uniquement
   var isEleve=user&&user.role!=='professeur';
   var tutSec=g('settingsTuteurSection'),tutGrp=g('settingsTuteurGroup');
-  if(tutSec)tutSec.style.display=isEleve?'':'none';
-  if(tutGrp)tutGrp.style.display=isEleve?'':'none';
+  if(tutSec)tutSec.style.display=isEleve?'block':'none';
+  if(tutGrp)tutGrp.style.display=isEleve?'flex':'none';
   if(isEleve){var tutTog=g('tuteurToggle');if(tutTog)tutTog.classList.toggle('on',!!(user&&user.is_tuteur));}
   updateDarkBtn();
   setTimeout(renderNotifStatus,50);
@@ -11709,9 +11728,36 @@ var _ssTimer=null;
 
 var _ssGeoActive=false;
 
+var _ssFocusedCard=null,_ssCurrentKbH=0;
+var _ssKbShowFn=null,_ssKbHideFn=null;
+function _ssOnFocus(inp){
+  _ssFocusedCard=inp.closest('.ss-card')||null;
+  // Keyboard already visible → re-apply shift for new focused card
+  if(_ssCurrentKbH>0)_ssApplyKb(_ssCurrentKbH);
+}
+function _ssApplyKb(kbH){
+  _ssCurrentKbH=kbH;
+  var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
+  var body=g('ssBody');if(!body)return;
+  if(kbH>0&&_ssFocusedCard){
+    var cards=ov.querySelectorAll('.ss-card');
+    var lastCard=cards.length?cards[cards.length-1]:_ssFocusedCard;
+    var lastRect=lastCard.getBoundingClientRect();
+    var focusedRect=_ssFocusedCard.getBoundingClientRect();
+    var visibleBottom=window.innerHeight-kbH-24;
+    // Shift enough to: show last card fully AND give focused card 60px above keyboard
+    var shift=Math.max(0,lastRect.bottom-visibleBottom,focusedRect.bottom-(visibleBottom-60));
+    body.style.transform='translateY(-'+shift+'px)';
+    body.style.transition='transform .22s ease';
+  } else {
+    body.style.transform='';
+    body.style.transition='';
+  }
+}
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
-  ov.style.display='flex';
+  ov.style.display='flex';ov.scrollTop=0;
+  var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';}
   ov.offsetHeight;
   ov.classList.add('open');
   // Pré-remplir depuis la recherche en cours
@@ -11719,13 +11765,25 @@ function openSmartSearch(){
   if(existing){var mi=g('ssMatiereInput');if(mi&&!mi.value)mi.value=existing;}
   _ssOnMatiereInput(g('ssMatiereInput')?g('ssMatiereInput').value:'');
   setTimeout(function(){var inp=g('ssMatiereInput');if(inp)inp.focus();},220);
+  // Keyboard listeners via Capacitor Keyboard plugin (reliable on WKWebView)
+  _ssKbShowFn=function(e){_ssApplyKb((e&&e.keyboardHeight)||0);};
+  _ssKbHideFn=function(){_ssApplyKb(0);};
+  window.addEventListener('keyboardWillShow',_ssKbShowFn);
+  window.addEventListener('keyboardWillHide',_ssKbHideFn);
   document.body.style.overflow='hidden';
   haptic(4);
 }
 
 function closeSmartSearch(){
   var ov=g('smartSearchOverlay');
-  if(ov){ov.classList.remove('open');setTimeout(function(){ov.style.display='none';},380);}
+  if(ov){
+    ov.classList.remove('open');
+    var _b=g('ssBody');if(_b){_b.style.transform='';_b.style.transition='';}
+    setTimeout(function(){ov.style.display='none';},380);
+  }
+  if(_ssKbShowFn){window.removeEventListener('keyboardWillShow',_ssKbShowFn);_ssKbShowFn=null;}
+  if(_ssKbHideFn){window.removeEventListener('keyboardWillHide',_ssKbHideFn);_ssKbHideFn=null;}
+  _ssFocusedCard=null;_ssCurrentKbH=0;
   document.body.style.overflow='';
 }
 // ── ACCORDÉON MATIÈRE ──
@@ -12223,15 +12281,26 @@ function initSwipeNav(){
 }
 
 // ── Keyboard / visualViewport ──────────────────────────────────────────────
-// Keeps the search modal body scrollable above the keyboard on iOS
+// Keeps the search modal body, create-course sheet, and message pane above the keyboard on iOS
 (function(){
   if(!window.visualViewport)return;
   function _onVpResize(){
-    var ov=g('smartSearchOverlay');
-    if(!ov||!ov.classList.contains('open'))return;
-    var body=g('ssBody');if(!body)return;
     var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
-    body.style.paddingBottom=kbH>30?(kbH+20+'px'):'20px';
+
+    // Search modal is handled via keyboardWillShow/Hide (Capacitor), not visualViewport
+
+    // Create-course sheet (#bdCr)
+    var bdCr=g('bdCr');
+    if(bdCr&&bdCr.classList.contains('on')){
+      // Shift the sheet up by adding bottom padding to the flex overlay
+      bdCr.style.paddingBottom=kbH>30?kbH+'px':'0px';
+    }
+
+    // Message conversation pane (#msgConvPane)
+    var mp=g('msgConvPane');
+    if(mp&&mp.style.display==='flex'){
+      mp.style.bottom=kbH>30?kbH+'px':'0px';
+    }
   }
   window.visualViewport.addEventListener('resize',_onVpResize,{passive:true});
   window.visualViewport.addEventListener('scroll',_onVpResize,{passive:true});

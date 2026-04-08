@@ -11459,8 +11459,8 @@ function openSettings(){
   // Tuteur / parent — visible pour les élèves uniquement
   var isEleve=user&&user.role!=='professeur';
   var tutSec=g('settingsTuteurSection'),tutGrp=g('settingsTuteurGroup');
-  if(tutSec)tutSec.style.display=isEleve?'':'none';
-  if(tutGrp)tutGrp.style.display=isEleve?'':'none';
+  if(tutSec)tutSec.style.display=isEleve?'block':'none';
+  if(tutGrp)tutGrp.style.display=isEleve?'flex':'none';
   if(isEleve){var tutTog=g('tuteurToggle');if(tutTog)tutTog.classList.toggle('on',!!(user&&user.is_tuteur));}
   updateDarkBtn();
   setTimeout(renderNotifStatus,50);
