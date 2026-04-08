@@ -12139,6 +12139,10 @@ function openTuteurConfirmSheet(){
     +'</div>'
     +'</div>'
   );
+  // Injection dans <head> — seule méthode fiable sur iOS WebKit pour ::placeholder dynamique
+  var _ps=document.getElementById('_tcpStyle');
+  if(!_ps){_ps=document.createElement('style');_ps.id='_tcpStyle';document.head.appendChild(_ps);}
+  _ps.textContent='#tuteurConfirmPrenom::placeholder{color:#C7C7CC!important;-webkit-text-fill-color:#C7C7CC!important;opacity:1!important;font-weight:400!important;}';
   setTimeout(function(){var inp=g('tuteurConfirmPrenom');if(inp&&!inp.value)inp.focus();},300);
 }
 
