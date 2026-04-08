@@ -4687,8 +4687,9 @@ function _tpContact(){
 function _tpShare(){
   var pid=_curPrFull;var p=P[pid]||{};
   var nm=p.nm||'un professeur';
-  if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:window.location.href}).catch(function(){});}
-  else{toast('Lien copié','');try{navigator.clipboard.writeText(window.location.href);}catch(e){}}
+  var url='https://courspool.vercel.app?prof='+pid;
+  if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:url}).catch(function(){});}
+  else{try{navigator.clipboard.writeText(url);toast('Lien copié','');}catch(e){toast(url,'');}}
 }
 
 function enrollWithCode(){
@@ -12256,15 +12257,16 @@ function initSwipeNav(){
 
   function _tabOrder(){
     var t=['exp','fav','msg'];
-    // Onglet "Mes cours" visible uniquement pour les élèves (après Messages dans la nav)
     var bniMes=g('bniMes');
     if(bniMes&&bniMes.style.display!=='none')t.push('mes');
+    var bniProfs=g('bniProfs');
+    if(bniProfs&&bniProfs.style.display!=='none')t.push('profs');
     t.push('acc');
     return t;
   }
 
   function _curTab(){
-    var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc'};
+    var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc',pgMesProfs:'profs'};
     for(var id in map){var el=g(id);if(el&&el.classList.contains('on'))return map[id];}
     return'exp';
   }
