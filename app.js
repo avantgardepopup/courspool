@@ -518,6 +518,63 @@ function _saveEnrolledProf(pid,profData){
     }
   }catch(e){}
 }
+function _removeEnrolledProf(pid){
+  try{
+    var list=_getEnrolledProfs().filter(function(p){return p.id!==String(pid);});
+    localStorage.setItem('cp_enrolled_profs',JSON.stringify(list));
+  }catch(e){}
+}
+function _confirmUnenroll(pid){
+  var ep=_getEnrolledProfs().find(function(p){return p.id===String(pid);});
+  var nm=(ep&&ep.nm)||(P[pid]&&P[pid].nm)||'ce professeur';
+  showQuickSheet(
+    '<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:20px 20px 8px;text-align:center">'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Se désinscrire ?</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6">Tu vas quitter l\'espace de <strong style="color:var(--ink)">'+esc(nm)+'</strong>. Tu perdras l\'accès à son contenu privé.</div>'
+    +'</div>'
+    +'<div style="padding:8px 20px max(20px,calc(env(safe-area-inset-bottom,0px) + 16px));display:flex;flex-direction:column;gap:10px">'
+    +'<button onclick="_doUnenrollProf(\''+String(pid)+'\')" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Se désinscrire</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'</div>'
+  );
+}
+function _doUnenrollProf(pid){
+  closeQuickSheet();
+  _removeEnrolledProf(String(pid));
+  haptic(6);
+  toast('Désinscription effectuée','');
+  buildMesProfs();
+}
+function _initProfCardSwipe(cardEl,type,pid){
+  var sx=0,sy=0,swiping=false,acted=false;
+  cardEl.addEventListener('touchstart',function(e){
+    if(acted)return;
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;swiping=false;
+  },{passive:true});
+  cardEl.addEventListener('touchmove',function(e){
+    if(acted)return;
+    var dx=e.touches[0].clientX-sx;
+    var dy=Math.abs(e.touches[0].clientY-sy);
+    if(!swiping&&Math.abs(dx)>8&&Math.abs(dx)>dy)swiping=true;
+    if(swiping&&dx<0){e.preventDefault();cardEl.style.transform='translateX('+Math.max(dx,-96)+'px)';cardEl.style.transition='none';}
+  },{passive:false});
+  cardEl.addEventListener('touchend',function(e){
+    if(acted||!swiping)return;
+    var dx=e.changedTouches[0].clientX-sx;
+    swiping=false;
+    if(dx<-80){
+      if(type==='enrolled'){
+        cardEl.style.transform='';cardEl.style.transition='transform .2s';
+        _confirmUnenroll(pid);
+      }else{
+        acted=true;
+        cardEl.style.transform='translateX(-110%)';cardEl.style.transition='transform .25s ease';cardEl.style.opacity='0';
+        setTimeout(function(){unfollowProf(pid);buildMesProfs();},260);
+      }
+    }else{cardEl.style.transform='';cardEl.style.transition='transform .2s';}
+  },{passive:true});
+}
 
 function buildMesProfs(){
   var empty=g('mesProfsEmpty');
@@ -547,7 +604,7 @@ function buildMesProfs(){
       var photo=p.photo||ep.photo||null;
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
-      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
@@ -570,7 +627,7 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
-      html+='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(fresh?esc(p.nm||'Professeur'):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>')+'</div>'
@@ -582,6 +639,9 @@ function buildMesProfs(){
     });
   }
   carousel.innerHTML=html;
+  carousel.querySelectorAll('.cp-prof-card[data-type]').forEach(function(card){
+    _initProfCardSwipe(card,card.dataset.type,card.dataset.pid);
+  });
 }
 
 function openProfEspace(pid){
@@ -812,13 +872,19 @@ var _mptSteps=[
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Bienvenue dans Mes Profs !',
-    sub:'Retrouve ici tous les professeurs dont tu as rejoint l\'espace, et accède directement à leur contenu.'
+    sub:'Retrouve ici les profs dont tu as rejoint l\'espace privé, et ceux que tu suis depuis l\'explorateur.'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Entre le code de ton prof',
-    sub:'Appuie sur "+ Rejoindre" et entre le code que ton professeur t\'a communiqué. Il t\'apparaîtra directement ici.'
+    title:'Rejoins l\'espace d\'un prof',
+    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+    bg:'rgba(99,102,241,.08)',
+    title:'Suis un prof',
+    sub:'Depuis l\'explorateur, ouvre le profil d\'un prof et appuie sur "Suivre". Il apparaît ici dans "Suivis" pour ne rater aucun de ses prochains cours.'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
