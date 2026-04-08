@@ -5041,6 +5041,7 @@ function espLoadStudents(){
         var paid=rsv.paid||rsv.status==='paid';
         var isTut=!!(rsv.is_tuteur);
         var enfNm=rsv.enfant_prenom||'';
+        if(pid){if(!P[pid])P[pid]={};P[pid].is_tuteur=isTut;}
         return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr)">'
           +'<div style="width:32px;height:32px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+av+'</div>'
           +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+(isTut?'<span style="font-size:9px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">Tuteur</span>':'')+'</div>'+(enfNm?'<div style="font-size:11px;color:var(--lite);margin-top:1px">👧 Pour '+esc(enfNm)+'</div>':'')+'</div>'
@@ -6957,6 +6958,7 @@ function openMsg(profNm,destId,avatar){
   setAvatar(av,_avPhoto,_avIni,_avCol);
   var _isPlaceholder=!profNm||profNm==='·\u200B·\u200B·'||profNm==='Contact';
   g('msgConvName').textContent=_isPlaceholder?'…':profNm;
+  var _mtb=g('msgTuteurBadge');if(_mtb)_mtb.style.display=(P[destId]&&P[destId].is_tuteur)?'inline-block':'none';
   // Si nom inconnu, charger le profil pour mettre à jour la topbar
   if(_isPlaceholder&&destId){
     (function(uid){
