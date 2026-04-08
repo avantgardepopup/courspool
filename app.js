@@ -10928,7 +10928,7 @@ var safeUrl=function(u){return (u&&/^https?:\/\//i.test(u))?escH(u):'#';};
 function _si(d){return '<div style="width:80px;height:80px;background:#FFF0E8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">'+d+'</svg></div>';}
 var STEP_DEFS=[
   {id:'mode',    em:_si('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'), q:'Type de cours',       h:'Pr\u00e9sentiel en personne ou visio en ligne'},
-  {id:'prive',   em:_si('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>'),                                           q:'Visibilit\u00e9',      h:'Un cours priv\u00e9 n\'est pas visible publiquement \u2014 acc\u00e8s par code unique'},
+  {id:'prive',   em:_si('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),                                          q:'Visibilit\u00e9',      h:'Un cours priv\u00e9 n\'est pas visible publiquement \u2014 acc\u00e8s par code unique'},
   {id:'titre',   em:_si('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>'),                                        q:'Titre du cours',       h:'Donnez un titre clair et accrocheur'},
   {id:'matiere', em:_si('<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>'),                         q:'Quelle mati\u00e8re\u00a0?', h:'Choisissez la discipline'},
   {id:'niveau',  em:_si('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),           q:'Niveau vis\u00e9',     h:'Quel public ciblez-vous\u00a0?'},
@@ -11025,7 +11025,7 @@ function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active')
 function buildStepDOM(){
   var div=document.createElement('div');div.id='bdCrStep';
   var style=document.createElement('style');
-  style.textContent='#bdCrStep{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;transition:padding-bottom .3s cubic-bezier(.22,.61,.36,1);}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}#bdCrStep input[type="date"],#bdCrStep input[type="time"]{-webkit-appearance:auto!important;}';
+  style.textContent='#bdCrStep{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;transition:padding-bottom .3s cubic-bezier(.22,.61,.36,1);}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{outline:none!important;box-shadow:none!important;}#bdCrStep input[type="date"],#bdCrStep input[type="time"]{-webkit-appearance:auto!important;}';
   document.head.appendChild(style);
   div.innerHTML=
     '<div style="padding:max(14px,env(safe-area-inset-top,14px)) 20px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--wh)">'
@@ -11458,7 +11458,7 @@ function _stepPickMat(key,label){
 }
 
 function sOpt(a,v,l,s,sel,bg,ex){
-  return '<div class="step-option'+(sel?' selected':'')+'" data-sa="'+a+'" data-sv="'+escH(v)+'" onclick="_stepOptClick(this)" style="background:var(--wh);border:1.5px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;'+(ex||'')+';box-shadow:'+(sel?'0 0 0 3px rgba(255,107,43,.1),0 1px 4px rgba(0,0,0,.04)':'0 1px 4px rgba(0,0,0,.04)')+';transition:all .18s;-webkit-tap-highlight-color:transparent">'
+  return '<div class="step-option'+(sel?' selected':'')+'" data-sa="'+a+'" data-sv="'+escH(v)+'" onclick="_stepOptClick(this)" style="background:var(--wh);border:1.5px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;'+(ex||'')+';box-shadow:0 1px 4px rgba(0,0,0,.04);transition:all .18s;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+bg+'"></div>'
     +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.02em">'+l+'</div>'+(s?'<div style="font-size:12.5px;color:var(--lite);margin-top:2px">'+s+'</div>':'')+'</div>'
     +'</div>';
