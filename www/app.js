@@ -10936,10 +10936,65 @@ var STEP_DEFS=[
   {id:'lieu',    em:_si('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),                                       q:'O\u00f9\u00a0?',       h:'Ville, adresse \u2014 ou lien g\u00e9n\u00e9r\u00e9 pour la visio'},
   {id:'prix',    em:_si('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),                                       q:'Prix &amp; places',   h:'Prix total que vous souhaitez recevoir'},
   {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:'Description', h:'D\u00e9tails sur votre cours (optionnel)'},
+  {id:'recurrence',em:_si('<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/>'), q:'R\u00e9currence', h:'Publiez une seule fois ou programmez plusieurs s\u00e9ances'},
 ];
 
-var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:''};
+var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
 var _sc=0;
+
+function _fmtRecDate(d){
+  var days=['\u202fDim.','\u202fLun.','\u202fMar.','\u202fMer.','\u202fJeu.','\u202fVen.','\u202fSam.'];
+  var months=['jan.','f\u00e9v.','mar.','avr.','mai','juin','juil.','ao\u00fbt','sep.','oct.','nov.','d\u00e9c.'];
+  return days[d.getDay()]+' '+d.getDate()+'\u00a0'+months[d.getMonth()];
+}
+
+function _computeRecDates(){
+  if(!_sd.date||!_sd.heure)return[];
+  var base=new Date(_sd.date+'T'+_sd.heure+':00');
+  if(isNaN(base.getTime()))return[];
+  if(_sd.recurrence==='once')return[base];
+  var n=Math.max(2,_sd.recurrence_count||4);
+  var dates=[base];
+  for(var i=1;i<n;i++){
+    var dt=new Date(base.getTime());
+    if(_sd.recurrence==='weekly')dt.setDate(base.getDate()+7*i);
+    else if(_sd.recurrence==='biweekly')dt.setDate(base.getDate()+14*i);
+    else if(_sd.recurrence==='monthly')dt.setMonth(base.getMonth()+i);
+    dates.push(dt);
+  }
+  return dates;
+}
+
+function _setRecurrence(val){
+  _sd.recurrence=val;
+  var bd=g('bdCrStep');
+  if(bd)bd.querySelectorAll('.rec-opt').forEach(function(el){
+    var isSel=el.dataset.rv===val;
+    el.style.borderColor=isSel?'var(--or)':'var(--bdr)';
+    var dot=el.querySelector('.rec-radio');
+    if(dot){dot.style.borderColor=isSel?'var(--or)':'var(--bdr)';dot.style.background=isSel?'var(--or)':'transparent';dot.innerHTML=isSel?'<div style="width:8px;height:8px;border-radius:50%;background:#fff"></div>':'';}
+  });
+  var cs=g('recCountSec');if(cs)cs.style.display=val==='once'?'none':'';
+  _recPreview();haptic(8);
+}
+
+function _recPreview(){
+  var prev=g('recPreview');if(!prev)return;
+  var dates=_computeRecDates();
+  if(_sd.recurrence==='once'){prev.style.display='none';return;}
+  prev.style.display='';
+  prev.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">S\u00e9ances programm\u00e9es</div>'
+    +'<div style="display:flex;flex-direction:column;gap:6px">'
+    +dates.map(function(d,i){
+      var H=String(d.getHours()).padStart(2,'0'),mi=String(d.getMinutes()).padStart(2,'0');
+      return'<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:10px">'
+        +'<div style="width:22px;height:22px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0">'+(i+1)+'</div>'
+        +'<div style="font-size:14px;font-weight:600;color:var(--ink)">'+_fmtRecDate(d)+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-left:auto">'+H+':'+mi+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
 
 function _crStepVpAdjust(){
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Keyboard)return;
@@ -10957,7 +11012,7 @@ function openCrStep(){
     else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
     return;
   }
-  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:''};
+  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
   stepRender(0);
@@ -11204,6 +11259,37 @@ function stepRender(idx){
       +'<div class="search-bar-premium" style="padding:14px 16px;align-items:flex-start"><textarea class="search-input-premium" id="stepDesc" rows="6" placeholder="D\u00e9crivez votre cours\u00a0: niveau requis, programme, mat\u00e9riel\u2026" style="resize:none;font-size:15px;font-weight:400;min-height:160px;line-height:1.6;color:var(--ink)">'+escH(_sd.desc)+'</textarea></div>'
       +'<div id="stepDescCount" style="font-size:12px;color:var(--lite);text-align:right">'+(_sd.desc?_sd.desc.length:0)+'/400</div>'
       +'</div>';
+
+  }else if(step.id==='recurrence'){
+    var _recOpts=[
+      {val:'once',     label:'Une seule fois',       sub:'Ce cours sera publi\u00e9 une seule fois'},
+      {val:'weekly',   label:'Toutes les semaines',  sub:'M\u00eame heure, chaque semaine'},
+      {val:'biweekly', label:'Toutes les 2 semaines',sub:'Bi-hebdomadaire'},
+      {val:'monthly',  label:'Tous les mois',        sub:'M\u00eame jour, chaque mois'},
+    ];
+    var _stpBtn3='width:44px;height:44px;border-radius:50%;border:1.5px solid var(--bdr);background:var(--wh);font-size:22px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s';
+    html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
+    _recOpts.forEach(function(opt){
+      var isSel=_sd.recurrence===opt.val;
+      html+='<div class="rec-opt" data-rv="'+opt.val+'" onclick="_setRecurrence(\''+opt.val+'\')" style="'
+        +'background:var(--wh);border:2px solid '+(isSel?'var(--or)':'var(--bdr)')+';border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:border-color .15s;-webkit-tap-highlight-color:transparent">'
+        +'<div class="rec-radio" style="width:20px;height:20px;border-radius:50%;border:2px solid '+(isSel?'var(--or)':'var(--bdr)')+';background:'+(isSel?'var(--or)':'transparent')+';flex-shrink:0;display:flex;align-items:center;justify-content:center">'
+        +(isSel?'<div style="width:8px;height:8px;border-radius:50%;background:#fff"></div>':'')
+        +'</div>'
+        +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+opt.label+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:1px">'+opt.sub+'</div>'
+        +'</div></div>';
+    });
+    html+='</div>';
+    html+='<div id="recCountSec" style="margin-top:20px;text-align:center;'+(_sd.recurrence==='once'?'display:none;':'')+'width:100%">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Nombre de s\u00e9ances</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
+      +'<button id="btnRecM" style="'+_stpBtn3+'">−</button>'
+      +'<div id="recCountDisp" style="font-size:52px;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1;min-width:70px;text-align:center">'+(_sd.recurrence_count||4)+'</div>'
+      +'<button id="btnRecP" style="'+_stpBtn3+'">+</button>'
+      +'</div>'
+      +'</div>';
+    html+='<div id="recPreview" style="margin-top:20px;width:100%;'+(_sd.recurrence==='once'?'display:none;':'')+'"></div>';
   }
 
   body.innerHTML=html;
@@ -11284,6 +11370,12 @@ function stepRender(idx){
   // Code regen
   var srg=g('stepCodeRegen');
   if(srg)srg.onclick=function(){_sd.code_acces=genCode();var cd=g('stepCodeDisp');if(cd)cd.textContent=_sd.code_acces;haptic(8);};
+
+  // Recurrence count stepper
+  var brcm=g('btnRecM'),brcp=g('btnRecP');
+  if(brcm)brcm.onclick=function(){var v=Math.max(2,(_sd.recurrence_count||4)-1);_sd.recurrence_count=v;var d=g('recCountDisp');if(d)d.textContent=v;_recPreview();haptic(4);};
+  if(brcp)brcp.onclick=function(){var v=Math.min(20,(_sd.recurrence_count||4)+1);_sd.recurrence_count=v;var d=g('recCountDisp');if(d)d.textContent=v;_recPreview();haptic(4);};
+  if(step.id==='recurrence')_recPreview();
 
   // Scroll focused input into view when keyboard appears
   body.querySelectorAll('input,textarea').forEach(function(inp){
@@ -11452,34 +11544,40 @@ function stepBack(){
 async function subCrStep(){
   var cta=g('stepCta');if(cta){cta.disabled=true;cta.textContent='Publication...';}
   try{
-    var dt=new Date(_sd.date+'T'+_sd.heure+':00');
-    var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
-    var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
     var _mat=MATIERES.find(function(m){return m.key===(_sd.matiere_key||_sd.matiere.toLowerCase());});
     var _sc2=_mat?_mat.color:'#7C3AED';
     var _bg=_mat?_mat.bg:'linear-gradient(135deg,#F5F3FF,#DDD6FE)';
-    var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
-      date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
-      lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
-      lieu_prive:_sd.lieu_prive||'',
-      lieu_type:_sd.lieu_type||'',
-      prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
-      description:_sd.desc||'',
-      prof_id:user.id,professeur_id:user.id,
-      mode:_sd.mode||'presentiel',
-      visio_url:_sd.mode==='visio'?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'',
-      prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
-      couleur_sujet:_sc2,background:_bg,
-      emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
-      prof_initiales:user.ini||'?',
-      prof_couleur:user.col||'linear-gradient(135deg,#FF8C55,#E04E10)',
-      prof_nom:(user.pr+(user.nm?' '+user.nm:'')).trim()};
-    if(user.photo)p.prof_photo=user.photo;
-    var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
-    var data=await r.json();
-    if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
+    var _dates=_computeRecDates();
+    if(!_dates.length)throw new Error('Date invalide');
+    var _published=0;
+    for(var _di=0;_di<_dates.length;_di++){
+      var dt=_dates[_di];
+      var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
+      var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
+      var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
+        date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
+        lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
+        lieu_prive:_sd.lieu_prive||'',
+        lieu_type:_sd.lieu_type||'',
+        prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
+        description:_sd.desc||'',
+        prof_id:user.id,professeur_id:user.id,
+        mode:_sd.mode||'presentiel',
+        visio_url:_sd.mode==='visio'?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'',
+        prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
+        couleur_sujet:_sc2,background:_bg,
+        emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
+        prof_initiales:user.ini||'?',
+        prof_couleur:user.col||'linear-gradient(135deg,#FF8C55,#E04E10)',
+        prof_nom:(user.pr+(user.nm?' '+user.nm:'')).trim()};
+      if(user.photo)p.prof_photo=user.photo;
+      var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
+      var data=await r.json();
+      if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
+      _published++;
+    }
     haptic([10,50,100,50,10]);closeCrStep();
-    toast('Cours publi\u00e9\u00a0!','Votre cours est maintenant visible');
+    toast('Cours publi\u00e9\u00a0!',_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
     await loadData();buildCards();buildAccLists();
   }catch(e){toast('Erreur',e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
 }
