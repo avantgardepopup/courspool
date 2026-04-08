@@ -851,13 +851,15 @@ function openMesProfsTuto(){
 
 function _mptRender(){
   var s=_mptSteps[_mptStep];if(!s)return;
-  var track=g('mptTrack');var dots=g('mptDots');
+  var track=g('mptTrack');var dots=g('mptDots');var skipBtn=g('mptSkipBtn');
+  var isLast=_mptStep===_mptSteps.length-1;
   if(track){track.innerHTML='<div style="text-align:center;padding:28px 0 20px">'
     +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
     +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
     +'</div>';}
   if(dots){dots.innerHTML=_mptSteps.map(function(_,i){return'<div onclick="mptGoTo('+i+')" style="width:'+(i===_mptStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_mptStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';}).join('');}
+  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
 }
 
 function _mptInitSwipe(sheet){
@@ -4730,7 +4732,8 @@ function openEspTuto(){
 function _espTutoRender(){
   var s=_espTutoSteps[_espTutoStep];if(!s)return;
   var track=g('espTutoTrack');
-  var dots=g('espTutoDots');
+  var dots=g('espTutoDots');var skipBtn=g('espTutoSkipBtn');
+  var isLast=_espTutoStep===_espTutoSteps.length-1;
   if(track){
     track.innerHTML=''
       +'<div style="text-align:center;padding:28px 0 20px">'
@@ -4744,6 +4747,7 @@ function _espTutoRender(){
       return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
+  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
 }
 
 function _espTutoInitSwipe(sheet){
