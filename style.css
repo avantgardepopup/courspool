@@ -2665,7 +2665,7 @@ html.dk .msg-bubble-time.them { color: #fff; }
   flex-shrink: 0;
   background: var(--wh);
   padding: 10px 14px;
-  padding-bottom: max(12px,env(safe-area-inset-bottom,12px));
+  padding-bottom: max(20px,env(safe-area-inset-bottom,20px));
 }
 .msg-input-wrap {
   display: flex;
