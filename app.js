@@ -8423,31 +8423,27 @@ function showBadgeInfo(type){
     }
   };
   var d=info[type];if(!d)return;
+  var isProf=user&&user.role==='professeur';
   content.innerHTML=
-    // Hero gradient card
-    '<div style="background:'+d.grad+';border-radius:24px;padding:32px 20px 26px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 40px '+d.glow+'">'
-    // deco circles
-    +'<div style="position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);top:-60px;right:-50px;pointer-events:none"></div>'
-    +'<div style="position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05);bottom:-25px;left:-25px;pointer-events:none"></div>'
-    // CERTIFIÉ label
+    // Hero gradient card — no deco circles
+    '<div style="background:'+d.grad+';border-radius:24px;padding:32px 20px 26px;text-align:center;margin-bottom:16px;box-shadow:0 10px 40px '+d.glow+'">'
     +'<div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:16px">✦ CoursPool Certifié ✦</div>'
-    // icon box with glow ring
-    +'<div style="position:relative;display:inline-flex;margin-bottom:16px">'
+    +'<div style="display:inline-flex;margin-bottom:16px">'
     +'<div style="width:88px;height:88px;background:rgba(255,255,255,.18);border-radius:28px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 0 8px rgba(255,255,255,.08)">'+d.icon+'</div>'
     +'</div>'
-    +'<div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:8px;text-shadow:0 1px 8px rgba(0,0,0,.15)">'+d.name+'</div>'
+    +'<div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;text-shadow:0 1px 8px rgba(0,0,0,.15)">'+d.name+'</div>'
     +'</div>'
     // Description
     +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
     +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Ce que ça garantit</div>'
     +'<div style="font-size:14px;color:var(--ink);line-height:1.65">'+d.desc+'</div>'
     +'</div>'
-    // How to get it
-    +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:18px">'
+    // How to get it — prof only
+    +(isProf?'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
     +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Comment l\'obtenir</div>'
     +'<div style="font-size:13.5px;color:var(--mid);line-height:1.65">'+d.how+'</div>'
-    +'</div>'
-    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Fermer</button>';
+    +'</div>':'')
+    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:10px">Fermer</button>';
   bd.style.display='flex';
   document.body.style.overflow='hidden';
 }
