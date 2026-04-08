@@ -5783,33 +5783,17 @@ function openSendDocSheet(){
     +'<input id="_sendDocUrl" type="url" placeholder="Lien (Drive, Notion, Dropbox…)" class="esp-input" style="margin-bottom:16px">'
     +'<button onclick="mpfSubmitDocSheet(this)" class="esp2-btn-submit" style="width:100%">Envoyer</button>'
     +'<button id="_sendDocCancel" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
-  // Keyboard avoidance — Capacitor (iOS) + visualViewport fallback
-  var _sdKbH=0;
-  function _sdKbApply(){
-    if(!document.body.contains(bd))return;
-    if(_sdKbH>0){
-      bd.style.alignItems='flex-start';
-      bd.style.paddingTop=Math.max(0,window.innerHeight-_sdKbH-sheet.offsetHeight-16)+'px';
-    } else {
-      bd.style.alignItems='flex-end';
-      bd.style.paddingTop='0';
-    }
-  }
-  function _sdKbShow(e){_sdKbH=(e&&e.keyboardHeight)||0;_sdKbApply();}
-  function _sdKbHide(){_sdKbH=0;_sdKbApply();}
+  // Keyboard avoidance — même pattern que openEnrollSheet : on pad le sheet, pas le backdrop
+  var _sdKbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;
+    if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}
+  };
+  var _sdKbHide=function(){
+    sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';
+    sheet.style.transition='padding-bottom .18s ease';
+  };
   window.addEventListener('keyboardWillShow',_sdKbShow);
   window.addEventListener('keyboardWillHide',_sdKbHide);
-  // Fallback visualViewport pour web
-  function _sdVpAdjust(){
-    if(!document.body.contains(bd)||_sdKbH>0)return;
-    var kbH=window.visualViewport?Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop):0;
-    if(kbH>30){bd.style.alignItems='flex-start';bd.style.paddingTop=Math.max(0,window.innerHeight-kbH-sheet.offsetHeight-16)+'px';}
-    else{bd.style.alignItems='flex-end';bd.style.paddingTop='0';}
-  }
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',_sdVpAdjust,{passive:true});
-    window.visualViewport.addEventListener('scroll',_sdVpAdjust,{passive:true});
-  }
   bd.onclick=function(e){
     if(e.target===bd){
       window.removeEventListener('keyboardWillShow',_sdKbShow);
