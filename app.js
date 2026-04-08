@@ -12528,17 +12528,15 @@ function openAllFiltersSheet(){
   document.body.style.overflow='hidden';
   _afSyncState();
   haptic(4);
-  var _afPanel=el.querySelector('div');
   var _afKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;if(h<=0||!_afPanel)return;
-    _afPanel.style.paddingBottom=h+'px';
-    _afPanel.style.transition='padding-bottom .22s ease';
-    setTimeout(function(){var fi=g('afVilleInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},60);
+    var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
+    el.style.transition='padding-bottom .22s ease';
+    el.style.paddingBottom=h+'px';
+    setTimeout(function(){var fi=g('afVilleInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
   };
   var _afKbHide=function(){
-    if(!_afPanel)return;
-    _afPanel.style.paddingBottom='max(24px,env(safe-area-inset-bottom,24px))';
-    _afPanel.style.transition='padding-bottom .18s ease';
+    el.style.transition='padding-bottom .18s ease';
+    el.style.paddingBottom='';
   };
   window.addEventListener('keyboardWillShow',_afKbShow);
   window.addEventListener('keyboardWillHide',_afKbHide);
@@ -12548,7 +12546,7 @@ function closeAllFiltersSheet(){
   var el=g('bdAllFilters');
   if(!el)return;
   if(el._cleanupKb){el._cleanupKb();el._cleanupKb=null;}
-  var _p=el.querySelector('div');if(_p){_p.style.paddingBottom='';_p.style.transition='';}
+  el.style.transition='';el.style.paddingBottom='';
   el.style.display='none';document.body.style.overflow='';
   _updateFiltersBadge();
 }
