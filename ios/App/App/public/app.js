@@ -11767,7 +11767,6 @@ function _calBuildHeader(myCours){
     +(_mesSeg!=='past'
       ?'<button class="mes-cal-picker-btn" onclick="calOpenPicker()" title="Choisir une date">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-        +'<input id="calDateInp" type="date" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="calPickDate(this.value)">'
         +'</button>'
       :'')
     +'</div>';
@@ -11826,9 +11825,95 @@ function calChangeWeek(delta){
   haptic(4);
 }
 
+var _pickerYear=0,_pickerMonth=0;
 function calOpenPicker(){
-  var inp=g('calDateInp');
-  if(inp){inp.value=_calSelDay||'';inp.showPicker?inp.showPicker():inp.click();}
+  var curSel=_calSelDay||_calYmd(new Date());
+  var initD=new Date(curSel+'T00:00:00');
+  _pickerYear=initD.getFullYear();
+  _pickerMonth=initD.getMonth();
+
+  var bd=document.createElement('div');
+  bd.id='calPickerBd';
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1200;display:flex;align-items:flex-end;justify-content:center';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  var sheet=document.createElement('div');
+  sheet.id='calPickerSheet';
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
+  bd.appendChild(sheet);
+  document.body.appendChild(bd);
+  _renderPickerMonth(curSel);
+  haptic(4);
+}
+
+function _pickerDaysWithCours(){
+  var dwc={};
+  var isProf=user&&user.role==='professeur';
+  var tagged=[];
+  if(isProf){
+    C.filter(function(c){return String(c.pr)===String(user.id);}).forEach(function(c){tagged.push(c);});
+    Object.keys(res).forEach(function(id){var c=C.find(function(x){return x.id==id;});if(c&&!tagged.some(function(m){return m.id===c.id;}))tagged.push(c);});
+  }else{
+    Object.keys(res).forEach(function(id){var c=C.find(function(x){return x.id==id;});if(c)tagged.push(c);});
+  }
+  tagged.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);dwc[_calYmd(d)]=true;}});
+  return dwc;
+}
+
+function _renderPickerMonth(curSel){
+  var sheet=g('calPickerSheet');if(!sheet)return;
+  var yr=_pickerYear,mo=_pickerMonth;
+  var dwc=_pickerDaysWithCours();
+  var today=_calYmd(new Date());
+  var MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  var DLBLS=['L','M','M','J','V','S','D'];
+  var first=new Date(yr,mo,1);
+  var lastDay=new Date(yr,mo+1,0).getDate();
+  var startWd=first.getDay();var startOff=startWd===0?6:startWd-1;
+
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 18px"></div>';
+  // En-tête mois/année + nav
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin-bottom:18px">';
+  html+='<button onclick="_pickerNav(-1)" style="width:38px;height:38px;border:none;background:var(--bg);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>';
+  html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">'+MONTHS[mo]+' '+yr+'</div>';
+  html+='<button onclick="_pickerNav(1)" style="width:38px;height:38px;border:none;background:var(--bg);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>';
+  html+='</div>';
+  // Labels jours
+  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;margin-bottom:6px">';
+  DLBLS.forEach(function(l){html+='<div style="text-align:center;font-size:11px;font-weight:700;color:var(--lite);padding:2px 0">'+l+'</div>';});
+  html+='</div>';
+  // Grille jours
+  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 12px 8px">';
+  for(var i=0;i<startOff;i++)html+='<div></div>';
+  for(var day=1;day<=lastDay;day++){
+    var ymd=yr+'-'+String(mo+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var isSel=ymd===curSel;
+    var isToday=ymd===today;
+    var hasDot=!!dwc[ymd];
+    var bg=isSel?'background:var(--or);box-shadow:0 4px 12px rgba(255,107,43,.35);':'';
+    var txtColor=isSel?'color:#fff;':isToday?'color:var(--or);':'color:var(--ink);';
+    var fw=isSel||isToday?'font-weight:800;':'font-weight:500;';
+    var dot=hasDot?'<span style="position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:'+(isSel?'rgba(0,0,0,.22)':'var(--or)')+';'+(isSel?'':'box-shadow:0 0 4px rgba(255,107,43,.6)')+';"></span>':'';
+    html+='<div style="display:flex;align-items:center;justify-content:center;padding:2px 0">'
+      +'<div onclick="_pickerPickDay(\''+ymd+'\')" style="position:relative;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;'+fw+txtColor+bg+'cursor:pointer;-webkit-tap-highlight-color:transparent">'+day+dot+'</div>'
+      +'</div>';
+  }
+  html+='</div>';
+  sheet.innerHTML=html;
+}
+
+function _pickerNav(delta){
+  _pickerMonth+=delta;
+  if(_pickerMonth<0){_pickerMonth=11;_pickerYear--;}
+  if(_pickerMonth>11){_pickerMonth=0;_pickerYear++;}
+  var curSel=_calSelDay||_calYmd(new Date());
+  _renderPickerMonth(curSel);haptic(4);
+}
+
+function _pickerPickDay(ymd){
+  var bd=g('calPickerBd');if(bd)bd.remove();
+  calPickDate(ymd);haptic(4);
 }
 
 function calPickDate(val){
