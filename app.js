@@ -10924,15 +10924,8 @@ var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere
 var _sc=0;
 
 function _crStepVpAdjust(){
-  var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
-  var vp=window.visualViewport;
-  var h=vp?vp.height:window.innerHeight;
-  var top=vp?(vp.pageTop||vp.offsetTop||0):0;
-  el.style.position='fixed';
-  el.style.top=top+'px';
-  el.style.left='0';el.style.right='0';
-  el.style.bottom='auto';
-  el.style.height=h+'px';
+  // No-op: keyboard gérée via Capacitor Keyboard plugin (padding uniquement)
+  // Ne pas modifier la hauteur de bdCrStep pour éviter le flash de la page derrière
 }
 
 function openCrStep(){
@@ -10951,7 +10944,7 @@ function openCrStep(){
   setTimeout(_crStepVpAdjust,50);
   haptic(10);
 }
-function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active');el.style.top='';el.style.height='';el.style.bottom='';}}
+function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active');el.style.top='';el.style.height='';el.style.bottom='';var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom='';var sb=g('stepBody');if(sb)sb.style.paddingBottom='';}}
 
 function buildStepDOM(){
   var div=document.createElement('div');div.id='bdCrStep';
@@ -10965,31 +10958,26 @@ function buildStepDOM(){
     +'<button id="stepCloseBtn" onclick="closeCrStep()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:16px;flex-shrink:0">&#x2715;</button>'
     +'</div>'
     +'<div id="stepBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:32px 24px;display:flex;flex-direction:column;align-items:center;max-width:480px;margin:0 auto;width:100%"></div>'
-    +'<div style="padding:16px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));flex-shrink:0;background:var(--wh);border-top:1px solid var(--bdr);max-width:480px;margin:0 auto;width:100%"><button id="stepCta" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:50px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.28);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">Continuer</button></div>';
+    +'<div id="stepCtaFoot" style="padding:16px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));flex-shrink:0;background:var(--wh);border-top:1px solid var(--bdr);max-width:480px;margin:0 auto;width:100%;transition:padding-bottom .25s cubic-bezier(.22,.61,.36,1)"><button id="stepCta" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:50px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.28);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">Continuer</button></div>';
   document.body.appendChild(div);
   g('stepBackBtn').onclick=stepBack;
   g('stepCloseBtn').onclick=closeCrStep;
   g('stepCta').onclick=stepNext;
-  // Keyboard awareness — Capacitor Keyboard plugin (primary, iOS-native)
+  // Keyboard awareness — pousser le footer CTA sans toucher la hauteur de bdCrStep
+  // (évite le flash de la page derrière)
   var _Kbd=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Keyboard;
   if(_Kbd){
     _Kbd.addListener('keyboardWillShow',function(info){
-      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+      var foot=g('stepCtaFoot');if(!foot||!g('bdCrStep').classList.contains('active'))return;
       var kh=(info&&info.keyboardHeight)||0;
-      el.style.height=(window.innerHeight-kh)+'px';
-      el.style.top='0';el.style.bottom='auto';
+      foot.style.paddingBottom=kh+'px';
+      var sb=g('stepBody');if(sb)sb.style.paddingBottom=(kh+8)+'px';
     });
     _Kbd.addListener('keyboardWillHide',function(){
-      var el=g('bdCrStep');if(!el)return;
-      el.style.height='';el.style.top='';el.style.bottom='';
+      var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom='';
+      var sb=g('stepBody');if(sb)sb.style.paddingBottom='';
     });
   }
-  // Fallback — VisualViewport API (web / non-iOS)
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',_crStepVpAdjust);
-    window.visualViewport.addEventListener('scroll',_crStepVpAdjust);
-  }
-  window.addEventListener('resize',_crStepVpAdjust);
 }
 
 function stepRender(idx){
@@ -11035,7 +11023,7 @@ function stepRender(idx){
     }
 
   }else if(step.id==='titre'){
-    html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:1.5px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)" type="text" placeholder="Ex\u00a0: Alg\u00e8bre pour d\u00e9butants\u2026" value="'+escH(_sd.titre)+'"></div>';
+    html+='<div class="search-bar-premium" style="width:100%;padding:14px 18px"><input class="search-input-premium" id="stepTitre" style="font-size:18px;font-weight:600;color:var(--ink)" type="text" placeholder="Ex\u00a0: Alg\u00e8bre pour d\u00e9butants\u2026" value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
     html+='<div class="search-bar-premium" style="width:100%;margin-bottom:16px">'
@@ -11093,15 +11081,13 @@ function stepRender(idx){
 
   }else if(step.id==='datetime'){
     var today=new Date().toISOString().split('T')[0];
-    var _dtFi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)';
-    var _dtFiNeu=_dtFi;
     var lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
       +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Date du cours</label><input id="stepDate" style="'+_dtFi+'" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div>'
-      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Heure de d\u00e9but</label><input id="stepHeure" style="'+_dtFi+'" type="time" value="'+escH(_sd.heure)+'"></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Date du cours</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDate" style="font-size:15px;font-weight:500;color:var(--ink)" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Heure de d\u00e9but</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepHeure" style="font-size:15px;font-weight:500;color:var(--ink)" type="time" value="'+escH(_sd.heure)+'"></div></div>'
       +'</div>'
-      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><input id="stepDuree" style="'+_dtFiNeu+'" type="number" value="'+_sd.duree+'" min="30"></div>'
+      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDuree" style="font-size:15px;font-weight:500;color:var(--ink);text-align:center" type="number" value="'+_sd.duree+'" min="30"></div></div>'
       +'</div>';
 
   }else if(step.id==='lieu'){
@@ -11153,13 +11139,13 @@ function stepRender(idx){
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
           +'<div>'
             +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
-            +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next">'
+            +'<div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepLieu" style="font-size:15px;font-weight:500;color:var(--ink)" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next"></div>'
             +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
             +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement — les \u00e9l\u00e8ves pourront filtrer par lieu.</div>'
           +'</div>'
           +'<div>'
             +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label2+'</div>'
-            +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="'+_cfg.ph2+'" value="'+escH(_sd.lieu_prive||'')+'" enterkeyhint="done">'
+            +'<div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepLieuPrive" style="font-size:15px;font-weight:500;color:var(--ink)" type="text" placeholder="'+_cfg.ph2+'" value="'+escH(_sd.lieu_prive||'')+'" enterkeyhint="done"></div>'
             +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">'+_cfg.note2+'</div>'
           +'</div>'
           +'</div>':'')
@@ -11167,19 +11153,18 @@ function stepRender(idx){
     }
 
   }else if(step.id==='prix'){
-    var _pInpSimple='border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:18px;font-weight:700;text-align:center;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink);width:100%;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .2s,box-shadow .2s';
     var _lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
       +'<div style="display:flex;gap:12px">'
-      +'<div style="flex:1"><label style="'+_lbl+'">Prix total (\u20ac)</label><input id="stepPrix" style="'+_pInpSimple+'" type="number" placeholder="60" value="'+(_sd.prix||'')+'" enterkeyhint="next"></div>'
-      +'<div style="flex:1"><label style="'+_lbl+'">Places max</label><input id="stepPlaces" style="'+_pInpSimple+'" type="number" value="'+_sd.places+'" min="1" max="20" enterkeyhint="done"></div>'
+      +'<div style="flex:1"><label style="'+_lbl+'">Prix total (\u20ac)</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepPrix" style="font-size:18px;font-weight:700;text-align:center;color:var(--ink)" type="number" placeholder="60" value="'+(_sd.prix||'')+'" enterkeyhint="next"></div></div>'
+      +'<div style="flex:1"><label style="'+_lbl+'">Places max</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepPlaces" style="font-size:18px;font-weight:700;text-align:center;color:var(--ink)" type="number" value="'+_sd.places+'" min="1" max="20" enterkeyhint="done"></div></div>'
       +'</div>'
       +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:14px;padding:14px;text-align:center;display:none;border:1.5px solid rgba(255,107,43,.15)"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:26px;font-weight:800;color:var(--or)">-</div></div>'
       +'</div>';
 
   }else if(step.id==='desc'){
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:8px">'
-      +'<textarea id="stepDesc" rows="6" placeholder="D\u00e9crivez votre cours\u00a0: niveau requis, programme, mat\u00e9riel\u2026" style="resize:none;font-size:15px;font-weight:400;min-height:160px;width:100%;line-height:1.6;border:1.5px solid var(--bdr);border-radius:16px;padding:14px 16px;font-family:inherit;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)">'+escH(_sd.desc)+'</textarea>'
+      +'<div class="search-bar-premium" style="padding:14px 16px;align-items:flex-start"><textarea class="search-input-premium" id="stepDesc" rows="6" placeholder="D\u00e9crivez votre cours\u00a0: niveau requis, programme, mat\u00e9riel\u2026" style="resize:none;font-size:15px;font-weight:400;min-height:160px;line-height:1.6;color:var(--ink)">'+escH(_sd.desc)+'</textarea></div>'
       +'<div id="stepDescCount" style="font-size:12px;color:var(--lite);text-align:right">'+(_sd.desc?_sd.desc.length:0)+'/400</div>'
       +'</div>';
   }

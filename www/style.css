@@ -2820,6 +2820,9 @@ html.dk .esp-msg-card { background: #2C2C2E; }
   color:var(--ink);
   outline:none;
   min-width:0;
+  width:100%;
+  -webkit-appearance:none;
+  box-sizing:border-box;
 }
 .search-input-premium::placeholder { color:var(--lite); }
 .search-clear-btn {
