@@ -885,16 +885,16 @@ html.dk .prof-badge{box-shadow:0 1px 3px rgba(0,0,0,.3),0 3px 10px rgba(0,0,0,.3
   box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);
   transition:box-shadow .18s;
 }
-.esp-input:focus{outline:none;border-color:var(--or);}
+.esp-input:focus{outline:none;box-shadow:0 0 0 3px rgba(255,107,43,.2),0 3px 12px rgba(0,0,0,.1);}
 .esp-textarea{resize:none;min-height:72px;line-height:1.5;}
 /* ── ESPACE ÉLÈVE v2 — panel + cards ── */
 #mpfPanelEspace:not([hidden]){display:flex;flex-direction:column;gap:10px;padding:12px 16px 48px;}
 .esp2-card{
   background:var(--wh);border-radius:20px;
-  border:1px solid var(--bdr);
-  box-shadow:0 1px 6px rgba(0,0,0,.05);overflow:hidden;
+  border:none;
+  box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);overflow:hidden;
 }
-html.dk .esp2-card{border-color:rgba(255,255,255,.07);box-shadow:none;}
+html.dk .esp2-card{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
 #bdBibliotheque.closing,#bdElveBibliotheque.closing{animation:mpfSlideOut .25s cubic-bezier(.55,0,1,.45) forwards;}
 /* Header cliquable d'une card tiroir */
 .esp2-card-hd{
@@ -953,9 +953,10 @@ html.dk .bdep-top{border-color:rgba(255,255,255,.07);}
 /* Feed cards (style réseau social) */
 .feed-card{
   background:var(--wh);border-radius:18px;
-  border:1px solid var(--bdr);margin-bottom:12px;overflow:hidden;
+  border:none;margin-bottom:12px;overflow:hidden;
+  box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);
 }
-html.dk .feed-card{border-color:rgba(255,255,255,.08);}
+html.dk .feed-card{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
 .feed-card-head{
   display:flex;align-items:center;gap:10px;padding:14px 14px 10px;
 }
@@ -1813,10 +1814,10 @@ html.dk .esp-kb-card.kb-open{box-shadow:0 -1px 0 rgba(255,255,255,.08);}
 .forum-post{
   background:var(--wh);border-radius:18px;padding:14px 16px;
   margin-bottom:12px;
-  box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
-  border:1px solid rgba(0,0,0,.04);
+  box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);
+  border:none;
 }
-html.dk .forum-post{background:#1C1C1E;border-color:rgba(255,255,255,.06);box-shadow:none;}
+html.dk .forum-post{background:#1C1C1E;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
 .forum-post-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .forum-post-av{
   width:34px;height:34px;border-radius:50%;flex-shrink:0;
@@ -1837,9 +1838,10 @@ html.dk .forum-post{background:#1C1C1E;border-color:rgba(255,255,255,.06);box-sh
 .forum-post-ft{display:flex;align-items:center;justify-content:flex-end;margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);}
 /* Fiche de cours dans la bibliothèque */
 .fiche-item{
-  background:var(--bg);border-radius:14px;padding:12px 14px;
+  background:var(--wh);border-radius:14px;padding:12px 14px;
   margin-bottom:8px;cursor:pointer;
   border-left:3px solid var(--or);
+  box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);
 }
 .fiche-item-title{font-size:13px;font-weight:700;color:var(--ink);}
 .fiche-item-date{font-size:11px;color:var(--lite);margin-top:2px;}
