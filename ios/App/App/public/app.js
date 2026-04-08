@@ -844,23 +844,20 @@ function openMesProfsTuto(){
   var bd=g('bdMesProfsTuto');if(!bd)return;
   _mptRender();
   bd.style.display='flex';
+  var nav=g('bnav');if(nav)nav.style.display='none';
   var sheet=g('mptSheet');if(sheet)_mptInitSwipe(sheet);
   haptic(4);
 }
 
 function _mptRender(){
   var s=_mptSteps[_mptStep];if(!s)return;
-  var track=g('mptTrack');var dots=g('mptDots');var btn=g('mptBtn');var backBtn=g('mptBackBtn');
-  var isLast=_mptStep===_mptSteps.length-1;
-  var isFirst=_mptStep===0;
+  var track=g('mptTrack');var dots=g('mptDots');
   if(track){track.innerHTML='<div style="text-align:center;padding:28px 0 20px">'
     +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
     +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
     +'</div>';}
   if(dots){dots.innerHTML=_mptSteps.map(function(_,i){return'<div onclick="mptGoTo('+i+')" style="width:'+(i===_mptStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_mptStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';}).join('');}
-  if(btn)btn.textContent=isLast?'C\'est parti\u00a0!':'Suivant';
-  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
 }
 
 function _mptInitSwipe(sheet){
@@ -881,6 +878,7 @@ function mptDone(){
   try{localStorage.setItem('cp_profs_tuto','1');}catch(e){}
   var bd=g('bdMesProfsTuto');
   if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
+  var nav=g('bnav');if(nav)nav.style.display='';
 }
 
 function unfollowProf(pid){
