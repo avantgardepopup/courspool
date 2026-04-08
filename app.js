@@ -3406,9 +3406,13 @@ function buildPlacesCircles(fl,sp){
   var pleft=sp-fl;
   var pct=sp>0?Math.round(fl/sp*100):100;
   var cls=pleft<=0?' full':pleft===1?' last':'';
-  var barColor=pleft<=0?'#9CA3AF':pleft===1?'#EF4444':'#FF6B35';
+  var barStyle=pleft<=0
+    ?'background:#D1D5DB'
+    :pleft===1
+      ?'background:linear-gradient(90deg,#F87171,#EF4444);box-shadow:0 2px 6px rgba(239,68,68,.45)'
+      :'background:linear-gradient(90deg,#FF9D66,#FF4500);box-shadow:0 2px 6px rgba(255,69,0,.45)';
   var txt=pleft<=0?t('rr_complet'):pleft===1?t('rr_place'):pleft+' '+t('rr_places');
-  return '<div class="places-bar"><div class="places-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'
+  return '<div class="places-bar"><div class="places-bar-fill" style="width:'+pct+'%;'+barStyle+'"></div></div>'
     +'<span class="card-places-count'+cls+'">'+txt+'</span>';
 }
 
