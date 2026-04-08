@@ -2791,6 +2791,7 @@ function doLogout(){
   try{localStorage.removeItem(_COURS_CACHE_KEY);}catch(e){}
   try{if(_fkLogout)localStorage.removeItem(_fkLogout);}catch(e){}
   try{localStorage.removeItem('cp_fav_cours');}catch(e){} // nettoyer la clé fallback sans user.id
+  try{localStorage.removeItem('cp_enrolled_profs');}catch(e){}
   // Cacher la bnav immédiatement
   var bnav=g('bnav');if(bnav)bnav.classList.remove('on');
   // Restaurer les items bnav pour la prochaine connexion
@@ -11709,12 +11710,15 @@ var _ssTimer=null;
 
 var _ssGeoActive=false;
 
-var _ssFocusedCard=null;
+var _ssFocusedCard=null,_ssCurrentKbH=0;
 var _ssKbShowFn=null,_ssKbHideFn=null;
 function _ssOnFocus(inp){
   _ssFocusedCard=inp.closest('.ss-card')||null;
+  // Keyboard already visible → re-apply shift for new focused card
+  if(_ssCurrentKbH>0)_ssApplyKb(_ssCurrentKbH);
 }
 function _ssApplyKb(kbH){
+  _ssCurrentKbH=kbH;
   var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
   var body=g('ssBody');if(!body)return;
   if(kbH>0&&_ssFocusedCard){
@@ -11761,7 +11765,7 @@ function closeSmartSearch(){
   }
   if(_ssKbShowFn){window.removeEventListener('keyboardWillShow',_ssKbShowFn);_ssKbShowFn=null;}
   if(_ssKbHideFn){window.removeEventListener('keyboardWillHide',_ssKbHideFn);_ssKbHideFn=null;}
-  _ssFocusedCard=null;
+  _ssFocusedCard=null;_ssCurrentKbH=0;
   document.body.style.overflow='';
 }
 // ── ACCORDÉON MATIÈRE ──
