@@ -7705,6 +7705,22 @@ function openAddFilter(){
   renderBarConfig();
   bd.style.display='flex';
   document.body.style.overflow='hidden';
+  // Keyboard avoidance — ajuster max-height du panel intérieur
+  var panel=bd.querySelector('div');
+  var _fKbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;
+    if(h>0&&panel){
+      panel.style.maxHeight=(window.innerHeight-h-12)+'px';
+      panel.style.transition='max-height .22s ease';
+      setTimeout(function(){var fi=g('filterInput');if(fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
+    }
+  };
+  var _fKbHide=function(){
+    if(panel){panel.style.maxHeight='88vh';panel.style.transition='max-height .18s ease';}
+  };
+  window.addEventListener('keyboardWillShow',_fKbShow);
+  window.addEventListener('keyboardWillHide',_fKbHide);
+  bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_fKbShow);window.removeEventListener('keyboardWillHide',_fKbHide);};
 }
 
 function renderBarConfig(){
@@ -7786,7 +7802,9 @@ function removeBarCustom(key){
 }
 function closeAddFilter(){
   var bd=g('bdFilter');
-  if(bd)bd.style.display='none';
+  if(!bd)return;
+  if(bd._cleanupKb){bd._cleanupKb();bd._cleanupKb=null;}
+  bd.style.display='none';
   document.body.style.overflow='';
 }
 
