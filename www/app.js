@@ -10924,14 +10924,11 @@ var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere
 var _sc=0;
 
 function _crStepVpAdjust(){
-  // Fallback VisualViewport pour navigateur web (non-Capacitor)
-  // N'ajuste QUE le padding du footer — jamais la hauteur de bdCrStep
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Keyboard)return;
   var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
   var vp=window.visualViewport;if(!vp)return;
   var kh=Math.max(0,window.innerHeight-vp.height);
-  var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom=(kh>50?kh+'px':'');
-  var sb=g('stepBody');if(sb)sb.style.paddingBottom=(kh>50?(kh+8)+'px':'');
+  el.style.bottom=kh+'px';
 }
 
 function openCrStep(){
@@ -10950,12 +10947,12 @@ function openCrStep(){
   setTimeout(_crStepVpAdjust,50);
   haptic(10);
 }
-function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active');el.style.top='';el.style.height='';el.style.bottom='';var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom='';var sb=g('stepBody');if(sb)sb.style.paddingBottom='';}}
+function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active');el.style.bottom='0';}}
 
 function buildStepDOM(){
   var div=document.createElement('div');div.id='bdCrStep';
   var style=document.createElement('style');
-  style.textContent='#bdCrStep{position:fixed;inset:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}';
+  style.textContent='#bdCrStep{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;transition:bottom .3s cubic-bezier(.22,.61,.36,1);}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}';
   document.head.appendChild(style);
   div.innerHTML=
     '<div style="padding:max(20px,env(safe-area-inset-top,20px)) 20px 16px;display:flex;align-items:center;gap:14px;flex-shrink:0;border-bottom:1px solid var(--bdr);background:var(--wh)">'
@@ -10969,22 +10966,18 @@ function buildStepDOM(){
   g('stepBackBtn').onclick=stepBack;
   g('stepCloseBtn').onclick=closeCrStep;
   g('stepCta').onclick=stepNext;
-  // Keyboard awareness — pousser le footer CTA sans toucher la hauteur de bdCrStep
-  // (évite le flash de la page derrière)
+  // Clavier : on remonte bdCrStep en réduisant bottom (le clavier couvre le vide — pas de flash)
   var _Kbd=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Keyboard;
   if(_Kbd){
     _Kbd.addListener('keyboardWillShow',function(info){
-      var foot=g('stepCtaFoot');if(!foot||!g('bdCrStep').classList.contains('active'))return;
-      var kh=(info&&info.keyboardHeight)||0;
-      foot.style.paddingBottom=kh+'px';
-      var sb=g('stepBody');if(sb)sb.style.paddingBottom=(kh+8)+'px';
+      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+      el.style.bottom=((info&&info.keyboardHeight)||0)+'px';
     });
     _Kbd.addListener('keyboardWillHide',function(){
-      var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom='';
-      var sb=g('stepBody');if(sb)sb.style.paddingBottom='';
+      var el=g('bdCrStep');if(el)el.style.bottom='0';
     });
   }
-  // Fallback VisualViewport pour Safari web
+  // Fallback VisualViewport (Safari web, non-Capacitor)
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_crStepVpAdjust);
     window.visualViewport.addEventListener('scroll',_crStepVpAdjust);
