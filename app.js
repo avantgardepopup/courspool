@@ -11718,9 +11718,12 @@ function _ssApplyKb(kbH){
   var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
   var body=g('ssBody');if(!body)return;
   if(kbH>0&&_ssFocusedCard){
-    var cardRect=_ssFocusedCard.getBoundingClientRect();
+    // Scroll enough to show the last card (Code), not just the focused one
+    var cards=ov.querySelectorAll('.ss-card');
+    var lastCard=cards.length?cards[cards.length-1]:_ssFocusedCard;
+    var lastRect=lastCard.getBoundingClientRect();
     var visibleBottom=window.innerHeight-kbH-16;
-    var shift=Math.max(0,cardRect.bottom-visibleBottom);
+    var shift=Math.max(0,lastRect.bottom-visibleBottom);
     body.style.transform='translateY(-'+shift+'px)';
     body.style.transition='transform .22s ease';
   } else {
