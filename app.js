@@ -12078,6 +12078,7 @@ function openTuteurConfirmSheet(){
     +'<div style="font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:6px">Je réserve pour mon enfant</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Les professeurs sauront que vous réservez en tant que parent ou tuteur légal. Votre statut sera visible sur vos réservations et messages.</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Prénom de votre enfant <span style="color:#EF4444">*</span></div>'
+    +'<style>#tuteurConfirmPrenom::placeholder{color:#C4C4C6;font-weight:400}</style>'
     +'<input id="tuteurConfirmPrenom" type="text" value="'+existing+'" placeholder="Ex : Lucas" autocorrect="off" autocapitalize="words" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;box-sizing:border-box;margin-bottom:14px;transition:border .18s">'
     +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:20px">'
     +'En activant ce statut, vous confirmez être le parent ou tuteur légal de cet enfant et autorisez CoursPool à afficher ce statut aux professeurs.'
