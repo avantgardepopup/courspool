@@ -715,6 +715,8 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 .fav-cours-card-meta{font-size:11.5px;color:var(--lite);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fav-cours-card-price{font-size:18px;font-weight:800;color:var(--or);letter-spacing:-.04em;}
 .fav-cours-card-price span{font-size:11px;font-weight:400;color:var(--lite);}
+/* Placeholder inputs — gris clair pour distinguer du texte saisi */
+#tuteurConfirmPrenom::placeholder{color:#C7C7CC;font-weight:400;-webkit-text-fill-color:#C7C7CC;}
 /* Card prof dans carrousel */
 .fav-prof-card{
   flex:0 0 160px;scroll-snap-align:start;

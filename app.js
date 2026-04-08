@@ -2538,6 +2538,15 @@ function goAccount(){
     if(pfProfExtra)pfProfExtra.style.display='none';
     var pfFormEx2=g('pfFormationsExtra');if(pfFormEx2)pfFormEx2.style.display='none';
   }
+  // Section tuteur/parent — élèves uniquement
+  var tutSec2=g('pfTuteurSection');
+  if(tutSec2)tutSec2.style.display=(user&&user.role!=='professeur')?'block':'none';
+  if(user&&user.role!=='professeur'){
+    var tutTog2=g('tuteurToggle');if(tutTog2)tutTog2.classList.toggle('on',!!(user&&user.is_tuteur));
+    var epRow2=g('enfantPrenomRow');if(epRow2)epRow2.style.display=(user&&user.is_tuteur)?'flex':'none';
+    var ep2=g('enfantPrenomInput');
+    if(ep2){var _ep2=user.enfant_prenom||(function(){try{return localStorage.getItem('cp_enfant_prenom')||'';}catch(e){return '';}}());ep2.value=_ep2;}
+  }
   buildAccLists();
   // Refresh stats depuis le serveur (background) — données fraîches à chaque visite
   if(user&&user.id&&!user.guest){
@@ -12120,7 +12129,6 @@ function openTuteurConfirmSheet(){
     +'<div style="font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:6px">Je réserve pour mon enfant</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Les professeurs sauront que vous réservez en tant que parent ou tuteur légal. Votre statut sera visible sur vos réservations et messages.</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Prénom de votre enfant <span style="color:#EF4444">*</span></div>'
-    +'<style>#tuteurConfirmPrenom::placeholder{color:#C4C4C6;font-weight:400}</style>'
     +'<input id="tuteurConfirmPrenom" type="text" value="'+existing+'" placeholder="Ex : Lucas" autocorrect="off" autocapitalize="words" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;box-sizing:border-box;margin-bottom:14px;transition:border .18s">'
     +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:20px">'
     +'En activant ce statut, vous confirmez être le parent ou tuteur légal de cet enfant et autorisez CoursPool à afficher ce statut aux professeurs.'
