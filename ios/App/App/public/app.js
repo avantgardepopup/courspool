@@ -848,16 +848,17 @@ function openEnrollSheet(){
   _enrollBd=bd;
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--bg);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(36px,env(safe-area-inset-bottom,36px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
+  sheet.style.cssText='background:'+cardBg+';border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(36px,env(safe-area-inset-bottom,36px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
   sheet.innerHTML=
     '<style>#_enrollCodeInp::placeholder{color:'+phColor+' !important;-webkit-text-fill-color:'+phColor+' !important;opacity:1;letter-spacing:.04em;font-family:inherit;font-size:16px;font-weight:400;text-transform:none;}</style>'
     +'<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
     +'<div style="font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Rejoindre un espace</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Entre le code partagé par ton professeur</div>'
     // Carte code — style ss-card, clean et premium
-    +'<div style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:10px;box-sizing:border-box">'
-      +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="12" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
+    +'<div id="_enrollCard" style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:6px;box-sizing:border-box;transition:box-shadow .18s">'
+      +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="6" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="_enrollLive(this)" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
     +'</div>'
+    +'<div id="_enrollHint" style="font-size:12px;color:var(--lite);padding:0 4px;margin-bottom:4px;min-height:18px;transition:opacity .15s"></div>'
     +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;line-height:1.5;padding:0 4px;margin-bottom:8px"></div>'
     +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:4px">Rejoindre</button>'
     +'<button onclick="if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
@@ -879,6 +880,29 @@ function openEnrollSheet(){
   window.addEventListener('keyboardWillShow',_ekbShow);
   window.addEventListener('keyboardWillHide',_ekbHide);
   bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);};
+}
+
+function _enrollLive(inp){
+  inp.value=inp.value.toUpperCase();
+  var v=inp.value.trim();
+  var hint=document.getElementById('_enrollHint');
+  var card=document.getElementById('_enrollCard');
+  var err=document.getElementById('_enrollErr');
+  if(err)err.style.display='none';
+  if(v.length===6){
+    // Complet — surbrillance orange
+    inp.style.color='#FF6B2B';
+    inp.style.webkitTextFillColor='#FF6B2B';
+    if(card)card.style.boxShadow='0 0 0 1.5px #FF6B2B,0 3px 14px rgba(255,107,43,.18)';
+    if(hint)hint.textContent='';
+  } else {
+    var isDk=document.documentElement.classList.contains('dk');
+    var inpColor=isDk?'#ffffff':'#111111';
+    inp.style.color=inpColor;
+    inp.style.webkitTextFillColor=inpColor;
+    if(card)card.style.boxShadow=isDk?'0 3px 16px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.07)':'0 3px 14px rgba(0,0,0,.11),0 0 0 .5px rgba(0,0,0,.06)';
+    if(hint)hint.textContent=v.length>0?'Le code fait exactement 6 caractères':'';
+  }
 }
 
 function submitEnrollSheet(){
@@ -1040,6 +1064,7 @@ var _calWeekOffset=0;
 var _calSelDay=null;
 var _mesSeg='upcoming';
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
+var _locTypedCoords=null; // coords issues du geocodage de la saisie manuelle ville
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
 var _searchTimer=null;
@@ -2473,6 +2498,9 @@ function goAccount(){
   var pgMesProfsEl=g('pgMesProfs');if(pgMesProfsEl)pgMesProfsEl.classList.remove('on');
   g('pgAcc').classList.add('on');
   setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.25)');
+  // Bouton photo réservé aux professeurs uniquement
+  var _pfl=g('pfPhotoLabel');
+  if(_pfl)_pfl.style.display=(user&&user.role==='professeur')?'flex':'none';
   var accName=g('accName'); if(accName)accName.textContent=user.pr+(user.nm?' '+user.nm:'');
   var accEmail=g('accEmail'); if(accEmail)accEmail.textContent=user.em;
   var pfPr=g('pfPr'),pfNm=g('pfNm'),pfEm=g('pfEm'),pfVille=g('pfVille'),pfBio=g('pfBio');
@@ -2513,6 +2541,15 @@ function goAccount(){
   } else {
     if(pfProfExtra)pfProfExtra.style.display='none';
     var pfFormEx2=g('pfFormationsExtra');if(pfFormEx2)pfFormEx2.style.display='none';
+  }
+  // Section tuteur/parent — élèves uniquement
+  var tutSec2=g('pfTuteurSection');
+  if(tutSec2)tutSec2.style.display=(user&&user.role!=='professeur')?'block':'none';
+  if(user&&user.role!=='professeur'){
+    var tutTog2=g('tuteurToggle');if(tutTog2)tutTog2.classList.toggle('on',!!(user&&user.is_tuteur));
+    var epRow2=g('enfantPrenomRow');if(epRow2)epRow2.style.display=(user&&user.is_tuteur)?'flex':'none';
+    var ep2=g('enfantPrenomInput');
+    if(ep2){var _ep2=user.enfant_prenom||(function(){try{return localStorage.getItem('cp_enfant_prenom')||'';}catch(e){return '';}}());ep2.value=_ep2;}
   }
   buildAccLists();
   // Refresh stats depuis le serveur (background) — données fraîches à chaque visite
@@ -3046,6 +3083,8 @@ function _applyPhotoPartout(url){
 }
 
 function previewPhoto(input){
+  // Réservé aux professeurs uniquement
+  if(!user||user.role!=='professeur'){input.value='';return;}
   if(input.files&&input.files[0]){
     var file=input.files[0];
     if(file.size>2*1024*1024){
@@ -3055,26 +3094,26 @@ function previewPhoto(input){
     var reader=new FileReader();
     reader.onload=function(e){
       var src=e.target.result;
-      // Appliquer la preview base64 immédiatement partout
-      _applyPhotoPartout(src);
-      // Uploader vers Supabase
       if(user&&user.id){
+        // Upload vers le backend — la photo passe en validation admin
+        // On N'applique PAS la preview immédiatement
         fetch(API+'/upload/photo',{
           method:'POST',
           headers:apiH(),
-          body:JSON.stringify({base64:src,userId:user.id,filename:file.name})
+          body:JSON.stringify({base64:src,userId:user.id,filename:file.name,pending:true})
         }).then(function(r){return r.json();}).then(function(data){
-          if(data.url){
-            user.photo=data.url;
-            try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
-            // Remplacer la base64 par l'URL Supabase définitive
-            _applyPhotoPartout(data.url);
-            toast(t('t_photo_ok'),'');
+          if(data.url||data.pending){
+            // Stocker l'URL en attente localement pour info, mais ne pas l'afficher
+            try{localStorage.setItem('cp_photo_pending','1');}catch(ex){}
+            toast('Photo envoyée ✓','Elle apparaîtra sur votre profil après validation par notre équipe.');
+          } else {
+            toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');
           }
-        }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
+        }).catch(function(){toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');});
       }
     };
     reader.readAsDataURL(file);
+    input.value=''; // reset pour permettre re-sélection du même fichier
   }
 }
 
@@ -3269,6 +3308,10 @@ function applyFilter(){
     if(geoMode&&_geoCoords&&c.lat&&c.lon){
       var dist=haversine(_geoCoords.lat,_geoCoords.lon,parseFloat(c.lat),parseFloat(c.lon));
       matchLoc=dist<=_geoDist;
+    } else if(_locTypedCoords&&c.lat&&c.lon){
+      // Geocodage manuel — filtre par distance
+      var distT=haversine(_locTypedCoords.lat,_locTypedCoords.lon,parseFloat(c.lat),parseFloat(c.lon));
+      matchLoc=distT<=_geoDist;
     } else if(actLoc){
       matchLoc=loc.includes(actLoc);
     }
@@ -3715,8 +3758,9 @@ function showAliasSuggestion(val){
 function acceptAlias(){
   if(!_pendingAlias)return;
   var box=g('searchAliasSuggestion');if(box)box.style.display='none';
-  var mobInp=g('mobSearchInput');if(mobInp){mobInp.value=_pendingAlias;var cb=g('searchClearBtn');if(cb)cb.style.display='flex';}
+  var mobInp=g('mobSearchInput');if(mobInp)mobInp.value=_pendingAlias;
   var srch=g('srch');if(srch)srch.value=_pendingAlias;
+  var pi=g('pillSearchInput');if(pi&&pi.style.display!=='none')pi.value=_pendingAlias;
   _pendingAlias=null;
   currentPage=1;applyFilter();
 }
@@ -4524,9 +4568,9 @@ var _curPrFull=null;
 var _curPrEnrolled=false;
 
 function _buildBadges(p,pid){
-  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>';
-  var icoDip='<svg viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
-  var icoShld='<svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var icoId='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
+  var icoDip='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var icoShld='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   var icoFol='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>';
   var _isVrf=p.verified===true||p.verified==='true';
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
@@ -4671,9 +4715,9 @@ function _tpBuildTrustCards(p,pid){
   var _tcSty='cursor:pointer;-webkit-tap-highlight-color:transparent';
   if(_isVrf){
     h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'identite\')">'
-      +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+      +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
-      +'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié</div>'
       +'</div>';
   }
   if(_isDip){
@@ -4686,9 +4730,9 @@ function _tpBuildTrustCards(p,pid){
   }
   if(_isCas){
     h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'confiance\')">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>'
+      +'<div class="tp-trust-icon" style="background:#ECFDF5"><svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Casier judiciaire vérifié</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Certifié</div>'
       +'</div>';
   }
   box.innerHTML=h;
@@ -4740,6 +4784,24 @@ function switchTpTab(tab){
     if(btn){if(on)btn.classList.add('on');else btn.classList.remove('on');}
     if(panel){if(on)panel.removeAttribute('hidden');else panel.setAttribute('hidden','');}
   });
+}
+
+function _tpCodeLive(inp){
+  inp.value=inp.value.toUpperCase();
+  var v=inp.value.trim();
+  var hint=g('tpCodeHint');
+  var row=g('tpEspaceRow');
+  var err=g('tpCodeError');
+  if(err)err.style.display='none';
+  if(v.length===6){
+    inp.style.color='#FF6B2B';
+    if(row)row.style.boxShadow='0 0 0 1.5px #FF6B2B';
+    if(hint)hint.textContent='';
+  } else {
+    inp.style.color='';
+    if(row)row.style.boxShadow='';
+    if(hint)hint.textContent=v.length>0?'Le code fait exactement 6 caractères':'';
+  }
 }
 
 function tpEnterCode(){
@@ -6745,16 +6807,7 @@ function togFP(){
 }
 
 // CRÉER COURS
-function openCr(){
-  if(!user||user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
-  if(user.verified===false){
-    if(getCniStatus()==='none'){toast(t('t_cni_req'),'');openCniSheet();}
-    else{toast(t('exp_verif'),t('exp_verif_sub'));}
-    return;
-  }
-  var today=new Date().toLocaleDateString('fr-CA',{timeZone:'Europe/Paris'});
-  g('crDate').min=today;buildCrMatCircles();openM('bdCr');
-}
+function openCr(){openCrStep();}
 function closeCr(){closeM('bdCr');}
 
 // ── Icônes matières (SVG path strings) ──────────────────────────────────────
@@ -7560,7 +7613,8 @@ function requestGeoloc(){
     function(pos){
       _geoActive=true;
       _geoCoords={lat:pos.coords.latitude,lon:pos.coords.longitude};
-      userCoords=_geoCoords;geoMode=true;
+      userCoords=_geoCoords;geoMode=true;_locTypedCoords=null;
+      _updateAfPerimRow();
       // Afficher immédiatement sans attendre le reverse geocoding
       var inp=g('locInput');if(inp)inp.value='📍 Autour de moi';
       var cb=g('locClearBtn');if(cb)cb.style.display='block';
@@ -7619,11 +7673,43 @@ function filterByLoc(val){
   if(btn)btn.style.display=val.trim()?'block':'none';
   var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=val.trim()||t('filter_ville');
   clearTimeout(locFilterTimer);
+  if(!val.trim()){
+    _locTypedCoords=null;actLoc='';
+    _updateAfPerimRow();updateResetBtn();applyFilter();return;
+  }
   locFilterTimer=setTimeout(function(){
-    actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    updateResetBtn();
-    applyFilter();
-  },300);
+    var q=val.trim();
+    actLoc=q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    _locTypedCoords=null;updateResetBtn();applyFilter();
+    // Geocodage Nominatim → filtre distance précis
+    fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+', France')+'&format=json&limit=1&countrycodes=fr',{headers:{'Accept-Language':'fr','User-Agent':'CoursPool/1.0'}})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data[0]&&data[0].lat){
+          _locTypedCoords={lat:parseFloat(data[0].lat),lon:parseFloat(data[0].lon)};
+          _updateAfPerimRow();applyFilter();
+        }
+      }).catch(function(){});
+  },500);
+}
+
+function _updateAfPerimRow(){
+  var row=g('afPerimRow');
+  if(!row)return;
+  var show=geoMode||!!_locTypedCoords;
+  row.style.display=show?'block':'none';
+  if(show){
+    row.querySelectorAll('.af-pill').forEach(function(b){
+      b.classList.toggle('on',parseInt(b.dataset.km||0)===_geoDist);
+    });
+  }
+}
+function afSetDist(km,el){
+  _geoDist=km;
+  // Sync bouton géoloc dist si actif
+  var geoDistLbl=g('geoDistLabel');if(geoDistLbl)geoDistLbl.textContent=km+' km';
+  _updateAfPerimRow();
+  applyFilter();
 }
 
 function locInputClear(){
@@ -7632,7 +7718,8 @@ function locInputClear(){
   var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=t('filter_ville');
   var bar=document.querySelector('.locbar');if(bar)bar.classList.remove('open');
   var pill=g('pillVille');if(pill)pill.classList.remove('on');
-  actLoc='';
+  actLoc='';_locTypedCoords=null;
+  _updateAfPerimRow();
   updateResetBtn();
   applyFilter();
 }
@@ -7654,6 +7741,23 @@ function openAddFilter(){
   renderBarConfig();
   bd.style.display='flex';
   document.body.style.overflow='hidden';
+  // Keyboard avoidance — ajuster max-height du panel intérieur
+  var panel=bd.querySelector('div');
+  var _fPanel=bd.querySelector('div');
+  var _fKbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;if(h<=0||!_fPanel)return;
+    _fPanel.style.paddingBottom=h+'px';
+    _fPanel.style.transition='padding-bottom .22s ease';
+    setTimeout(function(){var fi=g('filterInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},60);
+  };
+  var _fKbHide=function(){
+    if(!_fPanel)return;
+    _fPanel.style.paddingBottom='max(24px,env(safe-area-inset-bottom,24px))';
+    _fPanel.style.transition='padding-bottom .18s ease';
+  };
+  window.addEventListener('keyboardWillShow',_fKbShow);
+  window.addEventListener('keyboardWillHide',_fKbHide);
+  bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_fKbShow);window.removeEventListener('keyboardWillHide',_fKbHide);};
 }
 
 function renderBarConfig(){
@@ -7735,7 +7839,10 @@ function removeBarCustom(key){
 }
 function closeAddFilter(){
   var bd=g('bdFilter');
-  if(bd)bd.style.display='none';
+  if(!bd)return;
+  if(bd._cleanupKb){bd._cleanupKb();bd._cleanupKb=null;}
+  var _p=bd.querySelector('div');if(_p){_p.style.paddingBottom='';_p.style.transition='';}
+  bd.style.display='none';
   document.body.style.overflow='';
 }
 
@@ -8346,51 +8453,43 @@ function updateVerifStatusBlock(){
   if(!block)return;
   var secLbl=g('verifSectionLabel');
   if(!user||user.role!=='professeur'){block.style.display='none';if(secLbl)secLbl.style.display='none';return;}
+  var _icoId='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
   var status=getCniStatus();
-  if(status==='none'){
-    var html='<div style="background:var(--orp);border-radius:12px;padding:14px 16px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="13" y2="14"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:var(--or)">Vérification d\'identité requise</span>'
-      +'</div>'
-      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez votre pièce d\'identité pour activer votre compte et publier des cours.</div>'
-      +'<button onclick="openCniSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer ma pièce d\'identité</button>'
-      +'</div>';
-    block.style.display='block';block.innerHTML=html;
-    if(secLbl)secLbl.style.display='block';
-    return;
-  }
   var html='';
-  if(status==='verified'){
-    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F0FDF4;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#15803D">Identité vérifiée — Compte certifié</span>'
+  if(status==='none'){
+    html='<div class="tp-trust-card" style="margin-bottom:10px">'
+      +'<div class="tp-trust-icon" style="background:#FFF0E8">'+_icoId.replace('stroke-width','stroke="var(--or)" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Envoyez votre pièce d\'identité</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:var(--or)">À obtenir</div>'
+      +'</div>'
+      +'<button onclick="openCniSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Commencer la vérification</button>';
+  } else if(status==='verified'){
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#FFF0E8">'+_icoId.replace('stroke-width','stroke="#FF6B2B" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié</div>'
       +'</div>';
   } else if(status==='pending'){
-    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFBEB;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#92400E">Vérification en cours — Réponse sous 24h</span>'
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#FFF0E8">'+_icoId.replace('stroke-width','stroke="#FF6B2B" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
   } else if(status==='rejected_retry'){
     var raison=esc(user.rejection_reason||'');
-    html='<div style="background:#FEF2F2;border-radius:12px;padding:14px 16px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(raison?'10':'0')+'px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#991B1B">Vérification refusée — Vous pouvez renvoyer votre document</span>'
+    html='<div class="tp-trust-card" style="margin-bottom:10px">'
+      +'<div class="tp-trust-icon" style="background:#FEF2F2">'+_icoId.replace('stroke-width','stroke="#EF4444" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+(raison?esc(raison):'Document refusé')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FEF2F2;color:#991B1B">Refusé</div>'
       +'</div>'
-      +(raison?'<div style="font-size:12px;color:#B91C1C;background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5">'+raison+'</div>':'')
-      +'<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pièce d\'identité</button>'
-      +'</div>';
-    // Réinitialiser le statut local pour permettre le renvoi
+      +'<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pièce d\'identité</button>';
     if(user)user.cni_uploaded=false;
   } else if(status==='rejected_final'){
     var raison=esc(user.rejection_reason||'');
-    html='<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:14px 16px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(raison?'10':'0')+'px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#374151">Compte non éligible</span>'
-      +'</div>'
-      +(raison?'<div style="font-size:12px;color:#6B7280;line-height:1.5">'+raison+'</div>':'')
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#F3F4F6">'+_icoId.replace('stroke-width','stroke="#6B7280" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+(raison?esc(raison):'Non éligible')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#F3F4F6;color:#6B7280">Non éligible</div>'
       +'</div>';
   }
   block.style.display='block';block.innerHTML=html;
@@ -8502,27 +8601,28 @@ function updateDiplomeStatusBlock(){
   if(!block)return;
   if(!user||user.role!=='professeur'){block.style.display='none';return;}
   var status=getDiplomeStatus();
+  var _icoDip='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
   var html='';
   if(status==='none'){
-    html='<div style="background:#EFF6FF;border-radius:12px;padding:14px 16px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#1D4ED8">Badge Diplôme vérifié disponible</span>'
+    html='<div class="tp-trust-card" style="margin-bottom:10px">'
+      +'<div class="tp-trust-icon" style="background:#EFF6FF">'+_icoDip.replace('stroke-width','stroke="#3B82F6" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Envoyez votre diplôme</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EFF6FF;color:#1D4ED8">À obtenir</div>'
       +'</div>'
-      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez une photo de votre diplôme pour obtenir le badge et rassurer les parents.</div>'
-      +'<button onclick="openDiplomeSheet()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon diplôme</button>'
-      +'</div>';
+      +'<button onclick="openDiplomeSheet()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon diplôme</button>';
     block.style.display='block';
   } else if(status==='verified'){
-    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#EFF6FF;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#1D4ED8">Diplôme vérifié — Badge affiché sur votre profil</span>'
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#EEF2FF">'+_icoDip.replace('stroke-width','stroke="#3C3489" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Badge affiché sur votre profil</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
       +'</div>';
     block.style.display='block';
   } else if(status==='pending'){
-    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFBEB;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#92400E">Diplôme en cours de vérification — Réponse sous 24h</span>'
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#FFFBEB">'+_icoDip.replace('stroke-width','stroke="#F59E0B" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
     block.style.display='block';
   } else {
@@ -8547,26 +8647,27 @@ function updateCasierStatusBlock(){
   if(!user||user.role!=='professeur'){block.style.display='none';return;}
   var status=getCasierStatus();
   var html='';
+  var _icoShld='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   if(status==='none'){
-    html='<div style="background:#ECFDF5;border-radius:12px;padding:14px 16px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#059669">Badge Profil de confiance disponible</span>'
+    html='<div class="tp-trust-card" style="margin-bottom:10px">'
+      +'<div class="tp-trust-icon" style="background:#ECFDF5">'+_icoShld.replace('stroke-width','stroke="#10B981" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Envoyez votre attestation</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#059669">À obtenir</div>'
       +'</div>'
-      +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez une attestation pour rassurer les familles et vous démarquer.</div>'
-      +'<button onclick="openCasierSheet()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon attestation</button>'
-      +'</div>';
+      +'<button onclick="openCasierSheet()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon attestation</button>';
     block.style.display='block';
   } else if(status==='verified'){
-    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#ECFDF5;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#059669">Profil de confiance vérifié — Badge affiché sur votre profil</span>'
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#ECFDF5">'+_icoShld.replace('stroke-width','stroke="#10B981" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Badge affiché sur votre profil</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Vérifié</div>'
       +'</div>';
     block.style.display='block';
   } else if(status==='pending'){
-    html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFBEB;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
-      +'<span style="font-size:13px;font-weight:700;color:#92400E">Attestation en cours de vérification — Réponse sous 24h</span>'
+    html='<div class="tp-trust-card">'
+      +'<div class="tp-trust-icon" style="background:#FFFBEB">'+_icoShld.replace('stroke-width','stroke="#F59E0B" stroke-width')+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
     block.style.display='block';
   } else {
@@ -8630,9 +8731,9 @@ function showBadgeInfo(type){
   var content=g('bdBadgeInfoContent');if(!content)return;
   var info={
     identite:{
-      grad:'linear-gradient(135deg,#00C853,#009640)',
-      glow:'rgba(0,180,80,.32)',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><polyline points="20 6 9 17 4 12"/></svg>',
+      grad:'linear-gradient(135deg,#FF8C55,#E04E10)',
+      glow:'rgba(255,107,43,.32)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>',
       name:'Identité vérifiée',
       badge:'Rare · ~14% des profs',
       desc:'Ce professeur a fourni une pièce d\'identité officielle contrôlée par l\'équipe CoursPool. Vous interagissez avec une vraie personne.',
@@ -10105,7 +10206,7 @@ function resetFilters(){
   if(_dlbl)_dlbl.textContent=t('filter_periode');
   document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   var _dFirst=document.querySelector('#dateFilterList .niv-fchip');if(_dFirst)_dFirst.classList.add('on');
-  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;
+  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;_locTypedCoords=null;
   var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
   if(_rlbl){_rlbl.textContent=t('exp_around_me');_rlbl.style.display='';}
   if(_rdist)_rdist.style.display='none';
@@ -10526,6 +10627,41 @@ function initLargeTitle(){
   },{passive:true});
 }
 
+function openInlineSearch(){
+  var pill=g('searchPill'),inp=g('pillSearchInput'),tw=g('pillTextWrap');
+  var pd=g('pillDivider'),fb=g('filtersBtn'),cb=g('pillCancelBtn'),bar=g('filterBarWrap');
+  if(!inp||inp.style.display!=='none')return; // déjà ouvert
+  if(tw)tw.style.display='none';
+  if(pd)pd.style.display='none';
+  if(fb)fb.style.display='none';
+  if(bar)bar.style.display='none';
+  inp.style.display='block';
+  if(cb)cb.style.display='block';
+  if(pill)pill.onclick=null; // éviter re-déclenchement
+  setTimeout(function(){if(inp)inp.focus();},50);
+}
+function closeInlineSearch(){
+  var pill=g('searchPill'),inp=g('pillSearchInput'),tw=g('pillTextWrap');
+  var pd=g('pillDivider'),fb=g('filtersBtn'),cb=g('pillCancelBtn'),bar=g('filterBarWrap');
+  if(inp){inp.value='';inp.style.display='none';inp.blur();}
+  if(tw)tw.style.display='';
+  if(pd)pd.style.display='';
+  if(fb)fb.style.display='';
+  if(cb)cb.style.display='none';
+  if(bar)bar.style.display='';
+  if(pill)pill.onclick=function(){openInlineSearch();};
+  var srch=g('srch');if(srch)srch.value='';
+  var mob=g('mobSearchInput');if(mob)mob.value='';
+  var as=g('searchAliasSuggestion');if(as)as.style.display='none';
+  var cs=g('searchCodeSuggestion');if(cs)cs.style.display='none';
+  applyFilter();
+}
+function _pillDoFilter(val){
+  var srch=g('srch');if(srch)srch.value=val;
+  var mob=g('mobSearchInput');if(mob)mob.value=val;
+  doFilter();
+}
+
 function expandSearch(){
   var srch=g('srch');if(!srch)return;
   var wrap=srch.parentElement;
@@ -10844,43 +10980,25 @@ function stepRender(idx){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
-    var _isDkM=document.documentElement.classList.contains('dk');
-    var _matCats=[
-      {lbl:t('mat_cat_sciences'),  items:['Maths','Statistiques','Physique','Chimie','SVT / Biologie','Astronomie','G\u00e9ologie','M\u00e9decine / Sant\u00e9','\u00c9cologie']},
-      {lbl:t('mat_cat_numerique'), items:['Informatique','Python','JavaScript','D\u00e9veloppement web','Data Science','IA & Machine Learning','\u00c9lectronique','Design / UI','Cybers\u00e9curit\u00e9','No-code','Blockchain']},
-      {lbl:t('mat_cat_langues'),   items:['Fran\u00e7ais','Anglais','Espagnol','Allemand','Italien','Portugais','Arabe','Chinois','Japonais','Russe','Cor\u00e9en','Hindi','Latin','Langue des signes']},
-      {lbl:t('mat_cat_lettres'),   items:['\u00c9criture cr\u00e9ative','Philosophie','Th\u00e9\u00e2tre','Cin\u00e9ma / Vid\u00e9o','BD / Manga']},
-      {lbl:t('mat_cat_arts'),      items:['Dessin','Peinture','Aquarelle','Arts plastiques','Illustration','Calligraphie','Photographie']},
-      {lbl:t('mat_cat_musique'),   items:['Musique','Piano','Guitare','Chant','Batterie','Violon','Saxophone']},
-      {lbl:t('mat_cat_humaines'),  items:['Histoire-G\u00e9o','Psychologie','Sociologie','G\u00e9ographie','Sciences politiques','Anthropologie']},
-      {lbl:t('mat_cat_business'),  items:['\u00c9conomie','Comptabilit\u00e9','Finance','Marketing','Droit','Entrepreneuriat','Gestion de projet','Communication','RH & Recrutement','Immobilier','Architecture']},
-      {lbl:t('mat_cat_prepa'),     items:['CPGE / Pr\u00e9pa','M\u00e9decine (PASS/LAS)','Sciences Po','TOEFL / IELTS','GMAT / GRE']},
-      {lbl:t('mat_cat_sport'),     items:['Sport / EPS','Fitness','Yoga / M\u00e9ditation','Arts martiaux','Danse','Natation','Tennis','Football','Basket','Running','Boxe / MMA','Golf']},
-      {lbl:t('mat_cat_bienetre'),  items:['Nutrition / Di\u00e9t\u00e9tique','D\u00e9veloppement perso']},
-      {lbl:t('mat_cat_cuisine'),   items:['Cuisine / Gastronomie','P\u00e2tisserie','Jardinage','Bricolage','Couture / Tricot','Broderie','Poterie / C\u00e9ramique']},
-      {lbl:t('mat_cat_jeux'),      items:['Jeux de soci\u00e9t\u00e9','\u00c9checs']},
-      {lbl:t('mat_cat_autre'),     items:['Autre']},
-    ];
-    html+='<div style="width:100%;margin-bottom:4px;position:relative">'
-      +'<svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
-      +'<input id="stepMatSearch" type="text" placeholder="Rechercher une mati\u00e8re\u2026" style="width:100%;box-sizing:border-box;padding:11px 14px 11px 38px;border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none" oninput="_matSearchFilter(this.value)">'
-      +'</div>';
-    html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%">';
-    _matCats.forEach(function(cat){
-      html+='<div data-cat>'
-        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
-      cat.items.forEach(function(m){
-        var mo=MATIERES.find(function(x){return x.label===m;})||{color:'#9CA3AF',bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)',bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'};
-        var isSel=_sd.matiere===m;
-        var chipBg=isSel?(_isDkM?(mo.bgDark||mo.bg):mo.bg):'var(--wh)';
-        var chipBorder=isSel?mo.color:'var(--bdr)';
-        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="matiere" data-sv="'+escH(m)+'" data-color="'+escH(mo.color)+'" data-bg="'+escH(mo.bg)+'" data-bgdark="'+escH(mo.bgDark||mo.bg)+'" style="background:'+chipBg+';border:2px solid '+chipBorder+';border-radius:50px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
-          +'<div style="width:9px;height:9px;border-radius:50%;background:'+mo.color+';flex-shrink:0"></div>'
-          +'<span style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap">'+m+'</span>'
+    html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%;padding-bottom:8px">';
+    CR_CATEGORIES.forEach(function(cat){
+      var items=cat.keys.map(function(key){
+        var mat=MATIERES.find(function(m){return m.key===key;});
+        if(!mat)return'';
+        var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
+        var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+        if(lbl.length>9)lbl=lbl.slice(0,8)+'\u2026';
+        var isSel=_sd.matiere_key===key;
+        return'<div class="cr-mat-item'+(isSel?' on':'')+'" data-key="'+key+'" onclick="_stepPickMat(\''+key+'\',\''+escH(mat.label)+'\')" style="-webkit-tap-highlight-color:transparent">'
+          +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+          +'<span class="cr-mat-lbl">'+lbl+'</span>'
           +'</div>';
-      });
-      html+='</div></div>';
+      }).join('');
+      if(!items.trim())return;
+      html+='<div data-cat>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.label+'</div>'
+        +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
+        +'</div>';
     });
     html+='</div>';
 
@@ -11088,6 +11206,16 @@ function _matSearchFilter(q){
     });
     cat.style.display=visible?'':'none';
   });
+}
+
+function _stepPickMat(key,label){
+  _sd.matiere_key=key;
+  _sd.matiere=label;
+  var bd=g('bdCrStep');
+  if(bd)bd.querySelectorAll('.cr-mat-item').forEach(function(el){
+    el.classList.toggle('on',el.dataset.key===key);
+  });
+  haptic(8);
 }
 
 function sOpt(a,v,l,s,sel,bg,ex){
@@ -12033,14 +12161,34 @@ async function deleteAccount(){
 async function _confirmDeleteAccount(){
   closeQuickSheet();
   if(!user)return;
+  var uid=user.id;
+  // 1. Désinscrire les push notifications avant suppression backend
   try{
-    await fetch(API+'/users/'+user.id,{method:'DELETE',headers:apiH()});
+    if(window._pushSubscription){
+      await window._pushSubscription.unsubscribe();
+      await fetch(API+'/push/subscribe',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:uid})});
+    }
   }catch(e){}
+  // 2. Supprimer le compte côté backend
+  var ok=false;
+  try{
+    var r=await fetch(API+'/users/'+uid,{method:'DELETE',headers:apiH()});
+    ok=r.ok||r.status===404; // 404 = déjà supprimé, on continue
+  }catch(e){}
+  if(!ok){toast('Erreur','Impossible de supprimer le compte. Réessayez ou contactez le support.');return;}
+  // 3. Sign out Supabase (comptes OAuth)
+  try{if(window._supabase)await window._supabase.auth.signOut();}catch(e){}
+  // 4. Nettoyer Sentry
+  try{if(typeof setSentryUser==='function')setSentryUser(null);}catch(e){}
+  // 5. Vider timers et état mémoire
+  try{clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;}catch(e){}
+  try{clearInterval(_accountCheckTimer);_accountCheckTimer=null;}catch(e){}
+  // 6. Vider tout le stockage local
   try{localStorage.clear();sessionStorage.clear();}catch(e){}
   user=null;
   haptic(10);
-  toast('Compte supprimé','À bientôt');
-  setTimeout(function(){location.reload();},1500);
+  toast('Compte supprimé','Toutes vos données ont été effacées.');
+  setTimeout(function(){location.reload();},1800);
 }
 
 async function toggleTuteurMode(){
@@ -12088,6 +12236,10 @@ function openTuteurConfirmSheet(){
     +'</div>'
     +'</div>'
   );
+  // Injection dans <head> — seule méthode fiable sur iOS WebKit pour ::placeholder dynamique
+  var _ps=document.getElementById('_tcpStyle');
+  if(!_ps){_ps=document.createElement('style');_ps.id='_tcpStyle';document.head.appendChild(_ps);}
+  _ps.textContent='#tuteurConfirmPrenom::placeholder{color:#C7C7CC!important;-webkit-text-fill-color:#C7C7CC!important;opacity:1!important;font-weight:400!important;}';
   setTimeout(function(){var inp=g('tuteurConfirmPrenom');if(inp&&!inp.value)inp.focus();},300);
 }
 
@@ -12391,10 +12543,28 @@ function openAllFiltersSheet(){
   el.style.display='flex';
   document.body.style.overflow='hidden';
   _afSyncState();
+  _updateAfPerimRow();
   haptic(4);
+  var _afKbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
+    el.style.transition='padding-bottom .22s ease';
+    el.style.paddingBottom=h+'px';
+    setTimeout(function(){var fi=g('afVilleInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
+  };
+  var _afKbHide=function(){
+    el.style.transition='padding-bottom .18s ease';
+    el.style.paddingBottom='';
+  };
+  window.addEventListener('keyboardWillShow',_afKbShow);
+  window.addEventListener('keyboardWillHide',_afKbHide);
+  el._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_afKbShow);window.removeEventListener('keyboardWillHide',_afKbHide);};
 }
 function closeAllFiltersSheet(){
-  var el=g('bdAllFilters');if(el){el.style.display='none';document.body.style.overflow='';}
+  var el=g('bdAllFilters');
+  if(!el)return;
+  if(el._cleanupKb){el._cleanupKb();el._cleanupKb=null;}
+  el.style.transition='';el.style.paddingBottom='';
+  el.style.display='none';document.body.style.overflow='';
   _updateFiltersBadge();
 }
 function _afSyncState(){

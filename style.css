@@ -832,13 +832,13 @@ html.dk .fav2-sep{border-top-color:rgba(255,255,255,.1);}
   -webkit-tap-highlight-color:transparent;
 }
 .prof-badge:active{opacity:.7;transform:scale(.96);}
-.prof-badge-vrf{background:#fff;color:#059669;}
+.prof-badge-vrf{background:#fff;color:#FF6B2B;}
 .prof-badge-dip{background:#fff;color:#4F46E5;}
-.prof-badge-cas{background:#fff;color:#E8611A;}
+.prof-badge-cas{background:#fff;color:#10B981;}
 .prof-badge-fol{background:#fff;color:var(--or);}
-html.dk .prof-badge-vrf{background:#1C1C1E;color:#34D399;}
+html.dk .prof-badge-vrf{background:#1C1C1E;color:#FB923C;}
 html.dk .prof-badge-dip{background:#1C1C1E;color:#818CF8;}
-html.dk .prof-badge-cas{background:#1C1C1E;color:#FB923C;}
+html.dk .prof-badge-cas{background:#1C1C1E;color:#34D399;}
 html.dk .prof-badge-fol{background:#1C1C1E;color:var(--or);}
 html.dk .prof-badge{box-shadow:0 1px 3px rgba(0,0,0,.3),0 3px 10px rgba(0,0,0,.3);}
 /* ── ESPACE PROFESSEUR ── */
