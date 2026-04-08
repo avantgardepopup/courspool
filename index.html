@@ -1038,10 +1038,6 @@
           <div id="msgConvName" class="msg-conv-name"></div>
           <span id="msgTuteurBadge" style="display:none;font-size:10px;font-weight:800;color:#fff;background:#8B5CF6;border-radius:50px;padding:3px 9px;line-height:1.4;flex-shrink:0">Tuteur</span>
         </div>
-        <button id="btnShareCours" onclick="openShareCoursSheet()" class="msg-share-btn" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-          <span>Partager</span>
-        </button>
         <button id="btnSignalMsg" onclick="openSignalement('message',msgDestId,g('msgConvName').textContent)" title="Signaler" style="width:34px;height:34px;border-radius:50%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;-webkit-tap-highlight-color:transparent">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
         </button>
@@ -1054,8 +1050,8 @@
       </div>
       <div id="msgInputBar">
         <div class="msg-input-wrap">
-          <button id="msgAttachBtn" onclick="openMsgAttachment(false)" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:0;line-height:0;flex-shrink:0;-webkit-tap-highlight-color:transparent">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <button id="msgAttachBtn" onclick="openMsgAttachment(false)" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:0;flex-shrink:0;align-self:center;line-height:0;-webkit-tap-highlight-color:transparent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="24" height="24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           </button>
           <textarea id="msgInput" data-i18n-ph="msg_input" placeholder="Message…" rows="1"
             oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
@@ -1063,6 +1059,7 @@
           <button class="msg-send-btn" onclick="sendMsg()">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
+        </div>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 	"appName": "CoursPool",
 	"webDir": "www",
 	"server": {
+		"url": "https://courspool.vercel.app",
 		"cleartext": false,
 		"allowNavigation": [
 			"js.stripe.com",
