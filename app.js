@@ -5166,7 +5166,7 @@ function espLoadReceivedDocs(){
   var el=g('espReceivedDocs');if(!el)return;
   var uid=user&&user.id;if(!uid)return;
   el.innerHTML='<div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div><div class="skeleton" style="height:52px;border-radius:12px"></div>';
-  fetch(API+'/teacher/received-submissions',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+  fetch(API+'/teacher/received-submissions',{headers:apiH()}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(data){
     if(!Array.isArray(data)||!data.length){
       el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun document reçu pour l\'instant.</div>';
       return;
@@ -5191,7 +5191,7 @@ function espLoadReceivedDocs(){
         +'</div>';
     }).join('');
   }).catch(function(){
-    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Erreur de chargement.</div>';
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun document reçu pour l\'instant.</div>';
   });
 }
 
