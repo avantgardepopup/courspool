@@ -4731,10 +4731,6 @@ function _espTutoRender(){
   var s=_espTutoSteps[_espTutoStep];if(!s)return;
   var track=g('espTutoTrack');
   var dots=g('espTutoDots');
-  var btn=g('espTutoBtn');
-  var backBtn=g('espTutoBackBtn');
-  var isLast=_espTutoStep===_espTutoSteps.length-1;
-  var isFirst=_espTutoStep===0;
   if(track){
     track.innerHTML=''
       +'<div style="text-align:center;padding:28px 0 20px">'
@@ -4748,16 +4744,16 @@ function _espTutoRender(){
       return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
-  if(btn)btn.textContent=isLast?'Commencer\u00a0!':'Suivant';
-  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
 }
 
 function _espTutoInitSwipe(sheet){
   if(!sheet||sheet._tutoSwipeInit)return;
   sheet._tutoSwipeInit=true;
   var sx=0,sy=0;
-  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchstart',function(e){e.stopPropagation();sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});
   sheet.addEventListener('touchend',function(e){
+    e.stopPropagation();
     var dx=e.changedTouches[0].clientX-sx;
     var dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
