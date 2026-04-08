@@ -7712,12 +7712,18 @@ function openAddFilter(){
   document.body.style.overflow='hidden';
   // Keyboard avoidance — ajuster max-height du panel intérieur
   var panel=bd.querySelector('div');
+  var _fPanel=bd.querySelector('div');
   var _fKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
-    bd.style.paddingBottom=h+'px';
+    var h=(e&&e.keyboardHeight)||0;if(h<=0||!_fPanel)return;
+    _fPanel.style.paddingBottom=h+'px';
+    _fPanel.style.transition='padding-bottom .22s ease';
     setTimeout(function(){var fi=g('filterInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},60);
   };
-  var _fKbHide=function(){bd.style.paddingBottom='';};
+  var _fKbHide=function(){
+    if(!_fPanel)return;
+    _fPanel.style.paddingBottom='max(24px,env(safe-area-inset-bottom,24px))';
+    _fPanel.style.transition='padding-bottom .18s ease';
+  };
   window.addEventListener('keyboardWillShow',_fKbShow);
   window.addEventListener('keyboardWillHide',_fKbHide);
   bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_fKbShow);window.removeEventListener('keyboardWillHide',_fKbHide);};
@@ -7804,7 +7810,7 @@ function closeAddFilter(){
   var bd=g('bdFilter');
   if(!bd)return;
   if(bd._cleanupKb){bd._cleanupKb();bd._cleanupKb=null;}
-  bd.style.paddingBottom='';
+  var _p=bd.querySelector('div');if(_p){_p.style.paddingBottom='';_p.style.transition='';}
   bd.style.display='none';
   document.body.style.overflow='';
 }
@@ -12486,12 +12492,18 @@ function openAllFiltersSheet(){
   document.body.style.overflow='hidden';
   _afSyncState();
   haptic(4);
+  var _afPanel=el.querySelector('div');
   var _afKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
-    el.style.paddingBottom=h+'px';
+    var h=(e&&e.keyboardHeight)||0;if(h<=0||!_afPanel)return;
+    _afPanel.style.paddingBottom=h+'px';
+    _afPanel.style.transition='padding-bottom .22s ease';
     setTimeout(function(){var fi=g('afVilleInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},60);
   };
-  var _afKbHide=function(){el.style.paddingBottom='';};
+  var _afKbHide=function(){
+    if(!_afPanel)return;
+    _afPanel.style.paddingBottom='max(24px,env(safe-area-inset-bottom,24px))';
+    _afPanel.style.transition='padding-bottom .18s ease';
+  };
   window.addEventListener('keyboardWillShow',_afKbShow);
   window.addEventListener('keyboardWillHide',_afKbHide);
   el._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_afKbShow);window.removeEventListener('keyboardWillHide',_afKbHide);};
@@ -12500,7 +12512,7 @@ function closeAllFiltersSheet(){
   var el=g('bdAllFilters');
   if(!el)return;
   if(el._cleanupKb){el._cleanupKb();el._cleanupKb=null;}
-  el.style.paddingBottom='';
+  var _p=el.querySelector('div');if(_p){_p.style.paddingBottom='';_p.style.transition='';}
   el.style.display='none';document.body.style.overflow='';
   _updateFiltersBadge();
 }
