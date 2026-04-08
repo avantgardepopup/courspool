@@ -2569,7 +2569,7 @@ html.dk .msg-conv-header {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  background: #F2F2F7;
+  background: var(--wh);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: none;
 }
