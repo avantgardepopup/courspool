@@ -10973,13 +10973,13 @@ function buildStepDOM(){
   style.textContent='#bdCrStep{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;transition:padding-bottom .3s cubic-bezier(.22,.61,.36,1);}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}#bdCrStep input[type="date"],#bdCrStep input[type="time"]{-webkit-appearance:auto!important;}';
   document.head.appendChild(style);
   div.innerHTML=
-    '<div style="padding:max(20px,env(safe-area-inset-top,20px)) 20px 16px;display:flex;align-items:center;gap:14px;flex-shrink:0;border-bottom:1px solid var(--bdr);background:var(--wh)">'
-    +'<button id="stepBackBtn" onclick="stepBack()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
-    +'<div style="flex:1;height:4px;background:var(--bdr);border-radius:50px;overflow:hidden"><div id="stepFill" style="height:100%;background:var(--or);border-radius:50px;transition:width .4s cubic-bezier(.22,.61,.36,1);width:0%"></div></div>'
-    +'<button id="stepCloseBtn" onclick="closeCrStep()" style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:16px;flex-shrink:0">&#x2715;</button>'
+    '<div style="padding:max(14px,env(safe-area-inset-top,14px)) 20px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--wh)">'
+    +'<button id="stepBackBtn" onclick="stepBack()" style="display:flex;align-items:center;gap:2px;color:var(--or);border:none;background:transparent;font-family:inherit;font-size:16px;font-weight:500;cursor:pointer;padding:6px 0;min-width:72px;-webkit-tap-highlight-color:transparent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="19" height="19"><polyline points="15 18 9 12 15 6"/></svg><span id="stepBackLbl">Annuler</span></button>'
+    +'<button id="stepCloseBtn" onclick="closeCrStep()" style="width:28px;height:28px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:14px;-webkit-tap-highlight-color:transparent">&#x2715;</button>'
     +'</div>'
-    +'<div id="stepBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:32px 24px;display:flex;flex-direction:column;align-items:center;max-width:480px;margin:0 auto;width:100%"></div>'
-    +'<div id="stepCtaFoot" style="padding:16px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));flex-shrink:0;background:var(--wh);border-top:1px solid var(--bdr);max-width:480px;margin:0 auto;width:100%;transition:padding-bottom .25s cubic-bezier(.22,.61,.36,1)"><button id="stepCta" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:50px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.28);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">Continuer</button></div>';
+    +'<div style="padding:0 20px 10px;flex-shrink:0"><div style="height:2px;background:var(--bdr);border-radius:50px;overflow:hidden"><div id="stepFill" style="height:100%;background:var(--or);border-radius:50px;transition:width .4s cubic-bezier(.22,.61,.36,1);width:0%"></div></div></div>'
+    +'<div id="stepBody" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 24px 24px;display:flex;flex-direction:column;align-items:center;max-width:480px;margin:0 auto;width:100%"></div>'
+    +'<div id="stepCtaFoot" style="padding:12px 24px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));flex-shrink:0;background:var(--wh);max-width:480px;margin:0 auto;width:100%;transition:padding-bottom .25s cubic-bezier(.22,.61,.36,1)"><button id="stepCta" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:50px;padding:16px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.28);display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s">Continuer</button></div>';
   document.body.appendChild(div);
   g('stepBackBtn').onclick=stepBack;
   g('stepCloseBtn').onclick=closeCrStep;
@@ -11009,14 +11009,8 @@ function stepRender(idx){
   var _visioOffset=(_sd.mode==='visio'&&idx>STEP_DEFS.findIndex(function(s){return s.id==='lieu';}))&&idx>0?1:0;
   var _dispIdx=idx-_visioOffset;
   var fill=g('stepFill');if(fill)fill.style.width=Math.round(_dispIdx/_totalSteps*100)+'%';
-  var backBtn=g('stepBackBtn');
-  if(backBtn){
-    backBtn.style.opacity='1';
-    backBtn.innerHTML=idx===0
-      ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>';
-    backBtn.title=idx===0?t('wiz_back_cancel'):t('wiz_back_prev');
-  }
+  var backLbl=g('stepBackLbl');
+  if(backLbl)backLbl.textContent=(idx===0?'Annuler':'Retour');
   var cta=g('stepCta');if(cta){cta.textContent=idx===STEP_DEFS.length-1?t('wiz_publish'):t('wiz_continuer');cta.disabled=false;}
   var body=g('stepBody');if(!body)return;
 
@@ -11175,13 +11169,34 @@ function stepRender(idx){
     }
 
   }else if(step.id==='prix'){
-    var _lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
-    html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
-      +'<div style="display:flex;gap:12px">'
-      +'<div style="flex:1"><label style="'+_lbl+'">Prix total (\u20ac)</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepPrix" style="font-size:18px;font-weight:700;text-align:center;color:var(--ink)" type="number" placeholder="60" value="'+(_sd.prix||'')+'" enterkeyhint="next"></div></div>'
-      +'<div style="flex:1"><label style="'+_lbl+'">Places max</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepPlaces" style="font-size:18px;font-weight:700;text-align:center;color:var(--ink)" type="number" value="'+_sd.places+'" min="1" max="20" enterkeyhint="done"></div></div>'
+    var _stpBtn='width:48px;height:48px;border-radius:50%;border:1.5px solid var(--bdr);background:var(--wh);font-size:26px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s';
+    var _stpLbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:20px';
+    var _stpNum='font-size:64px;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1;min-width:100px;text-align:center';
+    html+='<div style="width:100%;display:flex;flex-direction:column;gap:28px">'
+      // Prix
+      +'<div style="text-align:center">'
+      +'<div style="'+_stpLbl+'">Prix total (\u20ac)</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
+      +'<button id="btnPrixM" style="'+_stpBtn+'">−</button>'
+      +'<div id="stepPrixDisp" style="'+_stpNum+'">'+(_sd.prix||0)+'</div>'
+      +'<button id="btnPrixP" style="'+_stpBtn+'">+</button>'
       +'</div>'
-      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:14px;padding:14px;text-align:center;display:none;border:1.5px solid rgba(255,107,43,.15)"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:26px;font-weight:800;color:var(--or)">-</div></div>'
+      +'<input type="hidden" id="stepPrix" value="'+(_sd.prix||0)+'">'
+      +'</div>'
+      // Séparateur
+      +'<div style="height:1px;background:var(--bdr)"></div>'
+      // Places
+      +'<div style="text-align:center">'
+      +'<div style="'+_stpLbl+'">Places max</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
+      +'<button id="btnPlcM" style="'+_stpBtn+'">−</button>'
+      +'<div id="stepPlacesDisp" style="'+_stpNum+'">'+(_sd.places||5)+'</div>'
+      +'<button id="btnPlcP" style="'+_stpBtn+'">+</button>'
+      +'</div>'
+      +'<input type="hidden" id="stepPlaces" value="'+(_sd.places||5)+'">'
+      +'</div>'
+      // Prix par élève
+      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:16px;padding:16px;text-align:center;border:1px solid rgba(255,107,43,.12);'+(_sd.prix>0?'':'display:none;')+'"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:32px;font-weight:800;color:var(--or)">'+(_sd.prix>0?Math.ceil(_sd.prix/Math.max(1,_sd.places))+'\u20ac':'-')+'</div></div>'
       +'</div>';
 
   }else if(step.id==='desc'){
@@ -11231,7 +11246,12 @@ function stepRender(idx){
   // Wire inputs
   function wire(id,fn){var e=g(id);if(e)e.addEventListener('input',fn);}
   wire('stepTitre',function(){_sd.titre=this.value;});
-  wire('stepDate',function(){_sd.date=this.value;});
+  wire('stepDate',function(){
+    _sd.date=this.value;
+    var today=new Date().toISOString().split('T')[0];
+    var ti=g('stepHeure');
+    if(ti){if(this.value===today){var n=new Date();ti.min=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}else ti.min='';}
+  });
   wire('stepHeure',function(){_sd.heure=this.value;});
   wire('stepDuree',function(){_sd.duree=parseInt(this.value)||60;});
   wire('stepLieu',function(){_sd.lieu=this.value;stepLieuSearch(this.value);});
@@ -11248,10 +11268,18 @@ function stepRender(idx){
 
   // +/- buttons
   var bpm=g('btnPrixM'),bpp=g('btnPrixP'),bplm=g('btnPlcM'),bplp=g('btnPlcP');
-  if(bpm)bpm.onclick=function(){var e=g('stepPrix');var v=Math.max(0,(parseInt(e.value)||0)-5);e.value=v;_sd.prix=v;stepPxCalc();haptic(4);};
-  if(bpp)bpp.onclick=function(){var e=g('stepPrix');var v=(parseInt(e.value)||0)+5;e.value=v;_sd.prix=v;stepPxCalc();haptic(4);};
-  if(bplm)bplm.onclick=function(){var e=g('stepPlaces');var v=Math.max(1,(parseInt(e.value)||1)-1);e.value=v;_sd.places=v;stepPxCalc();haptic(4);};
-  if(bplp)bplp.onclick=function(){var e=g('stepPlaces');var v=Math.min(20,(parseInt(e.value)||5)+1);e.value=v;_sd.places=v;stepPxCalc();haptic(4);};
+  function _stpUpd(field,v){
+    var inp=g(field==='prix'?'stepPrix':'stepPlaces');
+    var disp=g(field==='prix'?'stepPrixDisp':'stepPlacesDisp');
+    if(inp)inp.value=v;
+    if(disp)disp.textContent=v;
+    if(field==='prix')_sd.prix=v; else _sd.places=v;
+    stepPxCalc();haptic(4);
+  }
+  if(bpm)bpm.onclick=function(){_stpUpd('prix',Math.max(0,(_sd.prix||0)-5));};
+  if(bpp)bpp.onclick=function(){_stpUpd('prix',(_sd.prix||0)+5);};
+  if(bplm)bplm.onclick=function(){_stpUpd('places',Math.max(1,(_sd.places||1)-1));};
+  if(bplp)bplp.onclick=function(){_stpUpd('places',Math.min(20,(_sd.places||5)+1));};
 
   // Code regen
   var srg=g('stepCodeRegen');
@@ -11388,7 +11416,9 @@ function stepNext(){
     if(g('stepHeure'))_sd.heure=g('stepHeure').value;
     if(g('stepDuree'))_sd.duree=parseInt(g('stepDuree').value)||60;
     if(!_sd.date){toast('Date manquante','Choisissez une date');return;}
-    if(!_sd.heure){toast('Heure manquante','Choisissez une heure');return;}
+    if(!_sd.heure){toast('Heure manquante','Choisissez une heure de début');return;}
+    var _dt=new Date(_sd.date+'T'+_sd.heure);
+    if(_dt<=new Date()){toast('Date incohérente','Le cours doit être dans le futur');return;}
   }
   if(step.id==='lieu'){
     if(_sd.mode!=='visio'){
