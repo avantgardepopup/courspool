@@ -11782,8 +11782,7 @@ function _calBuildHeader(myCours){
       var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
       chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
         +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
-        +'<span class="cal-chip-num">'+d.getDate()+'</span>'
-        +(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')
+        +'<span class="cal-chip-num">'+d.getDate()+(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')+'</span>'
         +'</button>';
     }
     stripHtml='<div class="mes-cal-strip">'
