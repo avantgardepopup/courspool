@@ -4807,7 +4807,7 @@ var _espCurrentCode=null;
 
 function buildEspProf(){
   // Referme tous les tiroirs
-  ['espCard1','espCard2','espCard3','espCard4','espCard5'].forEach(function(id){
+  ['espCard1','espCard2','espCard3','espCard4','espCard5','espCard6'].forEach(function(id){
     var c=g(id);if(c)c.classList.remove('open');
   });
   // Charge le code (affiché dans le header de la card)
@@ -5039,6 +5039,39 @@ function espLoadStudents(){
         +rows
         +'</div>';
     }).join('');
+  });
+}
+
+function espLoadReceivedDocs(){
+  var el=g('espReceivedDocs');if(!el)return;
+  var uid=user&&user.id;if(!uid)return;
+  el.innerHTML='<div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div><div class="skeleton" style="height:52px;border-radius:12px"></div>';
+  fetch(API+'/teacher/received-submissions',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
+    if(!Array.isArray(data)||!data.length){
+      el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun document reçu pour l\'instant.</div>';
+      return;
+    }
+    var badge=g('espReceivedBadge');
+    if(badge){badge.textContent=data.length;badge.style.display='inline-flex';}
+    el.innerHTML=data.map(function(s){
+      var nm=s.student_name||s.user_name||s.userName||'Élève';
+      var ini=(nm[0]||'?').toUpperCase();
+      var dt=s.created_at?new Date(s.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+      return'<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:12px;margin-bottom:8px">'
+        +'<div style="width:38px;height:38px;border-radius:12px;background:rgba(34,192,105,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+        +'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.title||'Document sans titre')+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(nm)+(dt?' · '+dt:'')+'</div>'
+        +'</div>'
+        +(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:var(--wh);border:none;flex-shrink:0;-webkit-tap-highlight-color:transparent">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+        +'</a>':'')
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Erreur de chargement.</div>';
   });
 }
 
@@ -5749,19 +5782,49 @@ function openSendDocSheet(){
     +'<input id="_sendDocTitle" type="text" placeholder="Nom du document" class="esp-input" style="margin-bottom:10px">'
     +'<input id="_sendDocUrl" type="url" placeholder="Lien (Drive, Notion, Dropbox…)" class="esp-input" style="margin-bottom:16px">'
     +'<button onclick="mpfSubmitDocSheet(this)" class="esp2-btn-submit" style="width:100%">Envoyer</button>'
-    +'<button onclick="this.closest(\'[style*=rgba\\(0\\,0\\,0\\,.5\\)]\').remove()" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
-  // Keyboard avoidance — push sheet up when iOS keyboard opens
-  function _kbAdjust(){
+    +'<button id="_sendDocCancel" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+  // Keyboard avoidance — Capacitor (iOS) + visualViewport fallback
+  var _sdKbH=0;
+  function _sdKbApply(){
     if(!document.body.contains(bd))return;
+    if(_sdKbH>0){
+      bd.style.alignItems='flex-start';
+      bd.style.paddingTop=Math.max(0,window.innerHeight-_sdKbH-sheet.offsetHeight-16)+'px';
+    } else {
+      bd.style.alignItems='flex-end';
+      bd.style.paddingTop='0';
+    }
+  }
+  function _sdKbShow(e){_sdKbH=(e&&e.keyboardHeight)||0;_sdKbApply();}
+  function _sdKbHide(){_sdKbH=0;_sdKbApply();}
+  window.addEventListener('keyboardWillShow',_sdKbShow);
+  window.addEventListener('keyboardWillHide',_sdKbHide);
+  // Fallback visualViewport pour web
+  function _sdVpAdjust(){
+    if(!document.body.contains(bd)||_sdKbH>0)return;
     var kbH=window.visualViewport?Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop):0;
-    bd.style.paddingBottom=kbH>30?kbH+'px':'0px';
+    if(kbH>30){bd.style.alignItems='flex-start';bd.style.paddingTop=Math.max(0,window.innerHeight-kbH-sheet.offsetHeight-16)+'px';}
+    else{bd.style.alignItems='flex-end';bd.style.paddingTop='0';}
   }
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',_kbAdjust,{passive:true});
-    window.visualViewport.addEventListener('scroll',_kbAdjust,{passive:true});
+    window.visualViewport.addEventListener('resize',_sdVpAdjust,{passive:true});
+    window.visualViewport.addEventListener('scroll',_sdVpAdjust,{passive:true});
   }
-  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  bd.onclick=function(e){
+    if(e.target===bd){
+      window.removeEventListener('keyboardWillShow',_sdKbShow);
+      window.removeEventListener('keyboardWillHide',_sdKbHide);
+      bd.remove();
+    }
+  };
+  function _sdClose(){
+    window.removeEventListener('keyboardWillShow',_sdKbShow);
+    window.removeEventListener('keyboardWillHide',_sdKbHide);
+    bd.remove();
+  }
   bd.appendChild(sheet);document.body.appendChild(bd);
+  var cancelBtn=document.getElementById('_sendDocCancel');
+  if(cancelBtn)cancelBtn.onclick=_sdClose;
   setTimeout(function(){var inp=document.getElementById('_sendDocTitle');if(inp)inp.focus();},200);
 }
 
@@ -6452,6 +6515,7 @@ function toggleEsp2Card(id,section){
     if(section==='code')espLoadCode();
     if(section==='eleves')espLoadStudents();
     if(section==='annonces')espLoadAnnonces();
+    if(section==='received')espLoadReceivedDocs();
     if(section==='ressources'){espLoadResources();espLoadFiches();}
     if(section==='contenu')espLoadContenu();
     if(section==='mesCours')espLoadMesCours();
