@@ -1714,7 +1714,7 @@ html.dk .mes-cal-hd{background:#1C1C1E;border-color:rgba(255,255,255,.08);}
   background:var(--or);
   box-shadow:0 0 4px rgba(255,107,43,.6);
 }
-.cal-chip.cal-sel .cal-dot{background:#fff;box-shadow:0 0 4px rgba(255,255,255,.8);}
+.cal-chip.cal-sel .cal-dot{background:rgba(0,0,0,.22);box-shadow:none;}
 .mes-cal-scroll{
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:16px 16px 120px;
