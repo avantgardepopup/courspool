@@ -416,7 +416,7 @@ function _buildFavCard2Col(c,idx){
   // Red action behind the card
   var action=document.createElement('div');
   action.className='fav2-swipe-action';
-  action.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  action.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
   wrap.appendChild(action);
   var div=document.createElement('div');
   div.className='fav2-card';
@@ -612,7 +612,7 @@ function buildMesProfs(){
   if(empty)empty.style.display='none';
   if(!carousel)return;
   var _STATUT_LBL={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
-  var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
   var _delZone='<div style="position:absolute;right:0;top:0;bottom:0;width:88px;background:#FF3B30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:0 20px 20px 0;opacity:0;pointer-events:none">'+_trashSvg+'<span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.01em">Retirer</span></div>';
   function _profCardWrap(cardHtml){
     // Couche externe : ombre (pas overflow:hidden pour ne pas clipper l'ombre)
@@ -4728,12 +4728,12 @@ function _tpBuildTrustCards(p,pid){
   var _tcs='cursor:pointer;-webkit-tap-highlight-color:transparent';
   // Icône style popup : fond coloré solide + icône blanche + bordure blanche + ring 8px
   var _iIco='width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-  var _ior=_iIco+'background:#FF6B2B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(255,107,43,.18)';
-  var _iob=_iIco+'background:#4F46E5;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(79,70,229,.18)';
-  var _iog=_iIco+'background:#10B981;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(16,185,129,.18)';
-  var _icoIdW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
-  var _icoDipW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
-  var _icoShldW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var _ior=_iIco+'background:#FF6B2B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(255,107,43,.16)';
+  var _iob=_iIco+'background:#4F46E5;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(79,70,229,.16)';
+  var _iog=_iIco+'background:#10B981;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(16,185,129,.16)';
+  var _icoIdW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
+  var _icoDipW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var _icoShldW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   if(_isVrf){
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'identite\')">'
       +'<div style="'+_ior+'">'+_icoIdW+'</div>'
@@ -5875,7 +5875,7 @@ function openSendDocSheet(){
   sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
     +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
     +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
     +'</div>'
     +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Envoyer un document</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Partagez un fichier avec votre prof</div></div>'
@@ -6962,7 +6962,7 @@ function buildCrMatCircles(){
       var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
       if(lbl.length>9)lbl=lbl.slice(0,8)+'…';
       return'<div class="cr-mat-item'+(selKey===key?' on':'')+'" data-key="'+key+'" onclick="pickCrMat(\''+key+'\')">'
-        +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+        +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+icon+'</svg></div>'
         +'<span class="cr-mat-lbl">'+lbl+'</span>'
         +'</div>';
     }).join('');
@@ -8099,9 +8099,9 @@ var _espPickType='';
 
 function openMsgAttachment(isGroupe){
   _msgAttachIsGroupe=!!isGroupe;haptic(4);
-  var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
-  var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
-  var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+  var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+  var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
+  var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
   var opts=[
     {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
     {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
@@ -8475,11 +8475,11 @@ function updateVerifStatusBlock(){
   var secLbl=g('verifSectionLabel');
   if(!user||user.role!=='professeur'){block.style.display='none';if(secLbl)secLbl.style.display='none';return;}
   var _iIcoS='width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-  var _icoIdW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
+  var _icoIdW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
   var _btnSty='width:100%;border:none;border-radius:12px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px';
   var status=getCniStatus();
   var html='';
-  var _iorS=_iIcoS+'background:#FF6B2B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(255,107,43,.18)';
+  var _iorS=_iIcoS+'background:#FF6B2B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(255,107,43,.16)';
   if(status==='none'){
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iorS+'">'+_icoIdW2+'</div>'
@@ -8495,7 +8495,7 @@ function updateVerifStatusBlock(){
       +'</div>';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
-      +'<div style="'+_iIcoS+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(245,158,11,.18)">'+_icoIdW2+'</div>'
+      +'<div style="'+_iIcoS+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(245,158,11,.16)">'+_icoIdW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
@@ -8503,7 +8503,7 @@ function updateVerifStatusBlock(){
     var raison=esc(user.rejection_reason||'Document refusé');
     if(user)user.cni_uploaded=false;
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
-      +'<div style="'+_iIcoS+'background:#EF4444;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(239,68,68,.18)">'+_icoIdW2+'</div>'
+      +'<div style="'+_iIcoS+'background:#EF4444;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(239,68,68,.16)">'+_icoIdW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+raison+'</div></div>'
       +'<div class="tp-trust-badge" style="background:#FEF2F2;color:#991B1B">Refusé</div>'
       +'</div>'
@@ -8511,7 +8511,7 @@ function updateVerifStatusBlock(){
   } else if(status==='rejected_final'){
     var raison=esc(user.rejection_reason||'Non éligible');
     html='<div class="tp-trust-card">'
-      +'<div style="'+_iIcoS+'background:#9CA3AF;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(156,163,175,.18)">'+_icoIdW2+'</div>'
+      +'<div style="'+_iIcoS+'background:#9CA3AF;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(156,163,175,.16)">'+_icoIdW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+raison+'</div></div>'
       +'<div class="tp-trust-badge" style="background:#F3F4F6;color:#6B7280">Non éligible</div>'
       +'</div>';
@@ -8626,10 +8626,10 @@ function updateDiplomeStatusBlock(){
   if(!user||user.role!=='professeur'){block.style.display='none';return;}
   var status=getDiplomeStatus();
   var _iIcoD='width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-  var _icoDipW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var _icoDipW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
   var _btnDSty='width:100%;border:none;border-radius:12px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px';
   var html='';
-  var _iobS=_iIcoD+'background:#4F46E5;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(79,70,229,.18)';
+  var _iobS=_iIcoD+'background:#4F46E5;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(79,70,229,.16)';
   if(status==='none'){
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iobS+'">'+_icoDipW2+'</div>'
@@ -8647,7 +8647,7 @@ function updateDiplomeStatusBlock(){
     block.style.display='block';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
-      +'<div style="'+_iIcoD+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(245,158,11,.18)">'+_icoDipW2+'</div>'
+      +'<div style="'+_iIcoD+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(245,158,11,.16)">'+_icoDipW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
@@ -8675,9 +8675,9 @@ function updateCasierStatusBlock(){
   var status=getCasierStatus();
   var html='';
   var _iIcoC2='width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
-  var _icoShldW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var _icoShldW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   var _btnCSty='width:100%;border:none;border-radius:12px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px';
-  var _iogS2=_iIcoC2+'background:#10B981;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(16,185,129,.18)';
+  var _iogS2=_iIcoC2+'background:#10B981;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(16,185,129,.16)';
   if(status==='none'){
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iogS2+'">'+_icoShldW2+'</div>'
@@ -8695,7 +8695,7 @@ function updateCasierStatusBlock(){
     block.style.display='block';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
-      +'<div style="'+_iIcoC2+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 8px rgba(245,158,11,.18)">'+_icoShldW2+'</div>'
+      +'<div style="'+_iIcoC2+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 6px rgba(245,158,11,.16)">'+_icoShldW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
@@ -11020,7 +11020,7 @@ function stepRender(idx){
         if(lbl.length>9)lbl=lbl.slice(0,8)+'\u2026';
         var isSel=_sd.matiere_key===key;
         return'<div class="cr-mat-item'+(isSel?' on':'')+'" data-key="'+key+'" onclick="_stepPickMat(\''+key+'\',\''+escH(mat.label)+'\')" style="-webkit-tap-highlight-color:transparent">'
-          +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+          +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+icon+'</svg></div>'
           +'<span class="cr-mat-lbl">'+lbl+'</span>'
           +'</div>';
       }).join('');
