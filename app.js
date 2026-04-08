@@ -855,9 +855,10 @@ function openEnrollSheet(){
     +'<div style="font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Rejoindre un espace</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Entre le code partagé par ton professeur</div>'
     // Carte code — style ss-card, clean et premium
-    +'<div style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:10px;box-sizing:border-box">'
-      +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="12" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
+    +'<div id="_enrollCard" style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:6px;box-sizing:border-box;transition:box-shadow .18s">'
+      +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="6" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="_enrollLive(this)" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
     +'</div>'
+    +'<div id="_enrollHint" style="font-size:12px;color:var(--lite);padding:0 4px;margin-bottom:4px;min-height:18px;transition:opacity .15s"></div>'
     +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;line-height:1.5;padding:0 4px;margin-bottom:8px"></div>'
     +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:4px">Rejoindre</button>'
     +'<button onclick="if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
@@ -879,6 +880,29 @@ function openEnrollSheet(){
   window.addEventListener('keyboardWillShow',_ekbShow);
   window.addEventListener('keyboardWillHide',_ekbHide);
   bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);};
+}
+
+function _enrollLive(inp){
+  inp.value=inp.value.toUpperCase();
+  var v=inp.value.trim();
+  var hint=document.getElementById('_enrollHint');
+  var card=document.getElementById('_enrollCard');
+  var err=document.getElementById('_enrollErr');
+  if(err)err.style.display='none';
+  if(v.length===6){
+    // Complet — surbrillance orange
+    inp.style.color='#FF6B2B';
+    inp.style.webkitTextFillColor='#FF6B2B';
+    if(card)card.style.boxShadow='0 0 0 1.5px #FF6B2B,0 3px 14px rgba(255,107,43,.18)';
+    if(hint)hint.textContent='';
+  } else {
+    var isDk=document.documentElement.classList.contains('dk');
+    var inpColor=isDk?'#ffffff':'#111111';
+    inp.style.color=inpColor;
+    inp.style.webkitTextFillColor=inpColor;
+    if(card)card.style.boxShadow=isDk?'0 3px 16px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.07)':'0 3px 14px rgba(0,0,0,.11),0 0 0 .5px rgba(0,0,0,.06)';
+    if(hint)hint.textContent=v.length>0?'Le code fait exactement 6 caractères':'';
+  }
 }
 
 function submitEnrollSheet(){
@@ -4740,6 +4764,24 @@ function switchTpTab(tab){
     if(btn){if(on)btn.classList.add('on');else btn.classList.remove('on');}
     if(panel){if(on)panel.removeAttribute('hidden');else panel.setAttribute('hidden','');}
   });
+}
+
+function _tpCodeLive(inp){
+  inp.value=inp.value.toUpperCase();
+  var v=inp.value.trim();
+  var hint=g('tpCodeHint');
+  var row=g('tpEspaceRow');
+  var err=g('tpCodeError');
+  if(err)err.style.display='none';
+  if(v.length===6){
+    inp.style.color='#FF6B2B';
+    if(row)row.style.boxShadow='0 0 0 1.5px #FF6B2B';
+    if(hint)hint.textContent='';
+  } else {
+    inp.style.color='';
+    if(row)row.style.boxShadow='';
+    if(hint)hint.textContent=v.length>0?'Le code fait exactement 6 caractères':'';
+  }
 }
 
 function tpEnterCode(){

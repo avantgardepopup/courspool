@@ -1937,12 +1937,13 @@
         <div class="tp-espace-card">
           <div id="tpEspaceTitle" class="tp-espace-title"></div>
           <div class="tp-espace-desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
-          <div class="tp-espace-row">
+          <div id="tpEspaceRow" class="tp-espace-row">
             <input id="tpCodeInput" type="text" placeholder="Code d'accès" class="tp-code-input"
-              oninput="this.value=this.value.toUpperCase()" autocomplete="off" spellcheck="false" enterkeyhint="go">
+              maxlength="6" oninput="_tpCodeLive(this)" autocomplete="off" spellcheck="false" enterkeyhint="go">
             <button onclick="tpEnterCode()" class="tp-code-btn">Rejoindre</button>
           </div>
-          <div id="tpCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:6px"></div>
+          <div id="tpCodeHint" style="font-size:12px;color:#888;padding:4px 2px;min-height:18px"></div>
+          <div id="tpCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:2px"></div>
         </div>
       </div>
       <!-- Espace content (when enrolled) -->
