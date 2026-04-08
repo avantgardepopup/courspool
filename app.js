@@ -10608,27 +10608,24 @@ function updateVerifBand(){
   var status=getCniStatus();
   if(status==='none'){
     band.style.display='flex';
-    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub');
+    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub'),_vBI=g('verifBandIcon');
     if(_vBT)_vBT.textContent=window.t('verif_id_required');
     if(_vBS)_vBS.textContent=window.t('verif_id_tap');
-    band.style.background='var(--orp)';
-    band.style.borderColor='#FED7AA';
+    if(_vBI){_vBI.style.background='#FF6B2B';_vBI.style.boxShadow='0 0 0 3px rgba(255,107,43,.14)';}
     return;
   }
   if(status==='verified'){band.style.display='none';return;}
   if(status==='pending'||status==='rejected_retry'){
     band.style.display='flex';
-    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub');
+    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub'),_vBI=g('verifBandIcon');
     if(status==='pending'){
       if(_vBT)_vBT.textContent=window.t('verif_id_progress');
       if(_vBS)_vBS.textContent=window.t('verif_id_email24h');
-      band.style.background='#FFFBEB';
-      band.style.borderColor='#FDE68A';
+      if(_vBI){_vBI.style.background='#F59E0B';_vBI.style.boxShadow='0 0 0 3px rgba(245,158,11,.14)';}
     } else {
       if(_vBT)_vBT.textContent=window.t('verif_id_rejected');
       if(_vBS)_vBS.textContent=window.t('verif_id_resubmit');
-      band.style.background='#FEF2F2';
-      band.style.borderColor='#FECACA';
+      if(_vBI){_vBI.style.background='#EF4444';_vBI.style.boxShadow='0 0 0 3px rgba(239,68,68,.14)';}
     }
   }
 }

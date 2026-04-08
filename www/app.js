@@ -416,7 +416,7 @@ function _buildFavCard2Col(c,idx){
   // Red action behind the card
   var action=document.createElement('div');
   action.className='fav2-swipe-action';
-  action.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  action.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
   wrap.appendChild(action);
   var div=document.createElement('div');
   div.className='fav2-card';
@@ -612,7 +612,7 @@ function buildMesProfs(){
   if(empty)empty.style.display='none';
   if(!carousel)return;
   var _STATUT_LBL={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
-  var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
   var _delZone='<div style="position:absolute;right:0;top:0;bottom:0;width:88px;background:#FF3B30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:0 20px 20px 0;opacity:0;pointer-events:none">'+_trashSvg+'<span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.01em">Retirer</span></div>';
   function _profCardWrap(cardHtml){
     // Couche externe : ombre (pas overflow:hidden pour ne pas clipper l'ombre)
@@ -2808,15 +2808,11 @@ function buildAccLists(){
   lf.style.minHeight='10px';
   if(!fIds.length){
     lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
-      +'<div style="position:relative;width:80px;height:80px;margin:0 auto 20px">'
-      +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
+      +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
       +'</div>'
-      +'<div style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--bg)">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>'
-      +'</div></div>'
-      +'<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alert\u00e9 d\u00e8s qu\'un nouveau cours est publi\u00e9.</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
       +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
       +'</div>';
   } else {
@@ -2854,10 +2850,10 @@ function buildAccLists(){
     if(!folRows.trim()){
       // Tous les P[id] sont null — afficher empty state via innerHTML
       lf.innerHTML='<div style="text-align:center;padding:48px 24px">'
-        +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.6" stroke-linecap="round" width="36" height="36"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
+        +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
         +'</div>'
-        +'<div style="font-size:18px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
         +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
         +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
         +'</div>';
@@ -4705,6 +4701,19 @@ function openPrFull(pid){
   if(g('tpScroll'))g('tpScroll').scrollTop=0;
 }
 
+function _certCard(grad,glow,ico,name,sub,btn,clickFn){
+  var outerAttr=clickFn?' onclick="'+clickFn+'" style="cursor:pointer;-webkit-tap-highlight-color:transparent;display:block"':'';
+  return '<div'+outerAttr+'>'
+    +'<div style="background:'+grad+';border-radius:20px;padding:24px 16px 20px;text-align:center;box-shadow:0 8px 28px '+glow+';'+(btn?'margin-bottom:10px':'margin-bottom:0')+'">'
+    +'<div style="font-size:9px;font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:14px">✦ CoursPool Certifié ✦</div>'
+    +'<div style="display:inline-flex;margin-bottom:14px">'
+    +'<div style="width:72px;height:72px;background:rgba(255,255,255,.18);border-radius:22px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.28);box-shadow:0 0 0 6px rgba(255,255,255,.07)">'+ico+'</div>'
+    +'</div>'
+    +'<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em">'+name+'</div>'
+    +(sub?'<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);margin-top:5px">'+sub+'</div>':'')
+    +'</div>'+(btn||'')+'</div>';
+}
+
 function _tpBuildTrustCards(p,pid){
   var box=g('tpTrustCards');if(!box)return;
   var title=g('tpCertTitle');
@@ -4712,27 +4721,35 @@ function _tpBuildTrustCards(p,pid){
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
   var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
   var h='';
-  var _tcSty='cursor:pointer;-webkit-tap-highlight-color:transparent';
+  var _tcs='cursor:pointer;-webkit-tap-highlight-color:transparent';
+  // Icône style popup : fond coloré solide + icône blanche + bordure blanche + ring 8px
+  var _iIco='width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var _ior=_iIco+'background:#FF6B2B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(255,107,43,.14)';
+  var _iob=_iIco+'background:#4F46E5;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(79,70,229,.14)';
+  var _iog=_iIco+'background:#10B981;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(16,185,129,.14)';
+  var _icoIdW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
+  var _icoDipW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var _icoShldW='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="15" height="15"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
   if(_isVrf){
-    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'identite\')">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg></div>'
+    h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'identite\')">'
+      +'<div style="'+_ior+'">'+_icoIdW+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié</div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié ›</div>'
       +'</div>';
   }
   if(_isDip){
     var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
-    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'diplome\')">'
-      +'<div class="tp-trust-icon" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3C3489" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
+    h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'diplome\')">'
+      +'<div style="'+_iob+'">'+_icoDipW+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">Vérifié ›</div>'
       +'</div>';
   }
   if(_isCas){
-    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'confiance\')">'
-      +'<div class="tp-trust-icon" style="background:#ECFDF5"><svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
+    h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'confiance\')">'
+      +'<div style="'+_iog+'">'+_icoShldW+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Casier judiciaire vérifié</div></div>'
-      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Certifié</div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Certifié ›</div>'
       +'</div>';
   }
   box.innerHTML=h;
@@ -5853,8 +5870,8 @@ function openSendDocSheet(){
   sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
   sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
     +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
-    +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
+    +'<div style="width:42px;height:42px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
     +'</div>'
     +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Envoyer un document</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Partagez un fichier avec votre prof</div></div>'
@@ -6941,7 +6958,7 @@ function buildCrMatCircles(){
       var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
       if(lbl.length>9)lbl=lbl.slice(0,8)+'…';
       return'<div class="cr-mat-item'+(selKey===key?' on':'')+'" data-key="'+key+'" onclick="pickCrMat(\''+key+'\')">'
-        +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+        +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+icon+'</svg></div>'
         +'<span class="cr-mat-lbl">'+lbl+'</span>'
         +'</div>';
     }).join('');
@@ -7473,9 +7490,9 @@ async function loadConversations(){
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.innerHTML='<div style="text-align:center;padding:56px 24px">'
-        +'<div style="width:72px;height:72px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="30" height="30"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+      lm.innerHTML='<div style="text-align:center;padding:60px 24px">'
+        +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
         +'</div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
         +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
@@ -8078,9 +8095,9 @@ var _espPickType='';
 
 function openMsgAttachment(isGroupe){
   _msgAttachIsGroupe=!!isGroupe;haptic(4);
-  var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
-  var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
-  var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+  var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+  var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
+  var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
   var opts=[
     {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
     {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
@@ -8453,42 +8470,45 @@ function updateVerifStatusBlock(){
   if(!block)return;
   var secLbl=g('verifSectionLabel');
   if(!user||user.role!=='professeur'){block.style.display='none';if(secLbl)secLbl.style.display='none';return;}
-  var _icoId='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
+  var _iIcoS='width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var _icoIdW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>';
+  var _btnSty='width:100%;border:none;border-radius:12px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px';
   var status=getCniStatus();
   var html='';
+  var _iorS=_iIcoS+'background:#FF6B2B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(255,107,43,.14)';
   if(status==='none'){
-    html='<div class="tp-trust-card" style="margin-bottom:10px">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8">'+_icoId.replace('stroke-width','stroke="var(--or)" stroke-width')+'</div>'
+    html='<div class="tp-trust-card" style="margin-bottom:8px">'
+      +'<div style="'+_iorS+'">'+_icoIdW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Envoyez votre pièce d\'identité</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:var(--or)">À obtenir</div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">À obtenir</div>'
       +'</div>'
-      +'<button onclick="openCniSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Commencer la vérification</button>';
+      +'<button onclick="openCniSheet()" style="'+_btnSty+';background:var(--or);color:#fff">Commencer la vérification</button>';
   } else if(status==='verified'){
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8">'+_icoId.replace('stroke-width','stroke="#FF6B2B" stroke-width')+'</div>'
+      +'<div style="'+_iorS+'">'+_icoIdW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié</div>'
       +'</div>';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#FFF0E8">'+_icoId.replace('stroke-width','stroke="#FF6B2B" stroke-width')+'</div>'
+      +'<div style="'+_iIcoS+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(245,158,11,.14)">'+_icoIdW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
   } else if(status==='rejected_retry'){
-    var raison=esc(user.rejection_reason||'');
-    html='<div class="tp-trust-card" style="margin-bottom:10px">'
-      +'<div class="tp-trust-icon" style="background:#FEF2F2">'+_icoId.replace('stroke-width','stroke="#EF4444" stroke-width')+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+(raison?esc(raison):'Document refusé')+'</div></div>'
+    var raison=esc(user.rejection_reason||'Document refusé');
+    if(user)user.cni_uploaded=false;
+    html='<div class="tp-trust-card" style="margin-bottom:8px">'
+      +'<div style="'+_iIcoS+'background:#EF4444;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(239,68,68,.14)">'+_icoIdW2+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+raison+'</div></div>'
       +'<div class="tp-trust-badge" style="background:#FEF2F2;color:#991B1B">Refusé</div>'
       +'</div>'
-      +'<button onclick="openCniSheet()" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Renvoyer ma pièce d\'identité</button>';
-    if(user)user.cni_uploaded=false;
+      +'<button onclick="openCniSheet()" style="'+_btnSty+';background:#EF4444;color:#fff">Renvoyer ma pièce d\'identité</button>';
   } else if(status==='rejected_final'){
-    var raison=esc(user.rejection_reason||'');
+    var raison=esc(user.rejection_reason||'Non éligible');
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#F3F4F6">'+_icoId.replace('stroke-width','stroke="#6B7280" stroke-width')+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+(raison?esc(raison):'Non éligible')+'</div></div>'
+      +'<div style="'+_iIcoS+'background:#9CA3AF;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(156,163,175,.14)">'+_icoIdW2+'</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+raison+'</div></div>'
       +'<div class="tp-trust-badge" style="background:#F3F4F6;color:#6B7280">Non éligible</div>'
       +'</div>';
   }
@@ -8601,26 +8621,29 @@ function updateDiplomeStatusBlock(){
   if(!block)return;
   if(!user||user.role!=='professeur'){block.style.display='none';return;}
   var status=getDiplomeStatus();
-  var _icoDip='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var _iIcoD='width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var _icoDipW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+  var _btnDSty='width:100%;border:none;border-radius:12px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px';
   var html='';
+  var _iobS=_iIcoD+'background:#4F46E5;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(79,70,229,.14)';
   if(status==='none'){
-    html='<div class="tp-trust-card" style="margin-bottom:10px">'
-      +'<div class="tp-trust-icon" style="background:#EFF6FF">'+_icoDip.replace('stroke-width','stroke="#3B82F6" stroke-width')+'</div>'
+    html='<div class="tp-trust-card" style="margin-bottom:8px">'
+      +'<div style="'+_iobS+'">'+_icoDipW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Envoyez votre diplôme</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EFF6FF;color:#1D4ED8">À obtenir</div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">À obtenir</div>'
       +'</div>'
-      +'<button onclick="openDiplomeSheet()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon diplôme</button>';
+      +'<button onclick="openDiplomeSheet()" style="'+_btnDSty+';background:#4F46E5;color:#fff">Envoyer mon diplôme</button>';
     block.style.display='block';
   } else if(status==='verified'){
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#EEF2FF">'+_icoDip.replace('stroke-width','stroke="#3C3489" stroke-width')+'</div>'
+      +'<div style="'+_iobS+'">'+_icoDipW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Badge affiché sur votre profil</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">Vérifié</div>'
       +'</div>';
     block.style.display='block';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#FFFBEB">'+_icoDip.replace('stroke-width','stroke="#F59E0B" stroke-width')+'</div>'
+      +'<div style="'+_iIcoD+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(245,158,11,.14)">'+_icoDipW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
@@ -8647,25 +8670,28 @@ function updateCasierStatusBlock(){
   if(!user||user.role!=='professeur'){block.style.display='none';return;}
   var status=getCasierStatus();
   var html='';
-  var _icoShld='<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var _iIcoC2='width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var _icoShldW2='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  var _btnCSty='width:100%;border:none;border-radius:12px;padding:11px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-top:12px';
+  var _iogS2=_iIcoC2+'background:#10B981;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(16,185,129,.14)';
   if(status==='none'){
-    html='<div class="tp-trust-card" style="margin-bottom:10px">'
-      +'<div class="tp-trust-icon" style="background:#ECFDF5">'+_icoShld.replace('stroke-width','stroke="#10B981" stroke-width')+'</div>'
+    html='<div class="tp-trust-card" style="margin-bottom:8px">'
+      +'<div style="'+_iogS2+'">'+_icoShldW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Envoyez votre attestation</div></div>'
       +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#059669">À obtenir</div>'
       +'</div>'
-      +'<button onclick="openCasierSheet()" style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:10px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Envoyer mon attestation</button>';
+      +'<button onclick="openCasierSheet()" style="'+_btnCSty+';background:#10B981;color:#fff">Envoyer mon attestation</button>';
     block.style.display='block';
   } else if(status==='verified'){
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#ECFDF5">'+_icoShld.replace('stroke-width','stroke="#10B981" stroke-width')+'</div>'
+      +'<div style="'+_iogS2+'">'+_icoShldW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Badge affiché sur votre profil</div></div>'
       +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Vérifié</div>'
       +'</div>';
     block.style.display='block';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
-      +'<div class="tp-trust-icon" style="background:#FFFBEB">'+_icoShld.replace('stroke-width','stroke="#F59E0B" stroke-width')+'</div>'
+      +'<div style="'+_iIcoC2+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(245,158,11,.14)">'+_icoShldW2+'</div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
       +'</div>';
@@ -10582,27 +10608,24 @@ function updateVerifBand(){
   var status=getCniStatus();
   if(status==='none'){
     band.style.display='flex';
-    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub');
+    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub'),_vBI=g('verifBandIcon');
     if(_vBT)_vBT.textContent=window.t('verif_id_required');
     if(_vBS)_vBS.textContent=window.t('verif_id_tap');
-    band.style.background='var(--orp)';
-    band.style.borderColor='#FED7AA';
+    if(_vBI){_vBI.style.background='#FF6B2B';_vBI.style.boxShadow='0 0 0 3px rgba(255,107,43,.14)';}
     return;
   }
   if(status==='verified'){band.style.display='none';return;}
   if(status==='pending'||status==='rejected_retry'){
     band.style.display='flex';
-    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub');
+    var _vBT=g('verifBandTitle'),_vBS=g('verifBandSub'),_vBI=g('verifBandIcon');
     if(status==='pending'){
       if(_vBT)_vBT.textContent=window.t('verif_id_progress');
       if(_vBS)_vBS.textContent=window.t('verif_id_email24h');
-      band.style.background='#FFFBEB';
-      band.style.borderColor='#FDE68A';
+      if(_vBI){_vBI.style.background='#F59E0B';_vBI.style.boxShadow='0 0 0 3px rgba(245,158,11,.14)';}
     } else {
       if(_vBT)_vBT.textContent=window.t('verif_id_rejected');
       if(_vBS)_vBS.textContent=window.t('verif_id_resubmit');
-      band.style.background='#FEF2F2';
-      band.style.borderColor='#FECACA';
+      if(_vBI){_vBI.style.background='#EF4444';_vBI.style.boxShadow='0 0 0 3px rgba(239,68,68,.14)';}
     }
   }
 }
@@ -10990,7 +11013,7 @@ function stepRender(idx){
         if(lbl.length>9)lbl=lbl.slice(0,8)+'\u2026';
         var isSel=_sd.matiere_key===key;
         return'<div class="cr-mat-item'+(isSel?' on':'')+'" data-key="'+key+'" onclick="_stepPickMat(\''+key+'\',\''+escH(mat.label)+'\')" style="-webkit-tap-highlight-color:transparent">'
-          +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+          +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+icon+'</svg></div>'
           +'<span class="cr-mat-lbl">'+lbl+'</span>'
           +'</div>';
       }).join('');
