@@ -12050,32 +12050,44 @@ var _ssFocusedCard=null,_ssCurrentKbH=0;
 var _ssKbShowFn=null,_ssKbHideFn=null;
 function _ssOnFocus(inp){
   _ssFocusedCard=inp.closest('.ss-card')||null;
-  // Keyboard already visible → re-apply shift for new focused card
-  if(_ssCurrentKbH>0)_ssApplyKb(_ssCurrentKbH);
+  // Keyboard already visible → re-scroll for new focused card
+  if(_ssCurrentKbH>0)_ssScrollToFocused(_ssCurrentKbH);
 }
 function _ssApplyKb(kbH){
   _ssCurrentKbH=kbH;
   var ov=g('smartSearchOverlay');if(!ov||!ov.classList.contains('open'))return;
   var body=g('ssBody');if(!body)return;
-  if(kbH>0&&_ssFocusedCard){
-    var cards=ov.querySelectorAll('.ss-card');
-    var lastCard=cards.length?cards[cards.length-1]:_ssFocusedCard;
-    var lastRect=lastCard.getBoundingClientRect();
-    var focusedRect=_ssFocusedCard.getBoundingClientRect();
-    var visibleBottom=window.innerHeight-kbH-24;
-    // Shift enough to: show last card fully AND give focused card 60px above keyboard
-    var shift=Math.max(0,lastRect.bottom-visibleBottom,focusedRect.bottom-(visibleBottom-60));
-    body.style.transform='translateY(-'+shift+'px)';
-    body.style.transition='transform .22s ease';
-  } else {
-    body.style.transform='';
-    body.style.transition='';
+  // Abandon translateY — expand paddingBottom so content can scroll above keyboard
+  body.style.transform='';body.style.transition='';
+  if(kbH>0){
+    body.style.paddingBottom=(kbH+80)+'px';
+    _ssScrollToFocused(kbH);
+  }else{
+    body.style.paddingBottom='';
   }
+}
+function _ssScrollToFocused(kbH){
+  if(!_ssFocusedCard)return;
+  var ov=g('smartSearchOverlay');if(!ov)return;
+  // Delay 80ms for padding reflow before reading rects
+  setTimeout(function(){
+    if(!_ssFocusedCard||!ov.classList.contains('open'))return;
+    var rect=_ssFocusedCard.getBoundingClientRect();
+    var visBottom=window.innerHeight-kbH-12;
+    // Scroll just enough to show the focused card 12px above keyboard
+    if(rect.bottom>visBottom){
+      ov.scrollTop=ov.scrollTop+(rect.bottom-visBottom);
+    }
+    // Also make sure card top hasn't scrolled off screen
+    var rect2=_ssFocusedCard.getBoundingClientRect();
+    var minTop=60;// below the ss-top-bar (~56px)
+    if(rect2.top<minTop){ov.scrollTop=Math.max(0,ov.scrollTop-(minTop-rect2.top));}
+  },80);
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
   ov.style.display='flex';ov.scrollTop=0;
-  var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';}
+  var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';_ssB.style.paddingBottom='';}
   ov.offsetHeight;
   ov.classList.add('open');
   // Pré-remplir depuis la recherche en cours
