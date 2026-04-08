@@ -717,6 +717,8 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 .fav-cours-card-price span{font-size:11px;font-weight:400;color:var(--lite);}
 /* Placeholder inputs — gris clair pour distinguer du texte saisi */
 #tuteurConfirmPrenom::placeholder{color:#C7C7CC;font-weight:400;-webkit-text-fill-color:#C7C7CC;}
+#enfantPrenomInput{-webkit-text-fill-color:var(--ink);}
+#enfantPrenomInput::placeholder{color:#C7C7CC;-webkit-text-fill-color:#C7C7CC;font-weight:400;opacity:1;}
 /* Card prof dans carrousel */
 .fav-prof-card{
   flex:0 0 160px;scroll-snap-align:start;
