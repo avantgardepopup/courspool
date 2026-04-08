@@ -6753,13 +6753,156 @@ function openCr(){
     return;
   }
   var today=new Date().toLocaleDateString('fr-CA',{timeZone:'Europe/Paris'});
-  g('crDate').min=today;openM('bdCr');
+  g('crDate').min=today;buildCrMatCircles();openM('bdCr');
 }
 function closeCr(){closeM('bdCr');}
 
+// ── Icônes matières (SVG path strings) ──────────────────────────────────────
+var CR_MAT_ICONS={
+  maths:'<path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 15l2 2-2 2"/>',
+  stats:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="17" rx="1"/>',
+  physique:'<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/>',
+  chimie:'<path d="M9 3h6v6l3 9H6L9 9V3z"/><line x1="6" y1="6" x2="18" y2="6"/>',
+  svt:'<path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M12 12C12 7 7 5 3 7"/><path d="M12 12c0-5 5-7 9-5"/>',
+  astro:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+  geologie:'<path d="M2 20l10-16 10 16H2z"/><path d="M6 14h12"/>',
+  medecine:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  ecologie:'<path d="M17 8C8 10 5.9 16.17 3.82 19.98M3 2c2 5 6 7 10 7s8-2 9-6c-3 0-6 2-8 2-4 0-7-3-11-3z"/>',
+  informatique:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  python:'<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/><path d="M11 7h4a2 2 0 012 2v4"/><line x1="7" y1="11" x2="7" y2="17"/><line x1="4" y1="14" x2="10" y2="14"/>',
+  javascript:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8v5a3 3 0 006 0"/><path d="M13 13a2 2 0 104 0v-5"/>',
+  devweb:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="7 9 12 14 17 9"/>',
+  data:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>',
+  ia:'<path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.53A3 3 0 016 9.5a3 3 0 010-6H9.5z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.53A3 3 0 0118 9.5a3 3 0 000-6H14.5z"/>',
+  electronique:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/>',
+  design:'<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+  cyber:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  nocode:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  blockchain:'<circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><circle cx="6" cy="18" r="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="18" y1="8" x2="18" y2="16"/><line x1="16" y1="18" x2="8" y2="18"/><line x1="6" y1="16" x2="6" y2="8"/>',
+  francais:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  anglais:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
+  espagnol:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>',
+  allemand:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h2l3 4-3 4H9M13 8h2"/>',
+  italien:'<circle cx="12" cy="12" r="10"/><path d="M8 8h8M10 12h6M8 16h8"/>',
+  portugais:'<path d="M21 10a9 7 0 11-18 0 9 7 0 0118 0z"/><path d="M12 3v14"/><path d="M3 10h18"/>',
+  arabe:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h5"/>',
+  chinois:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="8" x2="12" y2="14"/>',
+  japonais:'<circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/>',
+  russe:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h4a2 2 0 010 4H8m0 0h4.5a2 2 0 010 4H8V9z"/>',
+  coreen:'<circle cx="12" cy="12" r="10"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="12" y1="7" x2="12" y2="17"/>',
+  hindi:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="10" y1="13" x2="14" y2="13"/>',
+  latin:'<path d="M4 4h16M8 4v16M8 12h8"/>',
+  lsf:'<path d="M18 11V6a2 2 0 00-4 0v1M14 7V4a2 2 0 00-4 0v3M10 7V5a2 2 0 00-4 0v6"/><path d="M6 11v3a6 6 0 0012 0v-3"/>',
+  philo:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  ecriture:'<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L3 14.67V21h6.33l10.06-10.06a5.5 5.5 0 000-7.78z"/><line x1="16" y1="5" x2="19" y2="8"/>',
+  theatre:'<path d="M2 10s3-3 3-8c2.5 2.5 5 4 9 4s6.5-1.5 9-4c0 5 3 8 3 8"/><path d="M2 10s3 3 3 8c2.5-2.5 5-4 9-4s6.5 1.5 9 4c0-5 3-8 3-8"/>',
+  cinema:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="5" y1="5" x2="5" y2="19"/><line x1="9" y1="5" x2="9" y2="19"/><line x1="1" y1="10" x2="5" y2="10"/><line x1="9" y1="10" x2="16" y2="10"/><line x1="1" y1="14" x2="5" y2="14"/><line x1="9" y1="14" x2="16" y2="14"/>',
+  bd:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h8M8 14h5"/>',
+  dessin:'<path d="M2 20h20M5 20V10M12 20V4M19 20v-6"/><circle cx="12" cy="2" r="2"/>',
+  peinture:'<circle cx="13.5" cy="6.5" r="2.5"/><path d="M17.5 12c2.5 2.5 2.5 7 0 9.5-2.5 2.5-7 2.5-9.5 0M6 2c3 0 5 2 7 4-1.5 1.5-3 3-4 5C7 9 5 7 2 6c2-2 4-4 4-4z"/>',
+  aquarelle:'<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>',
+  arts:'<circle cx="12" cy="12" r="3"/><path d="M12 3a9 9 0 100 18A9 9 0 0012 3z"/><path d="M12 8a1 1 0 100-2 1 1 0 000 2zM17 12a1 1 0 100-2 1 1 0 000 2zM12 17a1 1 0 100-2 1 1 0 000 2zM7 12a1 1 0 100-2 1 1 0 000 2z"/>',
+  calligraphie:'<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
+  photo:'<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>',
+  illustration:'<path d="M3 17l5-5 4 4 5-5 4 4"/><rect x="3" y="3" width="18" height="14" rx="2"/>',
+  musique:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  piano:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><rect x="5" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="11" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="17" y="4" width="3" height="6" rx="1" fill="currentColor"/>',
+  guitare:'<path d="M6 3c3 0 6 3 6 7 0 2-1 3-2.5 4L14 19a2.5 2.5 0 01-3.5 3.5L6 17c-1 1.5-2 2.5-4 2.5C3 17 3 14 6 11c-1-1.5-2-3-2-4.5C4 4.5 5 3 6 3z"/><circle cx="14" cy="5" r="2"/>',
+  chant:'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+  batterie:'<path d="M2 18h20M4 10h16M8 6h8"/><circle cx="7" cy="10" r="2"/><circle cx="17" cy="10" r="2"/><circle cx="12" cy="18" r="3"/>',
+  violon:'<path d="M12 3c-1.5 0-3 1.5-3 4s1.5 4 3 4 3-1.5 3-4-1.5-4-3-4z"/><path d="M9 7L5 18M15 7l4 11"/><path d="M7 14h10"/><circle cx="12" cy="20" r="2"/>',
+  saxo:'<path d="M14 3c1.5 0 2 1 2 2v8a4 4 0 01-8 0"/><path d="M8 5c-1.5 0-2 1-2 2v6"/><path d="M10 10h4M10 14h3"/>',
+  histoire:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
+  psycho:'<path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.53A3 3 0 016 9.5a3 3 0 010-6H9.5z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.53A3 3 0 0118 9.5a3 3 0 000-6H14.5z"/>',
+  socio:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+  geographie:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>',
+  sciencespol:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>',
+  anthropo:'<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>',
+  economie:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  compta:'<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/>',
+  finance:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  marketing:'<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.4 4.6 4 8 4-1-4.8 4-8.5 9-6.5.7.7 2 2 2 2z"/>',
+  droit:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  entrepreneuriat:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+  gestion:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  communication:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/>',
+  rh:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+  immo:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  architecture:'<path d="M3 21h18M3 18h18M3 7l9-4 9 4M4 18V8M20 18V8M12 4v14"/>',
+  prepa:'<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>',
+  pass:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  sciencespo:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',
+  toefl:'<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+  gmat:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="13" y2="12"/>',
+  sport:'<circle cx="12" cy="7" r="4"/><path d="M7 15h10a2 2 0 012 2v2H5v-2a2 2 0 012-2z"/>',
+  fitness:'<path d="M6 8h2.5a1 1 0 001-1V4a1 1 0 00-1-1H6a1 1 0 00-1 1v3a1 1 0 001 1zM15.5 8H18a1 1 0 001-1V4a1 1 0 00-1-1h-2.5a1 1 0 00-1 1v3a1 1 0 001 1z"/><line x1="5" y1="6" x2="2" y2="6"/><line x1="22" y1="6" x2="19" y2="6"/><line x1="8.5" y1="6" x2="15.5" y2="6"/>',
+  yoga:'<circle cx="12" cy="4" r="2"/><path d="M6.5 18h11M12 14l-5 4M12 14l5 4M12 7v7M7 10l5 4M17 10l-5 4"/>',
+  martial:'<path d="M12 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z"/>',
+  danse:'<circle cx="12" cy="4" r="2"/><path d="M9 8l-2 8M15 8l2 8M7 16l5 4 5-4"/><path d="M9 8h6"/>',
+  natation:'<path d="M2 12c.6.5 1.2 1 2.5 1C7 13 7 11 9.5 11s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 7c.6.5 1.2 1 2.5 1C7 8 7 6 9.5 6s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 17c.6.5 1.2 1 2.5 1C7 18 7 16 9.5 16s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/>',
+  tennis:'<circle cx="12" cy="12" r="10"/><path d="M2.5 12h19M12 2.5c-4 6-4 13 0 19M12 2.5c4 6 4 13 0 19"/>',
+  football:'<circle cx="12" cy="12" r="10"/><path d="M12 2l3 7H8l3-7zM4.5 7.5l5 3.5M19.5 7.5l-5 3.5M2 16l5-2M22 16l-5-2M10 22l2-6 2 6"/>',
+  basket:'<circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.9 4.9c4 4 4 10.2 0 14.2M19.1 4.9c-4 4-4 10.2 0 14.2"/>',
+  running:'<circle cx="13" cy="5" r="2"/><path d="M17 21l-4-8-3 3-3-4M7 15l2-6 4 3 3-5"/>',
+  boxe:'<path d="M8 2c3 0 7 2 7 6s-2 5-4 5H8V2z"/><path d="M8 13v9"/><path d="M3 12h5"/><path d="M18 7h2a2 2 0 012 2v1a2 2 0 01-2 2h-2"/>',
+  golf:'<circle cx="12" cy="18" r="3"/><path d="M12 15V3"/><path d="M12 3l7 4-7 4"/>',
+  nutrition:'<path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/>',
+  devperso:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  cuisine:'<path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 01.05-.5A5 5 0 0117.9 4h.1a5 5 0 014 4.9 4 4 0 01-1.41 7.94"/><polyline points="10 21 10 12M14 21v-4"/>',
+  patisserie:'<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M3 11V8a4 4 0 014-4h10a4 4 0 014 4v3"/><path d="M7 11V8M12 11V8M17 11V8"/><circle cx="7" cy="16" r="1"/><circle cx="12" cy="16" r="1"/><circle cx="17" cy="16" r="1"/>',
+  jardinage:'<path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M3 7c9.5 0 9.5-4 9.5-4S21 7 21 12H3V7z"/>',
+  bricolage:'<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>',
+  couture:'<path d="M2 20l20-8-8 20-3-7-7 3 4-8z"/><path d="M12 12l7-7"/><circle cx="19" cy="5" r="2"/>',
+  broderie:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  poterie:'<path d="M12 3c-4 0-7 2-7 5s3 5 7 5 7-2 7-5-3-5-7-5z"/><path d="M5 8v9a3 3 0 003 3h8a3 3 0 003-3V8"/>',
+  jeux:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>',
+  echecs:'<path d="M10 6h4M12 6v4M9 10h6M8 13h8"/><rect x="7" y="13" width="10" height="3" rx="1"/><rect x="6" y="16" width="12" height="4" rx="1"/>',
+  autre:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+};
+
+// ── Catégories matières pour le formulaire ───────────────────────────────────
+var CR_CATEGORIES=[
+  {label:'Sciences exactes',   keys:['maths','stats','physique','chimie','svt','astro','geologie','medecine','ecologie']},
+  {label:'Numérique & Tech',   keys:['informatique','python','javascript','devweb','data','ia','electronique','design','cyber','nocode','blockchain']},
+  {label:'Langues',            keys:['francais','anglais','espagnol','allemand','italien','portugais','arabe','chinois','japonais','russe','coreen','hindi','latin','lsf']},
+  {label:'Lettres & Créativité',keys:['philo','ecriture','theatre','cinema','bd']},
+  {label:'Arts visuels',       keys:['dessin','peinture','aquarelle','arts','calligraphie','photo','illustration']},
+  {label:'Musique',            keys:['musique','piano','guitare','chant','batterie','violon','saxo']},
+  {label:'Sciences humaines',  keys:['histoire','psycho','socio','geographie','sciencespol','anthropo']},
+  {label:'Business & Droit',   keys:['economie','compta','finance','marketing','droit','entrepreneuriat','gestion','communication','rh','immo','architecture']},
+  {label:'Prépa & Concours',   keys:['prepa','pass','sciencespo','toefl','gmat']},
+  {label:'Sport',              keys:['sport','fitness','yoga','martial','danse','natation','tennis','football','basket','running','boxe','golf']},
+  {label:'Bien-être',          keys:['nutrition','devperso']},
+  {label:'Cuisine & Artisanat',keys:['cuisine','patisserie','jardinage','bricolage','couture','broderie','poterie']},
+  {label:'Jeux & Loisirs',     keys:['jeux','echecs','autre']}
+];
+
+function buildCrMatCircles(){
+  var el=g('crMatSections');if(!el)return;
+  var selKey=(g('crSubjHidden')||{}).value||'';
+  el.innerHTML=CR_CATEGORIES.map(function(cat){
+    var items=cat.keys.map(function(key){
+      var mat=MATIERES.find(function(m){return m.key===key;});
+      if(!mat)return'';
+      var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
+      var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+      if(lbl.length>9)lbl=lbl.slice(0,8)+'…';
+      return'<div class="cr-mat-item'+(selKey===key?' on':'')+'" data-key="'+key+'" onclick="pickCrMat(\''+key+'\')">'
+        +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">'+icon+'</svg></div>'
+        +'<span class="cr-mat-lbl">'+lbl+'</span>'
+        +'</div>';
+    }).join('');
+    if(!items.trim())return'';
+    return'<div style="margin-bottom:16px">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:0 2px">'+cat.label+'</div>'
+      +'<div class="cr-mat-scroller">'+items+'</div>'
+      +'</div>';
+  }).join('');
+}
+
 function pickCrMat(key){
   var h=g('crSubjHidden');if(h)h.value=key;
-  document.querySelectorAll('#crMatScroller .cr-mat-item').forEach(function(el){
+  document.querySelectorAll('#crMatSections .cr-mat-item').forEach(function(el){
     el.classList.toggle('on',el.dataset.key===key);
   });
   if(navigator.vibrate)navigator.vibrate(6);
@@ -6843,7 +6986,7 @@ async function subCr(){
     if(data.error){toast(t('t_publish_fail'),typeof data.error==='string'?data.error:data.error.message||data.error.details||t('t_try_again'));return;}
     g('crTitre').value='';
     var crSH=g('crSubjHidden');if(crSH)crSH.value='';
-    document.querySelectorAll('#crMatScroller .cr-mat-item').forEach(function(el){el.classList.remove('on');});
+    document.querySelectorAll('#crMatSections .cr-mat-item').forEach(function(el){el.classList.remove('on');});
     g('crDate').value='';g('crHeure').value='';
     g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
     if(g('crDesc'))g('crDesc').value='';

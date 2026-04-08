@@ -2235,72 +2235,7 @@
       <!-- Matière — cercles horizontaux -->
       <div style="margin-bottom:18px">
         <div class="cr-section-title">Matière</div>
-        <div class="cr-mat-scroller" id="crMatScroller">
-          <div class="cr-mat-item" data-key="maths" onclick="pickCrMat('maths')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 15l2 2-2 2"/></svg></div>
-            <span class="cr-mat-lbl">Maths</span>
-          </div>
-          <div class="cr-mat-item" data-key="physique" onclick="pickCrMat('physique')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg></div>
-            <span class="cr-mat-lbl">Physique</span>
-          </div>
-          <div class="cr-mat-item" data-key="chimie" onclick="pickCrMat('chimie')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M9 3h6v6l3 9H6L9 9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg></div>
-            <span class="cr-mat-lbl">Chimie</span>
-          </div>
-          <div class="cr-mat-item" data-key="svt" onclick="pickCrMat('svt')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M12 12C12 7 7 5 3 7"/><path d="M12 12c0-5 5-7 9-5"/></svg></div>
-            <span class="cr-mat-lbl">SVT</span>
-          </div>
-          <div class="cr-mat-item" data-key="informatique" onclick="pickCrMat('informatique')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <span class="cr-mat-lbl">Informatique</span>
-          </div>
-          <div class="cr-mat-item" data-key="python" onclick="pickCrMat('python')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/><path d="M11 7h4a2 2 0 012 2v4"/><line x1="7" y1="11" x2="7" y2="17"/><line x1="4" y1="14" x2="10" y2="14"/></svg></div>
-            <span class="cr-mat-lbl">Python</span>
-          </div>
-          <div class="cr-mat-item" data-key="anglais" onclick="pickCrMat('anglais')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-            <span class="cr-mat-lbl">Anglais</span>
-          </div>
-          <div class="cr-mat-item" data-key="francais" onclick="pickCrMat('francais')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-            <span class="cr-mat-lbl">Français</span>
-          </div>
-          <div class="cr-mat-item" data-key="espagnol" onclick="pickCrMat('espagnol')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
-            <span class="cr-mat-lbl">Espagnol</span>
-          </div>
-          <div class="cr-mat-item" data-key="histoire" onclick="pickCrMat('histoire')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
-            <span class="cr-mat-lbl">Histoire</span>
-          </div>
-          <div class="cr-mat-item" data-key="philo" onclick="pickCrMat('philo')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-            <span class="cr-mat-lbl">Philosophie</span>
-          </div>
-          <div class="cr-mat-item" data-key="economie" onclick="pickCrMat('economie')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <span class="cr-mat-lbl">Économie</span>
-          </div>
-          <div class="cr-mat-item" data-key="musique" onclick="pickCrMat('musique')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-            <span class="cr-mat-lbl">Musique</span>
-          </div>
-          <div class="cr-mat-item" data-key="droit" onclick="pickCrMat('droit')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-            <span class="cr-mat-lbl">Droit</span>
-          </div>
-          <div class="cr-mat-item" data-key="dessin" onclick="pickCrMat('dessin')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M2 20h20"/><path d="M3.5 15.5L12 7l8.5 8.5"/><path d="M12 7L8 3l-5 5"/></svg></div>
-            <span class="cr-mat-lbl">Dessin</span>
-          </div>
-          <div class="cr-mat-item" data-key="autre" onclick="pickCrMat('autre')">
-            <div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-            <span class="cr-mat-lbl">Autre</span>
-          </div>
-        </div>
+        <div id="crMatSections"></div>
         <input type="hidden" id="crSubjHidden" value="">
       </div>
 
