@@ -10924,8 +10924,14 @@ var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere
 var _sc=0;
 
 function _crStepVpAdjust(){
-  // No-op: keyboard gérée via Capacitor Keyboard plugin (padding uniquement)
-  // Ne pas modifier la hauteur de bdCrStep pour éviter le flash de la page derrière
+  // Fallback VisualViewport pour navigateur web (non-Capacitor)
+  // N'ajuste QUE le padding du footer — jamais la hauteur de bdCrStep
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Keyboard)return;
+  var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+  var vp=window.visualViewport;if(!vp)return;
+  var kh=Math.max(0,window.innerHeight-vp.height);
+  var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom=(kh>50?kh+'px':'');
+  var sb=g('stepBody');if(sb)sb.style.paddingBottom=(kh>50?(kh+8)+'px':'');
 }
 
 function openCrStep(){
@@ -10977,6 +10983,11 @@ function buildStepDOM(){
       var foot=g('stepCtaFoot');if(foot)foot.style.paddingBottom='';
       var sb=g('stepBody');if(sb)sb.style.paddingBottom='';
     });
+  }
+  // Fallback VisualViewport pour Safari web
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',_crStepVpAdjust);
+    window.visualViewport.addEventListener('scroll',_crStepVpAdjust);
   }
 }
 
