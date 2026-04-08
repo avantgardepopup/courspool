@@ -2953,6 +2953,28 @@ html.dk .pill-filter-btn { border-color:var(--bdr); }
 html.dk .pill-filter-btn svg { color:var(--ink); }
 html.dk .pill-icon { color:var(--ink); }
 
+/* ════ CREATE COURSE — Premium redesign ════ */
+.cr-card{background:var(--wh);border-radius:16px;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);overflow:hidden;}
+html.dk .cr-card{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
+.cr-row{display:flex;align-items:center;gap:12px;padding:14px 16px;}
+.cr-row+.cr-row{border-top:1px solid var(--bdr);}
+.cr-section-title{font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.cr-input-plain{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);padding:0;min-height:24px;width:100%;}
+.cr-input-plain::placeholder{color:var(--lite);}
+.cr-mat-scroller{display:flex;gap:12px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.cr-mat-scroller::-webkit-scrollbar{display:none;}
+.cr-mat-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:transform .15s;}
+.cr-mat-item:active{transform:scale(.92);}
+.cr-mat-circle{width:60px;height:60px;border-radius:50%;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:center;color:var(--mid);transition:all .2s cubic-bezier(.34,1.56,.64,1);}
+html.dk .cr-mat-circle{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
+.cr-mat-item.on .cr-mat-circle{background:var(--or);box-shadow:0 4px 16px rgba(255,107,43,.4);color:#fff;}
+.cr-mat-lbl{font-size:11px;font-weight:600;color:var(--mid);text-align:center;max-width:68px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-mat-item.on .cr-mat-lbl{color:var(--or);font-weight:700;}
+.cr-mode-btn{flex:1;padding:14px 10px;border-radius:16px;border:none;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);font-family:inherit;font-size:14px;font-weight:600;color:var(--mid);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+html.dk .cr-mode-btn{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
+.cr-mode-btn.on{background:var(--or);color:#fff;box-shadow:0 4px 14px rgba(255,107,43,.35);}
+.cr-mode-btn:active{transform:scale(.97);}
+
 /* ════ SMART SEARCH (overlay supprimé — subject list réutilisé dans bdFilter) ════ */
 
 /* Liste statique avec icônes */

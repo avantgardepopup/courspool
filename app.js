@@ -6756,6 +6756,23 @@ function openCr(){
   g('crDate').min=today;openM('bdCr');
 }
 function closeCr(){closeM('bdCr');}
+
+function pickCrMat(key){
+  var h=g('crSubjHidden');if(h)h.value=key;
+  document.querySelectorAll('#crMatScroller .cr-mat-item').forEach(function(el){
+    el.classList.toggle('on',el.dataset.key===key);
+  });
+  if(navigator.vibrate)navigator.vibrate(6);
+}
+
+function pickCrMode(mode){
+  var h=g('crModeHidden');if(h)h.value=mode;
+  var pres=g('crModePres'),vis=g('crModeVis');
+  if(pres)pres.classList.toggle('on',mode==='presentiel');
+  if(vis)vis.classList.toggle('on',mode==='visio');
+  if(navigator.vibrate)navigator.vibrate(6);
+}
+
 function shakeField(el){
   if(!el)return;
   el.style.borderColor='#EF4444';
@@ -6769,32 +6786,44 @@ async function subCr(){
   var btn=document.querySelector('#bdCr .pb.pri');
   if(btn){btn.textContent=t('txt_publishing');btn.disabled=true;}
   var titre=g('crTitre').value.trim(),date=g('crDate').value,heure=g('crHeure').value;
-  // Validation
-  if(!titre){shakeField(g('crTitre'));toast(t('t_title_req'),t('t_title_req_msg'),true);return;}
+  // Validation titre
+  if(!titre){
+    var ti=g('crTitre');if(ti){ti.style.boxShadow='0 0 0 2px #EF4444';setTimeout(function(){ti.style.boxShadow='';},700);}
+    toast(t('t_title_req'),t('t_title_req_msg'),true);
+    window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
+  }
+  // Validation matière
   var crSubjH=g('crSubjHidden');
-  if(!crSubjH||!crSubjH.value){var crMB=g('crMatBtn');if(crMB){crMB.style.borderColor='#EF4444';setTimeout(function(){crMB.style.borderColor='';},600);}toast(t('t_subject_req'),t('t_subject_req_msg'),true);return;}
-  if(!date){shakeField(g('crDate'));toast(t('t_date_req'),t('t_date_req_msg'),true);return;}
-  if(!heure){shakeField(g('crHeure'));toast(t('t_hour_req'),t('t_hour_req_msg'),true);return;}
-  var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
+  if(!crSubjH||!crSubjH.value){
+    toast(t('t_subject_req'),t('t_subject_req_msg'),true);
+    window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
+  }
+  // Validation description (obligatoire)
   var desc=g('crDesc')?g('crDesc').value.trim():'';
-  // Matière depuis le sélecteur natif
-  var crSubjH=g('crSubjHidden');
-  var subjKey=crSubjH?crSubjH.value:'';
-  var matFound=MATIERES.find(function(m){return m.key===subjKey;});
-  var sujet=matFound?matFound.label:'Autre';
-  if(!titre||!date||!heure||!lieu||!prix){
+  if(!desc){
+    var di=g('crDesc');if(di){di.style.boxShadow='0 0 0 2px #EF4444';setTimeout(function(){di.style.boxShadow='';},700);}
+    toast('Description requise','Décrivez votre cours pour attirer les élèves',true);
+    window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
+  }
+  if(!date){shakeField(g('crDate'));toast(t('t_date_req'),t('t_date_req_msg'),true);window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;}
+  if(!heure){shakeField(g('crHeure'));toast(t('t_hour_req'),t('t_hour_req_msg'),true);window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;}
+  var lieu=g('crLieu').value.trim(),places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
+  if(!lieu||!prix){
     toast(t('t_fields_miss'),'');
     window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
+  var subjKey=crSubjH.value;
+  var matFound=MATIERES.find(function(m){return m.key===subjKey;});
+  var sujet=matFound?matFound.label:'Autre';
+  var sc=matFound?matFound.color:'#9CA3AF';
+  var bg=matFound?matFound.bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)';
+  var mode=(g('crModeHidden')&&g('crModeHidden').value)||'presentiel';
   var dateObj=new Date(date+'T'+heure);
   if(dateObj<=new Date()){
     toast(t('t_invalid_date'),t('t_future_date'));
     window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
   var dateFormatee=dateObj.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
-  var colors={'📐 Maths':'#16A34A','⚗️ Physique':'#BE185D','💻 Info':'#2563EB','🌍 Langues':'#059669','📊 Éco':'#D97706','✨ Autre':'#7C3AED'};
-  var bgs={'📐 Maths':'linear-gradient(135deg,#F0FDF4,#BBF7D0)','⚗️ Physique':'linear-gradient(135deg,#FDF2F8,#F9A8D4)','💻 Info':'linear-gradient(135deg,#EFF6FF,#BFDBFE)','🌍 Langues':'linear-gradient(135deg,#ECFDF5,#A7F3D0)','📊 Éco':'linear-gradient(135deg,#FFFBEB,#FDE68A)','✨ Autre':'linear-gradient(135deg,#F5F3FF,#DDD6FE)'};
-  var sc=colors[sujet]||'#7C3AED',bg=bgs[sujet]||bgs['✨ Autre'];
   var payload={
     titre,sujet,couleur_sujet:sc,background:bg,
     date_heure:dateFormatee,date_iso:dateObj.toISOString(),lieu,prix_total:prix,places_max:places,
@@ -6803,6 +6832,7 @@ async function subCr(){
     prof_couleur:'linear-gradient(135deg,#FF8C55,#E04E10)',
     prof_nom:user.pr+(user.nm?' '+user.nm:''),
     description:desc,
+    mode:mode,
     prive:isCoursPrivé,
     code_acces:isCoursPrivé?codePrivé:null
   };
@@ -6812,13 +6842,12 @@ async function subCr(){
     var data=await r.json();
     if(data.error){toast(t('t_publish_fail'),typeof data.error==='string'?data.error:data.error.message||data.error.details||t('t_try_again'));return;}
     g('crTitre').value='';
-  var crSH=g('crSubjHidden');if(crSH)crSH.value='';
-  var crML=g('crMatLabel');if(crML){crML.textContent=t('nc_mat_ph');crML.style.color='var(--lite)';}
-  var crMD=g('crMatDot');if(crMD)crMD.style.background='var(--bdr)';
-  var crMB=g('crMatBtn');if(crMB)crMB.style.borderColor='var(--bdr)';g('crDate').value='';g('crHeure').value='';
+    var crSH=g('crSubjHidden');if(crSH)crSH.value='';
+    document.querySelectorAll('#crMatScroller .cr-mat-item').forEach(function(el){el.classList.remove('on');});
+    g('crDate').value='';g('crHeure').value='';
     g('crLieu').value='';g('cPr').value='';g('cH').textContent='';
     if(g('crDesc'))g('crDesc').value='';
-    document.querySelectorAll('#bdCr .so').forEach(function(s){s.classList.remove('on');});
+    pickCrMode('presentiel');
     // Reset cours privé
     isCoursPrivé=false;codePrivé='';
     var tog=g('togglePrive');var knob=g('togglePriveKnob');var box=g('codePriveBox');
@@ -6850,19 +6879,15 @@ function dupCours(id){
     openCr();
     setTimeout(function(){
       var titre=g('crTitre'),lieu=g('crLieu'),cPl=g('cPl'),cPr=g('cPr');
-      var crSubjH=g('crSubjHidden'),crMatLbl=g('crMatLabel'),crMatDot=g('crMatDot'),crMatBtn=g('crMatBtn');
       if(titre)titre.value=c.title;
       if(lieu)lieu.value=c.lc;
       if(cPl)cPl.value=c.sp;
       if(cPr)cPr.value=c.tot;
-      // Restaurer la matiere
+      // Restaurer la matière
       var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);});
-      if(mat&&crSubjH){
-        crSubjH.value=mat.key;
-        if(crMatLbl){crMatLbl.textContent=mat.label;crMatLbl.style.color='var(--ink)';}
-        if(crMatDot)crMatDot.style.background=mat.color;
-        if(crMatBtn)crMatBtn.style.borderColor='var(--or)';
-      }
+      if(mat)pickCrMat(mat.key);
+      // Restaurer le mode
+      if(c.mode)pickCrMode(c.mode);
       if(typeof calcH==='function')calcH();
       var _niv=g('crNiveau');if(_niv&&c.niveau){_niv.value=c.niveau;document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(ch){ch.classList.toggle('on',ch.dataset.n===(c.niveau||''));});}
       var _dsc=g('crDesc');if(_dsc&&c.description)_dsc.value=c.description;
