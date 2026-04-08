@@ -10923,6 +10923,18 @@ var STEP_DEFS=[
 var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:''};
 var _sc=0;
 
+function _crStepVpAdjust(){
+  var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+  var vp=window.visualViewport;
+  var h=vp?vp.height:window.innerHeight;
+  var top=vp?(vp.pageTop||vp.offsetTop||0):0;
+  el.style.position='fixed';
+  el.style.top=top+'px';
+  el.style.left='0';el.style.right='0';
+  el.style.bottom='auto';
+  el.style.height=h+'px';
+}
+
 function openCrStep(){
   if(!user||!user.id){showLoginPrompt();return;}
   if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
@@ -10936,6 +10948,7 @@ function openCrStep(){
   if(!g('bdCrStep'))buildStepDOM();
   stepRender(0);
   g('bdCrStep').classList.add('active');
+  setTimeout(_crStepVpAdjust,50);
   haptic(10);
 }
 function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active');el.style.top='';el.style.height='';el.style.bottom='';}}
@@ -10957,20 +10970,12 @@ function buildStepDOM(){
   g('stepBackBtn').onclick=stepBack;
   g('stepCloseBtn').onclick=closeCrStep;
   g('stepCta').onclick=stepNext;
-  // Keyboard awareness — keep CTA visible above keyboard
-  function _crStepVpAdjust(){
-    var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
-    var vp=window.visualViewport;
-    var h=vp?vp.height:window.innerHeight;
-    var top=vp?vp.offsetTop:0;
-    el.style.top=top+'px';
-    el.style.height=h+'px';
-    el.style.bottom='auto';
-  }
+  // Keyboard awareness — delegate to global _crStepVpAdjust
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_crStepVpAdjust);
     window.visualViewport.addEventListener('scroll',_crStepVpAdjust);
   }
+  window.addEventListener('resize',_crStepVpAdjust);
 }
 
 function stepRender(idx){
@@ -11016,7 +11021,7 @@ function stepRender(idx){
     }
 
   }else if(step.id==='titre'){
-    html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
+    html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:1.5px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)" type="text" placeholder="Ex\u00a0: Alg\u00e8bre pour d\u00e9butants\u2026" value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
     html+='<div class="search-bar-premium" style="width:100%;margin-bottom:16px">'
@@ -11289,7 +11294,7 @@ function _stepPickMat(key,label){
 }
 
 function sOpt(a,v,l,s,sel,bg,ex){
-  return '<div class="step-option'+(sel?' selected':'')+'" data-sa="'+a+'" data-sv="'+escH(v)+'" onclick="_stepOptClick(this)" style="background:var(--wh);border:2px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:18px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;'+(ex||'')+';box-shadow:0 1px 3px rgba(0,0,0,.05)">'
+  return '<div class="step-option'+(sel?' selected':'')+'" data-sa="'+a+'" data-sv="'+escH(v)+'" onclick="_stepOptClick(this)" style="background:var(--wh);border:1.5px solid '+(sel?'var(--or)':'var(--bdr)')+';border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;'+(ex||'')+';box-shadow:'+(sel?'0 0 0 3px rgba(255,107,43,.1),0 1px 4px rgba(0,0,0,.04)':'0 1px 4px rgba(0,0,0,.04)')+';transition:all .18s;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:'+bg+'"></div>'
     +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-.02em">'+l+'</div>'+(s?'<div style="font-size:12.5px;color:var(--lite);margin-top:2px">'+s+'</div>':'')+'</div>'
     +'</div>';
