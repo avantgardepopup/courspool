@@ -12939,9 +12939,23 @@ function _stepOptClick(el){
   }
   else if(a==='matiere'){_sd.matiere=v;var mo=MATIERES.find(function(x){return x.label===v;});_sd.matiere_key=mo?mo.key:v.toLowerCase();}
   else if(a==='niveau'){_sd.niveau=v;}
-  if(body){body.querySelectorAll('[data-sa="'+a+'"]').forEach(function(o){o.classList.remove('selected');o.style.borderColor='var(--bdr)';});}
+  if(body){body.querySelectorAll('[data-sa="'+a+'"]').forEach(function(o){
+    o.classList.remove('selected');
+    o.style.background='var(--wh)';
+    o.style.boxShadow='0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07)';
+    o.style.color='';
+  });}
   el.classList.add('selected');
-  el.style.borderColor='var(--or)';
+  // Niveau chips (border-radius:50px) use gradient; sOpt cards use orange ring
+  var isChip=(el.style.borderRadius==='50px');
+  if(isChip){
+    el.style.background='linear-gradient(135deg,#FF7D42,#FF4500)';
+    el.style.color='#fff';
+    el.style.boxShadow='0 4px 14px rgba(255,69,0,.28)';
+  }else{
+    el.style.background='rgba(255,107,43,.04)';
+    el.style.boxShadow='0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.2)';
+  }
   haptic(8);
 }
 
