@@ -11231,6 +11231,13 @@ function stepRender(idx){
   var srg=g('stepCodeRegen');
   if(srg)srg.onclick=function(){_sd.code_acces=genCode();var cd=g('stepCodeDisp');if(cd)cd.textContent=_sd.code_acces;haptic(8);};
 
+  // Scroll focused input into view when keyboard appears
+  body.querySelectorAll('input,textarea').forEach(function(inp){
+    inp.addEventListener('focus',function(){
+      var el=this;
+      setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'nearest'});},350);
+    });
+  });
   if(step.id!=='matiere'){setTimeout(function(){var inp=body.querySelector('input[type="text"],input[type="number"],textarea');if(inp)inp.focus();},300);}
 }
 
