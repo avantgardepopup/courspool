@@ -44,8 +44,8 @@ html.dk{
    sinon cards = fond = invisibles */
 html.dk body{background:var(--bg)!important;}
 /* Nav / topbar — même fond que la page */
-html.dk .mob-header{background:var(--bg);border-bottom:1px solid var(--bdr);}
-html.dk .mob-search{background:var(--bg);border-bottom:1px solid var(--bdr);}
+html.dk .mob-header{background:var(--bg);}
+html.dk .mob-search{background:var(--bg);}
 html.dk .mob-search input{background:var(--bg);color:var(--ink);}
 /* Inputs */
 html.dk .locbar input{background:transparent !important;color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;color-scheme:light dark;}
