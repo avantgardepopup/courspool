@@ -1049,11 +1049,11 @@
         </div>
       </div>
       <div id="msgInputBar">
-        <div style="display:flex;align-items:flex-end;gap:8px">
-          <button id="msgAttachBtn" onclick="openMsgAttachment(false)" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:0;line-height:0;flex-shrink:0;width:36px;height:36px;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="msgAttachBtn" onclick="openMsgAttachment(false)" style="display:none;background:none;border:none;cursor:pointer;color:var(--lite);padding:0;line-height:0;flex-shrink:0;-webkit-tap-highlight-color:transparent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="26" height="26"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           </button>
-          <div class="msg-input-wrap" style="flex:1">
+          <div class="msg-input-wrap" style="flex:1;min-width:0">
             <textarea id="msgInput" data-i18n-ph="msg_input" placeholder="Message…" rows="1"
               oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"
               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
