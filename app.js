@@ -7713,16 +7713,11 @@ function openAddFilter(){
   // Keyboard avoidance — ajuster max-height du panel intérieur
   var panel=bd.querySelector('div');
   var _fKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;
-    if(h>0&&panel){
-      panel.style.maxHeight=(window.innerHeight-h-12)+'px';
-      panel.style.transition='max-height .22s ease';
-      setTimeout(function(){var fi=g('filterInput');if(fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},80);
-    }
+    var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
+    bd.style.paddingBottom=h+'px';
+    setTimeout(function(){var fi=g('filterInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},60);
   };
-  var _fKbHide=function(){
-    if(panel){panel.style.maxHeight='88vh';panel.style.transition='max-height .18s ease';}
-  };
+  var _fKbHide=function(){bd.style.paddingBottom='';};
   window.addEventListener('keyboardWillShow',_fKbShow);
   window.addEventListener('keyboardWillHide',_fKbHide);
   bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_fKbShow);window.removeEventListener('keyboardWillHide',_fKbHide);};
@@ -7809,6 +7804,7 @@ function closeAddFilter(){
   var bd=g('bdFilter');
   if(!bd)return;
   if(bd._cleanupKb){bd._cleanupKb();bd._cleanupKb=null;}
+  bd.style.paddingBottom='';
   bd.style.display='none';
   document.body.style.overflow='';
 }
@@ -12490,21 +12486,12 @@ function openAllFiltersSheet(){
   document.body.style.overflow='hidden';
   _afSyncState();
   haptic(4);
-  // Keyboard avoidance — ajuste max-height du panel quand le clavier monte
-  var panel=el.querySelector('div');
   var _afKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;if(h<=0||!panel)return;
-    panel.style.maxHeight=(window.innerHeight-h-12)+'px';
-    panel.style.transition='max-height .22s ease';
-    // Scroll vers le champ ville si c'est lui qui a le focus
-    setTimeout(function(){
-      var fi=g('afVilleInput');
-      if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});
-    },80);
+    var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
+    el.style.paddingBottom=h+'px';
+    setTimeout(function(){var fi=g('afVilleInput');if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});},60);
   };
-  var _afKbHide=function(){
-    if(panel){panel.style.maxHeight='88vh';panel.style.transition='max-height .18s ease';}
-  };
+  var _afKbHide=function(){el.style.paddingBottom='';};
   window.addEventListener('keyboardWillShow',_afKbShow);
   window.addEventListener('keyboardWillHide',_afKbHide);
   el._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_afKbShow);window.removeEventListener('keyboardWillHide',_afKbHide);};
@@ -12513,6 +12500,7 @@ function closeAllFiltersSheet(){
   var el=g('bdAllFilters');
   if(!el)return;
   if(el._cleanupKb){el._cleanupKb();el._cleanupKb=null;}
+  el.style.paddingBottom='';
   el.style.display='none';document.body.style.overflow='';
   _updateFiltersBadge();
 }
