@@ -2618,11 +2618,13 @@ function buildAccLists(){
         '<div class="cp-stat-card" style="'+_scSty+'"><div id="accStatElevesVal" style="'+_scVal+'">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="'+_scLbl+'">'+t('mp_eleves')+'</div></div>'+
         '<div class="cp-stat-card" style="'+_scSty+'"><div id="accStatNoteVal" style="'+_scVal+'">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="'+_scLbl+'">'+t('mp_note')+'</div></div>';
     } else {
-      var _nbProfs=(function(){try{var _cp=JSON.parse(localStorage.getItem('cp_profs')||'{}');return Object.keys(_cp).length;}catch(e){return 0;}})();
+      var _enrolledProfIds=(function(){try{return Object.keys(JSON.parse(localStorage.getItem('cp_profs')||'{}'));}catch(e){return [];}})();
+      var _allProfIds=new Set(fIds.concat(_enrolledProfIds));
+      var _nbHistorique=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);}).length;
       stats.innerHTML=
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.length+'</div><div style="'+_scLbl+'">'+t('acc_reservations')+'</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+fIds.length+'</div><div style="'+_scLbl+'">'+t('acc_suivis')+'</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_nbProfs+'</div><div style="'+_scLbl+'">'+t('acc_professeurs')+'</div></div>';
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">À venir</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">Profs</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">Historique</div></div>';
     }
   }
   // Rôle pill
