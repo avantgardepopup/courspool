@@ -6087,9 +6087,9 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
   var opts=[
-    {val:'enrolled',label:'Tous les inscrits',sub:'Visible par les élèves inscrits',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.1)'},
-    {val:'password',label:'Mot de passe',sub:'Protégé par un code secret',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'#2563EB',bg:'rgba(59,130,246,.1)'},
-    {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--or)',bg:'rgba(255,107,43,.1)'}
+    {val:'enrolled',label:'Tous les inscrits',sub:'Visible par les élèves inscrits',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/>',stroke:'var(--mid)',bg:'var(--bg)'},
+    {val:'password',label:'Mot de passe',sub:'Protégé par un code secret',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'},
+    {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--mid)',bg:'var(--bg)'}
   ];
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
   html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Visibilité</div>';
