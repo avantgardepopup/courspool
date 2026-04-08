@@ -12084,14 +12084,34 @@ async function deleteAccount(){
 async function _confirmDeleteAccount(){
   closeQuickSheet();
   if(!user)return;
+  var uid=user.id;
+  // 1. Désinscrire les push notifications avant suppression backend
   try{
-    await fetch(API+'/users/'+user.id,{method:'DELETE',headers:apiH()});
+    if(window._pushSubscription){
+      await window._pushSubscription.unsubscribe();
+      await fetch(API+'/push/subscribe',{method:'DELETE',headers:apiH(),body:JSON.stringify({user_id:uid})});
+    }
   }catch(e){}
+  // 2. Supprimer le compte côté backend
+  var ok=false;
+  try{
+    var r=await fetch(API+'/users/'+uid,{method:'DELETE',headers:apiH()});
+    ok=r.ok||r.status===404; // 404 = déjà supprimé, on continue
+  }catch(e){}
+  if(!ok){toast('Erreur','Impossible de supprimer le compte. Réessayez ou contactez le support.');return;}
+  // 3. Sign out Supabase (comptes OAuth)
+  try{if(window._supabase)await window._supabase.auth.signOut();}catch(e){}
+  // 4. Nettoyer Sentry
+  try{if(typeof setSentryUser==='function')setSentryUser(null);}catch(e){}
+  // 5. Vider timers et état mémoire
+  try{clearInterval(msgBadgePollTimer);msgBadgePollTimer=null;}catch(e){}
+  try{clearInterval(_accountCheckTimer);_accountCheckTimer=null;}catch(e){}
+  // 6. Vider tout le stockage local
   try{localStorage.clear();sessionStorage.clear();}catch(e){}
   user=null;
   haptic(10);
-  toast('Compte supprimé','À bientôt');
-  setTimeout(function(){location.reload();},1500);
+  toast('Compte supprimé','Toutes vos données ont été effacées.');
+  setTimeout(function(){location.reload();},1800);
 }
 
 async function toggleTuteurMode(){
