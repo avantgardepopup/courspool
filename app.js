@@ -12349,29 +12349,39 @@ function initSwipeNav(){
 }
 
 // ── Keyboard / visualViewport ──────────────────────────────────────────────
-// Keeps the search modal body, create-course sheet, and message pane above the keyboard on iOS
+// Keeps the create-course sheet above the keyboard on iOS (visualViewport)
 (function(){
   if(!window.visualViewport)return;
   function _onVpResize(){
     var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
-
-    // Search modal is handled via keyboardWillShow/Hide (Capacitor), not visualViewport
-
     // Create-course sheet (#bdCr)
     var bdCr=g('bdCr');
     if(bdCr&&bdCr.classList.contains('on')){
-      // Shift the sheet up by adding bottom padding to the flex overlay
       bdCr.style.paddingBottom=kbH>30?kbH+'px':'0px';
-    }
-
-    // Message conversation pane (#msgConvPane)
-    var mp=g('msgConvPane');
-    if(mp&&mp.style.display==='flex'){
-      mp.style.bottom=kbH>30?kbH+'px':'0px';
     }
   }
   window.visualViewport.addEventListener('resize',_onVpResize,{passive:true});
   window.visualViewport.addEventListener('scroll',_onVpResize,{passive:true});
+})();
+
+// ── Message pane keyboard avoidance (Capacitor keyboardWillShow/Hide) ───────
+// visualViewport ne se réduit pas sur iOS WKWebView : on utilise les events Capacitor
+(function(){
+  function _msgKbShow(e){
+    var kbH=(e&&e.keyboardHeight)||0;if(kbH<=0)return;
+    var mp=g('msgConvPane');if(!mp||mp.style.display!=='flex')return;
+    mp.style.bottom=kbH+'px';
+    mp.style.transition='bottom .22s ease';
+    // Scroll messages to bottom so last message stays visible
+    var msgs=g('msgMessages');if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},80);
+  }
+  function _msgKbHide(){
+    var mp=g('msgConvPane');if(!mp)return;
+    mp.style.bottom='0px';
+    mp.style.transition='bottom .18s ease';
+  }
+  window.addEventListener('keyboardWillShow',_msgKbShow);
+  window.addEventListener('keyboardWillHide',_msgKbHide);
 })();
 
 // ── Pull-to-refresh ────────────────────────────────────────────────────────
