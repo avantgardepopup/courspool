@@ -8139,7 +8139,7 @@ function openMsgAttachment(isGroupe){
       +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+o.label+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
       +'</button>';
   });
-  html+='<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button></div>';
+  html+='<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Annuler</button></div>';
   showQuickSheet(html);
 }
 
@@ -8153,7 +8153,7 @@ function _espMsgPickContent(type){
       _espPickItems=(list||[]).filter(filter);
       if(!_espPickItems.length){
         showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">Aucun contenu disponible dans ton espace</div>'
-          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button></div>');
+          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Fermer</button></div>');
         return;
       }
       var _icSmall='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18">'+(type==='fiche'?'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>':'<path d="M3 11l18-5v12L3 14v-3z"/>')+'</svg>';
@@ -8168,8 +8168,8 @@ function _espMsgPickContent(type){
           +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||'Sans titre')+'</span>'
           +'</button>';
       });
-      html+='</div><div style="padding:10px 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))">'
-        +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button></div>';
+      html+='</div><div style="padding:4px 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))">'
+        +'<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Annuler</button></div>';
       showQuickSheet(html);
     })
     .catch(function(){showQuickSheet('<div style="padding:40px;text-align:center;color:var(--lite)">Erreur de chargement</div>');});
