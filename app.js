@@ -7661,11 +7661,14 @@ var _espPickType='';
 
 function openMsgAttachment(isGroupe){
   _msgAttachIsGroupe=!!isGroupe;haptic(4);
+  var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+  var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
+  var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
   var opts=[
-    {icon:'📋',label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
-    {icon:'📢',label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
+    {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
+    {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
   ];
-  if(isGroupe)opts.push({icon:'📊',label:'Sondage',sub:'Pose une question au groupe',type:'sondage'});
+  if(isGroupe)opts.push({icon:_svgPoll,label:'Sondage',sub:'Pose une question au groupe',type:'sondage'});
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
     +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Partager dans la conversation</div></div>'
     +'<div style="padding:0 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">';
@@ -7693,7 +7696,8 @@ function _espMsgPickContent(type){
           +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button></div>');
         return;
       }
-      var icon=type==='fiche'?'📋':'📢';
+      var _icSmall='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18">'+(type==='fiche'?'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>':'<path d="M3 11l18-5v12L3 14v-3z"/>')+'</svg>';
+      var icon=_icSmall;
       var title=type==='fiche'?'Fiches de cours':'Publications';
       var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
         +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+title+'</div></div>'
@@ -7769,9 +7773,13 @@ function _sendSondageMsg(){
 }
 
 function _renderEspCardInner(d,isMe,time){
-  var icons={fiche:'📋',pub:'📢',sondage:'📊'};
   var labels={fiche:'Fiche de cours',pub:'Publication',sondage:'Sondage'};
-  var icon=icons[d.t]||'📄';
+  var _ic12={
+    fiche:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    pub:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M3 11l18-5v12L3 14v-3z"/></svg>',
+    sondage:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
+  };
+  var icon=_ic12[d.t]||'';
   var lbl=labels[d.t]||'Contenu';
   var tapAttr=(d.pid&&d.t!=='sondage')?' onclick="openProfEspace(\''+d.pid+'\')"':'';
   if(d.t==='sondage'){
