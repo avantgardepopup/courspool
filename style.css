@@ -2212,7 +2212,6 @@ html.dk .settings-chevron { color:var(--bdr); }
   padding:6px 16px 2px;
   overflow-x:auto; overflow-y:visible;
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
-  border-top:1px solid var(--bdr);
 }
 .filter-bar::-webkit-scrollbar { display:none; }
 
