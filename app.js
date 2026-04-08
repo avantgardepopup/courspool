@@ -1835,6 +1835,8 @@ function doGuest(){
 }
 
 function go(pr,nm,em,role,uid,photoUrl,token,refreshToken,tokenExp){
+  // Clear enrolled profs if switching to a different user account
+  try{var _prev=JSON.parse(localStorage.getItem('cp_user')||'{}');if(_prev.id&&String(_prev.id)!==String(uid))localStorage.removeItem('cp_enrolled_profs');}catch(e){}
   user={pr:pr,nm:nm,em:em,role:role||'eleve',id:uid,ini:((pr&&pr[0]?pr[0]:'')+(nm&&nm[0]?nm[0]:'')).toUpperCase()||'U',photo:photoUrl||null,token:token||undefined,refresh_token:refreshToken||undefined,token_exp:tokenExp||undefined};
   try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
   _scheduleTokenRefresh();
@@ -4462,7 +4464,10 @@ function openPrFull(pid){
   if(user&&!user.guest&&pid!==user.id){
     fetch(API+'/teacher/'+pid+'/is-enrolled',{headers:apiH()}).then(function(r){return r.json();}).then(function(d){
       if(_curPrFull!==pid)return;
-      _mpfSetEnrolled(!!(d&&d.enrolled));
+      var enrolled=!!(d&&d.enrolled);
+      _mpfSetEnrolled(enrolled);
+      // Persist to localStorage so enrollment survives re-login on same device
+      if(enrolled){var _p=P[pid]||{};_saveEnrolledProf(String(pid),{nm:_p.nm||'',ini:_p.i||'?',col:_p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_p.photo||null});}
     }).catch(function(){_mpfSetEnrolled(false);});
   }
   // Avis
