@@ -3782,7 +3782,7 @@ function viewCoursCard(id){
 function openR(id){haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
   var _rBtn=document.querySelector('[data-id="'+id+'"] .card-btn-reserve,[data-id="'+id+'"] .btnr');
-  if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);}
+  if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;var _rBtnTid=setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);_rBtn._resetTid=_rBtnTid;}
   var c=C.find(function(x){return x.id==id})||_histCache[String(id)];
   if(!c)return;
   var isOwner=user&&c.pr===user.id;
@@ -3859,6 +3859,7 @@ function openR(id){haptic(4);
       btnNoter.style.display=_canNote?'flex':'none';
     }
   }
+  if(_rBtn&&_rBtn._resetTid){clearTimeout(_rBtn._resetTid);_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}
   openM('bdR');
 }
 function closeR(){closeM('bdR');}

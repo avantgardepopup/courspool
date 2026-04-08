@@ -518,6 +518,63 @@ function _saveEnrolledProf(pid,profData){
     }
   }catch(e){}
 }
+function _removeEnrolledProf(pid){
+  try{
+    var list=_getEnrolledProfs().filter(function(p){return p.id!==String(pid);});
+    localStorage.setItem('cp_enrolled_profs',JSON.stringify(list));
+  }catch(e){}
+}
+function _confirmUnenroll(pid){
+  var ep=_getEnrolledProfs().find(function(p){return p.id===String(pid);});
+  var nm=(ep&&ep.nm)||(P[pid]&&P[pid].nm)||'ce professeur';
+  showQuickSheet(
+    '<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:20px 20px 8px;text-align:center">'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Se désinscrire ?</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6">Tu vas quitter l\'espace de <strong style="color:var(--ink)">'+esc(nm)+'</strong>. Tu perdras l\'accès à son contenu privé.</div>'
+    +'</div>'
+    +'<div style="padding:8px 20px max(20px,calc(env(safe-area-inset-bottom,0px) + 16px));display:flex;flex-direction:column;gap:10px">'
+    +'<button onclick="_doUnenrollProf(\''+String(pid)+'\')" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Se désinscrire</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'</div>'
+  );
+}
+function _doUnenrollProf(pid){
+  closeQuickSheet();
+  _removeEnrolledProf(String(pid));
+  haptic(6);
+  toast('Désinscription effectuée','');
+  buildMesProfs();
+}
+function _initProfCardSwipe(cardEl,type,pid){
+  var sx=0,sy=0,swiping=false,acted=false;
+  cardEl.addEventListener('touchstart',function(e){
+    if(acted)return;
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;swiping=false;
+  },{passive:true});
+  cardEl.addEventListener('touchmove',function(e){
+    if(acted)return;
+    var dx=e.touches[0].clientX-sx;
+    var dy=Math.abs(e.touches[0].clientY-sy);
+    if(!swiping&&Math.abs(dx)>8&&Math.abs(dx)>dy)swiping=true;
+    if(swiping&&dx<0){e.preventDefault();cardEl.style.transform='translateX('+Math.max(dx,-96)+'px)';cardEl.style.transition='none';}
+  },{passive:false});
+  cardEl.addEventListener('touchend',function(e){
+    if(acted||!swiping)return;
+    var dx=e.changedTouches[0].clientX-sx;
+    swiping=false;
+    if(dx<-80){
+      if(type==='enrolled'){
+        cardEl.style.transform='';cardEl.style.transition='transform .2s';
+        _confirmUnenroll(pid);
+      }else{
+        acted=true;
+        cardEl.style.transform='translateX(-110%)';cardEl.style.transition='transform .25s ease';cardEl.style.opacity='0';
+        setTimeout(function(){unfollowProf(pid);buildMesProfs();},260);
+      }
+    }else{cardEl.style.transform='';cardEl.style.transition='transform .2s';}
+  },{passive:true});
+}
 
 function buildMesProfs(){
   var empty=g('mesProfsEmpty');
@@ -547,7 +604,7 @@ function buildMesProfs(){
       var photo=p.photo||ep.photo||null;
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
-      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
@@ -570,7 +627,7 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
-      html+='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      html+='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;margin:0 16px 10px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(fresh?esc(p.nm||'Professeur'):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>')+'</div>'
@@ -582,6 +639,9 @@ function buildMesProfs(){
     });
   }
   carousel.innerHTML=html;
+  carousel.querySelectorAll('.cp-prof-card[data-type]').forEach(function(card){
+    _initProfCardSwipe(card,card.dataset.type,card.dataset.pid);
+  });
 }
 
 function openProfEspace(pid){
@@ -812,13 +872,19 @@ var _mptSteps=[
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
     bg:'rgba(255,107,43,.08)',
     title:'Bienvenue dans Mes Profs !',
-    sub:'Retrouve ici tous les professeurs dont tu as rejoint l\'espace, et accède directement à leur contenu.'
+    sub:'Retrouve ici les profs dont tu as rejoint l\'espace privé, et ceux que tu suis depuis l\'explorateur.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+    bg:'rgba(99,102,241,.08)',
+    title:'Suis un prof',
+    sub:'Depuis l\'explorateur, ouvre le profil d\'un prof et appuie sur "Suivre". Il apparaît ici dans "Suivis" pour ne rater aucun de ses prochains cours.'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Entre le code de ton prof',
-    sub:'Appuie sur "+ Rejoindre" et entre le code que ton professeur t\'a communiqué. Il t\'apparaîtra directement ici.'
+    title:'Rejoins l\'espace d\'un prof',
+    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
@@ -844,30 +910,31 @@ function openMesProfsTuto(){
   var bd=g('bdMesProfsTuto');if(!bd)return;
   _mptRender();
   bd.style.display='flex';
+  var nav=g('bnav');if(nav)nav.style.display='none';
   var sheet=g('mptSheet');if(sheet)_mptInitSwipe(sheet);
   haptic(4);
 }
 
 function _mptRender(){
   var s=_mptSteps[_mptStep];if(!s)return;
-  var track=g('mptTrack');var dots=g('mptDots');var btn=g('mptBtn');var backBtn=g('mptBackBtn');
+  var track=g('mptTrack');var dots=g('mptDots');var skipBtn=g('mptSkipBtn');
   var isLast=_mptStep===_mptSteps.length-1;
-  var isFirst=_mptStep===0;
   if(track){track.innerHTML='<div style="text-align:center;padding:28px 0 20px">'
     +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
     +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
     +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
     +'</div>';}
   if(dots){dots.innerHTML=_mptSteps.map(function(_,i){return'<div onclick="mptGoTo('+i+')" style="width:'+(i===_mptStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_mptStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';}).join('');}
-  if(btn)btn.textContent=isLast?'C\'est parti\u00a0!':'Suivant';
-  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
+  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
 }
 
 function _mptInitSwipe(sheet){
   if(!sheet||sheet._mptSwipe)return;sheet._mptSwipe=true;
   var sx=0,sy=0;
-  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchstart',function(e){e.stopPropagation();sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});
   sheet.addEventListener('touchend',function(e){
+    e.stopPropagation();
     var dx=e.changedTouches[0].clientX-sx;var dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){if(dx<0)mptNext();else if(_mptStep>0){_mptStep--;_mptRender();}}
   },{passive:true});
@@ -881,6 +948,7 @@ function mptDone(){
   try{localStorage.setItem('cp_profs_tuto','1');}catch(e){}
   var bd=g('bdMesProfsTuto');
   if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
+  var nav=g('bnav');if(nav)nav.style.display='';
 }
 
 function unfollowProf(pid){
@@ -3714,7 +3782,7 @@ function viewCoursCard(id){
 function openR(id){haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
   var _rBtn=document.querySelector('[data-id="'+id+'"] .card-btn-reserve,[data-id="'+id+'"] .btnr');
-  if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);}
+  if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;var _rBtnTid=setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);_rBtn._resetTid=_rBtnTid;}
   var c=C.find(function(x){return x.id==id})||_histCache[String(id)];
   if(!c)return;
   var isOwner=user&&c.pr===user.id;
@@ -3791,6 +3859,7 @@ function openR(id){haptic(4);
       btnNoter.style.display=_canNote?'flex':'none';
     }
   }
+  if(_rBtn&&_rBtn._resetTid){clearTimeout(_rBtn._resetTid);_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}
   openM('bdR');
 }
 function closeR(){closeM('bdR');}
@@ -4619,8 +4688,9 @@ function _tpContact(){
 function _tpShare(){
   var pid=_curPrFull;var p=P[pid]||{};
   var nm=p.nm||'un professeur';
-  if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:window.location.href}).catch(function(){});}
-  else{toast('Lien copié','');try{navigator.clipboard.writeText(window.location.href);}catch(e){}}
+  var url='https://courspool.vercel.app?prof='+pid;
+  if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:url}).catch(function(){});}
+  else{try{navigator.clipboard.writeText(url);toast('Lien copié','');}catch(e){toast(url,'');}}
 }
 
 function enrollWithCode(){
@@ -4730,11 +4800,8 @@ function openEspTuto(){
 function _espTutoRender(){
   var s=_espTutoSteps[_espTutoStep];if(!s)return;
   var track=g('espTutoTrack');
-  var dots=g('espTutoDots');
-  var btn=g('espTutoBtn');
-  var backBtn=g('espTutoBackBtn');
+  var dots=g('espTutoDots');var skipBtn=g('espTutoSkipBtn');
   var isLast=_espTutoStep===_espTutoSteps.length-1;
-  var isFirst=_espTutoStep===0;
   if(track){
     track.innerHTML=''
       +'<div style="text-align:center;padding:28px 0 20px">'
@@ -4748,16 +4815,17 @@ function _espTutoRender(){
       return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
-  if(btn)btn.textContent=isLast?'Commencer\u00a0!':'Suivant';
-  if(backBtn)backBtn.style.visibility=isFirst?'hidden':'visible';
+  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
 }
 
 function _espTutoInitSwipe(sheet){
   if(!sheet||sheet._tutoSwipeInit)return;
   sheet._tutoSwipeInit=true;
   var sx=0,sy=0;
-  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchstart',function(e){e.stopPropagation();sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});
   sheet.addEventListener('touchend',function(e){
+    e.stopPropagation();
     var dx=e.changedTouches[0].clientX-sx;
     var dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){
@@ -6786,6 +6854,7 @@ function openMsg(profNm,destId,avatar){
   }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
   var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
+  var ab=g('msgAttachBtn');if(ab)ab.style.display=(user&&user.role==='professeur')?'flex':'none';
 
   // Mark active row
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
@@ -6900,6 +6969,13 @@ async function loadMessages(){
       var avHtml='';
       if(!isMe){
         avHtml='<div class="msg-bubble-av" style="background:'+oCol+'">'+(oPhoto?'<img src="'+oPhoto+'" style="width:100%;height:100%;object-fit:cover">':oIni)+'</div>';
+      }
+      // ESP card (fiche / publication / sondage partagé)
+      if(txt.startsWith('%%ESP%%')){
+        try{var _ec=JSON.parse(txt.slice(7));
+          h+='<div class="msg-bubble-row '+(isMe?'me':'them')+'">'+(isMe?'':avHtml)+_renderEspCardInner(_ec,isMe,time)+'</div>';
+        }catch(e){}
+        return;
       }
       if(isCard){
         // Card cours
@@ -7444,6 +7520,7 @@ function openGroupeMsg(coursId){
 
   // Toggle permission visible seulement pour le prof
   var pw = g('groupePermWrap'); if(pw) pw.style.display = _groupeIsProf ? 'flex' : 'none';
+  var ga=g('groupeAttachBtn');if(ga)ga.style.display=_groupeIsProf?'flex':'none';
   _updateGroupeToggle();
   _updateGroupeInput();
 
@@ -7527,6 +7604,14 @@ async function _loadGroupeMsgs(){
       var bg = isMe ? 'linear-gradient(135deg,var(--or),var(--ord))' : 'var(--wh)';
       var col = isMe ? '#fff' : 'var(--ink)';
       var br = isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
+      if((m.contenu||'').startsWith('%%ESP%%')){
+        try{var _gec=JSON.parse(m.contenu.slice(7));
+          html+='<div style="display:flex;flex-direction:column;margin-bottom:2px">'+nameHtml
+            +'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px">'
+            +avHtml+_renderEspCardInner(_gec,isMe,time)+'</div></div>';
+        }catch(e){}
+        return;
+      }
       html+='<div style="display:flex;flex-direction:column;margin-bottom:2px">'+nameHtml
         +'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px">'
         +avHtml
@@ -7568,6 +7653,155 @@ async function sendGroupeMsg(){
     haptic(6);
   }catch(e){ toast(t('t_error'),t('t_msg_failed_s')); }
   finally{ if(btn) btn.disabled = false; }
+}
+
+// ── ESP MSG ATTACHMENT ─────────────────────────────────────────────────────
+var _msgAttachIsGroupe=false;
+var _espPickItems=[];
+var _espPickType='';
+
+function openMsgAttachment(isGroupe){
+  _msgAttachIsGroupe=!!isGroupe;haptic(4);
+  var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+  var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
+  var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+  var opts=[
+    {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
+    {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
+  ];
+  if(isGroupe)opts.push({icon:_svgPoll,label:'Sondage',sub:'Pose une question au groupe',type:'sondage'});
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Partager dans la conversation</div></div>'
+    +'<div style="padding:0 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">';
+  opts.forEach(function(o){
+    var fn=o.type==='sondage'?'openSondageCreator()':'_espMsgPickContent(\''+o.type+'\')';
+    html+='<button onclick="closeQuickSheet();setTimeout(function(){'+fn+';},80)" style="width:100%;background:var(--bg);border:none;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
+      +'<div style="width:44px;height:44px;border-radius:12px;background:var(--orp);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+o.icon+'</div>'
+      +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+o.label+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
+      +'</button>';
+  });
+  html+='<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button></div>';
+  showQuickSheet(html);
+}
+
+function _espMsgPickContent(type){
+  _espPickType=type;
+  showQuickSheet('<div style="padding:48px;text-align:center;color:var(--lite)">Chargement…</div>');
+  fetch(API+'/teacher/'+user.id+'/announcements',{headers:apiH()})
+    .then(function(r){return r.json();})
+    .then(function(list){
+      var filter=type==='fiche'?function(a){return a.type==='fiche';}:function(a){return a.type!=='fiche';};
+      _espPickItems=(list||[]).filter(filter);
+      if(!_espPickItems.length){
+        showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">Aucun contenu disponible dans ton espace</div>'
+          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button></div>');
+        return;
+      }
+      var _icSmall='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18">'+(type==='fiche'?'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>':'<path d="M3 11l18-5v12L3 14v-3z"/>')+'</svg>';
+      var icon=_icSmall;
+      var title=type==='fiche'?'Fiches de cours':'Publications';
+      var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+        +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+title+'</div></div>'
+        +'<div style="max-height:55vh;overflow-y:auto;padding:0 12px;display:flex;flex-direction:column;gap:6px">';
+      _espPickItems.forEach(function(item,idx){
+        html+='<button onclick="closeQuickSheet();_espMsgSendCardByIdx('+idx+')" style="width:100%;background:var(--bg);border:none;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
+          +'<span style="font-size:20px;flex-shrink:0">'+icon+'</span>'
+          +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||'Sans titre')+'</span>'
+          +'</button>';
+      });
+      html+='</div><div style="padding:10px 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))">'
+        +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button></div>';
+      showQuickSheet(html);
+    })
+    .catch(function(){showQuickSheet('<div style="padding:40px;text-align:center;color:var(--lite)">Erreur de chargement</div>');});
+}
+
+function _espMsgSendCardByIdx(idx){
+  var item=_espPickItems[idx];if(!item)return;
+  _espMsgSendCard(_espPickType,item.id,item.title||'');
+}
+
+function _espMsgSendCard(type,id,title){
+  var contenu='%%ESP%%'+JSON.stringify({t:type,id:id,title:title,pid:user.id});
+  if(_msgAttachIsGroupe){
+    var c=C.find(function(x){return x.id==_groupeCoursId;});
+    fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),body:JSON.stringify({
+      cours_id:_groupeCoursId,expediteur_id:user.id,
+      expediteur_nom:((user.pr||'')+(user.nm?' '+user.nm:'')).trim()||'Professeur',
+      contenu:contenu,cours_titre:c?c.title:'Cours'
+    })}).then(function(){_loadGroupeMsgs();var c2=g('groupeMsgList');if(c2)c2.scrollTop=c2.scrollHeight;});
+  }else{
+    fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({
+      expediteur_id:user.id,destinataire_id:msgDestId,contenu:contenu
+    })}).then(function(){loadMessages();});
+  }
+  haptic(6);toast('Partagé dans la conversation','');
+}
+
+function openSondageCreator(){
+  var inpStyle='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--ink);outline:none;box-sizing:border-box';
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">Créer un sondage</div></div>'
+    +'<div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">'
+    +'<input id="sondageQ" placeholder="Votre question…" style="'+inpStyle+';font-size:15px" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO1" placeholder="Option 1" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO2" placeholder="Option 2" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO3" placeholder="Option 3 (optionnel)" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'</div>'
+    +'<div style="padding:14px 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">'
+    +'<button onclick="_sendSondageMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Envoyer le sondage</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'</div>';
+  showQuickSheet(html);
+}
+
+function _sendSondageMsg(){
+  var q=(g('sondageQ')&&g('sondageQ').value||'').trim();
+  var o1=(g('sondageO1')&&g('sondageO1').value||'').trim();
+  var o2=(g('sondageO2')&&g('sondageO2').value||'').trim();
+  var o3=(g('sondageO3')&&g('sondageO3').value||'').trim();
+  if(!q||!o1||!o2){toast('Complète la question et au moins 2 options','');return;}
+  var opts=[o1,o2];if(o3)opts.push(o3);
+  closeQuickSheet();
+  var contenu='%%ESP%%'+JSON.stringify({t:'sondage',q:q,opts:opts});
+  var c=C.find(function(x){return x.id==_groupeCoursId;});
+  fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),body:JSON.stringify({
+    cours_id:_groupeCoursId,expediteur_id:user.id,
+    expediteur_nom:((user.pr||'')+(user.nm?' '+user.nm:'')).trim()||'Professeur',
+    contenu:contenu,cours_titre:c?c.title:'Cours'
+  })}).then(function(){_loadGroupeMsgs();var c2=g('groupeMsgList');if(c2)c2.scrollTop=c2.scrollHeight;});
+  haptic(6);
+}
+
+function _renderEspCardInner(d,isMe,time){
+  var labels={fiche:'Fiche de cours',pub:'Publication',sondage:'Sondage'};
+  var _ic12={
+    fiche:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    pub:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M3 11l18-5v12L3 14v-3z"/></svg>',
+    sondage:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
+  };
+  var icon=_ic12[d.t]||'';
+  var lbl=labels[d.t]||'Contenu';
+  var tapAttr=(d.pid&&d.t!=='sondage')?' onclick="openProfEspace(\''+d.pid+'\')"':'';
+  if(d.t==='sondage'){
+    var optsHtml=(d.opts||[]).map(function(o,i){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--bdr)">'
+        +'<span style="font-size:12px;font-weight:700;color:var(--or);min-width:16px">'+(i+1)+'.</span>'
+        +'<span style="font-size:13px;color:var(--ink)">'+esc(o)+'</span></div>';
+    }).join('');
+    return '<div class="esp-msg-card" style="align-self:'+(isMe?'flex-end':'flex-start')+'">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">'+icon+' '+lbl+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.3">'+esc(d.q||'')+'</div>'
+      +optsHtml
+      +'<div style="font-size:10px;color:var(--lite);margin-top:8px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+      +'</div>';
+  }
+  return '<div class="esp-msg-card'+(tapAttr?' clickable':'')+'"'+tapAttr+' style="align-self:'+(isMe?'flex-end':'flex-start')+'">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">'+icon+' '+lbl+'</div>'
+    +'<div style="font-size:15px;font-weight:700;color:var(--ink);line-height:1.3">'+esc(d.title||'')+'</div>'
+    +(tapAttr?'<div style="font-size:12px;color:var(--or);font-weight:600;margin-top:8px">Voir dans l\'espace →</div>':'')
+    +'<div style="font-size:10px;color:var(--lite);margin-top:6px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+    +'</div>';
 }
 
 // ============================================================
@@ -12190,15 +12424,16 @@ function initSwipeNav(){
 
   function _tabOrder(){
     var t=['exp','fav','msg'];
-    // Onglet "Mes cours" visible uniquement pour les élèves (après Messages dans la nav)
     var bniMes=g('bniMes');
     if(bniMes&&bniMes.style.display!=='none')t.push('mes');
+    var bniProfs=g('bniProfs');
+    if(bniProfs&&bniProfs.style.display!=='none')t.push('profs');
     t.push('acc');
     return t;
   }
 
   function _curTab(){
-    var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc'};
+    var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc',pgMesProfs:'profs'};
     for(var id in map){var el=g(id);if(el&&el.classList.contains('on'))return map[id];}
     return'exp';
   }
@@ -12281,29 +12516,39 @@ function initSwipeNav(){
 }
 
 // ── Keyboard / visualViewport ──────────────────────────────────────────────
-// Keeps the search modal body, create-course sheet, and message pane above the keyboard on iOS
+// Keeps the create-course sheet above the keyboard on iOS (visualViewport)
 (function(){
   if(!window.visualViewport)return;
   function _onVpResize(){
     var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
-
-    // Search modal is handled via keyboardWillShow/Hide (Capacitor), not visualViewport
-
     // Create-course sheet (#bdCr)
     var bdCr=g('bdCr');
     if(bdCr&&bdCr.classList.contains('on')){
-      // Shift the sheet up by adding bottom padding to the flex overlay
       bdCr.style.paddingBottom=kbH>30?kbH+'px':'0px';
-    }
-
-    // Message conversation pane (#msgConvPane)
-    var mp=g('msgConvPane');
-    if(mp&&mp.style.display==='flex'){
-      mp.style.bottom=kbH>30?kbH+'px':'0px';
     }
   }
   window.visualViewport.addEventListener('resize',_onVpResize,{passive:true});
   window.visualViewport.addEventListener('scroll',_onVpResize,{passive:true});
+})();
+
+// ── Message pane keyboard avoidance (Capacitor keyboardWillShow/Hide) ───────
+// visualViewport ne se réduit pas sur iOS WKWebView : on utilise les events Capacitor
+(function(){
+  function _msgKbShow(e){
+    var kbH=(e&&e.keyboardHeight)||0;if(kbH<=0)return;
+    var mp=g('msgConvPane');if(!mp||mp.style.display!=='flex')return;
+    mp.style.bottom=kbH+'px';
+    mp.style.transition='bottom .22s ease';
+    // Scroll messages to bottom so last message stays visible
+    var msgs=g('msgMessages');if(msgs)setTimeout(function(){msgs.scrollTop=msgs.scrollHeight;},80);
+  }
+  function _msgKbHide(){
+    var mp=g('msgConvPane');if(!mp)return;
+    mp.style.bottom='0px';
+    mp.style.transition='bottom .18s ease';
+  }
+  window.addEventListener('keyboardWillShow',_msgKbShow);
+  window.addEventListener('keyboardWillHide',_msgKbHide);
 })();
 
 // ── Pull-to-refresh ────────────────────────────────────────────────────────
