@@ -875,16 +875,16 @@ var _mptSteps=[
     sub:'Retrouve ici les profs dont tu as rejoint l\'espace privé, et ceux que tu suis depuis l\'explorateur.'
   },
   {
-    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Rejoins l\'espace d\'un prof',
-    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
-  },
-  {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
     bg:'rgba(99,102,241,.08)',
     title:'Suis un prof',
     sub:'Depuis l\'explorateur, ouvre le profil d\'un prof et appuie sur "Suivre". Il apparaît ici dans "Suivis" pour ne rater aucun de ses prochains cours.'
+  },
+  {
+    svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
+    bg:'rgba(255,107,43,.08)',
+    title:'Rejoins l\'espace d\'un prof',
+    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
@@ -6853,6 +6853,7 @@ function openMsg(profNm,destId,avatar){
   }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
   var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
+  var ab=g('msgAttachBtn');if(ab)ab.style.display=(user&&user.role==='professeur')?'flex':'none';
 
   // Mark active row
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
@@ -6967,6 +6968,13 @@ async function loadMessages(){
       var avHtml='';
       if(!isMe){
         avHtml='<div class="msg-bubble-av" style="background:'+oCol+'">'+(oPhoto?'<img src="'+oPhoto+'" style="width:100%;height:100%;object-fit:cover">':oIni)+'</div>';
+      }
+      // ESP card (fiche / publication / sondage partagé)
+      if(txt.startsWith('%%ESP%%')){
+        try{var _ec=JSON.parse(txt.slice(7));
+          h+='<div class="msg-bubble-row '+(isMe?'me':'them')+'">'+(isMe?'':avHtml)+_renderEspCardInner(_ec,isMe,time)+'</div>';
+        }catch(e){}
+        return;
       }
       if(isCard){
         // Card cours
@@ -7511,6 +7519,7 @@ function openGroupeMsg(coursId){
 
   // Toggle permission visible seulement pour le prof
   var pw = g('groupePermWrap'); if(pw) pw.style.display = _groupeIsProf ? 'flex' : 'none';
+  var ga=g('groupeAttachBtn');if(ga)ga.style.display=_groupeIsProf?'flex':'none';
   _updateGroupeToggle();
   _updateGroupeInput();
 
@@ -7594,6 +7603,14 @@ async function _loadGroupeMsgs(){
       var bg = isMe ? 'linear-gradient(135deg,var(--or),var(--ord))' : 'var(--wh)';
       var col = isMe ? '#fff' : 'var(--ink)';
       var br = isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
+      if((m.contenu||'').startsWith('%%ESP%%')){
+        try{var _gec=JSON.parse(m.contenu.slice(7));
+          html+='<div style="display:flex;flex-direction:column;margin-bottom:2px">'+nameHtml
+            +'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px">'
+            +avHtml+_renderEspCardInner(_gec,isMe,time)+'</div></div>';
+        }catch(e){}
+        return;
+      }
       html+='<div style="display:flex;flex-direction:column;margin-bottom:2px">'+nameHtml
         +'<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+';align-items:flex-end;gap:6px">'
         +avHtml
@@ -7635,6 +7652,147 @@ async function sendGroupeMsg(){
     haptic(6);
   }catch(e){ toast(t('t_error'),t('t_msg_failed_s')); }
   finally{ if(btn) btn.disabled = false; }
+}
+
+// ── ESP MSG ATTACHMENT ─────────────────────────────────────────────────────
+var _msgAttachIsGroupe=false;
+var _espPickItems=[];
+var _espPickType='';
+
+function openMsgAttachment(isGroupe){
+  _msgAttachIsGroupe=!!isGroupe;haptic(4);
+  var opts=[
+    {icon:'📋',label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
+    {icon:'📢',label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
+  ];
+  if(isGroupe)opts.push({icon:'📊',label:'Sondage',sub:'Pose une question au groupe',type:'sondage'});
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Partager dans la conversation</div></div>'
+    +'<div style="padding:0 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">';
+  opts.forEach(function(o){
+    var fn=o.type==='sondage'?'openSondageCreator()':'_espMsgPickContent(\''+o.type+'\')';
+    html+='<button onclick="closeQuickSheet();setTimeout(function(){'+fn+';},80)" style="width:100%;background:var(--bg);border:none;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
+      +'<div style="width:44px;height:44px;border-radius:12px;background:var(--orp);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+o.icon+'</div>'
+      +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+o.label+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
+      +'</button>';
+  });
+  html+='<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button></div>';
+  showQuickSheet(html);
+}
+
+function _espMsgPickContent(type){
+  _espPickType=type;
+  showQuickSheet('<div style="padding:48px;text-align:center;color:var(--lite)">Chargement…</div>');
+  fetch(API+'/teacher/'+user.id+'/announcements',{headers:apiH()})
+    .then(function(r){return r.json();})
+    .then(function(list){
+      var filter=type==='fiche'?function(a){return a.type==='fiche';}:function(a){return a.type!=='fiche';};
+      _espPickItems=(list||[]).filter(filter);
+      if(!_espPickItems.length){
+        showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">Aucun contenu disponible dans ton espace</div>'
+          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Fermer</button></div>');
+        return;
+      }
+      var icon=type==='fiche'?'📋':'📢';
+      var title=type==='fiche'?'Fiches de cours':'Publications';
+      var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+        +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+title+'</div></div>'
+        +'<div style="max-height:55vh;overflow-y:auto;padding:0 12px;display:flex;flex-direction:column;gap:6px">';
+      _espPickItems.forEach(function(item,idx){
+        html+='<button onclick="closeQuickSheet();_espMsgSendCardByIdx('+idx+')" style="width:100%;background:var(--bg);border:none;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
+          +'<span style="font-size:20px;flex-shrink:0">'+icon+'</span>'
+          +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||'Sans titre')+'</span>'
+          +'</button>';
+      });
+      html+='</div><div style="padding:10px 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))">'
+        +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button></div>';
+      showQuickSheet(html);
+    })
+    .catch(function(){showQuickSheet('<div style="padding:40px;text-align:center;color:var(--lite)">Erreur de chargement</div>');});
+}
+
+function _espMsgSendCardByIdx(idx){
+  var item=_espPickItems[idx];if(!item)return;
+  _espMsgSendCard(_espPickType,item.id,item.title||'');
+}
+
+function _espMsgSendCard(type,id,title){
+  var contenu='%%ESP%%'+JSON.stringify({t:type,id:id,title:title,pid:user.id});
+  if(_msgAttachIsGroupe){
+    var c=C.find(function(x){return x.id==_groupeCoursId;});
+    fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),body:JSON.stringify({
+      cours_id:_groupeCoursId,expediteur_id:user.id,
+      expediteur_nom:((user.pr||'')+(user.nm?' '+user.nm:'')).trim()||'Professeur',
+      contenu:contenu,cours_titre:c?c.title:'Cours'
+    })}).then(function(){_loadGroupeMsgs();var c2=g('groupeMsgList');if(c2)c2.scrollTop=c2.scrollHeight;});
+  }else{
+    fetch(API+'/messages',{method:'POST',headers:apiH(),body:JSON.stringify({
+      expediteur_id:user.id,destinataire_id:msgDestId,contenu:contenu
+    })}).then(function(){loadMessages();});
+  }
+  haptic(6);toast('Partagé dans la conversation','');
+}
+
+function openSondageCreator(){
+  var inpStyle='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--ink);outline:none;box-sizing:border-box';
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">Créer un sondage</div></div>'
+    +'<div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">'
+    +'<input id="sondageQ" placeholder="Votre question…" style="'+inpStyle+';font-size:15px" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO1" placeholder="Option 1" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO2" placeholder="Option 2" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO3" placeholder="Option 3 (optionnel)" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'</div>'
+    +'<div style="padding:14px 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">'
+    +'<button onclick="_sendSondageMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Envoyer le sondage</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'</div>';
+  showQuickSheet(html);
+}
+
+function _sendSondageMsg(){
+  var q=(g('sondageQ')&&g('sondageQ').value||'').trim();
+  var o1=(g('sondageO1')&&g('sondageO1').value||'').trim();
+  var o2=(g('sondageO2')&&g('sondageO2').value||'').trim();
+  var o3=(g('sondageO3')&&g('sondageO3').value||'').trim();
+  if(!q||!o1||!o2){toast('Complète la question et au moins 2 options','');return;}
+  var opts=[o1,o2];if(o3)opts.push(o3);
+  closeQuickSheet();
+  var contenu='%%ESP%%'+JSON.stringify({t:'sondage',q:q,opts:opts});
+  var c=C.find(function(x){return x.id==_groupeCoursId;});
+  fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),body:JSON.stringify({
+    cours_id:_groupeCoursId,expediteur_id:user.id,
+    expediteur_nom:((user.pr||'')+(user.nm?' '+user.nm:'')).trim()||'Professeur',
+    contenu:contenu,cours_titre:c?c.title:'Cours'
+  })}).then(function(){_loadGroupeMsgs();var c2=g('groupeMsgList');if(c2)c2.scrollTop=c2.scrollHeight;});
+  haptic(6);
+}
+
+function _renderEspCardInner(d,isMe,time){
+  var icons={fiche:'📋',pub:'📢',sondage:'📊'};
+  var labels={fiche:'Fiche de cours',pub:'Publication',sondage:'Sondage'};
+  var icon=icons[d.t]||'📄';
+  var lbl=labels[d.t]||'Contenu';
+  var tapAttr=(d.pid&&d.t!=='sondage')?' onclick="openProfEspace(\''+d.pid+'\')"':'';
+  if(d.t==='sondage'){
+    var optsHtml=(d.opts||[]).map(function(o,i){
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--bdr)">'
+        +'<span style="font-size:12px;font-weight:700;color:var(--or);min-width:16px">'+(i+1)+'.</span>'
+        +'<span style="font-size:13px;color:var(--ink)">'+esc(o)+'</span></div>';
+    }).join('');
+    return '<div class="esp-msg-card" style="align-self:'+(isMe?'flex-end':'flex-start')+'">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">'+icon+' '+lbl+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.3">'+esc(d.q||'')+'</div>'
+      +optsHtml
+      +'<div style="font-size:10px;color:var(--lite);margin-top:8px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+      +'</div>';
+  }
+  return '<div class="esp-msg-card'+(tapAttr?' clickable':'')+'"'+tapAttr+' style="align-self:'+(isMe?'flex-end':'flex-start')+'">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">'+icon+' '+lbl+'</div>'
+    +'<div style="font-size:15px;font-weight:700;color:var(--ink);line-height:1.3">'+esc(d.title||'')+'</div>'
+    +(tapAttr?'<div style="font-size:12px;color:var(--or);font-weight:600;margin-top:8px">Voir dans l\'espace →</div>':'')
+    +'<div style="font-size:10px;color:var(--lite);margin-top:6px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
+    +'</div>';
 }
 
 // ============================================================
