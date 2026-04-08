@@ -10943,7 +10943,7 @@ function closeCrStep(){var el=g('bdCrStep');if(el)el.classList.remove('active');
 function buildStepDOM(){
   var div=document.createElement('div');div.id='bdCrStep';
   var style=document.createElement('style');
-  style.textContent='#bdCrStep{position:fixed;inset:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;}#bdCrStep.active{display:flex!important;}';
+  style.textContent='#bdCrStep{position:fixed;inset:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}';
   document.head.appendChild(style);
   div.innerHTML=
     '<div style="padding:max(20px,env(safe-area-inset-top,20px)) 20px 16px;display:flex;align-items:center;gap:14px;flex-shrink:0;border-bottom:1px solid var(--bdr);background:var(--wh)">'
@@ -10957,6 +10957,18 @@ function buildStepDOM(){
   g('stepBackBtn').onclick=stepBack;
   g('stepCloseBtn').onclick=closeCrStep;
   g('stepCta').onclick=stepNext;
+  // Keyboard awareness — keep CTA visible above keyboard
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',function(){
+      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+      el.style.height=window.visualViewport.height+'px';
+      el.style.top=window.visualViewport.offsetTop+'px';
+    });
+    window.visualViewport.addEventListener('scroll',function(){
+      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+      el.style.top=window.visualViewport.offsetTop+'px';
+    });
+  }
 }
 
 function stepRender(idx){
@@ -11005,6 +11017,10 @@ function stepRender(idx){
     html+='<div style="width:100%"><input id="stepTitre" style="width:100%;border:2px solid var(--bdr);border-radius:16px;padding:16px 18px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box" type="text" placeholder="Ex: Alg\u00e8bre pour d\u00e9butants..." value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
+    html+='<div class="search-bar-premium" style="width:100%;margin-bottom:16px">'
+      +'<div class="search-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>'
+      +'<input class="search-input-premium" id="stepMatSearch" type="search" placeholder="Rechercher une mati\u00e8re\u2026" autocomplete="off">'
+      +'</div>';
     html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%;padding-bottom:8px">';
     CR_CATEGORIES.forEach(function(cat){
       var items=cat.keys.map(function(key){
@@ -11039,11 +11055,12 @@ function stepRender(idx){
     _nivCats.forEach(function(cat){
       html+='<div>'
         +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
+        +'<div style="display:flex;flex-direction:column;gap:8px">';
       cat.items.forEach(function(nv){
         var isSel=_sd.niveau===nv;
-        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="niveau" data-sv="'+escH(nv)+'" onclick="_stepOptClick(this)" style="background:'+(isSel?'var(--orp)':'var(--wh)')+';border:2px solid '+(isSel?'var(--or)':'var(--bdr)')+';border-radius:50px;padding:9px 16px;cursor:pointer;display:inline-flex;align-items:center;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.12)':'none')+'">'
-          +'<span style="font-size:14px;font-weight:600;color:'+(isSel?'var(--or)':'var(--ink)')+';white-space:nowrap">'+nv+'</span>'
+        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="niveau" data-sv="'+escH(nv)+'" onclick="_stepOptClick(this)" style="background:'+(isSel?'var(--orp)':'var(--wh)')+';border:1.5px solid '+(isSel?'var(--or)':'var(--bdr)')+';border-radius:14px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.1)':'0 1px 4px rgba(0,0,0,.04)')+';transition:all .15s;-webkit-tap-highlight-color:transparent">'
+          +'<span style="font-size:14px;font-weight:600;color:'+(isSel?'var(--or)':'var(--ink)')+'">'+nv+'</span>'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(isSel?'var(--or)':'var(--bdr)')+'" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><polyline points="9 18 15 12 9 6"/></svg>'
           +'</div>';
       });
       html+='</div></div>';
@@ -11052,8 +11069,8 @@ function stepRender(idx){
 
   }else if(step.id==='datetime'){
     var today=new Date().toISOString().split('T')[0];
-    var _dtFi='width:100%;border:1.5px solid rgba(255,107,53,.3);border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .18s';
-    var _dtFiNeu='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .18s';
+    var _dtFi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:16px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)';
+    var _dtFiNeu=_dtFi;
     var lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
       +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
@@ -11072,7 +11089,7 @@ function stepRender(idx){
         +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">Un lien Jitsi sera créé pour votre cours. Vous pourrez le modifier depuis <strong>Mes cours</strong> après publication.</div></div>'
         +'</div></div>';
     }else{
-      var _fi='width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;-webkit-appearance:none;box-sizing:border-box;margin-top:0';
+      var _fi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)';
       var _lt=_sd.lieu_type||'';
       // Chaque option a ses propres placeholders / notes
       var _lieuCfg={
@@ -11112,13 +11129,13 @@ function stepRender(idx){
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
           +'<div>'
             +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
-            +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'">'
+            +'<input id="stepLieu" style="'+_fi+'" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next">'
             +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
             +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement — les \u00e9l\u00e8ves pourront filtrer par lieu.</div>'
           +'</div>'
           +'<div>'
             +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label2+'</div>'
-            +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="'+_cfg.ph2+'" value="'+escH(_sd.lieu_prive||'')+'">'
+            +'<input id="stepLieuPrive" style="'+_fi+'" type="text" placeholder="'+_cfg.ph2+'" value="'+escH(_sd.lieu_prive||'')+'" enterkeyhint="done">'
             +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">'+_cfg.note2+'</div>'
           +'</div>'
           +'</div>':'')
@@ -11126,25 +11143,28 @@ function stepRender(idx){
     }
 
   }else if(step.id==='prix'){
-    html+='<div style="width:100%;display:flex;flex-direction:column;gap:18px">'
-      +'<div><label style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:10px">Prix total (&euro;)</label>'
+    var _pCard='background:var(--wh);border:1.5px solid var(--bdr);border-radius:16px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.04)';
+    var _pInp='width:110px;border:1.5px solid var(--bdr);border-radius:14px;padding:12px;font-family:inherit;font-size:30px;font-weight:800;text-align:center;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink);flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .2s,box-shadow .2s';
+    var _pBtn='width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;border:none';
+    html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
+      +'<div style="'+_pCard+'"><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">Prix total (\u20ac)</div>'
       +'<div style="display:flex;align-items:center;gap:14px;justify-content:center">'
-      +'<button type="button" id="btnPrixM" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--bdr);background:var(--bg);font-size:22px;cursor:pointer;color:var(--mid);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s">&#8722;</button>'
-      +'<input id="stepPrix" style="width:130px;border:2px solid var(--bdr);border-radius:16px;padding:14px;font-family:inherit;font-size:32px;font-weight:800;text-align:center;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink);flex-shrink:0" type="number" placeholder="60" value="'+(_sd.prix||'')+'">'
-      +'<button type="button" id="btnPrixP" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--or);background:var(--orp);font-size:22px;cursor:pointer;color:var(--or);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s">+</button>'
+      +'<button type="button" id="btnPrixM" style="'+_pBtn+';background:var(--bg);color:var(--mid)">&#8722;</button>'
+      +'<input id="stepPrix" style="'+_pInp+'" type="number" placeholder="60" value="'+(_sd.prix||'')+'">'
+      +'<button type="button" id="btnPrixP" style="'+_pBtn+';background:var(--orp);color:var(--or)">+</button>'
       +'</div></div>'
-      +'<div><label style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:10px">Places max</label>'
+      +'<div style="'+_pCard+'"><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">Places max</div>'
       +'<div style="display:flex;align-items:center;gap:14px;justify-content:center">'
-      +'<button type="button" id="btnPlcM" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--bdr);background:var(--bg);font-size:22px;cursor:pointer;color:var(--mid);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s">&#8722;</button>'
-      +'<input id="stepPlaces" style="width:130px;border:2px solid var(--bdr);border-radius:16px;padding:14px;font-family:inherit;font-size:28px;font-weight:800;text-align:center;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink);flex-shrink:0" type="number" value="'+_sd.places+'" min="1" max="20">'
-      +'<button type="button" id="btnPlcP" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--or);background:var(--orp);font-size:22px;cursor:pointer;color:var(--or);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s">+</button>'
+      +'<button type="button" id="btnPlcM" style="'+_pBtn+';background:var(--bg);color:var(--mid)">&#8722;</button>'
+      +'<input id="stepPlaces" style="'+_pInp+';font-size:26px;" type="number" value="'+_sd.places+'" min="1" max="20">'
+      +'<button type="button" id="btnPlcP" style="'+_pBtn+';background:var(--orp);color:var(--or)">+</button>'
       +'</div></div>'
-      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:14px;padding:14px;text-align:center;display:none"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:30px;font-weight:800;color:var(--or)">-</div></div>'
+      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:14px;padding:16px;text-align:center;display:none;border:1.5px solid rgba(255,107,43,.15)"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:30px;font-weight:800;color:var(--or)">-</div></div>'
       +'</div>';
 
   }else if(step.id==='desc'){
-    html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
-      +'<textarea id="stepDesc" rows="4" placeholder="D\u00e9crivez votre cours : niveau requis, programme, mat\u00e9riel..." style="resize:none;font-size:15px;font-weight:400;min-height:130px;width:100%;line-height:1.6;border:2px solid var(--bdr);border-radius:16px;padding:14px 16px;font-family:inherit;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s;box-sizing:border-box">'+escH(_sd.desc)+'</textarea>'
+    html+='<div style="width:100%;display:flex;flex-direction:column;gap:8px">'
+      +'<textarea id="stepDesc" rows="6" placeholder="D\u00e9crivez votre cours\u00a0: niveau requis, programme, mat\u00e9riel\u2026" style="resize:none;font-size:15px;font-weight:400;min-height:160px;width:100%;line-height:1.6;border:1.5px solid var(--bdr);border-radius:16px;padding:14px 16px;font-family:inherit;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)">'+escH(_sd.desc)+'</textarea>'
       +'<div id="stepDescCount" style="font-size:12px;color:var(--lite);text-align:right">'+(_sd.desc?_sd.desc.length:0)+'/400</div>'
       +'</div>';
   }
@@ -11194,6 +11214,12 @@ function stepRender(idx){
   wire('stepDuree',function(){_sd.duree=parseInt(this.value)||60;});
   wire('stepLieu',function(){_sd.lieu=this.value;stepLieuSearch(this.value);});
   wire('stepLieuPrive',function(){_sd.lieu_prive=this.value;});
+  wire('stepMatSearch',function(){_filterCrMat(this.value);});
+  // Auto-advance lieu → lieu_prive on Enter
+  var _slEl=g('stepLieu');
+  if(_slEl)_slEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var nx=g('stepLieuPrive');if(nx){nx.focus();var sb=g('stepBody');if(sb)sb.scrollTop=sb.scrollHeight;}}});
+  var _slpEl=g('stepLieuPrive');
+  if(_slpEl)_slpEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}});
   wire('stepPrix',function(){_sd.prix=parseInt(this.value)||0;stepPxCalc();});
   wire('stepPlaces',function(){_sd.places=parseInt(this.value)||5;stepPxCalc();});
   wire('stepDesc',function(){if(this.value.length>400)this.value=this.value.slice(0,400);_sd.desc=this.value;var cnt=g('stepDescCount');if(cnt)cnt.textContent=this.value.length+'/400';});
@@ -11227,6 +11253,22 @@ function _matSearchFilter(q){
     chips.forEach(function(chip){
       var match=!n||normStr(chip.dataset.sv).includes(n);
       chip.style.display=match?'':'none';
+      if(match)visible++;
+    });
+    cat.style.display=visible?'':'none';
+  });
+}
+
+function _filterCrMat(q){
+  var list=g('stepMatList');if(!list)return;
+  var n=normStr(q||'');
+  list.querySelectorAll('[data-cat]').forEach(function(cat){
+    var items=cat.querySelectorAll('.cr-mat-item');
+    var visible=0;
+    items.forEach(function(it){
+      var lbl=it.querySelector('.cr-mat-lbl');
+      var match=!n||(lbl&&normStr(lbl.textContent).includes(n));
+      it.style.display=match?'':'none';
       if(match)visible++;
     });
     cat.style.display=visible?'':'none';
