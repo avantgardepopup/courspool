@@ -4759,14 +4759,32 @@ function _tpBuildTrustCards(p,pid){
 function _tpRenderStatut(p){
   var sect=g('tpStatutSection'),list=g('tpStatutList');if(!sect||!list)return;
   var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  function _row(svgPath,bg,col,lbl,val){
+    return'<div class="tp-card-row">'
+      +'<div style="width:32px;height:32px;border-radius:9px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" width="15" height="15">'+svgPath+'</svg>'
+      +'</div>'
+      +'<div class="tp-card-row-left"><div class="tp-card-row-lbl">'+lbl+'</div><div class="tp-card-row-val">'+esc(val)+'</div></div>'
+      +'</div>';
+  }
+  var _ico={
+    statut:'<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+    diplome:'<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+    formation:'<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>',
+    experience:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>',
+    lieu:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'
+  };
   var rows='';
-  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Statut</div><div class="tp-card-row-val">'+esc(p.statut?(STATUT[p.statut]||p.statut):'—')+'</div></div></div>';
+  rows+=_row(_ico.statut,'#F5F3FF','#8B5CF6','Statut',p.statut?(STATUT[p.statut]||p.statut):'—');
   var dip=p.diplome||p.niveau||null;
-  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Diplôme</div><div class="tp-card-row-val">'+esc(dip||'—')+'</div></div></div>';
+  rows+=_row(_ico.diplome,'#EEF2FF','#4F46E5','Diplôme',dip||'—');
+  var fm=p.formations?String(p.formations).split('\n').filter(Boolean)[0]:null;
+  if(fm)rows+=_row(_ico.formation,'#EEF2FF','#4F46E5','Formations',fm+(p.formations.split('\n').filter(Boolean).length>1?' …':''));
   var exp=p.experiences||p.experience||null;
-  if(exp){rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Expérience</div><div class="tp-card-row-val">'+esc(String(exp).split('\n')[0])+'</div></div></div>';}
+  if(exp)rows+=_row(_ico.experience,'#F5F3FF','#8B5CF6','Expérience',String(exp).split('\n')[0]);
   var lieu=p.lieu_enseignement||p.lieu||null;
-  rows+='<div class="tp-card-row"><div class="tp-card-row-left"><div class="tp-card-row-lbl">Lieu d\'enseignement</div><div class="tp-card-row-val">'+esc(lieu||'—')+'</div></div></div>';
+  if(lieu)rows+=_row(_ico.lieu,'#FFF0E8','#FF6B2B','Lieu d\'enseignement',lieu);
+  if(!rows){sect.style.display='none';return;}
   list.innerHTML=rows;sect.style.display='block';
 }
 
@@ -10952,7 +10970,7 @@ function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active')
 function buildStepDOM(){
   var div=document.createElement('div');div.id='bdCrStep';
   var style=document.createElement('style');
-  style.textContent='#bdCrStep{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;transition:padding-bottom .3s cubic-bezier(.22,.61,.36,1);}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}';
+  style.textContent='#bdCrStep{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2001;background:var(--wh);display:none;flex-direction:column;overflow:hidden;transition:padding-bottom .3s cubic-bezier(.22,.61,.36,1);}#bdCrStep.active{display:flex!important;}#bdCrStep input:focus,#bdCrStep textarea:focus{border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,107,43,.1)!important;outline:none!important;}#bdCrStep input[type="date"],#bdCrStep input[type="time"]{-webkit-appearance:auto!important;}';
   document.head.appendChild(style);
   div.innerHTML=
     '<div style="padding:max(20px,env(safe-area-inset-top,20px)) 20px 16px;display:flex;align-items:center;gap:14px;flex-shrink:0;border-bottom:1px solid var(--bdr);background:var(--wh)">'
@@ -11273,6 +11291,7 @@ function _matSearchFilter(q){
 function _filterCrMat(q){
   var list=g('stepMatList');if(!list)return;
   var n=normStr(q||'');
+  var total=0;
   list.querySelectorAll('[data-cat]').forEach(function(cat){
     var items=cat.querySelectorAll('.cr-mat-item');
     var visible=0;
@@ -11283,7 +11302,28 @@ function _filterCrMat(q){
       if(match)visible++;
     });
     cat.style.display=visible?'':'none';
+    total+=visible;
   });
+  // Aucun résultat : message + rendre "Autre" accessible
+  var noRes=g('stepMatNoRes');
+  if(!n||total>0){
+    if(noRes)noRes.style.display='none';
+    return;
+  }
+  if(!noRes){
+    noRes=document.createElement('div');
+    noRes.id='stepMatNoRes';
+    noRes.style.cssText='width:100%;display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0';
+    list.appendChild(noRes);
+  }
+  var autreItem=list.querySelector('[data-key="autre"]');
+  noRes.style.display='';
+  noRes.innerHTML='<div style="font-size:13px;color:var(--lite);text-align:center">Matière non trouvée — sélectionnez <strong style="color:var(--ink)">Autre</strong></div>';
+  if(autreItem){
+    autreItem.style.display='';
+    var autreParent=autreItem.closest('[data-cat]');
+    if(autreParent)autreParent.style.display='';
+  }
 }
 
 function _stepPickMat(key,label){
