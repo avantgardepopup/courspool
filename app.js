@@ -10602,6 +10602,37 @@ function initLargeTitle(){
   },{passive:true});
 }
 
+function openInlineSearch(){
+  var pill=g('searchPill'),inp=g('pillSearchInput'),tw=g('pillTextWrap');
+  var pd=g('pillDivider'),fb=g('filtersBtn'),cb=g('pillCancelBtn'),bar=g('filterBarWrap');
+  if(!inp||inp.style.display!=='none')return; // déjà ouvert
+  if(tw)tw.style.display='none';
+  if(pd)pd.style.display='none';
+  if(fb)fb.style.display='none';
+  if(bar)bar.style.display='none';
+  inp.style.display='block';
+  if(cb)cb.style.display='block';
+  if(pill)pill.onclick=null; // éviter re-déclenchement
+  setTimeout(function(){if(inp)inp.focus();},50);
+}
+function closeInlineSearch(){
+  var pill=g('searchPill'),inp=g('pillSearchInput'),tw=g('pillTextWrap');
+  var pd=g('pillDivider'),fb=g('filtersBtn'),cb=g('pillCancelBtn'),bar=g('filterBarWrap');
+  if(inp){inp.value='';inp.style.display='none';inp.blur();}
+  if(tw)tw.style.display='';
+  if(pd)pd.style.display='';
+  if(fb)fb.style.display='';
+  if(cb)cb.style.display='none';
+  if(bar)bar.style.display='';
+  if(pill)pill.onclick=function(){openInlineSearch();};
+  var srch=g('srch');if(srch)srch.value='';
+  applyFilter();
+}
+function _pillDoFilter(val){
+  var srch=g('srch');if(srch)srch.value=val;
+  doFilter();
+}
+
 function expandSearch(){
   var srch=g('srch');if(!srch)return;
   var wrap=srch.parentElement;
