@@ -3015,6 +3015,7 @@ html.dk {
   border-radius:20px;
   box-shadow:0 3px 14px rgba(0,0,0,0.11),0 0 0 0.5px rgba(0,0,0,0.06);
   overflow:hidden;
+  flex-shrink:0;
 }
 html.dk .ss-card {
   background:#1C1C1E;
@@ -3024,8 +3025,7 @@ html.dk .ss-card {
 /* Ligne principale d'une carte (style pill) */
 .ss-pill-row {
   display:flex;align-items:center;gap:13px;
-  padding:0 18px;
-  min-height:56px;
+  padding:17px 18px;
   -webkit-tap-highlight-color:transparent;
   cursor:pointer;
 }
@@ -3058,12 +3058,11 @@ html.dk .ss-pill-chevron { color:#636366; }
 /* Input pill (Lieu / Prof / Code) */
 .ss-pill-input {
   flex:1;border:none;outline:none;
-  background:#ffffff !important;-webkit-appearance:none;
+  background:transparent !important;-webkit-appearance:none;
   font-family:inherit;font-size:16px;font-weight:400;
   color:#222;-webkit-text-fill-color:#222;
   -webkit-tap-highlight-color:transparent;min-width:0;
-  height:56px;padding:0;line-height:56px;
-  display:block;
+  height:auto;padding:0;margin:0;
 }
 .ss-pill-input::placeholder { color:#aaa;-webkit-text-fill-color:#aaa;opacity:1; }
 html.dk .ss-pill-input { background:#1C1C1E !important;color:#fff;-webkit-text-fill-color:#fff; }
