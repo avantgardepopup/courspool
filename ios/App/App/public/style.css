@@ -504,10 +504,51 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-around;
+  overflow: visible;
   /* Espace au-dessus des icônes */
   padding-top: 10px;
   /* Espace en dessous : home indicator + marge */
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+}
+
+/* ── FAB centre ── */
+.bni-fab {
+  gap: 3px;
+  padding: 0;
+  padding-bottom: 2px;
+  overflow: visible;
+  justify-content: flex-end;
+}
+.bni-fab .bni-add-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #FF7D42, #FF4500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: -24px;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.97), 0 8px 24px rgba(255,69,0,.5);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+}
+.bni-fab-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--or);
+  line-height: 1;
+  white-space: nowrap;
+}
+.bni-fab:active { opacity: 1; transform: none; }
+.bni-fab:active .bni-add-circle {
+  transform: scale(.88);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.97), 0 4px 14px rgba(255,69,0,.4);
+}
+html.dk .bni-fab .bni-add-circle {
+  box-shadow: 0 0 0 5px rgb(18,17,16), 0 8px 24px rgba(255,69,0,.55);
+}
+html.dk .bni-fab:active .bni-add-circle {
+  box-shadow: 0 0 0 5px rgb(18,17,16), 0 4px 14px rgba(255,69,0,.4);
 }
 .bnav.on { display: flex; }
 /* Pseudo-élément qui étend le fond jusqu'au bas absolu de l'écran (home indicator iOS) */
@@ -647,8 +688,9 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
     flex-grow: 0;
   }
   #bniAdd .bni-add-circle {
-    width: 44px !important;
-    height: 44px !important;
+    width: 50px !important;
+    height: 50px !important;
+    margin-top: -18px !important;
     flex-shrink: 0;
     flex-grow: 0;
   }
@@ -2323,7 +2365,7 @@ html.dk .settings-chevron { color:var(--bdr); }
     gap: 5px !important;
   }
   .bni svg { width: 22px !important; height: 22px !important; }
-  #bniAdd > div { width: 36px !important; height: 36px !important; }
+  #bniAdd > .bni-add-circle { width: 46px !important; height: 46px !important; margin-top: -14px !important; }
 }
 
 /* ── Mobile (<769px) ── */

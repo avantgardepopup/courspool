@@ -2985,18 +2985,18 @@
     <span class="bni-lbl" data-i18n="bnav_favoris">Favoris</span>
   </div>
 
+  <div class="bni bni-fab" id="bniAdd" onclick="openCrStep()" style="display:none;">
+    <div class="bni-add-circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" width="22" height="22" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <span class="bni-fab-lbl" data-i18n="bnav_creer">Créer</span>
+  </div>
+
   <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
     <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
     <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <div class="bni-badge" id="bnavBadge"></div>
     <span class="bni-lbl bni-msg-lbl" data-i18n="bnav_messages">Messages</span>
-  </div>
-
-  <div class="bni" id="bniAdd" onclick="openCrStep()" style="display:none;">
-    <div class="bni-add-circle" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(255,107,43,.4)">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </div>
-    <span style="font-size:11px;font-weight:500;color:#9A9A9A;line-height:1" data-i18n="bnav_creer">Créer</span>
   </div>
 
   <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
