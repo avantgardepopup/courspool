@@ -8457,7 +8457,7 @@ function updateVerifStatusBlock(){
   if(status==='none'){
     var html='<div style="background:var(--orp);border-radius:12px;padding:14px 16px">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="13" y2="14"/></svg>'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>'
       +'<span style="font-size:13px;font-weight:700;color:var(--or)">Vérification d\'identité requise</span>'
       +'</div>'
       +'<div style="font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:12px">Envoyez votre pièce d\'identité pour activer votre compte et publier des cours.</div>'
@@ -8622,7 +8622,7 @@ function updateDiplomeStatusBlock(){
     block.style.display='block';
   } else if(status==='verified'){
     html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#EFF6FF;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>'
       +'<span style="font-size:13px;font-weight:700;color:#1D4ED8">Diplôme vérifié — Badge affiché sur votre profil</span>'
       +'</div>';
     block.style.display='block';
@@ -8666,7 +8666,7 @@ function updateCasierStatusBlock(){
     block.style.display='block';
   } else if(status==='verified'){
     html='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#ECFDF5;border-radius:12px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
       +'<span style="font-size:13px;font-weight:700;color:#059669">Profil de confiance vérifié — Badge affiché sur votre profil</span>'
       +'</div>';
     block.style.display='block';
@@ -8739,7 +8739,7 @@ function showBadgeInfo(type){
     identite:{
       grad:'linear-gradient(135deg,#00C853,#009640)',
       glow:'rgba(0,180,80,.32)',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><polyline points="20 6 9 17 4 12"/></svg>',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>',
       name:'Identité vérifiée',
       badge:'Rare · ~14% des profs',
       desc:'Ce professeur a fourni une pièce d\'identité officielle contrôlée par l\'équipe CoursPool. Vous interagissez avec une vraie personne.',
