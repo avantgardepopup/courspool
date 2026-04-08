@@ -848,7 +848,7 @@ function openEnrollSheet(){
   _enrollBd=bd;
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--bg);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(36px,env(safe-area-inset-bottom,36px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
+  sheet.style.cssText='background:'+cardBg+';border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(36px,env(safe-area-inset-bottom,36px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
   sheet.innerHTML=
     '<style>#_enrollCodeInp::placeholder{color:'+phColor+' !important;-webkit-text-fill-color:'+phColor+' !important;opacity:1;letter-spacing:.04em;font-family:inherit;font-size:16px;font-weight:400;text-transform:none;}</style>'
     +'<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
