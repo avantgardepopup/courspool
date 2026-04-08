@@ -11055,13 +11055,16 @@ function stepRender(idx){
     _nivCats.forEach(function(cat){
       html+='<div>'
         +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.lbl+'</div>'
-        +'<div style="display:flex;flex-direction:column;gap:8px">';
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px">';
       cat.items.forEach(function(nv){
         var isSel=_sd.niveau===nv;
-        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="niveau" data-sv="'+escH(nv)+'" onclick="_stepOptClick(this)" style="background:'+(isSel?'var(--orp)':'var(--wh)')+';border:1.5px solid '+(isSel?'var(--or)':'var(--bdr)')+';border-radius:14px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,43,.1)':'0 1px 4px rgba(0,0,0,.04)')+';transition:all .15s;-webkit-tap-highlight-color:transparent">'
-          +'<span style="font-size:14px;font-weight:600;color:'+(isSel?'var(--or)':'var(--ink)')+'">'+nv+'</span>'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(isSel?'var(--or)':'var(--bdr)')+'" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><polyline points="9 18 15 12 9 6"/></svg>'
-          +'</div>';
+        html+='<div class="step-option'+(isSel?' selected':'')+'" data-sa="niveau" data-sv="'+escH(nv)+'" onclick="_stepOptClick(this)" style="'
+          +'padding:9px 18px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;'
+          +'transition:all .22s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent;'
+          +(isSel
+            ?'background:linear-gradient(135deg,#FF7D42,#FF4500);color:#fff;border:1.5px solid transparent;box-shadow:0 4px 14px rgba(255,69,0,.28);'
+            :'background:var(--wh);color:var(--mid);border:1.5px solid var(--bdr);box-shadow:0 1px 3px rgba(0,0,0,.05);')
+          +'">'+nv+'</div>';
       });
       html+='</div></div>';
     });
@@ -11143,23 +11146,14 @@ function stepRender(idx){
     }
 
   }else if(step.id==='prix'){
-    var _pCard='background:var(--wh);border:1.5px solid var(--bdr);border-radius:16px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.04)';
-    var _pInp='width:110px;border:1.5px solid var(--bdr);border-radius:14px;padding:12px;font-family:inherit;font-size:30px;font-weight:800;text-align:center;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink);flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .2s,box-shadow .2s';
-    var _pBtn='width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;border:none';
-    html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
-      +'<div style="'+_pCard+'"><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">Prix total (\u20ac)</div>'
-      +'<div style="display:flex;align-items:center;gap:14px;justify-content:center">'
-      +'<button type="button" id="btnPrixM" style="'+_pBtn+';background:var(--bg);color:var(--mid)">&#8722;</button>'
-      +'<input id="stepPrix" style="'+_pInp+'" type="number" placeholder="60" value="'+(_sd.prix||'')+'">'
-      +'<button type="button" id="btnPrixP" style="'+_pBtn+';background:var(--orp);color:var(--or)">+</button>'
-      +'</div></div>'
-      +'<div style="'+_pCard+'"><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">Places max</div>'
-      +'<div style="display:flex;align-items:center;gap:14px;justify-content:center">'
-      +'<button type="button" id="btnPlcM" style="'+_pBtn+';background:var(--bg);color:var(--mid)">&#8722;</button>'
-      +'<input id="stepPlaces" style="'+_pInp+';font-size:26px;" type="number" value="'+_sd.places+'" min="1" max="20">'
-      +'<button type="button" id="btnPlcP" style="'+_pBtn+';background:var(--orp);color:var(--or)">+</button>'
-      +'</div></div>'
-      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:14px;padding:16px;text-align:center;display:none;border:1.5px solid rgba(255,107,43,.15)"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:30px;font-weight:800;color:var(--or)">-</div></div>'
+    var _pInpSimple='border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:18px;font-weight:700;text-align:center;outline:none;-webkit-appearance:none;box-sizing:border-box;background:var(--wh);color:var(--ink);width:100%;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:border-color .2s,box-shadow .2s';
+    var _lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
+    html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
+      +'<div style="display:flex;gap:12px">'
+      +'<div style="flex:1"><label style="'+_lbl+'">Prix total (\u20ac)</label><input id="stepPrix" style="'+_pInpSimple+'" type="number" placeholder="60" value="'+(_sd.prix||'')+'" enterkeyhint="next"></div>'
+      +'<div style="flex:1"><label style="'+_lbl+'">Places max</label><input id="stepPlaces" style="'+_pInpSimple+'" type="number" value="'+_sd.places+'" min="1" max="20" enterkeyhint="done"></div>'
+      +'</div>'
+      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:14px;padding:14px;text-align:center;display:none;border:1.5px solid rgba(255,107,43,.15)"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:26px;font-weight:800;color:var(--or)">-</div></div>'
       +'</div>';
 
   }else if(step.id==='desc'){
