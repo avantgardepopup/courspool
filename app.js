@@ -12490,9 +12490,30 @@ function openAllFiltersSheet(){
   document.body.style.overflow='hidden';
   _afSyncState();
   haptic(4);
+  // Keyboard avoidance — ajuste max-height du panel quand le clavier monte
+  var panel=el.querySelector('div');
+  var _afKbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;if(h<=0||!panel)return;
+    panel.style.maxHeight=(window.innerHeight-h-12)+'px';
+    panel.style.transition='max-height .22s ease';
+    // Scroll vers le champ ville si c'est lui qui a le focus
+    setTimeout(function(){
+      var fi=g('afVilleInput');
+      if(fi&&document.activeElement===fi)fi.scrollIntoView({behavior:'smooth',block:'nearest'});
+    },80);
+  };
+  var _afKbHide=function(){
+    if(panel){panel.style.maxHeight='88vh';panel.style.transition='max-height .18s ease';}
+  };
+  window.addEventListener('keyboardWillShow',_afKbShow);
+  window.addEventListener('keyboardWillHide',_afKbHide);
+  el._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_afKbShow);window.removeEventListener('keyboardWillHide',_afKbHide);};
 }
 function closeAllFiltersSheet(){
-  var el=g('bdAllFilters');if(el){el.style.display='none';document.body.style.overflow='';}
+  var el=g('bdAllFilters');
+  if(!el)return;
+  if(el._cleanupKb){el._cleanupKb();el._cleanupKb=null;}
+  el.style.display='none';document.body.style.overflow='';
   _updateFiltersBadge();
 }
 function _afSyncState(){
