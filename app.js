@@ -5830,11 +5830,27 @@ function loadElveBibliotheque(pid){
       return;
     }
     var html='';
+    function _elveLockedCard(title,icoHtml,onClickAttr){
+      return'<div onclick="'+onClickAttr+'" style="position:relative;border-radius:16px;overflow:hidden;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+        +'<div style="display:flex;align-items:center;gap:12px;background:var(--wh);padding:14px;filter:blur(3px);pointer-events:none;user-select:none">'
+        +icoHtml
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+title+'</div>'
+        +'<div style="font-size:12px;color:var(--lite);margin-top:2px">••••••••</div></div></div>'
+        +'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.55);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px)">'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,107,43,.35)">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--ink)">Mot de passe requis</div>'
+        +'</div></div>';
+    }
     if(fiches.length){
       html+='<div class="mes-section-title" style="padding:4px 4px 8px">Fiches de cours</div>';
       html+=fiches.map(function(f){
-        return'<div onclick="espOpenFicheEleve(\''+pid+'\',\''+escH(f.id)+'\')" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:1px solid var(--bdr);border-radius:16px;padding:14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
-          +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+        var icoHtml='<div style="width:40px;height:40px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>';
+        if(f.access_type==='password'){
+          return _elveLockedCard(esc(f.title||'Fiche sans titre'),icoHtml,'elveUnlockSheet(\''+pid+'\',\'fiche\',\''+escH(f.id)+'\')');
+        }
+        return'<div onclick="espOpenFicheEleve(\''+pid+'\',\''+escH(f.id)+'\')" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:none;box-shadow:0 3px 12px rgba(0,0,0,.1),0 0 0 0.5px rgba(0,0,0,.06);border-radius:16px;padding:14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+          +icoHtml
           +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.title||'Fiche sans titre')+'</div>'
           +'<div style="font-size:12px;color:var(--lite);margin-top:2px">Fiche de cours</div></div>'
           +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
@@ -5844,30 +5860,35 @@ function loadElveBibliotheque(pid){
     if(resources.length||content.length){
       html+='<div class="mes-section-title" style="padding:'+(fiches.length?'16px':'4px')+' 4px 8px">Ressources</div>';
       resources.forEach(function(r){
-        html+='<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:1px solid var(--bdr);border-radius:16px;padding:14px;margin-bottom:8px;text-decoration:none;-webkit-tap-highlight-color:transparent">'
-          +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+(TYPE_ICON[r.type]||'📎')+'</div>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title||'Document')+'</div>'
-          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(r.type||'document')+'</div></div>'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-          +'</a>';
+        var icoHtml='<div style="width:40px;height:40px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>';
+        if(r.access_type==='password'){
+          html+=_elveLockedCard(esc(r.title||'Document'),icoHtml,'elveUnlockSheet(\''+pid+'\',\'resource\',\''+escH(r.id)+'\',\''+escH(r.url||'')+'\')');
+        }else{
+          html+='<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:none;box-shadow:0 3px 12px rgba(0,0,0,.1),0 0 0 0.5px rgba(0,0,0,.06);border-radius:16px;padding:14px;margin-bottom:8px;text-decoration:none;-webkit-tap-highlight-color:transparent">'
+            +icoHtml
+            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title||'Document')+'</div>'
+            +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(r.type||'document')+'</div></div>'
+            +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+            +'</a>';
+        }
       });
       content.forEach(function(c){
-        var typeIco={text:'📝',video:'🎥',pdf:'📄',link:'🔗'}[c.content_type]||'📚';
         var isUnlocked=c.is_unlocked;
-        var tag=c.access_type==='password'?'Mot de passe requis':c.access_type==='premium'?'Premium':'Accès libre';
-        var tagColor=c.access_type==='password'?'#8B5CF6':c.access_type==='premium'?'#F59E0B':'#10B981';
-        html+='<div style="background:var(--wh);border:1px solid var(--bdr);border-radius:16px;padding:14px;margin-bottom:8px">'
-          +'<div style="display:flex;align-items:center;gap:12px">'
-          +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">'+typeIco+'</div>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title||'Contenu')+'</div>'
-          +'<div style="font-size:11px;font-weight:600;color:'+tagColor+';margin-top:2px">'+tag+'</div></div>'
-          +'</div>';
-        if(isUnlocked&&c.content_url){
-          html+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;padding:9px;background:rgba(99,102,241,.08);border-radius:10px;text-align:center;font-size:13px;font-weight:700;color:#6366F1;text-decoration:none">'+typeIco+' Voir le contenu</a>';
-        }else if(c.access_type==='password'){
-          html+='<div id="_elvePwRow_'+c.id+'" style="display:flex;gap:8px;margin-top:10px"><input type="password" placeholder="Mot de passe" class="esp-input" style="flex:1;font-size:13px;padding:8px 10px" id="_elvePwInp_'+c.id+'"><button onclick="elveBiblioUnlock(\''+pid+'\',\''+escH(c.id)+'\')" class="esp-btn esp-btn-prim" style="font-size:12px;padding:8px 12px">OK</button></div>';
+        var icoSvgs={text:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>',video:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',pdf:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',link:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>'};
+        var icoPath=icoSvgs[c.content_type]||icoSvgs.text;
+        var icoHtml='<div style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+icoPath+'</svg></div>';
+        if(c.access_type==='password'&&!isUnlocked){
+          html+=_elveLockedCard(esc(c.title||'Contenu'),icoHtml,'elveUnlockSheet(\''+pid+'\',\'content\',\''+escH(c.id)+'\')');
+        }else{
+          html+='<div style="background:var(--wh);border:none;box-shadow:0 3px 12px rgba(0,0,0,.1),0 0 0 0.5px rgba(0,0,0,.06);border-radius:16px;padding:14px;margin-bottom:8px">'
+            +'<div style="display:flex;align-items:center;gap:12px">'+icoHtml
+            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title||'Contenu')+'</div>'
+            +'<div style="font-size:11px;font-weight:600;color:#10B981;margin-top:2px">Accès libre</div></div></div>';
+          if(isUnlocked&&c.content_url){
+            html+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;padding:9px;background:rgba(99,102,241,.08);border-radius:10px;text-align:center;font-size:13px;font-weight:700;color:#6366F1;text-decoration:none">Voir le contenu</a>';
+          }
+          html+='</div>';
         }
-        html+='</div>';
       });
     }
     grid.innerHTML=html;
@@ -5882,6 +5903,44 @@ function elveBiblioUnlock(pid,cid){
       if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
       haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
     }).catch(function(){});
+}
+
+function elveUnlockSheet(pid,kind,id,extra){
+  var bd=document.createElement('div');
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1200;display:flex;align-items:flex-end;justify-content:center';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))';
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
+    +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>'
+    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Contenu protégé</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Entre le mot de passe pour accéder</div></div></div>'
+    +'<input id="_elveUnlockInp" type="text" placeholder="Mot de passe" style="width:100%;border:none;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.06em;outline:none;box-sizing:border-box;margin-bottom:14px">'
+    +'<button id="_elveUnlockBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px">Déverrouiller</button>'
+    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+  var btn=sheet.querySelector('#_elveUnlockBtn');
+  btn.onclick=function(){
+    var pw=(document.getElementById('_elveUnlockInp').value||'').trim();
+    if(!pw)return;
+    btn.disabled=true;btn.textContent='…';
+    if(kind==='content'){
+      fetch(API+'/teacher/'+pid+'/content/'+id+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
+        .then(function(r){return r.json();}).then(function(d){
+          if(d.error){btn.disabled=false;btn.textContent='Déverrouiller';document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast('Mot de passe incorrect','');haptic(2);return;}
+          bd.remove();haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
+        }).catch(function(){btn.disabled=false;btn.textContent='Déverrouiller';});
+    }else if(kind==='resource'&&extra){
+      // resources: open link after password (best effort — server-side gating not implemented here)
+      bd.remove();haptic(8);window.open(extra,'_blank');
+    }else{
+      bd.remove();loadElveBibliotheque(pid);
+    }
+  };
+  bd.appendChild(sheet);document.body.appendChild(bd);
+  setTimeout(function(){var inp=document.getElementById('_elveUnlockInp');if(inp)inp.focus();},150);
+  haptic(4);
 }
 
 // ── ENVOYER UN DOCUMENT (sheet) ───────────────────────────────────────────
@@ -5983,9 +6042,9 @@ function loadBibliotheque(){
     var resources=results[1]||[];
     var content=results[2]||[];
     var items=[];
-    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',icon:'📋',access:f.access_type||'enrolled',created_at:f.created_at});});
-    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',icon:TYPE_ICON[r.type]||'📎',access:r.access_type||'enrolled',created_at:r.created_at});});
-    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',icon:TYPE_ICON[c.content_type]||'📚',access:c.access_type||'enrolled',created_at:c.created_at});});
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',password:f.password||'',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_type||'enrolled',password:r.password||'',created_at:r.created_at});});
+    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',type:c.content_type||'',access:c.access_type||'enrolled',password:c.password||'',created_at:c.created_at});});
     items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
     if(!items.length){
       grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
@@ -6005,6 +6064,7 @@ function loadBibliotheque(){
         +'<div class="biblio-card-body">'
         +'<div class="biblio-card-title">'+esc(item.title)+'</div>'
         +badge
+        +(acc==='password'&&item.password?'<div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;background:var(--bg);border-radius:8px;padding:4px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span style="font-size:12px;font-weight:700;color:var(--mid);letter-spacing:.06em">'+esc(item.password)+'</span></div>':'')
         +'</div>'
         +'<div class="biblio-card-actions">'
         +'<button onclick="event.stopPropagation();biblioOpenAccessSheet(\''+item.kind+'\',\''+item.id+'\',\''+acc+'\')" class="biblio-act-btn" title="Changer l\'accès" style="padding:8px;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center">'
@@ -6049,16 +6109,44 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   sheet.innerHTML=html;
   bd.appendChild(sheet);
   document.body.appendChild(bd);
-  window._biblioPickAccess=function(k,i,v){bd.remove();biblioSetAccess(k,i,v);};
+  window._biblioPickAccess=function(k,i,v){
+    if(v==='password'){
+      bd.remove();
+      _biblioAskPassword(function(pw){biblioSetAccess(k,i,v,pw);});
+    }else{bd.remove();biblioSetAccess(k,i,v);}
+  };
   haptic(4);
 }
 
-function biblioSetAccess(kind,id,access){
+function _biblioAskPassword(onDone){
+  var bd2=document.createElement('div');
+  bd2.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1300;display:flex;align-items:flex-end;justify-content:center';
+  bd2.onclick=function(e){if(e.target===bd2)bd2.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))';
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em">Définir un mot de passe</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:18px">Les élèves devront saisir ce code pour accéder au contenu.</div>'
+    +'<input id="_biblioPwInp" type="text" placeholder="Ex\u00a0: mathsL3" style="width:100%;border:none;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.08em;outline:none;box-sizing:border-box;margin-bottom:16px">'
+    +'<button onclick="_biblioPwConfirm()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28)">Confirmer</button>'
+    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;margin-top:10px;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+  window._biblioPwConfirm=function(){
+    var v=(document.getElementById('_biblioPwInp').value||'').trim();
+    if(!v){document.getElementById('_biblioPwInp').style.boxShadow='0 0 0 2px #EF4444';return;}
+    bd2.remove();onDone(v);
+  };
+  bd2.appendChild(sheet);document.body.appendChild(bd2);
+  setTimeout(function(){var inp=document.getElementById('_biblioPwInp');if(inp)inp.focus();},150);
+  haptic(4);
+}
+
+function biblioSetAccess(kind,id,access,pw){
   var uid=user&&user.id;if(!uid)return;
   var endpoints={resource:'/teacher/'+uid+'/resources/'+id,content:'/teacher/'+uid+'/content/'+id,fiche:'/teacher/'+uid+'/announcements/'+id};
   var ep=endpoints[kind];if(!ep)return;
   haptic(4);
-  fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
+  var body={access_type:access};if(pw)body.password=pw;
+  fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
     .catch(function(){toast('Erreur réseau','');});
 }
