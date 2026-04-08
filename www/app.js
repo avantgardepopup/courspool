@@ -6007,9 +6007,9 @@ function loadBibliotheque(){
         +badge
         +'</div>'
         +'<div class="biblio-card-actions">'
-        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'enrolled\')" class="biblio-act-btn'+(acc==='enrolled'?' active':'')+'" title="Visible par tous les inscrits">Inscrits</button>'
-        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'password\')" class="biblio-act-btn'+(acc==='password'?' active':'')+'" title="Protégé par mot de passe">MDP</button>'
-        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'share\')" class="biblio-act-btn'+(acc==='share'?' active':'')+'" title="Accessible via un lien de partage">Lien</button>'
+        +'<button onclick="event.stopPropagation();biblioOpenAccessSheet(\''+item.kind+'\',\''+item.id+'\',\''+acc+'\')" class="biblio-act-btn" title="Changer l\'accès" style="padding:8px;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'
+        +'</button>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -6018,6 +6018,39 @@ function loadBibliotheque(){
 
 function biblioOpenItem(kind,id){
   if(kind==='fiche')espOpenFiche(id);
+}
+
+function biblioOpenAccessSheet(kind,id,curAcc){
+  var bd=document.createElement('div');
+  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:1200;display:flex;align-items:flex-end;justify-content:center';
+  bd.onclick=function(e){if(e.target===bd)bd.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
+  var opts=[
+    {val:'enrolled',label:'Tous les inscrits',sub:'Visible par les élèves inscrits',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.1)'},
+    {val:'password',label:'Mot de passe',sub:'Protégé par un code secret',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'#2563EB',bg:'rgba(59,130,246,.1)'},
+    {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--or)',bg:'rgba(255,107,43,.1)'}
+  ];
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
+  html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Visibilité</div>';
+  html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">Choisir qui peut accéder à ce contenu</div>';
+  opts.forEach(function(o){
+    var isCur=o.val===curAcc;
+    html+='<div onclick="_biblioPickAccess(\''+kind+'\',\''+id+'\',\''+o.val+'\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;margin-bottom:8px;cursor:pointer;background:'+(isCur?'rgba(255,107,43,.04)':'var(--bg)')+';box-shadow:'+(isCur?'0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.12)':'none')+';-webkit-tap-highlight-color:transparent">'
+      +'<div style="width:42px;height:42px;border-radius:13px;background:'+o.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+o.stroke+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+o.svgPath+'</svg>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink)">'+o.label+'</div>'
+      +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
+      +(isCur?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>':'')
+      +'</div>';
+  });
+  html+='<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;margin-top:4px;padding:14px;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--lite);cursor:pointer;-webkit-tap-highlight-color:transparent">Annuler</button>';
+  sheet.innerHTML=html;
+  bd.appendChild(sheet);
+  document.body.appendChild(bd);
+  window._biblioPickAccess=function(k,i,v){bd.remove();biblioSetAccess(k,i,v);};
+  haptic(4);
 }
 
 function biblioSetAccess(kind,id,access){
