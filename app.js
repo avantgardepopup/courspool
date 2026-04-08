@@ -423,8 +423,14 @@ function _buildFavCard2Col(c,idx){
   div.onclick=function(){openR(c.id);};
   var avInner=profPhoto?('<img src="'+esc(profPhoto)+'" style="width:100%;height:100%;object-fit:cover">')
     :esc(profIni);
+  var modeIco=isV
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="10" height="10"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   div.innerHTML='<div class="fav2-img" style="height:'+imgH+'px;background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22);position:relative;overflow:hidden">'
-    +'<span class="fav2-subj" style="background:'+mat.color+'">'+esc(c.subj||'Cours')+'</span>'
+    +'<div style="position:absolute;top:9px;left:9px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:5px">'
+    +'<span class="fav2-subj" style="background:'+mat.color+';position:static">'+esc(c.subj||'Cours')+'</span>'
+    +'<span style="display:inline-flex;align-items:center;gap:4px;background:'+modeBg+';color:'+modeCo+';font-size:9px;font-weight:700;border-radius:50px;padding:3px 7px 3px 5px">'+modeIco+(isV?'Visio':'Présentiel')+'</span>'
+    +'</div>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'+avInner+'</div>'
     +'</div>'
     +'<div class="fav2-body">'
@@ -433,7 +439,7 @@ function _buildFavCard2Col(c,idx){
     +'<div class="fav2-sep"></div>'
     +'<div class="fav2-foot">'
     +(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
-    +'<div class="fav2-mode" style="background:'+modeBg+';color:'+modeCo+'">'+(isV?'Visio':'Présentiel')+'</div>'
+    +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--lite)">Voir<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>'
     +'</div>'
     +'</div>';
   wrap.appendChild(div);

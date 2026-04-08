@@ -786,12 +786,12 @@ html.dk .fav2-swipe-wrap{box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),0 4px 
 html.dk .fav2-card{background:var(--wh);}
 /* floating subject pill + prof avatar at top (like explorer) */
 .fav2-subj{
-  position:absolute;top:9px;left:9px;z-index:2;
   font-size:10px;font-weight:800;color:#fff;
   padding:4px 10px;border-radius:50px;
   letter-spacing:.03em;text-transform:uppercase;
   box-shadow:0 2px 8px rgba(0,0,0,.18);
-  max-width:calc(100% - 48px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  display:inline-block;
 }
 .fav2-av-wrap{
   position:absolute;top:7px;right:7px;z-index:2;
