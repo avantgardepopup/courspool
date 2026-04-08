@@ -5952,9 +5952,24 @@ function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
   var grid=g('biblioGrid');if(!grid)return;
   grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
-  var ACCESS_ICON={enrolled:'🔓',password:'🔐',share:'🔗'};
-  var ACCESS_LABEL={enrolled:'Tous',password:'Mot de passe',share:'Via partage'};
+  var ACCESS_LABEL={enrolled:'Inscrits',password:'Mot de passe',share:'Via lien'};
   var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  function _biblioIco(kind,type){
+    var bg,stroke,path;
+    if(kind==='fiche'){bg='rgba(34,197,94,.12)';stroke='#16A34A';path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';}
+    else if(type==='video'){bg='rgba(99,102,241,.1)';stroke='#6366F1';path='<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>';}
+    else if(type==='link'){bg='rgba(255,107,43,.1)';stroke='var(--or)';path='<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>';}
+    else if(type==='pdf'){bg='rgba(239,68,68,.1)';stroke='#EF4444';path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>';}
+    else{bg='rgba(59,130,246,.1)';stroke='#3B82F6';path='<path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/>';}
+    return'<div class="biblio-card-ico" style="background:'+bg+'">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+stroke+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+path+'</svg>'
+      +'</div>';
+  }
+  function _biblioAccessSvg(type){
+    if(type==='password')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+    if(type==='share')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
+    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>';
+  }
   // Fetch announcements (fiches) + resources
   Promise.all([
     fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
@@ -5984,17 +5999,17 @@ function loadBibliotheque(){
     }
     grid.innerHTML=items.map(function(item){
       var acc=item.access||'enrolled';
-      var badge='<span class="biblio-access-badge '+acc+'">'+ACCESS_ICON[acc]+' '+ACCESS_LABEL[acc]+'</span>';
+      var badge='<span class="biblio-access-badge '+acc+'">'+_biblioAccessSvg(acc)+ACCESS_LABEL[acc]+'</span>';
       return'<div class="biblio-card" onclick="biblioOpenItem(\''+item.kind+'\',\''+item.id+'\')">'
-        +'<div class="biblio-card-ico">'+item.icon+'</div>'
+        +_biblioIco(item.kind,item.type||'')
         +'<div class="biblio-card-body">'
         +'<div class="biblio-card-title">'+esc(item.title)+'</div>'
         +badge
         +'</div>'
         +'<div class="biblio-card-actions">'
-        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'enrolled\')" class="biblio-act-btn'+(acc==='enrolled'?' active':'')+'">🔓 Tous</button>'
-        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'password\')" class="biblio-act-btn'+(acc==='password'?' active':'')+'">🔐 MDP</button>'
-        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'share\')" class="biblio-act-btn'+(acc==='share'?' active':'')+'">🔗</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'enrolled\')" class="biblio-act-btn'+(acc==='enrolled'?' active':'')+'" title="Visible par tous les inscrits">Inscrits</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'password\')" class="biblio-act-btn'+(acc==='password'?' active':'')+'" title="Protégé par mot de passe">MDP</button>'
+        +'<button onclick="event.stopPropagation();biblioSetAccess(\''+item.kind+'\',\''+item.id+'\',\'share\')" class="biblio-act-btn'+(acc==='share'?' active':'')+'" title="Accessible via un lien de partage">Lien</button>'
         +'</div>'
         +'</div>';
     }).join('');
