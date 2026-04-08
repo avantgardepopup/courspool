@@ -863,8 +863,10 @@ function _mptRender(){
 function _mptInitSwipe(sheet){
   if(!sheet||sheet._mptSwipe)return;sheet._mptSwipe=true;
   var sx=0,sy=0;
-  sheet.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchstart',function(e){e.stopPropagation();sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchmove',function(e){e.stopPropagation();},{passive:true});
   sheet.addEventListener('touchend',function(e){
+    e.stopPropagation();
     var dx=e.changedTouches[0].clientX-sx;var dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){if(dx<0)mptNext();else if(_mptStep>0){_mptStep--;_mptRender();}}
   },{passive:true});
