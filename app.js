@@ -11846,7 +11846,9 @@ function calOpenPicker(){
 }
 
 function _pickerDaysWithCours(){
+  // returns {ymd: 'past'|'upcoming'}
   var dwc={};
+  var now=new Date();
   var isProf=user&&user.role==='professeur';
   var tagged=[];
   if(isProf){
@@ -11855,7 +11857,14 @@ function _pickerDaysWithCours(){
   }else{
     Object.keys(res).forEach(function(id){var c=C.find(function(x){return x.id==id;});if(c)tagged.push(c);});
   }
-  tagged.forEach(function(c){if(c.dt_iso){var d=new Date(c.dt_iso);dwc[_calYmd(d)]=true;}});
+  tagged.forEach(function(c){
+    if(c.dt_iso){
+      var d=new Date(c.dt_iso);
+      var ymd=_calYmd(d);
+      // Only upgrade past→upcoming, never downgrade
+      if(dwc[ymd]!=='upcoming') dwc[ymd]=d<now?'past':'upcoming';
+    }
+  });
   return dwc;
 }
 
@@ -11894,7 +11903,10 @@ function _renderPickerMonth(curSel){
     var bg=isSel?'background:var(--or);box-shadow:0 4px 12px rgba(255,107,43,.35);':'';
     var txtColor=isSel?'color:#fff;':isToday?'color:var(--or);':'color:var(--ink);';
     var fw=isSel||isToday?'font-weight:800;':'font-weight:500;';
-    var dot=hasDot?'<span style="position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:'+(isSel?'rgba(0,0,0,.22)':'var(--or)')+';'+(isSel?'':'box-shadow:0 0 4px rgba(255,107,43,.6)')+';"></span>':'';
+    var dotKind=dwc[ymd];
+    var dotBg=isSel?'rgba(0,0,0,.22)':dotKind==='past'?'var(--lite)':'var(--or)';
+    var dotGlow=(!isSel&&dotKind==='upcoming')?'box-shadow:0 0 4px rgba(255,107,43,.6);':'';
+    var dot=hasDot?'<span style="position:absolute;top:2px;right:2px;width:5px;height:5px;border-radius:50%;background:'+dotBg+';'+dotGlow+'"></span>':'';
     html+='<div style="display:flex;align-items:center;justify-content:center;padding:2px 0">'
       +'<div onclick="_pickerPickDay(\''+ymd+'\')" style="position:relative;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;'+fw+txtColor+bg+'cursor:pointer;-webkit-tap-highlight-color:transparent">'+day+dot+'</div>'
       +'</div>';
