@@ -956,7 +956,7 @@
         <button id="msgBackBtn" onclick="closeMsgConv()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div id="msgConvAv" class="msg-conv-av"></div>
+        <div id="msgConvAv" class="msg-conv-av" onclick="if(msgDestId)openPrFull(msgDestId)" style="cursor:pointer;-webkit-tap-highlight-color:transparent"></div>
         <div class="msg-conv-info">
           <div id="msgConvName" class="msg-conv-name"></div>
         </div>
@@ -3357,13 +3357,12 @@
       <!-- Ville -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Ville</div>
-        <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:12px;padding:11px 14px;border:1.5px solid var(--bdr);transition:border-color .18s" id="afVilleWrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div id="afVilleWrap" style="background:var(--wh);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.10),0 0 0 .5px rgba(0,0,0,.06);display:flex;align-items:center;gap:12px;padding:0 16px;overflow:hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <input id="afVilleInput" type="text" placeholder="Ville, code postal…" autocomplete="off"
-            style="flex:1;border:none;outline:none;font-family:inherit;font-size:14px;background:transparent;color:var(--ink)"
-            onfocus="g('afVilleWrap').style.borderColor='var(--or)'" onblur="g('afVilleWrap').style.borderColor='var(--bdr)'"
+            style="flex:1;border:none;outline:none;font-family:inherit;font-size:15px;background:transparent;color:var(--ink);padding:15px 0;-webkit-appearance:none"
             oninput="var li=g('locInput');if(li){li.value=this.value;}filterByLoc(this.value)">
-          <button onclick="g('afVilleInput').value='';var li=g('locInput');if(li)li.value='';filterByLoc('');" style="background:none;border:none;cursor:pointer;color:var(--lite);line-height:0;padding:0">
+          <button onclick="g('afVilleInput').value='';var li=g('locInput');if(li)li.value='';filterByLoc('');" style="background:none;border:none;cursor:pointer;color:var(--lite);line-height:0;padding:4px;flex-shrink:0">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>

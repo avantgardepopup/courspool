@@ -3236,6 +3236,7 @@ html.dk .ss-tab.on { background:var(--wh); }
 }
 html.dk .af-pill { background:var(--wh); }
 html.dk #bdAllFilters > div { background:var(--wh); }
+html.dk #afVilleWrap { box-shadow:0 3px 16px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.07) !important; }
 /* html.dk #smartSearchOverlay — supprimé, overlay reste semi-transparent */
 
 @keyframes accIconPop {

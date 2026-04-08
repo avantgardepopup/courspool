@@ -608,7 +608,11 @@ function buildMesProfs(){
   var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
   var _delZone='<div style="position:absolute;right:0;top:0;bottom:0;width:88px;background:#FF3B30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:0 20px 20px 0;opacity:0;pointer-events:none">'+_trashSvg+'<span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.01em">Retirer</span></div>';
   function _profCardWrap(cardHtml){
-    return '<div style="position:relative;overflow:hidden;margin:0 16px 10px;border-radius:20px">'+_delZone+cardHtml+'</div>';
+    // Couche externe : ombre (pas overflow:hidden pour ne pas clipper l'ombre)
+    // Couche interne : overflow:hidden pour clipper la zone rouge
+    return '<div style="margin:0 16px 10px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.07)">'
+      +'<div style="position:relative;overflow:hidden;border-radius:20px">'+_delZone+cardHtml+'</div>'
+      +'</div>';
   }
   var html='';
   // Section : inscrits via code
@@ -624,7 +628,7 @@ function buildMesProfs(){
       var avBg=photo?'none':col;
       var statut=_STATUT_LBL[p.statut]||null;
       var subLine='<span style="color:var(--or);font-weight:600">Espace inscrit</span>'+(statut?'<span style="color:var(--lite)"> · '+esc(statut)+'</span>':'');
-      var card='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      var card='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+'</div>'
@@ -649,7 +653,7 @@ function buildMesProfs(){
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
       var statut=fresh?(_STATUT_LBL[p.statut]||p.rl||'Professeur'):'';
-      var card='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
+      var card='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(fresh?esc(p.nm||'Professeur'):'<span class="skeleton" style="display:inline-block;height:14px;width:110px;border-radius:4px"></span>')+'</div>'
@@ -826,33 +830,65 @@ var _enrollBd=null;
 
 function openEnrollSheet(){
   haptic(4);
-  if(_enrollBd){_enrollBd.remove();_enrollBd=null;}
+  if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}
+  var isDk=document.documentElement.classList.contains('dk');
+  var cardBg=isDk?'#1C1C1E':'#ffffff';
+  var cardShadow=isDk?'0 3px 16px rgba(0,0,0,.55),0 0 0 .5px rgba(255,255,255,.07)':'0 3px 14px rgba(0,0,0,.11),0 0 0 .5px rgba(0,0,0,.06)';
+  var sepColor=isDk?'rgba(255,255,255,.08)':'rgba(0,0,0,.08)';
+  var inpColor=isDk?'#ffffff':'#222222';
+  var phColor=isDk?'#636366':'#aaaaaa';
+  var inpBase='flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:inherit;font-size:16px;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';min-width:0;padding:17px 0;box-sizing:border-box;width:100%';
   var bd=document.createElement('div');
   _enrollBd=bd;
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
-  sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
-    +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Rejoindre un espace</div><div style="font-size:13px;color:var(--lite);margin-top:2px">Entre le code que ton prof t\'a donné</div></div>'
+  sheet.style.cssText='background:var(--bg);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px 20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
+  sheet.innerHTML=
+    '<style>#_enrollNameInp::placeholder,#_enrollCodeInp::placeholder{color:'+phColor+';opacity:1;}</style>'
+    +'<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">'
+      +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>'
+      +'</div>'
+      +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Rejoindre un espace</div>'
+      +'<div style="font-size:13px;color:var(--lite);margin-top:2px">Entre le code que ton prof t\'a donné</div></div>'
     +'</div>'
-    +'<input id="_enrollCodeInp" type="text" placeholder="Code (ex\u00a0: ABC123)" maxlength="10" autocomplete="off" style="width:100%;border:2px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:20px;font-weight:800;text-align:center;letter-spacing:.16em;outline:none;box-sizing:border-box;text-transform:uppercase;margin-bottom:6px;transition:border-color .18s;background:var(--bg);color:var(--ink)" oninput="this.value=this.value.toUpperCase()">'
-    +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;text-align:center;margin-bottom:6px;line-height:1.5"></div>'
-    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:8px">Rejoindre</button>'
-    +'<button onclick="if(_enrollBd){_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
+    +'<div style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';overflow:hidden;margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:13px;padding:0 18px">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+        +'<input id="_enrollNameInp" type="text" placeholder="Nom du professeur" enterkeyhint="next" autocomplete="off" style="'+inpBase+'">'
+      +'</div>'
+      +'<div style="height:.5px;background:'+sepColor+';margin-left:49px"></div>'
+      +'<div style="display:flex;align-items:center;gap:13px;padding:0 18px">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
+        +'<input id="_enrollCodeInp" type="text" placeholder="Code (ex\u00a0: ABC123)" maxlength="10" enterkeyhint="go" autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="'+inpBase+';font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:20px;font-weight:800;letter-spacing:.18em;text-transform:uppercase">'
+      +'</div>'
+    +'</div>'
+    +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;line-height:1.5;padding:0 4px;margin-bottom:8px"></div>'
+    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28)">Rejoindre</button>'
+    +'<button onclick="if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
   bd.appendChild(sheet);document.body.appendChild(bd);
-  bd.onclick=function(e){if(e.target===bd){bd.remove();_enrollBd=null;}};
-  var inp=sheet.querySelector('#_enrollCodeInp');
-  if(inp){
-    inp.addEventListener('focus',function(){inp.style.borderColor='var(--or)';});
-    inp.addEventListener('blur',function(){inp.style.borderColor='var(--bdr)';});
-    setTimeout(function(){inp.focus();},300);
+  bd.onclick=function(e){if(e.target===bd){if(bd._cleanupKb)bd._cleanupKb();bd.remove();_enrollBd=null;}};
+  var nameInp=document.getElementById('_enrollNameInp');
+  var codeInp=document.getElementById('_enrollCodeInp');
+  if(nameInp){
+    nameInp.addEventListener('keydown',function(e){if(e.key==='Enter'&&codeInp){e.preventDefault();codeInp.focus();}});
   }
-  var _ekbShow=function(e){var h=(e&&e.keyboardHeight)||0;if(h>0)sheet.style.paddingBottom=(h+16)+'px';};
-  var _ekbHide=function(){sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';};
+  if(codeInp){
+    codeInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();submitEnrollSheet();}});
+  }
+  setTimeout(function(){if(nameInp)nameInp.focus();else if(codeInp)codeInp.focus();},320);
+  var _ekbShow=function(e){
+    var h=(e&&e.keyboardHeight)||0;
+    if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}
+  };
+  var _ekbHide=function(){
+    sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';
+    sheet.style.transition='padding-bottom .18s ease';
+  };
   window.addEventListener('keyboardWillShow',_ekbShow);
   window.addEventListener('keyboardWillHide',_ekbHide);
+  bd._cleanupKb=function(){window.removeEventListener('keyboardWillShow',_ekbShow);window.removeEventListener('keyboardWillHide',_ekbHide);};
 }
 
 function submitEnrollSheet(){
@@ -879,7 +915,31 @@ function submitEnrollSheet(){
     buildMesProfs();
     if(pid)setTimeout(function(){openProfEspace(String(pid));},300);
   }
-  function _onErr(msg){if(btn)btn.disabled=false;if(errEl){errEl.textContent=msg||'Code incorrect.';errEl.style.display='block';}}
+  function _onErr(msg){
+    // Fallback : tenter d'ouvrir le cours privé avec ce code (code_acces de cours)
+    if(btn)btn.disabled=false;
+    fetch(API+'/cours/code/'+code).then(function(r){return r.json();}).then(function(data){
+      if(data&&data.id){
+        // C'est un code de cours privé
+        if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}
+        var nc={id:data.id,t:((data.titre||'')+' '+(data.sujet||'')).toLowerCase(),
+          subj:data.sujet||'Autre',sc:data.couleur_sujet||'#7C3AED',
+          bg:data.background||'linear-gradient(135deg,#F5F3FF,#DDD6FE)',bgDark:data.bg_dark||'',
+          title:data.titre||'',dt:data.date_heure||'',dt_iso:data.date_iso||'',lc:data.lieu||'',
+          mode:data.mode||'presentiel',visio_url:data.visio_url||'',
+          tot:data.prix_total||0,sp:data.places_max||5,fl:data.places_prises||0,
+          pr:data.professeur_id,prof_ini:data.prof_initiales||'?',
+          prof_col:data.prof_couleur||'linear-gradient(135deg,#FF8C55,#E04E10)',
+          prof_nm:data.prof_nom||'',prof_photo:data.prof_photo||null,
+          description:data.description||'',code:data.code_acces||'',prive:true};
+        if(!C.find(function(x){return x.id==nc.id;}))C.unshift(nc);
+        openR(nc.id);
+        toast('Cours trouvé !',nc.title);
+      } else {
+        if(errEl){errEl.textContent=msg||'Code incorrect ou expiré.';errEl.style.display='block';}
+      }
+    }).catch(function(){if(errEl){errEl.textContent=msg||'Code incorrect ou expiré.';errEl.style.display='block';}});
+  }
   fetch(API+'/teacher/enroll',{method:'POST',headers:apiH(),body:JSON.stringify({code:code})})
     .then(function(r){var ok=r.ok;return _safeJson(r).then(function(d){return{ok:ok,d:d||{}};});})
     .then(function(res){
