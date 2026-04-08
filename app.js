@@ -7250,7 +7250,6 @@ function openMsg(profNm,destId,avatar){
     if(bnav)bnav.classList.add('conv-mode');
   }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
-  var sb=g('btnShareCours');if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
   var ab=g('msgAttachBtn');if(ab)ab.style.display=(user&&user.role==='professeur')?'flex':'none';
 
   // Mark active row
@@ -7559,7 +7558,10 @@ async function loadConversations(){
       var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var _pc=m.contenu||'';
-      var preview=_pc.includes('chat-cours-card')||_pc.includes('"mode":"')?'📚 '+t('rr_partager'):(esc(_pc.slice(0,35))+(_pc.length>35?'…':''));
+      var preview;
+      if(_pc.includes('chat-cours-card')||_pc.includes('"mode":"'))preview='📚 Cours partagé';
+      else if(_pc.startsWith('%%ESP%%')){try{var _ep=JSON.parse(_pc.slice(7));preview=(_ep.t==='fiche'?'📄 Fiche de cours':_ep.t==='pub'?'📢 Publication':_ep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_ep.title?' · '+esc(_ep.title.slice(0,22)):'');}catch(e){preview='📎 Contenu partagé';}}
+      else preview=esc(_pc.slice(0,35))+(_pc.length>35?'…':'');
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
       return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
     }).join('');
@@ -8115,10 +8117,12 @@ var _espPickType='';
 
 function openMsgAttachment(isGroupe){
   _msgAttachIsGroupe=!!isGroupe;haptic(4);
+  var _svgCours='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
   var _svgFiche='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
   var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
   var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
   var opts=[
+    {icon:_svgCours,label:'Un cours',sub:'Partage une de tes s\u00e9ances',type:'cours'},
     {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
     {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
   ];
@@ -8127,7 +8131,7 @@ function openMsgAttachment(isGroupe){
     +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Partager dans la conversation</div></div>'
     +'<div style="padding:0 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function(o){
-    var fn=o.type==='sondage'?'openSondageCreator()':'_espMsgPickContent(\''+o.type+'\')';
+    var fn=o.type==='sondage'?'openSondageCreator()':o.type==='cours'?'openShareCoursSheet()':'_espMsgPickContent(\''+o.type+'\')';
     html+='<button onclick="closeQuickSheet();setTimeout(function(){'+fn+';},80)" style="width:100%;background:var(--bg);border:none;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
       +'<div style="width:44px;height:44px;border-radius:12px;background:var(--orp);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">'+o.icon+'</div>'
       +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+o.label+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
@@ -8226,6 +8230,12 @@ function _sendSondageMsg(){
   haptic(6);
 }
 
+function _openEspContent(type,pid,id){
+  haptic(4);
+  if(type==='fiche'&&pid&&id){espOpenFicheEleve(pid,id);return;}
+  if(pid){_mpfAutoSwitchEspace=true;openPrFull(pid);}
+}
+
 function _renderEspCardInner(d,isMe,time){
   var labels={fiche:'Fiche de cours',pub:'Publication',sondage:'Sondage'};
   var _ic12={
@@ -8235,7 +8245,7 @@ function _renderEspCardInner(d,isMe,time){
   };
   var icon=_ic12[d.t]||'';
   var lbl=labels[d.t]||'Contenu';
-  var tapAttr=(d.pid&&d.t!=='sondage')?' onclick="openProfEspace(\''+d.pid+'\')"':'';
+  var tapAttr=(d.t!=='sondage')?' onclick="_openEspContent(\''+d.t+'\',\''+escH(d.pid||'')+'\',\''+escH(d.id||'')+'\')"':'';
   if(d.t==='sondage'){
     var optsHtml=(d.opts||[]).map(function(o,i){
       return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--bdr)">'
@@ -11635,8 +11645,6 @@ async function subCrStep(){
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     var bp=g('bniProfs');if(bp)bp.style.display=(user&&user.role==='professeur')?'none':'flex';
     var be=g('bniEsp');if(be)be.style.display=(user&&user.role==='professeur')?'flex':'none';
-    var sb=g('btnShareCours');
-    if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
   };
 
   // openR — mode badge + visio join
@@ -12211,8 +12219,6 @@ function showAccHome(){
     var bm=g('bniMes');if(bm)bm.style.display=(user&&user.role==='professeur')?'none':'flex';
     var bp=g('bniProfs');if(bp)bp.style.display=(user&&user.role==='professeur')?'none':'flex';
     var be=g('bniEsp');if(be)be.style.display=(user&&user.role==='professeur')?'flex':'none';
-    var sb=g('btnShareCours');
-    if(sb)sb.style.display=(user&&user.role==='professeur')?'flex':'none';
     var pg=g('pgAcc');
     if(pg&&!pg.classList.contains('detail-mode'))pg.classList.add('home-mode');
   };
