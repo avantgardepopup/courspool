@@ -6454,6 +6454,7 @@ function espGoMesCours(){
   updateMobHeader('mes');
   restoreNav();
   _mesSeg='upcoming';
+  _calWeekOffset=0;_calSelDay=null; // toujours démarrer sur la semaine courante
   buildMesCours();
 }
 
@@ -11845,6 +11846,11 @@ function calPickDate(val){
   buildMesCours();
 }
 
+function _calJumpTo(weekOffset,ymd){
+  _calWeekOffset=weekOffset;_calSelDay=ymd;
+  buildMesCours();haptic(4);
+}
+
 function _renderCalCourses(){
   var el=g('pgMesCnt');if(!el)return;
   var isProf=user&&user.role==='professeur';
@@ -11892,10 +11898,31 @@ function _renderCalCourses(){
   }).sort(function(a,b){return new Date(a.c.dt_iso||0)-new Date(b.c.dt_iso||0);});
 
   if(!dayTagged.length){
+    // Chercher le prochain cours à venir pour afficher un raccourci
+    var now=new Date();
+    var futureTagged=tagged.filter(function(t){return t.c.dt_iso&&new Date(t.c.dt_iso)>now;})
+      .sort(function(a,b){return new Date(a.c.dt_iso)-new Date(b.c.dt_iso);});
+    var nextHint='';
+    if(futureTagged.length){
+      var nc=futureTagged[0].c;
+      var ncD=new Date(nc.dt_iso);
+      var ncLbl=ncD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+      // Calculer l'offset de semaine pour le prochain cours
+      var todayN=new Date();todayN.setHours(0,0,0,0);
+      var wd=todayN.getDay();var diff=wd===0?-6:1-wd;
+      var thisMonday=new Date(todayN);thisMonday.setDate(todayN.getDate()+diff);
+      var ncMonday=new Date(ncD);var nwd=ncD.getDay();var ndiff=nwd===0?-6:1-nwd;ncMonday.setDate(ncD.getDate()+ndiff);
+      var wDiff=Math.round((ncMonday-thisMonday)/(7*86400000));
+      var ncYmd=_calYmd(ncD);
+      nextHint='<button onclick="_calJumpTo('+wDiff+',\''+ncYmd+'\')" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,43,.08);color:var(--or);border:none;border-radius:50px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
+        +'Prochain cours&nbsp;: '+ncLbl+'</button>';
+    }
     el.innerHTML='<div class="mes-cal-empty">'
       +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
       +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
       +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
+      +nextHint
       +'</div>';
     return;
   }

@@ -1708,9 +1708,12 @@ html.dk .mes-cal-hd{background:#1C1C1E;border-color:rgba(255,255,255,.08);}
   box-shadow:0 3px 12px rgba(255,107,43,.38);
 }
 .cal-dot{
-  width:4px;height:4px;border-radius:50%;
-  background:var(--or);opacity:.7;margin-top:-2px;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--or);
+  box-shadow:0 0 5px rgba(255,107,43,.7);
+  margin-top:2px;
 }
+.cal-chip.cal-sel .cal-dot{background:#fff;box-shadow:0 0 5px rgba(255,255,255,.8);}
 .mes-cal-scroll{
   flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
   padding:16px 16px 120px;
