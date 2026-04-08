@@ -3378,6 +3378,19 @@
         </div>
       </div>
 
+      <!-- Périmètre (visible si ville saisie ou géoloc active) -->
+      <div id="afPerimRow" style="display:none;padding:14px 0 0">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Périmètre</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="af-pill" data-km="2"  onclick="afSetDist(2,this)">2 km</button>
+          <button class="af-pill" data-km="5"  onclick="afSetDist(5,this)">5 km</button>
+          <button class="af-pill on" data-km="10" onclick="afSetDist(10,this)">10 km</button>
+          <button class="af-pill" data-km="20" onclick="afSetDist(20,this)">20 km</button>
+          <button class="af-pill" data-km="50" onclick="afSetDist(50,this)">50 km</button>
+          <button class="af-pill" data-km="100" onclick="afSetDist(100,this)">100 km</button>
+        </div>
+      </div>
+
       <!-- Tri -->
       <div style="padding:18px 0 14px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Trier par</div>

@@ -1064,6 +1064,7 @@ var _calWeekOffset=0;
 var _calSelDay=null;
 var _mesSeg='upcoming';
 var geoMode=false,userCoords=null,_geoActive=false,_geoCoords=null,_geoDist=10;
+var _locTypedCoords=null; // coords issues du geocodage de la saisie manuelle ville
 var PAGE_SIZE=6,currentPage=1,filteredCards=[];
 var msgBadgePollTimer=null;
 var _searchTimer=null;
@@ -3307,6 +3308,10 @@ function applyFilter(){
     if(geoMode&&_geoCoords&&c.lat&&c.lon){
       var dist=haversine(_geoCoords.lat,_geoCoords.lon,parseFloat(c.lat),parseFloat(c.lon));
       matchLoc=dist<=_geoDist;
+    } else if(_locTypedCoords&&c.lat&&c.lon){
+      // Geocodage manuel — filtre par distance
+      var distT=haversine(_locTypedCoords.lat,_locTypedCoords.lon,parseFloat(c.lat),parseFloat(c.lon));
+      matchLoc=distT<=_geoDist;
     } else if(actLoc){
       matchLoc=loc.includes(actLoc);
     }
@@ -7617,7 +7622,8 @@ function requestGeoloc(){
     function(pos){
       _geoActive=true;
       _geoCoords={lat:pos.coords.latitude,lon:pos.coords.longitude};
-      userCoords=_geoCoords;geoMode=true;
+      userCoords=_geoCoords;geoMode=true;_locTypedCoords=null;
+      _updateAfPerimRow();
       // Afficher immédiatement sans attendre le reverse geocoding
       var inp=g('locInput');if(inp)inp.value='📍 Autour de moi';
       var cb=g('locClearBtn');if(cb)cb.style.display='block';
@@ -7676,11 +7682,43 @@ function filterByLoc(val){
   if(btn)btn.style.display=val.trim()?'block':'none';
   var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=val.trim()||t('filter_ville');
   clearTimeout(locFilterTimer);
+  if(!val.trim()){
+    _locTypedCoords=null;actLoc='';
+    _updateAfPerimRow();updateResetBtn();applyFilter();return;
+  }
   locFilterTimer=setTimeout(function(){
-    actLoc=val.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    updateResetBtn();
-    applyFilter();
-  },300);
+    var q=val.trim();
+    actLoc=q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    _locTypedCoords=null;updateResetBtn();applyFilter();
+    // Geocodage Nominatim → filtre distance précis
+    fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+', France')+'&format=json&limit=1&countrycodes=fr',{headers:{'Accept-Language':'fr','User-Agent':'CoursPool/1.0'}})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data[0]&&data[0].lat){
+          _locTypedCoords={lat:parseFloat(data[0].lat),lon:parseFloat(data[0].lon)};
+          _updateAfPerimRow();applyFilter();
+        }
+      }).catch(function(){});
+  },500);
+}
+
+function _updateAfPerimRow(){
+  var row=g('afPerimRow');
+  if(!row)return;
+  var show=geoMode||!!_locTypedCoords;
+  row.style.display=show?'block':'none';
+  if(show){
+    row.querySelectorAll('.af-pill').forEach(function(b){
+      b.classList.toggle('on',parseInt(b.dataset.km||0)===_geoDist);
+    });
+  }
+}
+function afSetDist(km,el){
+  _geoDist=km;
+  // Sync bouton géoloc dist si actif
+  var geoDistLbl=g('geoDistLabel');if(geoDistLbl)geoDistLbl.textContent=km+' km';
+  _updateAfPerimRow();
+  applyFilter();
 }
 
 function locInputClear(){
@@ -7689,7 +7727,8 @@ function locInputClear(){
   var lbl=g('pillVilleLabel');if(lbl)lbl.textContent=t('filter_ville');
   var bar=document.querySelector('.locbar');if(bar)bar.classList.remove('open');
   var pill=g('pillVille');if(pill)pill.classList.remove('on');
-  actLoc='';
+  actLoc='';_locTypedCoords=null;
+  _updateAfPerimRow();
   updateResetBtn();
   applyFilter();
 }
@@ -10182,7 +10221,7 @@ function resetFilters(){
   if(_dlbl)_dlbl.textContent=t('filter_periode');
   document.querySelectorAll('#dateFilterList .niv-fchip').forEach(function(c){c.classList.remove('on');});
   var _dFirst=document.querySelector('#dateFilterList .niv-fchip');if(_dFirst)_dFirst.classList.add('on');
-  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;
+  geoMode=false;_geoActive=false;_geoCoords=null;userCoords=null;_geoPermDenied=false;_locTypedCoords=null;
   var _rlbl=g('geoBtnLabel'),_rdist=g('geoDistBtn');
   if(_rlbl){_rlbl.textContent=t('exp_around_me');_rlbl.style.display='';}
   if(_rdist)_rdist.style.display='none';
@@ -12527,6 +12566,7 @@ function openAllFiltersSheet(){
   el.style.display='flex';
   document.body.style.overflow='hidden';
   _afSyncState();
+  _updateAfPerimRow();
   haptic(4);
   var _afKbShow=function(e){
     var h=(e&&e.keyboardHeight)||0;if(h<=0)return;
