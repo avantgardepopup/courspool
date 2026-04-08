@@ -3,6 +3,7 @@
 	"appName": "CoursPool",
 	"webDir": "www",
 	"server": {
+		"cleartext": false,
 		"allowNavigation": [
 			"js.stripe.com",
 			"hooks.stripe.com",
