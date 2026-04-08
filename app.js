@@ -12045,14 +12045,72 @@ async function _confirmDeleteAccount(){
 
 async function toggleTuteurMode(){
   if(!user)return;
-  user.is_tuteur=!user.is_tuteur;
-  var tog=g('tuteurToggle');if(tog)tog.classList.toggle('on',user.is_tuteur);
-  try{localStorage.setItem('cp_is_tuteur',user.is_tuteur?'1':'0');}catch(e){}
-  var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display=user.is_tuteur?'flex':'none';
-  // Sync backend si possible
-  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:user.is_tuteur})});}catch(e){}
+  // Désactivation immédiate — pas de confirmation
+  if(user.is_tuteur){
+    user.is_tuteur=false;
+    var tog=g('tuteurToggle');if(tog)tog.classList.remove('on');
+    try{localStorage.setItem('cp_is_tuteur','0');}catch(e){}
+    var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display='none';
+    try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:false})});}catch(e){}
+    haptic(6);
+    toast('Statut désactivé','Vous n\'apparaissez plus comme parent');
+    return;
+  }
+  // 1. Vérification âge ≥ 18
+  if(user.birth_year){
+    var age=new Date().getFullYear()-user.birth_year;
+    if(age<18){
+      haptic(3);
+      toast('Réservé aux parents','Vous devez avoir 18 ans ou plus pour activer ce statut');
+      return;
+    }
+  }
+  // 4. Sheet de confirmation avec prénom obligatoire
+  openTuteurConfirmSheet();
+}
+
+function openTuteurConfirmSheet(){
+  var existing=user&&user.enfant_prenom?esc(user.enfant_prenom):'';
+  showQuickSheet(
+    '<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:20px 20px 0">'
+    +'<div style="width:52px;height:52px;background:#F5F3FF;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:26px">👨‍👧</div>'
+    +'<div style="font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:6px">Je réserve pour mon enfant</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Les professeurs sauront que vous réservez en tant que parent ou tuteur légal. Votre statut sera visible sur vos réservations et messages.</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Prénom de votre enfant <span style="color:#EF4444">*</span></div>'
+    +'<input id="tuteurConfirmPrenom" type="text" value="'+existing+'" placeholder="Ex : Lucas" autocorrect="off" autocapitalize="words" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;box-sizing:border-box;margin-bottom:14px;transition:border .18s">'
+    +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--lite);line-height:1.5;margin-bottom:20px">'
+    +'En activant ce statut, vous confirmez être le parent ou tuteur légal de cet enfant et autorisez CoursPool à afficher ce statut aux professeurs.'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;margin-bottom:max(20px,env(safe-area-inset-bottom,20px))">'
+    +'<button onclick="closeQuickSheet()" style="flex:1;padding:15px;border-radius:14px;background:var(--bg);border:none;font-family:inherit;font-weight:600;font-size:15px;color:var(--mid);cursor:pointer">Annuler</button>'
+    +'<button onclick="confirmActivateTuteur()" style="flex:2;padding:15px;border-radius:14px;background:#8B5CF6;border:none;font-family:inherit;font-weight:700;font-size:15px;color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(139,92,246,.35)">Confirmer</button>'
+    +'</div>'
+    +'</div>'
+  );
+  setTimeout(function(){var inp=g('tuteurConfirmPrenom');if(inp&&!inp.value)inp.focus();},300);
+}
+
+async function confirmActivateTuteur(){
+  var prenomInp=g('tuteurConfirmPrenom');
+  var prenom=prenomInp?prenomInp.value.trim():'';
+  // 2. Prénom obligatoire
+  if(!prenom){
+    if(prenomInp){prenomInp.style.borderColor='#EF4444';setTimeout(function(){prenomInp.style.borderColor='';},700);}
+    toast('Prénom requis','Indiquez le prénom de votre enfant pour continuer');
+    return;
+  }
+  closeQuickSheet();
+  user.is_tuteur=true;
+  user.enfant_prenom=prenom;
+  var tog=g('tuteurToggle');if(tog)tog.classList.add('on');
+  try{localStorage.setItem('cp_is_tuteur','1');}catch(e){}
+  try{localStorage.setItem('cp_enfant_prenom',prenom);}catch(e){}
+  var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display='flex';
+  var epInp=g('enfantPrenomInput');if(epInp)epInp.value=prenom;
+  try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:true,enfant_prenom:prenom})});}catch(e){}
   haptic(6);
-  toast(user.is_tuteur?'Mode tuteur activé':'Mode tuteur désactivé',user.is_tuteur?'Les profs voient votre statut Tuteur':'Statut Tuteur désactivé');
+  toast('Statut activé 👨‍👧','Les profs voient que vous réservez pour '+prenom);
 }
 
 function saveEnfantPrenom(val){
