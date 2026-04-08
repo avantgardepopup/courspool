@@ -7436,12 +7436,12 @@ function renderBarConfig(){
     var inBar=_barActive.indexOf(f.key)!==-1;
     html+='<button onclick="toggleBarFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:5px;'
       +(inBar
-          ?'background:var(--or);color:#fff;border:1.5px solid var(--or);box-shadow:0 2px 8px rgba(255,107,43,.25);'
-          :'background:var(--wh);color:var(--ink);border:1.5px solid var(--bdr);')
-      +'border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
+          ?'background:var(--or);color:#fff;box-shadow:0 2px 10px rgba(255,107,43,.3);'
+          :'background:var(--wh);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07),0 0 0 0.5px rgba(0,0,0,.06);')
+      +'border:none;border-radius:50px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
       +esc(f.label)
       +(inBar?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>':'')
-      +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.3);font-size:10px;font-weight:800">✕</span>':'')
+      +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.25);font-size:10px;font-weight:800">✕</span>':'')
       +'</button>';
   });
   html+='</div>';
@@ -12049,30 +12049,26 @@ function _ssApplyKb(kbH){
     body.style.paddingBottom=(kbH+80)+'px';
     _ssScrollToFocused(kbH);
   }else{
-    body.style.paddingBottom='';
+    body.style.paddingBottom='max(28px,env(safe-area-inset-bottom,28px))';
   }
 }
 function _ssScrollToFocused(kbH){
   if(!_ssFocusedCard)return;
   var ov=g('smartSearchOverlay');if(!ov)return;
-  // Delay 80ms for padding reflow before reading rects
+  var body=g('ssBody');if(!body)return;
   setTimeout(function(){
     if(!_ssFocusedCard||!ov.classList.contains('open'))return;
     var rect=_ssFocusedCard.getBoundingClientRect();
     var visBottom=window.innerHeight-kbH-12;
-    // Scroll just enough to show the focused card 12px above keyboard
-    if(rect.bottom>visBottom){
-      ov.scrollTop=ov.scrollTop+(rect.bottom-visBottom);
-    }
-    // Also make sure card top hasn't scrolled off screen
+    if(rect.bottom>visBottom){body.scrollTop=body.scrollTop+(rect.bottom-visBottom);}
     var rect2=_ssFocusedCard.getBoundingClientRect();
-    var minTop=60;// below the ss-top-bar (~56px)
-    if(rect2.top<minTop){ov.scrollTop=Math.max(0,ov.scrollTop-(minTop-rect2.top));}
+    if(rect2.top<80){body.scrollTop=Math.max(0,body.scrollTop-(80-rect2.top));}
   },80);
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
-  ov.style.display='flex';ov.scrollTop=0;
+  ov.style.display='flex';
+  var _ssB2=g('ssBody');if(_ssB2)_ssB2.scrollTop=0;
   var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';_ssB.style.paddingBottom='';}
   ov.offsetHeight;
   ov.classList.add('open');
@@ -12125,7 +12121,7 @@ function _ssSelectMatiere(label){
 function _ssUpdateMatLabel(val){
   var el=g('ssMatLabel');if(!el)return;
   if(val){el.textContent=val;el.classList.add('selected');}
-  else{el.textContent='Quelle matière\u00a0?';el.classList.remove('selected');}
+  else{el.textContent='Toutes';el.classList.remove('selected');}
 }
 
 function _ssSearch(){

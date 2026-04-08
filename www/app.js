@@ -2609,16 +2609,22 @@ function buildAccLists(){
   var stats=g('accStats');
   if(stats){
     var nbCours=isProf?C.filter(function(c){return c.pr===user.id&&!_isCoursPass(c);}).length:0;
+    var _scSty='background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.05);cursor:pointer;-webkit-tap-highlight-color:transparent';
+    var _scVal='font-size:22px;font-weight:800;color:var(--or)';
+    var _scLbl='font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px';
     if(isProf){
       stats.innerHTML=
-        '<div class="cp-stat-card" style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.04)"><div id="accStatCoursVal" style="font-size:22px;font-weight:800;color:var(--or)">'+nbCours+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('mp_cours')+'</div></div>'+
-        '<div class="cp-stat-card" style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.04)"><div id="accStatElevesVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('mp_eleves')+'</div></div>'+
-        '<div class="cp-stat-card" style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.04)"><div id="accStatNoteVal" style="font-size:22px;font-weight:800;color:var(--or)">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('mp_note')+'</div></div>';
+        '<div class="cp-stat-card" style="'+_scSty+'"><div id="accStatCoursVal" style="'+_scVal+'">'+nbCours+'</div><div style="'+_scLbl+'">'+t('mp_cours')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'"><div id="accStatElevesVal" style="'+_scVal+'">'+(user.nbEleves!=null?user.nbEleves:'—')+'</div><div style="'+_scLbl+'">'+t('mp_eleves')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'"><div id="accStatNoteVal" style="'+_scVal+'">'+(user.noteMoyenne?'★\u00a0'+user.noteMoyenne:'—')+'</div><div style="'+_scLbl+'">'+t('mp_note')+'</div></div>';
     } else {
+      var _enrolledProfIds=(function(){try{return Object.keys(JSON.parse(localStorage.getItem('cp_profs')||'{}'));}catch(e){return [];}})();
+      var _allProfIds=new Set(fIds.concat(_enrolledProfIds));
+      var _nbHistorique=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);}).length;
       stats.innerHTML=
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+rIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('acc_reservations')+'</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">'+fIds.length+'</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('acc_suivis')+'</div></div>'+
-        '<div style="background:var(--wh);border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)"><div style="font-size:22px;font-weight:800;color:var(--or)">0</div><div style="font-size:10px;color:var(--lite);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+t('acc_professeurs')+'</div></div>';
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">À venir</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">Profs</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">Historique</div></div>';
     }
   }
   // Rôle pill
@@ -4647,8 +4653,9 @@ function _tpBuildTrustCards(p,pid){
   var _isDip=(p.dv===true||p.dv==='true')||(p.diplome_verifie===true||p.diplome_verifie==='true');
   var _isCas=(p.cv===true||p.cv==='true')||(p.casier_verifie===true||p.casier_verifie==='true');
   var h='';
+  var _tcSty='cursor:pointer;-webkit-tap-highlight-color:transparent';
   if(_isVrf){
-    h+='<div class="tp-trust-card">'
+    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'identite\')">'
       +'<div class="tp-trust-icon" style="background:#E6F7EC"><svg viewBox="0 0 24 24" fill="none" stroke="#0A7A3C" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
       +'<div class="tp-trust-badge" style="background:#E6F7EC;color:#0A7A3C">Vérifié</div>'
@@ -4656,14 +4663,14 @@ function _tpBuildTrustCards(p,pid){
   }
   if(_isDip){
     var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
-    h+='<div class="tp-trust-card">'
+    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'diplome\')">'
       +'<div class="tp-trust-icon" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#3C3489" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
       +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#3C3489">Vérifié</div>'
       +'</div>';
   }
   if(_isCas){
-    h+='<div class="tp-trust-card">'
+    h+='<div class="tp-trust-card" style="'+_tcSty+'" onclick="showBadgeInfo(\'confiance\')">'
       +'<div class="tp-trust-icon" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#E8611A" stroke-width="2" stroke-linecap="round" width="18" height="18"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
       +'<div class="tp-trust-text"><div class="tp-trust-lbl">Badge de confiance</div><div class="tp-trust-sub">Profil complet et certifié</div></div>'
       +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#E8611A">Certifié</div>'
@@ -7429,12 +7436,12 @@ function renderBarConfig(){
     var inBar=_barActive.indexOf(f.key)!==-1;
     html+='<button onclick="toggleBarFilter(\''+f.key+'\')" style="display:inline-flex;align-items:center;gap:5px;'
       +(inBar
-          ?'background:var(--or);color:#fff;border:1.5px solid var(--or);box-shadow:0 2px 8px rgba(255,107,43,.25);'
-          :'background:var(--wh);color:var(--ink);border:1.5px solid var(--bdr);')
-      +'border-radius:50px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
+          ?'background:var(--or);color:#fff;box-shadow:0 2px 10px rgba(255,107,43,.3);'
+          :'background:var(--wh);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07),0 0 0 0.5px rgba(0,0,0,.06);')
+      +'border:none;border-radius:50px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
       +esc(f.label)
       +(inBar?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>':'')
-      +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.3);font-size:10px;font-weight:800">✕</span>':'')
+      +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.25);font-size:10px;font-weight:800">✕</span>':'')
       +'</button>';
   });
   html+='</div>';
@@ -8416,31 +8423,27 @@ function showBadgeInfo(type){
     }
   };
   var d=info[type];if(!d)return;
+  var isProf=user&&user.role==='professeur';
   content.innerHTML=
-    // Hero gradient card
-    '<div style="background:'+d.grad+';border-radius:24px;padding:32px 20px 26px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 40px '+d.glow+'">'
-    // deco circles
-    +'<div style="position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07);top:-60px;right:-50px;pointer-events:none"></div>'
-    +'<div style="position:absolute;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.05);bottom:-25px;left:-25px;pointer-events:none"></div>'
-    // CERTIFIÉ label
+    // Hero gradient card — no deco circles
+    '<div style="background:'+d.grad+';border-radius:24px;padding:32px 20px 26px;text-align:center;margin-bottom:16px;box-shadow:0 10px 40px '+d.glow+'">'
     +'<div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:16px">✦ CoursPool Certifié ✦</div>'
-    // icon box with glow ring
-    +'<div style="position:relative;display:inline-flex;margin-bottom:16px">'
+    +'<div style="display:inline-flex;margin-bottom:16px">'
     +'<div style="width:88px;height:88px;background:rgba(255,255,255,.18);border-radius:28px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 0 8px rgba(255,255,255,.08)">'+d.icon+'</div>'
     +'</div>'
-    +'<div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:8px;text-shadow:0 1px 8px rgba(0,0,0,.15)">'+d.name+'</div>'
+    +'<div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-.03em;text-shadow:0 1px 8px rgba(0,0,0,.15)">'+d.name+'</div>'
     +'</div>'
     // Description
     +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
     +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Ce que ça garantit</div>'
     +'<div style="font-size:14px;color:var(--ink);line-height:1.65">'+d.desc+'</div>'
     +'</div>'
-    // How to get it
-    +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:18px">'
+    // How to get it — prof only
+    +(isProf?'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
     +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Comment l\'obtenir</div>'
     +'<div style="font-size:13.5px;color:var(--mid);line-height:1.65">'+d.how+'</div>'
-    +'</div>'
-    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Fermer</button>';
+    +'</div>':'')
+    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:10px">Fermer</button>';
   bd.style.display='flex';
   document.body.style.overflow='hidden';
 }
@@ -12046,30 +12049,26 @@ function _ssApplyKb(kbH){
     body.style.paddingBottom=(kbH+80)+'px';
     _ssScrollToFocused(kbH);
   }else{
-    body.style.paddingBottom='';
+    body.style.paddingBottom='max(28px,env(safe-area-inset-bottom,28px))';
   }
 }
 function _ssScrollToFocused(kbH){
   if(!_ssFocusedCard)return;
   var ov=g('smartSearchOverlay');if(!ov)return;
-  // Delay 80ms for padding reflow before reading rects
+  var body=g('ssBody');if(!body)return;
   setTimeout(function(){
     if(!_ssFocusedCard||!ov.classList.contains('open'))return;
     var rect=_ssFocusedCard.getBoundingClientRect();
     var visBottom=window.innerHeight-kbH-12;
-    // Scroll just enough to show the focused card 12px above keyboard
-    if(rect.bottom>visBottom){
-      ov.scrollTop=ov.scrollTop+(rect.bottom-visBottom);
-    }
-    // Also make sure card top hasn't scrolled off screen
+    if(rect.bottom>visBottom){body.scrollTop=body.scrollTop+(rect.bottom-visBottom);}
     var rect2=_ssFocusedCard.getBoundingClientRect();
-    var minTop=60;// below the ss-top-bar (~56px)
-    if(rect2.top<minTop){ov.scrollTop=Math.max(0,ov.scrollTop-(minTop-rect2.top));}
+    if(rect2.top<80){body.scrollTop=Math.max(0,body.scrollTop-(80-rect2.top));}
   },80);
 }
 function openSmartSearch(){
   var ov=g('smartSearchOverlay');if(!ov)return;
-  ov.style.display='flex';ov.scrollTop=0;
+  ov.style.display='flex';
+  var _ssB2=g('ssBody');if(_ssB2)_ssB2.scrollTop=0;
   var _ssB=g('ssBody');if(_ssB){_ssB.style.transform='';_ssB.style.transition='';_ssB.style.paddingBottom='';}
   ov.offsetHeight;
   ov.classList.add('open');
@@ -12122,7 +12121,7 @@ function _ssSelectMatiere(label){
 function _ssUpdateMatLabel(val){
   var el=g('ssMatLabel');if(!el)return;
   if(val){el.textContent=val;el.classList.add('selected');}
-  else{el.textContent='Quelle matière\u00a0?';el.classList.remove('selected');}
+  else{el.textContent='Toutes';el.classList.remove('selected');}
 }
 
 function _ssSearch(){
