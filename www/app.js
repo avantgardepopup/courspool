@@ -7491,8 +7491,8 @@ async function loadConversations(){
     if(!Array.isArray(msgs)||!msgs.length){
       var _isProf=user&&user.role==='professeur';
       var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.style.padding='0';lm.style.display='flex';lm.style.alignItems='center';lm.style.justifyContent='center';
-      lm.innerHTML='<div style="text-align:center;padding:24px">'
+      lm.style.cssText='';
+      lm.innerHTML='<div style="text-align:center;padding:40px 24px">'
         +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
         +'</div>'
@@ -10970,7 +10970,21 @@ function buildStepDOM(){
   g('stepBackBtn').onclick=stepBack;
   g('stepCloseBtn').onclick=closeCrStep;
   g('stepCta').onclick=stepNext;
-  // Keyboard awareness — delegate to global _crStepVpAdjust
+  // Keyboard awareness — Capacitor Keyboard plugin (primary, iOS-native)
+  var _Kbd=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Keyboard;
+  if(_Kbd){
+    _Kbd.addListener('keyboardWillShow',function(info){
+      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+      var kh=(info&&info.keyboardHeight)||0;
+      el.style.height=(window.innerHeight-kh)+'px';
+      el.style.top='0';el.style.bottom='auto';
+    });
+    _Kbd.addListener('keyboardWillHide',function(){
+      var el=g('bdCrStep');if(!el)return;
+      el.style.height='';el.style.top='';el.style.bottom='';
+    });
+  }
+  // Fallback — VisualViewport API (web / non-iOS)
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_crStepVpAdjust);
     window.visualViewport.addEventListener('scroll',_crStepVpAdjust);
@@ -11045,7 +11059,7 @@ function stepRender(idx){
       if(!items.trim())return;
       html+='<div data-cat>'
         +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.label+'</div>'
-        +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
+        +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 2px 12px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
         +'</div>';
     });
     html+='</div>';
