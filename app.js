@@ -1999,8 +1999,6 @@ function applyUser(){
   // Restaurer is_tuteur et enfant_prenom depuis localStorage si non fournis par le backend
   if(user&&user.is_tuteur===undefined){try{user.is_tuteur=localStorage.getItem('cp_is_tuteur')==='1';}catch(e){}}
   if(user&&!user.enfant_prenom){try{user.enfant_prenom=localStorage.getItem('cp_enfant_prenom')||'';}catch(e){}}
-  // Badge tuteur dans la messagerie
-  var _tb=g('msgTuteurBadge');if(_tb)_tb.style.display=(user&&user.is_tuteur)?'block':'none';
   // Greeting dynamique
   try{
     var h=new Date().getHours();
@@ -11882,7 +11880,6 @@ async function toggleTuteurMode(){
   var tog=g('tuteurToggle');if(tog)tog.classList.toggle('on',user.is_tuteur);
   try{localStorage.setItem('cp_is_tuteur',user.is_tuteur?'1':'0');}catch(e){}
   var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display=user.is_tuteur?'flex':'none';
-  var tb=g('msgTuteurBadge');if(tb)tb.style.display=user.is_tuteur?'block':'none';
   // Sync backend si possible
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:user.is_tuteur})});}catch(e){}
   haptic(6);
