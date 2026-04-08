@@ -11069,7 +11069,7 @@ function stepRender(idx){
       if(!items.trim())return;
       html+='<div data-cat>'
         +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.label+'</div>'
-        +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 2px 12px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
+        +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
         +'</div>';
     });
     html+='</div>';
@@ -11327,11 +11327,12 @@ function _filterCrMat(q){
 }
 
 function _stepPickMat(key,label){
-  _sd.matiere_key=key;
-  _sd.matiere=label;
+  var desel=(_sd.matiere_key===key);
+  _sd.matiere_key=desel?'':key;
+  _sd.matiere=desel?'':label;
   var bd=g('bdCrStep');
   if(bd)bd.querySelectorAll('.cr-mat-item').forEach(function(el){
-    el.classList.toggle('on',el.dataset.key===key);
+    el.classList.toggle('on',!desel&&el.dataset.key===key);
   });
   haptic(8);
 }
