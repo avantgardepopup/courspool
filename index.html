@@ -1938,10 +1938,9 @@
           <div id="tpEspaceTitle" class="tp-espace-title"></div>
           <div class="tp-espace-desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
           <div class="tp-espace-row">
-            <input id="tpCodeInput" type="text" placeholder="Ex: ABC123" class="tp-code-input"
-              oninput="this.value=this.value.toUpperCase()"
-              onfocus="this.style.background='#fff'" onblur="this.style.background='#F7F7F7'">
-            <button onclick="tpEnterCode()" class="tp-code-btn">Entrer</button>
+            <input id="tpCodeInput" type="text" placeholder="Code d'accès" class="tp-code-input"
+              oninput="this.value=this.value.toUpperCase()" autocomplete="off" spellcheck="false" enterkeyhint="go">
+            <button onclick="tpEnterCode()" class="tp-code-btn">Rejoindre</button>
           </div>
           <div id="tpCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:6px"></div>
         </div>
