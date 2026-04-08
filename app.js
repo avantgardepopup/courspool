@@ -11995,11 +11995,10 @@ function openSettings(){
     var searchTog=g('searchVisibleToggle');
     if(searchTog)searchTog.classList.toggle('on',user.search_visible!==false);
   }
-  // Tuteur / parent — visible pour les élèves uniquement
+  // Tuteur / parent — visible pour les élèves uniquement (dans le profil)
   var isEleve=user&&user.role!=='professeur';
-  var tutSec=g('settingsTuteurSection'),tutGrp=g('settingsTuteurGroup');
+  var tutSec=g('pfTuteurSection');
   if(tutSec)tutSec.style.display=isEleve?'block':'none';
-  if(tutGrp)tutGrp.style.display=isEleve?'flex':'none';
   if(isEleve){
     var tutTog=g('tuteurToggle');if(tutTog)tutTog.classList.toggle('on',!!(user&&user.is_tuteur));
     var _isTut=!!(user&&user.is_tuteur);

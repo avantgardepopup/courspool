@@ -1491,6 +1491,34 @@
             <textarea id="pfBio" rows="3" data-i18n-ph="prof_a_propos_ph" placeholder="Présentez-vous, partagez votre approche…" style="width:100%;border:none;font-family:inherit;font-size:15px;outline:none;background:transparent;resize:none;color:var(--ink);line-height:1.6"></textarea>
           </div>
 
+          <!-- Tuteur / Parent (élèves seulement) -->
+          <div id="pfTuteurSection" style="display:none">
+            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px">Profil parent</div>
+            <div class="pref-group">
+              <div class="pref-row" style="cursor:pointer;align-items:flex-start;padding:16px" onclick="toggleTuteurMode()">
+                <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0;margin-top:2px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:15px;font-weight:600;color:var(--ink)">Je suis parent / tuteur légal</div>
+                  <div style="font-size:12px;color:var(--lite);margin-top:3px;line-height:1.5">Votre statut sera visible auprès des professeurs, favorisant la confiance et la communication</div>
+                </div>
+                <div class="ntog" id="tuteurToggle" style="flex-shrink:0;margin-top:2px"></div>
+              </div>
+              <div id="enfantPrenomRow" style="display:none;border-top:1px solid var(--bdr)">
+                <div class="pref-row" style="padding:14px 16px">
+                  <div class="pref-icon" style="background:#F5F3FF;flex-shrink:0">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+                  </div>
+                  <span class="pref-label">Prénom de l'enfant</span>
+                  <input id="enfantPrenomInput" type="text" placeholder="Ex : Lucas"
+                    style="border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:right;outline:none;width:120px;-webkit-text-fill-color:var(--ink);-webkit-appearance:none"
+                    onchange="saveEnfantPrenom(this.value)">
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Enseignement (prof seulement) -->
           <div id="pfProfExtra" style="display:none">
             <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:20px 4px 8px" data-i18n="prof_enseignement">Enseignement</div>
@@ -3235,27 +3263,6 @@
           <div class="settings-sub" data-i18n="settings_location_sub">Ouvrir les réglages de l'app</div>
         </div>
         <svg class="settings-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-    </div>
-
-    <!-- Profil (élèves seulement) -->
-    <div class="settings-section-lbl" id="settingsTuteurSection" style="display:none" data-i18n="settings_mon_profil">Mon profil</div>
-    <div class="settings-group" id="settingsTuteurGroup" style="display:none">
-      <div class="settings-row" style="cursor:pointer" onclick="toggleTuteurMode()">
-        <div style="flex:1">
-          <div class="settings-label" data-i18n="settings_tuteur">Je suis parent / tuteur légal</div>
-          <div class="settings-sub" data-i18n="settings_tuteur_sub">Les professeurs voient votre statut sur vos réservations, messages et avis</div>
-        </div>
-        <div class="ntog" id="tuteurToggle"></div>
-      </div>
-      <div class="settings-row" id="enfantPrenomRow" style="display:none">
-        <div style="flex:1">
-          <div class="settings-label">Prénom de l'enfant</div>
-          <div class="settings-sub">Affiché aux professeurs sur vos réservations</div>
-        </div>
-        <input id="enfantPrenomInput" type="text" placeholder="Ex : Lucas"
-          style="border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:right;outline:none;width:120px;-webkit-text-fill-color:var(--ink);-webkit-appearance:none"
-          onchange="saveEnfantPrenom(this.value)">
       </div>
     </div>
 
