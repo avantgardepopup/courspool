@@ -810,6 +810,7 @@ function _loadEleveEspFiches(pid){
 function espOpenFicheEleve(pid,id){
   haptic(4);
   var bd=document.createElement('div');
+  bd.className='cp-sheet-bd';
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;animation:mi .28s cubic-bezier(.32,1,.6,1)';
@@ -817,7 +818,7 @@ function espOpenFicheEleve(pid,id){
     +'<div style="padding:16px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
     +'<div id="_ficheELTitle" style="flex:1;font-size:16px;font-weight:800;color:var(--ink)">Chargement\u2026</div>'
-    +'<button onclick="this.closest(\'[style*=inset:0]\').remove()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'<button onclick="this.closest(\'.cp-sheet-bd\').remove()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
     +'</div>'
     +'<div id="_ficheELBody" style="flex:1;overflow-y:auto;padding:20px;-webkit-overflow-scrolling:touch"><div style="display:flex;justify-content:center;padding:40px"><div class="cp-loader"></div></div></div>'
     +'<div style="padding:12px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px));flex-shrink:0"></div>';
@@ -5565,6 +5566,7 @@ function espOpenFiche(id){
   // Essayer depuis le cache d'abord
   var cached;try{var fd=JSON.parse(localStorage.getItem('cp_fiche_data')||'{}');cached=fd[String(id)];}catch(e){}
   var bd=document.createElement('div');
+  bd.className='cp-sheet-bd';
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;animation:mi .28s cubic-bezier(.32,1,.6,1)';
@@ -5576,7 +5578,7 @@ function espOpenFiche(id){
     +'<div style="padding:16px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(0,0,0,.06);flex-shrink:0">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
     +'<div id="_ficheSheetTitle" style="flex:1;font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+esc(initTitle)+'</div>'
-    +'<button onclick="this.closest(\'[style*=inset:0]\').remove()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'<button onclick="this.closest(\'.cp-sheet-bd\').remove()" style="width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
     +'</div>'
     +'<div id="_ficheSheetBody" style="flex:1;overflow-y:auto;padding:20px;-webkit-overflow-scrolling:touch">'
     +(initContent?initContent:'<div style="display:flex;justify-content:center;padding:40px"><div class="cp-loader"></div></div>')
