@@ -2497,6 +2497,9 @@ function goAccount(){
   var pgMesProfsEl=g('pgMesProfs');if(pgMesProfsEl)pgMesProfsEl.classList.remove('on');
   g('pgAcc').classList.add('on');
   setAvatar(g('accAv'),user.photo,user.ini,'rgba(255,255,255,.25)');
+  // Bouton photo réservé aux professeurs uniquement
+  var _pfl=g('pfPhotoLabel');
+  if(_pfl)_pfl.style.display=(user&&user.role==='professeur')?'flex':'none';
   var accName=g('accName'); if(accName)accName.textContent=user.pr+(user.nm?' '+user.nm:'');
   var accEmail=g('accEmail'); if(accEmail)accEmail.textContent=user.em;
   var pfPr=g('pfPr'),pfNm=g('pfNm'),pfEm=g('pfEm'),pfVille=g('pfVille'),pfBio=g('pfBio');
@@ -3079,6 +3082,8 @@ function _applyPhotoPartout(url){
 }
 
 function previewPhoto(input){
+  // Réservé aux professeurs uniquement
+  if(!user||user.role!=='professeur'){input.value='';return;}
   if(input.files&&input.files[0]){
     var file=input.files[0];
     if(file.size>2*1024*1024){
@@ -3088,26 +3093,26 @@ function previewPhoto(input){
     var reader=new FileReader();
     reader.onload=function(e){
       var src=e.target.result;
-      // Appliquer la preview base64 immédiatement partout
-      _applyPhotoPartout(src);
-      // Uploader vers Supabase
       if(user&&user.id){
+        // Upload vers le backend — la photo passe en validation admin
+        // On N'applique PAS la preview immédiatement
         fetch(API+'/upload/photo',{
           method:'POST',
           headers:apiH(),
-          body:JSON.stringify({base64:src,userId:user.id,filename:file.name})
+          body:JSON.stringify({base64:src,userId:user.id,filename:file.name,pending:true})
         }).then(function(r){return r.json();}).then(function(data){
-          if(data.url){
-            user.photo=data.url;
-            try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(e){}
-            // Remplacer la base64 par l'URL Supabase définitive
-            _applyPhotoPartout(data.url);
-            toast(t('t_photo_ok'),'');
+          if(data.url||data.pending){
+            // Stocker l'URL en attente localement pour info, mais ne pas l'afficher
+            try{localStorage.setItem('cp_photo_pending','1');}catch(ex){}
+            toast('Photo envoyée ✓','Elle apparaîtra sur votre profil après validation par notre équipe.');
+          } else {
+            toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');
           }
-        }).catch(function(){toast('Erreur','Impossible d\'uploader la photo');});
+        }).catch(function(){toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');});
       }
     };
     reader.readAsDataURL(file);
+    input.value=''; // reset pour permettre re-sélection du même fichier
   }
 }
 
