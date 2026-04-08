@@ -10938,7 +10938,7 @@ function openCrStep(){
   g('bdCrStep').classList.add('active');
   haptic(10);
 }
-function closeCrStep(){var el=g('bdCrStep');if(el)el.classList.remove('active');}
+function closeCrStep(){var el=g('bdCrStep');if(el){el.classList.remove('active');el.style.top='';el.style.height='';el.style.bottom='';}}
 
 function buildStepDOM(){
   var div=document.createElement('div');div.id='bdCrStep';
@@ -10958,16 +10958,18 @@ function buildStepDOM(){
   g('stepCloseBtn').onclick=closeCrStep;
   g('stepCta').onclick=stepNext;
   // Keyboard awareness — keep CTA visible above keyboard
+  function _crStepVpAdjust(){
+    var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
+    var vp=window.visualViewport;
+    var h=vp?vp.height:window.innerHeight;
+    var top=vp?vp.offsetTop:0;
+    el.style.top=top+'px';
+    el.style.height=h+'px';
+    el.style.bottom='auto';
+  }
   if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',function(){
-      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
-      el.style.height=window.visualViewport.height+'px';
-      el.style.top=window.visualViewport.offsetTop+'px';
-    });
-    window.visualViewport.addEventListener('scroll',function(){
-      var el=g('bdCrStep');if(!el||!el.classList.contains('active'))return;
-      el.style.top=window.visualViewport.offsetTop+'px';
-    });
+    window.visualViewport.addEventListener('resize',_crStepVpAdjust);
+    window.visualViewport.addEventListener('scroll',_crStepVpAdjust);
   }
 }
 
