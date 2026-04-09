@@ -174,14 +174,14 @@ function recordFailedLogin(ip, email) {
     const d = failedLoginMap.get(ip);
     d.count++;
     // Alerte à partir de 3 échecs en 5 min, une seule fois par fenêtre
-    if (d.count >= 3 && !d.alerted) {
+    if (d.count >= 5 && !d.alerted) {
       d.alerted = true;
       const time = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
       discordAlert(
         `🚨 **Tentatives de connexion suspectes**\n` +
         `> **IP :** \`${ip}\`\n` +
         `> **Dernier email :** \`${email}\`\n` +
-        `> **Tentatives :** ${d.count} en moins de 5 min\n` +
+        `> **Tentatives :** ${d.count} échecs en moins de 5 min\n` +
         `> **Heure :** ${time}`
       );
     }
