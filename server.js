@@ -625,7 +625,16 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
   if (!email || !password || !prenom || !role) {
     return res.status(400).json({ error: 'Champs manquants' });
   }
-  if (prenom && prenom.length > 50) return res.status(400).json({ error: 'Prénom trop long (50 max)' });
+  // Whitelist des rôles autorisés — empêche role:'admin' ou valeur arbitraire
+  if (!['eleve', 'professeur'].includes(role)) {
+    return res.status(400).json({ error: 'Rôle invalide' });
+  }
+  // Validation format email basique
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email invalide' });
+  }
+  if (password.length < 6) return res.status(400).json({ error: 'Mot de passe trop court (6 min)' });
+  if (prenom.length > 50) return res.status(400).json({ error: 'Prénom trop long (50 max)' });
   if (nom && nom.length > 50) return res.status(400).json({ error: 'Nom trop long (50 max)' });
   try {
     const { data, error } = await supabase.auth.admin.createUser({
@@ -635,7 +644,8 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
     if (error) return res.status(400).json({ error: error.message });
     await supabase.from('profiles').insert([{
       id: data.user.id, prenom, nom, email, role,
-      statut: req.body.statut || null,
+      // statut et verified fixés côté serveur — jamais depuis le body client
+      statut: null,
       niveau: req.body.niveau || null,
       matieres: req.body.matieres || null,
       verified: role === 'eleve' ? true : false
@@ -687,7 +697,10 @@ app.get('/cours', async (req, res) => {
   let query = supabase.from('cours').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
   const niveau_filter = req.query.niveau || null;
-  if (sujet && sujet !== 'tous') query = query.ilike('sujet', '%' + sujet + '%');
+  if (sujet && sujet !== 'tous') {
+    const safeSubjet = sujet.slice(0, 100).replace(/[%_\\]/g, c => '\\' + c);
+    query = query.ilike('sujet', '%' + safeSubjet + '%');
+  }
   if (search) {
     const s = search.slice(0, 100).replace(/[%_\\]/g, c => '\\' + c);
     query = query.or(`titre.ilike.%${s}%,sujet.ilike.%${s}%,lieu.ilike.%${s}%,prof_nom.ilike.%${s}%`);
