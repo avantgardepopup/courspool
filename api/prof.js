@@ -9,7 +9,7 @@ function esc(s) {
 
 module.exports = async function(req, res) {
   const id = req.query.id;
-  if (!id) { res.redirect(302, '/'); return; }
+  if (!id || !/^[a-zA-Z0-9_-]{1,100}$/.test(id)) { res.redirect(302, '/'); return; }
 
   let prof = null;
   try {
@@ -72,7 +72,7 @@ module.exports = async function(req, res) {
       `<meta name="twitter:description" content="${esc(desc)}">`)
     .replace('</head>',
       `<link rel="canonical" href="${esc(canonicalUrl)}">\n`
-      + `<script type="application/ld+json">${JSON.stringify(cleanJsonLd)}</script>\n`
+      + `<script type="application/ld+json">${JSON.stringify(cleanJsonLd).replace(/</g,'\\u003c').replace(/>/g,'\\u003e')}</script>\n`
       + `<script>window.__CP_DEEP__=${JSON.stringify({type:'prof',id:String(id)})};</script>\n`
       + '</head>'
     );

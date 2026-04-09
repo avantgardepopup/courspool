@@ -31,6 +31,7 @@ const { Resend } = require('resend');
 const http = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 
 const app = express();
@@ -2597,11 +2598,13 @@ app.post('/teacher/:id/content', requireAuth, async (req, res) => {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { title, description, content_url, content_type, access_type, password, price } = req.body;
     if (!title) return res.status(400).json({ error: 'Titre requis' });
+    const hashedPassword = (access_type === 'password' && password)
+      ? await bcrypt.hash(password, 10) : null;
     const { data, error } = await supabase.from('teacher_content')
       .insert({ teacher_id: req.params.id, title: title.trim(),
         description: (description||'').trim(), content_url: content_url||null,
         content_type: content_type||'text', access_type: access_type||'enrolled',
-        password: password||null, price: price||0 })
+        password: hashedPassword, price: price||0 })
       .select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
@@ -2626,7 +2629,9 @@ app.post('/teacher/:id/content/:cid/unlock', requireAuth, async (req, res) => {
       .select('id,password,access_type').eq('id', req.params.cid).eq('teacher_id', req.params.id).single();
     if (!c) return res.status(404).json({ error: 'Contenu introuvable' });
     if (c.access_type !== 'password') return res.status(400).json({ error: 'Non protégé par mot de passe' });
-    if (!c.password || c.password !== password) return res.status(400).json({ error: 'Mot de passe incorrect' });
+    const isHash = c.password && c.password.startsWith('$2b$');
+    const match = isHash ? await bcrypt.compare(password, c.password) : (c.password === password);
+    if (!c.password || !match) return res.status(400).json({ error: 'Mot de passe incorrect' });
     await supabase.from('content_access')
       .upsert({ content_id: req.params.cid, student_id: req.user.id }, { onConflict: 'content_id,student_id' });
     res.json({ success: true });
