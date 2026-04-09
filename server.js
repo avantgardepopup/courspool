@@ -683,7 +683,7 @@ app.get('/cours', async (req, res) => {
 });
 
 // COURS — créer
-app.post('/cours', async (req, res) => {
+app.post('/cours', requireAuth, async (req, res) => {
   const professeur_id = req.user.id; // toujours l'utilisateur connecté
   const { titre, sujet, couleur_sujet, background, date_heure, date_iso, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau, mode, prive, code_acces, visio_url } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total) {
@@ -797,7 +797,7 @@ app.get('/cours/:id/ics', requireAuth, async (req, res) => {
 });
 
 // COURS — supprimer
-app.delete('/cours/:id', async (req, res) => {
+app.delete('/cours/:id', requireAuth, async (req, res) => {
   try {
     const { data: cours } = await supabase.from('cours').select('professeur_id').eq('id', req.params.id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
@@ -832,7 +832,7 @@ app.patch('/cours/:id', requireAuth, async (req, res) => {
 });
 
 // RESERVATIONS — créer
-app.post('/reservations', async (req, res) => {
+app.post('/reservations', requireAuth, async (req, res) => {
   const user_id = req.user.id;
   const { cours_id, montant_paye, type_paiement } = req.body;
   if (!cours_id) return res.status(400).json({ error: 'Données manquantes' });
@@ -855,7 +855,7 @@ app.post('/reservations', async (req, res) => {
 });
 
 // RESERVATIONS — réserver pour un ami
-app.post('/reservations/ami', async (req, res) => {
+app.post('/reservations/ami', requireAuth, async (req, res) => {
   const { cours_id } = req.body;
   if (!cours_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
@@ -866,7 +866,7 @@ app.post('/reservations/ami', async (req, res) => {
 });
 
 // RESERVATIONS — récupérer par user
-app.get('/reservations/:user_id', async (req, res) => {
+app.get('/reservations/:user_id', requireAuth, async (req, res) => {
   if (req.user.id !== req.params.user_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   try {
     const { data, error } = await supabase.from('reservations').select('*, cours(*)').eq('user_id', req.params.user_id);
@@ -1142,7 +1142,7 @@ app.post('/stripe/confirm', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-app.post('/follows', async (req, res) => {
+app.post('/follows', requireAuth, async (req, res) => {
   const user_id = req.user.id;
   const { professeur_id } = req.body;
   if (!professeur_id) return res.status(400).json({ error: 'professeur_id manquant' });
@@ -1157,7 +1157,7 @@ app.post('/follows', async (req, res) => {
 });
 
 // FOLLOWS — supprimer (désabonnement)
-app.delete('/follows', async (req, res) => {
+app.delete('/follows', requireAuth, async (req, res) => {
   const user_id = req.user.id;
   const { professeur_id } = req.body;
   if (!professeur_id) return res.status(400).json({ error: 'professeur_id manquant' });
@@ -1331,7 +1331,7 @@ app.delete('/users/:id', requireAdmin, async (req, res) => {
 });
 
 // PATCH profil — mise à jour par l'utilisateur lui-même (champs autorisés uniquement)
-app.patch('/profiles/:id', async (req, res) => {
+app.patch('/profiles/:id', requireAuth, async (req, res) => {
   res.set('Cache-Control', 'no-store');
   const { id } = req.params;
   // Seul l'utilisateur lui-même peut modifier son profil
@@ -1827,7 +1827,7 @@ app.get('/conversations/:user_id', async (req, res) => {
 });
 
 // MESSAGES — marquer comme lu
-app.put('/messages/lu/:user_id', async (req, res) => {
+app.put('/messages/lu/:user_id', requireAuth, async (req, res) => {
   const { expediteur_id } = req.body;
   if (!expediteur_id) return res.status(400).json({ error: 'expediteur_id manquant' });
   if (req.params.user_id !== req.user.id) return res.status(403).json({ error: 'Non autorisé' });
@@ -1932,7 +1932,7 @@ app.post('/upload/photo', async (req, res) => {
 });
 
 // NOTATIONS — noter un cours
-app.post('/notations', async (req, res) => {
+app.post('/notations', requireAuth, async (req, res) => {
   const eleve_id = req.user.id;
   const { professeur_id, cours_id, note, commentaire } = req.body;
   if (!professeur_id || !cours_id || !note) return res.status(400).json({ error: 'Données manquantes' });
@@ -2010,7 +2010,7 @@ async function pushToUser(userId, payload) {
 }
 
 // PUSH — s'abonner (requireAuth via middleware global)
-app.post('/push/subscribe', async (req, res) => {
+app.post('/push/subscribe', requireAuth, async (req, res) => {
   const { subscription, role } = req.body;
   const user_id = req.user.id; // toujours l'utilisateur connecté
   if (!subscription || !subscription.endpoint) return res.status(400).json({ error: 'Abonnement invalide' });
@@ -2028,7 +2028,7 @@ app.post('/push/subscribe', async (req, res) => {
 });
 
 // PUSH — se désabonner
-app.delete('/push/subscribe', async (req, res) => {
+app.delete('/push/subscribe', requireAuth, async (req, res) => {
   const { user_id } = req.body;
   if (!user_id) return res.status(400).json({ error: 'user_id manquant' });
   if (user_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
