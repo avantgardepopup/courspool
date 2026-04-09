@@ -100,7 +100,16 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(cors({ origin: ALLOWED_ORIGINS }));
+app.use(cors({
+  origin: function(origin, callback) {
+    // Autoriser les requêtes sans origin (mobile natif Capacitor, Postman en dev)
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error('CORS: origine non autorisée'));
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+}));
 app.use(express.json({limit: '10mb', verify: (req, res, buf) => { if (req.path === '/stripe/webhook') req.rawBody = buf; }}));
 app.use(express.urlencoded({limit: '10mb', extended: true}));
 
