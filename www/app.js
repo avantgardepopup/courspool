@@ -1327,6 +1327,18 @@ async function _initSupabase(){
   }
 }
 
+// ── UPLOAD VERS SUPABASE STORAGE ─────────────────────────────────────────────
+// Retourne le storagePath (bucket/folder/userId/timestamp.ext) ou throw
+async function _uploadToStorage(file, folder){
+  if(!window._supabase)throw new Error('Supabase non disponible');
+  var ext=(file.name.split('.').pop()||'bin').toLowerCase();
+  var uid=user&&user.id||'unknown';
+  var path=folder+'/'+uid+'/'+Date.now()+'.'+ext;
+  var result=await window._supabase.storage.from('verifications').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(result.error)throw result.error;
+  return result.data.path;
+}
+
 function _setupCapacitorDeepLink(){
   if(!_isIOS||!window.Capacitor||!window.Capacitor.Plugins||!window.Capacitor.Plugins.App)return;
   window.Capacitor.Plugins.App.addListener('appUrlOpen',function(event){
@@ -4506,16 +4518,48 @@ function _loadMpAnnonces(pid){
   }).catch(function(){if(curProf===pid)el.innerHTML='';});
 }
 
+// Icône SVG pour un type de ressource / URL (remplace les emojis)
+function _resIcon(type, url){
+  var u=url||'';
+  var bg,stroke,path;
+  if(/drive\.google\.com|docs\.google\.com/.test(u)){
+    bg='rgba(66,133,244,.12)';stroke='#4285F4';
+    path='<path d="M4.5 20L9 12l4.5 8H4.5z"/><path d="M9 12L13.5 4H19l-5.5 8H9z"/><path d="M14 20H9l2.5-4L14 20z"/><path d="M19 4l-5.5 8 2.5 4H22L19 4z"/>';
+  } else if(/dropbox\.com/.test(u)){
+    bg='rgba(0,97,210,.1)';stroke='#0061D2';
+    path='<path d="M12 2L6 6l6 4 6-4-6-4z"/><path d="M6 10l-4 3 4 3 4-3-4-3z"/><path d="M18 10l-4 3 4 3 4-3-4-3z"/><path d="M6 16l6 4 6-4"/>';
+  } else if(/notion\.so/.test(u)){
+    bg='rgba(0,0,0,.07)';stroke='#555';
+    path='<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>';
+  } else if(/youtube\.com|youtu\.be/.test(u)||type==='video'){
+    bg='rgba(255,0,0,.1)';stroke='#FF0000';
+    path='<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>';
+  } else if(type==='pdf'){
+    bg='rgba(239,68,68,.1)';stroke='#EF4444';
+    path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/>';
+  } else if(type==='article'||type==='text'){
+    bg='rgba(59,130,246,.1)';stroke='#3B82F6';
+    path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';
+  } else if(type==='exercice'){
+    bg='rgba(245,158,11,.1)';stroke='#F59E0B';
+    path='<path d="M17 3a2.121 2.121 0 013 3L7 19l-4 1 1-4L17 3z"/><line x1="15" y1="5" x2="19" y2="9"/>';
+  } else {
+    bg='rgba(255,107,43,.1)';stroke='var(--or)';
+    path='<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>';
+  }
+  return'<div style="width:36px;height:36px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+stroke+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+path+'</svg></div>';
+}
+
 function _loadMpRessources(pid){
   var el=g('mpRessources');if(!el)return;
   el.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px"></div>';
   fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
     if(curProf!==pid)return;
     if(!data||!data.length){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:10px 0" data-i18n="mp_aucune_ressource">Aucune ressource partagée.</div>';return;}
-    var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
     el.innerHTML=data.map(function(r){
       return'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;text-decoration:none">'
-        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +_resIcon(r.type,r.url)
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+esc(r.type)+(r.access_level==='public'?' · public':'')+'</div>'
@@ -5228,7 +5272,6 @@ function espLoadResources(){
   var el=g('espResources');
   if(el)el.innerHTML='<div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:6px"></div>';
   var uid=user&&user.id;if(!uid)return;
-  var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
   fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
     if(!list||!list.length){
       if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune ressource publiée.</div>';
@@ -5236,7 +5279,7 @@ function espLoadResources(){
     }
     if(el)el.innerHTML=list.map(function(r){
       return'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)">'
-        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +_resIcon(r.type,r.url)
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite)">'+esc(r.type)+'</div>'
@@ -8732,16 +8775,13 @@ async function submitCni(){
   var btn=g('cniSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.cni_uploaded=true;
-      cniGoStep3();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'cni');
+    try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.cni_uploaded=true;
+    cniGoStep3();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -8902,17 +8942,14 @@ async function submitDiplome(){
   var btn=g('diplomeSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.diplome_uploaded=true;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
-      diplomeGoStep3();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'diplome');
+    try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.diplome_uploaded=true;
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+    diplomeGoStep3();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -9031,19 +9068,16 @@ async function submitCasier(){
   var btn=g('casierSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.casier_uploaded=true;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
-      casierLater();
-      toast(t('t_sent'),t('t_attest_verif'));
-      updateCasierStatusBlock();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'casier');
+    try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.casier_uploaded=true;
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+    casierLater();
+    toast(t('t_sent'),t('t_attest_verif'));
+    updateCasierStatusBlock();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
