@@ -1065,6 +1065,14 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
     if (!cours_id || !user_id) return res.status(400).json({ error: 'Métadonnées payment intent manquantes' });
     if (user_id !== req.user.id) return res.status(403).json({ error: 'Non autorisé' });
 
+    // Vérification croisée du montant — ce que Stripe a encaissé doit correspondre aux métadonnées
+    const expectedAmount = Math.round(parseFloat(montant) * 100);
+    if (pi.amount !== expectedAmount) {
+      console.error(`[STRIPE] Montant incohérent — pi.amount: ${pi.amount} | attendu: ${expectedAmount} | payment_intent: ${payment_intent_id}`);
+      discordAlert(`⚠️ **Montant Stripe incohérent**\n> **PI :** \`${payment_intent_id}\`\n> **Encaissé :** ${pi.amount/100}€ | **Attendu :** ${expectedAmount/100}€`);
+      return res.status(400).json({ error: 'Montant incohérent' });
+    }
+
     // Idempotence par stripe_payment_intent_id
     const { data: existingByPi } = await supabase.from('reservations')
       .select('id').eq('stripe_payment_intent_id', payment_intent_id).maybeSingle();
@@ -1075,6 +1083,16 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
       const { data: existing } = await supabase.from('reservations')
         .select('id').eq('cours_id', cours_id).eq('user_id', user_id).maybeSingle();
       if (existing) return res.json({ success: true, already_existed: true });
+    }
+
+    // Vérification places disponibles — anti-surbooking (race condition entre PI création et confirmation)
+    if (!pour_ami) {
+      const { data: coursCheck } = await supabase.from('cours').select('places_max,places_prises').eq('id', cours_id).single();
+      if (coursCheck && coursCheck.places_prises >= coursCheck.places_max) {
+        console.warn(`[STRIPE] Paiement OK mais cours complet — cours_id: ${cours_id} | user_id: ${user_id}`);
+        // Le paiement est déjà encaissé — on crée quand même la réservation et on notifie pour traitement manuel
+        discordAlert(`⚠️ **Surbooking détecté**\n> **Cours :** \`${cours_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant encaissé :** ${montant}€\n> Remboursement manuel à traiter.`);
+      }
     }
 
     // Créer la réservation
