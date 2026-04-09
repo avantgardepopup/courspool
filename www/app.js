@@ -7409,6 +7409,11 @@ function openMsg(profNm,destId,avatar){
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
   var ab=g('msgAttachBtn');if(ab)ab.style.display=(user&&user.role==='professeur')?'flex':'none';
 
+  // Blocage — afficher/masquer le bandeau et la saisie
+  var _blocked=isBlocked(destId);
+  var _convBanner=g('msgBlockedBanner');if(_convBanner)_convBanner.style.display=_blocked?'block':'none';
+  var _convInp=g('msgInputBar');if(_convInp)_convInp.style.display=_blocked?'none':'';
+
   // Mark active row
   document.querySelectorAll('.msg-row').forEach(function(r){r.classList.remove('active');});
   var activeRow=document.querySelector('[data-uid="'+msgDestId+'"]');
@@ -12867,6 +12872,134 @@ async function toggleSearchVisible(){
 }
 
 // ---- Signalement ----
+// ── Blocage utilisateur (localStorage) ─────────────────────────────────────
+function _blockedSet(){
+  try{var s=localStorage.getItem('cp_blocked');return new Set(s?JSON.parse(s):[]);}catch(e){return new Set();}
+}
+function _saveBlocked(set){
+  try{localStorage.setItem('cp_blocked',JSON.stringify([...set]));}catch(e){}
+}
+function isBlocked(uid){return _blockedSet().has(String(uid));}
+
+function blockUser(uid,nm){
+  var s=_blockedSet();s.add(String(uid));_saveBlocked(s);
+  var convBanner=g('msgBlockedBanner');if(convBanner)convBanner.style.display='block';
+  var inp=g('msgInputBar');if(inp)inp.style.display='none';
+  haptic(10);
+  toast('Utilisateur bloqué',esc(nm||'Cet utilisateur')+' ne peut plus vous contacter.');
+}
+
+function unblockUser(uid,nm){
+  var s=_blockedSet();s.delete(String(uid));_saveBlocked(s);
+  var convBanner=g('msgBlockedBanner');if(convBanner)convBanner.style.display='none';
+  var inp=g('msgInputBar');if(inp)inp.style.display='';
+  haptic(6);
+  toast('Utilisateur débloqué','Vous pouvez à nouveau échanger des messages.');
+}
+
+function openMsgMoreOptions(){
+  var uid=msgDestId;
+  var nm=(g('msgConvName')&&g('msgConvName').textContent)||'';
+  var blocked=isBlocked(uid);
+  var WARN='<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+  var BLOCK='<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>';
+  var safeName=esc(nm).replace(/'/g,'&#39;');
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:14px 20px 8px;font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Options</div>'
+    +'<div style="padding:0 14px;display:flex;flex-direction:column;gap:6px">'
+    +'<div onclick="closeQuickSheet();openSignalement(\'message\',\''+esc(uid)+'\',\''+safeName+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--bg);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+    +'<div style="width:34px;height:34px;border-radius:9px;background:var(--wh);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="15" height="15">'+WARN+'</svg></div>'
+    +'<div style="font-size:14px;font-weight:600;color:var(--ink)">Signaler</div>'
+    +'</div>'
+    +(blocked
+      ?'<div onclick="closeQuickSheet();unblockUser(\''+esc(uid)+'\',\''+safeName+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--bg);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+        +'<div style="width:34px;height:34px;border-radius:9px;background:var(--wh);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="15" height="15">'+BLOCK+'</svg></div>'
+        +'<div style="font-size:14px;font-weight:600;color:var(--ink)">Débloquer cet utilisateur</div>'
+        +'</div>'
+      :'<div onclick="closeQuickSheet();_confirmBlockUser(\''+esc(uid)+'\',\''+safeName+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--bg);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+        +'<div style="width:34px;height:34px;border-radius:9px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="15" height="15">'+BLOCK+'</svg></div>'
+        +'<div style="font-size:14px;font-weight:600;color:#EF4444">Bloquer cet utilisateur</div>'
+        +'</div>'
+    )
+    +'</div>'
+    +'<div style="padding:12px 14px"><button onclick="closeQuickSheet()" style="width:100%;padding:14px;background:var(--bg);border:none;border-radius:14px;font-family:inherit;font-size:15px;font-weight:600;color:var(--mid);cursor:pointer">Annuler</button></div>'
+    +'<div style="height:max(20px,env(safe-area-inset-bottom,20px))"></div>';
+  showQuickSheet(html);
+}
+
+function _confirmBlockUser(uid,nm){
+  var BLOCK='<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>';
+  var safeName=esc(nm).replace(/'/g,'&#39;');
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:20px 20px 8px;text-align:center">'
+    +'<div style="width:56px;height:56px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="26" height="26">'+BLOCK+'</svg></div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:10px">Bloquer '+esc(nm||'cet utilisateur')+'</div>'
+    +'<div style="font-size:14px;color:var(--mid);line-height:1.6;margin-bottom:20px">'+esc(nm||'Cet utilisateur')+' ne pourra plus vous envoyer de messages.<br>Vous pouvez le débloquer à tout moment depuis la conversation.</div>'
+    +'</div>'
+    +'<div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">'
+    +'<button onclick="closeQuickSheet();blockUser(\''+esc(uid)+'\',\''+safeName+'\')" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Bloquer</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'</div>'
+    +'<div style="height:max(20px,env(safe-area-inset-bottom,20px))"></div>';
+  showQuickSheet(html);
+}
+
+// ── Export données RGPD ─────────────────────────────────────────────────────
+async function exportMesDonnees(){
+  if(!user){toast('Connexion requise','');return;}
+  closeSettings();
+  toast('Préparation…','Collecte de vos données en cours');
+  var data={
+    export_date:new Date().toISOString(),
+    notice:'Cet export contient toutes les données personnelles associées à votre compte CoursPool, conformément au RGPD (Art. 15 et 20).',
+    profil:{
+      id:user.id,
+      prenom:user.pr||'',
+      nom:user.nm||'',
+      email:user.em||'',
+      role:user.role||'',
+      ville:user.ville||'',
+      bio:user.bio||'',
+      photo:user.photo||'',
+      niveau:user.niveau||'',
+      created_at:user.created_at||''
+    },
+    cours:[],
+    reservations:[],
+    messages:[]
+  };
+  // Cours (prof : ses cours créés ; élève : cours auxquels il est inscrit)
+  try{
+    if(user.role==='professeur'){
+      var myC=C.filter(function(c){return c.pr===user.id||c.professeur_id===user.id;});
+      data.cours=myC.map(function(c){return{id:c.id,titre:c.title||c.titre||'',matiere:c.matiere||'',date:c.date_heure||c.date_iso||'',prix:c.prix||0,places:c.places_total||0,inscrits:c.places_prises||0};});
+    }else{
+      var myRes=Object.values(res||{});
+      data.cours=myRes.map(function(r){var c=C.find(function(x){return x.id===r.cours_id;})||{};return{cours_id:r.cours_id,titre:c.title||c.titre||'',matiere:c.matiere||'',date:c.date_heure||c.date_iso||'',montant_paye:r.montant||0,statut:r.statut||''};});
+    }
+  }catch(e){}
+  // Réservations depuis l'API
+  try{
+    var rr=await fetch(API+'/reservations?user_id='+user.id,{headers:apiH()});
+    if(rr.ok){var dr=await rr.json();data.reservations=(dr||[]).map(function(r){return{id:r.id,cours_id:r.cours_id,montant:r.montant,statut:r.statut,created_at:r.created_at};});}
+  }catch(e){}
+  // Messages
+  try{
+    var rm=await fetch(API+'/messages?user_id='+user.id,{headers:apiH()});
+    if(rm.ok){var dm=await rm.json();data.messages=(dm||[]).map(function(m){return{id:m.id,expediteur_id:m.expediteur_id||m.sender_id,destinataire_id:m.destinataire_id,contenu:m.content||m.contenu||'',date:m.created_at};});}
+  }catch(e){}
+
+  var json=JSON.stringify(data,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='courspool-mes-donnees-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  haptic(6);
+  toast('Export téléchargé','Fichier JSON avec toutes vos données personnelles.');
+}
+
 function openSignalement(context,targetId,targetName){
   if(!user){toast('Connexion requise','Connectez-vous pour signaler');return;}
   var WARN='<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
