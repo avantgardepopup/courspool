@@ -201,7 +201,13 @@
   <!-- ══ ÉCRAN CONNEXION ══ -->
   <div id="lsLogin" class="lscreen-wrap">
     <div class="lscreen-inner lscreen-login-inner">
-      <div class="lscreen-logo-text">CoursPool</div>
+      <div style="position:relative">
+        <div class="lscreen-logo-text">CoursPool</div>
+        <button onclick="openLangPicker()" style="position:absolute;top:0;right:0;background:none;border:1.5px solid var(--bdr);border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink);font-size:13px;font-weight:500" id="loginLangBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="loginLangCode">FR</span>
+        </button>
+      </div>
       <p class="lscreen-sub" data-i18n="login_subtitle">Trouvez un cours près de vous</p>
 
       <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email"></div>
@@ -598,22 +604,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
           <div id="filtersBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#E8611A;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;border:1.5px solid #fff;padding:0 2px">0</div>
         </div>
-        <button id="pillCancelBtn" onclick="event.stopPropagation();closeInlineSearch()" style="display:none;background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:0 0 0 10px;white-space:nowrap;flex-shrink:0">Annuler</button>
+        <button id="pillCancelBtn" onclick="event.stopPropagation();closeInlineSearch()" data-i18n="txt_annuler" style="display:none;background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:0 0 0 10px;white-space:nowrap;flex-shrink:0">Annuler</button>
       </div>
       <!-- Suggestions alias (Levenshtein) -->
       <div id="searchAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:12px;padding:9px 14px;margin-top:8px;border:1px solid rgba(255,107,43,.2)">
         <span class="alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="acceptAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
-          <button onclick="denyAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+          <button onclick="acceptAlias()" data-i18n="btn_oui" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
+          <button onclick="denyAlias()" data-i18n="btn_non" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
         </div>
       </div>
       <!-- Suggestion code cours privé -->
       <div id="searchCodeSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:12px;padding:9px 14px;margin-top:8px;border:1px solid rgba(255,107,43,.2)">
         <span class="code-label" style="font-size:13px;color:var(--mid);flex:1"></span>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="acceptCodeSearch()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Rejoindre</button>
-          <button onclick="denyCodeSearch()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+          <button onclick="acceptCodeSearch()" data-i18n="exp_join" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Rejoindre</button>
+          <button onclick="denyCodeSearch()" data-i18n="btn_non" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
         </div>
       </div>
     </div>
@@ -3186,9 +3192,9 @@
       <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em" data-i18n="settings_title">Paramètres</div>
     </div>
 
-    <!-- Langue — masqué (FR uniquement pour le lancement) -->
-    <div class="settings-section-lbl" data-i18n="settings_langue" style="display:none">Langue</div>
-    <div class="settings-group" style="display:none">
+    <!-- Langue -->
+    <div class="settings-section-lbl" data-i18n="settings_langue">Langue</div>
+    <div class="settings-group">
       <div class="settings-row" onclick="openLangPicker()" style="cursor:pointer">
         <div style="flex:1">
           <div class="settings-label" data-i18n="settings_langue">Langue</div>

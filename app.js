@@ -579,7 +579,7 @@ function _doUnenrollProf(pid){
   closeQuickSheet();
   _removeEnrolledProf(String(pid));
   haptic(6);
-  toast('Désinscription effectuée','');
+  toast(t('t_unsubscribed'),'');
   buildMesProfs();
 }
 function _initProfCardSwipe(cardEl,type,pid){
@@ -941,7 +941,7 @@ function submitEnrollSheet(){
   var btn=document.getElementById('_enrollBtn');
   var code=(inp?inp.value.trim().toUpperCase():'');
   if(!code){if(errEl){errEl.textContent='Veuillez entrer un code.';errEl.style.display='block';}return;}
-  if(!user||user.guest){toast('Connecte-toi d\'abord','');return;}
+  if(!user||user.guest){toast(t('t_login_first'),'');return;}
   if(btn)btn.disabled=true;
   if(errEl)errEl.style.display='none';
   function _safeJson(r){try{return r.json();}catch(e){return Promise.resolve(null);}}
@@ -954,7 +954,7 @@ function submitEnrollSheet(){
       if(!P[pid])P[pid]={};
       if(d.prof_nm||d.teacher_name)P[pid].nm=d.prof_nm||d.teacher_name;
     }
-    haptic(4);toast('Espace rejoint !','');
+    haptic(4);toast(t('t_space_joined'),'');
     if(_enrollBd){_enrollBd.remove();_enrollBd=null;}
     buildMesProfs();
     if(pid)setTimeout(function(){openProfEspace(String(pid));},300);
@@ -978,7 +978,7 @@ function submitEnrollSheet(){
           description:data.description||'',code:data.code_acces||'',prive:true};
         if(!C.find(function(x){return x.id==nc.id;}))C.unshift(nc);
         openR(nc.id);
-        toast('Cours trouvé !',nc.title);
+        toast(t('t_course_found'),nc.title);
       } else {
         if(errEl){errEl.textContent=msg||'Code incorrect ou expiré.';errEl.style.display='block';}
       }
@@ -1325,6 +1325,18 @@ async function _initSupabase(){
     console.warn('[OAuth] Erreur init Supabase:',e);
     if(_isOAuthReturn)_oauthRestoreLogin('Réessaie ou utilise email / mot de passe');
   }
+}
+
+// ── UPLOAD VERS SUPABASE STORAGE ─────────────────────────────────────────────
+// Retourne le storagePath (bucket/folder/userId/timestamp.ext) ou throw
+async function _uploadToStorage(file, folder){
+  if(!window._supabase)throw new Error('Supabase non disponible');
+  var ext=(file.name.split('.').pop()||'bin').toLowerCase();
+  var uid=user&&user.id||'unknown';
+  var path=folder+'/'+uid+'/'+Date.now()+'.'+ext;
+  var result=await window._supabase.storage.from('verification').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(result.error)throw result.error;
+  return result.data.path;
 }
 
 function _setupCapacitorDeepLink(){
@@ -1888,7 +1900,7 @@ async function doLogin(){
     var r=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw}),signal:_ctrl.signal});
     clearTimeout(_tId);
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);shake('lfC');return;}
+    if(data.error){toast(t('t_error'),data.error);shake('lfC');return;}
     var p=data.profile||{};
     // Vérifier si compte bloqué
     if(p.statut_compte==='bloqué'){
@@ -2468,7 +2480,7 @@ async function checkStripeReturn(){
     }
     if(params.get('stripe_refresh')){
       window.history.replaceState({},'',window.location.pathname);
-      toast('Configuration requise','Finalisez votre configuration bancaire pour recevoir les paiements');
+      toast(t('t_setup_required'),'Finalisez votre configuration bancaire pour recevoir les paiements');
       return;
     }
     // Deep link ?cours=ID — ouvrir directement la fiche du cours
@@ -2864,7 +2876,7 @@ function buildAccLists(){
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
       var _now2=Date.now();
       var prochainCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now2);}).length;
-      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
+      var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
         '<span style="font-size:15px;font-weight:800;color:var(--or)">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
       var dispoLabel=prochainCours?' · <span style="color:var(--or);font-weight:600">'+prochainCours+' cours dispo</span>':'';
@@ -3131,11 +3143,11 @@ function previewPhoto(input){
           if(data.url||data.pending){
             // Stocker l'URL en attente localement pour info, mais ne pas l'afficher
             try{localStorage.setItem('cp_photo_pending','1');}catch(ex){}
-            toast('Photo envoyée ✓','Elle apparaîtra sur votre profil après validation par notre équipe.');
+            toast(t('t_photo_sent'),'Elle apparaîtra sur votre profil après validation par notre équipe.');
           } else {
-            toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');
+            toast(t('t_error'),'Impossible d\'envoyer la photo. Réessayez.');
           }
-        }).catch(function(){toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');});
+        }).catch(function(){toast(t('t_error'),'Impossible d\'envoyer la photo. Réessayez.');});
       }
     };
     reader.readAsDataURL(file);
@@ -4076,7 +4088,7 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
   try{
     var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
+    if(data.error){toast(t('t_error'),data.error);return;}
     toast(t('t_cancelled'),t('t_cancelled_sub'));
     openEleves(coursId);
     var c=C.find(function(x){return x.id==coursId;});
@@ -4087,11 +4099,11 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
 function confR(){
   haptic(15);
   var id=curId;
-  if(!id){toast('Erreur','Veuillez réessayer');return;}
+  if(!id){toast(t('t_error'),t('t_try_again'));return;}
   var c=C.find(function(x){return x.id==id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
+  if(!user||!user.id){toast(t('t_connect_required'),t('t_connect_to_book'));return;}
   if(res[id]){toast(t('t_already_res'),t('t_already_res_s'));return;}
   closeM('bdR');
   openPaymentSheet(id,false);
@@ -4227,7 +4239,7 @@ function _openPrLegacy(pid){
   var displayIni=p.i||'?';
   var displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
   var displayPhoto=p.photo||null;
-  if(!displayNm){toast('Profil introuvable','');return;}
+  if(!displayNm){toast(t('t_profile_not_found'),'');return;}
 
   // Sujets uniques extraits des cours (dispo immédiatement)
   var subjSet={};cours.forEach(function(c){if(c.subj)subjSet[c.subj]=true;});
@@ -4506,16 +4518,48 @@ function _loadMpAnnonces(pid){
   }).catch(function(){if(curProf===pid)el.innerHTML='';});
 }
 
+// Icône SVG pour un type de ressource / URL (remplace les emojis)
+function _resIcon(type, url){
+  var u=url||'';
+  var bg,stroke,path;
+  if(/drive\.google\.com|docs\.google\.com/.test(u)){
+    bg='rgba(66,133,244,.12)';stroke='#4285F4';
+    path='<path d="M4.5 20L9 12l4.5 8H4.5z"/><path d="M9 12L13.5 4H19l-5.5 8H9z"/><path d="M14 20H9l2.5-4L14 20z"/><path d="M19 4l-5.5 8 2.5 4H22L19 4z"/>';
+  } else if(/dropbox\.com/.test(u)){
+    bg='rgba(0,97,210,.1)';stroke='#0061D2';
+    path='<path d="M12 2L6 6l6 4 6-4-6-4z"/><path d="M6 10l-4 3 4 3 4-3-4-3z"/><path d="M18 10l-4 3 4 3 4-3-4-3z"/><path d="M6 16l6 4 6-4"/>';
+  } else if(/notion\.so/.test(u)){
+    bg='rgba(0,0,0,.07)';stroke='#555';
+    path='<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>';
+  } else if(/youtube\.com|youtu\.be/.test(u)||type==='video'){
+    bg='rgba(255,0,0,.1)';stroke='#FF0000';
+    path='<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>';
+  } else if(type==='pdf'){
+    bg='rgba(239,68,68,.1)';stroke='#EF4444';
+    path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/>';
+  } else if(type==='article'||type==='text'){
+    bg='rgba(59,130,246,.1)';stroke='#3B82F6';
+    path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';
+  } else if(type==='exercice'){
+    bg='rgba(245,158,11,.1)';stroke='#F59E0B';
+    path='<path d="M17 3a2.121 2.121 0 013 3L7 19l-4 1 1-4L17 3z"/><line x1="15" y1="5" x2="19" y2="9"/>';
+  } else {
+    bg='rgba(255,107,43,.1)';stroke='var(--or)';
+    path='<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>';
+  }
+  return'<div style="width:36px;height:36px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+stroke+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+path+'</svg></div>';
+}
+
 function _loadMpRessources(pid){
   var el=g('mpRessources');if(!el)return;
   el.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px"></div>';
   fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
     if(curProf!==pid)return;
     if(!data||!data.length){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:10px 0" data-i18n="mp_aucune_ressource">Aucune ressource partagée.</div>';return;}
-    var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
     el.innerHTML=data.map(function(r){
       return'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;text-decoration:none">'
-        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +_resIcon(r.type,r.url)
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+esc(r.type)+(r.access_level==='public'?' · public':'')+'</div>'
@@ -4881,7 +4925,7 @@ function tpEnterCode(){
   var errEl=g('tpCodeError');if(errEl)errEl.style.display='none';
   var numPid=parseInt(pid)||pid;
   function _onSuccess(){
-    toast('Accès débloqué !','');haptic(4);
+    toast(t('t_access_unlocked'),'');haptic(4);
     var _ep=P[pid]||{};
     _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
     _mpfSetEnrolled(true);
@@ -4910,7 +4954,7 @@ function _tpShare(){
   var nm=p.nm||'un professeur';
   var url='https://courspool.vercel.app?prof='+pid;
   if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:url}).catch(function(){});}
-  else{try{navigator.clipboard.writeText(url);toast('Lien copié','');}catch(e){toast(url,'');}}
+  else{try{navigator.clipboard.writeText(url);toast(t('t_link_copied'),'');}catch(e){toast(url,'');}}
 }
 
 function enrollWithCode(){
@@ -4922,7 +4966,7 @@ function enrollWithCode(){
   var errEl=g('mpfCodeError');if(errEl)errEl.style.display='none';
   var numPid=parseInt(pid)||pid;
   function _onSuccess(){
-    toast('Accès débloqué !','');haptic(4);
+    toast(t('t_access_unlocked'),'');haptic(4);
     var _ep=P[pid]||{};
     _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
     _mpfSetEnrolled(true);
@@ -5113,24 +5157,24 @@ function espRegenCode(){
   if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';btn.style.background='';btn.style.color='';}
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
-    if(d.error){if(el)el.textContent='—';toast('Erreur',d.error.slice(0,60));return;}
+    if(d.error){if(el)el.textContent='—';toast(t('t_error'),d.error.slice(0,60));return;}
     _espCurrentCode=d.teacher_code||null;
     if(el)el.textContent=_espCurrentCode||'—';
-    haptic(8);toast('Code généré !','Partage-le avec tes élèves');
-  }).catch(function(){if(el)el.textContent='—';toast('Erreur réseau','Vérifie ta connexion');});
+    haptic(8);toast(t('t_code_generated'),t('t_code_generated_sub'));
+  }).catch(function(){if(el)el.textContent='—';toast(t('t_net_error'),t('t_net_error_sub'));});
 }
 
 function espCopyCode(){
-  if(!_espCurrentCode){toast('Génère un code d\'abord','');return;}
-  try{navigator.clipboard.writeText(_espCurrentCode);toast('Code copié !','');haptic(4);}
+  if(!_espCurrentCode){toast(t('t_generate_first'),'');return;}
+  try{navigator.clipboard.writeText(_espCurrentCode);toast(t('t_code_copied'),'');haptic(4);}
   catch(e){toast(_espCurrentCode,'Copie ce code manuellement');}
 }
 
 function espShareCode(){
-  if(!_espCurrentCode){toast('Génère un code d\'abord','');return;}
+  if(!_espCurrentCode){toast(t('t_generate_first'),'');return;}
   var txt='Rejoins mon espace sur CoursPool avec le code : '+_espCurrentCode+'\nhttps://courspool.vercel.app';
   if(navigator.share){navigator.share({title:'Mon code CoursPool',text:txt}).catch(function(){});}
-  else{try{navigator.clipboard.writeText(txt);toast('Lien copié !','');}catch(e){toast(_espCurrentCode,'Copie ce code');}}
+  else{try{navigator.clipboard.writeText(txt);toast(t('t_link_copied'),'');}catch(e){toast(_espCurrentCode,'Copie ce code');}}
 }
 
 function espLoadStudents(){
@@ -5228,7 +5272,6 @@ function espLoadResources(){
   var el=g('espResources');
   if(el)el.innerHTML='<div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:6px"></div>';
   var uid=user&&user.id;if(!uid)return;
-  var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
   fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
     if(!list||!list.length){
       if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune ressource publiée.</div>';
@@ -5236,7 +5279,7 @@ function espLoadResources(){
     }
     if(el)el.innerHTML=list.map(function(r){
       return'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)">'
-        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +_resIcon(r.type,r.url)
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite)">'+esc(r.type)+'</div>'
@@ -5254,7 +5297,7 @@ function espDeleteRes(id){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/resources/'+id,{method:'DELETE',headers:apiH()}).then(function(){
     haptic(4);espLoadResources();
-  }).catch(function(){toast('Erreur','Impossible de supprimer');});
+  }).catch(function(){toast(t('t_error'),t('t_delete_error'));});
 }
 
 function espToggleAddRes(btn){
@@ -5269,13 +5312,13 @@ function espSubmitRes(){
   var title=(g('espResTitle')||{}).value||'';
   var url=(g('espResUrl')||{}).value||'';
   var type=(g('espResType')||{}).value||'article';
-  if(!title.trim()||!url.trim()){toast('Titre et lien requis','');return;}
+  if(!title.trim()||!url.trim()){toast(t('t_title_link_req'),'');return;}
   var btn=document.querySelector('#espResForm .esp-btn-prim');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),body:JSON.stringify({title:title.trim(),url:url.trim(),type:type,access_level:'followers'})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Erreur',d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
-      haptic(4);toast('Ressource publiée !','');
+      if(d.error){toast(t('t_error'),d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
+      haptic(4);toast(t('t_resource_published'),'');
       if(g('espResTitle'))g('espResTitle').value='';
       if(g('espResUrl'))g('espResUrl').value='';
       var f=g('espResForm');if(f)f.style.display='none';
@@ -5283,7 +5326,7 @@ function espSubmitRes(){
       if(ab)ab.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter';
       if(btn){btn.disabled=false;btn.textContent='Publier';}
       espLoadResources();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast(t('t_net_error'),'');});
 }
 
 // ── ÉDITEUR RICH TEXT ────────────────────────────────────────────────────
@@ -5706,7 +5749,7 @@ function pubSetVisibility(id,access){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
     .then(function(r){return r.json();}).then(function(){haptic(4);loadMesPublications();espLoadAnnonces();})
-    .catch(function(){toast('Erreur réseau','');});
+    .catch(function(){toast(t('t_net_error'),'');});
 }
 
 function openPubSettings(id,currentAcc){
@@ -5770,7 +5813,7 @@ function openSondageSheet(){
 function addSondageOption(){
   var container=document.getElementById('_sdgOpts');if(!container)return;
   var count=container.querySelectorAll('._sdgOpt').length;
-  if(count>=6){toast('Maximum 6 options','');return;}
+  if(count>=6){toast(t('t_max_options'),'');return;}
   var inp=document.createElement('input');
   inp.type='text';inp.className='esp-input _sdgOpt';inp.placeholder='Option '+(count+1);inp.style.marginBottom='8px';
   container.appendChild(inp);inp.focus();
@@ -5779,31 +5822,31 @@ function addSondageOption(){
 function submitSondage(btn){
   var uid=user&&user.id;if(!uid)return;
   var q=(document.getElementById('_sdgQ')||{value:''}).value.trim();
-  if(!q){toast('Écris une question','');return;}
+  if(!q){toast(t('t_write_question'),'');return;}
   var opts=Array.from(document.querySelectorAll('._sdgOpt')).map(function(el){return el.value.trim();}).filter(Boolean);
-  if(opts.length<2){toast('Au moins 2 options','');return;}
+  if(opts.length<2){toast(t('t_min_two_options'),'');return;}
   if(btn){btn.disabled=true;btn.textContent='…';}
   var body={type:'poll',content:JSON.stringify({question:q,options:opts,votes:{}})};
   fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast('Erreur',d.error);return;}
-      haptic(8);toast('Sondage publié !','');
+      if(d.error){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast(t('t_error'),d.error);return;}
+      haptic(8);toast(t('t_poll_published'),'');
       var bd=btn&&btn.parentElement;while(bd&&!bd.style.cssText.includes('rgba'))bd=bd.parentElement;
       if(bd)bd.remove();
       loadMesPublications();espLoadAnnonces();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast(t('t_net_error'),'');});
 }
 
 function voteOnPoll(annId,profId,optIdx,container){
-  if(!user){toast('Connecte-toi pour voter','');return;}
+  if(!user){toast(t('t_login_to_vote'),'');return;}
   haptic(4);
   fetch(API+'/teacher/'+profId+'/announcements/'+annId+'/vote',{method:'POST',headers:apiH(),body:JSON.stringify({option_index:optIdx})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Erreur',d.error);return;}
+      if(d.error){toast(t('t_error'),d.error);return;}
       haptic(8);
       var poll;try{poll=JSON.parse(d.content);}catch(e){return;}
       if(container)container.innerHTML=_renderPollHtml(poll,annId,true,profId);
-    }).catch(function(){toast('Erreur réseau','');});
+    }).catch(function(){toast(t('t_net_error'),'');});
 }
 
 // ── BIBLIOTHÈQUE ──────────────────────────────────────────────────────────
@@ -5929,8 +5972,8 @@ function elveBiblioUnlock(pid,cid){
   var pw=inp.value.trim();if(!pw)return;
   fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
-      haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
+      if(d.error){toast(t('t_wrong_password'),'');haptic(2);return;}
+      haptic(8);toast(t('t_content_unlocked'),'');loadElveBibliotheque(pid);
     }).catch(function(){});
 }
 
@@ -5957,8 +6000,8 @@ function elveUnlockSheet(pid,kind,id,extra){
     if(kind==='content'){
       fetch(API+'/teacher/'+pid+'/content/'+id+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
         .then(function(r){return r.json();}).then(function(d){
-          if(d.error){btn.disabled=false;btn.textContent='Déverrouiller';document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast('Mot de passe incorrect','');haptic(2);return;}
-          bd.remove();haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
+          if(d.error){btn.disabled=false;btn.textContent='Déverrouiller';document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast(t('t_wrong_password'),'');haptic(2);return;}
+          bd.remove();haptic(8);toast(t('t_content_unlocked'),'');loadElveBibliotheque(pid);
         }).catch(function(){btn.disabled=false;btn.textContent='Déverrouiller';});
     }else if(kind==='resource'&&extra){
       // resources: open link after password (best effort — server-side gating not implemented here)
@@ -6034,15 +6077,15 @@ function mpfSubmitDocSheet(btn){
   var pid=_curPrFull;if(!pid)return;
   var title=(document.getElementById('_sendDocTitle')||{value:''}).value.trim();
   var url=(document.getElementById('_sendDocUrl')||{value:''}).value.trim();
-  if(!title){toast('Donne un nom au document','');return;}
+  if(!title){toast(t('t_doc_name_req'),'');return;}
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||undefined})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast('Erreur',d.error);return;}
-      haptic(8);toast('Document envoyé !','');
+      if(d.error){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast(t('t_error'),d.error);return;}
+      haptic(8);toast(t('t_doc_sent_success'),'');
       var bd=btn&&btn.parentElement;while(bd&&!bd.style.cssText.includes('rgba(0,0,0,.5)'))bd=bd.parentElement;
       if(bd)bd.remove();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast(t('t_net_error'),'');});
 }
 
 function loadBibliotheque(){
@@ -6191,7 +6234,7 @@ function biblioSetAccess(kind,id,access,pw){
   var body={access_type:access};if(pw)body.password=pw;
   fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
-    .catch(function(){toast('Erreur réseau','');});
+    .catch(function(){toast(t('t_net_error'),'');});
 }
 
 // ── AJOUTER UN DOCUMENT ───────────────────────────────────────────────────
@@ -6217,26 +6260,26 @@ function addDocSubmit(){
   var type=g('addDocType').value;
   var access=g('addDocAccess').value;
   var pw=access==='password'?(g('addDocPw').value||'').trim():'';
-  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  if(!title||!url){toast(t('t_fill_title_link'),'');return;}
   var btn=g('addDocBtn');if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
     body:JSON.stringify({title:title,url:url,type:type,access_type:access,password:pw||undefined})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Ajouter';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Document ajouté !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_doc_added'),'');
       g('addDocTitle').value='';g('addDocUrl').value='';
       closeAddDoc();
       // Refresh la bibliothèque si ouverte
       if(g('bdBibliotheque')&&g('bdBibliotheque').style.display!=='none')loadBibliotheque();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter';}toast(t('t_net_error'),'');});
 }
 
 function espDeleteAnn(id){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'DELETE',headers:apiH()}).then(function(){
     haptic(4);espLoadAnnonces();
-  }).catch(function(){toast('Erreur','Impossible de supprimer');});
+  }).catch(function(){toast(t('t_error'),t('t_delete_error'));});
 }
 
 function espUpdateCounter(){
@@ -6251,9 +6294,9 @@ function espSubmitAnn(){
   var uid=user&&user.id;if(!uid)return;
   var ed=g('espAnnEditor');
   var content=ed?ed.innerHTML.trim():'';
-  if(!content||content==='<br>'||content==='<p><br></p>'){toast('Écris quelque chose d\'abord','');return;}
+  if(!content||content==='<br>'||content==='<p><br></p>'){toast(t('t_write_first'),'');return;}
   var _rawLen=(ed?(ed.innerText||ed.textContent||''):'').replace(/\n/g,'').length;
-  if(_rawLen>1500){toast('Trop long','Limite de 1500 caractères');return;}
+  if(_rawLen>1500){toast(t('t_too_long'),t('t_char_limit_1500'));return;}
   var btn=g('espEdPublishBtn');
   if(btn){btn.disabled=true;btn.textContent='…';}
   var isFiche=_espEdMode==='fiche';
@@ -6264,7 +6307,7 @@ function espSubmitAnn(){
   fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}
-      if(d.error){toast('Erreur',d.error);return;}
+      if(d.error){toast(t('t_error'),d.error);return;}
       // Cache l'ID + titre + contenu comme fiche dans localStorage
       if(isFiche&&d.id){try{
         var ids=JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]');
@@ -6276,7 +6319,7 @@ function espSubmitAnn(){
       haptic(4);toast(isFiche?'Fiche enregistrée !':'Publié !','');
       closeEspEditor();
       if(isFiche){loadBibliotheque();openBibliotheque();}else{espLoadAnnonces();}
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}toast(t('t_net_error'),'');});
 }
 
 function _renderMpfTags(list){
@@ -6469,8 +6512,8 @@ function mpfUnlockContent(pid,cid){
   var pw=inp.value.trim();if(!pw)return;
   fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
-      haptic(8);toast('Contenu débloqué !','');_loadMpfContenu(pid);
+      if(d.error){toast(t('t_wrong_password'),'');haptic(2);return;}
+      haptic(8);toast(t('t_content_unlocked'),'');_loadMpfContenu(pid);
     }).catch(function(){});
 }
 
@@ -6514,14 +6557,14 @@ function mpfSubmitDoc(){
   var pid=_curPrFull;if(!pid)return;
   var title=((g('mpfSubTitle')||{}).value||'').trim();
   var url=((g('mpfSubUrl')||{}).value||'').trim();
-  if(!title){toast('Donne un nom au document','');return;}
+  if(!title){toast(t('t_doc_name_req'),'');return;}
   var btn=document.querySelector('.esp2-btn-submit');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||null})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Envoyer';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Document envoyé !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_doc_sent_success'),'');
       if(g('mpfSubTitle'))g('mpfSubTitle').value='';
       if(g('mpfSubUrl'))g('mpfSubUrl').value='';
       _loadMpfSubmissions(pid);
@@ -6561,21 +6604,21 @@ function espToggleAddContenu(btn){
 function espSubmitContenu(){
   var uid=user&&user.id;if(!uid)return;
   var title=((g('espCttTitle')||{}).value||'').trim();
-  if(!title){toast('Titre requis','');return;}
+  if(!title){toast(t('t_title_link_req'),'');return;}
   var desc=((g('espCttDesc')||{}).value||'').trim();
   var url=((g('espCttUrl')||{}).value||'').trim();
   var type=(g('espCttType')||{}).value||'text';
   var access=(g('espCttAccess')||{}).value||'enrolled';
   var pw=access==='password'?((g('espCttPw')||{}).value||'').trim():null;
   var price=access==='premium'?parseInt((g('espCttPrice')||{}).value||'0',10):0;
-  if(access==='password'&&!pw){toast('Mot de passe requis','');return;}
+  if(access==='password'&&!pw){toast(t('t_passwd_req'),'');return;}
   var btn=document.querySelector('#espContenuForm .esp-btn-prim');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/content',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,description:desc,content_url:url||null,content_type:type,access_type:access,password:pw,price:price})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Publier';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(8);toast('Contenu publié !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(8);toast(t('t_content_published'),'');
       if(g('espCttTitle'))g('espCttTitle').value='';
       if(g('espCttDesc'))g('espCttDesc').value='';
       if(g('espCttUrl'))g('espCttUrl').value='';
@@ -6748,36 +6791,36 @@ function espCaDocSubmit(){
   var title=(g('espCaDocTitle').value||'').trim();
   var url=(g('espCaDocUrl').value||'').trim();
   var type=g('espCaDocType').value;
-  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  if(!title||!url){toast(t('t_fill_title_link'),'');return;}
   var btn=document.querySelector('#espCaDocForm .esp2-btn-submit');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
     body:JSON.stringify({title:title,url:url,type:type,cours_id:_espSelCours.id})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Document ajouté !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_doc_added'),'');
       g('espCaDocTitle').value='';g('espCaDocUrl').value='';
       g('espCaDocForm').style.display='none';
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}toast(t('t_net_error'),'');});
 }
 
 function espCaMsgSubmit(){
   if(!_espSelCours)return;
   var uid=user&&user.id;if(!uid)return;
   var msg=(g('espCaMsgText').value||'').trim();
-  if(!msg){toast('Écris un message','');return;}
+  if(!msg){toast(t('t_write_message'),'');return;}
   var btn=document.querySelector('#espCaMsgForm .esp2-btn-submit');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),
     body:JSON.stringify({cours_id:_espSelCours.id,message:msg,sender_id:uid})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Message envoyé à tous les inscrits !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_message_sent_all'),'');
       g('espCaMsgText').value='';
       g('espCaMsgForm').style.display='none';
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}toast(t('t_net_error'),'');});
 }
 
 function switchMpfTab(tab){
@@ -7219,7 +7262,7 @@ async function subCr(){
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   if(!desc){
     var di=g('crDesc');if(di){di.style.boxShadow='0 0 0 2px #EF4444';setTimeout(function(){di.style.boxShadow='';},700);}
-    toast('Description requise','Décrivez votre cours pour attirer les élèves',true);
+    toast(t('t_desc_required'),'Décrivez votre cours pour attirer les élèves',true);
     window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
   if(!date){shakeField(g('crDate'));toast(t('t_date_req'),t('t_date_req_msg'),true);window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;}
@@ -7289,9 +7332,9 @@ function togglePw(id,btn){
 // DUPLIQUER UN COURS — ouvre le wizard pré-rempli à l'étape date/heure
 function dupCours(id){
   var c=C.find(function(x){return x.id==id;});
-  if(!c){toast('Erreur','Cours introuvable');return;}
+  if(!c){toast(t('t_error'),'Cours introuvable');return;}
   if(!user||user.role!=='professeur')return;
-  if(user.verified===false){toast('Vérification en cours','Votre identité est en cours de vérification.');return;}
+  if(user.verified===false){toast(t('t_verif_pending'),t('t_verif_pending_sub'));return;}
 
   // Résoudre la matiere_key depuis le sujet du cours
   var mat=MATIERES.find(function(m){
@@ -8732,16 +8775,13 @@ async function submitCni(){
   var btn=g('cniSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.cni_uploaded=true;
-      cniGoStep3();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'cni');
+    try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.cni_uploaded=true;
+    cniGoStep3();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -8902,17 +8942,14 @@ async function submitDiplome(){
   var btn=g('diplomeSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.diplome_uploaded=true;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
-      diplomeGoStep3();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'diplome');
+    try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.diplome_uploaded=true;
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+    diplomeGoStep3();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -9031,19 +9068,16 @@ async function submitCasier(){
   var btn=g('casierSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.casier_uploaded=true;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
-      casierLater();
-      toast(t('t_sent'),t('t_attest_verif'));
-      updateCasierStatusBlock();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'casier');
+    try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.casier_uploaded=true;
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+    casierLater();
+    toast(t('t_sent'),t('t_attest_verif'));
+    updateCasierStatusBlock();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -9178,7 +9212,7 @@ function openPrivateCours(code){
   var c=C.find(function(x){return x.code&&x.code.toUpperCase()===code.toUpperCase();});
   if(c){
     openR(c.id);
-    toast('Cours trouvé !',c.title);
+    toast(t('t_course_found'),c.title);
   } else {
     // Essayer en fetch direct
     fetch(API+'/cours/code/'+code).then(function(r){return r.json();}).then(function(data){
@@ -9917,7 +9951,7 @@ async function saveIban() {
     });
 
     if (result.error) {
-      toast('IBAN invalide', result.error.message);
+      toast(t('t_iban_invalid'), result.error.message);
       return;
     }
 
@@ -9928,7 +9962,7 @@ async function saveIban() {
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
-    toast('IBAN enregistré !', 'Vérification en cours — vous serez notifié par email ✓');
+    toast(t('t_iban_saved'), 'Vérification en cours — vous serez notifié par email ✓');
 
     // Mettre à jour l'UI — passer en état "en attente de validation Stripe"
     var notConn = g('stripeNotConnected');
@@ -9939,7 +9973,7 @@ async function saveIban() {
     if (pending) pending.style.display = 'block';
 
   } catch(e) {
-    toast('Erreur', 'Impossible d\'enregistrer l\'IBAN');
+    toast(t('t_error'), t('t_iban_error'));
   } finally {
     btn.disabled = false; btn.textContent = t('txt_save_iban');
   }
@@ -9992,9 +10026,9 @@ var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 
 
 function openNote(cours){
   if(!cours||!user||user.role==='professeur')return;
-  if(!res[cours.id]){toast('Réservation requise','Vous devez avoir réservé ce cours pour le noter');return;}
+  if(!res[cours.id]){toast(t('t_booking_required'),'Vous devez avoir réservé ce cours pour le noter');return;}
   var isPastNow=false;try{var _diffNow=Date.now()-new Date(cours.dt_iso||0);isPastNow=!isNaN(_diffNow)&&_diffNow>3600000;}catch(e){}
-  if(!isPastNow){toast('Cours à venir','Vous pourrez noter ce cours une fois qu\'il est terminé');return;}
+  if(!isPastNow){toast(t('t_course_upcoming'),'Vous pourrez noter ce cours une fois qu\'il est terminé');return;}
   noteCours=cours;noteVal=0;
   updateStars(0);
   var np=g('noteProf');
@@ -10032,10 +10066,10 @@ async function submitNote(){
       is_tuteur:!!(user.is_tuteur),prenom:user.pr||null
     })});
     var data=await r.json();
-    if(data.error){toast('Erreur','Impossible d\'envoyer la note');return;}
+    if(data.error){toast(t('t_error'),t('t_rating_error'));return;}
     closeM('bdNote');
     try{if(noteCours)localStorage.setItem('cp_noted_'+noteCours.id,'1');}catch(e){}
-    toast('Merci pour votre avis !','Votre note a été enregistrée ⭐');
+    toast(t('t_thanks_review'),'Votre note a été enregistrée ⭐');
     noteCours=null;noteVal=0;
   }catch(e){toast(t('t_net_error'),'');}
 }
@@ -10399,7 +10433,7 @@ function shareApp(){
   var data={title:'CoursPool',text:"Découvrez CoursPool — partagez les frais d'un cours particulier entre étudiants !",url:'https://courspool.vercel.app'};
   if(navigator.share){navigator.share(data).catch(function(){});}
   else{
-    try{navigator.clipboard.writeText(data.url);toast('Lien copié ✓','Partagez-le avec vos amis');}
+    try{navigator.clipboard.writeText(data.url);toast(t('t_link_copied'),'Partagez-le avec vos amis');}
     catch(e){toast('courspool.vercel.app','Copiez ce lien pour partager');}
   }
 }
@@ -10486,9 +10520,9 @@ async function submitContact(){
       document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
       toast('Message envoyé ✓','On vous répond sous 24h');
     } else {
-      toast('Erreur',"Impossible d'envoyer, réessayez");
+      toast(t('t_error'),"Impossible d'envoyer, réessayez");
     }
-  }catch(e){toast('Erreur',"Impossible d'envoyer",true);}
+  }catch(e){toast(t('t_error'),"Impossible d'envoyer",true);}
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer le message';}
 }
 function previewContactPhoto(input){
@@ -11148,12 +11182,12 @@ function startAccountCheck(){
       if(r.status>=500)return; // erreur serveur temporaire — ne pas déconnecter
       var p=await r.json();
       if(r.status===404&&p&&p.error){
-        toast('Votre compte a été désactivé','Vous allez être déconnecté');
+        toast(t('t_account_disabled'),t('t_account_disabled_s'));
         setTimeout(doLogout,2000);return;
       }
       if(!p||!p.id)return; // réponse inattendue — ignorer
       if(p.statut_compte==='bloqué'&&user.statut_compte!=='bloqué'){
-        toast('Votre compte a été bloqué','Vous allez être déconnecté');
+        toast(t('t_account_blocked'),t('t_account_disabled_s'));
         setTimeout(doLogout,2000);return;
       }
       // Mettre à jour le statut si changé (ex: vérifié par admin)
@@ -11173,10 +11207,10 @@ function startAccountCheck(){
         updateCasierStatusBlock();
         // Notifier uniquement si le compte vient d'être vérifié (pas déjà vérifié avant)
         if(user.role==='professeur'&&!_prevVerified&&(p.statut_compte==='verified'||p.verified)){
-          toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
+          toast(t('t_account_verified'),'Vous pouvez maintenant publier des cours');
           haptic([10,50,100,50,10]);
         } else if(user.role==='professeur'&&p.statut_compte==='rejeté'){
-          toast('Document refusé','Vérifiez votre email pour plus d\'informations');
+          toast(t('t_doc_rejected'),'Vérifiez votre email pour plus d\'informations');
         }
         if(_dvChanged&&p.diplome_verifie===true){
           toast(t('t_diplome_ok'),t('t_diplome_sub'));
@@ -11288,10 +11322,10 @@ function _crStepVpAdjust(){
 
 function openCrStep(){
   if(!user||!user.id){showLoginPrompt();return;}
-  if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
+  if(user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
   if(user.verified===false){
-    if(getCniStatus()==='none'){toast('Pi\u00e8ce d\'identit\u00e9 requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
-    else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
+    if(getCniStatus()==='none'){toast(t('t_cni_req'),'Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+    else{toast(t('t_verif_pending'),t('t_verif_pending_sub'));}
     return;
   }
   _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
@@ -11788,29 +11822,29 @@ function stepLieuSearch(q){
 
 function stepNext(){
   var step=STEP_DEFS[_sc];
-  if(step.id==='titre'){if(g('stepTitre'))_sd.titre=g('stepTitre').value.trim();if(!_sd.titre){toast('Titre manquant','Donnez un titre');return;}}
-  if(step.id==='matiere'&&!_sd.matiere){toast('Mati\u00e8re manquante','Choisissez une mati\u00e8re');return;}
+  if(step.id==='titre'){if(g('stepTitre'))_sd.titre=g('stepTitre').value.trim();if(!_sd.titre){toast(t('t_title_req'),t('t_title_req_msg'));return;}}
+  if(step.id==='matiere'&&!_sd.matiere){toast(t('t_subject_req'),t('t_subject_req_msg'));return;}
   if(step.id==='datetime'){
     if(g('stepDate'))_sd.date=g('stepDate').value;
     if(g('stepHeure'))_sd.heure=g('stepHeure').value;
     if(g('stepDuree'))_sd.duree=parseInt(g('stepDuree').value)||60;
-    if(!_sd.date){toast('Date manquante','Choisissez une date');return;}
-    if(!_sd.heure){toast('Heure manquante','Choisissez une heure de début');return;}
+    if(!_sd.date){toast(t('t_date_req'),t('t_date_req_msg'));return;}
+    if(!_sd.heure){toast(t('t_hour_req'),'Choisissez une heure de début');return;}
     var _dt=new Date(_sd.date+'T'+_sd.heure);
-    if(_dt<=new Date()){toast('Date incohérente','Le cours doit être dans le futur');return;}
+    if(_dt<=new Date()){toast(t('t_date_incoherent'),t('t_date_future_msg'));return;}
   }
   if(step.id==='lieu'){
     if(_sd.mode!=='visio'){
-      if(!_sd.lieu_type){toast('Lieu manquant','Choisissez un type de lieu');return;}
+      if(!_sd.lieu_type){toast(t('t_location_req'),t('t_location_type_req'));return;}
       if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
       if(g('stepLieuPrive'))_sd.lieu_prive=g('stepLieuPrive').value.trim();
-      if(!_sd.lieu){toast('Lieu manquant','Précisez la ville ou l\'adresse');return;}
+      if(!_sd.lieu){toast(t('t_location_req'),t('t_location_addr_req'));return;}
     }
   }
   if(step.id==='prix'){
     if(g('stepPrix'))_sd.prix=parseInt(g('stepPrix').value)||0;
     if(g('stepPlaces'))_sd.places=parseInt(g('stepPlaces').value)||5;
-    if(!_sd.prix){toast('Prix manquant','Entrez le prix');return;}
+    if(!_sd.prix){toast(t('t_price_req'),'Entrez le prix');return;}
   }
   if(step.id==='desc'&&g('stepDesc'))_sd.desc=g('stepDesc').value.trim();
   var total=STEP_DEFS.length;
@@ -11864,9 +11898,9 @@ async function subCrStep(){
       _published++;
     }
     haptic([10,50,100,50,10]);closeCrStep();
-    toast('Cours publi\u00e9\u00a0!',_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
+    toast(t('t_course_published'),_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
     await loadData();buildCards();buildAccLists();
-  }catch(e){toast('Erreur',e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
+  }catch(e){toast(t('t_error'),e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
 }
 
 // ---- Override openCr ----
@@ -11874,10 +11908,10 @@ async function subCrStep(){
   var _oc=openCr;
   openCr=function(){
     if(!user||!user.id){showLoginPrompt();return;}
-    if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
+    if(user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
     if(user.verified===false){
-      if(getCniStatus()==='none'){toast('Pi\u00e8ce d\'identit\u00e9 requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
-      else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
+      if(getCniStatus()==='none'){toast(t('t_cni_req'),'Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+      else{toast(t('t_verif_pending'),t('t_verif_pending_sub'));}
       return;
     }
     openCrStep();
@@ -11963,7 +11997,7 @@ function retryPayment(){
   var p=g('popupFailed');if(p)p.style.display='none';
   var cid=window._lastCancelledCoursId||null;
   if(!cid){try{var r=localStorage.getItem('cp_stripe_pending');if(r){var d=JSON.parse(r);cid=d.cours_id||null;}}catch(e){}}
-  if(!cid){toast('Cours introuvable','Selectionnez le cours');return;}
+  if(!cid){toast(t('t_course_not_found'),t('t_select_course'));return;}
   if(!user||!user.id){showLoginPrompt();return;}
   setTimeout(function(){openR(cid);},200);
 }
@@ -12294,9 +12328,9 @@ function _renderCalCourses(){
 
 function _bindMesCards(el){
   el.querySelectorAll('.mes-card').forEach(function(card){card.onclick=function(){openR(card.dataset.cid);};});
-  el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast('Copié\u00a0!','');});};});
+  el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast(t('t_copied'),'');});};});
   el.querySelectorAll('.mes-visio-add').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();openAddVisioLink(btn.dataset.cid);};});
-  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('Lien copié\u00a0!','');});}};});
+  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast(t('t_link_copied'),'');});}};});
 }
 
 function mesSetSeg(seg){
@@ -12412,12 +12446,12 @@ function openAddVisioLink(coursId){
 // ---- Ajouter au calendrier ----
 function addToCalendar(coursId){
   var c=C.find(function(x){return x.id==coursId;});
-  if(!c){toast('Erreur','Cours introuvable');return;}
+  if(!c){toast(t('t_error'),'Cours introuvable');return;}
 
   function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
   function toIcsDate(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');}
   var dtStart=new Date(c.dt);
-  if(isNaN(dtStart)){toast('Erreur','Date du cours introuvable');return;}
+  if(isNaN(dtStart)){toast(t('t_error'),'Date du cours introuvable');return;}
   var dtEnd=new Date(dtStart.getTime()+60*60*1000);
   var icsText=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CoursPool//CoursPool//FR',
     'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
@@ -12707,7 +12741,7 @@ async function submitEditMsg(msgId, btn){
       var ew=wrap.querySelector('.msg-edit-wrap');if(ew)ew.remove();
       var ac=wrap.querySelector('.msg-actions');if(ac)ac.style.display='';
       haptic(6);
-    }else{toast('Erreur','Impossible de modifier');}
+    }else{toast(t('t_error'),t('t_edit_error'));}
   }catch(e){toast(t('t_net_error'),'');}
   finally{btn.disabled=false;btn.textContent='OK';}
 }
@@ -12725,8 +12759,8 @@ async function deleteMsg(msgId){
         if(row){row.style.transition='opacity .25s,max-height .3s';row.style.opacity='0';row.style.maxHeight='0';row.style.overflow='hidden';setTimeout(function(){row.remove();},300);}
         else if(wrap)wrap.remove();
       }
-      haptic([10,30]);toast('Message supprimé','');
-    }else{toast('Erreur','Impossible de supprimer');}
+      haptic([10,30]);toast(t('t_message_deleted'),'');
+    }else{toast(t('t_error'),t('t_delete_error'));}
   }catch(e){toast(t('t_net_error'),'');}
 }
 
@@ -12827,7 +12861,7 @@ async function _confirmDeleteAccount(){
     var r=await fetch(API+'/users/'+uid,{method:'DELETE',headers:apiH()});
     ok=r.ok||r.status===404; // 404 = déjà supprimé, on continue
   }catch(e){}
-  if(!ok){toast('Erreur','Impossible de supprimer le compte. Réessayez ou contactez le support.');return;}
+  if(!ok){toast(t('t_error'),t('t_delete_acc_error'));return;}
   // 3. Sign out Supabase (comptes OAuth)
   try{if(window._supabase)await window._supabase.auth.signOut();}catch(e){}
   // 4. Nettoyer Sentry
@@ -12839,7 +12873,7 @@ async function _confirmDeleteAccount(){
   try{localStorage.clear();sessionStorage.clear();}catch(e){}
   user=null;
   haptic(10);
-  toast('Compte supprimé','Toutes vos données ont été effacées.');
+  toast(t('t_account_deleted'),'Toutes vos données ont été effacées.');
   setTimeout(function(){location.reload();},1800);
 }
 
@@ -12853,7 +12887,7 @@ async function toggleTuteurMode(){
     var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display='none';
     try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:false})});}catch(e){}
     haptic(6);
-    toast('Statut désactivé','Vous n\'apparaissez plus comme parent');
+    toast(t('t_parent_disabled'),'Vous n\'apparaissez plus comme parent');
     return;
   }
   // 1. Vérification âge ≥ 18
@@ -12861,7 +12895,7 @@ async function toggleTuteurMode(){
     var age=new Date().getFullYear()-user.birth_year;
     if(age<18){
       haptic(3);
-      toast('Réservé aux parents','Vous devez avoir 18 ans ou plus pour activer ce statut');
+      toast(t('t_parent_only'),'Vous devez avoir 18 ans ou plus pour activer ce statut');
       return;
     }
   }
@@ -12901,7 +12935,7 @@ async function confirmActivateTuteur(){
   // 2. Prénom obligatoire
   if(!prenom){
     if(prenomInp){prenomInp.style.borderColor='#EF4444';setTimeout(function(){prenomInp.style.borderColor='';},700);}
-    toast('Prénom requis','Indiquez le prénom de votre enfant pour continuer');
+    toast(t('t_firstname_req'),'Indiquez le prénom de votre enfant pour continuer');
     return;
   }
   closeQuickSheet();
@@ -12914,7 +12948,7 @@ async function confirmActivateTuteur(){
   var epInp=g('enfantPrenomInput');if(epInp)epInp.value=prenom;
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:true,enfant_prenom:prenom})});}catch(e){}
   haptic(6);
-  toast('Statut activé 👨‍👧','Les profs voient que vous réservez pour '+prenom);
+  toast(t('t_parent_enabled'),'Les profs voient que vous réservez pour '+prenom);
 }
 
 function saveEnfantPrenom(val){
@@ -12923,7 +12957,7 @@ function saveEnfantPrenom(val){
   try{localStorage.setItem('cp_enfant_prenom',val.trim());}catch(e){}
   fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({enfant_prenom:val.trim()})}).catch(function(){});
   haptic(4);
-  toast('Prénom enregistré','');
+  toast(t('t_firstname_saved'),'');
 }
 function openMsgContactSheet(){
   var opts=[
@@ -12995,7 +13029,7 @@ function blockUser(uid,nm){
   var convBanner=g('msgBlockedBanner');if(convBanner)convBanner.style.display='block';
   var inp=g('msgInputBar');if(inp)inp.style.display='none';
   haptic(10);
-  toast('Utilisateur bloqué',esc(nm||'Cet utilisateur')+' ne peut plus vous contacter.');
+  toast(t('t_user_blocked'),esc(nm||'Cet utilisateur')+' ne peut plus vous contacter.');
 }
 
 function unblockUser(uid,nm){
@@ -13003,7 +13037,7 @@ function unblockUser(uid,nm){
   var convBanner=g('msgBlockedBanner');if(convBanner)convBanner.style.display='none';
   var inp=g('msgInputBar');if(inp)inp.style.display='';
   haptic(6);
-  toast('Utilisateur débloqué','Vous pouvez à nouveau échanger des messages.');
+  toast(t('t_user_unblocked'),'Vous pouvez à nouveau échanger des messages.');
 }
 
 function openMsgMoreOptions(){
@@ -13055,9 +13089,9 @@ function _confirmBlockUser(uid,nm){
 
 // ── Export données RGPD ─────────────────────────────────────────────────────
 async function exportMesDonnees(){
-  if(!user){toast('Connexion requise','');return;}
+  if(!user){toast(t('t_login_to_report'),'');return;}
   closeSettings();
-  toast('Préparation…','Collecte de vos données en cours');
+  toast(t('t_preparing'),'Collecte de vos données en cours');
   var data={
     export_date:new Date().toISOString(),
     notice:'Cet export contient toutes les données personnelles associées à votre compte CoursPool, conformément au RGPD (Art. 15 et 20).',
@@ -13106,11 +13140,11 @@ async function exportMesDonnees(){
   document.body.appendChild(a);a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
   haptic(6);
-  toast('Export téléchargé','Fichier JSON avec toutes vos données personnelles.');
+  toast(t('t_export_done'),'Fichier JSON avec toutes vos données personnelles.');
 }
 
 function openSignalement(context,targetId,targetName){
-  if(!user){toast('Connexion requise','Connectez-vous pour signaler');return;}
+  if(!user){toast(t('t_login_to_report'),t('t_login_to_report_s'));return;}
   var WARN='<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
   var CIRC='<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
   var CLOK='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
@@ -13177,8 +13211,8 @@ async function submitSignalement(context,targetId,targetName,motif,motifLabel){
       role:user.role||'',user_id:user.id
     })});
     haptic(12);
-    toast('Signalement envoyé','Notre équipe va examiner ce contenu. Merci.');
-  }catch(e){toast('Erreur',"Impossible d'envoyer le signalement");}
+    toast(t('t_report_sent'),'Notre équipe va examiner ce contenu. Merci.');
+  }catch(e){toast(t('t_error'),"Impossible d'envoyer le signalement");}
 }
 
 // ---- Quick sheet helper ----
@@ -13228,6 +13262,8 @@ function applyLangDOM(){
   document.documentElement.lang=window._i18nLang||'fr';
   var lbl=document.getElementById('currentLangLabel');
   if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
+  var loginCode=document.getElementById('loginLangCode');
+  if(loginCode)loginCode.textContent=(window._i18nLang||'fr').toUpperCase();
 }
 
 function applyLang(){
