@@ -876,7 +876,7 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
 });
 
 // STRIPE — créer une session de paiement
-app.post('/stripe/checkout', async (req, res) => {
+app.post('/stripe/checkout', requireAuth, async (req, res) => {
   const { cours_id, user_id, cours_titre, pour_ami } = req.body;
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
 
@@ -917,7 +917,7 @@ app.post('/stripe/checkout', async (req, res) => {
 });
 
 // STRIPE — PaymentIntent in-app (Stripe Elements)
-app.post('/stripe/payment-intent', async (req, res) => {
+app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
   const { cours_id, user_id, cours_titre, pour_ami } = req.body;
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
@@ -950,7 +950,7 @@ app.post('/stripe/payment-intent', async (req, res) => {
 });
 
 // STRIPE — confirmer paiement in-app et créer réservation
-app.post('/stripe/confirm-payment', async (req, res) => {
+app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
   const { payment_intent_id } = req.body;
   if (!payment_intent_id) return res.status(400).json({ error: 'payment_intent_id manquant' });
   try {
@@ -1098,7 +1098,7 @@ app.get('/stripe/success', async (req, res) => {
 });
 
 // STRIPE — confirmer paiement après redirect
-app.post('/stripe/confirm', async (req, res) => {
+app.post('/stripe/confirm', requireAuth, async (req, res) => {
   const { session_id, cours_id, user_id, pour_ami } = req.body;
   if (!session_id || !cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user && user_id !== req.user.id) return res.status(403).json({ error: 'Accès refusé' });
@@ -1498,7 +1498,7 @@ app.post('/stripe/webhook', async (req, res) => {
 });
 
 // RESERVATIONS — liste élèves inscrits à un cours (une seule requête avec JOIN)
-app.get('/reservations/cours/:cours_id', async (req, res) => {
+app.get('/reservations/cours/:cours_id', requireAuth, async (req, res) => {
   try{
     // Vérifier que le demandeur est le prof du cours ou admin
     const {data:cours}=await supabase.from('cours').select('professeur_id').eq('id',req.params.cours_id).single();
@@ -1519,7 +1519,7 @@ app.get('/reservations/cours/:cours_id', async (req, res) => {
 });
 
 // RESERVATIONS — annuler une réservation élève
-app.post('/reservations/:id/cancel', async (req, res) => {
+app.post('/reservations/:id/cancel', requireAuth, async (req, res) => {
   const {cours_id}=req.body;
   try{
     const {data:reservation}=await supabase.from('reservations').select('*').eq('id',req.params.id).single();
@@ -1539,7 +1539,7 @@ app.post('/reservations/:id/cancel', async (req, res) => {
 });
 
 // COURS — annuler cours complet + rembourser tous les élèves
-app.post('/cours/:id/cancel', async (req, res) => {
+app.post('/cours/:id/cancel', requireAuth, async (req, res) => {
   try{
     const {data:cours}=await supabase.from('cours').select('professeur_id').eq('id',req.params.id).single();
     if(!cours)return res.status(404).json({error:'Cours introuvable'});
@@ -1595,7 +1595,7 @@ app.get('/stripe/refunds/prof/:prof_id', async (req, res) => {
 });
 
 // GROUPE — envoyer un message à plusieurs élèves d'un cours
-app.post('/messages/groupe', async (req, res) => {
+app.post('/messages/groupe', requireAuth, async (req, res) => {
   const expediteur_id = req.user.id; // toujours l'utilisateur connecté
   const { cours_id, contenu, cours_titre } = req.body;
   if (!cours_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
@@ -1653,7 +1653,7 @@ app.post('/messages/groupe', async (req, res) => {
 });
 
 // GROUPE — récupérer messages d'un cours
-app.get('/messages/groupe/:cours_id', async (req, res) => {
+app.get('/messages/groupe/:cours_id', requireAuth, async (req, res) => {
   const { cours_id } = req.params;
   try {
     // Vérifier accès : prof du cours, inscrit, ou admin
@@ -1687,7 +1687,7 @@ app.get('/messages/groupe/:cours_id', async (req, res) => {
 });
 
 // GROUPE — toggle autorisation élèves d'écrire
-app.patch('/cours/:id/groupe', async (req, res) => {
+app.patch('/cours/:id/groupe', requireAuth, async (req, res) => {
   const { eleves_peuvent_ecrire } = req.body;
   try {
     const { data: cours } = await supabase.from('cours').select('professeur_id').eq('id', req.params.id).single();
@@ -1700,7 +1700,7 @@ app.patch('/cours/:id/groupe', async (req, res) => {
 
 
 // STRIPE CONNECT — créer compte
-app.post('/stripe/connect/create', async (req, res) => {
+app.post('/stripe/connect/create', requireAuth, async (req, res) => {
   const {prof_id,email}=req.body;
   if(!prof_id||!email)return res.status(400).json({error:'Données manquantes'});
   if(prof_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({error:'Non autorisé'});
@@ -1714,7 +1714,7 @@ app.post('/stripe/connect/create', async (req, res) => {
 });
 
 // STRIPE CONNECT — setup intent IBAN
-app.post('/stripe/connect/setup-intent', async (req, res) => {
+app.post('/stripe/connect/setup-intent', requireAuth, async (req, res) => {
   const {stripe_account_id}=req.body;
   if(!stripe_account_id)return res.status(400).json({error:'stripe_account_id manquant'});
   try{
@@ -1724,7 +1724,7 @@ app.post('/stripe/connect/setup-intent', async (req, res) => {
 });
 
 // STRIPE CONNECT — IBAN sauvegardé
-app.post('/stripe/connect/iban-saved', async (req, res) => {
+app.post('/stripe/connect/iban-saved', requireAuth, async (req, res) => {
   const {prof_id,stripe_account_id}=req.body;
   if(!prof_id)return res.status(400).json({error:'prof_id manquant'});
   if(prof_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({error:'Non autorisé'});
@@ -1761,7 +1761,7 @@ app.get('/profiles/:id', async (req, res) => {
 });
 
 // MESSAGES — envoyer
-app.post('/messages', async (req, res) => {
+app.post('/messages', requireAuth, async (req, res) => {
   const expediteur_id = req.user.id;
   const { destinataire_id, contenu } = req.body;
   if (!destinataire_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
@@ -1778,7 +1778,7 @@ app.post('/messages', async (req, res) => {
 });
 
 // MESSAGES — compteur non lus (léger, pour le badge)
-app.get('/messages/unread-count', async (req, res) => {
+app.get('/messages/unread-count', requireAuth, async (req, res) => {
   try {
     const { count, error } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', req.user.id).eq('lu', false);
     if (error) return res.status(500).json({ error: error.message });
@@ -1787,7 +1787,7 @@ app.get('/messages/unread-count', async (req, res) => {
 });
 
 // MESSAGES — récupérer conversation
-app.get('/messages/:user1/:user2', async (req, res) => {
+app.get('/messages/:user1/:user2', requireAuth, async (req, res) => {
   const { user1, user2 } = req.params;
   if (!UUID_RE.test(user1) || !UUID_RE.test(user2)) return res.status(400).json({ error: 'ID invalide' });
   if (req.user.id !== user1 && req.user.id !== user2 && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
@@ -1801,7 +1801,7 @@ app.get('/messages/:user1/:user2', async (req, res) => {
 });
 
 // MESSAGES — toutes conversations d'un user (limité + enrichi avec profils)
-app.get('/conversations/:user_id', async (req, res) => {
+app.get('/conversations/:user_id', requireAuth, async (req, res) => {
   if (!UUID_RE.test(req.params.user_id)) return res.status(400).json({ error: 'ID invalide' });
   if (req.user.id !== req.params.user_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   try {
@@ -1841,7 +1841,7 @@ app.put('/messages/lu/:user_id', requireAuth, async (req, res) => {
 
 // UPLOAD PHOTO PROFIL
 // CNI — upload pièce d'identité
-app.post('/upload/cni', async (req, res) => {
+app.post('/upload/cni', requireAuth, async (req, res) => {
   const { storagePath, userId, filename } = req.body;
   if (!storagePath || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
@@ -1862,7 +1862,7 @@ app.post('/upload/cni', async (req, res) => {
 });
 
 // DIPLÔME — upload diplôme
-app.post('/upload/diplome', async (req, res) => {
+app.post('/upload/diplome', requireAuth, async (req, res) => {
   const { storagePath, userId } = req.body;
   if (!storagePath || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
@@ -1897,7 +1897,7 @@ app.post('/upload/casier', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/upload/photo', async (req, res) => {
+app.post('/upload/photo', requireAuth, async (req, res) => {
   const { base64, userId, filename } = req.body;
   if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
@@ -2053,7 +2053,7 @@ app.post('/push/prof-new-eleve', requireAdmin, async (req, res) => {
 });
 
 // PUSH — notif élève : un prof suivi publie un cours (prof concerné ou admin)
-app.post('/push/new-cours', async (req, res) => {
+app.post('/push/new-cours', requireAuth, async (req, res) => {
   const { prof_id, cours_titre, cours_id } = req.body;
   if (!prof_id) return res.status(400).json({ error: 'prof_id manquant' });
   if (prof_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
@@ -2323,7 +2323,7 @@ app.get('/teacher/:id/announcements', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/announcements', async (req, res) => {
+app.post('/teacher/:id/announcements', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { content, type, title, access_type } = req.body;
@@ -2339,7 +2339,7 @@ app.post('/teacher/:id/announcements', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.patch('/teacher/:id/announcements/:ann_id', async (req, res) => {
+app.patch('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { access_type, title, content } = req.body;
@@ -2358,7 +2358,7 @@ app.patch('/teacher/:id/announcements/:ann_id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/teacher/:id/announcements/:ann_id', async (req, res) => {
+app.delete('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { error } = await supabase.from('teacher_announcements')
@@ -2368,7 +2368,7 @@ app.delete('/teacher/:id/announcements/:ann_id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/announcements/:ann_id/vote', async (req, res) => {
+app.post('/teacher/:id/announcements/:ann_id/vote', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { option_index } = req.body;
@@ -2401,7 +2401,7 @@ app.get('/teacher/:id/resources', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/resources', async (req, res) => {
+app.post('/teacher/:id/resources', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { title, url, type, access_level } = req.body;
@@ -2414,7 +2414,7 @@ app.post('/teacher/:id/resources', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/teacher/:id/resources/:res_id', async (req, res) => {
+app.delete('/teacher/:id/resources/:res_id', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { error } = await supabase.from('teacher_resources')
@@ -2435,7 +2435,7 @@ app.get('/teacher/:id/is-enrolled', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/enroll', async (req, res) => {
+app.post('/teacher/enroll', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { teacher_id, code } = req.body;
@@ -2463,7 +2463,7 @@ app.post('/teacher/enroll', async (req, res) => {
 });
 
 // ── STUDENT NOTES ─────────────────────────────────────────────────────────────
-app.get('/teacher/:id/student-notes/:student_id', async (req, res) => {
+app.get('/teacher/:id/student-notes/:student_id', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     // accessible par le prof (teacher_id) ou l'élève concerné (student_id)
@@ -2475,7 +2475,7 @@ app.get('/teacher/:id/student-notes/:student_id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/student-notes', async (req, res) => {
+app.post('/teacher/:id/student-notes', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { student_id, content } = req.body;
@@ -2489,7 +2489,7 @@ app.post('/teacher/:id/student-notes', async (req, res) => {
 });
 
 // ── ESPACE PROFESSEUR — code d'accès + élèves ─────────────────────────────
-app.get('/teacher/my-code', async (req, res) => {
+app.get('/teacher/my-code', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { data, error } = await supabase.from('profiles')
@@ -2499,7 +2499,7 @@ app.get('/teacher/my-code', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/generate-code', async (req, res) => {
+app.post('/teacher/generate-code', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -2511,7 +2511,7 @@ app.post('/teacher/generate-code', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/teacher/my-students', async (req, res) => {
+app.get('/teacher/my-students', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { data: rows, error } = await supabase.from('teacher_students')
@@ -2587,7 +2587,7 @@ app.get('/teacher/:id/content', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/content', async (req, res) => {
+app.post('/teacher/:id/content', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { title, description, content_url, content_type, access_type, password, price } = req.body;
@@ -2603,7 +2603,7 @@ app.post('/teacher/:id/content', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/teacher/:id/content/:cid', async (req, res) => {
+app.delete('/teacher/:id/content/:cid', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { error } = await supabase.from('teacher_content')
@@ -2613,7 +2613,7 @@ app.delete('/teacher/:id/content/:cid', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/content/:cid/unlock', async (req, res) => {
+app.post('/teacher/:id/content/:cid/unlock', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { password } = req.body;
@@ -2629,7 +2629,7 @@ app.post('/teacher/:id/content/:cid/unlock', async (req, res) => {
 });
 
 // ── DÉPÔTS ÉLÈVES ──────────────────────────────────────────────────────────
-app.get('/teacher/:id/submissions', async (req, res) => {
+app.get('/teacher/:id/submissions', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const isProf = req.user.id === req.params.id;
@@ -2641,7 +2641,7 @@ app.get('/teacher/:id/submissions', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/teacher/:id/submissions', async (req, res) => {
+app.post('/teacher/:id/submissions', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { title, url } = req.body;
@@ -2654,7 +2654,7 @@ app.post('/teacher/:id/submissions', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/teacher/:id/submissions/:sid', async (req, res) => {
+app.delete('/teacher/:id/submissions/:sid', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { data: sub } = await supabase.from('student_submissions').select('student_id,teacher_id').eq('id', req.params.sid).single();
