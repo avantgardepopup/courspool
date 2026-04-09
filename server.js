@@ -81,6 +81,25 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // Compression gzip — réduit la taille des réponses de 70%
 app.use(compression());
 
+// ── Headers de sécurité HTTP ──────────────────────────────────
+app.use(function(req, res, next) {
+  // Empêche le clickjacking (l'app ne peut pas être chargée dans un iframe)
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Désactive la détection automatique de type MIME (évite les attaques MIME sniffing)
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Active la protection XSS du navigateur (legacy, mais utile sur anciens navigateurs)
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Force HTTPS pendant 1 an (HSTS)
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  // Masque la technologie utilisée
+  res.removeHeader('X-Powered-By');
+  // Contrôle les infos envoyées dans le header Referer
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Désactive les fonctionnalités sensibles du navigateur non utilisées par l'app
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  next();
+});
+
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json({limit: '10mb', verify: (req, res, buf) => { if (req.path === '/stripe/webhook') req.rawBody = buf; }}));
 app.use(express.urlencoded({limit: '10mb', extended: true}));
