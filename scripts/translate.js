@@ -1163,6 +1163,110 @@ const SOURCE = {
   pc_mode_sep:         'Mode de cours',
   mode_both:           'Les deux',
   lbl_rechercher:      'Rechercher',
+
+  // Wizard création de cours — labels & placeholders
+  cr_step_code_acces:  'Code d\'accès généré',
+  cr_step_titre_ph:    'Ex : Algèbre pour débutants…',
+  cr_step_mat_ph:      'Rechercher une matière…',
+  cr_step_date_lbl:    'Date du cours',
+  cr_step_heure_lbl:   'Heure de début',
+  cr_step_duree_lbl:   'Durée (min)',
+  cr_step_ville_lbl:   'Ville ou arrondissement',
+  cr_step_ville_ph:    'Ex : Paris 5e, Lyon 3e…',
+  cr_step_ville_note:  'Visible publiquement — les élèves pourront filtrer par lieu.',
+  cr_step_visio_title: 'Lien généré automatiquement',
+  cr_step_visio_desc:  'Un lien Jitsi sera créé pour votre cours. Vous pourrez le modifier depuis Mes cours après publication.',
+  cr_step_dom_lbl:     'Adresse exacte',
+  cr_step_dom_ph:      'Ex : 12 rue de la Paix, Paris…',
+  cr_step_dom_note:    'Partagée avec les élèves inscrits uniquement, selon vos paramètres.',
+  cr_step_etab_lbl:    'Nom de l\'établissement',
+  cr_step_etab_ph:     'Ex : Collège Victor Hugo, Lycée Pasteur…',
+  cr_step_etab_note:   'Partagé avec les élèves inscrits.',
+  cr_step_autre_ph:    'Ex : 20 avenue Larousse, Paris 5e…',
+  cr_step_autre_note:  'Partagée avec les élèves inscrits.',
+  cr_step_prix_lbl:    'Prix total (€)',
+  cr_step_places_lbl:  'Places max',
+  cr_step_ppeleve_lbl: 'Prix par élève',
+  cr_step_desc_ph:     'Décrivez votre cours : niveau requis, programme, matériel…',
+  cr_step_seances_lbl: 'Nombre de séances',
+
+  // Récurrence
+  rec_once:         'Une seule fois',
+  rec_once_sub:     'Ce cours sera publié une seule fois',
+  rec_weekly:       'Toutes les semaines',
+  rec_weekly_sub:   'Même heure, chaque semaine',
+  rec_biweekly:     'Toutes les 2 semaines',
+  rec_biweekly_sub: 'Bi-hebdomadaire',
+  rec_monthly:      'Tous les mois',
+  rec_monthly_sub:  'Même jour, chaque mois',
+
+  // Duplication
+  dup_title:        'Dupliquer ce cours',
+  dup_date_only:    'Choisir une nouvelle date',
+  dup_date_sub:     'Tout le reste reste identique',
+  dup_full:         'Modifier les détails',
+  dup_full_sub:     'Revoir chaque étape',
+  dup_field_mat:    'Matière',
+  dup_field_niveau: 'Niveau',
+  dup_field_mode:   'Mode',
+  dup_field_prix:   'Prix',
+  dup_field_places: 'Places',
+  dup_field_lieu:   'Lieu',
+  dup_visio_auto:   'Lien auto-généré',
+
+  // Onglets compte
+  acc_tab_cours:    'Mes cours',
+  acc_tab_suivis:   'Suivis',
+  acc_tab_histo:    'Historique',
+  acc_tab_profil:   'Mon profil',
+  acc_tab_revenus:  'Revenus',
+  acc_tab_remb:     'Remboursements',
+  acc_tab_avis:     'Mes avis',
+
+  // États vides compte
+  empty_no_cours_prof:    'Aucun cours à venir — créez-en un nouveau',
+  empty_first_cours:      'Vous n\'avez pas encore créé de cours',
+  btn_creer_cours:        'Créer un cours →',
+  empty_no_resa_prof:     'Aucune réservation à venir',
+  empty_resa_title:       'Aucun cours à venir',
+  empty_resa_sub:         'Réservez votre premier cours et retrouvez-le ici',
+  empty_resa_histo:       'Voir l\'historique',
+  empty_resa_explorer:    'Explorer les cours →',
+  section_mes_resa:       'Mes réservations',
+  section_prochains:      'Prochains cours',
+
+  // Profil prof sections
+  prof_formations:    'Formations & Diplômes',
+  prof_experiences:   'Expériences',
+
+  // Sondage
+  sondage_title:      'Créer un sondage',
+  sondage_question_ph:'Votre question…',
+  sondage_opt1_ph:    'Option 1',
+  sondage_opt2_ph:    'Option 2',
+  sondage_opt3_ph:    'Option 3 (optionnel)',
+  sondage_send:       'Envoyer le sondage',
+  sondage_err:        'Complète la question et au moins 2 options',
+  sondage_share:      'Partagé dans la conversation',
+
+  // Contenu messagerie
+  contenu_fiche_ph:   'Contenu de la fiche…',
+  contenu_msg_ph:     'Écris quelque chose pour tes élèves…',
+  msg_send_all:       'Envoyer à tous',
+  btn_deverrouiller:  'Déverrouiller',
+  vis_label:          'Visibilité',
+  vis_desc:           'Choisir qui peut accéder à ce contenu',
+
+  // Recherche
+  search_title:       'Que cherches-tu ?',
+  search_sub:         'Matière · Professeur · Code privé',
+
+  // Toast divers
+  t_desabonne:        'Désabonné',
+  t_desabonne_pre:    'Vous ne suivez plus ',
+  t_msg_envoye:       'Message envoyé ✓',
+  t_msg_envoye_sub:   'On vous répond sous 24h',
+  t_aucun_cours_share_sub: 'Publiez un nouveau cours pour le partager',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────

@@ -2734,14 +2734,14 @@ function buildAccLists(){
     profCoursHtml='<div style="padding:20px 20px 0">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
       +'<div style="width:28px;height:28px;background:rgba(255,107,43,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>'
-      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Prochains cours</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">'+t('section_prochains')+'</div>'
       +(_pastCnt>0?'<div style="margin-left:auto;font-size:11px;color:var(--lite)">'+_pastCnt+' passé'+((_pastCnt>1)?'s':'')+'</div>':'')
       +'</div>';
     if(!myC.length){
-      var _emptyMsg=_pastCnt>0?'Aucun cours à venir — créez-en un nouveau':'Vous n\'avez pas encore créé de cours';
+      var _emptyMsg=_pastCnt>0?t('empty_no_cours_prof'):t('empty_first_cours');
       profCoursHtml+='<div style="background:var(--bg);border-radius:16px;padding:20px;text-align:center">'
         +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">'+_emptyMsg+'</div>'
-        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Créer un cours →</button>'
+        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">'+t('btn_creer_cours')+'</button>'
         +'</div>';
     } else {
       profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding:8px 10px 18px;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:-8px -10px -18px;">';
@@ -2773,7 +2773,7 @@ function buildAccLists(){
     profCoursHtml+='</div>'
       +'<div style="display:flex;align-items:center;gap:8px;padding:20px 20px 10px">'
       +'<div style="width:28px;height:28px;background:rgba(59,130,246,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
-      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes réservations</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">'+t('section_mes_resa')+'</div>'
       +'</div>';
   }
   lr.innerHTML=profCoursHtml;
@@ -2782,15 +2782,15 @@ function buildAccLists(){
   var _pastRIds=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);});
   var _showRIds=_upcomingRIds;
   if(!_showRIds.length){lr.innerHTML+=isProf
-    ?'<div style="padding:0 20px 20px;font-size:13px;color:var(--lite)">Aucune réservation à venir</div>'
+    ?'<div style="padding:0 20px 20px;font-size:13px;color:var(--lite)">'+t('empty_no_resa_prof')+'</div>'
     :'<div style="text-align:center;padding:40px 20px">'
     +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
     +'</div>'
-    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours à venir</div>'
-    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Réservez votre premier cours<br>et retrouvez-le ici</div>'
-    +(_pastRIds.length?'<button onclick="switchATab(\'H\',g(\'aTabH\'))" style="background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">Voir l\'historique ('+_pastRIds.length+')</button><br>':'')
-    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">'+t('empty_resa_title')+'</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">'+t('empty_resa_sub')+'</div>'
+    +(_pastRIds.length?'<button onclick="switchATab(\'H\',g(\'aTabH\'))" style="background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">'+t('empty_resa_histo')+' ('+_pastRIds.length+')</button><br>':'')
+    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('empty_resa_explorer')+'</button>'
     +'</div>';}
   else{
     lr.innerHTML+=_showRIds.map(function(id){
@@ -4618,7 +4618,7 @@ function _renderMpfExtraInfo(p){
   // Formations
   var formations=p.formations||null;
   if(formations){
-    rows+='<div class="mpf-section-lbl">Formations & Diplômes</div>'
+    rows+='<div class="mpf-section-lbl">'+t('prof_formations')+'</div>'
       +'<div style="background:var(--wh);border-radius:16px;padding:14px;margin:0 16px 8px">'
       +(typeof formations==='string'?formations.split('\n').filter(Boolean).map(function(f){
           return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">'
@@ -4631,7 +4631,7 @@ function _renderMpfExtraInfo(p){
   // Expériences
   var experiences=p.experiences||p.experience||null;
   if(experiences){
-    rows+='<div class="mpf-section-lbl">Expériences</div>'
+    rows+='<div class="mpf-section-lbl">'+t('prof_experiences')+'</div>'
       +'<div style="background:var(--wh);border-radius:16px;padding:14px;margin:0 16px 8px">'
       +(typeof experiences==='string'?experiences.split('\n').filter(Boolean).map(function(e){
           return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">'
@@ -5798,14 +5798,14 @@ function openSondageSheet(){
   sheet.innerHTML='<div style="text-align:center;margin-bottom:16px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'
     +'<div style="width:44px;height:44px;border-radius:13px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Créer un sondage</div>'
+    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+t('sondage_title')+'</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:2px">Pose une question à tes élèves</div></div>'
     +'</div>'
-    +'<input id="_sdgQ" type="text" placeholder="Ta question…" class="esp-input" style="margin-bottom:14px">'
+    +'<input id="_sdgQ" type="text" placeholder="'+escH(t('sondage_question_ph'))+'" class="esp-input" style="margin-bottom:14px">'
     +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Options</div>'
     +'<div id="_sdgOpts">'
-    +'<input class="esp-input _sdgOpt" placeholder="Option 1" style="margin-bottom:8px">'
-    +'<input class="esp-input _sdgOpt" placeholder="Option 2" style="margin-bottom:8px">'
+    +'<input class="esp-input _sdgOpt" placeholder="'+escH(t('sondage_opt1_ph'))+'" style="margin-bottom:8px">'
+    +'<input class="esp-input _sdgOpt" placeholder="'+escH(t('sondage_opt2_ph'))+'" style="margin-bottom:8px">'
     +'</div>'
     +'<button onclick="addSondageOption()" style="background:none;border:1.5px dashed var(--bdr);border-radius:12px;width:100%;padding:10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;margin-bottom:16px;-webkit-tap-highlight-color:transparent">+ Ajouter une option</button>'
     +'<button onclick="submitSondage(this)" class="esp2-btn-submit" style="width:100%">Publier le sondage</button>'
@@ -5995,7 +5995,7 @@ function elveUnlockSheet(pid,kind,id,extra){
     +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Contenu protégé</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Entre le mot de passe pour accéder</div></div></div>'
     +'<input id="_elveUnlockInp" type="text" placeholder="Mot de passe" style="width:100%;border:none;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.06em;outline:none;box-sizing:border-box;margin-bottom:14px">'
-    +'<button id="_elveUnlockBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px">Déverrouiller</button>'
+    +'<button id="_elveUnlockBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px">'+t('btn_deverrouiller')+'</button>'
     +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
   var btn=sheet.querySelector('#_elveUnlockBtn');
   btn.onclick=function(){
@@ -6005,9 +6005,9 @@ function elveUnlockSheet(pid,kind,id,extra){
     if(kind==='content'){
       fetch(API+'/teacher/'+pid+'/content/'+id+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
         .then(function(r){return r.json();}).then(function(d){
-          if(d.error){btn.disabled=false;btn.textContent='Déverrouiller';document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast(t('t_wrong_password'),'');haptic(2);return;}
+          if(d.error){btn.disabled=false;btn.textContent=t('btn_deverrouiller');document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast(t('t_wrong_password'),'');haptic(2);return;}
           bd.remove();haptic(8);toast(t('t_content_unlocked'),'');loadElveBibliotheque(pid);
-        }).catch(function(){btn.disabled=false;btn.textContent='Déverrouiller';});
+        }).catch(function(){btn.disabled=false;btn.textContent=t('btn_deverrouiller');});
     }else if(kind==='resource'&&extra){
       // resources: open link after password (best effort — server-side gating not implemented here)
       bd.remove();haptic(8);window.open(extra,'_blank');
@@ -6178,8 +6178,8 @@ function biblioOpenAccessSheet(kind,id,curAcc){
     {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--mid)',bg:'var(--bg)'}
   ];
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
-  html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Visibilité</div>';
-  html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">Choisir qui peut accéder à ce contenu</div>';
+  html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">'+t('vis_label')+'</div>';
+  html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">'+t('vis_desc')+'</div>';
   opts.forEach(function(o){
     var isCur=o.val===curAcc;
     html+='<div onclick="_biblioPickAccess(\''+kind+'\',\''+id+'\',\''+o.val+'\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;margin-bottom:8px;cursor:pointer;background:'+(isCur?'rgba(255,107,43,.04)':'var(--bg)')+';box-shadow:'+(isCur?'0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.12)':'none')+';-webkit-tap-highlight-color:transparent">'
@@ -6820,12 +6820,12 @@ function espCaMsgSubmit(){
   fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),
     body:JSON.stringify({cours_id:_espSelCours.id,message:msg,sender_id:uid})})
     .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}
+      if(btn){btn.disabled=false;btn.textContent=t('msg_send_all');}
       if(d.error){toast(t('t_error'),d.error);return;}
       haptic(4);toast(t('t_message_sent_all'),'');
       g('espCaMsgText').value='';
       g('espCaMsgForm').style.display='none';
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}toast(t('t_net_error'),'');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=t('msg_send_all');}toast(t('t_net_error'),'');});
 }
 
 function switchMpfTab(tab){
@@ -6994,7 +6994,7 @@ function togFP(){
     fol.delete(id);_saveFol();
     _setFollowBtn(false);
     _syncFollowBtns(id,false);
-    toast('Désabonné','Vous ne suivez plus '+p.nm);
+    toast(t('t_desabonne'),t('t_desabonne_pre')+p.nm);
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=Math.max(0,(P[id].e||1)-1);
     var row=document.querySelector('#listF [data-prof-id="'+id+'"]');
     if(row){
@@ -7389,12 +7389,12 @@ function _openDupSheet(c){
 
   // Résumé des champs pré-remplis
   var rows=[
-    {k:'Matière',  v:_sd.matiere||'—'},
-    {k:'Niveau',   v:_sd.niveau||'—'},
-    {k:'Mode',     v:_sd.mode==='visio'?'Visio':'Présentiel'},
-    {k:'Prix',     v:_sd.prix?_sd.prix+'€':'—'},
-    {k:'Places',   v:_sd.places||'—'},
-    {k:'Lieu',     v:_sd.lieu||(_sd.mode==='visio'?'Lien auto-généré':'—')},
+    {k:t('dup_field_mat'),    v:_sd.matiere?subjL(_sd.matiere):'—'},
+    {k:t('dup_field_niveau'), v:_sd.niveau||'—'},
+    {k:t('dup_field_mode'),   v:_sd.mode==='visio'?t('mode_visio'):t('mode_pres')},
+    {k:t('dup_field_prix'),   v:_sd.prix?_sd.prix+'€':'—'},
+    {k:t('dup_field_places'), v:_sd.places||'—'},
+    {k:t('dup_field_lieu'),   v:_sd.lieu||(_sd.mode==='visio'?t('dup_visio_auto'):'—')},
   ].map(function(r){
     return'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr)">'
       +'<span style="font-size:13px;color:var(--lite)">'+r.k+'</span>'
@@ -7408,7 +7408,7 @@ function _openDupSheet(c){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20">'+COPY+'</svg>'
     +'</div>'
     +'<div>'
-    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Dupliquer ce cours</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">'+t('dup_title')+'</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:2px">'+esc(c.title||'')+'</div>'
     +'</div>'
     +'</div>'
@@ -7418,14 +7418,14 @@ function _openDupSheet(c){
     +'<div style="padding:0 14px;display:flex;flex-direction:column;gap:8px">'
     +'<button onclick="closeQuickSheet();_dupOpen(\'date\')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--or);border:none;border-radius:16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="17" height="17">'+CAL+'</svg></div>'
-    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:#fff">Choisir une nouvelle date</div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">Tout le reste reste identique</div></div>'
+    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:#fff">'+t('dup_date_only')+'</div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">'+t('dup_date_sub')+'</div></div>'
     +'</button>'
     // Option 2 — tout modifier
     +'<button onclick="closeQuickSheet();_dupOpen(\'full\')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg);border:none;border-radius:16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:var(--wh);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="17" height="17">'+EDIT+'</svg></div>'
-    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:var(--ink)">Modifier les détails</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Revoir chaque étape</div></div>'
+    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('dup_full')+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+t('dup_full_sub')+'</div></div>'
     +'</button>'
-    +'<button onclick="closeQuickSheet()" style="width:100%;padding:13px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;padding:13px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">'+t('btn_annuler')+'</button>'
     +'</div>'
     +'<div style="height:max(16px,env(safe-area-inset-bottom,16px))"></div>';
   showQuickSheet(html);
@@ -8511,22 +8511,22 @@ function _espMsgSendCard(type,id,title){
       expediteur_id:user.id,destinataire_id:msgDestId,contenu:contenu
     })}).then(function(){loadMessages();});
   }
-  haptic(6);toast('Partagé dans la conversation','');
+  haptic(6);toast(t('sondage_share'),'');
 }
 
 function openSondageCreator(){
   var inpStyle='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--ink);outline:none;box-sizing:border-box';
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
-    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">Créer un sondage</div></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+t('sondage_title')+'</div></div>'
     +'<div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">'
-    +'<input id="sondageQ" placeholder="Votre question…" style="'+inpStyle+';font-size:15px" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
-    +'<input id="sondageO1" placeholder="Option 1" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
-    +'<input id="sondageO2" placeholder="Option 2" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
-    +'<input id="sondageO3" placeholder="Option 3 (optionnel)" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageQ" placeholder="'+escH(t('sondage_question_ph'))+'" style="'+inpStyle+';font-size:15px" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO1" placeholder="'+escH(t('sondage_opt1_ph'))+'" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO2" placeholder="'+escH(t('sondage_opt2_ph'))+'" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO3" placeholder="'+escH(t('sondage_opt3_ph'))+'" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
     +'</div>'
     +'<div style="padding:14px 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">'
-    +'<button onclick="_sendSondageMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Envoyer le sondage</button>'
-    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'<button onclick="_sendSondageMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('sondage_send')+'</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">'+t('btn_annuler')+'</button>'
     +'</div>';
   showQuickSheet(html);
 }
@@ -8536,7 +8536,7 @@ function _sendSondageMsg(){
   var o1=(g('sondageO1')&&g('sondageO1').value||'').trim();
   var o2=(g('sondageO2')&&g('sondageO2').value||'').trim();
   var o3=(g('sondageO3')&&g('sondageO3').value||'').trim();
-  if(!q||!o1||!o2){toast('Complète la question et au moins 2 options','');return;}
+  if(!q||!o1||!o2){toast(t('sondage_err'),'');return;}
   var opts=[o1,o2];if(o3)opts.push(o3);
   closeQuickSheet();
   var contenu='%%ESP%%'+JSON.stringify({t:'sondage',q:q,opts:opts});
@@ -10523,7 +10523,7 @@ async function submitContact(){
       if(g('contactPhoto'))g('contactPhoto').value='';
       var lbl=g('contactPhotoTxt');if(lbl)lbl.textContent='Ajouter une capture d\'écran…';
       document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
-      toast('Message envoyé ✓','On vous répond sous 24h');
+      toast(t('t_msg_envoye'),t('t_msg_envoye_sub'));
     } else {
       toast(t('t_error'),"Impossible d'envoyer, réessayez");
     }
@@ -11407,7 +11407,7 @@ function stepRender(idx){
       +'</div>';
     if(_sd.prive){
       html+='<div style="margin-top:16px;width:100%;background:var(--orp);border-radius:14px;padding:14px 16px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Code d\'acc\u00e8s g\u00e9n\u00e9r\u00e9</div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">'+t('cr_step_code_acces')+'</div>'
         +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div id="stepCodeDisp" style="flex:1;background:var(--wh);border-radius:10px;padding:10px 14px;font-size:22px;font-weight:800;letter-spacing:.22em;color:var(--ink);text-align:center">'+escH(_sd.code_acces)+'</div>'
         +'<button id="stepCodeRegen" style="background:var(--wh);border:none;border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--mid);font-size:15px;transition:all .15s">&#x21BA;</button>'
@@ -11415,12 +11415,12 @@ function stepRender(idx){
     }
 
   }else if(step.id==='titre'){
-    html+='<div class="search-bar-premium" style="width:100%;padding:14px 18px"><input class="search-input-premium" id="stepTitre" style="font-size:18px;font-weight:600;color:var(--ink)" type="text" placeholder="Ex\u00a0: Alg\u00e8bre pour d\u00e9butants\u2026" value="'+escH(_sd.titre)+'"></div>';
+    html+='<div class="search-bar-premium" style="width:100%;padding:14px 18px"><input class="search-input-premium" id="stepTitre" style="font-size:18px;font-weight:600;color:var(--ink)" type="text" placeholder="'+escH(t('cr_step_titre_ph'))+'" value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
     html+='<div class="search-bar-premium" style="width:100%;margin-bottom:16px">'
       +'<div class="search-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>'
-      +'<input class="search-input-premium" id="stepMatSearch" type="search" placeholder="Rechercher une mati\u00e8re\u2026" autocomplete="off">'
+      +'<input class="search-input-premium" id="stepMatSearch" type="search" placeholder="'+escH(t('cr_step_mat_ph'))+'" autocomplete="off">'
       +'</div>';
     html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%;padding-bottom:8px">';
     CR_CATEGORIES.forEach(function(cat){
@@ -11476,10 +11476,10 @@ function stepRender(idx){
     var lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
       +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Date du cours</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDate" style="font-size:15px;font-weight:500;color:var(--ink)" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div></div>'
-      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Heure de d\u00e9but</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepHeure" style="font-size:15px;font-weight:500;color:var(--ink)" type="time" value="'+escH(_sd.heure)+'"></div></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">'+t('cr_step_date_lbl')+'</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDate" style="font-size:15px;font-weight:500;color:var(--ink)" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">'+t('cr_step_heure_lbl')+'</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepHeure" style="font-size:15px;font-weight:500;color:var(--ink)" type="time" value="'+escH(_sd.heure)+'"></div></div>'
       +'</div>'
-      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDuree" style="font-size:15px;font-weight:500;color:var(--ink);text-align:center" type="number" value="'+_sd.duree+'" min="30"></div></div>'
+      +'<div><label style="'+lbl+'">'+t('cr_step_duree_lbl')+'</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDuree" style="font-size:15px;font-weight:500;color:var(--ink);text-align:center" type="number" value="'+_sd.duree+'" min="30"></div></div>'
       +'</div>';
 
   }else if(step.id==='lieu'){
@@ -11487,8 +11487,8 @@ function stepRender(idx){
       html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
         +'<div style="background:var(--orp);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">'
         +'<div style="width:52px;height:52px;background:rgba(0,113,227,.12);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
-        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Lien généré automatiquement</div>'
-        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">Un lien Jitsi sera créé pour votre cours. Vous pourrez le modifier depuis <strong>Mes cours</strong> après publication.</div></div>'
+        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('cr_step_visio_title')+'</div>'
+        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">'+t('cr_step_visio_desc')+'</div></div>'
         +'</div></div>';
     }else{
       var _fi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)';
@@ -11496,19 +11496,19 @@ function stepRender(idx){
       // Chaque option a ses propres placeholders / notes
       var _lieuCfg={
         domicile:{
-          label2:'Adresse exacte',
-          ph2:'Ex\u00a0: 12 rue de la Paix, Paris\u2026',
-          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.'
+          label2:t('cr_step_dom_lbl'),
+          ph2:t('cr_step_dom_ph'),
+          note2:t('cr_step_dom_note')
         },
         etablissement:{
-          label2:'Nom de l\u2019\u00e9tablissement',
-          ph2:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Lyc\u00e9e Pasteur\u2026',
-          note2:'Partag\u00e9 avec les \u00e9l\u00e8ves inscrits.'
+          label2:t('cr_step_etab_lbl'),
+          ph2:t('cr_step_etab_ph'),
+          note2:t('cr_step_etab_note')
         },
         autre:{
-          label2:'Adresse exacte',
-          ph2:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
-          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits.'
+          label2:t('cr_step_dom_lbl'),
+          ph2:t('cr_step_autre_ph'),
+          note2:t('cr_step_autre_note')
         }
       };
       var _cfg=_lieuCfg[_lt]||null;
@@ -11532,10 +11532,10 @@ function stepRender(idx){
         // Champ(s) adresse — toujours affiché dès qu'un type est sélectionné
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
           +'<div>'
-            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
-            +'<div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepLieu" style="font-size:15px;font-weight:500;color:var(--ink)" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next"></div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+t('cr_step_ville_lbl')+'</div>'
+            +'<div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepLieu" style="font-size:15px;font-weight:500;color:var(--ink)" type="text" placeholder="'+escH(t('cr_step_ville_ph'))+'" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next"></div>'
             +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement — les \u00e9l\u00e8ves pourront filtrer par lieu.</div>'
+            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">'+t('cr_step_ville_note')+'</div>'
           +'</div>'
           +'<div>'
             +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label2+'</div>'
@@ -11553,7 +11553,7 @@ function stepRender(idx){
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:28px">'
       // Prix
       +'<div style="text-align:center">'
-      +'<div style="'+_stpLbl+'">Prix total (\u20ac)</div>'
+      +'<div style="'+_stpLbl+'">'+t('cr_step_prix_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnPrixM" style="'+_stpBtn+'">−</button>'
       +'<div id="stepPrixDisp" style="'+_stpNum+'">'+(_sd.prix||0)+'</div>'
@@ -11565,7 +11565,7 @@ function stepRender(idx){
       +'<div style="height:1px;background:var(--bdr)"></div>'
       // Places
       +'<div style="text-align:center">'
-      +'<div style="'+_stpLbl+'">Places max</div>'
+      +'<div style="'+_stpLbl+'">'+t('cr_step_places_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnPlcM" style="'+_stpBtn+'">−</button>'
       +'<div id="stepPlacesDisp" style="'+_stpNum+'">'+(_sd.places||5)+'</div>'
@@ -11574,21 +11574,21 @@ function stepRender(idx){
       +'<input type="hidden" id="stepPlaces" value="'+(_sd.places||5)+'">'
       +'</div>'
       // Prix par élève
-      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:16px;padding:16px;text-align:center;border:1px solid rgba(255,107,43,.12);'+(_sd.prix>0?'':'display:none;')+'"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:32px;font-weight:800;color:var(--or)">'+(_sd.prix>0?Math.ceil(_sd.prix/Math.max(1,_sd.places))+'\u20ac':'-')+'</div></div>'
+      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:16px;padding:16px;text-align:center;border:1px solid rgba(255,107,43,.12);'+(_sd.prix>0?'':'display:none;')+'"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">'+t('cr_step_ppeleve_lbl')+'</div><div id="stepPrixCalcVal" style="font-size:32px;font-weight:800;color:var(--or)">'+(_sd.prix>0?Math.ceil(_sd.prix/Math.max(1,_sd.places))+'\u20ac':'-')+'</div></div>'
       +'</div>';
 
   }else if(step.id==='desc'){
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:8px">'
-      +'<div class="search-bar-premium" style="padding:14px 16px;align-items:flex-start"><textarea class="search-input-premium" id="stepDesc" rows="6" placeholder="D\u00e9crivez votre cours\u00a0: niveau requis, programme, mat\u00e9riel\u2026" style="resize:none;font-size:15px;font-weight:400;min-height:160px;line-height:1.6;color:var(--ink)">'+escH(_sd.desc)+'</textarea></div>'
+      +'<div class="search-bar-premium" style="padding:14px 16px;align-items:flex-start"><textarea class="search-input-premium" id="stepDesc" rows="6" placeholder="'+escH(t('cr_step_desc_ph'))+'" style="resize:none;font-size:15px;font-weight:400;min-height:160px;line-height:1.6;color:var(--ink)">'+escH(_sd.desc)+'</textarea></div>'
       +'<div id="stepDescCount" style="font-size:12px;color:var(--lite);text-align:right">'+(_sd.desc?_sd.desc.length:0)+'/400</div>'
       +'</div>';
 
   }else if(step.id==='recurrence'){
     var _recOpts=[
-      {val:'once',     label:'Une seule fois',       sub:'Ce cours sera publi\u00e9 une seule fois'},
-      {val:'weekly',   label:'Toutes les semaines',  sub:'M\u00eame heure, chaque semaine'},
-      {val:'biweekly', label:'Toutes les 2 semaines',sub:'Bi-hebdomadaire'},
-      {val:'monthly',  label:'Tous les mois',        sub:'M\u00eame jour, chaque mois'},
+      {val:'once',     label:t('rec_once'),     sub:t('rec_once_sub')},
+      {val:'weekly',   label:t('rec_weekly'),   sub:t('rec_weekly_sub')},
+      {val:'biweekly', label:t('rec_biweekly'), sub:t('rec_biweekly_sub')},
+      {val:'monthly',  label:t('rec_monthly'),  sub:t('rec_monthly_sub')},
     ];
     var _stpBtn3='width:44px;height:44px;border-radius:50%;border:none;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);font-size:22px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s';
     html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
@@ -11606,7 +11606,7 @@ function stepRender(idx){
     });
     html+='</div>';
     html+='<div id="recCountSec" style="margin-top:20px;text-align:center;'+(_sd.recurrence==='once'?'display:none;':'')+'width:100%">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Nombre de s\u00e9ances</div>'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">'+t('cr_step_seances_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnRecM" style="'+_stpBtn3+'">−</button>'
       +'<div id="recCountDisp" style="font-size:52px;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1;min-width:70px;text-align:center">'+(_sd.recurrence_count||4)+'</div>'
@@ -12535,7 +12535,7 @@ function addToCalendar(coursId){
 function openShareCoursSheet(){
   var myC=C.filter(function(c){return user&&c.pr===user.id&&!_isCoursPass(c);})
     .sort(function(a,b){return new Date(a.dt)-new Date(b.dt);});
-  if(!myC.length){toast('Aucun cours à venir','Publiez un nouveau cours pour le partager');return;}
+  if(!myC.length){toast(t('empty_resa_title'),t('t_aucun_cours_share_sub'));return;}
   var bd=document.createElement('div');
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
@@ -12603,7 +12603,9 @@ async function sendCoursCardMsg(c){
 // ============================================================
 // PROFILE — Home grid + Detail view navigation
 // ============================================================
-var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus','Rmb':'Remboursements','Avis':'Mes avis'};
+var ACC_TITLES={};
+function _initAccTitles(){ACC_TITLES={'R':t('acc_tab_cours'),'F':t('acc_tab_suivis'),'H':t('acc_tab_histo'),'P':t('acc_tab_profil'),'Rev':t('acc_tab_revenus'),'Rmb':t('acc_tab_remb'),'Avis':t('acc_tab_avis')};}
+_initAccTitles();
 
 function showAccHome(){
   var pg=g('pgAcc');
@@ -13269,6 +13271,7 @@ function applyLangDOM(){
   if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
   var loginCode=document.getElementById('loginLangCode');
   if(loginCode)loginCode.textContent=(window._i18nLang||'fr').toUpperCase();
+  _initAccTitles();
 }
 
 function applyLang(){
@@ -13334,12 +13337,12 @@ function _updateSearchPill(val,sub){
   var main=g('searchPillMain'),subEl=g('searchPillSub'),clr=g('searchPillClear');
   if(val){
     if(main){main.textContent=val;main.style.color='#222';}
-    if(subEl){subEl.textContent=sub||'Matière · Professeur · Code privé';subEl.style.display='block';}
+    if(subEl){subEl.textContent=sub||t('search_sub');subEl.style.display='block';}
     if(clr)clr.style.display='flex';
     var pill=g('searchPill');
     if(pill)pill.style.boxShadow='0 2px 8px rgba(232,97,26,.18),0 0 0 1.5px rgba(232,97,26,.35)';
   } else {
-    if(main){main.textContent='Que cherches-tu ?';main.style.color='#222';}
+    if(main){main.textContent=t('search_title');main.style.color='#222';}
     if(subEl){subEl.textContent='Matière · Professeur · Code privé';subEl.style.display='block';}
     if(clr)clr.style.display='none';
     var pill2=g('searchPill');
