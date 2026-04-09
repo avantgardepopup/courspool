@@ -7257,31 +7257,59 @@ function togglePw(id,btn){
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
-// SUPPRIMER SON COURS avec confirmation
+// DUPLIQUER UN COURS — ouvre le wizard pré-rempli à l'étape date/heure
 function dupCours(id){
   var c=C.find(function(x){return x.id==id;});
-  if(!c)return;
-  // Pré-remplir le formulaire avec les données du cours
+  if(!c){toast('Erreur','Cours introuvable');return;}
+  if(!user||user.role!=='professeur')return;
+  if(user.verified===false){toast('Vérification en cours','Votre identité est en cours de vérification.');return;}
+
+  // Résoudre la matiere_key depuis le sujet du cours
+  var mat=MATIERES.find(function(m){
+    if(!c.subj)return false;
+    var s=c.subj.toLowerCase();
+    return s===m.label.toLowerCase()||s.includes(m.key)||m.label.toLowerCase().includes(s);
+  });
+
+  // Extraire l'heure du cours source (date laissée vide — prof doit choisir)
+  var srcHeure='';
+  var srcDt=new Date(c.dt_iso||c.dt||'');
+  if(!isNaN(srcDt.getTime())){
+    srcHeure=String(srcDt.getHours()).padStart(2,'0')+':'+String(srcDt.getMinutes()).padStart(2,'0');
+  }
+
+  // Pré-remplir _sd avec toutes les données du cours source
+  _sd={
+    mode:c.mode||'presentiel',
+    prive:c.prive||false,
+    code_acces:c.code||'',
+    titre:c.title||'',
+    matiere:c.subj||'',
+    matiere_key:mat?mat.key:'',
+    niveau:c.niveau||'',
+    date:'',           // vide — prof choisit la nouvelle date
+    heure:srcHeure,    // heure conservée du cours source
+    duree:60,
+    places:c.sp||5,
+    prix:c.tot||0,
+    lieu:c.lc||'',
+    lieu_prive:'',
+    lieu_type:'',
+    desc:c.description||'',
+    recurrence:'once',
+    recurrence_count:4
+  };
+
   closeR();
   setTimeout(function(){
-    openCr();
-    setTimeout(function(){
-      var titre=g('crTitre'),lieu=g('crLieu'),cPl=g('cPl'),cPr=g('cPr');
-      if(titre)titre.value=c.title;
-      if(lieu)lieu.value=c.lc;
-      if(cPl)cPl.value=c.sp;
-      if(cPr)cPr.value=c.tot;
-      // Restaurer la matière
-      var mat=MATIERES.find(function(m){return c.subj&&c.subj.toLowerCase().includes(m.key);});
-      if(mat)pickCrMat(mat.key);
-      // Restaurer le mode
-      if(c.mode)pickCrMode(c.mode);
-      if(typeof calcH==='function')calcH();
-      var _niv=g('crNiveau');if(_niv&&c.niveau){_niv.value=c.niveau;document.querySelectorAll('#crNiveauChips .crn-chip').forEach(function(ch){ch.classList.toggle('on',ch.dataset.n===(c.niveau||''));});}
-      var _dsc=g('crDesc');if(_dsc&&c.description)_dsc.value=c.description;
-      var _df=g('crDate');if(_df){_df.value='';_df.style.borderColor='var(--or)';_df.style.boxShadow='0 0 0 3px rgba(255,107,43,.15)';setTimeout(function(){_df.scrollIntoView({behavior:'smooth',block:'center'});_df.focus();},350);}
-      toast(t('t_duplicated'),t('t_duplicated_msg'));
-    },200);
+    if(!g('bdCrStep'))buildStepDOM();
+    // Aller directement à l'étape date/heure — tout le reste est pré-rempli
+    var dtIdx=STEP_DEFS.findIndex(function(s){return s.id==='datetime';});
+    stepRender(dtIdx>=0?dtIdx:5);
+    g('bdCrStep').classList.add('active');
+    setTimeout(_crStepVpAdjust,50);
+    haptic(10);
+    toast('Cours dupliqué','Choisissez la nouvelle date — tout le reste est pré-rempli');
   },300);
 }
 
