@@ -145,6 +145,49 @@ app.use(function(req, res, next) {
   next();
 });
 
+// ── Alertes Discord ───────────────────────────────────────────
+async function discordAlert(message) {
+  const url = process.env.DISCORD_WEBHOOK_URL;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: message })
+    });
+  } catch(e) {}
+}
+
+// Compteur de tentatives échouées par IP (fenêtre 5 min)
+const failedLoginMap = new Map();
+setInterval(function() {
+  const cutoff = Date.now() - 5 * 60 * 1000;
+  failedLoginMap.forEach(function(data, ip) { if (data.firstFail < cutoff) failedLoginMap.delete(ip); });
+}, 5 * 60 * 1000);
+
+function recordFailedLogin(ip, email) {
+  const now = Date.now();
+  const cutoff = now - 5 * 60 * 1000;
+  if (!failedLoginMap.has(ip) || failedLoginMap.get(ip).firstFail < cutoff) {
+    failedLoginMap.set(ip, { count: 1, firstFail: now, alerted: false });
+  } else {
+    const d = failedLoginMap.get(ip);
+    d.count++;
+    // Alerte à partir de 3 échecs en 5 min, une seule fois par fenêtre
+    if (d.count >= 3 && !d.alerted) {
+      d.alerted = true;
+      const time = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
+      discordAlert(
+        `🚨 **Tentatives de connexion suspectes**\n` +
+        `> **IP :** \`${ip}\`\n` +
+        `> **Dernier email :** \`${email}\`\n` +
+        `> **Tentatives :** ${d.count} en moins de 5 min\n` +
+        `> **Heure :** ${time}`
+      );
+    }
+  }
+}
+
 // Rate limiting strict pour les routes auth — 5 req/min par IP
 const authRateLimitMap = new Map();
 setInterval(function() {
@@ -692,8 +735,8 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      // Log de chaque tentative échouée — utile pour détecter un bruteforce
       console.warn(`[AUTH] Échec login — email: ${email} | ip: ${ip} | raison: ${error.message}`);
+      recordFailedLogin(ip, email);
       return res.status(400).json({ error: error.message });
     }
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
