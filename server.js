@@ -1085,6 +1085,20 @@ app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
   }
 });
 
+// STRIPE — libérer le verrou de place (utilisateur annule le paiement)
+app.post('/stripe/cancel-lock', requireAuth, async (req, res) => {
+  const { payment_intent_id } = req.body;
+  if (!payment_intent_id) return res.status(400).json({ error: 'payment_intent_id manquant' });
+  // Retrouver le verrou correspondant à ce PI et cet utilisateur
+  const user_id = req.user.id;
+  placeLocks.forEach(function(lock, key) {
+    if (lock.payment_intent_id === payment_intent_id && key.endsWith(':' + user_id)) {
+      placeLocks.delete(key);
+    }
+  });
+  res.json({ success: true });
+});
+
 // STRIPE — confirmer paiement in-app et créer réservation
 app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
   const { payment_intent_id } = req.body;

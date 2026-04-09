@@ -9732,7 +9732,7 @@ var STRIPE_PK = 'pk_live_51TB9Am3FNybFliKQGUpI1uSMheaSyFV0TwgRoAfmgRJtLtxAujacxr
 // ============================================================
 // PAYMENT ELEMENT — paiement natif in-app (sans redirect)
 // ============================================================
-var _payElements=null,_payCoursId=null,_payPourAmi=false;
+var _payElements=null,_payCoursId=null,_payPourAmi=false,_payIntentId=null;
 
 async function openPaymentSheet(id,pourAmi){
   _payCoursId=id;_payPourAmi=!!pourAmi;
@@ -9755,6 +9755,7 @@ async function openPaymentSheet(id,pourAmi){
     var data=await r.json();
     if(data.error){toast(t('t_error'),data.error,true);closePaymentSheet();return;}
     if(data.already_reserved){toast(t('t_already_res'),t('t_already_res_s'));closePaymentSheet();return;}
+    _payIntentId=data.payment_intent_id||null;
     if(!_stripeInstance){if(!window.Stripe){toast(t('t_error'),t('t_payment_svc'),true);closePaymentSheet();return;}_stripeInstance=Stripe(STRIPE_PK);}
     var dk=document.documentElement.classList.contains('dk');
     var appearance={
@@ -9801,6 +9802,7 @@ async function submitPayment(){
       var r2=await fetch(API+'/stripe/confirm-payment',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pi.id})});
       var d2=await r2.json();
       if(d2.success||d2.already_existed){
+        _payIntentId=null; // paiement réussi — ne pas cancel le verrou
         closePaymentSheet();
         localStorage.removeItem('cp_stripe_pending');
         if(!_payPourAmi)res[_payCoursId]=true;
@@ -9847,6 +9849,12 @@ function closePaymentSheet(){
   _payElements=null;
   var el=g('stripe-payment-element');
   if(el)el.innerHTML='';
+  // Libérer le verrou de place immédiatement si le paiement n'est pas complété
+  if(_payIntentId){
+    var pid=_payIntentId;
+    _payIntentId=null;
+    fetch(API+'/stripe/cancel-lock',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pid})}).catch(function(){});
+  }
 }
 
 function initStripeIban() {
