@@ -684,7 +684,8 @@ app.get('/cours', async (req, res) => {
 
 // COURS — créer
 app.post('/cours', requireAuth, async (req, res) => {
-  const professeur_id = req.user.id; // toujours l'utilisateur connecté
+  if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Seuls les professeurs peuvent créer des cours' });
+  const professeur_id = req.user.id;
   const { titre, sujet, couleur_sujet, background, date_heure, date_iso, lieu, prix_total, places_max, emoji, prof_nom, prof_photo, prof_initiales, prof_couleur, description, niveau, mode, prive, code_acces, visio_url } = req.body;
   if (!titre || !date_heure || !lieu || !prix_total) {
     return res.status(400).json({ error: 'Champs manquants' });
@@ -877,7 +878,8 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
 
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', requireAuth, async (req, res) => {
-  const { cours_id, user_id, cours_titre, pour_ami } = req.body;
+  const { cours_id, cours_titre, pour_ami } = req.body;
+  const user_id = pour_ami ? req.body.user_id : req.user.id;
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
 
   try {
@@ -918,7 +920,8 @@ app.post('/stripe/checkout', requireAuth, async (req, res) => {
 
 // STRIPE — PaymentIntent in-app (Stripe Elements)
 app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
-  const { cours_id, user_id, cours_titre, pour_ami } = req.body;
+  const { cours_id, cours_titre, pour_ami } = req.body;
+  const user_id = pour_ami ? req.body.user_id : req.user.id;
   if (!cours_id || !user_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
     // Prix depuis la BDD — ne jamais faire confiance au client
@@ -1193,6 +1196,8 @@ app.get('/follows/:user_id', async (req, res) => {
 app.post('/contact', authRateLimit, async (req, res) => {
   const { email, nom, role, sujet, message, photo_base64 } = req.body;
   if (!email || !message) return res.status(400).json({ error: 'Données manquantes' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Email invalide' });
+  if (message.length > 5000) return res.status(400).json({ error: 'Message trop long' });
   let photo_url = null;
   if (photo_base64 && photo_base64.startsWith('data:image/')) {
     try {
@@ -1559,7 +1564,7 @@ app.post('/cours/:id/cancel', requireAuth, async (req, res) => {
 });
 
 // STRIPE — paiements d'un prof
-app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
+app.get('/stripe/payments/prof/:prof_id', requireAuth, async (req, res) => {
   if (req.user.id !== req.params.prof_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   try{
     const {data:cours}=await supabase.from('cours').select('id,titre').eq('professeur_id',req.params.prof_id);
@@ -1574,7 +1579,7 @@ app.get('/stripe/payments/prof/:prof_id', async (req, res) => {
 });
 
 // STRIPE — remboursements émis par un prof
-app.get('/stripe/refunds/prof/:prof_id', async (req, res) => {
+app.get('/stripe/refunds/prof/:prof_id', requireAuth, async (req, res) => {
   if (req.user.id !== req.params.prof_id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
   try {
     const refunds = await stripe.refunds.list({ limit: 100, expand: ['data.payment_intent'] });
@@ -2425,7 +2430,7 @@ app.delete('/teacher/:id/resources/:res_id', requireAuth, async (req, res) => {
 });
 
 // ── TEACHER ENROLLMENT ────────────────────────────────────────────────────────
-app.get('/teacher/:id/is-enrolled', async (req, res) => {
+app.get('/teacher/:id/is-enrolled', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const { data, error } = await supabase.from('teacher_students')
@@ -2558,7 +2563,7 @@ app.get('/teacher/my-students', requireAuth, async (req, res) => {
 //   title TEXT NOT NULL, url TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
 // );
 
-app.get('/teacher/:id/content', async (req, res) => {
+app.get('/teacher/:id/content', requireAuth, async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
     const isProf = req.user.id === req.params.id;
