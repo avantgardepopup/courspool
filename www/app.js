@@ -13262,6 +13262,8 @@ function applyLangDOM(){
   document.documentElement.lang=window._i18nLang||'fr';
   var lbl=document.getElementById('currentLangLabel');
   if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
+  var loginCode=document.getElementById('loginLangCode');
+  if(loginCode)loginCode.textContent=(window._i18nLang||'fr').toUpperCase();
 }
 
 function applyLang(){

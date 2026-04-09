@@ -201,7 +201,13 @@
   <!-- ══ ÉCRAN CONNEXION ══ -->
   <div id="lsLogin" class="lscreen-wrap">
     <div class="lscreen-inner lscreen-login-inner">
-      <div class="lscreen-logo-text">CoursPool</div>
+      <div style="position:relative">
+        <div class="lscreen-logo-text">CoursPool</div>
+        <button onclick="openLangPicker()" style="position:absolute;top:0;right:0;background:none;border:1.5px solid var(--bdr);border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink);font-size:13px;font-weight:500" id="loginLangBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="loginLangCode">FR</span>
+        </button>
+      </div>
       <p class="lscreen-sub" data-i18n="login_subtitle">Trouvez un cours près de vous</p>
 
       <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email"></div>
@@ -3186,9 +3192,9 @@
       <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em" data-i18n="settings_title">Paramètres</div>
     </div>
 
-    <!-- Langue — masqué (FR uniquement pour le lancement) -->
-    <div class="settings-section-lbl" data-i18n="settings_langue" style="display:none">Langue</div>
-    <div class="settings-group" style="display:none">
+    <!-- Langue -->
+    <div class="settings-section-lbl" data-i18n="settings_langue">Langue</div>
+    <div class="settings-group">
       <div class="settings-row" onclick="openLangPicker()" style="cursor:pointer">
         <div style="flex:1">
           <div class="settings-label" data-i18n="settings_langue">Langue</div>
