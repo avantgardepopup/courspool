@@ -188,6 +188,37 @@ function recordFailedLogin(ip, email) {
   }
 }
 
+// ── Verrous temporaires de places (10 min) ────────────────────
+// clé : `${cours_id}:${user_id}` → { payment_intent_id, expiresAt }
+const placeLocks = new Map();
+const LOCK_TTL = 10 * 60 * 1000; // 10 minutes
+
+setInterval(function() {
+  const now = Date.now();
+  placeLocks.forEach(function(lock, key) { if (lock.expiresAt < now) placeLocks.delete(key); });
+}, 60 * 1000);
+
+function lockPlace(cours_id, user_id, payment_intent_id) {
+  placeLocks.set(`${cours_id}:${user_id}`, { payment_intent_id, expiresAt: Date.now() + LOCK_TTL });
+}
+
+function unlockPlace(cours_id, user_id) {
+  placeLocks.delete(`${cours_id}:${user_id}`);
+}
+
+// Nombre de places verrouillées pour un cours (hors l'utilisateur lui-même)
+function lockedPlacesCount(cours_id, exclude_user_id) {
+  let count = 0;
+  const now = Date.now();
+  placeLocks.forEach(function(lock, key) {
+    if (key.startsWith(cours_id + ':') && lock.expiresAt > now) {
+      const uid = key.slice(cours_id.length + 1);
+      if (uid !== exclude_user_id) count++;
+    }
+  });
+  return count;
+}
+
 // Rate limiting strict pour les routes auth — 5 req/min par IP
 const authRateLimitMap = new Map();
 setInterval(function() {
@@ -1023,9 +1054,13 @@ app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
     // Prix depuis la BDD — ne jamais faire confiance au client
     const { data: cours } = await supabase.from('cours').select('prix_total,places_max,places_prises,titre,professeur_id').eq('id', cours_id).single();
     if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
-    // Vérifier que le cours n'est pas complet
-    if (!pour_ami && cours.places_prises >= cours.places_max) {
-      return res.status(400).json({ error: 'Ce cours est complet' });
+    // Vérifier que le cours n'est pas complet (places réelles + verrous temporaires)
+    if (!pour_ami) {
+      const locked = lockedPlacesCount(cours_id, user_id);
+      const placesEffectives = cours.places_prises + locked;
+      if (placesEffectives >= cours.places_max) {
+        return res.status(400).json({ error: 'Ce cours est complet' });
+      }
     }
     const montant = Math.round((cours.prix_total / (cours.places_max || 1)) * 100) / 100;
     // Vérifier si déjà réservé
@@ -1041,6 +1076,8 @@ app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
       metadata: { cours_id, user_id, montant: montant.toString(), pour_ami: pour_ami ? '1' : '0', prof_id: cours.professeur_id || '' },
       automatic_payment_methods: { enabled: true },
     });
+    // Poser le verrou temporaire — cette place est réservée 10 min pour cet utilisateur
+    if (!pour_ami) lockPlace(cours_id, user_id, paymentIntent.id);
     res.json({ client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id, montant });
   } catch (e) {
     console.log('PaymentIntent error:', e.message);
@@ -1109,6 +1146,9 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
       stripe_payment_intent_id: payment_intent_id,
       type_paiement: pour_ami ? 'stripe_ami' : 'stripe'
     }]);
+
+    // Libérer le verrou temporaire — la réservation est maintenant réelle
+    unlockPlace(cours_id, user_id);
 
     // Recalculer places_prises depuis la source de vérité
     const { data: coursData } = await supabase.from('cours')
