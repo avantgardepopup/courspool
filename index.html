@@ -485,28 +485,28 @@
   <!-- ═══ PROF SLIDE 2 : Matieres ═══ -->
   <div id="pcPfB" class="pc-slide" style="display:none">
     <div class="lreg-slide-inner">
-      <h2 class="lscreen-title">Quelles matieres enseignez-vous ?</h2>
+      <h2 class="lscreen-title" data-i18n="pc_mat_title">Quelles matieres enseignez-vous ?</h2>
       <div class="lfield">
-        <label>Rechercher</label>
-        <input id="pcMatSearch" type="text" placeholder="Ex : Maths, Physique, Anglais..." oninput="pcMatSearchInput(this.value)">
+        <label data-i18n="lbl_rechercher">Rechercher</label>
+        <input id="pcMatSearch" type="text" data-i18n-ph="pc_mat_search_ph" placeholder="Ex : Maths, Physique, Anglais..." oninput="pcMatSearchInput(this.value)">
         <div id="pcMatAlias" class="pc-mat-alias" style="display:none" onclick="pcMatAliasAccept()"></div>
       </div>
       <div class="pc-mat-popular">
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Mathematiques')">Mathematiques</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Francais')">Francais</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Anglais')">Anglais</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Physique-Chimie')">Physique-Chimie</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'SVT')">SVT</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Histoire-Geo')">Histoire-Geo</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Informatique')">Informatique</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Espagnol')">Espagnol</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Philosophie')">Philosophie</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Economie')">Economie</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Allemand')">Allemand</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Mathematiques')" data-i18n="mat_maths">Mathematiques</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Francais')" data-i18n="mat_francais_l">Francais</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Anglais')" data-i18n="mat_anglais">Anglais</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Physique-Chimie')" data-i18n="mat_physchim">Physique-Chimie</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'SVT')" data-i18n="mat_svt">SVT</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Histoire-Geo')" data-i18n="mat_histoire">Histoire-Geo</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Informatique')" data-i18n="mat_informatique">Informatique</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Espagnol')" data-i18n="mat_espagnol">Espagnol</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Philosophie')" data-i18n="mat_philo">Philosophie</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Economie')" data-i18n="mat_economie">Economie</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Allemand')" data-i18n="mat_allemand">Allemand</div>
         <div class="lniv-chip" onclick="pcToggleMat(this,'NSI')">NSI</div>
       </div>
       <div id="pcMatSelected" style="display:none;margin-top:14px">
-        <div class="pc-mat-selected-label">Selectionnees :</div>
+        <div class="pc-mat-selected-label" data-i18n="pc_mat_selected">Selectionnees :</div>
         <div id="pcMatSelectedChips" class="lniv-grid" style="margin-top:6px;margin-bottom:0"></div>
       </div>
       <button class="lbtn" style="margin-top:16px" onclick="pcNext()" data-i18n="pc_continue">Continuer</button>
@@ -526,11 +526,11 @@
         <label id="pcEtabLabel">Établissement <span style="font-weight:400;color:var(--lite)">(optionnel)</span></label>
         <input id="pcEtablissement" type="text" placeholder="Ex : Collège Victor Hugo, Lycée Carnot…">
       </div>
-      <div class="lreg-role-sep" style="margin-top:6px"><span>Mode de cours</span></div>
+      <div class="lreg-role-sep" style="margin-top:6px"><span data-i18n="pc_mode_sep">Mode de cours</span></div>
       <div class="pc-mode-toggle">
-        <div class="pc-mode-item" id="pcModePres" onclick="pickPcMode('presentiel')">Presentiel</div>
-        <div class="pc-mode-item" id="pcModeVis" onclick="pickPcMode('visio')">Visio</div>
-        <div class="pc-mode-item" id="pcModeBoth" onclick="pickPcMode('les_deux')">Les deux</div>
+        <div class="pc-mode-item" id="pcModePres" onclick="pickPcMode('presentiel')" data-i18n="nc_mode_pres">Presentiel</div>
+        <div class="pc-mode-item" id="pcModeVis" onclick="pickPcMode('visio')" data-i18n="nc_mode_vis">Visio</div>
+        <div class="pc-mode-item" id="pcModeBoth" onclick="pickPcMode('les_deux')" data-i18n="mode_both">Les deux</div>
       </div>
       <button class="lbtn" style="margin-top:20px" onclick="saveProfCompletion()" data-i18n="pc_finish">Terminer</button>
       <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()" data-i18n="pc_later">Plus tard</p>
@@ -546,7 +546,7 @@
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
-    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" data-i18n-ph="exp_search_ph" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <!-- Nav desktop -->
     <nav class="topbar-nav" id="topbarNav">
       <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
@@ -829,63 +829,63 @@
           <div id="barConfigGrid" style="padding:0 20px 8px"></div>
           <!-- Matières populaires avec icônes -->
           <div style="padding:4px 20px 0">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Matières populaires</div>
+            <div data-i18n="mat_pop_title" style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Matières populaires</div>
             <div class="ss-subject-list">
               <button class="ss-subject-row" onclick="toggleBarFilter('Maths');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 15l2 2-2 2"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Maths</span><span class="ss-subject-desc">Algèbre, géométrie, analyse…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_maths">Maths</span><span class="ss-subject-desc" data-i18n="mat_desc_maths">Algèbre, géométrie, analyse…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Physique');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Physique</span><span class="ss-subject-desc">Mécanique, optique, thermodynamique…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_physique">Physique</span><span class="ss-subject-desc" data-i18n="mat_desc_phys">Mécanique, optique, thermodynamique…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Chimie');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M9 3h6v6l3 9H6L9 9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Chimie</span><span class="ss-subject-desc">Organique, minérale, solutions…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_chimie">Chimie</span><span class="ss-subject-desc" data-i18n="mat_desc_chim">Organique, minérale, solutions…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Informatique');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Informatique</span><span class="ss-subject-desc">Algorithmes, web, bases de données…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_informatique">Informatique</span><span class="ss-subject-desc" data-i18n="mat_desc_info">Algorithmes, web, bases de données…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Anglais');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Anglais</span><span class="ss-subject-desc">Conversation, grammaire, TOEFL…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_anglais">Anglais</span><span class="ss-subject-desc" data-i18n="mat_desc_angl">Conversation, grammaire, TOEFL…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Français');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Français</span><span class="ss-subject-desc">Dissertation, grammaire, littérature…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_francais_l">Français</span><span class="ss-subject-desc" data-i18n="mat_desc_fr">Dissertation, grammaire, littérature…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Espagnol');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Espagnol</span><span class="ss-subject-desc">Conversation, conjugaison, DELE…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_espagnol">Espagnol</span><span class="ss-subject-desc" data-i18n="mat_desc_esp">Conversation, conjugaison, DELE…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Histoire-Géo');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Histoire-Géo</span><span class="ss-subject-desc">Chronologie, cartographie, géopolitique…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_histoire">Histoire-Géo</span><span class="ss-subject-desc" data-i18n="mat_desc_hist">Chronologie, cartographie, géopolitique…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Philosophie');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Philosophie</span><span class="ss-subject-desc">Dissertation, éthique, épistémologie…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_philo">Philosophie</span><span class="ss-subject-desc" data-i18n="mat_desc_philo">Dissertation, éthique, épistémologie…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('SVT');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M12 12C12 7 7 5 3 7"/><path d="M12 12c0-5 5-7 9-5"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">SVT / Biologie</span><span class="ss-subject-desc">Génétique, écologie, anatomie…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_svt">SVT / Biologie</span><span class="ss-subject-desc" data-i18n="mat_desc_svt">Génétique, écologie, anatomie…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Musique');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Musique</span><span class="ss-subject-desc">Solfège, instrument, théorie…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_musique">Musique</span><span class="ss-subject-desc" data-i18n="mat_desc_mus">Solfège, instrument, théorie…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Python');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/><path d="M11 7h4a2 2 0 012 2v4"/><line x1="7" y1="11" x2="7" y2="17"/><line x1="4" y1="14" x2="10" y2="14"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Python</span><span class="ss-subject-desc">Scripts, data science, automatisation…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_python">Python</span><span class="ss-subject-desc" data-i18n="mat_desc_py">Scripts, data science, automatisation…</span></div>
               </button>
             </div>
           </div>
           <!-- Custom filter input -->
           <div style="padding:8px 20px 0">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
+            <div data-i18n="filter_add_custom" style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
             <div style="display:flex;gap:8px">
-              <input id="filterInput" class="fi3" style="flex:1;font-size:15px;border-radius:14px;background:var(--bg);border:none;padding:13px 16px;outline:none;font-family:inherit;-webkit-appearance:none;color:var(--ink)" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
+              <input id="filterInput" class="fi3" style="flex:1;font-size:15px;border-radius:14px;background:var(--bg);border:none;padding:13px 16px;outline:none;font-family:inherit;-webkit-appearance:none;color:var(--ink)" data-i18n-ph="filter_custom_ph" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
               <button onclick="requestGeoloc();closeAddFilter();" title="Autour de moi" style="background:var(--bg);color:var(--or);border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 0.5px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2" opacity=".4"/></svg></button>
               <button onclick="addBarCustomFilter()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28);-webkit-tap-highlight-color:transparent">+</button>
             </div>

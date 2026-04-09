@@ -1017,6 +1017,48 @@ const SOURCE = {
   btn_oui:              'Oui',
   btn_non:              'Non',
   legal_back:           '← Retour à l\'app',
+
+  // Matières — noms affichés (filtres + onboarding)
+  mat_pop_title:   'Matières populaires',
+  mat_maths:       'Maths',
+  mat_desc_maths:  'Algèbre, géométrie, analyse…',
+  mat_physique:    'Physique',
+  mat_desc_phys:   'Mécanique, optique, thermodynamique…',
+  mat_chimie:      'Chimie',
+  mat_desc_chim:   'Organique, minérale, solutions…',
+  mat_informatique:'Informatique',
+  mat_desc_info:   'Algorithmes, web, bases de données…',
+  mat_anglais:     'Anglais',
+  mat_desc_angl:   'Conversation, grammaire, TOEFL…',
+  mat_francais_l:  'Français',
+  mat_desc_fr:     'Dissertation, grammaire, littérature…',
+  mat_espagnol:    'Espagnol',
+  mat_desc_esp:    'Conversation, conjugaison, DELE…',
+  mat_histoire:    'Histoire-Géo',
+  mat_desc_hist:   'Chronologie, cartographie, géopolitique…',
+  mat_philo:       'Philosophie',
+  mat_desc_philo:  'Dissertation, éthique, épistémologie…',
+  mat_svt:         'SVT / Biologie',
+  mat_desc_svt:    'Génétique, écologie, anatomie…',
+  mat_musique:     'Musique',
+  mat_desc_mus:    'Solfège, instrument, théorie…',
+  mat_python:      'Python',
+  mat_desc_py:     'Scripts, data science, automatisation…',
+  mat_physchim:    'Physique-Chimie',
+  mat_economie:    'Économie',
+  mat_allemand:    'Allemand',
+
+  // Filtres
+  filter_add_custom:   'Ajouter une matière personnalisée',
+  filter_custom_ph:    'Ex: architecture, latin…',
+
+  // Profil completion — matières
+  pc_mat_title:        'Quelles matières enseignez-vous ?',
+  pc_mat_search_ph:    'Ex : Maths, Physique, Anglais...',
+  pc_mat_selected:     'Sélectionnées :',
+  pc_mode_sep:         'Mode de cours',
+  mode_both:           'Les deux',
+  lbl_rechercher:      'Rechercher',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────
