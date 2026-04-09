@@ -11246,18 +11246,20 @@ var safeUrl=function(u){return (u&&/^https?:\/\//i.test(u))?escH(u):'#';};
 
 // Step form — icônes natives simples (style Feather, cercle orange)
 function _si(d){return '<div style="width:80px;height:80px;background:#FFF0E8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">'+d+'</svg></div>';}
-var STEP_DEFS=[
-  {id:'mode',    em:_si('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'), q:'Type de cours',       h:'Pr\u00e9sentiel en personne ou visio en ligne'},
-  {id:'prive',   em:_si('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),                                          q:'Visibilit\u00e9',      h:'Un cours priv\u00e9 n\'est pas visible publiquement \u2014 acc\u00e8s par code unique'},
-  {id:'titre',   em:_si('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>'),                                        q:'Titre du cours',       h:'Donnez un titre clair et accrocheur'},
-  {id:'matiere', em:_si('<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>'),                         q:'Quelle mati\u00e8re\u00a0?', h:'Choisissez la discipline'},
-  {id:'niveau',  em:_si('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),           q:'Niveau vis\u00e9',     h:'Quel public ciblez-vous\u00a0?'},
-  {id:'datetime',em:_si('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'), q:'Quand\u00a0?', h:'Date et heure du cours'},
-  {id:'lieu',    em:_si('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),                                       q:'O\u00f9\u00a0?',       h:'Ville, adresse \u2014 ou lien g\u00e9n\u00e9r\u00e9 pour la visio'},
-  {id:'prix',    em:_si('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),                                       q:'Prix &amp; places',   h:'Prix total que vous souhaitez recevoir'},
-  {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:'Description', h:'D\u00e9tails sur votre cours (optionnel)'},
-  {id:'recurrence',em:_si('<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/>'), q:'R\u00e9currence', h:'Publiez une seule fois ou programmez plusieurs s\u00e9ances'},
-];
+var STEP_DEFS=[];
+function _initStepDefs(){STEP_DEFS=[
+  {id:'mode',    em:_si('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'), q:t('step_mode_q'),     h:t('step_mode_h')},
+  {id:'prive',   em:_si('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),                                          q:t('step_prive_q'),    h:t('step_prive_h')},
+  {id:'titre',   em:_si('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>'),                                        q:t('step_titre_q'),    h:t('step_titre_h')},
+  {id:'matiere', em:_si('<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>'),                         q:t('step_matiere_q'),  h:t('step_matiere_h')},
+  {id:'niveau',  em:_si('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),           q:t('step_niveau_q'),   h:t('step_niveau_h')},
+  {id:'datetime',em:_si('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'), q:t('step_datetime_q'), h:t('step_datetime_h')},
+  {id:'lieu',    em:_si('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),                                       q:t('step_lieu_q'),     h:t('step_lieu_h')},
+  {id:'prix',    em:_si('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),                                       q:t('step_prix_q'),     h:t('step_prix_h')},
+  {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:t('step_desc_q'),     h:t('step_desc_h')},
+  {id:'recurrence',em:_si('<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/>'), q:t('step_rec_q'),      h:t('step_rec_h')},
+];}
+_initStepDefs();
 
 var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
 var _sc=0;
@@ -13272,6 +13274,7 @@ function applyLangDOM(){
   var loginCode=document.getElementById('loginLangCode');
   if(loginCode)loginCode.textContent=(window._i18nLang||'fr').toUpperCase();
   _initAccTitles();
+  _initStepDefs();
 }
 
 function applyLang(){

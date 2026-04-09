@@ -437,7 +437,7 @@
       </div>
       <div class="lfield" style="margin-top:4px">
         <label>Prénom de l'enfant (optionnel)</label>
-        <input id="pcEnfantPrenom" type="text" placeholder="Ex : Lucas">
+        <input id="pcEnfantPrenom" type="text" data-i18n-ph="ph_enfant_prenom" placeholder="Ex : Lucas">
       </div>
       <div class="lfield" style="margin-top:4px">
         <label>Age de l'enfant (optionnel)</label>
@@ -524,7 +524,7 @@
       </div>
       <div class="lfield" style="margin-top:12px" id="pcEtabWrap">
         <label id="pcEtabLabel">Établissement <span style="font-weight:400;color:var(--lite)">(optionnel)</span></label>
-        <input id="pcEtablissement" type="text" placeholder="Ex : Collège Victor Hugo, Lycée Carnot…">
+        <input id="pcEtablissement" type="text" data-i18n-ph="ph_etablissement" placeholder="Ex : Collège Victor Hugo, Lycée Carnot…">
       </div>
       <div class="lreg-role-sep" style="margin-top:6px"><span data-i18n="pc_mode_sep">Mode de cours</span></div>
       <div class="pc-mode-toggle">
@@ -593,10 +593,10 @@
       <div class="search-pill" id="searchPill" onclick="openInlineSearch()">
         <svg class="pill-icon" id="pillIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
         <div class="pill-text" id="pillTextWrap">
-          <div class="pill-main" id="searchPillMain">Que cherches-tu ?</div>
-          <div class="pill-sub" id="searchPillSub">Matière · Professeur · Code privé</div>
+          <div class="pill-main" id="searchPillMain" data-i18n="search_title">Que cherches-tu ?</div>
+          <div class="pill-sub" id="searchPillSub" data-i18n="search_sub">Matière · Professeur · Code privé</div>
         </div>
-        <input id="pillSearchInput" type="text" placeholder="Maths, Python, anglais…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
+        <input id="pillSearchInput" type="text" data-i18n-ph="ph_search_pill" placeholder="Maths, Python, anglais…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
           style="display:none;flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);-webkit-appearance:none;min-width:0;padding:0"
           oninput="_pillDoFilter(this.value)">
         <div class="pill-divider" id="pillDivider"></div>
@@ -1545,7 +1545,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
                   </div>
                   <span class="pref-label">Prénom de l'enfant</span>
-                  <input id="enfantPrenomInput" type="text" placeholder="Ex : Lucas"
+                  <input id="enfantPrenomInput" type="text" data-i18n-ph="ph_enfant_prenom" placeholder="Ex : Lucas"
                     style="border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:right;outline:none;width:120px;-webkit-appearance:none"
                     onchange="saveEnfantPrenom(this.value)">
                 </div>
@@ -2165,7 +2165,7 @@
     <!-- Zone message groupé (dépliable) -->
     <div id="espCaMsgForm" style="display:none;padding:12px 16px;border-top:1px solid var(--bdr);margin-top:12px">
       <div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Message groupé</div>
-      <textarea id="espCaMsgText" placeholder="Écris un message pour tous les élèves inscrits à ce cours…" class="esp-input esp-textarea" rows="3"></textarea>
+      <textarea id="espCaMsgText" data-i18n-ph="espca_msg_ph" placeholder="Écris un message pour tous les élèves inscrits à ce cours…" class="esp-input esp-textarea" rows="3"></textarea>
       <button onclick="espCaMsgSubmit()" class="esp2-btn-submit" style="margin-top:8px">Envoyer à tous</button>
     </div>
     <!-- Zone inscrits (dépliable) -->
@@ -2285,31 +2285,31 @@
 
       <!-- Titre -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Titre du cours</div>
+        <div class="cr-section-title" data-i18n="step_titre_q">Titre du cours</div>
         <div class="cr-card">
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <input class="cr-input-plain" id="crTitre" type="text" placeholder="Ex : Algèbre linéaire pour débutants…" style="font-size:15px;font-weight:500">
+            <input class="cr-input-plain" id="crTitre" type="text" data-i18n-ph="cr_titre_ph" placeholder="Ex : Algèbre linéaire pour débutants…" style="font-size:15px;font-weight:500">
           </div>
         </div>
       </div>
 
       <!-- Matière — cercles horizontaux -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Matière</div>
+        <div class="cr-section-title" data-i18n="dup_field_mat">Matière</div>
         <div id="crMatSections"></div>
         <input type="hidden" id="crSubjHidden" value="">
       </div>
 
       <!-- Format : Présentiel / Visio -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Format</div>
+        <div class="cr-section-title" data-i18n="cr_section_format">Format</div>
         <div style="display:flex;gap:10px">
           <button class="cr-mode-btn on" id="crModePres" onclick="pickCrMode('presentiel')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Présentiel
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-i18n="mode_pres">Présentiel</span>
           </button>
           <button class="cr-mode-btn" id="crModeVis" onclick="pickCrMode('visio')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span data-i18n="mode_visio">Visio</span>
           </button>
         </div>
         <input type="hidden" id="crModeHidden" value="presentiel">
@@ -2317,12 +2317,12 @@
 
       <!-- Niveau -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Niveau visé</div>
+        <div class="cr-section-title" data-i18n="step_niveau_q">Niveau visé</div>
         <div style="display:flex;gap:7px;overflow-x:auto;padding:2px 0 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap" id="crNiveauChips">
-          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="" style="flex-shrink:0">Tous</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire" style="flex-shrink:0">Primaire</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège" style="flex-shrink:0">Collège</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée" style="flex-shrink:0">Lycée</div>
+          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="" style="flex-shrink:0" data-i18n="niv_tous">Tous</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire" style="flex-shrink:0" data-i18n="niv_prim_lbl">Primaire</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège" style="flex-shrink:0" data-i18n="niv_col_lbl">Collège</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée" style="flex-shrink:0" data-i18n="niv_lyc_lbl">Lycée</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+1/2" style="flex-shrink:0">Bac+1/2</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+3/4" style="flex-shrink:0">Bac+3/4</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+5" style="flex-shrink:0">Bac+5</div>
@@ -2332,21 +2332,21 @@
 
       <!-- Quand & Où -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Quand &amp; Où</div>
+        <div class="cr-section-title" data-i18n="cr_section_quandou">Quand &amp; Où</div>
         <div class="cr-card">
           <label class="cr-row" for="crDate" style="cursor:pointer;-webkit-tap-highlight-color:transparent">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px">Date</span>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px" data-i18n="cr_date_lbl">Date</span>
             <input id="crDate" type="date" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);text-align:right;-webkit-appearance:none;appearance:none;cursor:pointer;min-height:24px">
           </label>
           <label class="cr-row" for="crHeure" style="cursor:pointer;-webkit-tap-highlight-color:transparent">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px">Heure</span>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px" data-i18n="cr_heure_lbl">Heure</span>
             <input id="crHeure" type="time" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);text-align:right;-webkit-appearance:none;appearance:none;cursor:pointer;min-height:24px">
           </label>
           <div class="cr-row" style="position:relative">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input class="cr-input-plain" id="crLieu" type="text" placeholder="Ville ou adresse…" oninput="searchLieu(this.value)" autocomplete="off">
+            <input class="cr-input-plain" id="crLieu" type="text" data-i18n-ph="cr_lieu_ph" placeholder="Ville ou adresse…" oninput="searchLieu(this.value)" autocomplete="off">
             <div id="lieuSuggestions" style="position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--wh);border-radius:14px;z-index:100;display:none;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07)"></div>
           </div>
         </div>
@@ -2354,22 +2354,22 @@
 
       <!-- Infos pratiques -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Infos pratiques</div>
+        <div class="cr-section-title" data-i18n="cr_section_pratique">Infos pratiques</div>
         <div class="cr-card">
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex:1">Durée</span>
+            <span style="font-size:15px;color:var(--mid);flex:1" data-i18n="cr_duree">Durée</span>
             <input id="crDuree" type="number" value="60" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:right;width:60px;padding:0">
             <span style="font-size:14px;color:var(--lite)">min</span>
           </div>
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex:1">Places max</span>
+            <span style="font-size:15px;color:var(--mid);flex:1" data-i18n="cr_step_places_lbl">Places max</span>
             <input id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:right;width:60px;padding:0">
           </div>
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex:1">Prix total</span>
+            <span style="font-size:15px;color:var(--mid);flex:1" data-i18n="cr_prix_total">Prix total</span>
             <input id="cPr" type="number" placeholder="0" oninput="calcH()" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:right;width:60px;padding:0">
             <span style="font-size:14px;color:var(--lite)">€</span>
           </div>
@@ -2379,25 +2379,25 @@
 
       <!-- Description — obligatoire -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Description</div>
+        <div class="cr-section-title" data-i18n="step_desc_q">Description</div>
         <div class="cr-card">
           <div class="cr-row" style="align-items:flex-start;padding:14px 16px">
-            <textarea id="crDesc" rows="3" placeholder="Niveau requis, programme abordé, prérequis…" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;color:var(--ink);resize:none;line-height:1.6;padding:0;min-height:64px"></textarea>
+            <textarea id="crDesc" rows="3" data-i18n-ph="cr_desc_ph" placeholder="Niveau requis, programme abordé, prérequis…" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;color:var(--ink);resize:none;line-height:1.6;padding:0;min-height:64px"></textarea>
           </div>
         </div>
       </div>
 
       <!-- Cours privé -->
       <div style="margin-bottom:8px">
-        <div class="cr-section-title">Options</div>
+        <div class="cr-section-title" data-i18n="cr_section_options">Options</div>
         <div class="cr-card">
           <div class="cr-row" style="padding:14px 16px">
             <div style="width:36px;height:36px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
             <div style="flex:1">
-              <div style="font-size:15px;font-weight:600;color:var(--ink)">Cours privé</div>
-              <div style="font-size:12px;color:var(--lite);margin-top:1px">Accès par code uniquement</div>
+              <div style="font-size:15px;font-weight:600;color:var(--ink)" data-i18n="nc_prive">Cours privé</div>
+              <div style="font-size:12px;color:var(--lite);margin-top:1px" data-i18n="cr_prive_sub">Accès par code uniquement</div>
             </div>
             <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
               <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
