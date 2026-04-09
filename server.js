@@ -1085,13 +1085,20 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
       if (existing) return res.json({ success: true, already_existed: true });
     }
 
-    // Vérification places disponibles — anti-surbooking (race condition entre PI création et confirmation)
+    // Vérification places disponibles — anti-surbooking automatique
     if (!pour_ami) {
-      const { data: coursCheck } = await supabase.from('cours').select('places_max,places_prises').eq('id', cours_id).single();
+      const { data: coursCheck } = await supabase.from('cours').select('places_max,places_prises,titre').eq('id', cours_id).single();
       if (coursCheck && coursCheck.places_prises >= coursCheck.places_max) {
-        console.warn(`[STRIPE] Paiement OK mais cours complet — cours_id: ${cours_id} | user_id: ${user_id}`);
-        // Le paiement est déjà encaissé — on crée quand même la réservation et on notifie pour traitement manuel
-        discordAlert(`⚠️ **Surbooking détecté**\n> **Cours :** \`${cours_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant encaissé :** ${montant}€\n> Remboursement manuel à traiter.`);
+        console.warn(`[STRIPE] Cours complet — remboursement auto — cours_id: ${cours_id} | user_id: ${user_id}`);
+        // Remboursement automatique via Stripe
+        try {
+          await stripe.refunds.create({ payment_intent: payment_intent_id });
+        } catch(refundErr) {
+          console.error(`[STRIPE] Échec remboursement auto: ${refundErr.message}`);
+          discordAlert(`🚨 **Échec remboursement auto**\n> **PI :** \`${payment_intent_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant :** ${montant}€\n> Remboursement manuel requis.`);
+        }
+        discordAlert(`ℹ️ **Surbooking évité — remboursement auto**\n> **Cours :** ${coursCheck.titre}\n> **Élève :** \`${user_id}\`\n> **Montant remboursé :** ${montant}€`);
+        return res.status(409).json({ error: 'Ce cours est complet. Vous allez être remboursé sous 5-10 jours ouvrés.' });
       }
     }
 
