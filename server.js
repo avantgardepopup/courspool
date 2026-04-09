@@ -1846,7 +1846,7 @@ app.post('/upload/cni', async (req, res) => {
   if (!storagePath || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   try {
-    const { data: urlData } = supabase.storage.from('verifications').getPublicUrl(storagePath);
+    const { data: urlData } = supabase.storage.from('verification').getPublicUrl(storagePath);
     const cniUrl = urlData.publicUrl;
     await supabase.from('profiles').update({
       cni_uploaded: true,
@@ -1868,7 +1868,7 @@ app.post('/upload/diplome', async (req, res) => {
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Réservé aux professeurs' });
   try {
-    const { data: urlData } = supabase.storage.from('verifications').getPublicUrl(storagePath);
+    const { data: urlData } = supabase.storage.from('verification').getPublicUrl(storagePath);
     const diplomeUrl = urlData.publicUrl;
     await supabase.from('profiles').update({ diplome_uploaded: true, diplome_url: diplomeUrl, diplome_verifie: false }).eq('id', userId);
     res.json({ success: true, url: diplomeUrl });
@@ -1886,7 +1886,7 @@ app.post('/upload/casier', requireAuth, async (req, res) => {
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Réservé aux professeurs' });
   try {
-    const { data: urlData } = supabase.storage.from('verifications').getPublicUrl(storagePath);
+    const { data: urlData } = supabase.storage.from('verification').getPublicUrl(storagePath);
     const casierUrl = urlData.publicUrl;
     await supabase.from('profiles').update({ casier_uploaded: true, casier_url: casierUrl, casier_verifie: false }).eq('id', userId);
     res.json({ success: true, url: casierUrl });

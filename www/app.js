@@ -1334,7 +1334,7 @@ async function _uploadToStorage(file, folder){
   var ext=(file.name.split('.').pop()||'bin').toLowerCase();
   var uid=user&&user.id||'unknown';
   var path=folder+'/'+uid+'/'+Date.now()+'.'+ext;
-  var result=await window._supabase.storage.from('verifications').upload(path,file,{cacheControl:'3600',upsert:false});
+  var result=await window._supabase.storage.from('verification').upload(path,file,{cacheControl:'3600',upsert:false});
   if(result.error)throw result.error;
   return result.data.path;
 }
