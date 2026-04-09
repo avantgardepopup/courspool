@@ -458,7 +458,7 @@ function _buildFavCard2Col(c,idx){
   var modeSolid=isV?'#0071E3':'#00A550';
   div.innerHTML='<div class="fav2-img" style="height:'+imgH+'px;background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22);position:relative;overflow:hidden">'
     +'<div style="position:absolute;top:9px;left:9px;right:44px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:5px">'
-    +'<span class="fav2-subj" style="background:'+mat.color+';position:static;max-width:100%">'+esc(c.subj||'Cours')+'</span>'
+    +'<span class="fav2-subj" style="background:'+mat.color+';position:static;max-width:100%">'+esc(subjL(c.subj)||t('card_cours')||'Cours')+'</span>'
     +'<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;color:'+modeSolid+';font-size:9px;font-weight:700;border-radius:50px;padding:3px 7px 3px 5px;box-shadow:0 1px 4px rgba(0,0,0,.15)">'+modeIco+(isV?'Visio':'Présentiel')+'</span>'
     +'</div>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'+avInner+'</div>'
@@ -2754,7 +2754,7 @@ function buildAccLists(){
         var _favBg=_isDkFav?(mat.bgDark||mat.bg):mat.bg;
         profCoursHtml+='<div class="fav-cours-card" onclick="openR(\''+esc(c.id)+'\')">'
           +'<div class="fav-cours-card-top" style="background:'+_favBg+'">'
-          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
+          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(subjL(c.subj))+'</span>'
           +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">'+t('rr_complet')+'</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
           +'</div>'
           +'<div class="fav-cours-card-body">'
@@ -2809,7 +2809,7 @@ function buildAccLists(){
         // Bande colorée + matière + titre
         +'<div style="background:'+_bg+';padding:14px 16px 12px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(c.subj)+'</span>'
+        +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(subjL(c.subj))+'</span>'
         +(isPast?'<span class="rbadge bdone" style="font-size:10px">Terminé</span>':'<span class="rbadge bup" style="font-size:10px">À venir</span>')
         +'</div>'
         +'<div style="font-size:15px;font-weight:800;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
@@ -3222,7 +3222,7 @@ function _buildCourseCard(c){
     ?('<img src="'+esc(_pPhoto)+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'+_avIniSpan)
     :_avIniSpan;
   var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
-  var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
+  var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(subjL(c.subj))+'</span>';
   var modeIcon=_isVisio?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>';
   var miniFollowBtn='';
@@ -3636,6 +3636,11 @@ var MATIERES = [
   {label:'Autre',                  key:'autre',          color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)', bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
 
+// Helper: label traduit d'une matière (retombe sur label FR si clé absente)
+function mL(m){return (typeof t==='function'&&t('mat_'+m.key))||m.label;}
+// Helper: traduire un sujet stocké en DB (peut être label FR ou clé)
+function subjL(subj){var m=findMatiere(subj||'');return m?mL(m):(subj||'');}
+
 // Fonction pour normaliser une chaîne
 function normStr(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
 
@@ -3659,9 +3664,9 @@ function openMatFilter(){
     list.innerHTML=MATIERES.map(function(m,i){
       var isOn=(g('crSubjHidden')&&g('crSubjHidden').value===m.key);
       var border=i<MATIERES.length-1?'border-bottom:1px solid var(--bdr)':'';
-      return'<div onclick="pickMatFromSheet(\''+m.key+'\',\''+m.label+'\',\''+m.color+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .12s;'+border+'">'
+      return'<div onclick="pickMatFromSheet(\''+m.key+'\',\''+mL(m)+'\',\''+m.color+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .12s;'+border+'">'
         +'<div style="width:10px;height:10px;border-radius:50%;background:'+m.color+';flex-shrink:0"></div>'
-        +'<span style="flex:1;font-size:15px;font-weight:'+(isOn?'700':'500')+';color:'+(isOn?'var(--or)':'var(--ink)')+'">'+m.label+'</span>'
+        +'<span style="flex:1;font-size:15px;font-weight:'+(isOn?'700':'500')+';color:'+(isOn?'var(--or)':'var(--ink)')+'">'+mL(m)+'</span>'
         +(isOn?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>':'')
         +'</div>';
     }).join('');
@@ -3691,14 +3696,14 @@ function onMatInput(val, dropdownId, hiddenId){
   var n=normStr(val);
   // Filtrer les matières
   var matches=val.length===0?MATIERES:MATIERES.filter(function(m){
-    return normStr(m.label).includes(n)||m.key.includes(n);
+    return normStr(m.label).includes(n)||normStr(mL(m)).includes(n)||m.key.includes(n);
   });
   if(!matches.length){box.style.display='none';return;}
   box.innerHTML=matches.map(function(m){
     return'<div class="mat-item" onclick="pickMatiere(\''
-      +m.key+'\',\''+m.label+'\',\''+dropdownId+'\',\''+hiddenId+'\',this)">'
+      +m.key+'\',\''+mL(m)+'\',\''+dropdownId+'\',\''+hiddenId+'\',this)">'
       +'<div class="mat-dot" style="background:'+m.color+'"></div>'
-      +'<span>'+m.label+'</span>'
+      +'<span>'+mL(m)+'</span>'
       +'</div>';
   }).join('');
   box.style.display='block';
@@ -3875,7 +3880,7 @@ function renderFilterBar(){
     var pill=document.createElement('button');
     pill.className='filter-pill-btn pill'+(actF===key?' on':'');
     pill.dataset.f=key;
-    pill.textContent=f.label;
+    pill.textContent=t('fchip_'+f.key)||f.label;
     pill.onclick=function(){setPill(pill);};
     bar.insertBefore(pill,addBtn);
   });
@@ -3918,7 +3923,7 @@ function viewCoursCard(id){
   curId=c.id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
-  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
+  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=subjL(c.subj)||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
   var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
@@ -3966,7 +3971,7 @@ function openR(id){haptic(4);
   curId=id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
-  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
+  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=subjL(c.subj)||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
   var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
@@ -4133,7 +4138,7 @@ function confO(){
   curId=id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title+' · Place supplémentaire';
-  g('rSbj').textContent=c.subj;
+  g('rSbj').textContent=subjL(c.subj);
   g('rDt').textContent=c.dt;
   g('rLc').textContent=c.lc;
   g('rTot').textContent=c.tot+'€';
@@ -7179,19 +7184,19 @@ var CR_MAT_ICONS={
 
 // ── Catégories matières pour le formulaire ───────────────────────────────────
 var CR_CATEGORIES=[
-  {label:'Sciences exactes',   keys:['maths','stats','physique','chimie','svt','astro','geologie','medecine','ecologie']},
-  {label:'Numérique & Tech',   keys:['informatique','python','javascript','devweb','data','ia','electronique','design','cyber','nocode','blockchain']},
-  {label:'Langues',            keys:['francais','anglais','espagnol','allemand','italien','portugais','arabe','chinois','japonais','russe','coreen','hindi','latin','lsf']},
-  {label:'Lettres & Créativité',keys:['philo','ecriture','theatre','cinema','bd']},
-  {label:'Arts visuels',       keys:['dessin','peinture','aquarelle','arts','calligraphie','photo','illustration']},
-  {label:'Musique',            keys:['musique','piano','guitare','chant','batterie','violon','saxo']},
-  {label:'Sciences humaines',  keys:['histoire','psycho','socio','geographie','sciencespol','anthropo']},
-  {label:'Business & Droit',   keys:['economie','compta','finance','marketing','droit','entrepreneuriat','gestion','communication','rh','immo','architecture']},
-  {label:'Prépa & Concours',   keys:['prepa','pass','sciencespo','toefl','gmat']},
-  {label:'Sport',              keys:['sport','fitness','yoga','martial','danse','natation','tennis','football','basket','running','boxe','golf']},
-  {label:'Bien-être',          keys:['nutrition','devperso']},
-  {label:'Cuisine & Artisanat',keys:['cuisine','patisserie','jardinage','bricolage','couture','broderie','poterie']},
-  {label:'Jeux & Loisirs',     keys:['jeux','echecs','autre']}
+  {label:'Sciences exactes',   i18nKey:'mat_cat_sciences',  keys:['maths','stats','physique','chimie','svt','astro','geologie','medecine','ecologie']},
+  {label:'Numérique & Tech',   i18nKey:'mat_cat_numerique', keys:['informatique','python','javascript','devweb','data','ia','electronique','design','cyber','nocode','blockchain']},
+  {label:'Langues',            i18nKey:'mat_cat_langues',   keys:['francais','anglais','espagnol','allemand','italien','portugais','arabe','chinois','japonais','russe','coreen','hindi','latin','lsf']},
+  {label:'Lettres & Créativité',i18nKey:'mat_cat_lettres',  keys:['philo','ecriture','theatre','cinema','bd']},
+  {label:'Arts visuels',       i18nKey:'mat_cat_arts',      keys:['dessin','peinture','aquarelle','arts','calligraphie','photo','illustration']},
+  {label:'Musique',            i18nKey:'mat_cat_musique',   keys:['musique','piano','guitare','chant','batterie','violon','saxo']},
+  {label:'Sciences humaines',  i18nKey:'mat_cat_humaines',  keys:['histoire','psycho','socio','geographie','sciencespol','anthropo']},
+  {label:'Business & Droit',   i18nKey:'mat_cat_business',  keys:['economie','compta','finance','marketing','droit','entrepreneuriat','gestion','communication','rh','immo','architecture']},
+  {label:'Prépa & Concours',   i18nKey:'mat_cat_prepa',     keys:['prepa','pass','sciencespo','toefl','gmat']},
+  {label:'Sport',              i18nKey:'mat_cat_sport',     keys:['sport','fitness','yoga','martial','danse','natation','tennis','football','basket','running','boxe','golf']},
+  {label:'Bien-être',          i18nKey:'mat_cat_bienetre',  keys:['nutrition','devperso']},
+  {label:'Cuisine & Artisanat',i18nKey:'mat_cat_cuisine',   keys:['cuisine','patisserie','jardinage','bricolage','couture','broderie','poterie']},
+  {label:'Jeux & Loisirs',     i18nKey:'mat_cat_jeux',      keys:['jeux','echecs','autre']}
 ];
 
 function buildCrMatCircles(){
@@ -7202,7 +7207,7 @@ function buildCrMatCircles(){
       var mat=MATIERES.find(function(m){return m.key===key;});
       if(!mat)return'';
       var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
-      var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+      var lbl=mL(mat).split(' / ')[0].split(' (')[0].split(' & ')[0];
       if(lbl.length>9)lbl=lbl.slice(0,8)+'…';
       return'<div class="cr-mat-item'+(selKey===key?' on':'')+'" data-key="'+key+'" onclick="pickCrMat(\''+key+'\')">'
         +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+icon+'</svg></div>'
@@ -7211,7 +7216,7 @@ function buildCrMatCircles(){
     }).join('');
     if(!items.trim())return'';
     return'<div style="margin-bottom:16px">'
-      +'<div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:0 2px">'+cat.label+'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:0 2px">'+(t(cat.i18nKey)||cat.label)+'</div>'
       +'<div class="cr-mat-scroller">'+items+'</div>'
       +'</div>';
   }).join('');
@@ -8131,7 +8136,7 @@ function renderBarConfig(){
           ?'background:var(--or);color:#fff;box-shadow:0 2px 10px rgba(255,107,43,.3);'
           :'background:var(--wh);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07),0 0 0 0.5px rgba(0,0,0,.06);')
       +'border:none;border-radius:50px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
-      +esc(f.label)
+      +esc(t('fchip_'+f.key)||f.label)
       +(inBar?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>':'')
       +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.25);font-size:10px;font-weight:800">✕</span>':'')
       +'</button>';
@@ -10919,7 +10924,7 @@ function previewCours(){
   var dt=date&&heure?new Date(date+'T'+heure).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' \u00b7 '+heure:'Date \u00e0 d\u00e9finir';
   var card=g('previewCard');if(!card)return;
   card.innerHTML='<div style="background:'+mat.bg+';padding:14px 16px 10px">'
-    +'<span style="background:rgba(255,255,255,.7);border-radius:50px;padding:3px 10px;font-size:11.5px;font-weight:600;color:'+mat.color+'">'+mat.label+'</span></div>'
+    +'<span style="background:rgba(255,255,255,.7);border-radius:50px;padding:3px 10px;font-size:11.5px;font-weight:600;color:'+mat.color+'">'+mL(mat)+'</span></div>'
     +'<div style="padding:14px 16px"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px">'+titre+'</div>'
     +'<div style="font-size:13px;color:var(--mid);margin-bottom:4px">&#128336; '+dt+'</div>'
     +'<div style="font-size:13px;color:var(--mid);margin-bottom:12px">&#128205; '+lieu+'</div>'
@@ -11423,7 +11428,7 @@ function stepRender(idx){
         var mat=MATIERES.find(function(m){return m.key===key;});
         if(!mat)return'';
         var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
-        var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+        var lbl=mL(mat).split(' / ')[0].split(' (')[0].split(' & ')[0];
         if(lbl.length>9)lbl=lbl.slice(0,8)+'\u2026';
         var isSel=_sd.matiere_key===key;
         return'<div class="cr-mat-item'+(isSel?' on':'')+'" data-key="'+key+'" onclick="_stepPickMat(\''+key+'\',\''+escH(mat.label)+'\')" style="-webkit-tap-highlight-color:transparent">'
@@ -11433,7 +11438,7 @@ function stepRender(idx){
       }).join('');
       if(!items.trim())return;
       html+='<div data-cat>'
-        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.label+'</div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+(t(cat.i18nKey)||cat.label)+'</div>'
         +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
         +'</div>';
     });
