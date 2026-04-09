@@ -35,6 +35,33 @@
   .page-nav a:hover{color:var(--ink);}
   .page-nav a.active{color:var(--or);border-bottom-color:var(--or);}
 </style>
+<script src="/lang.js"></script>
+<script>
+(function(){
+  var FLAGS={'fr':'🇫🇷','en':'🇬🇧','es':'🇪🇸','de':'🇩🇪','it':'🇮🇹','pt':'🇵🇹','da':'🇩🇰','fi':'🇫🇮','sv':'🇸🇪','pl':'🇵🇱','el':'🇬🇷'};
+  function applyLang(){
+    document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=window.t(el.getAttribute('data-i18n'));});
+    var btn=document.getElementById('_legalLangBtn');
+    if(btn)btn.textContent=FLAGS[window._i18nLang||'fr']+' '+(window._i18nLang||'fr').toUpperCase();
+  }
+  window.applyLang=applyLang;
+  window.openLegalLangPicker=function(){
+    var d=document.getElementById('_legalLangDrop');
+    if(d)d.style.display=d.style.display==='block'?'none':'block';
+  };
+  window.setLegalLang=function(code){
+    window.setLang(code);
+    var d=document.getElementById('_legalLangDrop');
+    if(d)d.style.display='none';
+    applyLang();
+  };
+  document.addEventListener('DOMContentLoaded',applyLang);
+  document.addEventListener('click',function(e){
+    var d=document.getElementById('_legalLangDrop');
+    if(d&&!d.contains(e.target)&&e.target.id!=='_legalLangBtn')d.style.display='none';
+  });
+})();
+</script>
 </head>
 <body>
 
@@ -45,7 +72,23 @@
     </svg>
   </div>
   <span>CoursPool</span>
-  <a href="https://courspool.vercel.app">← Retour à l'app</a>
+  <a href="https://courspool.vercel.app" data-i18n="legal_back">← Retour à l'app</a>
+  <div style="position:relative;margin-left:12px">
+    <button id="_legalLangBtn" onclick="openLegalLangPicker()" style="background:rgba(255,255,255,.2);border:none;border-radius:20px;padding:5px 12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🇫🇷 FR</button>
+    <div id="_legalLangDrop" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;min-width:150px;overflow:hidden">
+      <div onclick="setLegalLang('fr')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇫🇷 Français</div>
+      <div onclick="setLegalLang('en')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇬🇧 English</div>
+      <div onclick="setLegalLang('es')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇪🇸 Español</div>
+      <div onclick="setLegalLang('de')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇩🇪 Deutsch</div>
+      <div onclick="setLegalLang('it')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇮🇹 Italiano</div>
+      <div onclick="setLegalLang('pt')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇵🇹 Português</div>
+      <div onclick="setLegalLang('da')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇩🇰 Dansk</div>
+      <div onclick="setLegalLang('fi')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇫🇮 Suomi</div>
+      <div onclick="setLegalLang('sv')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇸🇪 Svenska</div>
+      <div onclick="setLegalLang('pl')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0ede8">🇵🇱 Polski</div>
+      <div onclick="setLegalLang('el')" style="padding:10px 14px;cursor:pointer;font-size:13px;font-weight:500;color:#111;display:flex;align-items:center;gap:8px">🇬🇷 Ελληνικά</div>
+    </div>
+  </div>
 </header>
 
 <nav class="page-nav">

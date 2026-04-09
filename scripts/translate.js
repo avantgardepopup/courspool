@@ -1016,6 +1016,7 @@ const SOURCE = {
   t_select_course:      'Sélectionnez le cours d\'abord',
   btn_oui:              'Oui',
   btn_non:              'Non',
+  legal_back:           '← Retour à l\'app',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────
