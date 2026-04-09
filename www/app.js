@@ -7301,16 +7301,68 @@ function dupCours(id){
   };
 
   closeR();
-  setTimeout(function(){
-    if(!g('bdCrStep'))buildStepDOM();
-    // Aller directement à l'étape date/heure — tout le reste est pré-rempli
-    var dtIdx=STEP_DEFS.findIndex(function(s){return s.id==='datetime';});
-    stepRender(dtIdx>=0?dtIdx:5);
-    g('bdCrStep').classList.add('active');
-    setTimeout(_crStepVpAdjust,50);
-    haptic(10);
-    toast('Cours dupliqué','Choisissez la nouvelle date — tout le reste est pré-rempli');
-  },300);
+  setTimeout(function(){_openDupSheet(c);},300);
+}
+
+function _openDupSheet(c){
+  haptic(4);
+  var COPY='<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>';
+  var CAL='<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+  var EDIT='<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>';
+
+  // Résumé des champs pré-remplis
+  var rows=[
+    {k:'Matière',  v:_sd.matiere||'—'},
+    {k:'Niveau',   v:_sd.niveau||'—'},
+    {k:'Mode',     v:_sd.mode==='visio'?'Visio':'Présentiel'},
+    {k:'Prix',     v:_sd.prix?_sd.prix+'€':'—'},
+    {k:'Places',   v:_sd.places||'—'},
+    {k:'Lieu',     v:_sd.lieu||(_sd.mode==='visio'?'Lien auto-généré':'—')},
+  ].map(function(r){
+    return'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr)">'
+      +'<span style="font-size:13px;color:var(--lite)">'+r.k+'</span>'
+      +'<span style="font-size:13px;font-weight:600;color:var(--ink)">'+esc(String(r.v))+'</span>'
+      +'</div>';
+  }).join('');
+
+  var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
+    +'<div style="padding:18px 20px 10px;display:flex;align-items:center;gap:12px">'
+    +'<div style="width:42px;height:42px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20">'+COPY+'</svg>'
+    +'</div>'
+    +'<div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Dupliquer ce cours</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:2px">'+esc(c.title||'')+'</div>'
+    +'</div>'
+    +'</div>'
+    // Résumé
+    +'<div style="margin:4px 20px 16px;background:var(--bg);border-radius:14px;padding:4px 14px">'+rows+'</div>'
+    // Option 1 — juste la date
+    +'<div style="padding:0 14px;display:flex;flex-direction:column;gap:8px">'
+    +'<button onclick="closeQuickSheet();_dupOpen(\'date\')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--or);border:none;border-radius:16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">'
+    +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="17" height="17">'+CAL+'</svg></div>'
+    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:#fff">Choisir une nouvelle date</div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">Tout le reste reste identique</div></div>'
+    +'</button>'
+    // Option 2 — tout modifier
+    +'<button onclick="closeQuickSheet();_dupOpen(\'full\')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg);border:none;border-radius:16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">'
+    +'<div style="width:36px;height:36px;border-radius:10px;background:var(--wh);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="17" height="17">'+EDIT+'</svg></div>'
+    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:var(--ink)">Modifier les détails</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Revoir chaque étape</div></div>'
+    +'</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;padding:13px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>'
+    +'</div>'
+    +'<div style="height:max(16px,env(safe-area-inset-bottom,16px))"></div>';
+  showQuickSheet(html);
+}
+
+function _dupOpen(mode){
+  if(!g('bdCrStep'))buildStepDOM();
+  var startStep=mode==='date'
+    ?STEP_DEFS.findIndex(function(s){return s.id==='datetime';})
+    :0;
+  stepRender(startStep>=0?startStep:5);
+  g('bdCrStep').classList.add('active');
+  setTimeout(_crStepVpAdjust,50);
+  haptic(10);
 }
 
 function confirmDeleteCoursNative(id){
