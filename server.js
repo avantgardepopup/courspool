@@ -659,6 +659,8 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
       matieres: req.body.matieres || null,
       verified: role === 'eleve' ? true : false
     }]);
+    const ip = req.ip || req.connection.remoteAddress;
+    console.log(`[AUTH] Inscription — email: ${email} | role: ${role} | ip: ${ip}`);
     // Email de bienvenue
     const userName = (prenom + ' ' + (nom||'')).trim();
     sendEmailWelcome(email, prenom || userName, role).catch(() => {});
@@ -686,11 +688,20 @@ app.post('/auth/refresh', authRateLimit, async (req, res) => {
 app.post('/auth/login', authRateLimit, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
+  const ip = req.ip || req.connection.remoteAddress;
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return res.status(400).json({ error: error.message });
+    if (error) {
+      // Log de chaque tentative échouée — utile pour détecter un bruteforce
+      console.warn(`[AUTH] Échec login — email: ${email} | ip: ${ip} | raison: ${error.message}`);
+      return res.status(400).json({ error: error.message });
+    }
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-    if (profile?.statut_compte === 'bloqué') return res.status(403).json({ error: 'Compte bloqué' });
+    if (profile?.statut_compte === 'bloqué') {
+      console.warn(`[AUTH] Tentative login compte bloqué — email: ${email} | ip: ${ip}`);
+      return res.status(403).json({ error: 'Compte bloqué' });
+    }
+    console.log(`[AUTH] Login réussi — email: ${email} | ip: ${ip}`);
     res.json({ user: data.user, session: data.session, profile });
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
