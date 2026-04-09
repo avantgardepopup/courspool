@@ -78,6 +78,35 @@ var _isOAuthReturn=window.location.hash.indexOf('access_token')!==-1||window.loc
 function _hideSplash(){
   var sp=document.getElementById('splash');
   if(sp){sp.style.opacity='0';setTimeout(function(){sp.style.display='none';},500);}
+  // Deep link depuis une URL SEO (/cours/id ou /prof/id)
+  setTimeout(_handleDeepLink,600);
+}
+
+var _deepLinkHandled=false;
+function _handleDeepLink(){
+  if(_deepLinkHandled)return;
+  var dl=window.__CP_DEEP__;
+  // Fallback : lire le pathname si pas injecté par le serveur
+  if(!dl){
+    var m=window.location.pathname.match(/^\/(cours|prof)\/([^/]+)$/);
+    if(m)dl={type:m[1],id:m[2]};
+  }
+  if(!dl)return;
+  _deepLinkHandled=true;
+  // Nettoyer l'URL dans la barre d'adresse sans recharger
+  try{window.history.replaceState({},'','/');}catch(e){}
+  if(dl.type==='cours'){
+    var c=C.find(function(x){return String(x.id)===String(dl.id);});
+    if(c){openR(dl.id);}
+    else{
+      // Cours pas encore dans le cache local (privé ou non chargé) — fetch direct
+      fetch(API+'/cours/'+dl.id).then(function(r){return r.ok?r.json():null;}).then(function(data){
+        if(data&&!data.error){C.push({id:data.id,title:data.titre||'',subj:data.sujet||'',mode:data.mode||'presentiel',dt:data.date_heure||'',dt_iso:data.date_heure||'',lc:data.lieu||'',tot:data.prix_total||0,sp:data.places_max||5,fl:data.places_prises||0,pr:data.professeur_id,prof_nm:data.prof_nom||'',prof_photo:data.prof_photo||null,prof_ini:(data.prof_nom||'?')[0].toUpperCase(),prof_col:'linear-gradient(135deg,#FF8C55,#E04E10)',description:data.description||'',niveau:data.niveau||'',prive:data.prive||false,code:data.code_acces||''});openR(dl.id);}
+      }).catch(function(){});
+    }
+  } else if(dl.type==='prof'){
+    openPrFull(dl.id);
+  }
 }
 window.addEventListener('DOMContentLoaded',function(){
   applyLangDOM();
