@@ -1,0 +1,18 @@
+name: Alerte Discord — Dependabot
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Envoyer alerte Discord
+        run: |
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"**Mise à jour de sécurité disponible**\n> **PR :** ${{ github.event.pull_request.title }}\n> **Ouverte par :** Dependabot\n> Merci de vérifier et merger si tout est bon.\"
+            }"
