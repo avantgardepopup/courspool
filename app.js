@@ -13970,7 +13970,7 @@ function _vOpenDemo(){
   document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
   _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
-  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
   _isRecording=false;
   if(_callTimer)clearInterval(_callTimer);
   _updateVisioTimer();
@@ -14022,8 +14022,9 @@ function _vBuildDemoTile(f){
   if(!f.local){
     var pc=document.createElement('div');
     pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
-    pc.innerHTML='<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
-      +'<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Mute</button>';
+    var bs2='border:none;color:#fff;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,.35);';
+    pc.innerHTML='<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="'+bs2+'background:#FF6B2B;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
+      +'<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="'+bs2+'background:rgba(255,255,255,.15);backdrop-filter:blur(4px);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Mute</button>';
     wrap.appendChild(pc);
   }
   wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
@@ -14033,6 +14034,7 @@ var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_board
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
+var _vComments=[],_vCommentOpen=false,_vCommentAllowed=true;
 
 function openVisioModal(url){
   if(!url)return;
@@ -14049,7 +14051,7 @@ function openVisioModal(url){
   var nav=g('bnav');if(nav)nav.style.display='none';
   _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
   _sharing=false;_boardActive=false;_raisedHands={};
-  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
   _isRecording=false;
   if(_callTimer)clearInterval(_callTimer);
   _updateVisioTimer();
@@ -14070,7 +14072,7 @@ function _buildVisioHTML(){
     +'</div>'
     +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;flex-shrink:0">00:00</div>'
     +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
-    +(_isOwner?'<button onclick="_vToggleRecord()" id="_vRecBtn" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:50px;padding:5px 12px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 10 10" fill="#fc8181" width="10" height="10"><circle cx="5" cy="5" r="5"/></svg>Enreg.</button>':'')
+    +''
     +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s">✕ Quitter</button>'
     +'</div></div>'
     // Raised hands panel
@@ -14088,6 +14090,17 @@ function _buildVisioHTML(){
     +'<div style="padding:14px 16px 10px;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">Participants</div>'
     +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
     +'</div>'
+    // Comment panel (slide-in from right)
+    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:rgba(10,10,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
+    +'<div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em">Commentaires</span>'
+    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
+    +'</div>'
+    +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;"></div>'
+    +'<div style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
+    +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
+    +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+    +'</div></div>'
     +'</div>'
     // Reactions panel (above controls)
     +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:rgba(10,10,20,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
@@ -14097,10 +14110,10 @@ function _buildVisioHTML(){
     +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;box-shadow:0 -1px 0 rgba(255,255,255,.06)">'
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
-    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M18 11V6a2 2 0 00-4 0v5M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8l-2-1.5a1.5 1.5 0 00-2 2l3 4a5 5 0 0010 0V9a2 2 0 00-4 0z"/></svg></button>'
-    +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8h4M7 12h4M15 8l2 4-2 4"/></svg></button>'
+    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg></button>'
+    +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +'<button id="_vReactBtn" onclick="_vToggleReact()" style="'+cs+'" title="Réactions"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="#fff" stroke="none"/><circle cx="15" cy="9" r="1" fill="#fff" stroke="none"/></svg></button>'
+    +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></button>'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
     +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
@@ -14233,6 +14246,11 @@ function _vOnMsg(evt){
     }
   }else if(m.type==='reaction'){
     _vShowFloatReact(from,m.emoji);
+  }else if(m.type==='comment'){
+    if(_vCommentAllowed||_isOwner)_vAddComment(m.name||'Élève',m.text||'',false);
+  }else if(m.type==='comment_policy'){
+    _vCommentAllowed=!!m.allowed;
+    if(!_isOwner)toast(_vCommentAllowed?'Commentaires autorisés':'Commentaires bloqués par le prof','');
   }
 }
 
@@ -14463,10 +14481,52 @@ function _vShowFloatReact(sid,emoji){
 }
 function _vTogglePeople(){
   _peopleOpen=!_peopleOpen;
+  if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp)cp.style.display='none';var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
   var panel=g('_vPeople');if(panel)panel.style.display=_peopleOpen?'flex':'none';
   var btn=g('_vPeopleBtn');
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   if(_peopleOpen)_vUpdatePeople();
+}
+function _vToggleComment(){
+  _vCommentOpen=!_vCommentOpen;
+  if(_vCommentOpen&&_peopleOpen){_peopleOpen=false;var pp=g('_vPeople');if(pp)pp.style.display='none';var pb=g('_vPeopleBtn');if(pb){pb.style.background='rgba(255,255,255,.12)';pb.style.boxShadow='';}}
+  var panel=g('_vComment');if(panel)panel.style.display=_vCommentOpen?'flex':'none';
+  var btn=g('_vCommentBtn');
+  if(btn){btn.style.background=_vCommentOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_vCommentOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+  if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
+}
+function _vToggleCommentAllow(){
+  if(!_isOwner)return;
+  _vCommentAllowed=!_vCommentAllowed;
+  var btn=g('_vComAllowBtn');
+  if(btn){btn.textContent=_vCommentAllowed?'Autorisés':'Bloqués';btn.style.background=_vCommentAllowed?'rgba(255,107,43,.85)':'rgba(255,255,255,.15)';}
+  if(_callObj)_callObj.sendAppMessage({type:'comment_policy',allowed:_vCommentAllowed},'*');
+  toast(_vCommentAllowed?'Commentaires autorisés':'Commentaires bloqués','');
+}
+function _vSendComment(){
+  if(!_vCommentAllowed&&!_isOwner){toast('Commentaires désactivés par le professeur','');return;}
+  var inp=g('_vCommentInput');if(!inp)return;
+  var text=inp.value.trim();if(!text)return;
+  inp.value='';
+  var myName=user?((user.prenom||'')+(user.nom?' '+user.nom:'')).trim()||'Moi':'Moi';
+  if(_callObj)_callObj.sendAppMessage({type:'comment',text:text,name:myName},'*');
+  _vAddComment(myName,text,true);
+}
+function _vAddComment(name,text,isLocal){
+  _vComments.push({name:name,text:text,ts:Date.now(),local:isLocal});
+  var list=g('_vCommentList');if(!list)return;
+  var el=document.createElement('div');
+  el.style.cssText='display:flex;flex-direction:column;gap:2px;align-items:'+(isLocal?'flex-end':'flex-start')+';';
+  var bubble=document.createElement('div');
+  bubble.style.cssText='max-width:85%;padding:7px 11px;border-radius:'+(isLocal?'14px 14px 4px 14px':'14px 14px 14px 4px')+';background:'+(isLocal?'#FF6B2B':'rgba(255,255,255,.12)')+';color:#fff;font-size:13px;line-height:1.4;word-break:break-word;';
+  bubble.textContent=text;
+  var nameEl=document.createElement('span');
+  nameEl.style.cssText='font-size:10px;color:rgba(255,255,255,.4);padding:0 4px;';
+  nameEl.textContent=name;
+  el.appendChild(nameEl);el.appendChild(bubble);
+  list.appendChild(el);
+  list.scrollTop=list.scrollHeight;
+  if(!_vCommentOpen){var btn=g('_vCommentBtn');if(btn)btn.style.boxShadow='0 0 0 3px #FF6B2B';}
 }
 function _vToggleRecord(){
   if(!_isOwner||(!_callObj&&!_isDemoMode))return;
@@ -15079,7 +15139,7 @@ function closeVisioModal(){
   if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;
-  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_isRecording=false;
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
   var nav=g('bnav');if(nav)nav.style.display='';
   haptic(4);
 }
