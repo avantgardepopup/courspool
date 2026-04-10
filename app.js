@@ -1329,9 +1329,15 @@ async function _initSupabase(){
 
 // ── UPLOAD VERS SUPABASE STORAGE ─────────────────────────────────────────────
 // Retourne le storagePath (bucket/folder/userId/timestamp.ext) ou throw
+var _ALLOWED_DOC_MIME=['image/jpeg','image/png','image/webp','application/pdf'];
+var _ALLOWED_DOC_EXT=['jpg','jpeg','png','webp','pdf'];
 async function _uploadToStorage(file, folder){
   if(!window._supabase)throw new Error('Supabase non disponible');
   var ext=(file.name.split('.').pop()||'bin').toLowerCase();
+  // Validation MIME type et extension avant upload
+  if(!_ALLOWED_DOC_MIME.includes(file.type)||!_ALLOWED_DOC_EXT.includes(ext)){
+    throw new Error('Format non autorisé (JPG, PNG, WEBP ou PDF uniquement)');
+  }
   var uid=user&&user.id||'unknown';
   var path=folder+'/'+uid+'/'+Date.now()+'.'+ext;
   var result=await window._supabase.storage.from('verification').upload(path,file,{cacheControl:'3600',upsert:false});
@@ -3053,6 +3059,8 @@ function saveProf(){
 
 function doLogout(){
   var _fkLogout=_folKey(); // sauvegarder la clé AVANT user=null (sinon _folKey() retourne null)
+  // Révoquer la session côté serveur (blacklist du token)
+  if(user&&user.access_token){fetch(API+'/auth/logout',{method:'POST',headers:apiH()}).catch(function(){});}
   _followsInitialized=false;
   user=null;
   _tutoLaunched=false;
@@ -3170,6 +3178,10 @@ function previewPhoto(input){
   if(!user||user.role!=='professeur'){input.value='';return;}
   if(input.files&&input.files[0]){
     var file=input.files[0];
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
+      toast(t('t_error'),'Format non autorisé (JPG, PNG ou WEBP uniquement)');
+      input.value='';return;
+    }
     if(file.size>2*1024*1024){
       toast(t('t_photo_heavy'),t('t_photo_heavy_s'));
       input.value='';return;
@@ -3299,7 +3311,7 @@ function _buildCourseCard(c){
   wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
   wrap.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
   wrap.innerHTML=
-    subjBadge+modeBadge+profAvDiv+
+    '<div class="card-badges-row">'+subjBadge+modeBadge+'</div>'+profAvDiv+
     '<div class="card card-new'+(c.prive?' card-prive':'')+'">'+
       '<div class="card-body-new">'+
         '<div class="card-title-new">'+esc(c.title)+'</div>'+
