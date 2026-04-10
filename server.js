@@ -336,6 +336,24 @@ async function logAdminAction(adminId, action, targetId, details = {}) {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Helpers de validation
+function isValidUUID(id) { return UUID_RE.test(id); }
+function requireUUID(param, res) {
+  if (!isValidUUID(param)) { res.status(400).json({ error: 'ID invalide' }); return false; }
+  return true;
+}
+function safePage(val, max = 100) { const n = parseInt(val) || 1; return Math.min(Math.max(n, 1), max); }
+function safeLimit(val, max = 50) { const n = parseInt(val) || 20; return Math.min(Math.max(n, 1), max); }
+
+// Validation automatique des params UUID via app.param()
+// S'applique à toutes les routes qui utilisent ces noms de paramètres
+['id', 'user_id', 'prof_id', 'cours_id', 'ann_id', 'cid', 'res_id', 'student_id'].forEach(function(param) {
+  app.param(param, function(req, res, next, val) {
+    if (!isValidUUID(val)) return res.status(400).json({ error: 'ID invalide' });
+    next();
+  });
+});
+
 // ============================================================
 // EMAILS — domaine vérifié Resend
 // ============================================================
@@ -807,8 +825,8 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
 
 // COURS — récupérer tous
 app.get('/cours', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 20;
+  const page = safePage(req.query.page);
+  const limit = safeLimit(req.query.limit);
   const offset = (page - 1) * limit;
   const sujet = req.query.sujet || null;
   const search = req.query.search || null;
@@ -905,6 +923,7 @@ app.get('/cours/code/:code', async (req, res) => {
 
 // COURS — export calendrier .ics
 app.get('/cours/:id/ics', requireAuth, async (req, res) => {
+  if (!requireUUID(req.params.id, res)) return;
   try {
     const { data: cours, error } = await supabase.from('cours')
       .select('id,titre,sujet,date_heure,lieu,description,professeur_id,prof_nom')
