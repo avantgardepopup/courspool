@@ -14135,6 +14135,22 @@ function _vNetSvg(q){
 
 async function _joinDailyRoom(url,roomName){
   var grid=g('_vGrid');if(grid)grid.innerHTML='<div style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:14px;height:100%">Connexion…</div>';
+  // Demander les autorisations caméra + micro avant de rejoindre
+  try{
+    var stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    stream.getTracks().forEach(function(t){t.stop();}); // Daily crée ses propres pistes
+  }catch(permErr){
+    var denied=permErr.name==='NotAllowedError'||permErr.name==='PermissionDeniedError'||permErr.name==='SecurityError';
+    var msg=denied
+      ?'Caméra ou micro refusés. Active-les dans\nRéglages > CoursPool (ou Safari).'
+      :'Caméra et micro non disponibles sur cet appareil.';
+    if(grid)grid.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.75);font-size:14px;text-align:center;padding:24px;height:100%;line-height:1.5;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="40" height="40"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="1" y1="1" x2="23" y2="23" stroke="#f87171" stroke-width="2"/></svg>'
+      +'<span style="white-space:pre-line;">'+msg+'</span>'
+      +(denied?'<button onclick="_joinDailyRoom(\''+url+'\',\''+roomName+'\')" style="background:#FF6B2B;border:none;color:#fff;padding:8px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;">Réessayer</button>':'')
+      +'</div>';
+    return;
+  }
   try{
     var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
     var td=await tr.json();
