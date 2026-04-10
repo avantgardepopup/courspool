@@ -49,7 +49,7 @@
 <!-- Le DSN frontend est une clé publique, safe à mettre ici.                           -->
 <!-- Pour injection via env var, ajouter en buildCommand : sed 's/__SENTRY_DSN__/$SENTRY_DSN/g' -->
 <script>window.SENTRY_DSN = 'https://a6091d3f297d09b49447973cee830a2d@o4511145728737280.ingest.de.sentry.io/4511145912303696';</script>
-<script defer src="https://browser.sentry-cdn.com/8.55.1/bundle.min.js" crossorigin="anonymous"></script>
+<script defer src="https://browser.sentry-cdn.com/8.55.1/bundle.min.js" crossorigin="anonymous" integrity="sha384-I2FyOdFrhSWXzJPSR9baOF/+xkaKCaKNoBe2i+S2vHOW5ZI7Cq79GczGdf4YMnX2"></script>
 <!-- Lib paiement sécurisé — chargé en async pour ne pas bloquer le démarrage -->
 <script async src="https://js.stripe.com/v3/"></script>
 <link rel="stylesheet" href="/fonts.css">
@@ -201,7 +201,13 @@
   <!-- ══ ÉCRAN CONNEXION ══ -->
   <div id="lsLogin" class="lscreen-wrap">
     <div class="lscreen-inner lscreen-login-inner">
-      <div class="lscreen-logo-text">CoursPool</div>
+      <div style="position:relative">
+        <div class="lscreen-logo-text">CoursPool</div>
+        <button onclick="openLangPicker()" style="position:absolute;top:0;right:0;background:none;border:1.5px solid var(--bdr);border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink);font-size:13px;font-weight:500" id="loginLangBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="loginLangCode">FR</span>
+        </button>
+      </div>
       <p class="lscreen-sub" data-i18n="login_subtitle">Trouvez un cours près de vous</p>
 
       <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email"></div>
@@ -431,7 +437,7 @@
       </div>
       <div class="lfield" style="margin-top:4px">
         <label>Prénom de l'enfant (optionnel)</label>
-        <input id="pcEnfantPrenom" type="text" placeholder="Ex : Lucas">
+        <input id="pcEnfantPrenom" type="text" data-i18n-ph="ph_enfant_prenom" placeholder="Ex : Lucas">
       </div>
       <div class="lfield" style="margin-top:4px">
         <label>Age de l'enfant (optionnel)</label>
@@ -479,28 +485,28 @@
   <!-- ═══ PROF SLIDE 2 : Matieres ═══ -->
   <div id="pcPfB" class="pc-slide" style="display:none">
     <div class="lreg-slide-inner">
-      <h2 class="lscreen-title">Quelles matieres enseignez-vous ?</h2>
+      <h2 class="lscreen-title" data-i18n="pc_mat_title">Quelles matieres enseignez-vous ?</h2>
       <div class="lfield">
-        <label>Rechercher</label>
-        <input id="pcMatSearch" type="text" placeholder="Ex : Maths, Physique, Anglais..." oninput="pcMatSearchInput(this.value)">
+        <label data-i18n="lbl_rechercher">Rechercher</label>
+        <input id="pcMatSearch" type="text" data-i18n-ph="pc_mat_search_ph" placeholder="Ex : Maths, Physique, Anglais..." oninput="pcMatSearchInput(this.value)">
         <div id="pcMatAlias" class="pc-mat-alias" style="display:none" onclick="pcMatAliasAccept()"></div>
       </div>
       <div class="pc-mat-popular">
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Mathematiques')">Mathematiques</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Francais')">Francais</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Anglais')">Anglais</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Physique-Chimie')">Physique-Chimie</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'SVT')">SVT</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Histoire-Geo')">Histoire-Geo</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Informatique')">Informatique</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Espagnol')">Espagnol</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Philosophie')">Philosophie</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Economie')">Economie</div>
-        <div class="lniv-chip" onclick="pcToggleMat(this,'Allemand')">Allemand</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Mathematiques')" data-i18n="mat_maths">Mathematiques</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Francais')" data-i18n="mat_francais_l">Francais</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Anglais')" data-i18n="mat_anglais">Anglais</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Physique-Chimie')" data-i18n="mat_physchim">Physique-Chimie</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'SVT')" data-i18n="mat_svt">SVT</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Histoire-Geo')" data-i18n="mat_histoire">Histoire-Geo</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Informatique')" data-i18n="mat_informatique">Informatique</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Espagnol')" data-i18n="mat_espagnol">Espagnol</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Philosophie')" data-i18n="mat_philo">Philosophie</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Economie')" data-i18n="mat_economie">Economie</div>
+        <div class="lniv-chip" onclick="pcToggleMat(this,'Allemand')" data-i18n="mat_allemand">Allemand</div>
         <div class="lniv-chip" onclick="pcToggleMat(this,'NSI')">NSI</div>
       </div>
       <div id="pcMatSelected" style="display:none;margin-top:14px">
-        <div class="pc-mat-selected-label">Selectionnees :</div>
+        <div class="pc-mat-selected-label" data-i18n="pc_mat_selected">Selectionnees :</div>
         <div id="pcMatSelectedChips" class="lniv-grid" style="margin-top:6px;margin-bottom:0"></div>
       </div>
       <button class="lbtn" style="margin-top:16px" onclick="pcNext()" data-i18n="pc_continue">Continuer</button>
@@ -518,13 +524,13 @@
       </div>
       <div class="lfield" style="margin-top:12px" id="pcEtabWrap">
         <label id="pcEtabLabel">Établissement <span style="font-weight:400;color:var(--lite)">(optionnel)</span></label>
-        <input id="pcEtablissement" type="text" placeholder="Ex : Collège Victor Hugo, Lycée Carnot…">
+        <input id="pcEtablissement" type="text" data-i18n-ph="ph_etablissement" placeholder="Ex : Collège Victor Hugo, Lycée Carnot…">
       </div>
-      <div class="lreg-role-sep" style="margin-top:6px"><span>Mode de cours</span></div>
+      <div class="lreg-role-sep" style="margin-top:6px"><span data-i18n="pc_mode_sep">Mode de cours</span></div>
       <div class="pc-mode-toggle">
-        <div class="pc-mode-item" id="pcModePres" onclick="pickPcMode('presentiel')">Presentiel</div>
-        <div class="pc-mode-item" id="pcModeVis" onclick="pickPcMode('visio')">Visio</div>
-        <div class="pc-mode-item" id="pcModeBoth" onclick="pickPcMode('les_deux')">Les deux</div>
+        <div class="pc-mode-item" id="pcModePres" onclick="pickPcMode('presentiel')" data-i18n="nc_mode_pres">Presentiel</div>
+        <div class="pc-mode-item" id="pcModeVis" onclick="pickPcMode('visio')" data-i18n="nc_mode_vis">Visio</div>
+        <div class="pc-mode-item" id="pcModeBoth" onclick="pickPcMode('les_deux')" data-i18n="mode_both">Les deux</div>
       </div>
       <button class="lbtn" style="margin-top:20px" onclick="saveProfCompletion()" data-i18n="pc_finish">Terminer</button>
       <p style="text-align:center;font-size:14px;color:var(--lite);cursor:pointer;margin-top:12px;padding:8px" onclick="saveProfCompletion()" data-i18n="pc_later">Plus tard</p>
@@ -540,7 +546,7 @@
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
-    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" data-i18n-ph="exp_search_ph" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <!-- Nav desktop -->
     <nav class="topbar-nav" id="topbarNav">
       <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
@@ -587,10 +593,10 @@
       <div class="search-pill" id="searchPill" onclick="openInlineSearch()">
         <svg class="pill-icon" id="pillIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
         <div class="pill-text" id="pillTextWrap">
-          <div class="pill-main" id="searchPillMain">Que cherches-tu ?</div>
-          <div class="pill-sub" id="searchPillSub">Matière · Professeur · Code privé</div>
+          <div class="pill-main" id="searchPillMain" data-i18n="search_title">Que cherches-tu ?</div>
+          <div class="pill-sub" id="searchPillSub" data-i18n="search_sub">Matière · Professeur · Code privé</div>
         </div>
-        <input id="pillSearchInput" type="text" placeholder="Maths, Python, anglais…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
+        <input id="pillSearchInput" type="text" data-i18n-ph="ph_search_pill" placeholder="Maths, Python, anglais…" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
           style="display:none;flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);-webkit-appearance:none;min-width:0;padding:0"
           oninput="_pillDoFilter(this.value)">
         <div class="pill-divider" id="pillDivider"></div>
@@ -598,22 +604,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
           <div id="filtersBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#E8611A;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;border:1.5px solid #fff;padding:0 2px">0</div>
         </div>
-        <button id="pillCancelBtn" onclick="event.stopPropagation();closeInlineSearch()" style="display:none;background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:0 0 0 10px;white-space:nowrap;flex-shrink:0">Annuler</button>
+        <button id="pillCancelBtn" onclick="event.stopPropagation();closeInlineSearch()" data-i18n="txt_annuler" style="display:none;background:none;border:none;color:var(--or);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:0 0 0 10px;white-space:nowrap;flex-shrink:0">Annuler</button>
       </div>
       <!-- Suggestions alias (Levenshtein) -->
       <div id="searchAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:12px;padding:9px 14px;margin-top:8px;border:1px solid rgba(255,107,43,.2)">
         <span class="alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="acceptAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
-          <button onclick="denyAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+          <button onclick="acceptAlias()" data-i18n="btn_oui" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
+          <button onclick="denyAlias()" data-i18n="btn_non" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
         </div>
       </div>
       <!-- Suggestion code cours privé -->
       <div id="searchCodeSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:12px;padding:9px 14px;margin-top:8px;border:1px solid rgba(255,107,43,.2)">
         <span class="code-label" style="font-size:13px;color:var(--mid);flex:1"></span>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button onclick="acceptCodeSearch()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Rejoindre</button>
-          <button onclick="denyCodeSearch()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+          <button onclick="acceptCodeSearch()" data-i18n="exp_join" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Rejoindre</button>
+          <button onclick="denyCodeSearch()" data-i18n="btn_non" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
         </div>
       </div>
     </div>
@@ -823,63 +829,63 @@
           <div id="barConfigGrid" style="padding:0 20px 8px"></div>
           <!-- Matières populaires avec icônes -->
           <div style="padding:4px 20px 0">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Matières populaires</div>
+            <div data-i18n="mat_pop_title" style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px">Matières populaires</div>
             <div class="ss-subject-list">
               <button class="ss-subject-row" onclick="toggleBarFilter('Maths');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 15l2 2-2 2"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Maths</span><span class="ss-subject-desc">Algèbre, géométrie, analyse…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_maths">Maths</span><span class="ss-subject-desc" data-i18n="mat_desc_maths">Algèbre, géométrie, analyse…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Physique');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Physique</span><span class="ss-subject-desc">Mécanique, optique, thermodynamique…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_physique">Physique</span><span class="ss-subject-desc" data-i18n="mat_desc_phys">Mécanique, optique, thermodynamique…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Chimie');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M9 3h6v6l3 9H6L9 9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Chimie</span><span class="ss-subject-desc">Organique, minérale, solutions…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_chimie">Chimie</span><span class="ss-subject-desc" data-i18n="mat_desc_chim">Organique, minérale, solutions…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Informatique');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Informatique</span><span class="ss-subject-desc">Algorithmes, web, bases de données…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_informatique">Informatique</span><span class="ss-subject-desc" data-i18n="mat_desc_info">Algorithmes, web, bases de données…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Anglais');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Anglais</span><span class="ss-subject-desc">Conversation, grammaire, TOEFL…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_anglais">Anglais</span><span class="ss-subject-desc" data-i18n="mat_desc_angl">Conversation, grammaire, TOEFL…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Français');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Français</span><span class="ss-subject-desc">Dissertation, grammaire, littérature…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_francais_l">Français</span><span class="ss-subject-desc" data-i18n="mat_desc_fr">Dissertation, grammaire, littérature…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Espagnol');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Espagnol</span><span class="ss-subject-desc">Conversation, conjugaison, DELE…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_espagnol">Espagnol</span><span class="ss-subject-desc" data-i18n="mat_desc_esp">Conversation, conjugaison, DELE…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Histoire-Géo');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Histoire-Géo</span><span class="ss-subject-desc">Chronologie, cartographie, géopolitique…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_histoire">Histoire-Géo</span><span class="ss-subject-desc" data-i18n="mat_desc_hist">Chronologie, cartographie, géopolitique…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Philosophie');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Philosophie</span><span class="ss-subject-desc">Dissertation, éthique, épistémologie…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_philo">Philosophie</span><span class="ss-subject-desc" data-i18n="mat_desc_philo">Dissertation, éthique, épistémologie…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('SVT');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M12 12C12 7 7 5 3 7"/><path d="M12 12c0-5 5-7 9-5"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">SVT / Biologie</span><span class="ss-subject-desc">Génétique, écologie, anatomie…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_svt">SVT / Biologie</span><span class="ss-subject-desc" data-i18n="mat_desc_svt">Génétique, écologie, anatomie…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Musique');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Musique</span><span class="ss-subject-desc">Solfège, instrument, théorie…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_musique">Musique</span><span class="ss-subject-desc" data-i18n="mat_desc_mus">Solfège, instrument, théorie…</span></div>
               </button>
               <button class="ss-subject-row" onclick="toggleBarFilter('Python');renderBarConfig()">
                 <div class="ss-subject-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="18" height="18"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/><path d="M11 7h4a2 2 0 012 2v4"/><line x1="7" y1="11" x2="7" y2="17"/><line x1="4" y1="14" x2="10" y2="14"/></svg></div>
-                <div class="ss-subject-info"><span class="ss-subject-name">Python</span><span class="ss-subject-desc">Scripts, data science, automatisation…</span></div>
+                <div class="ss-subject-info"><span class="ss-subject-name" data-i18n="mat_python">Python</span><span class="ss-subject-desc" data-i18n="mat_desc_py">Scripts, data science, automatisation…</span></div>
               </button>
             </div>
           </div>
           <!-- Custom filter input -->
           <div style="padding:8px 20px 0">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
+            <div data-i18n="filter_add_custom" style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
             <div style="display:flex;gap:8px">
-              <input id="filterInput" class="fi3" style="flex:1;font-size:15px;border-radius:14px;background:var(--bg);border:none;padding:13px 16px;outline:none;font-family:inherit;-webkit-appearance:none;color:var(--ink)" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
+              <input id="filterInput" class="fi3" style="flex:1;font-size:15px;border-radius:14px;background:var(--bg);border:none;padding:13px 16px;outline:none;font-family:inherit;-webkit-appearance:none;color:var(--ink)" data-i18n-ph="filter_custom_ph" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
               <button onclick="requestGeoloc();closeAddFilter();" title="Autour de moi" style="background:var(--bg);color:var(--or);border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 0.5px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2" opacity=".4"/></svg></button>
               <button onclick="addBarCustomFilter()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28);-webkit-tap-highlight-color:transparent">+</button>
             </div>
@@ -1118,8 +1124,8 @@
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
             </div>
-            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes Profs</div>
-            <div style="font-size:12px;color:var(--lite);margin-top:3px">Professeurs suivis</div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em" data-i18n="acc_mes_profs">Mes Profs</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px" data-i18n="acc_profs_suivis">Professeurs suivis</div>
           </div>
 
           <!-- Historique -->
@@ -1145,8 +1151,8 @@
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
-            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mon Espace</div>
-            <div style="font-size:12px;color:var(--lite);margin-top:3px">Élèves &amp; ressources</div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em" data-i18n="acc_mon_espace">Mon Espace</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px" data-i18n="acc_eleves_ressources">Élèves &amp; ressources</div>
           </div>
 
           <!-- Revenus (prof seulement) -->
@@ -1163,8 +1169,8 @@
             <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
-            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em">Mes avis</div>
-            <div style="font-size:12px;color:var(--lite);margin-top:3px">Notes &amp; commentaires</div>
+            <div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em" data-i18n="acc_mes_avis">Mes avis</div>
+            <div style="font-size:12px;color:var(--lite);margin-top:3px" data-i18n="acc_notes_commentaires">Notes &amp; commentaires</div>
           </div>
 
           <!-- Paramètres -->
@@ -1288,6 +1294,12 @@
           <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>
           </div>
+          <!-- Historique des virements -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Virements reçus</div>
+          <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revPayouts">
+            <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>
+          </div>
+
           <div style="padding:14px 16px;text-align:center">
             <div style="font-size:12px;color:var(--lite);line-height:1.6">Vos paiements sont sécurisés et virés automatiquement sur votre compte bancaire.</div>
           </div>
@@ -1461,7 +1473,7 @@
           <div id="profAvisScore" style="display:flex;align-items:center;gap:16px;background:var(--wh);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid var(--bdr)">
             <div style="text-align:center;flex-shrink:0">
               <div id="profAvisAvg" style="font-size:40px;font-weight:900;color:#FF9500;letter-spacing:-.04em">—</div>
-              <div id="profAvisStars" style="font-size:18px;color:#FF9500;letter-spacing:.05em;margin-top:-4px">☆☆☆☆☆</div>
+              <div id="profAvisStars" style="display:flex;gap:3px;justify-content:center;margin-top:4px"></div>
             </div>
             <div style="flex:1">
               <div id="profAvisCount" style="font-size:13px;color:var(--lite);font-weight:600">Aucun avis pour le moment</div>
@@ -1539,7 +1551,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
                   </div>
                   <span class="pref-label">Prénom de l'enfant</span>
-                  <input id="enfantPrenomInput" type="text" placeholder="Ex : Lucas"
+                  <input id="enfantPrenomInput" type="text" data-i18n-ph="ph_enfant_prenom" placeholder="Ex : Lucas"
                     style="border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:right;outline:none;width:120px;-webkit-appearance:none"
                     onchange="saveEnfantPrenom(this.value)">
                 </div>
@@ -1989,12 +2001,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="tp-esp-sep"></div>
-          <div class="tp-esp-row" onclick="openSendDocSheet()">
-            <div class="tp-esp-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Envoyer un document</div><div class="tp-esp-sub">Partagez un fichier avec votre prof</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
-          <div class="tp-esp-sep"></div>
           <div class="tp-esp-row" onclick="contPrFull()">
             <div class="tp-esp-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
             <div class="tp-esp-text"><div class="tp-esp-title">Écrire au professeur</div><div class="tp-esp-sub">Message direct</div></div>
@@ -2159,7 +2165,7 @@
     <!-- Zone message groupé (dépliable) -->
     <div id="espCaMsgForm" style="display:none;padding:12px 16px;border-top:1px solid var(--bdr);margin-top:12px">
       <div style="font-size:12px;font-weight:700;color:var(--mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Message groupé</div>
-      <textarea id="espCaMsgText" placeholder="Écris un message pour tous les élèves inscrits à ce cours…" class="esp-input esp-textarea" rows="3"></textarea>
+      <textarea id="espCaMsgText" data-i18n-ph="espca_msg_ph" placeholder="Écris un message pour tous les élèves inscrits à ce cours…" class="esp-input esp-textarea" rows="3"></textarea>
       <button onclick="espCaMsgSubmit()" class="esp2-btn-submit" style="margin-top:8px">Envoyer à tous</button>
     </div>
     <!-- Zone inscrits (dépliable) -->
@@ -2217,24 +2223,29 @@
     <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
     <div style="padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Ajouter un document</div>
-      <button onclick="closeAddDoc()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)">✕</button>
+      <button onclick="closeAddDoc()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">
+    <div style="padding:0 20px;display:flex;flex-direction:column;gap:12px">
       <input id="addDocTitle" type="text" placeholder="Titre du document" class="esp-input">
       <input id="addDocUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
-      <select id="addDocType" class="esp-input">
-        <option value="pdf">PDF</option>
-        <option value="video">Vidéo</option>
-        <option value="article">Article / lien</option>
-        <option value="exercice">Exercice</option>
-      </select>
-      <select id="addDocAccess" class="esp-input">
-        <option value="enrolled">🔓 Visible par tous les inscrits</option>
-        <option value="password">🔐 Protégé par mot de passe</option>
-        <option value="share">🔗 Visible uniquement via partage</option>
-      </select>
-      <div id="addDocPwBox" style="display:none">
-        <input id="addDocPw" type="text" placeholder="Mot de passe à donner" class="esp-input">
+      <!-- Type de document -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Type</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="addDocTypeGrid">
+          <button onclick="_addDocPickType('pdf',this)" class="add-doc-type-btn add-doc-type-sel" data-val="pdf">PDF</button>
+          <button onclick="_addDocPickType('video',this)" class="add-doc-type-btn" data-val="video">Vidéo</button>
+          <button onclick="_addDocPickType('article',this)" class="add-doc-type-btn" data-val="article">Article</button>
+          <button onclick="_addDocPickType('exercice',this)" class="add-doc-type-btn" data-val="exercice">Exercice</button>
+        </div>
+      </div>
+      <!-- Visibilité -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Visibilité</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="addDocAccessGrid">
+          <button onclick="_addDocPickAccess('followers',this)" class="add-doc-type-btn add-doc-type-sel" data-val="followers">Inscrits</button>
+          <button onclick="_addDocPickAccess('public',this)" class="add-doc-type-btn" data-val="public">Public</button>
+          <button onclick="_addDocPickAccess('private',this)" class="add-doc-type-btn" data-val="private">Privé</button>
+        </div>
       </div>
     </div>
     <div style="padding:16px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px))">
@@ -2279,31 +2290,31 @@
 
       <!-- Titre -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Titre du cours</div>
+        <div class="cr-section-title" data-i18n="step_titre_q">Titre du cours</div>
         <div class="cr-card">
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <input class="cr-input-plain" id="crTitre" type="text" placeholder="Ex : Algèbre linéaire pour débutants…" style="font-size:15px;font-weight:500">
+            <input class="cr-input-plain" id="crTitre" type="text" data-i18n-ph="cr_titre_ph" placeholder="Ex : Algèbre linéaire pour débutants…" style="font-size:15px;font-weight:500">
           </div>
         </div>
       </div>
 
       <!-- Matière — cercles horizontaux -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Matière</div>
+        <div class="cr-section-title" data-i18n="dup_field_mat">Matière</div>
         <div id="crMatSections"></div>
         <input type="hidden" id="crSubjHidden" value="">
       </div>
 
       <!-- Format : Présentiel / Visio -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Format</div>
+        <div class="cr-section-title" data-i18n="cr_section_format">Format</div>
         <div style="display:flex;gap:10px">
           <button class="cr-mode-btn on" id="crModePres" onclick="pickCrMode('presentiel')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Présentiel
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span data-i18n="mode_pres">Présentiel</span>
           </button>
           <button class="cr-mode-btn" id="crModeVis" onclick="pickCrMode('visio')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Visio
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span data-i18n="mode_visio">Visio</span>
           </button>
         </div>
         <input type="hidden" id="crModeHidden" value="presentiel">
@@ -2311,12 +2322,12 @@
 
       <!-- Niveau -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Niveau visé</div>
+        <div class="cr-section-title" data-i18n="step_niveau_q">Niveau visé</div>
         <div style="display:flex;gap:7px;overflow-x:auto;padding:2px 0 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap" id="crNiveauChips">
-          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="" style="flex-shrink:0">Tous</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire" style="flex-shrink:0">Primaire</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège" style="flex-shrink:0">Collège</div>
-          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée" style="flex-shrink:0">Lycée</div>
+          <div class="crn-chip on" onclick="pickNiveau(this)" data-n="" style="flex-shrink:0" data-i18n="niv_tous">Tous</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Primaire" style="flex-shrink:0" data-i18n="niv_prim_lbl">Primaire</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Collège" style="flex-shrink:0" data-i18n="niv_col_lbl">Collège</div>
+          <div class="crn-chip" onclick="pickNiveau(this)" data-n="Lycée" style="flex-shrink:0" data-i18n="niv_lyc_lbl">Lycée</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+1/2" style="flex-shrink:0">Bac+1/2</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+3/4" style="flex-shrink:0">Bac+3/4</div>
           <div class="crn-chip" onclick="pickNiveau(this)" data-n="Bac+5" style="flex-shrink:0">Bac+5</div>
@@ -2326,21 +2337,21 @@
 
       <!-- Quand & Où -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Quand &amp; Où</div>
+        <div class="cr-section-title" data-i18n="cr_section_quandou">Quand &amp; Où</div>
         <div class="cr-card">
           <label class="cr-row" for="crDate" style="cursor:pointer;-webkit-tap-highlight-color:transparent">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px">Date</span>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px" data-i18n="cr_date_lbl">Date</span>
             <input id="crDate" type="date" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);text-align:right;-webkit-appearance:none;appearance:none;cursor:pointer;min-height:24px">
           </label>
           <label class="cr-row" for="crHeure" style="cursor:pointer;-webkit-tap-highlight-color:transparent">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px">Heure</span>
+            <span style="font-size:15px;color:var(--mid);flex-shrink:0;min-width:44px" data-i18n="cr_heure_lbl">Heure</span>
             <input id="crHeure" type="time" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);text-align:right;-webkit-appearance:none;appearance:none;cursor:pointer;min-height:24px">
           </label>
           <div class="cr-row" style="position:relative">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input class="cr-input-plain" id="crLieu" type="text" placeholder="Ville ou adresse…" oninput="searchLieu(this.value)" autocomplete="off">
+            <input class="cr-input-plain" id="crLieu" type="text" data-i18n-ph="cr_lieu_ph" placeholder="Ville ou adresse…" oninput="searchLieu(this.value)" autocomplete="off">
             <div id="lieuSuggestions" style="position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--wh);border-radius:14px;z-index:100;display:none;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07)"></div>
           </div>
         </div>
@@ -2348,22 +2359,22 @@
 
       <!-- Infos pratiques -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Infos pratiques</div>
+        <div class="cr-section-title" data-i18n="cr_section_pratique">Infos pratiques</div>
         <div class="cr-card">
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex:1">Durée</span>
+            <span style="font-size:15px;color:var(--mid);flex:1" data-i18n="cr_duree">Durée</span>
             <input id="crDuree" type="number" value="60" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:right;width:60px;padding:0">
             <span style="font-size:14px;color:var(--lite)">min</span>
           </div>
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex:1">Places max</span>
+            <span style="font-size:15px;color:var(--mid);flex:1" data-i18n="cr_step_places_lbl">Places max</span>
             <input id="cPl" type="number" value="5" min="1" max="20" oninput="calcH()" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:right;width:60px;padding:0">
           </div>
           <div class="cr-row">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-            <span style="font-size:15px;color:var(--mid);flex:1">Prix total</span>
+            <span style="font-size:15px;color:var(--mid);flex:1" data-i18n="cr_prix_total">Prix total</span>
             <input id="cPr" type="number" placeholder="0" oninput="calcH()" style="border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);text-align:right;width:60px;padding:0">
             <span style="font-size:14px;color:var(--lite)">€</span>
           </div>
@@ -2373,25 +2384,25 @@
 
       <!-- Description — obligatoire -->
       <div style="margin-bottom:18px">
-        <div class="cr-section-title">Description</div>
+        <div class="cr-section-title" data-i18n="step_desc_q">Description</div>
         <div class="cr-card">
           <div class="cr-row" style="align-items:flex-start;padding:14px 16px">
-            <textarea id="crDesc" rows="3" placeholder="Niveau requis, programme abordé, prérequis…" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;color:var(--ink);resize:none;line-height:1.6;padding:0;min-height:64px"></textarea>
+            <textarea id="crDesc" rows="3" data-i18n-ph="cr_desc_ph" placeholder="Niveau requis, programme abordé, prérequis…" style="flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:15px;color:var(--ink);resize:none;line-height:1.6;padding:0;min-height:64px"></textarea>
           </div>
         </div>
       </div>
 
       <!-- Cours privé -->
       <div style="margin-bottom:8px">
-        <div class="cr-section-title">Options</div>
+        <div class="cr-section-title" data-i18n="cr_section_options">Options</div>
         <div class="cr-card">
           <div class="cr-row" style="padding:14px 16px">
             <div style="width:36px;height:36px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
             <div style="flex:1">
-              <div style="font-size:15px;font-weight:600;color:var(--ink)">Cours privé</div>
-              <div style="font-size:12px;color:var(--lite);margin-top:1px">Accès par code uniquement</div>
+              <div style="font-size:15px;font-weight:600;color:var(--ink)" data-i18n="nc_prive">Cours privé</div>
+              <div style="font-size:12px;color:var(--lite);margin-top:1px" data-i18n="cr_prive_sub">Accès par code uniquement</div>
             </div>
             <div id="togglePrive" onclick="toggleCoursPrivé()" style="width:44px;height:26px;border-radius:50px;background:var(--bdr);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
               <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)" id="togglePriveKnob"></div>
@@ -2482,7 +2493,13 @@
   <div class="modal">
     <div class="mhd">
       <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Inscrits</div><div style="font-size:17px;font-weight:800" id="elevesTitre" data-i18n="students_title">Élèves inscrits</div></div>
-      <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="bdElevesGroupe" style="display:none;align-items:center;gap:6px;background:var(--orp);color:var(--or);border:none;border-radius:10px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+          Groupe
+        </button>
+        <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+      </div>
     </div>
     <div class="mbd">
       <div id="elevesList"></div>
@@ -3186,9 +3203,9 @@
       <div style="font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.025em" data-i18n="settings_title">Paramètres</div>
     </div>
 
-    <!-- Langue — masqué (FR uniquement pour le lancement) -->
-    <div class="settings-section-lbl" data-i18n="settings_langue" style="display:none">Langue</div>
-    <div class="settings-group" style="display:none">
+    <!-- Langue -->
+    <div class="settings-section-lbl" data-i18n="settings_langue">Langue</div>
+    <div class="settings-group">
       <div class="settings-row" onclick="openLangPicker()" style="cursor:pointer">
         <div style="flex:1">
           <div class="settings-label" data-i18n="settings_langue">Langue</div>

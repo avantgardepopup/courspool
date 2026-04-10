@@ -438,7 +438,7 @@ function _buildFavCard2Col(c,idx){
   var modeBg=isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)';
   var modeCo=isV?'#0055B3':'#007A38';
   // Variable height image zone (cycles for masonry rhythm)
-  var imgH=[90,120,100][(idx||0)%3];
+  var imgH=[72,95,82][(idx||0)%3];
   // Wrapper (clips swipe animation + carries shadow/border)
   var wrap=document.createElement('div');
   wrap.className='fav2-swipe-wrap';
@@ -458,8 +458,8 @@ function _buildFavCard2Col(c,idx){
   var modeSolid=isV?'#0071E3':'#00A550';
   div.innerHTML='<div class="fav2-img" style="height:'+imgH+'px;background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22);position:relative;overflow:hidden">'
     +'<div style="position:absolute;top:9px;left:9px;right:44px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:5px">'
-    +'<span class="fav2-subj" style="background:'+mat.color+';position:static;max-width:100%">'+esc(c.subj||'Cours')+'</span>'
-    +'<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;color:'+modeSolid+';font-size:9px;font-weight:700;border-radius:50px;padding:3px 7px 3px 5px;box-shadow:0 1px 4px rgba(0,0,0,.15)">'+modeIco+(isV?'Visio':'Présentiel')+'</span>'
+    +'<span class="fav2-subj" style="background:'+mat.color+';position:static;max-width:100%">'+esc(subjL(c.subj)||t('card_cours')||'Cours')+'</span>'
+    +'<span class="card-badge-mode-new">'+modeIco+(isV?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>'
     +'</div>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'+avInner+'</div>'
     +'</div>'
@@ -579,7 +579,7 @@ function _doUnenrollProf(pid){
   closeQuickSheet();
   _removeEnrolledProf(String(pid));
   haptic(6);
-  toast('Désinscription effectuée','');
+  toast(t('t_unsubscribed'),'');
   buildMesProfs();
 }
 function _initProfCardSwipe(cardEl,type,pid){
@@ -941,7 +941,7 @@ function submitEnrollSheet(){
   var btn=document.getElementById('_enrollBtn');
   var code=(inp?inp.value.trim().toUpperCase():'');
   if(!code){if(errEl){errEl.textContent='Veuillez entrer un code.';errEl.style.display='block';}return;}
-  if(!user||user.guest){toast('Connecte-toi d\'abord','');return;}
+  if(!user||user.guest){toast(t('t_login_first'),'');return;}
   if(btn)btn.disabled=true;
   if(errEl)errEl.style.display='none';
   function _safeJson(r){try{return r.json();}catch(e){return Promise.resolve(null);}}
@@ -954,7 +954,7 @@ function submitEnrollSheet(){
       if(!P[pid])P[pid]={};
       if(d.prof_nm||d.teacher_name)P[pid].nm=d.prof_nm||d.teacher_name;
     }
-    haptic(4);toast('Espace rejoint !','');
+    haptic(4);toast(t('t_space_joined'),'');
     if(_enrollBd){_enrollBd.remove();_enrollBd=null;}
     buildMesProfs();
     if(pid)setTimeout(function(){openProfEspace(String(pid));},300);
@@ -978,7 +978,7 @@ function submitEnrollSheet(){
           description:data.description||'',code:data.code_acces||'',prive:true};
         if(!C.find(function(x){return x.id==nc.id;}))C.unshift(nc);
         openR(nc.id);
-        toast('Cours trouvé !',nc.title);
+        toast(t('t_course_found'),nc.title);
       } else {
         if(errEl){errEl.textContent=msg||'Code incorrect ou expiré.';errEl.style.display='block';}
       }
@@ -998,32 +998,27 @@ var _mptSteps=[
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Bienvenue dans Mes Profs !',
-    sub:'Retrouve ici les profs dont tu as rejoint l\'espace privé, et ceux que tu suis depuis l\'explorateur.'
+    titleKey:'mpt_title_1',sub_key:'mpt_sub_1'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
     bg:'rgba(99,102,241,.08)',
-    title:'Suis un prof',
-    sub:'Depuis l\'explorateur, ouvre le profil d\'un prof et appuie sur "Suivre". Il apparaît ici dans "Suivis" pour ne rater aucun de ses prochains cours.'
+    titleKey:'mpt_title_2',sub_key:'mpt_sub_2'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Rejoins l\'espace d\'un prof',
-    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
+    titleKey:'mpt_title_3',sub_key:'mpt_sub_3'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
     bg:'rgba(99,102,241,.08)',
-    title:'Cours à venir',
-    sub:'Accède aux prochains cours de ton prof, réserve ta place et rejoins les sessions visio directement depuis l\'app.'
+    titleKey:'mpt_title_4',sub_key:'mpt_sub_4'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
     bg:'rgba(34,192,105,.08)',
-    title:'Fiches & Publications',
-    sub:'Consulte les fiches de cours et les annonces publiées par ton professeur, accessibles depuis son espace.'
+    titleKey:'mpt_title_5',sub_key:'mpt_sub_5'
   }
 ];
 
@@ -1048,11 +1043,11 @@ function _mptRender(){
   var isLast=_mptStep===_mptSteps.length-1;
   if(track){track.innerHTML='<div style="text-align:center;padding:28px 0 20px">'
     +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
-    +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-    +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+    +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+t(s.titleKey)+'</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t(s.sub_key)+'</div>'
     +'</div>';}
   if(dots){dots.innerHTML=_mptSteps.map(function(_,i){return'<div onclick="mptGoTo('+i+')" style="width:'+(i===_mptStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_mptStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';}).join('');}
-  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
+  if(skipBtn)skipBtn.textContent=isLast?t('mpt_done'):t('mpt_skip');
 }
 
 function _mptInitSwipe(sheet){
@@ -1325,6 +1320,24 @@ async function _initSupabase(){
     console.warn('[OAuth] Erreur init Supabase:',e);
     if(_isOAuthReturn)_oauthRestoreLogin('Réessaie ou utilise email / mot de passe');
   }
+}
+
+// ── UPLOAD VERS SUPABASE STORAGE ─────────────────────────────────────────────
+// Retourne le storagePath (bucket/folder/userId/timestamp.ext) ou throw
+var _ALLOWED_DOC_MIME=['image/jpeg','image/png','image/webp','application/pdf'];
+var _ALLOWED_DOC_EXT=['jpg','jpeg','png','webp','pdf'];
+async function _uploadToStorage(file, folder){
+  if(!window._supabase)throw new Error('Supabase non disponible');
+  var ext=(file.name.split('.').pop()||'bin').toLowerCase();
+  // Validation MIME type et extension avant upload
+  if(!_ALLOWED_DOC_MIME.includes(file.type)||!_ALLOWED_DOC_EXT.includes(ext)){
+    throw new Error('Format non autorisé (JPG, PNG, WEBP ou PDF uniquement)');
+  }
+  var uid=user&&user.id||'unknown';
+  var path=folder+'/'+uid+'/'+Date.now()+'.'+ext;
+  var result=await window._supabase.storage.from('verification').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(result.error)throw result.error;
+  return result.data.path;
 }
 
 function _setupCapacitorDeepLink(){
@@ -1888,7 +1901,7 @@ async function doLogin(){
     var r=await fetch(API+'/auth/login',{method:'POST',headers:apiH(),body:JSON.stringify({email:em,password:pw}),signal:_ctrl.signal});
     clearTimeout(_tId);
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);shake('lfC');return;}
+    if(data.error){toast(t('t_error'),data.error);shake('lfC');return;}
     var p=data.profile||{};
     // Vérifier si compte bloqué
     if(p.statut_compte==='bloqué'){
@@ -2260,6 +2273,11 @@ function navTo(tab,_skipHistory){
     var br4=g('btnRefresh');if(br4)br4.style.display='none';
     restoreNav();
     buildMesProfs();
+  } else if(tab==='esp'){
+    if(pgAcc)pgAcc.classList.add('on');
+    var br5=g('btnRefresh');if(br5)br5.style.display='none';
+    restoreNav();
+    goEspProf();
   }
 }
 
@@ -2468,7 +2486,7 @@ async function checkStripeReturn(){
     }
     if(params.get('stripe_refresh')){
       window.history.replaceState({},'',window.location.pathname);
-      toast('Configuration requise','Finalisez votre configuration bancaire pour recevoir les paiements');
+      toast(t('t_setup_required'),'Finalisez votre configuration bancaire pour recevoir les paiements');
       return;
     }
     // Deep link ?cours=ID — ouvrir directement la fiche du cours
@@ -2490,7 +2508,7 @@ async function checkStripeReturn(){
       else{setTimeout(tryOpenCours,1200);}
       return;
     }
-    if(!paid||!coursId){checkPrivateCoursAccess();return;}
+    if(!paid||!coursId){checkPrivateCoursAccess();_checkResumePayment();return;}
     localStorage.removeItem('cp_stripe_pending');
     if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
     await loadData();
@@ -2517,6 +2535,51 @@ async function checkStripeReturn(){
 }
 
 function shake(id){var e=g(id);e.style.animation='shake .3s';setTimeout(function(){e.style.animation=''},400);}
+
+// Reprendre un paiement interrompu (crash app, perte réseau)
+function _checkResumePayment(){
+  if(!user||!user.id)return;
+  try{
+    var raw=localStorage.getItem('cp_pay_resume');
+    if(!raw)return;
+    var d=JSON.parse(raw);
+    // Verrou valide 5 min — même durée que le verrou serveur
+    if(!d.pi||!d.cs||!d.cid||Date.now()-d.ts>5*60*1000){
+      localStorage.removeItem('cp_pay_resume');
+      return;
+    }
+    // Proposer de reprendre après un court délai
+    setTimeout(function(){
+      var cours=C.find(function(x){return String(x.id)===String(d.cid);});
+      var titre=cours?cours.titre:'votre cours';
+      if(confirm('Vous avez un paiement en cours pour "'+titre+'". Voulez-vous le finaliser ?')){
+        // Rouvrir la sheet avec le client_secret existant (pas de nouveau PI)
+        _payCoursId=d.cid;
+        _payIntentId=d.pi;
+        var sheet=g('bdPayment');
+        if(sheet){
+          sheet.style.display='flex';
+          document.body.style.overflow='hidden';
+          if(!_stripeInstance&&window.Stripe)_stripeInstance=Stripe(STRIPE_PK);
+          if(_stripeInstance){
+            var dk=document.documentElement.classList.contains('dk');
+            var appearance={theme:dk?'night':'stripe',variables:{colorPrimary:'#FF6B2B',borderRadius:'10px',fontFamily:'Plus Jakarta Sans, system-ui, sans-serif',fontSizeBase:'15px',spacingUnit:'4px'}};
+            _payElements=_stripeInstance.elements({clientSecret:d.cs,appearance:appearance});
+            var pe=_payElements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
+            var el=g('stripe-payment-element');if(el){el.innerHTML='';pe.mount('#stripe-payment-element');}
+            var btn=g('payBtn'),btnTxt=g('payBtnTxt');
+            if(cours){var pp=cours.sp>0?Math.ceil(cours.tot/cours.sp):0;g('payCoursTitle').textContent=cours.titre;g('payAmount').textContent=pp+'€';if(btnTxt)btnTxt.textContent='Payer '+pp+'€';}
+            pe.on('ready',function(){if(btn){btn.disabled=false;btn.style.opacity='1';}});
+          }
+        }
+      } else {
+        // Refus — libérer le verrou et nettoyer
+        localStorage.removeItem('cp_pay_resume');
+        fetch(API+'/stripe/cancel-lock',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:d.pi})}).catch(function(){});
+      }
+    },1500);
+  }catch(e){}
+}
 
 // PAGES
 function goAccount(){
@@ -2674,7 +2737,7 @@ function switchATab(s,el){
   el.classList.add('on');
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
-  if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
+  if(s==='Rev'){loadRevenues();loadPayouts();loadStripeConnectStatus();}
   if(s==='P'){updateVerifStatusBlock();updateDiplomeStatusBlock();updateCasierStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
@@ -2704,9 +2767,9 @@ function buildAccLists(){
       var _allProfIds=new Set(fIds.concat(_enrolledProfIds));
       var _nbHistorique=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);}).length;
       stats.innerHTML=
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">À venir</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">Profs</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">Historique</div></div>';
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">'+t('cal_upcoming')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">'+t('stat_profs_lbl')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">'+t('acc_historique')+'</div></div>';
     }
   }
   // Rôle pill
@@ -2722,14 +2785,14 @@ function buildAccLists(){
     profCoursHtml='<div style="padding:20px 20px 0">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
       +'<div style="width:28px;height:28px;background:rgba(255,107,43,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>'
-      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Prochains cours</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">'+t('section_prochains')+'</div>'
       +(_pastCnt>0?'<div style="margin-left:auto;font-size:11px;color:var(--lite)">'+_pastCnt+' passé'+((_pastCnt>1)?'s':'')+'</div>':'')
       +'</div>';
     if(!myC.length){
-      var _emptyMsg=_pastCnt>0?'Aucun cours à venir — créez-en un nouveau':'Vous n\'avez pas encore créé de cours';
+      var _emptyMsg=_pastCnt>0?t('empty_no_cours_prof'):t('empty_first_cours');
       profCoursHtml+='<div style="background:var(--bg);border-radius:16px;padding:20px;text-align:center">'
         +'<div style="font-size:13px;color:var(--lite);margin-bottom:12px">'+_emptyMsg+'</div>'
-        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">Créer un cours →</button>'
+        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">'+t('btn_creer_cours')+'</button>'
         +'</div>';
     } else {
       profCoursHtml+='<div style="display:flex;gap:12px;overflow-x:auto;padding:8px 10px 18px;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:-8px -10px -18px;">';
@@ -2742,7 +2805,7 @@ function buildAccLists(){
         var _favBg=_isDkFav?(mat.bgDark||mat.bg):mat.bg;
         profCoursHtml+='<div class="fav-cours-card" onclick="openR(\''+esc(c.id)+'\')">'
           +'<div class="fav-cours-card-top" style="background:'+_favBg+'">'
-          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(c.subj)+'</span>'
+          +'<span style="background:rgba(0,0,0,.18);backdrop-filter:blur(6px);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+esc(subjL(c.subj))+'</span>'
           +(isFull?'<span style="background:rgba(34,192,105,.25);color:#22C069;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:700">'+t('rr_complet')+'</span>':'<span style="background:rgba(0,0,0,.15);color:#fff;border-radius:50px;padding:3px 10px;font-size:10px;font-weight:600">'+c.fl+'/'+c.sp+'</span>')
           +'</div>'
           +'<div class="fav-cours-card-body">'
@@ -2761,7 +2824,7 @@ function buildAccLists(){
     profCoursHtml+='</div>'
       +'<div style="display:flex;align-items:center;gap:8px;padding:20px 20px 10px">'
       +'<div style="width:28px;height:28px;background:rgba(59,130,246,.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
-      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">Mes réservations</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--ink)">'+t('section_mes_resa')+'</div>'
       +'</div>';
   }
   lr.innerHTML=profCoursHtml;
@@ -2770,15 +2833,15 @@ function buildAccLists(){
   var _pastRIds=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);});
   var _showRIds=_upcomingRIds;
   if(!_showRIds.length){lr.innerHTML+=isProf
-    ?'<div style="padding:0 20px 20px;font-size:13px;color:var(--lite)">Aucune réservation à venir</div>'
+    ?'<div style="padding:0 20px 20px;font-size:13px;color:var(--lite)">'+t('empty_no_resa_prof')+'</div>'
     :'<div style="text-align:center;padding:40px 20px">'
     +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
     +'</div>'
-    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">Aucun cours à venir</div>'
-    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">Réservez votre premier cours<br>et retrouvez-le ici</div>'
-    +(_pastRIds.length?'<button onclick="switchATab(\'H\',g(\'aTabH\'))" style="background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">Voir l\'historique ('+_pastRIds.length+')</button><br>':'')
-    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">'+t('empty_resa_title')+'</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:20px">'+t('empty_resa_sub')+'</div>'
+    +(_pastRIds.length?'<button onclick="switchATab(\'H\',g(\'aTabH\'))" style="background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:10px 20px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;margin-bottom:10px">'+t('empty_resa_histo')+' ('+_pastRIds.length+')</button><br>':'')
+    +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('empty_resa_explorer')+'</button>'
     +'</div>';}
   else{
     lr.innerHTML+=_showRIds.map(function(id){
@@ -2797,8 +2860,8 @@ function buildAccLists(){
         // Bande colorée + matière + titre
         +'<div style="background:'+_bg+';padding:14px 16px 12px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-        +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(c.subj)+'</span>'
-        +(isPast?'<span class="rbadge bdone" style="font-size:10px">Terminé</span>':'<span class="rbadge bup" style="font-size:10px">À venir</span>')
+        +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(subjL(c.subj))+'</span>'
+        +(isPast?'<span class="rbadge bdone" style="font-size:10px">'+t('badge_done')+'</span>':'<span class="rbadge bup" style="font-size:10px">'+t('badge_upcoming')+'</span>')
         +'</div>'
         +'<div style="font-size:15px;font-weight:800;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
         +'</div>'
@@ -2841,9 +2904,9 @@ function buildAccLists(){
       +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
       +'</div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
-      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">'+t('no_prof_followed')+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">'+t('follow_profs_desc')+'</div>'
+      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('explore_courses_btn')+'</button>'
       +'</div>';
   } else {
     var folRows=fIds.map(function(id,i){
@@ -2864,7 +2927,7 @@ function buildAccLists(){
       var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
       var _now2=Date.now();
       var prochainCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now2);}).length;
-      var av=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
+      var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
         '<span style="font-size:15px;font-weight:800;color:var(--or)">'+p.i+'</span>';
       var border=i<fIds.length-1?'border-bottom:1px solid var(--bdr)':'';
       var dispoLabel=prochainCours?' · <span style="color:var(--or);font-weight:600">'+prochainCours+' cours dispo</span>':'';
@@ -2996,6 +3059,8 @@ function saveProf(){
 
 function doLogout(){
   var _fkLogout=_folKey(); // sauvegarder la clé AVANT user=null (sinon _folKey() retourne null)
+  // Révoquer la session côté serveur (blacklist du token)
+  if(user&&user.access_token){fetch(API+'/auth/logout',{method:'POST',headers:apiH()}).catch(function(){});}
   _followsInitialized=false;
   user=null;
   _tutoLaunched=false;
@@ -3113,6 +3178,10 @@ function previewPhoto(input){
   if(!user||user.role!=='professeur'){input.value='';return;}
   if(input.files&&input.files[0]){
     var file=input.files[0];
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
+      toast(t('t_error'),'Format non autorisé (JPG, PNG ou WEBP uniquement)');
+      input.value='';return;
+    }
     if(file.size>2*1024*1024){
       toast(t('t_photo_heavy'),t('t_photo_heavy_s'));
       input.value='';return;
@@ -3131,11 +3200,11 @@ function previewPhoto(input){
           if(data.url||data.pending){
             // Stocker l'URL en attente localement pour info, mais ne pas l'afficher
             try{localStorage.setItem('cp_photo_pending','1');}catch(ex){}
-            toast('Photo envoyée ✓','Elle apparaîtra sur votre profil après validation par notre équipe.');
+            toast(t('t_photo_sent'),'Elle apparaîtra sur votre profil après validation par notre équipe.');
           } else {
-            toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');
+            toast(t('t_error'),'Impossible d\'envoyer la photo. Réessayez.');
           }
-        }).catch(function(){toast('Erreur','Impossible d\'envoyer la photo. Réessayez.');});
+        }).catch(function(){toast(t('t_error'),'Impossible d\'envoyer la photo. Réessayez.');});
       }
     };
     reader.readAsDataURL(file);
@@ -3210,7 +3279,7 @@ function _buildCourseCard(c){
     ?('<img src="'+esc(_pPhoto)+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\';this.parentNode.style.background=\''+_avCol+'\'">'+_avIniSpan)
     :_avIniSpan;
   var _isVisio=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
-  var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(c.subj)+'</span>';
+  var subjBadge='<span class="card-badge-subj" style="background:'+esc(c.sc)+'">'+esc(subjL(c.subj))+'</span>';
   var modeIcon=_isVisio?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="8" height="8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   var modeBadge='<span class="card-badge-mode-new">'+modeIcon+(_isVisio?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>';
   var miniFollowBtn='';
@@ -3242,7 +3311,7 @@ function _buildCourseCard(c){
   wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
   wrap.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
   wrap.innerHTML=
-    subjBadge+modeBadge+profAvDiv+
+    '<div class="card-badges-row">'+subjBadge+modeBadge+'</div>'+profAvDiv+
     '<div class="card card-new'+(c.prive?' card-prive':'')+'">'+
       '<div class="card-body-new">'+
         '<div class="card-title-new">'+esc(c.title)+'</div>'+
@@ -3510,7 +3579,7 @@ function loadMore(){
 // ============================================================
 var MATIERES = [
   // --- Sciences exactes ---
-  {label:'Maths',                  key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Mathématiques',           key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
   {label:'Statistiques',           key:'stats',          color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
   {label:'Physique',               key:'physique',       color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
   {label:'Chimie',                 key:'chimie',         color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
@@ -3569,7 +3638,7 @@ var MATIERES = [
   {label:'Violon',                 key:'violon',         color:'#92400E', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2000)'},
   {label:'Saxophone',              key:'saxo',           color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
   // --- Sciences humaines ---
-  {label:'Histoire-Géo',           key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Histoire',                key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
   {label:'Psychologie',            key:'psycho',         color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
   {label:'Sociologie',             key:'socio',          color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
   {label:'Géographie',             key:'geographie',     color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
@@ -3624,6 +3693,11 @@ var MATIERES = [
   {label:'Autre',                  key:'autre',          color:'#9CA3AF', bg:'linear-gradient(135deg,#F9FAFB,#F3F4F6)', bgDark:'linear-gradient(135deg,#1A1A1A,#2A2A2A)'},
 ];
 
+// Helper: label traduit d'une matière (retombe sur label FR si clé absente)
+function mL(m){return (typeof t==='function'&&t('mat_'+m.key))||m.label;}
+// Helper: traduire un sujet stocké en DB (peut être label FR ou clé)
+function subjL(subj){var m=findMatiere(subj||'');return m?mL(m):(subj||'');}
+
 // Fonction pour normaliser une chaîne
 function normStr(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
 
@@ -3647,9 +3721,9 @@ function openMatFilter(){
     list.innerHTML=MATIERES.map(function(m,i){
       var isOn=(g('crSubjHidden')&&g('crSubjHidden').value===m.key);
       var border=i<MATIERES.length-1?'border-bottom:1px solid var(--bdr)':'';
-      return'<div onclick="pickMatFromSheet(\''+m.key+'\',\''+m.label+'\',\''+m.color+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .12s;'+border+'">'
+      return'<div onclick="pickMatFromSheet(\''+m.key+'\',\''+mL(m)+'\',\''+m.color+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;transition:background .12s;'+border+'">'
         +'<div style="width:10px;height:10px;border-radius:50%;background:'+m.color+';flex-shrink:0"></div>'
-        +'<span style="flex:1;font-size:15px;font-weight:'+(isOn?'700':'500')+';color:'+(isOn?'var(--or)':'var(--ink)')+'">'+m.label+'</span>'
+        +'<span style="flex:1;font-size:15px;font-weight:'+(isOn?'700':'500')+';color:'+(isOn?'var(--or)':'var(--ink)')+'">'+mL(m)+'</span>'
         +(isOn?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>':'')
         +'</div>';
     }).join('');
@@ -3679,14 +3753,14 @@ function onMatInput(val, dropdownId, hiddenId){
   var n=normStr(val);
   // Filtrer les matières
   var matches=val.length===0?MATIERES:MATIERES.filter(function(m){
-    return normStr(m.label).includes(n)||m.key.includes(n);
+    return normStr(m.label).includes(n)||normStr(mL(m)).includes(n)||m.key.includes(n);
   });
   if(!matches.length){box.style.display='none';return;}
   box.innerHTML=matches.map(function(m){
     return'<div class="mat-item" onclick="pickMatiere(\''
-      +m.key+'\',\''+m.label+'\',\''+dropdownId+'\',\''+hiddenId+'\',this)">'
+      +m.key+'\',\''+mL(m)+'\',\''+dropdownId+'\',\''+hiddenId+'\',this)">'
       +'<div class="mat-dot" style="background:'+m.color+'"></div>'
-      +'<span>'+m.label+'</span>'
+      +'<span>'+mL(m)+'</span>'
       +'</div>';
   }).join('');
   box.style.display='block';
@@ -3863,7 +3937,7 @@ function renderFilterBar(){
     var pill=document.createElement('button');
     pill.className='filter-pill-btn pill'+(actF===key?' on':'');
     pill.dataset.f=key;
-    pill.textContent=f.label;
+    pill.textContent=t('fchip_'+f.key)||f.label;
     pill.onclick=function(){setPill(pill);};
     bar.insertBefore(pill,addBtn);
   });
@@ -3906,7 +3980,7 @@ function viewCoursCard(id){
   curId=c.id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
-  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
+  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=subjL(c.subj)||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
   var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
@@ -3944,7 +4018,7 @@ function viewCoursCard(id){
 function openR(id){haptic(4);
   if(!user||!user.id){showLoginPrompt();return;}
   var _rBtn=document.querySelector('[data-id="'+id+'"] .card-btn-reserve,[data-id="'+id+'"] .btnr');
-  if(_rBtn&&_rBtn.textContent==='Réserver'){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;var _rBtnTid=setTimeout(function(){if(_rBtn){_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}},5000);_rBtn._resetTid=_rBtnTid;}
+  if(_rBtn&&!_rBtn.disabled){_rBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13" style="animation:cpSpin .6s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>';_rBtn.disabled=true;var _rBtnTid=setTimeout(function(){if(_rBtn){_rBtn.innerHTML=t('card_reserve');_rBtn.disabled=false;}},5000);_rBtn._resetTid=_rBtnTid;}
   var c=C.find(function(x){return x.id==id})||_histCache[String(id)];
   if(!c)return;
   var isOwner=user&&c.pr===user.id;
@@ -3954,7 +4028,7 @@ function openR(id){haptic(4);
   curId=id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title;
-  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=c.subj||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
+  var _rSubjBdg=g('rSubjBadge');if(_rSubjBdg){var _rMat2=findMatiere(c.subj||'');_rSubjBdg.textContent=subjL(c.subj)||'';_rSubjBdg.style.background=_rMat2&&_rMat2.color?_rMat2.color:'#9CA3AF';}
   var _rMdBdg=g('rModeBadgeTop');if(_rMdBdg){var _rIsVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;_rMdBdg.textContent=_rIsVis?t('mode_visio'):t('mode_pres');_rMdBdg.style.display='inline-block';}
   var rAv=g('rProfAv'),rNm=g('rProfNm');
   if(rAv){var _pp=(P[c.pr]&&P[c.pr].photo)||c.prof_photo;setAvatar(rAv,_pp,c.prof_ini||'?','rgba(255,255,255,.25)');}
@@ -3997,6 +4071,8 @@ function openR(id){haptic(4);
   var btnDel=g('btnDelCours');
   var btnEleves=g('btnVoirEleves');
   var btnNoter=g('btnNoterCours');
+  var btnGroupe=g('btnGroupe');
+  if(btnGroupe)btnGroupe.style.display='none'; // uniquement dans bdEleves pour le prof
   if(isOwner){
     if(btnConf)btnConf.style.display='none';
     if(btnContact)btnContact.style.display='none';
@@ -4021,7 +4097,7 @@ function openR(id){haptic(4);
       btnNoter.style.display=_canNote?'flex':'none';
     }
   }
-  if(_rBtn&&_rBtn._resetTid){clearTimeout(_rBtn._resetTid);_rBtn.innerHTML='Réserver';_rBtn.disabled=false;}
+  if(_rBtn&&_rBtn._resetTid){clearTimeout(_rBtn._resetTid);_rBtn.innerHTML=t('card_reserve');_rBtn.disabled=false;}
   openM('bdR');
 }
 function closeR(){closeM('bdR');}
@@ -4030,6 +4106,10 @@ async function openEleves(id){
   var c=C.find(function(x){return x.id==id;});
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' '+(c.fl>1?t('eleves_inscrits'):t('eleve_inscrit'));
+  // Bouton groupe dans bdEleves (prof uniquement)
+  var _bge=g('bdElevesGroupe');
+  if(_bge)_bge.style.display=c.fl>0?'flex':'none';
+  if(_bge)_bge.onclick=function(){closeM('bdEleves');setTimeout(function(){openGroupeMsg(id);},200);};
   var list=g('elevesList');
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_loading')+'</div>';
   openM('bdEleves');
@@ -4076,7 +4156,7 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
   try{
     var r=await fetch(API+'/reservations/'+reservationId+'/cancel',{method:'POST',headers:apiH(),body:JSON.stringify({user_id:userId,cours_id:coursId,montant:montant})});
     var data=await r.json();
-    if(data.error){toast('Erreur',data.error);return;}
+    if(data.error){toast(t('t_error'),data.error);return;}
     toast(t('t_cancelled'),t('t_cancelled_sub'));
     openEleves(coursId);
     var c=C.find(function(x){return x.id==coursId;});
@@ -4087,11 +4167,11 @@ async function cancelEleveReservation(reservationId,userId,coursId,montant){
 function confR(){
   haptic(15);
   var id=curId;
-  if(!id){toast('Erreur','Veuillez réessayer');return;}
+  if(!id){toast(t('t_error'),t('t_try_again'));return;}
   var c=C.find(function(x){return x.id==id});
   if(!c)return;
   if(c.fl>=c.sp){closeM('bdR');openF(c.pr,c.title);return;}
-  if(!user||!user.id){toast('Connexion requise','Connectez-vous pour réserver');return;}
+  if(!user||!user.id){toast(t('t_connect_required'),t('t_connect_to_book'));return;}
   if(res[id]){toast(t('t_already_res'),t('t_already_res_s'));return;}
   closeM('bdR');
   openPaymentSheet(id,false);
@@ -4121,7 +4201,7 @@ function confO(){
   curId=id;
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
   g('rTit').textContent=c.title+' · Place supplémentaire';
-  g('rSbj').textContent=c.subj;
+  g('rSbj').textContent=subjL(c.subj);
   g('rDt').textContent=c.dt;
   g('rLc').textContent=c.lc;
   g('rTot').textContent=c.tot+'€';
@@ -4227,7 +4307,7 @@ function _openPrLegacy(pid){
   var displayIni=p.i||'?';
   var displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)';
   var displayPhoto=p.photo||null;
-  if(!displayNm){toast('Profil introuvable','');return;}
+  if(!displayNm){toast(t('t_profile_not_found'),'');return;}
 
   // Sujets uniques extraits des cours (dispo immédiatement)
   var subjSet={};cours.forEach(function(c){if(c.subj)subjSet[c.subj]=true;});
@@ -4361,11 +4441,7 @@ function _openPrLegacy(pid){
     var _avgAll=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(P[pid])P[pid].n=_avgAll;
     var _mpNEl=g('mpN');if(_mpNEl)_mpNEl.textContent='★ '+_avgAll;
-    var stars=function(n){
-      var s='';
-      for(var i=1;i<=5;i++)s+='<svg viewBox="0 0 24 24" width="13" height="13" fill="'+(i<=n?'#FBBF24':'none')+'" stroke="'+(i<=n?'#FBBF24':'#D1D5DB')+'" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-      return s;
-    };
+    var stars=function(n){return _avisSvgStars(n,13);};
     var html=notes.slice(0,3).map(function(a){
       var isTuteur=!!a.is_tuteur;
       var roleLabel=isTuteur?t('role_tuteur'):t('role_eleve');
@@ -4506,16 +4582,48 @@ function _loadMpAnnonces(pid){
   }).catch(function(){if(curProf===pid)el.innerHTML='';});
 }
 
+// Icône SVG pour un type de ressource / URL (remplace les emojis)
+function _resIcon(type, url){
+  var u=url||'';
+  var bg,stroke,path;
+  if(/drive\.google\.com|docs\.google\.com/.test(u)){
+    bg='rgba(66,133,244,.12)';stroke='#4285F4';
+    path='<path d="M4.5 20L9 12l4.5 8H4.5z"/><path d="M9 12L13.5 4H19l-5.5 8H9z"/><path d="M14 20H9l2.5-4L14 20z"/><path d="M19 4l-5.5 8 2.5 4H22L19 4z"/>';
+  } else if(/dropbox\.com/.test(u)){
+    bg='rgba(0,97,210,.1)';stroke='#0061D2';
+    path='<path d="M12 2L6 6l6 4 6-4-6-4z"/><path d="M6 10l-4 3 4 3 4-3-4-3z"/><path d="M18 10l-4 3 4 3 4-3-4-3z"/><path d="M6 16l6 4 6-4"/>';
+  } else if(/notion\.so/.test(u)){
+    bg='rgba(0,0,0,.07)';stroke='#555';
+    path='<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>';
+  } else if(/youtube\.com|youtu\.be/.test(u)||type==='video'){
+    bg='rgba(255,0,0,.1)';stroke='#FF0000';
+    path='<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>';
+  } else if(type==='pdf'){
+    bg='rgba(239,68,68,.1)';stroke='#EF4444';
+    path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/>';
+  } else if(type==='article'||type==='text'){
+    bg='rgba(59,130,246,.1)';stroke='#3B82F6';
+    path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';
+  } else if(type==='exercice'){
+    bg='rgba(245,158,11,.1)';stroke='#F59E0B';
+    path='<path d="M17 3a2.121 2.121 0 013 3L7 19l-4 1 1-4L17 3z"/><line x1="15" y1="5" x2="19" y2="9"/>';
+  } else {
+    bg='rgba(255,107,43,.1)';stroke='var(--or)';
+    path='<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>';
+  }
+  return'<div style="width:36px;height:36px;border-radius:10px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+stroke+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+path+'</svg></div>';
+}
+
 function _loadMpRessources(pid){
   var el=g('mpRessources');if(!el)return;
   el.innerHTML='<div class="skeleton" style="height:54px;border-radius:12px"></div>';
   fetch(API+'/teacher/'+pid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
     if(curProf!==pid)return;
     if(!data||!data.length){el.innerHTML='<div style="font-size:13px;color:var(--lite);padding:10px 0" data-i18n="mp_aucune_ressource">Aucune ressource partagée.</div>';return;}
-    var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
     el.innerHTML=data.map(function(r){
       return'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:12px;padding:12px 14px;text-decoration:none">'
-        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +_resIcon(r.type,r.url)
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+esc(r.type)+(r.access_level==='public'?' · public':'')+'</div>'
@@ -4569,7 +4677,7 @@ function _renderMpfExtraInfo(p){
   // Formations
   var formations=p.formations||null;
   if(formations){
-    rows+='<div class="mpf-section-lbl">Formations & Diplômes</div>'
+    rows+='<div class="mpf-section-lbl">'+t('prof_formations')+'</div>'
       +'<div style="background:var(--wh);border-radius:16px;padding:14px;margin:0 16px 8px">'
       +(typeof formations==='string'?formations.split('\n').filter(Boolean).map(function(f){
           return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">'
@@ -4582,7 +4690,7 @@ function _renderMpfExtraInfo(p){
   // Expériences
   var experiences=p.experiences||p.experience||null;
   if(experiences){
-    rows+='<div class="mpf-section-lbl">Expériences</div>'
+    rows+='<div class="mpf-section-lbl">'+t('prof_experiences')+'</div>'
       +'<div style="background:var(--wh);border-radius:16px;padding:14px;margin:0 16px 8px">'
       +(typeof experiences==='string'?experiences.split('\n').filter(Boolean).map(function(e){
           return'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">'
@@ -4881,7 +4989,7 @@ function tpEnterCode(){
   var errEl=g('tpCodeError');if(errEl)errEl.style.display='none';
   var numPid=parseInt(pid)||pid;
   function _onSuccess(){
-    toast('Accès débloqué !','');haptic(4);
+    toast(t('t_access_unlocked'),'');haptic(4);
     var _ep=P[pid]||{};
     _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
     _mpfSetEnrolled(true);
@@ -4910,7 +5018,7 @@ function _tpShare(){
   var nm=p.nm||'un professeur';
   var url='https://courspool.vercel.app?prof='+pid;
   if(navigator.share){navigator.share({title:nm+' sur CoursPool',text:'Découvre les cours de '+nm+' sur CoursPool',url:url}).catch(function(){});}
-  else{try{navigator.clipboard.writeText(url);toast('Lien copié','');}catch(e){toast(url,'');}}
+  else{try{navigator.clipboard.writeText(url);toast(t('t_link_copied'),'');}catch(e){toast(url,'');}}
 }
 
 function enrollWithCode(){
@@ -4922,7 +5030,7 @@ function enrollWithCode(){
   var errEl=g('mpfCodeError');if(errEl)errEl.style.display='none';
   var numPid=parseInt(pid)||pid;
   function _onSuccess(){
-    toast('Accès débloqué !','');haptic(4);
+    toast(t('t_access_unlocked'),'');haptic(4);
     var _ep=P[pid]||{};
     _saveEnrolledProf(String(pid),{nm:_ep.nm||'',ini:_ep.i||'?',col:_ep.col||'linear-gradient(135deg,#FF8C55,#E04E10)',photo:_ep.photo||null});
     _mpfSetEnrolled(true);
@@ -4967,39 +5075,27 @@ var _espTutoStep=0;
 var _espTutoSteps=[
   {
     svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Bienvenue dans ton Espace !',
-    sub:'Tout ce dont tu as besoin pour gérer tes cours et tes élèves est ici, en un seul endroit.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_1',sub_key:'esp_sub_1'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Code d\'accès élèves',
-    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et accéder à tes contenus.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_2',sub_key:'esp_sub_2'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Mes cours',
-    sub:'Retrouve ici tous tes cours à venir et passés. Les cours que tu as créés sont distingués de ceux que tu as réservés.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_3',sub_key:'esp_sub_3'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-    bg:'rgba(99,102,241,.08)',
-    title:'Mes élèves',
-    sub:'Retrouve tous les élèves inscrits à ton espace. Valide ou refuse les nouvelles demandes d\'accès.'
+    bg:'rgba(99,102,241,.08)',titleKey:'esp_title_4',sub_key:'esp_sub_4'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
-    bg:'rgba(249,115,22,.08)',
-    title:'Publications',
-    sub:'Écris des annonces pour tes élèves : infos de cours, rappels, messages importants. Tes élèves les voient directement sur ton profil.'
+    bg:'rgba(249,115,22,.08)',titleKey:'esp_title_5',sub_key:'esp_sub_5'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
-    bg:'rgba(34,192,105,.08)',
-    title:'Ma bibliothèque',
-    sub:'Crée des fiches de cours et ajoute des documents. Tu choisis quels élèves y ont accès.'
+    bg:'rgba(34,192,105,.08)',titleKey:'esp_title_6',sub_key:'esp_sub_6'
   }
 ];
 
@@ -5026,8 +5122,8 @@ function _espTutoRender(){
     track.innerHTML=''
       +'<div style="text-align:center;padding:28px 0 20px">'
       +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
-      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+t(s.titleKey)+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t(s.sub_key)+'</div>'
       +'</div>';
   }
   if(dots){
@@ -5035,7 +5131,7 @@ function _espTutoRender(){
       return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
-  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
+  if(skipBtn)skipBtn.textContent=isLast?t('mpt_done'):t('mpt_skip');
 }
 
 function _espTutoInitSwipe(sheet){
@@ -5113,24 +5209,24 @@ function espRegenCode(){
   if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';btn.style.background='';btn.style.color='';}
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
-    if(d.error){if(el)el.textContent='—';toast('Erreur',d.error.slice(0,60));return;}
+    if(d.error){if(el)el.textContent='—';toast(t('t_error'),d.error.slice(0,60));return;}
     _espCurrentCode=d.teacher_code||null;
     if(el)el.textContent=_espCurrentCode||'—';
-    haptic(8);toast('Code généré !','Partage-le avec tes élèves');
-  }).catch(function(){if(el)el.textContent='—';toast('Erreur réseau','Vérifie ta connexion');});
+    haptic(8);toast(t('t_code_generated'),t('t_code_generated_sub'));
+  }).catch(function(){if(el)el.textContent='—';toast(t('t_net_error'),t('t_net_error_sub'));});
 }
 
 function espCopyCode(){
-  if(!_espCurrentCode){toast('Génère un code d\'abord','');return;}
-  try{navigator.clipboard.writeText(_espCurrentCode);toast('Code copié !','');haptic(4);}
+  if(!_espCurrentCode){toast(t('t_generate_first'),'');return;}
+  try{navigator.clipboard.writeText(_espCurrentCode);toast(t('t_code_copied'),'');haptic(4);}
   catch(e){toast(_espCurrentCode,'Copie ce code manuellement');}
 }
 
 function espShareCode(){
-  if(!_espCurrentCode){toast('Génère un code d\'abord','');return;}
+  if(!_espCurrentCode){toast(t('t_generate_first'),'');return;}
   var txt='Rejoins mon espace sur CoursPool avec le code : '+_espCurrentCode+'\nhttps://courspool.vercel.app';
   if(navigator.share){navigator.share({title:'Mon code CoursPool',text:txt}).catch(function(){});}
-  else{try{navigator.clipboard.writeText(txt);toast('Lien copié !','');}catch(e){toast(_espCurrentCode,'Copie ce code');}}
+  else{try{navigator.clipboard.writeText(txt);toast(t('t_link_copied'),'');}catch(e){toast(_espCurrentCode,'Copie ce code');}}
 }
 
 function espLoadStudents(){
@@ -5139,7 +5235,7 @@ function espLoadStudents(){
   var uid=user&&user.id;if(!uid)return;
   var myCours=C.filter(function(c){return c.pr===uid&&!_isCoursPass(c);});
   if(!myCours.length){
-    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun cours publié pour l\'instant.</div>';
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">'+t('no_course_published')+'</div>';
     if(badge)badge.style.display='none';
     return;
   }
@@ -5228,7 +5324,6 @@ function espLoadResources(){
   var el=g('espResources');
   if(el)el.innerHTML='<div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:6px"></div>';
   var uid=user&&user.id;if(!uid)return;
-  var TYPE_ICON={'pdf':'📄','video':'🎥','article':'📰','exercice':'📝'};
   fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
     if(!list||!list.length){
       if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune ressource publiée.</div>';
@@ -5236,7 +5331,7 @@ function espLoadResources(){
     }
     if(el)el.innerHTML=list.map(function(r){
       return'<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)">'
-        +'<span style="font-size:20px;flex-shrink:0">'+(TYPE_ICON[r.type]||'📎')+'</span>'
+        +_resIcon(r.type,r.url)
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite)">'+esc(r.type)+'</div>'
@@ -5254,7 +5349,7 @@ function espDeleteRes(id){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/resources/'+id,{method:'DELETE',headers:apiH()}).then(function(){
     haptic(4);espLoadResources();
-  }).catch(function(){toast('Erreur','Impossible de supprimer');});
+  }).catch(function(){toast(t('t_error'),t('t_delete_error'));});
 }
 
 function espToggleAddRes(btn){
@@ -5269,13 +5364,13 @@ function espSubmitRes(){
   var title=(g('espResTitle')||{}).value||'';
   var url=(g('espResUrl')||{}).value||'';
   var type=(g('espResType')||{}).value||'article';
-  if(!title.trim()||!url.trim()){toast('Titre et lien requis','');return;}
+  if(!title.trim()||!url.trim()){toast(t('t_title_link_req'),'');return;}
   var btn=document.querySelector('#espResForm .esp-btn-prim');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),body:JSON.stringify({title:title.trim(),url:url.trim(),type:type,access_level:'followers'})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Erreur',d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
-      haptic(4);toast('Ressource publiée !','');
+      if(d.error){toast(t('t_error'),d.error);if(btn){btn.disabled=false;btn.textContent='Publier';}return;}
+      haptic(4);toast(t('t_resource_published'),'');
       if(g('espResTitle'))g('espResTitle').value='';
       if(g('espResUrl'))g('espResUrl').value='';
       var f=g('espResForm');if(f)f.style.display='none';
@@ -5283,7 +5378,7 @@ function espSubmitRes(){
       if(ab)ab.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter';
       if(btn){btn.disabled=false;btn.textContent='Publier';}
       espLoadResources();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}toast(t('t_net_error'),'');});
 }
 
 // ── ÉDITEUR RICH TEXT ────────────────────────────────────────────────────
@@ -5706,7 +5801,7 @@ function pubSetVisibility(id,access){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'PATCH',headers:apiH(),body:JSON.stringify({access_type:access})})
     .then(function(r){return r.json();}).then(function(){haptic(4);loadMesPublications();espLoadAnnonces();})
-    .catch(function(){toast('Erreur réseau','');});
+    .catch(function(){toast(t('t_net_error'),'');});
 }
 
 function openPubSettings(id,currentAcc){
@@ -5750,14 +5845,14 @@ function openSondageSheet(){
   sheet.innerHTML='<div style="text-align:center;margin-bottom:16px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'
     +'<div style="width:44px;height:44px;border-radius:13px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Créer un sondage</div>'
+    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+t('sondage_title')+'</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:2px">Pose une question à tes élèves</div></div>'
     +'</div>'
-    +'<input id="_sdgQ" type="text" placeholder="Ta question…" class="esp-input" style="margin-bottom:14px">'
+    +'<input id="_sdgQ" type="text" placeholder="'+escH(t('sondage_question_ph'))+'" class="esp-input" style="margin-bottom:14px">'
     +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Options</div>'
     +'<div id="_sdgOpts">'
-    +'<input class="esp-input _sdgOpt" placeholder="Option 1" style="margin-bottom:8px">'
-    +'<input class="esp-input _sdgOpt" placeholder="Option 2" style="margin-bottom:8px">'
+    +'<input class="esp-input _sdgOpt" placeholder="'+escH(t('sondage_opt1_ph'))+'" style="margin-bottom:8px">'
+    +'<input class="esp-input _sdgOpt" placeholder="'+escH(t('sondage_opt2_ph'))+'" style="margin-bottom:8px">'
     +'</div>'
     +'<button onclick="addSondageOption()" style="background:none;border:1.5px dashed var(--bdr);border-radius:12px;width:100%;padding:10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;margin-bottom:16px;-webkit-tap-highlight-color:transparent">+ Ajouter une option</button>'
     +'<button onclick="submitSondage(this)" class="esp2-btn-submit" style="width:100%">Publier le sondage</button>'
@@ -5770,7 +5865,7 @@ function openSondageSheet(){
 function addSondageOption(){
   var container=document.getElementById('_sdgOpts');if(!container)return;
   var count=container.querySelectorAll('._sdgOpt').length;
-  if(count>=6){toast('Maximum 6 options','');return;}
+  if(count>=6){toast(t('t_max_options'),'');return;}
   var inp=document.createElement('input');
   inp.type='text';inp.className='esp-input _sdgOpt';inp.placeholder='Option '+(count+1);inp.style.marginBottom='8px';
   container.appendChild(inp);inp.focus();
@@ -5779,31 +5874,31 @@ function addSondageOption(){
 function submitSondage(btn){
   var uid=user&&user.id;if(!uid)return;
   var q=(document.getElementById('_sdgQ')||{value:''}).value.trim();
-  if(!q){toast('Écris une question','');return;}
+  if(!q){toast(t('t_write_question'),'');return;}
   var opts=Array.from(document.querySelectorAll('._sdgOpt')).map(function(el){return el.value.trim();}).filter(Boolean);
-  if(opts.length<2){toast('Au moins 2 options','');return;}
+  if(opts.length<2){toast(t('t_min_two_options'),'');return;}
   if(btn){btn.disabled=true;btn.textContent='…';}
   var body={type:'poll',content:JSON.stringify({question:q,options:opts,votes:{}})};
   fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast('Erreur',d.error);return;}
-      haptic(8);toast('Sondage publié !','');
+      if(d.error){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast(t('t_error'),d.error);return;}
+      haptic(8);toast(t('t_poll_published'),'');
       var bd=btn&&btn.parentElement;while(bd&&!bd.style.cssText.includes('rgba'))bd=bd.parentElement;
       if(bd)bd.remove();
       loadMesPublications();espLoadAnnonces();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier le sondage';}toast(t('t_net_error'),'');});
 }
 
 function voteOnPoll(annId,profId,optIdx,container){
-  if(!user){toast('Connecte-toi pour voter','');return;}
+  if(!user){toast(t('t_login_to_vote'),'');return;}
   haptic(4);
   fetch(API+'/teacher/'+profId+'/announcements/'+annId+'/vote',{method:'POST',headers:apiH(),body:JSON.stringify({option_index:optIdx})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Erreur',d.error);return;}
+      if(d.error){toast(t('t_error'),d.error);return;}
       haptic(8);
       var poll;try{poll=JSON.parse(d.content);}catch(e){return;}
       if(container)container.innerHTML=_renderPollHtml(poll,annId,true,profId);
-    }).catch(function(){toast('Erreur réseau','');});
+    }).catch(function(){toast(t('t_net_error'),'');});
 }
 
 // ── BIBLIOTHÈQUE ──────────────────────────────────────────────────────────
@@ -5929,8 +6024,8 @@ function elveBiblioUnlock(pid,cid){
   var pw=inp.value.trim();if(!pw)return;
   fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
-      haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
+      if(d.error){toast(t('t_wrong_password'),'');haptic(2);return;}
+      haptic(8);toast(t('t_content_unlocked'),'');loadElveBibliotheque(pid);
     }).catch(function(){});
 }
 
@@ -5947,7 +6042,7 @@ function elveUnlockSheet(pid,kind,id,extra){
     +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Contenu protégé</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Entre le mot de passe pour accéder</div></div></div>'
     +'<input id="_elveUnlockInp" type="text" placeholder="Mot de passe" style="width:100%;border:none;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.06em;outline:none;box-sizing:border-box;margin-bottom:14px">'
-    +'<button id="_elveUnlockBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px">Déverrouiller</button>'
+    +'<button id="_elveUnlockBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px">'+t('btn_deverrouiller')+'</button>'
     +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
   var btn=sheet.querySelector('#_elveUnlockBtn');
   btn.onclick=function(){
@@ -5957,9 +6052,9 @@ function elveUnlockSheet(pid,kind,id,extra){
     if(kind==='content'){
       fetch(API+'/teacher/'+pid+'/content/'+id+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
         .then(function(r){return r.json();}).then(function(d){
-          if(d.error){btn.disabled=false;btn.textContent='Déverrouiller';document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast('Mot de passe incorrect','');haptic(2);return;}
-          bd.remove();haptic(8);toast('Contenu débloqué !','');loadElveBibliotheque(pid);
-        }).catch(function(){btn.disabled=false;btn.textContent='Déverrouiller';});
+          if(d.error){btn.disabled=false;btn.textContent=t('btn_deverrouiller');document.getElementById('_elveUnlockInp').style.boxShadow='0 0 0 2px #EF4444';toast(t('t_wrong_password'),'');haptic(2);return;}
+          bd.remove();haptic(8);toast(t('t_content_unlocked'),'');loadElveBibliotheque(pid);
+        }).catch(function(){btn.disabled=false;btn.textContent=t('btn_deverrouiller');});
     }else if(kind==='resource'&&extra){
       // resources: open link after password (best effort — server-side gating not implemented here)
       bd.remove();haptic(8);window.open(extra,'_blank');
@@ -5981,76 +6076,13 @@ function elveUnlockSheet(pid,kind,id,extra){
   haptic(4);
 }
 
-// ── ENVOYER UN DOCUMENT (sheet) ───────────────────────────────────────────
-function openSendDocSheet(){
-  var pid=_curPrFull;if(!pid)return;
-  haptic(4);
-  var bd=document.createElement('div');
-  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center;transition:padding-bottom .18s';
-  var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
-  sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
-    +'<div style="width:42px;height:42px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
-    +'</div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Envoyer un document</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Partagez un fichier avec votre prof</div></div>'
-    +'</div>'
-    +'<input id="_sendDocTitle" type="text" placeholder="Nom du document" class="esp-input" style="margin-bottom:10px">'
-    +'<input id="_sendDocUrl" type="url" placeholder="Lien (Drive, Notion, Dropbox…)" class="esp-input" style="margin-bottom:16px">'
-    +'<button onclick="mpfSubmitDocSheet(this)" class="esp2-btn-submit" style="width:100%">Envoyer</button>'
-    +'<button id="_sendDocCancel" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
-  // Keyboard avoidance — même pattern que openEnrollSheet : on pad le sheet, pas le backdrop
-  var _sdKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;
-    if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}
-  };
-  var _sdKbHide=function(){
-    sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';
-    sheet.style.transition='padding-bottom .18s ease';
-  };
-  window.addEventListener('keyboardWillShow',_sdKbShow);
-  window.addEventListener('keyboardWillHide',_sdKbHide);
-  bd.onclick=function(e){
-    if(e.target===bd){
-      window.removeEventListener('keyboardWillShow',_sdKbShow);
-      window.removeEventListener('keyboardWillHide',_sdKbHide);
-      bd.remove();
-    }
-  };
-  function _sdClose(){
-    window.removeEventListener('keyboardWillShow',_sdKbShow);
-    window.removeEventListener('keyboardWillHide',_sdKbHide);
-    bd.remove();
-  }
-  bd.appendChild(sheet);document.body.appendChild(bd);
-  var cancelBtn=document.getElementById('_sendDocCancel');
-  if(cancelBtn)cancelBtn.onclick=_sdClose;
-  setTimeout(function(){var inp=document.getElementById('_sendDocTitle');if(inp)inp.focus();},200);
-}
-
-function mpfSubmitDocSheet(btn){
-  var pid=_curPrFull;if(!pid)return;
-  var title=(document.getElementById('_sendDocTitle')||{value:''}).value.trim();
-  var url=(document.getElementById('_sendDocUrl')||{value:''}).value.trim();
-  if(!title){toast('Donne un nom au document','');return;}
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||undefined})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(d.error){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast('Erreur',d.error);return;}
-      haptic(8);toast('Document envoyé !','');
-      var bd=btn&&btn.parentElement;while(bd&&!bd.style.cssText.includes('rgba(0,0,0,.5)'))bd=bd.parentElement;
-      if(bd)bd.remove();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast('Erreur réseau','');});
-}
 
 function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
   var grid=g('biblioGrid');if(!grid)return;
   grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
-  var ACCESS_LABEL={enrolled:'Inscrits',password:'Mot de passe',share:'Via lien'};
-  var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  var ACCESS_LABEL={enrolled:'Inscrits',followers:'Inscrits',public:'Public',private:'Privé',password:'Mot de passe',share:'Via lien'};
+  var TYPE_ICON={pdf:'PDF',video:'Vidéo',article:'Article',exercice:'Exercice',fiche:'Fiche',text:'Texte',link:'Lien'};
   function _biblioIco(kind,type){
     var bg,stroke,path;
     if(kind==='fiche'){bg='rgba(34,197,94,.12)';stroke='#16A34A';path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';}
@@ -6063,26 +6095,23 @@ function loadBibliotheque(){
       +'</div>';
   }
   function _biblioAccessSvg(type){
-    if(type==='password')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
-    if(type==='share')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
-    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>';
+    if(type==='public')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>';
+    if(type==='private')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
   }
   // Fetch announcements (fiches) + resources
   Promise.all([
     fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-    fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
   ]).then(function(results){
     var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
     var _fData;try{_fData=JSON.parse(localStorage.getItem('cp_fiche_data')||'{}');}catch(e){_fData={};}
     var fiches=(results[0]||[]).filter(function(a){return a.type==='fiche'||_fIds.has(String(a.id));});
     fiches=fiches.map(function(f){var c=_fData[String(f.id)]||{};return Object.assign({},f,{title:f.title||c.title||'',content:f.content||c.content||''});});
     var resources=results[1]||[];
-    var content=results[2]||[];
     var items=[];
-    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',password:f.password||'',created_at:f.created_at});});
-    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_type||'enrolled',password:r.password||'',created_at:r.created_at});});
-    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',type:c.content_type||'',access:c.access_type||'enrolled',password:c.password||'',created_at:c.created_at});});
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_level||'followers',created_at:r.created_at});});
     items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
     if(!items.length){
       grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
@@ -6124,14 +6153,21 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
-  var opts=[
-    {val:'enrolled',label:'Tous les inscrits',sub:'Visible par les élèves inscrits',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/>',stroke:'var(--mid)',bg:'var(--bg)'},
-    {val:'password',label:'Mot de passe',sub:'Protégé par un code secret',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'},
-    {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--mid)',bg:'var(--bg)'}
-  ];
+  // Options différentes selon le type : fiches utilisent enrolled/private/public, ressources utilisent followers/public/private
+  var opts=kind==='fiche'
+    ?[
+      {val:'enrolled',label:'Inscrits',sub:'Visible par tous les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+    ]
+    :[
+      {val:'followers',label:'Inscrits',sub:'Visible par les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+    ];
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
-  html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Visibilité</div>';
-  html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">Choisir qui peut accéder à ce contenu</div>';
+  html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">'+t('vis_label')+'</div>';
+  html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">'+t('vis_desc')+'</div>';
   opts.forEach(function(o){
     var isCur=o.val===curAcc;
     html+='<div onclick="_biblioPickAccess(\''+kind+'\',\''+id+'\',\''+o.val+'\')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;margin-bottom:8px;cursor:pointer;background:'+(isCur?'rgba(255,107,43,.04)':'var(--bg)')+';box-shadow:'+(isCur?'0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.12)':'none')+';-webkit-tap-highlight-color:transparent">'
@@ -6148,10 +6184,7 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   bd.appendChild(sheet);
   document.body.appendChild(bd);
   window._biblioPickAccess=function(k,i,v){
-    if(v==='password'){
-      bd.remove();
-      _biblioAskPassword(function(pw){biblioSetAccess(k,i,v,pw);});
-    }else{bd.remove();biblioSetAccess(k,i,v);}
+    bd.remove();biblioSetAccess(k,i,v);
   };
   haptic(4);
 }
@@ -6183,25 +6216,50 @@ function _biblioAskPassword(onDone){
   haptic(4);
 }
 
-function biblioSetAccess(kind,id,access,pw){
+function biblioSetAccess(kind,id,access){
   var uid=user&&user.id;if(!uid)return;
-  var endpoints={resource:'/teacher/'+uid+'/resources/'+id,content:'/teacher/'+uid+'/content/'+id,fiche:'/teacher/'+uid+'/announcements/'+id};
-  var ep=endpoints[kind];if(!ep)return;
+  var ep,body;
+  if(kind==='fiche'){
+    ep='/teacher/'+uid+'/announcements/'+id;
+    body={access_type:access};
+  }else if(kind==='resource'){
+    ep='/teacher/'+uid+'/resources/'+id;
+    body={access_level:access};
+  }else{return;}
   haptic(4);
-  var body={access_type:access};if(pw)body.password=pw;
   fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify(body)})
-    .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
-    .catch(function(){toast('Erreur réseau','');});
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.error){toast(t('t_error'),d.error);return;}
+      loadBibliotheque();
+    })
+    .catch(function(){toast(t('t_net_error'),'');});
 }
 
 // ── AJOUTER UN DOCUMENT ───────────────────────────────────────────────────
+var _addDocType='pdf';
+var _addDocAccess='followers';
+
+function _addDocPickType(val,btn){
+  _addDocType=val;
+  var btns=document.querySelectorAll('#addDocTypeGrid .add-doc-type-btn');
+  btns.forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val===val);});
+  haptic(4);
+}
+
+function _addDocPickAccess(val,btn){
+  _addDocAccess=val;
+  var btns=document.querySelectorAll('#addDocAccessGrid .add-doc-type-btn');
+  btns.forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val===val);});
+  haptic(4);
+}
+
 function openAddDoc(){
   var el=g('bdAddDoc');if(!el)return;
+  // Reset pickers
+  _addDocType='pdf';_addDocAccess='followers';
+  document.querySelectorAll('#addDocTypeGrid .add-doc-type-btn').forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val==='pdf');});
+  document.querySelectorAll('#addDocAccessGrid .add-doc-type-btn').forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val==='followers');});
   el.style.display='flex';
-  var sel=g('addDocAccess');
-  if(sel)sel.addEventListener('change',function(){
-    var pw=g('addDocPwBox');if(pw)pw.style.display=sel.value==='password'?'block':'none';
-  },{once:false});
   haptic(4);
 }
 
@@ -6214,29 +6272,26 @@ function addDocSubmit(){
   var uid=user&&user.id;if(!uid)return;
   var title=(g('addDocTitle').value||'').trim();
   var url=(g('addDocUrl').value||'').trim();
-  var type=g('addDocType').value;
-  var access=g('addDocAccess').value;
-  var pw=access==='password'?(g('addDocPw').value||'').trim():'';
-  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  if(!title||!url){toast(t('t_fill_title_link'),'');return;}
   var btn=g('addDocBtn');if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
-    body:JSON.stringify({title:title,url:url,type:type,access_type:access,password:pw||undefined})})
+    body:JSON.stringify({title:title,url:url,type:_addDocType,access_level:_addDocAccess})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Ajouter';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Document ajouté !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_doc_added'),'');
       g('addDocTitle').value='';g('addDocUrl').value='';
       closeAddDoc();
       // Refresh la bibliothèque si ouverte
       if(g('bdBibliotheque')&&g('bdBibliotheque').style.display!=='none')loadBibliotheque();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter';}toast(t('t_net_error'),'');});
 }
 
 function espDeleteAnn(id){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/announcements/'+id,{method:'DELETE',headers:apiH()}).then(function(){
     haptic(4);espLoadAnnonces();
-  }).catch(function(){toast('Erreur','Impossible de supprimer');});
+  }).catch(function(){toast(t('t_error'),t('t_delete_error'));});
 }
 
 function espUpdateCounter(){
@@ -6251,9 +6306,9 @@ function espSubmitAnn(){
   var uid=user&&user.id;if(!uid)return;
   var ed=g('espAnnEditor');
   var content=ed?ed.innerHTML.trim():'';
-  if(!content||content==='<br>'||content==='<p><br></p>'){toast('Écris quelque chose d\'abord','');return;}
+  if(!content||content==='<br>'||content==='<p><br></p>'){toast(t('t_write_first'),'');return;}
   var _rawLen=(ed?(ed.innerText||ed.textContent||''):'').replace(/\n/g,'').length;
-  if(_rawLen>1500){toast('Trop long','Limite de 1500 caractères');return;}
+  if(_rawLen>1500){toast(t('t_too_long'),t('t_char_limit_1500'));return;}
   var btn=g('espEdPublishBtn');
   if(btn){btn.disabled=true;btn.textContent='…';}
   var isFiche=_espEdMode==='fiche';
@@ -6264,7 +6319,7 @@ function espSubmitAnn(){
   fetch(API+'/teacher/'+uid+'/announcements',{method:'POST',headers:apiH(),body:JSON.stringify(body)})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}
-      if(d.error){toast('Erreur',d.error);return;}
+      if(d.error){toast(t('t_error'),d.error);return;}
       // Cache l'ID + titre + contenu comme fiche dans localStorage
       if(isFiche&&d.id){try{
         var ids=JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]');
@@ -6276,7 +6331,7 @@ function espSubmitAnn(){
       haptic(4);toast(isFiche?'Fiche enregistrée !':'Publié !','');
       closeEspEditor();
       if(isFiche){loadBibliotheque();openBibliotheque();}else{espLoadAnnonces();}
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=isFiche?'Enregistrer':'Publier';}toast(t('t_net_error'),'');});
 }
 
 function _renderMpfTags(list){
@@ -6308,19 +6363,20 @@ function _loadMpfAvis(pid){
     if(P[pid])P[pid].nb_avis=notes.length;
     var _rtEl2=g('tpStRating');if(_rtEl2){_rtEl2.textContent=_avg+'★';_rtEl2.style.color='#FF9500';}
     if(g('tpStAvis'))g('tpStAvis').textContent=notes.length;
-    var starsHtml=function(n){
-      var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;
-    };
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     avisContainer.innerHTML=notes.slice(0,10).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid #F0F0F0">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:600;color:#222">'+(a.prenom||'Élève')+'</div>'
-        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
-        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
+        +'<div style="font-size:13px;font-weight:600;color:#222">'+esc(a.prenom||'Élève')+'</div>'
+        +(date?'<div style="font-size:11px;color:#999">'+date+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:2px;margin-bottom:'+(a.commentaire?'6':'0')+'px">'+_avisSvgStars(a.note||0,13)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55">'+esc(a.commentaire)+'</div>':'')
         +'</div>'
         +'</div>';
     }).join('');
@@ -6330,6 +6386,11 @@ function _loadMpfAvis(pid){
 }
 
 // ── MES AVIS (compte prof) ──────────────────────────────────────────────
+function _avisSvgStar(filled,sz){
+  return'<svg viewBox="0 0 24 24" width="'+sz+'" height="'+sz+'" fill="'+(filled?'#FBBF24':'none')+'" stroke="'+(filled?'#FBBF24':'#D1D5DB')+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+}
+function _avisSvgStars(n,sz){var s='';for(var i=1;i<=5;i++)s+=_avisSvgStar(i<=Math.round(n),sz||13);return s;}
+
 function _loadProfAvis(){
   if(!user)return;
   var listEl=g('profAvisList');
@@ -6341,25 +6402,28 @@ function _loadProfAvis(){
     if(!notes||!notes.length){
       if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
       if(avgEl)avgEl.textContent='—';
-      if(starsEl)starsEl.textContent='☆☆☆☆☆';
-      if(countEl)countEl.textContent='Aucun avis pour le moment';
+      if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
+      if(countEl)countEl.textContent=t('no_reviews_yet');
       return;
     }
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(avgEl){avgEl.textContent=avg;}
-    var starsHtml=function(n){var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;};
-    if(starsEl)starsEl.textContent=starsHtml(avg);
+    if(starsEl)starsEl.innerHTML=_avisSvgStars(avg,17);
     if(countEl)countEl.textContent=notes.length+' avis';
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--bdr)">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
-        +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+(a.prenom||'Élève')+'</div>'
-        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
-        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
+        +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+esc(a.prenom||'Élève')+'</div>'
+        +(date?'<div style="font-size:11px;color:var(--lite)">'+date+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:2px;margin-bottom:'+(a.commentaire?'6':'0')+'px">'+_avisSvgStars(a.note||0,13)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55">'+esc(a.commentaire)+'</div>':'')
         +'</div>'
         +'</div>';
     }).join('');
@@ -6420,59 +6484,6 @@ function _loadMpfFeed(pid){
   }).catch(function(){el.innerHTML='';});
 }
 
-function _loadMpfContenu(pid){
-  var el=g('mpfEspContenu');if(!el)return;
-  el.innerHTML='<div class="skeleton" style="height:90px;border-radius:16px;margin-bottom:10px"></div>';
-  fetch(API+'/teacher/'+pid+'/content',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-    if(_curPrFull!==pid)return;
-    if(!data||!data.length){
-      el.innerHTML='<div style="text-align:center;padding:32px 20px;color:var(--lite)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.3;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>'
-        +'<div style="font-size:14px;font-weight:600">Aucun cours disponible</div>'
-        +'<div style="font-size:12px;margin-top:4px">Le prof n\'a pas encore publié de contenu</div></div>';
-      return;
-    }
-    el.innerHTML=data.map(function(c){
-      var ico=c.access_type==='password'?'🔐':c.access_type==='premium'?'💎':'🔓';
-      var typeIco={text:'📝',video:'🎥',pdf:'📄',link:'🔗'}[c.content_type]||'📚';
-      var isUnlocked=c.is_unlocked;
-      var tag=c.access_type==='password'?'Mot de passe requis':c.access_type==='premium'?'Premium · '+(c.price||'?')+'€/mois':'Accès libre';
-      var tagColor=c.access_type==='password'?'#8B5CF6':c.access_type==='premium'?'#F59E0B':'#10B981';
-      var body='';
-      if(isUnlocked){
-        if(c.description)body+='<div class="contenu-desc">'+esc(c.description)+'</div>';
-        if(c.content_url)body+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" class="contenu-link">'+typeIco+' Voir le contenu</a>';
-      }else if(c.access_type==='password'){
-        body+='<div id="cttPwForm_'+c.id+'" style="display:flex;gap:8px;margin-top:10px">'
-          +'<input type="text" placeholder="Mot de passe" class="esp-input" style="flex:1;font-size:13px;padding:8px 10px" id="cttPwInp_'+c.id+'">'
-          +'<button onclick="mpfUnlockContent(\''+pid+'\',\''+c.id+'\')" class="esp-btn esp-btn-prim" style="font-size:12px;padding:8px 12px">OK</button>'
-          +'</div>';
-      }else if(c.access_type==='premium'){
-        body+='<div style="margin-top:10px"><button onclick="contPrFull()" class="esp-btn esp-btn-prim" style="font-size:12px">Contacter le prof pour s\'abonner</button></div>';
-      }
-      return'<div class="contenu-card">'
-        +'<div class="contenu-card-head">'
-        +'<span style="font-size:20px">'+ico+'</span>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div class="contenu-title">'+esc(c.title)+'</div>'
-        +'<div class="contenu-tag" style="color:'+tagColor+';background:'+tagColor+'18">'+tag+'</div>'
-        +'</div>'
-        +'</div>'
-        +body
-        +'</div>';
-    }).join('');
-  }).catch(function(){el.innerHTML='';});
-}
-
-function mpfUnlockContent(pid,cid){
-  var inp=g('cttPwInp_'+cid);if(!inp)return;
-  var pw=inp.value.trim();if(!pw)return;
-  fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast('Mot de passe incorrect','');haptic(2);return;}
-      haptic(8);toast('Contenu débloqué !','');_loadMpfContenu(pid);
-    }).catch(function(){});
-}
 
 function _loadMpfRessourcesEsp(pid){
   var el=g('mpfEspRessources');if(!el)return;
@@ -6492,47 +6503,6 @@ function _loadMpfRessourcesEsp(pid){
   }).catch(function(){el.innerHTML='';});
 }
 
-function _loadMpfSubmissions(pid){
-  var el=g('mpfMySubmissions');if(!el||!user)return;
-  fetch(API+'/teacher/'+pid+'/submissions',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-    if(_curPrFull!==pid)return;
-    if(!data||!data.length){el.innerHTML='<div style="font-size:12px;color:var(--lite);padding:4px 0">Aucun dépôt envoyé</div>';return;}
-    el.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Envoyés</div>'
-      +data.map(function(s){
-      var d=new Date(s.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-      return'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.title)+'</div><div style="font-size:11px;color:var(--lite)">'+d+'</div></div>'
-        +(s.url?'<a href="'+esc(s.url)+'" target="_blank" style="font-size:11px;color:var(--or);font-weight:700;flex-shrink:0">Voir</a>':'')
-        +'<button onclick="mpfDeleteSub(\''+pid+'\',\''+s.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
-        +'</div>';
-    }).join('');
-  }).catch(function(){});
-}
-
-function mpfSubmitDoc(){
-  var pid=_curPrFull;if(!pid)return;
-  var title=((g('mpfSubTitle')||{}).value||'').trim();
-  var url=((g('mpfSubUrl')||{}).value||'').trim();
-  if(!title){toast('Donne un nom au document','');return;}
-  var btn=document.querySelector('.esp2-btn-submit');
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||null})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Envoyer';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Document envoyé !','');
-      if(g('mpfSubTitle'))g('mpfSubTitle').value='';
-      if(g('mpfSubUrl'))g('mpfSubUrl').value='';
-      _loadMpfSubmissions(pid);
-    }).catch(function(){if(btn){btn.disabled=false;}});
-}
-
-function mpfDeleteSub(pid,sid){
-  fetch(API+'/teacher/'+pid+'/submissions/'+sid,{method:'DELETE',headers:apiH()}).then(function(){
-    haptic(4);_loadMpfSubmissions(pid);
-  });
-}
 
 function _loadMpfNote(pid){
   var el=g('mpfEspNotes');var sec=g('mpfEspNoteSection');if(!el||!user)return;
@@ -6544,78 +6514,6 @@ function _loadMpfNote(pid){
   }).catch(function(){if(sec)sec.style.display='none';});
 }
 
-// ── GESTION CONTENUS CÔTÉ PROF ───────────────────────────────────────────
-function espCttAccessChange(sel){
-  var pw=g('espCttPwBox'),pr=g('espCttPriceBox');
-  if(pw)pw.style.display=sel.value==='password'?'block':'none';
-  if(pr)pr.style.display=sel.value==='premium'?'block':'none';
-}
-
-function espToggleAddContenu(btn){
-  var f=g('espContenuForm');if(!f)return;
-  var show=f.style.display==='none';
-  f.style.display=show?'flex':'none';
-  if(btn)btn.textContent=show?'Annuler':'+ Ajouter';
-}
-
-function espSubmitContenu(){
-  var uid=user&&user.id;if(!uid)return;
-  var title=((g('espCttTitle')||{}).value||'').trim();
-  if(!title){toast('Titre requis','');return;}
-  var desc=((g('espCttDesc')||{}).value||'').trim();
-  var url=((g('espCttUrl')||{}).value||'').trim();
-  var type=(g('espCttType')||{}).value||'text';
-  var access=(g('espCttAccess')||{}).value||'enrolled';
-  var pw=access==='password'?((g('espCttPw')||{}).value||'').trim():null;
-  var price=access==='premium'?parseInt((g('espCttPrice')||{}).value||'0',10):0;
-  if(access==='password'&&!pw){toast('Mot de passe requis','');return;}
-  var btn=document.querySelector('#espContenuForm .esp-btn-prim');
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+uid+'/content',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,description:desc,content_url:url||null,content_type:type,access_type:access,password:pw,price:price})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.textContent='Publier';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(8);toast('Contenu publié !','');
-      if(g('espCttTitle'))g('espCttTitle').value='';
-      if(g('espCttDesc'))g('espCttDesc').value='';
-      if(g('espCttUrl'))g('espCttUrl').value='';
-      var f=g('espContenuForm');if(f)f.style.display='none';
-      var ab=document.querySelector('[onclick="espToggleAddContenu(this)"]');if(ab)ab.textContent='+ Ajouter';
-      espLoadContenu();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}});
-}
-
-function espLoadContenu(){
-  var uid=user&&user.id;if(!uid)return;
-  var el=g('espContenu');if(!el)return;
-  el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px"></div>';
-  var ACCESS_LABEL={'enrolled':'🔓 Accès libre','password':'🔐 Mot de passe','premium':'💎 Premium'};
-  var TYPE_ICON={text:'📝',video:'🎥',pdf:'📄',link:'🔗'};
-  fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
-    if(!list||!list.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun contenu publié.</div>';return;}
-    el.innerHTML=list.map(function(c){
-      var label=ACCESS_LABEL[c.access_type]||c.access_type;
-      var tIco=TYPE_ICON[c.content_type]||'📚';
-      return'<div style="background:var(--wh);border:1px solid var(--bdr);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:18px;flex-shrink:0">'+tIco+'</span>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title)+'</div>'
-        +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+label+(c.price?' · '+c.price+'€/mois':'')+'</div>'
-        +'</div>'
-        +'<button onclick="espDeleteContenu(\''+c.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
-        +'</button>'
-        +'</div>';
-    }).join('');
-  }).catch(function(){el.innerHTML='';});
-}
-
-function espDeleteContenu(id){
-  var uid=user&&user.id;if(!uid)return;
-  fetch(API+'/teacher/'+uid+'/content/'+id,{method:'DELETE',headers:apiH()}).then(function(){
-    haptic(4);espLoadContenu();
-  });
-}
 
 // ── MES COURS (prof) ──────────────────────────────────────────────────────
 function goMesCoursPage(){
@@ -6674,8 +6572,8 @@ function espLoadMesCours(){
         +'</div>';
     });
   }
-  renderRows(upcoming,'upcoming','À venir');
-  renderRows(past,'past','Passés');
+  renderRows(upcoming,'upcoming',t('cal_upcoming'));
+  renderRows(past,'past',t('cal_past'));
   el.innerHTML=html||'<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours.</div>';
 }
 
@@ -6748,36 +6646,36 @@ function espCaDocSubmit(){
   var title=(g('espCaDocTitle').value||'').trim();
   var url=(g('espCaDocUrl').value||'').trim();
   var type=g('espCaDocType').value;
-  if(!title||!url){toast('Remplis le titre et le lien','');return;}
+  if(!title||!url){toast(t('t_fill_title_link'),'');return;}
   var btn=document.querySelector('#espCaDocForm .esp2-btn-submit');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
     body:JSON.stringify({title:title,url:url,type:type,cours_id:_espSelCours.id})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Document ajouté !','');
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_doc_added'),'');
       g('espCaDocTitle').value='';g('espCaDocUrl').value='';
       g('espCaDocForm').style.display='none';
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Ajouter au cours';}toast(t('t_net_error'),'');});
 }
 
 function espCaMsgSubmit(){
   if(!_espSelCours)return;
   var uid=user&&user.id;if(!uid)return;
   var msg=(g('espCaMsgText').value||'').trim();
-  if(!msg){toast('Écris un message','');return;}
+  if(!msg){toast(t('t_write_message'),'');return;}
   var btn=document.querySelector('#espCaMsgForm .esp2-btn-submit');
   if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/messages/groupe',{method:'POST',headers:apiH(),
     body:JSON.stringify({cours_id:_espSelCours.id,message:msg,sender_id:uid})})
     .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}
-      if(d.error){toast('Erreur',d.error);return;}
-      haptic(4);toast('Message envoyé à tous les inscrits !','');
+      if(btn){btn.disabled=false;btn.textContent=t('msg_send_all');}
+      if(d.error){toast(t('t_error'),d.error);return;}
+      haptic(4);toast(t('t_message_sent_all'),'');
       g('espCaMsgText').value='';
       g('espCaMsgForm').style.display='none';
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer à tous';}toast('Erreur réseau','');});
+    }).catch(function(){if(btn){btn.disabled=false;btn.textContent=t('msg_send_all');}toast(t('t_net_error'),'');});
 }
 
 function switchMpfTab(tab){
@@ -6794,15 +6692,13 @@ function toggleEsp2Card(id,section){
   if(opening){
     // Côté élève
     var pid=_curPrFull;
-    if(section==='cours'){_loadMpfContenu(pid);_loadMpfRessourcesEsp(pid);}
-    if(section==='docs'){_loadMpfSubmissions(pid);}
+    if(section==='cours'){_loadMpfRessourcesEsp(pid);}
     // Côté prof
     if(section==='code')espLoadCode();
     if(section==='eleves')espLoadStudents();
     if(section==='annonces')espLoadAnnonces();
     if(section==='received')espLoadReceivedDocs();
     if(section==='ressources'){espLoadResources();espLoadFiches();}
-    if(section==='contenu')espLoadContenu();
     if(section==='mesCours')espLoadMesCours();
   }
 }
@@ -6946,7 +6842,7 @@ function togFP(){
     fol.delete(id);_saveFol();
     _setFollowBtn(false);
     _syncFollowBtns(id,false);
-    toast('Désabonné','Vous ne suivez plus '+p.nm);
+    toast(t('t_desabonne'),t('t_desabonne_pre')+p.nm);
     P[id]=P[id]||{n:'—',e:0,col:'linear-gradient(135deg,#FF8C55,#E04E10)'};P[id].e=Math.max(0,(P[id].e||1)-1);
     var row=document.querySelector('#listF [data-prof-id="'+id+'"]');
     if(row){
@@ -7073,7 +6969,7 @@ var CR_MAT_ICONS={
   cinema:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="5" y1="5" x2="5" y2="19"/><line x1="9" y1="5" x2="9" y2="19"/><line x1="1" y1="10" x2="5" y2="10"/><line x1="9" y1="10" x2="16" y2="10"/><line x1="1" y1="14" x2="5" y2="14"/><line x1="9" y1="14" x2="16" y2="14"/>',
   bd:'<polygon points="12,2 14.9,8 21.5,8.9 16.8,13.6 17.9,20.1 12,17 6.1,20.1 7.2,13.6 2.5,8.9 9.1,8"/>',
   dessin:'<path d="M2 20h20M5 20V10M12 20V4M19 20v-6"/><circle cx="12" cy="2" r="2"/>',
-  peinture:'<circle cx="13.5" cy="6.5" r="2.5"/><path d="M17.5 12c2.5 2.5 2.5 7 0 9.5-2.5 2.5-7 2.5-9.5 0M6 2c3 0 5 2 7 4-1.5 1.5-3 3-4 5C7 9 5 7 2 6c2-2 4-4 4-4z"/>',
+  peinture:'<circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
   aquarelle:'<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>',
   arts:'<circle cx="12" cy="12" r="3"/><path d="M12 3a9 9 0 100 18A9 9 0 0012 3z"/><path d="M12 8a1 1 0 100-2 1 1 0 000 2zM17 12a1 1 0 100-2 1 1 0 000 2zM12 17a1 1 0 100-2 1 1 0 000 2zM7 12a1 1 0 100-2 1 1 0 000 2z"/>',
   calligraphie:'<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
@@ -7081,10 +6977,10 @@ var CR_MAT_ICONS={
   illustration:'<path d="M3 17l5-5 4 4 5-5 4 4"/><rect x="3" y="3" width="18" height="14" rx="2"/>',
   musique:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   piano:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><rect x="5" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="11" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="17" y="4" width="3" height="6" rx="1" fill="currentColor"/>',
-  guitare:'<ellipse cx="12" cy="16" rx="6" ry="5"/><ellipse cx="12" cy="10" rx="4" ry="3"/><line x1="12" y1="7" x2="12" y2="2"/><line x1="9" y1="2" x2="15" y2="2"/><circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/>',
+  guitare:'<ellipse cx="12" cy="17" rx="5" ry="4.5"/><ellipse cx="12" cy="9" rx="3.5" ry="3"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="10" y1="2" x2="14" y2="2"/><circle cx="12" cy="17" r="1.5" fill="currentColor" stroke="none"/>',
   chant:'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
   batterie:'<line x1="6" y1="4" x2="18" y2="16"/><line x1="18" y1="4" x2="6" y2="16"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>',
-  violon:'<path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1.1.4 2.1 1 2.9L8.5 13c-.3.7-.5 1.4-.5 2C8 17.8 9.8 21 12 21s4-3.2 4-6c0-.6-.2-1.3-.5-2L14 8.4c.6-.8 1-1.8 1-2.9C15 3.5 13.5 2 12 2z"/><line x1="10.2" y1="11.5" x2="8.5" y2="11.5"/><line x1="13.8" y1="11.5" x2="15.5" y2="11.5"/>',
+  violon:'<path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1.1.4 2.1 1 2.9L8.5 13c-.3.7-.5 1.4-.5 2C8 17.8 9.8 21 12 21s4-3.2 4-6c0-.6-.2-1.3-.5-2L14 8.4c.6-.8 1-1.8 1-2.9C15 3.5 13.5 2 12 2z"/><line x1="9.5" y1="11.5" x2="11" y2="11.5"/><line x1="13" y1="11.5" x2="14.5" y2="11.5"/>',
   saxo:'<path d="M14 3h-3a1 1 0 00-1 1v1a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1z"/><path d="M13 6v8.5a4.5 4.5 0 01-9 0V11h2"/><path d="M8 9h4"/><path d="M8 13h3"/>',
   histoire:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
   psycho:'<path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.53A3 3 0 016 9.5a3 3 0 010-6H9.5z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.53A3 3 0 0118 9.5a3 3 0 000-6H14.5z"/>',
@@ -7117,16 +7013,16 @@ var CR_MAT_ICONS={
   tennis:'<circle cx="12" cy="12" r="10"/><path d="M2.5 12h19M12 2.5c-4 6-4 13 0 19M12 2.5c4 6 4 13 0 19"/>',
   football:'<circle cx="12" cy="12" r="10"/><path d="M12 7l3 2-1 4H10l-1-4 3-2z"/><path d="M12 7V2M15 9l5-3M9 9l-5-3M14 13l3 5M10 13l-3 5"/>',
   basket:'<circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.9 4.9c4 4 4 10.2 0 14.2M19.1 4.9c-4 4-4 10.2 0 14.2"/>',
-  running:'<circle cx="15" cy="3" r="2"/><path d="M20 8l-4 2-3-2-4 4"/><path d="M9 12l-3 8"/><path d="M13 10l2 9"/>',
-  boxe:'<path d="M7 10a5 5 0 0110 0v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4z"/><path d="M5 12h2"/><path d="M9 10V8a3 3 0 016 0v2"/><rect x="7" y="16" width="10" height="5" rx="2"/>',
+  running:'<circle cx="13" cy="4" r="2"/><path d="M5 20l3.5-3.5 2.5 2.5 3-7 4 4"/><path d="M7 9l2-3 4 1 3-3"/>',
+  boxe:'<path d="M8 6a4 4 0 018 0v5H8V6z"/><rect x="6" y="11" width="12" height="5" rx="2"/><path d="M9 16v2a3 3 0 006 0v-2"/>',
   golf:'<circle cx="12" cy="18" r="3"/><path d="M12 15V3"/><path d="M12 3l7 4-7 4"/>',
   nutrition:'<path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/>',
   devperso:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
   cuisine:'<line x1="18" y1="2" x2="18" y2="22"/><path d="M6 2v5a4 4 0 004 4 4 4 0 004-4V2"/><line x1="10" y1="11" x2="10" y2="22"/>',
   patisserie:'<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M3 11V8a4 4 0 014-4h10a4 4 0 014 4v3"/><path d="M7 11V8M12 11V8M17 11V8"/><circle cx="7" cy="16" r="1"/><circle cx="12" cy="16" r="1"/><circle cx="17" cy="16" r="1"/>',
-  jardinage:'<path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M3 7c9.5 0 9.5-4 9.5-4S21 7 21 12H3V7z"/>',
+  jardinage:'<path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
   bricolage:'<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>',
-  couture:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="11.41" y1="11.41" x2="6.5" y2="14.5"/>',
+  couture:'<circle cx="12" cy="12" r="9"/><path d="M3.6 9c4.8-2.4 9.6 2.4 14.4 0"/><path d="M3.6 15c4.8-2.4 9.6 2.4 14.4 0"/><line x1="12" y1="3" x2="12" y2="21"/>',
   broderie:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
   poterie:'<path d="M12 3c-4 0-7 2-7 5s3 5 7 5 7-2 7-5-3-5-7-5z"/><path d="M5 8v9a3 3 0 003 3h8a3 3 0 003-3V8"/>',
   jeux:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>',
@@ -7136,19 +7032,19 @@ var CR_MAT_ICONS={
 
 // ── Catégories matières pour le formulaire ───────────────────────────────────
 var CR_CATEGORIES=[
-  {label:'Sciences exactes',   keys:['maths','stats','physique','chimie','svt','astro','geologie','medecine','ecologie']},
-  {label:'Numérique & Tech',   keys:['informatique','python','javascript','devweb','data','ia','electronique','design','cyber','nocode','blockchain']},
-  {label:'Langues',            keys:['francais','anglais','espagnol','allemand','italien','portugais','arabe','chinois','japonais','russe','coreen','hindi','latin','lsf']},
-  {label:'Lettres & Créativité',keys:['philo','ecriture','theatre','cinema','bd']},
-  {label:'Arts visuels',       keys:['dessin','peinture','aquarelle','arts','calligraphie','photo','illustration']},
-  {label:'Musique',            keys:['musique','piano','guitare','chant','batterie','violon','saxo']},
-  {label:'Sciences humaines',  keys:['histoire','psycho','socio','geographie','sciencespol','anthropo']},
-  {label:'Business & Droit',   keys:['economie','compta','finance','marketing','droit','entrepreneuriat','gestion','communication','rh','immo','architecture']},
-  {label:'Prépa & Concours',   keys:['prepa','pass','sciencespo','toefl','gmat']},
-  {label:'Sport',              keys:['sport','fitness','yoga','martial','danse','natation','tennis','football','basket','running','boxe','golf']},
-  {label:'Bien-être',          keys:['nutrition','devperso']},
-  {label:'Cuisine & Artisanat',keys:['cuisine','patisserie','jardinage','bricolage','couture','broderie','poterie']},
-  {label:'Jeux & Loisirs',     keys:['jeux','echecs','autre']}
+  {label:'Sciences exactes',   i18nKey:'mat_cat_sciences',  keys:['maths','stats','physique','chimie','svt','astro','geologie','medecine','ecologie']},
+  {label:'Numérique & Tech',   i18nKey:'mat_cat_numerique', keys:['informatique','python','javascript','devweb','data','ia','electronique','design','cyber','nocode','blockchain']},
+  {label:'Langues',            i18nKey:'mat_cat_langues',   keys:['francais','anglais','espagnol','allemand','italien','portugais','arabe','chinois','japonais','russe','coreen','hindi','latin','lsf']},
+  {label:'Lettres & Créativité',i18nKey:'mat_cat_lettres',  keys:['philo','ecriture','theatre','cinema','bd']},
+  {label:'Arts visuels',       i18nKey:'mat_cat_arts',      keys:['dessin','peinture','aquarelle','arts','calligraphie','photo','illustration']},
+  {label:'Musique',            i18nKey:'mat_cat_musique',   keys:['musique','piano','guitare','chant','batterie','violon','saxo']},
+  {label:'Sciences humaines',  i18nKey:'mat_cat_humaines',  keys:['histoire','psycho','socio','geographie','sciencespol','anthropo']},
+  {label:'Business & Droit',   i18nKey:'mat_cat_business',  keys:['economie','compta','finance','marketing','droit','entrepreneuriat','gestion','communication','rh','immo','architecture']},
+  {label:'Prépa & Concours',   i18nKey:'mat_cat_prepa',     keys:['prepa','pass','sciencespo','toefl','gmat']},
+  {label:'Sport',              i18nKey:'mat_cat_sport',     keys:['sport','fitness','yoga','martial','danse','natation','tennis','football','basket','running','boxe','golf']},
+  {label:'Bien-être',          i18nKey:'mat_cat_bienetre',  keys:['nutrition','devperso']},
+  {label:'Cuisine & Artisanat',i18nKey:'mat_cat_cuisine',   keys:['cuisine','patisserie','jardinage','bricolage','couture','broderie','poterie']},
+  {label:'Jeux & Loisirs',     i18nKey:'mat_cat_jeux',      keys:['jeux','echecs','autre']}
 ];
 
 function buildCrMatCircles(){
@@ -7159,7 +7055,7 @@ function buildCrMatCircles(){
       var mat=MATIERES.find(function(m){return m.key===key;});
       if(!mat)return'';
       var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
-      var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+      var lbl=mL(mat).split(' / ')[0].split(' (')[0].split(' & ')[0];
       if(lbl.length>9)lbl=lbl.slice(0,8)+'…';
       return'<div class="cr-mat-item'+(selKey===key?' on':'')+'" data-key="'+key+'" onclick="pickCrMat(\''+key+'\')">'
         +'<div class="cr-mat-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">'+icon+'</svg></div>'
@@ -7168,7 +7064,7 @@ function buildCrMatCircles(){
     }).join('');
     if(!items.trim())return'';
     return'<div style="margin-bottom:16px">'
-      +'<div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:0 2px">'+cat.label+'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:0 2px">'+(t(cat.i18nKey)||cat.label)+'</div>'
       +'<div class="cr-mat-scroller">'+items+'</div>'
       +'</div>';
   }).join('');
@@ -7219,7 +7115,7 @@ async function subCr(){
   var desc=g('crDesc')?g('crDesc').value.trim():'';
   if(!desc){
     var di=g('crDesc');if(di){di.style.boxShadow='0 0 0 2px #EF4444';setTimeout(function(){di.style.boxShadow='';},700);}
-    toast('Description requise','Décrivez votre cours pour attirer les élèves',true);
+    toast(t('t_desc_required'),'Décrivez votre cours pour attirer les élèves',true);
     window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
   if(!date){shakeField(g('crDate'));toast(t('t_date_req'),t('t_date_req_msg'),true);window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;}
@@ -7289,9 +7185,9 @@ function togglePw(id,btn){
 // DUPLIQUER UN COURS — ouvre le wizard pré-rempli à l'étape date/heure
 function dupCours(id){
   var c=C.find(function(x){return x.id==id;});
-  if(!c){toast('Erreur','Cours introuvable');return;}
+  if(!c){toast(t('t_error'),'Cours introuvable');return;}
   if(!user||user.role!=='professeur')return;
-  if(user.verified===false){toast('Vérification en cours','Votre identité est en cours de vérification.');return;}
+  if(user.verified===false){toast(t('t_verif_pending'),t('t_verif_pending_sub'));return;}
 
   // Résoudre la matiere_key depuis le sujet du cours
   var mat=MATIERES.find(function(m){
@@ -7341,12 +7237,12 @@ function _openDupSheet(c){
 
   // Résumé des champs pré-remplis
   var rows=[
-    {k:'Matière',  v:_sd.matiere||'—'},
-    {k:'Niveau',   v:_sd.niveau||'—'},
-    {k:'Mode',     v:_sd.mode==='visio'?'Visio':'Présentiel'},
-    {k:'Prix',     v:_sd.prix?_sd.prix+'€':'—'},
-    {k:'Places',   v:_sd.places||'—'},
-    {k:'Lieu',     v:_sd.lieu||(_sd.mode==='visio'?'Lien auto-généré':'—')},
+    {k:t('dup_field_mat'),    v:_sd.matiere?subjL(_sd.matiere):'—'},
+    {k:t('dup_field_niveau'), v:_sd.niveau||'—'},
+    {k:t('dup_field_mode'),   v:_sd.mode==='visio'?t('mode_visio'):t('mode_pres')},
+    {k:t('dup_field_prix'),   v:_sd.prix?_sd.prix+'€':'—'},
+    {k:t('dup_field_places'), v:_sd.places||'—'},
+    {k:t('dup_field_lieu'),   v:_sd.lieu||(_sd.mode==='visio'?t('dup_visio_auto'):'—')},
   ].map(function(r){
     return'<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bdr)">'
       +'<span style="font-size:13px;color:var(--lite)">'+r.k+'</span>'
@@ -7360,7 +7256,7 @@ function _openDupSheet(c){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20">'+COPY+'</svg>'
     +'</div>'
     +'<div>'
-    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Dupliquer ce cours</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">'+t('dup_title')+'</div>'
     +'<div style="font-size:13px;color:var(--lite);margin-top:2px">'+esc(c.title||'')+'</div>'
     +'</div>'
     +'</div>'
@@ -7370,14 +7266,14 @@ function _openDupSheet(c){
     +'<div style="padding:0 14px;display:flex;flex-direction:column;gap:8px">'
     +'<button onclick="closeQuickSheet();_dupOpen(\'date\')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--or);border:none;border-radius:16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="17" height="17">'+CAL+'</svg></div>'
-    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:#fff">Choisir une nouvelle date</div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">Tout le reste reste identique</div></div>'
+    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:#fff">'+t('dup_date_only')+'</div><div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">'+t('dup_date_sub')+'</div></div>'
     +'</button>'
     // Option 2 — tout modifier
     +'<button onclick="closeQuickSheet();_dupOpen(\'full\')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg);border:none;border-radius:16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:var(--wh);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2" stroke-linecap="round" width="17" height="17">'+EDIT+'</svg></div>'
-    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:var(--ink)">Modifier les détails</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Revoir chaque étape</div></div>'
+    +'<div style="text-align:left"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('dup_full')+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+t('dup_full_sub')+'</div></div>'
     +'</button>'
-    +'<button onclick="closeQuickSheet()" style="width:100%;padding:13px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;padding:13px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">'+t('btn_annuler')+'</button>'
     +'</div>'
     +'<div style="height:max(16px,env(safe-area-inset-bottom,16px))"></div>';
   showQuickSheet(html);
@@ -7754,6 +7650,28 @@ var _convCache=''; // cache HTML de la liste pour affichage immédiat
 var _convRetries=0; // compteur de tentatives auto (cold start / timeout iOS)
 var _convRetryTimer=null; // handle du timer de retry — annulable
 var _convGen=0; // génération — écarte les résultats périmés (requêtes en retard)
+function _groupeAvatarStack(membres,total){
+  var AV_SIZE=30,AV_OFFSET=16;
+  var COLORS=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444'];
+  var shown=membres.slice(0,2);
+  var extra=total-shown.length;
+  var circles=shown.map(function(m,i){
+    var bg=m.photo?'#ddd':COLORS[i%COLORS.length];
+    var inner=m.photo
+      ?'<img src="'+esc(m.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      :'<span style="font-size:10px;font-weight:700;color:#fff">'+esc((m.nom||'?')[0].toUpperCase())+'</span>';
+    return'<div style="position:absolute;left:'+(i*AV_OFFSET)+'px;top:50%;transform:translateY(-50%);z-index:'+(3-i)+';width:'+AV_SIZE+'px;height:'+AV_SIZE+'px;border-radius:50%;border:2px solid var(--wh);background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+inner+'</div>';
+  });
+  if(extra>0){
+    var xLeft=shown.length*AV_OFFSET;
+    circles.push('<div style="position:absolute;left:'+xLeft+'px;top:50%;transform:translateY(-50%);z-index:0;width:'+AV_SIZE+'px;height:'+AV_SIZE+'px;border-radius:50%;border:2px solid var(--wh);background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--mid)">+'+extra+'</div>');
+  }
+  var cols=shown.length+(extra>0?1:0);
+  var w=(cols-1)*AV_OFFSET+AV_SIZE;
+  // Enveloppe de la même taille que .msg-av (52px) pour garder l'alignement
+  return'<div style="width:52px;height:52px;flex-shrink:0;position:relative;display:flex;align-items:center"><div style="position:relative;width:'+w+'px;height:'+AV_SIZE+'px">'+circles.join('')+'</div></div>';
+}
+
 async function loadConversations(){
   if(!user)return;
   var lm=g('listM');
@@ -7776,22 +7694,11 @@ async function loadConversations(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     _convRetries=0; // succès — réinitialiser le compteur de tentatives
-    if(!Array.isArray(msgs)||!msgs.length){
-      var _isProf=user&&user.role==='professeur';
-      var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.style.cssText='';
-      lm.innerHTML='<div style="text-align:center;padding:60px 24px">'
-        +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-        +'</div>'
-        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
-        +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
-        +'</div>';
-      _convLoading=false;return;
-    }
-    // Grouper par interlocuteur
+    if(!Array.isArray(msgs))msgs=[];
+    // Grouper par interlocuteur (ignorer les messages groupe)
     var convs={};
     msgs.forEach(function(m){
+      if(m.groupe_cours_id)return; // messages groupe traités séparément
       var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
       if(!otherId||otherId===user.id)return;
       if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
@@ -7826,7 +7733,7 @@ async function loadConversations(){
       if(!nm||!photo)_fetchProf(otherId);
       if(!nm)nm='·\u200B·\u200B·';
       if(!ini)ini=nm[0]&&nm[0]!=='·'?nm[0].toUpperCase():'?';
-      var av=photo?'<img src="'+photo+'" style="width:100%;height:100%;object-fit:cover">':ini;
+      var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover">':esc(ini);
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var _pc=m.contenu||'';
       var preview;
@@ -7834,9 +7741,40 @@ async function loadConversations(){
       else if(_pc.startsWith('%%ESP%%')){try{var _ep=JSON.parse(_pc.slice(7));preview=(_ep.t==='fiche'?'📄 Fiche de cours':_ep.t==='pub'?'📢 Publication':_ep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_ep.title?' · '+esc(_ep.title.slice(0,22)):'');}catch(e){preview='📎 Contenu partagé';}}
       else preview=esc(_pc.slice(0,35))+(_pc.length>35?'…':'');
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+nm.replace(/'/g,"\\'")+'\'\,\''+otherId+'\',\''+(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+nm+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
-    }).join('');
-    var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">'+t('msg_empty_conv')+'</div>';
+      return{ts:new Date(m.created_at).getTime(),html:'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>'};
+    });
+
+    // Fetch conversations groupe
+    var groupeItems=[];
+    try{
+      var rg=await fetch(API+'/groupe-conversations/'+user.id,{headers:apiH()});
+      if(rg.ok){
+        var gconvs=await rg.json();
+        (gconvs||[]).forEach(function(g){
+          var gm=g.last_message||{};
+          var gIsMe=gm.sender_id===user.id;
+          var gNonLu=g.unread>0;
+          if(gNonLu)nonLus+=g.unread;
+          var gTime=gm.created_at?new Date(gm.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+          var gPc=gm.contenu||'';
+          var gPreview;
+          if(gPc.startsWith('%%ESP%%')){try{var _gep=JSON.parse(gPc.slice(7));gPreview=(_gep.t==='fiche'?'📄 Fiche':_gep.t==='pub'?'📢 Publication':_gep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_gep.title?' · '+esc(_gep.title.slice(0,20)):'');}catch(e){gPreview='📎 Contenu';}}
+          else gPreview=esc(gPc.slice(0,35))+(gPc.length>35?'…':'');
+          var gUnreadDot=gNonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
+          var gStack=_groupeAvatarStack(g.membres||[],g.total_membres||1);
+          var gTitle=esc(g.cours_title||'Groupe');
+          var gCid=escH(String(g.cours_id));
+          groupeItems.push({ts:new Date(gm.created_at||0).getTime(),html:'<div class="msg-row'+(gNonLu?' msg-unread':'')+'" onclick="openGroupeMsg(\''+gCid+'\')" style="align-items:center">'+gStack+'<div class="msg-info" style="margin-left:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+gTitle+'</div><div style="font-size:11px;color:'+(gNonLu?'var(--or)':'var(--lite)')+';font-weight:'+(gNonLu?'700':'400')+'">'+gTime+'</div></div><div class="msg-preview">'+(gIsMe?'Vous · ':((gm.sender_nom||'').split(' ')[0]+' · '))+gPreview+'</div></div>'+gUnreadDot+'</div>'});
+        });
+      }
+    }catch(_){}
+
+    // Merger et trier par date décroissante
+    var allItems=html.concat(groupeItems).sort(function(a,b){return b.ts-a.ts;});
+    var _isProf2=user&&user.role==='professeur';
+    var _emptyDesc2=_isProf2?t('msg_empty_prof'):t('msg_empty_eleve');
+    var _emptyHtml='<div style="text-align:center;padding:60px 24px"><div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div><div style="font-size:13px;color:var(--lite)">'+_emptyDesc2+'</div></div>';
+    var _convHtml=allItems.length?allItems.map(function(i){return i.html;}).join(''):_emptyHtml;
     lm.style.cssText='';lm.innerHTML=_convHtml;
     lm.querySelectorAll('.msg-row').forEach(function(r){
       r.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
@@ -8088,7 +8026,7 @@ function renderBarConfig(){
           ?'background:var(--or);color:#fff;box-shadow:0 2px 10px rgba(255,107,43,.3);'
           :'background:var(--wh);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07),0 0 0 0.5px rgba(0,0,0,.06);')
       +'border:none;border-radius:50px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent">'
-      +esc(f.label)
+      +esc(t('fchip_'+f.key)||f.label)
       +(inBar?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" width="11" height="11" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>':'')
       +(f.custom?'<span onclick="event.stopPropagation();removeBarCustom(\''+f.key+'\')" style="display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.25);font-size:10px;font-weight:800">✕</span>':'')
       +'</button>';
@@ -8254,6 +8192,11 @@ function openGroupeMsg(coursId){
   var bd = g('bdGroupe'); if(bd) bd.style.display = 'flex';
   haptic(4);
 
+  // Marquer les messages groupe comme lus
+  fetch(API+'/messages/groupe/lu/'+coursId,{method:'PUT',headers:apiH()}).catch(function(){});
+  // Invalider le cache de conversations pour que le badge se mette à jour
+  _convCache=null;
+
   _loadGroupeMsgs();
   clearInterval(_groupePollTimer);
   _groupePollTimer = setInterval(_loadGroupeMsgs, 4000);
@@ -8325,8 +8268,13 @@ async function _loadGroupeMsgs(){
       var time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var nm = m.sender_nom || 'Utilisateur';
       var ini = nm[0]||'?';
-      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end">'+ini+'</div>';
-      var nameHtml = isMe ? '' : '<div style="font-size:11px;color:var(--lite);margin-bottom:2px;padding-left:34px">'+nm+'</div>';
+      var _sCol=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#0EA5E9','#EC4899'];
+      var _senderHash=(m.sender_id||'').split('').reduce(function(h,c){return h+c.charCodeAt(0);},0);
+      var _avBg=_sCol[_senderHash%_sCol.length];
+      var _avPhoto=(P[m.sender_id]&&P[m.sender_id].photo)||null;
+      var _avInner=_avPhoto?'<img src="'+esc(_avPhoto)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':esc(ini.toUpperCase());
+      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:'+(_avPhoto?'transparent':_avBg)+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end;overflow:hidden">'+_avInner+'</div>';
+      var nameHtml = isMe ? '' : '<div style="font-size:11px;color:var(--lite);margin-bottom:2px;padding-left:34px">'+esc(nm)+'</div>';
       var bg = isMe ? 'linear-gradient(135deg,var(--or),var(--ord))' : 'var(--wh)';
       var col = isMe ? '#fff' : 'var(--ink)';
       var br = isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px';
@@ -8463,22 +8411,22 @@ function _espMsgSendCard(type,id,title){
       expediteur_id:user.id,destinataire_id:msgDestId,contenu:contenu
     })}).then(function(){loadMessages();});
   }
-  haptic(6);toast('Partagé dans la conversation','');
+  haptic(6);toast(t('sondage_share'),'');
 }
 
 function openSondageCreator(){
   var inpStyle='width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:14px;background:var(--bg);color:var(--ink);outline:none;box-sizing:border-box';
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
-    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">Créer un sondage</div></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+t('sondage_title')+'</div></div>'
     +'<div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">'
-    +'<input id="sondageQ" placeholder="Votre question…" style="'+inpStyle+';font-size:15px" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
-    +'<input id="sondageO1" placeholder="Option 1" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
-    +'<input id="sondageO2" placeholder="Option 2" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
-    +'<input id="sondageO3" placeholder="Option 3 (optionnel)" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageQ" placeholder="'+escH(t('sondage_question_ph'))+'" style="'+inpStyle+';font-size:15px" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO1" placeholder="'+escH(t('sondage_opt1_ph'))+'" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO2" placeholder="'+escH(t('sondage_opt2_ph'))+'" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
+    +'<input id="sondageO3" placeholder="'+escH(t('sondage_opt3_ph'))+'" style="'+inpStyle+'" onfocus="this.style.borderColor=\'var(--or)\'" onblur="this.style.borderColor=\'var(--bdr)\'">'
     +'</div>'
     +'<div style="padding:14px 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">'
-    +'<button onclick="_sendSondageMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Envoyer le sondage</button>'
-    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Annuler</button>'
+    +'<button onclick="_sendSondageMsg()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('sondage_send')+'</button>'
+    +'<button onclick="closeQuickSheet()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">'+t('btn_annuler')+'</button>'
     +'</div>';
   showQuickSheet(html);
 }
@@ -8488,7 +8436,7 @@ function _sendSondageMsg(){
   var o1=(g('sondageO1')&&g('sondageO1').value||'').trim();
   var o2=(g('sondageO2')&&g('sondageO2').value||'').trim();
   var o3=(g('sondageO3')&&g('sondageO3').value||'').trim();
-  if(!q||!o1||!o2){toast('Complète la question et au moins 2 options','');return;}
+  if(!q||!o1||!o2){toast(t('sondage_err'),'');return;}
   var opts=[o1,o2];if(o3)opts.push(o3);
   closeQuickSheet();
   var contenu='%%ESP%%'+JSON.stringify({t:'sondage',q:q,opts:opts});
@@ -8732,16 +8680,13 @@ async function submitCni(){
   var btn=g('cniSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.cni_uploaded=true;
-      cniGoStep3();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'cni');
+    try{await fetch(API+'/upload/cni',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.cni_uploaded=true;
+    cniGoStep3();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -8902,17 +8847,14 @@ async function submitDiplome(){
   var btn=g('diplomeSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.diplome_uploaded=true;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
-      diplomeGoStep3();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'diplome');
+    try{await fetch(API+'/upload/diplome',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.diplome_uploaded=true;
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+    diplomeGoStep3();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -9031,19 +8973,16 @@ async function submitCasier(){
   var btn=g('casierSubmitBtn');
   if(btn){btn.disabled=true;btn.textContent=t('txt_sending');}
   try{
-    var reader=new FileReader();
-    reader.onload=async function(e){
-      try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({base64:e.target.result,userId:user.id,filename:file.name})});}catch(err){}
-      user.casier_uploaded=true;
-      try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
-      casierLater();
-      toast(t('t_sent'),t('t_attest_verif'));
-      updateCasierStatusBlock();
-      if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
-    };
-    reader.readAsDataURL(file);
+    var storagePath=await _uploadToStorage(file,'casier');
+    try{await fetch(API+'/upload/casier',{method:'POST',headers:apiH(),body:JSON.stringify({storagePath:storagePath,userId:user.id,filename:file.name})});}catch(err){}
+    user.casier_uploaded=true;
+    try{localStorage.setItem('cp_user',JSON.stringify(user));}catch(ex){}
+    casierLater();
+    toast(t('t_sent'),t('t_attest_verif'));
+    updateCasierStatusBlock();
   }catch(e){
     toast(t('t_error'),t('t_file_fail'));
+  }finally{
     if(btn){btn.disabled=false;btn.textContent=t('txt_send_verif');}
   }
 }
@@ -9178,7 +9117,7 @@ function openPrivateCours(code){
   var c=C.find(function(x){return x.code&&x.code.toUpperCase()===code.toUpperCase();});
   if(c){
     openR(c.id);
-    toast('Cours trouvé !',c.title);
+    toast(t('t_course_found'),c.title);
   } else {
     // Essayer en fetch direct
     fetch(API+'/cours/code/'+code).then(function(r){return r.json();}).then(function(data){
@@ -9677,6 +9616,44 @@ async function loadRevenues() {
   }
 }
 
+async function loadPayouts() {
+  if (!user || user.role !== 'professeur') return;
+  var el = g('revPayouts');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  try {
+    var r = await fetch(API + '/stripe/connect/payouts/' + user.id, {headers: apiH()});
+    var data = await r.json();
+    if (!Array.isArray(data) || !data.length) {
+      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">Aucun virement pour le moment.</div>';
+      return;
+    }
+    var STATUS_LABEL = {paid: 'Reçu', pending: 'En cours', in_transit: 'En transit', failed: 'Échoué', canceled: 'Annulé'};
+    var STATUS_COLOR = {paid: 'var(--green)', pending: 'var(--or)', in_transit: 'var(--or)', failed: '#EF4444', canceled: 'var(--lite)'};
+    el.innerHTML = data.map(function(p) {
+      var d = new Date(p.arrival_date);
+      var dateStr = d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric'});
+      var label = STATUS_LABEL[p.status] || p.status;
+      var color = STATUS_COLOR[p.status] || 'var(--lite)';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bdr)">'
+        + '<div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(34,192,105,.15),rgba(34,192,105,.05));display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'
+        + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">Virement bancaire</div>'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-top:3px">'
+        + '<span style="font-size:11px;color:var(--lite)">'+dateStr+'</span>'
+        + '<span style="font-size:10px;font-weight:700;color:'+color+';background:'+color+'1a;border-radius:4px;padding:1px 6px">'+label+'</span>'
+        + '</div>'
+        + '</div>'
+        + '<div style="font-size:16px;font-weight:800;color:#22C069">'+p.amount.toFixed(2)+'€</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Erreur de chargement.<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+  }
+}
+
 
 
 
@@ -9693,7 +9670,7 @@ var STRIPE_PK = 'pk_live_51TB9Am3FNybFliKQGUpI1uSMheaSyFV0TwgRoAfmgRJtLtxAujacxr
 // ============================================================
 // PAYMENT ELEMENT — paiement natif in-app (sans redirect)
 // ============================================================
-var _payElements=null,_payCoursId=null,_payPourAmi=false;
+var _payElements=null,_payCoursId=null,_payPourAmi=false,_payIntentId=null;
 
 async function openPaymentSheet(id,pourAmi){
   _payCoursId=id;_payPourAmi=!!pourAmi;
@@ -9714,8 +9691,17 @@ async function openPaymentSheet(id,pourAmi){
   try{
     var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:id,user_id:user.id,pour_ami:pourAmi})});
     var data=await r.json();
-    if(data.error){toast(t('t_error'),data.error,true);closePaymentSheet();return;}
+    if(data.error){
+      if(data.locking){toast('Réservation en cours','Une place est en cours de réservation, réessayez dans quelques minutes.',true);}
+      else{toast(t('t_error'),data.error,true);}
+      closePaymentSheet();return;
+    }
     if(data.already_reserved){toast(t('t_already_res'),t('t_already_res_s'));closePaymentSheet();return;}
+    _payIntentId=data.payment_intent_id||null;
+    // Sauvegarder pour reprendre si l'app crash
+    if(_payIntentId){
+      try{localStorage.setItem('cp_pay_resume',JSON.stringify({pi:_payIntentId,cs:data.client_secret,cid:_payCoursId,ts:Date.now()}));}catch(e){}
+    }
     if(!_stripeInstance){if(!window.Stripe){toast(t('t_error'),t('t_payment_svc'),true);closePaymentSheet();return;}_stripeInstance=Stripe(STRIPE_PK);}
     var dk=document.documentElement.classList.contains('dk');
     var appearance={
@@ -9762,6 +9748,8 @@ async function submitPayment(){
       var r2=await fetch(API+'/stripe/confirm-payment',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pi.id})});
       var d2=await r2.json();
       if(d2.success||d2.already_existed){
+        _payIntentId=null; // paiement réussi — ne pas cancel le verrou
+        try{localStorage.removeItem('cp_pay_resume');}catch(e){}
         closePaymentSheet();
         localStorage.removeItem('cp_stripe_pending');
         if(!_payPourAmi)res[_payCoursId]=true;
@@ -9808,6 +9796,13 @@ function closePaymentSheet(){
   _payElements=null;
   var el=g('stripe-payment-element');
   if(el)el.innerHTML='';
+  // Libérer le verrou de place immédiatement si le paiement n'est pas complété
+  if(_payIntentId){
+    var pid=_payIntentId;
+    _payIntentId=null;
+    try{localStorage.removeItem('cp_pay_resume');}catch(e){}
+    fetch(API+'/stripe/cancel-lock',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pid})}).catch(function(){});
+  }
 }
 
 function initStripeIban() {
@@ -9917,7 +9912,7 @@ async function saveIban() {
     });
 
     if (result.error) {
-      toast('IBAN invalide', result.error.message);
+      toast(t('t_iban_invalid'), result.error.message);
       return;
     }
 
@@ -9928,7 +9923,7 @@ async function saveIban() {
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
-    toast('IBAN enregistré !', 'Vérification en cours — vous serez notifié par email ✓');
+    toast(t('t_iban_saved'), 'Vérification en cours — vous serez notifié par email ✓');
 
     // Mettre à jour l'UI — passer en état "en attente de validation Stripe"
     var notConn = g('stripeNotConnected');
@@ -9939,7 +9934,7 @@ async function saveIban() {
     if (pending) pending.style.display = 'block';
 
   } catch(e) {
-    toast('Erreur', 'Impossible d\'enregistrer l\'IBAN');
+    toast(t('t_error'), t('t_iban_error'));
   } finally {
     btn.disabled = false; btn.textContent = t('txt_save_iban');
   }
@@ -9992,9 +9987,9 @@ var LABELS=['','Décevant 😕','Peut mieux faire 😐','Bien 🙂','Très bien 
 
 function openNote(cours){
   if(!cours||!user||user.role==='professeur')return;
-  if(!res[cours.id]){toast('Réservation requise','Vous devez avoir réservé ce cours pour le noter');return;}
+  if(!res[cours.id]){toast(t('t_booking_required'),'Vous devez avoir réservé ce cours pour le noter');return;}
   var isPastNow=false;try{var _diffNow=Date.now()-new Date(cours.dt_iso||0);isPastNow=!isNaN(_diffNow)&&_diffNow>3600000;}catch(e){}
-  if(!isPastNow){toast('Cours à venir','Vous pourrez noter ce cours une fois qu\'il est terminé');return;}
+  if(!isPastNow){toast(t('t_course_upcoming'),'Vous pourrez noter ce cours une fois qu\'il est terminé');return;}
   noteCours=cours;noteVal=0;
   updateStars(0);
   var np=g('noteProf');
@@ -10032,10 +10027,10 @@ async function submitNote(){
       is_tuteur:!!(user.is_tuteur),prenom:user.pr||null
     })});
     var data=await r.json();
-    if(data.error){toast('Erreur','Impossible d\'envoyer la note');return;}
+    if(data.error){toast(t('t_error'),t('t_rating_error'));return;}
     closeM('bdNote');
     try{if(noteCours)localStorage.setItem('cp_noted_'+noteCours.id,'1');}catch(e){}
-    toast('Merci pour votre avis !','Votre note a été enregistrée ⭐');
+    toast(t('t_thanks_review'),'Votre note a été enregistrée ⭐');
     noteCours=null;noteVal=0;
   }catch(e){toast(t('t_net_error'),'');}
 }
@@ -10399,7 +10394,7 @@ function shareApp(){
   var data={title:'CoursPool',text:"Découvrez CoursPool — partagez les frais d'un cours particulier entre étudiants !",url:'https://courspool.vercel.app'};
   if(navigator.share){navigator.share(data).catch(function(){});}
   else{
-    try{navigator.clipboard.writeText(data.url);toast('Lien copié ✓','Partagez-le avec vos amis');}
+    try{navigator.clipboard.writeText(data.url);toast(t('t_link_copied'),'Partagez-le avec vos amis');}
     catch(e){toast('courspool.vercel.app','Copiez ce lien pour partager');}
   }
 }
@@ -10484,11 +10479,11 @@ async function submitContact(){
       if(g('contactPhoto'))g('contactPhoto').value='';
       var lbl=g('contactPhotoTxt');if(lbl)lbl.textContent='Ajouter une capture d\'écran…';
       document.querySelectorAll('.contact-subj').forEach(function(s){s.classList.remove('on');});
-      toast('Message envoyé ✓','On vous répond sous 24h');
+      toast(t('t_msg_envoye'),t('t_msg_envoye_sub'));
     } else {
-      toast('Erreur',"Impossible d'envoyer, réessayez");
+      toast(t('t_error'),"Impossible d'envoyer, réessayez");
     }
-  }catch(e){toast('Erreur',"Impossible d'envoyer",true);}
+  }catch(e){toast(t('t_error'),"Impossible d'envoyer",true);}
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Envoyer le message';}
 }
 function previewContactPhoto(input){
@@ -10885,10 +10880,10 @@ function previewCours(){
   var dt=date&&heure?new Date(date+'T'+heure).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' \u00b7 '+heure:'Date \u00e0 d\u00e9finir';
   var card=g('previewCard');if(!card)return;
   card.innerHTML='<div style="background:'+mat.bg+';padding:14px 16px 10px">'
-    +'<span style="background:rgba(255,255,255,.7);border-radius:50px;padding:3px 10px;font-size:11.5px;font-weight:600;color:'+mat.color+'">'+mat.label+'</span></div>'
-    +'<div style="padding:14px 16px"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px">'+titre+'</div>'
+    +'<span style="background:rgba(255,255,255,.7);border-radius:50px;padding:3px 10px;font-size:11.5px;font-weight:600;color:'+mat.color+'">'+mL(mat)+'</span></div>'
+    +'<div style="padding:14px 16px"><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:10px">'+esc(titre)+'</div>'
     +'<div style="font-size:13px;color:var(--mid);margin-bottom:4px">&#128336; '+dt+'</div>'
-    +'<div style="font-size:13px;color:var(--mid);margin-bottom:12px">&#128205; '+lieu+'</div>'
+    +'<div style="font-size:13px;color:var(--mid);margin-bottom:12px">&#128205; '+esc(lieu)+'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
     +'<div><div style="font-size:12px;color:var(--lite)">Total '+prix+'\u20ac</div>'
     +'<div style="font-size:20px;font-weight:800;color:var(--or)">'+pp+'\u20ac<span style="font-size:12px;font-weight:500;color:var(--lite)"> / \u00e9l\u00e8ve</span></div></div>'
@@ -11148,12 +11143,12 @@ function startAccountCheck(){
       if(r.status>=500)return; // erreur serveur temporaire — ne pas déconnecter
       var p=await r.json();
       if(r.status===404&&p&&p.error){
-        toast('Votre compte a été désactivé','Vous allez être déconnecté');
+        toast(t('t_account_disabled'),t('t_account_disabled_s'));
         setTimeout(doLogout,2000);return;
       }
       if(!p||!p.id)return; // réponse inattendue — ignorer
       if(p.statut_compte==='bloqué'&&user.statut_compte!=='bloqué'){
-        toast('Votre compte a été bloqué','Vous allez être déconnecté');
+        toast(t('t_account_blocked'),t('t_account_disabled_s'));
         setTimeout(doLogout,2000);return;
       }
       // Mettre à jour le statut si changé (ex: vérifié par admin)
@@ -11173,10 +11168,10 @@ function startAccountCheck(){
         updateCasierStatusBlock();
         // Notifier uniquement si le compte vient d'être vérifié (pas déjà vérifié avant)
         if(user.role==='professeur'&&!_prevVerified&&(p.statut_compte==='verified'||p.verified)){
-          toast('Compte vérifié !','Vous pouvez maintenant publier des cours');
+          toast(t('t_account_verified'),'Vous pouvez maintenant publier des cours');
           haptic([10,50,100,50,10]);
         } else if(user.role==='professeur'&&p.statut_compte==='rejeté'){
-          toast('Document refusé','Vérifiez votre email pour plus d\'informations');
+          toast(t('t_doc_rejected'),'Vérifiez votre email pour plus d\'informations');
         }
         if(_dvChanged&&p.diplome_verifie===true){
           toast(t('t_diplome_ok'),t('t_diplome_sub'));
@@ -11207,18 +11202,20 @@ var safeUrl=function(u){return (u&&/^https?:\/\//i.test(u))?escH(u):'#';};
 
 // Step form — icônes natives simples (style Feather, cercle orange)
 function _si(d){return '<div style="width:80px;height:80px;background:#FFF0E8;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">'+d+'</svg></div>';}
-var STEP_DEFS=[
-  {id:'mode',    em:_si('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'), q:'Type de cours',       h:'Pr\u00e9sentiel en personne ou visio en ligne'},
-  {id:'prive',   em:_si('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),                                          q:'Visibilit\u00e9',      h:'Un cours priv\u00e9 n\'est pas visible publiquement \u2014 acc\u00e8s par code unique'},
-  {id:'titre',   em:_si('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>'),                                        q:'Titre du cours',       h:'Donnez un titre clair et accrocheur'},
-  {id:'matiere', em:_si('<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>'),                         q:'Quelle mati\u00e8re\u00a0?', h:'Choisissez la discipline'},
-  {id:'niveau',  em:_si('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),           q:'Niveau vis\u00e9',     h:'Quel public ciblez-vous\u00a0?'},
-  {id:'datetime',em:_si('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'), q:'Quand\u00a0?', h:'Date et heure du cours'},
-  {id:'lieu',    em:_si('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),                                       q:'O\u00f9\u00a0?',       h:'Ville, adresse \u2014 ou lien g\u00e9n\u00e9r\u00e9 pour la visio'},
-  {id:'prix',    em:_si('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),                                       q:'Prix &amp; places',   h:'Prix total que vous souhaitez recevoir'},
-  {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:'Description', h:'D\u00e9tails sur votre cours (optionnel)'},
-  {id:'recurrence',em:_si('<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/>'), q:'R\u00e9currence', h:'Publiez une seule fois ou programmez plusieurs s\u00e9ances'},
-];
+var STEP_DEFS=[];
+function _initStepDefs(){STEP_DEFS=[
+  {id:'mode',    em:_si('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'), q:t('step_mode_q'),     h:t('step_mode_h')},
+  {id:'prive',   em:_si('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),                                          q:t('step_prive_q'),    h:t('step_prive_h')},
+  {id:'titre',   em:_si('<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>'),                                        q:t('step_titre_q'),    h:t('step_titre_h')},
+  {id:'matiere', em:_si('<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>'),                         q:t('step_matiere_q'),  h:t('step_matiere_h')},
+  {id:'niveau',  em:_si('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),           q:t('step_niveau_q'),   h:t('step_niveau_h')},
+  {id:'datetime',em:_si('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'), q:t('step_datetime_q'), h:t('step_datetime_h')},
+  {id:'lieu',    em:_si('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),                                       q:t('step_lieu_q'),     h:t('step_lieu_h')},
+  {id:'prix',    em:_si('<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'),                                       q:t('step_prix_q'),     h:t('step_prix_h')},
+  {id:'desc',    em:_si('<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'), q:t('step_desc_q'),     h:t('step_desc_h')},
+  {id:'recurrence',em:_si('<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/>'), q:t('step_rec_q'),      h:t('step_rec_h')},
+];}
+_initStepDefs();
 
 var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
 var _sc=0;
@@ -11288,15 +11285,22 @@ function _crStepVpAdjust(){
 
 function openCrStep(){
   if(!user||!user.id){showLoginPrompt();return;}
-  if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
+  if(user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
   if(user.verified===false){
-    if(getCniStatus()==='none'){toast('Pi\u00e8ce d\'identit\u00e9 requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
-    else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
+    if(getCniStatus()==='none'){toast(t('t_cni_req'),'Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+    else{toast(t('t_verif_pending'),t('t_verif_pending_sub'));}
     return;
   }
   _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
+  // Réinitialiser les boutons nav (peuvent avoir été mutés par _showCoursePublishedStep)
+  var _ctaBtn=g('stepCta');if(_ctaBtn)_ctaBtn.onclick=stepNext;
+  var _backBtn=g('stepBackBtn');if(_backBtn)_backBtn.onclick=stepBack;
+  var _closeBtn=g('stepCloseBtn');if(_closeBtn)_closeBtn.onclick=closeCrStep;
+  var _fill=g('stepFill');if(_fill)_fill.parentElement.parentElement.style.display='';
+  var _backBtnEl=g('stepBackBtn');if(_backBtnEl)_backBtnEl.style.visibility='';
+  var _closeBtnEl=g('stepCloseBtn');if(_closeBtnEl)_closeBtnEl.style.display='';
   stepRender(0);
   g('bdCrStep').classList.add('active');
   setTimeout(_crStepVpAdjust,50);
@@ -11368,7 +11372,7 @@ function stepRender(idx){
       +'</div>';
     if(_sd.prive){
       html+='<div style="margin-top:16px;width:100%;background:var(--orp);border-radius:14px;padding:14px 16px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Code d\'acc\u00e8s g\u00e9n\u00e9r\u00e9</div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">'+t('cr_step_code_acces')+'</div>'
         +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div id="stepCodeDisp" style="flex:1;background:var(--wh);border-radius:10px;padding:10px 14px;font-size:22px;font-weight:800;letter-spacing:.22em;color:var(--ink);text-align:center">'+escH(_sd.code_acces)+'</div>'
         +'<button id="stepCodeRegen" style="background:var(--wh);border:none;border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--mid);font-size:15px;transition:all .15s">&#x21BA;</button>'
@@ -11376,12 +11380,12 @@ function stepRender(idx){
     }
 
   }else if(step.id==='titre'){
-    html+='<div class="search-bar-premium" style="width:100%;padding:14px 18px"><input class="search-input-premium" id="stepTitre" style="font-size:18px;font-weight:600;color:var(--ink)" type="text" placeholder="Ex\u00a0: Alg\u00e8bre pour d\u00e9butants\u2026" value="'+escH(_sd.titre)+'"></div>';
+    html+='<div class="search-bar-premium" style="width:100%;padding:14px 18px"><input class="search-input-premium" id="stepTitre" style="font-size:18px;font-weight:600;color:var(--ink)" type="text" placeholder="'+escH(t('cr_step_titre_ph'))+'" value="'+escH(_sd.titre)+'"></div>';
 
   }else if(step.id==='matiere'){
     html+='<div class="search-bar-premium" style="width:100%;margin-bottom:16px">'
       +'<div class="search-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>'
-      +'<input class="search-input-premium" id="stepMatSearch" type="search" placeholder="Rechercher une mati\u00e8re\u2026" autocomplete="off">'
+      +'<input class="search-input-premium" id="stepMatSearch" type="search" placeholder="'+escH(t('cr_step_mat_ph'))+'" autocomplete="off">'
       +'</div>';
     html+='<div id="stepMatList" style="display:flex;flex-direction:column;gap:20px;width:100%;padding-bottom:8px">';
     CR_CATEGORIES.forEach(function(cat){
@@ -11389,7 +11393,7 @@ function stepRender(idx){
         var mat=MATIERES.find(function(m){return m.key===key;});
         if(!mat)return'';
         var icon=CR_MAT_ICONS[key]||CR_MAT_ICONS.autre;
-        var lbl=mat.label.split(' / ')[0].split(' (')[0].split(' & ')[0];
+        var lbl=mL(mat).split(' / ')[0].split(' (')[0].split(' & ')[0];
         if(lbl.length>9)lbl=lbl.slice(0,8)+'\u2026';
         var isSel=_sd.matiere_key===key;
         return'<div class="cr-mat-item'+(isSel?' on':'')+'" data-key="'+key+'" onclick="_stepPickMat(\''+key+'\',\''+escH(mat.label)+'\')" style="-webkit-tap-highlight-color:transparent">'
@@ -11399,7 +11403,7 @@ function stepRender(idx){
       }).join('');
       if(!items.trim())return;
       html+='<div data-cat>'
-        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+cat.label+'</div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">'+(t(cat.i18nKey)||cat.label)+'</div>'
         +'<div style="display:flex;gap:12px;overflow-x:auto;padding:4px 4px 12px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none">'+items+'</div>'
         +'</div>';
     });
@@ -11437,10 +11441,10 @@ function stepRender(idx){
     var lbl='font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:8px';
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:16px">'
       +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Date du cours</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDate" style="font-size:15px;font-weight:500;color:var(--ink)" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div></div>'
-      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">Heure de d\u00e9but</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepHeure" style="font-size:15px;font-weight:500;color:var(--ink)" type="time" value="'+escH(_sd.heure)+'"></div></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">'+t('cr_step_date_lbl')+'</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDate" style="font-size:15px;font-weight:500;color:var(--ink)" type="date" min="'+today+'" value="'+escH(_sd.date)+'"></div></div>'
+      +'<div style="flex:1;min-width:140px"><label style="'+lbl+'">'+t('cr_step_heure_lbl')+'</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepHeure" style="font-size:15px;font-weight:500;color:var(--ink)" type="time" value="'+escH(_sd.heure)+'"></div></div>'
       +'</div>'
-      +'<div><label style="'+lbl+'">Dur\u00e9e (min)</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDuree" style="font-size:15px;font-weight:500;color:var(--ink);text-align:center" type="number" value="'+_sd.duree+'" min="30"></div></div>'
+      +'<div><label style="'+lbl+'">'+t('cr_step_duree_lbl')+'</label><div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepDuree" style="font-size:15px;font-weight:500;color:var(--ink);text-align:center" type="number" value="'+_sd.duree+'" min="30"></div></div>'
       +'</div>';
 
   }else if(step.id==='lieu'){
@@ -11448,8 +11452,8 @@ function stepRender(idx){
       html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
         +'<div style="background:var(--orp);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">'
         +'<div style="width:52px;height:52px;background:rgba(0,113,227,.12);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
-        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Lien généré automatiquement</div>'
-        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">Un lien Jitsi sera créé pour votre cours. Vous pourrez le modifier depuis <strong>Mes cours</strong> après publication.</div></div>'
+        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('cr_step_visio_title')+'</div>'
+        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">'+t('cr_step_visio_desc')+'</div></div>'
         +'</div></div>';
     }else{
       var _fi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)';
@@ -11457,19 +11461,19 @@ function stepRender(idx){
       // Chaque option a ses propres placeholders / notes
       var _lieuCfg={
         domicile:{
-          label2:'Adresse exacte',
-          ph2:'Ex\u00a0: 12 rue de la Paix, Paris\u2026',
-          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits uniquement, selon vos param\u00e8tres.'
+          label2:t('cr_step_dom_lbl'),
+          ph2:t('cr_step_dom_ph'),
+          note2:t('cr_step_dom_note')
         },
         etablissement:{
-          label2:'Nom de l\u2019\u00e9tablissement',
-          ph2:'Ex\u00a0: Coll\u00e8ge Victor Hugo, Lyc\u00e9e Pasteur\u2026',
-          note2:'Partag\u00e9 avec les \u00e9l\u00e8ves inscrits.'
+          label2:t('cr_step_etab_lbl'),
+          ph2:t('cr_step_etab_ph'),
+          note2:t('cr_step_etab_note')
         },
         autre:{
-          label2:'Adresse exacte',
-          ph2:'Ex\u00a0: 20 avenue Larousse, Paris 5e\u2026',
-          note2:'Partag\u00e9e avec les \u00e9l\u00e8ves inscrits.'
+          label2:t('cr_step_dom_lbl'),
+          ph2:t('cr_step_autre_ph'),
+          note2:t('cr_step_autre_note')
         }
       };
       var _cfg=_lieuCfg[_lt]||null;
@@ -11493,10 +11497,10 @@ function stepRender(idx){
         // Champ(s) adresse — toujours affiché dès qu'un type est sélectionné
         +(_cfg?'<div id="stepLieuInputWrap" style="display:flex;flex-direction:column;gap:12px">'
           +'<div>'
-            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Ville ou arrondissement</div>'
-            +'<div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepLieu" style="font-size:15px;font-weight:500;color:var(--ink)" type="text" placeholder="Ex\u00a0: Paris 5e, Lyon 3e\u2026" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next"></div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+t('cr_step_ville_lbl')+'</div>'
+            +'<div class="search-bar-premium" style="padding:12px 14px"><input class="search-input-premium" id="stepLieu" style="font-size:15px;font-weight:500;color:var(--ink)" type="text" placeholder="'+escH(t('cr_step_ville_ph'))+'" value="'+escH(_sd.lieu||'')+'" enterkeyhint="next"></div>'
             +'<div id="stepLieuSug" style="margin-top:8px;display:none;background:var(--wh);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>'
-            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">Visible publiquement — les \u00e9l\u00e8ves pourront filtrer par lieu.</div>'
+            +'<div style="margin-top:7px;font-size:11.5px;color:var(--lite);line-height:1.45">'+t('cr_step_ville_note')+'</div>'
           +'</div>'
           +'<div>'
             +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">'+_cfg.label2+'</div>'
@@ -11514,19 +11518,19 @@ function stepRender(idx){
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:28px">'
       // Prix
       +'<div style="text-align:center">'
-      +'<div style="'+_stpLbl+'">Prix total (\u20ac)</div>'
+      +'<div style="'+_stpLbl+'">'+t('cr_step_prix_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnPrixM" style="'+_stpBtn+'">−</button>'
-      +'<div id="stepPrixDisp" style="'+_stpNum+'">'+(_sd.prix||0)+'</div>'
+      +'<input id="stepPrix" type="number" inputmode="numeric" min="0" max="9999" value="'+(_sd.prix||'')+'" placeholder="0" style="'+_stpNum+';border:none;background:transparent;outline:none;font-family:inherit;width:120px;-moz-appearance:textfield;" oninput="_sd.prix=parseInt(this.value)||0;var d=g(\'stepPrixDisp\');if(d)d.textContent=this.value||\'0\';stepPxCalc();">'
       +'<button id="btnPrixP" style="'+_stpBtn+'">+</button>'
       +'</div>'
-      +'<input type="hidden" id="stepPrix" value="'+(_sd.prix||0)+'">'
+      +'<div id="stepPrixDisp" style="display:none"></div>'
       +'</div>'
       // Séparateur
       +'<div style="height:1px;background:var(--bdr)"></div>'
       // Places
       +'<div style="text-align:center">'
-      +'<div style="'+_stpLbl+'">Places max</div>'
+      +'<div style="'+_stpLbl+'">'+t('cr_step_places_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnPlcM" style="'+_stpBtn+'">−</button>'
       +'<div id="stepPlacesDisp" style="'+_stpNum+'">'+(_sd.places||5)+'</div>'
@@ -11535,25 +11539,26 @@ function stepRender(idx){
       +'<input type="hidden" id="stepPlaces" value="'+(_sd.places||5)+'">'
       +'</div>'
       // Prix par élève
-      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:16px;padding:16px;text-align:center;border:1px solid rgba(255,107,43,.12);'+(_sd.prix>0?'':'display:none;')+'"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">Prix par \u00e9l\u00e8ve</div><div id="stepPrixCalcVal" style="font-size:32px;font-weight:800;color:var(--or)">'+(_sd.prix>0?Math.ceil(_sd.prix/Math.max(1,_sd.places))+'\u20ac':'-')+'</div></div>'
+      +'<div id="stepPrixCalc" style="background:var(--orp);border-radius:16px;padding:16px;text-align:center;border:1px solid rgba(255,107,43,.12);'+(_sd.prix>0?'':'display:none;')+'"><div style="font-size:12px;color:var(--mid);margin-bottom:4px">'+t('cr_step_ppeleve_lbl')+'</div><div id="stepPrixCalcVal" style="font-size:32px;font-weight:800;color:var(--or)">'+(_sd.prix>0?Math.ceil(_sd.prix/Math.max(1,_sd.places))+'\u20ac':'-')+'</div></div>'
       +'</div>';
 
   }else if(step.id==='desc'){
     html+='<div style="width:100%;display:flex;flex-direction:column;gap:8px">'
-      +'<div class="search-bar-premium" style="padding:14px 16px;align-items:flex-start"><textarea class="search-input-premium" id="stepDesc" rows="6" placeholder="D\u00e9crivez votre cours\u00a0: niveau requis, programme, mat\u00e9riel\u2026" style="resize:none;font-size:15px;font-weight:400;min-height:160px;line-height:1.6;color:var(--ink)">'+escH(_sd.desc)+'</textarea></div>'
+      +'<div class="search-bar-premium" style="padding:14px 16px;align-items:flex-start"><textarea class="search-input-premium" id="stepDesc" rows="6" placeholder="'+escH(t('cr_step_desc_ph'))+'" style="resize:none;font-size:15px;font-weight:400;min-height:160px;line-height:1.6;color:var(--ink)">'+escH(_sd.desc)+'</textarea></div>'
       +'<div id="stepDescCount" style="font-size:12px;color:var(--lite);text-align:right">'+(_sd.desc?_sd.desc.length:0)+'/400</div>'
       +'</div>';
 
   }else if(step.id==='recurrence'){
     var _recOpts=[
-      {val:'once',     label:'Une seule fois',       sub:'Ce cours sera publi\u00e9 une seule fois'},
-      {val:'weekly',   label:'Toutes les semaines',  sub:'M\u00eame heure, chaque semaine'},
-      {val:'biweekly', label:'Toutes les 2 semaines',sub:'Bi-hebdomadaire'},
-      {val:'monthly',  label:'Tous les mois',        sub:'M\u00eame jour, chaque mois'},
+      {val:'once',     label:t('rec_once'),     sub:t('rec_once_sub')},
+      {val:'weekly',   label:t('rec_weekly'),   sub:t('rec_weekly_sub')},
+      {val:'biweekly', label:t('rec_biweekly'), sub:t('rec_biweekly_sub')},
+      {val:'monthly',  label:t('rec_monthly'),  sub:t('rec_monthly_sub')},
     ];
     var _stpBtn3='width:44px;height:44px;border-radius:50%;border:none;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);font-size:22px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s';
     html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    _recOpts.forEach(function(opt){
+    _recOpts.forEach(function(opt,i){
+      if(i===1)html+='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="flex:1;height:1px;background:var(--bdr)"></div><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">Cours récurrent</div><div style="flex:1;height:1px;background:var(--bdr)"></div></div>';
       var isSel=_sd.recurrence===opt.val;
       html+='<div class="rec-opt" data-rv="'+opt.val+'" onclick="_setRecurrence(\''+opt.val+'\')" style="'
         +(isSel?'background:rgba(255,107,43,.04);box-shadow:0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.2);':'background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);')
@@ -11567,7 +11572,7 @@ function stepRender(idx){
     });
     html+='</div>';
     html+='<div id="recCountSec" style="margin-top:20px;text-align:center;'+(_sd.recurrence==='once'?'display:none;':'')+'width:100%">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Nombre de s\u00e9ances</div>'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">'+t('cr_step_seances_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnRecM" style="'+_stpBtn3+'">−</button>'
       +'<div id="recCountDisp" style="font-size:52px;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1;min-width:70px;text-align:center">'+(_sd.recurrence_count||4)+'</div>'
@@ -11633,7 +11638,7 @@ function stepRender(idx){
   if(_slEl)_slEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var nx=g('stepLieuPrive');if(nx){nx.focus();var sb=g('stepBody');if(sb)sb.scrollTop=sb.scrollHeight;}}});
   var _slpEl=g('stepLieuPrive');
   if(_slpEl)_slpEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}});
-  wire('stepPrix',function(){_sd.prix=parseInt(this.value)||0;stepPxCalc();});
+  // stepPrix est maintenant un input direct avec oninput inline — pas de wire séparé
   wire('stepPlaces',function(){_sd.places=parseInt(this.value)||5;stepPxCalc();});
   wire('stepDesc',function(){if(this.value.length>400)this.value=this.value.slice(0,400);_sd.desc=this.value;var cnt=g('stepDescCount');if(cnt)cnt.textContent=this.value.length+'/400';});
 
@@ -11642,7 +11647,7 @@ function stepRender(idx){
   function _stpUpd(field,v){
     var inp=g(field==='prix'?'stepPrix':'stepPlaces');
     var disp=g(field==='prix'?'stepPrixDisp':'stepPlacesDisp');
-    if(inp)inp.value=v;
+    if(inp)inp.value=v||'';
     if(disp)disp.textContent=v;
     if(field==='prix')_sd.prix=v; else _sd.places=v;
     stepPxCalc();haptic(4);
@@ -11788,31 +11793,31 @@ function stepLieuSearch(q){
 
 function stepNext(){
   var step=STEP_DEFS[_sc];
-  if(step.id==='titre'){if(g('stepTitre'))_sd.titre=g('stepTitre').value.trim();if(!_sd.titre){toast('Titre manquant','Donnez un titre');return;}}
-  if(step.id==='matiere'&&!_sd.matiere){toast('Mati\u00e8re manquante','Choisissez une mati\u00e8re');return;}
+  if(step.id==='titre'){if(g('stepTitre'))_sd.titre=g('stepTitre').value.trim();if(!_sd.titre){toast(t('t_title_req'),t('t_title_req_msg'));return;}}
+  if(step.id==='matiere'&&!_sd.matiere){toast(t('t_subject_req'),t('t_subject_req_msg'));return;}
   if(step.id==='datetime'){
     if(g('stepDate'))_sd.date=g('stepDate').value;
     if(g('stepHeure'))_sd.heure=g('stepHeure').value;
     if(g('stepDuree'))_sd.duree=parseInt(g('stepDuree').value)||60;
-    if(!_sd.date){toast('Date manquante','Choisissez une date');return;}
-    if(!_sd.heure){toast('Heure manquante','Choisissez une heure de début');return;}
+    if(!_sd.date){toast(t('t_date_req'),t('t_date_req_msg'));return;}
+    if(!_sd.heure){toast(t('t_hour_req'),'Choisissez une heure de début');return;}
     var _dt=new Date(_sd.date+'T'+_sd.heure);
-    if(_dt<=new Date()){toast('Date incohérente','Le cours doit être dans le futur');return;}
+    if(_dt<=new Date()){toast(t('t_date_incoherent'),t('t_date_future_msg'));return;}
   }
   if(step.id==='lieu'){
     if(_sd.mode!=='visio'){
-      if(!_sd.lieu_type){toast('Lieu manquant','Choisissez un type de lieu');return;}
+      if(!_sd.lieu_type){toast(t('t_location_req'),t('t_location_type_req'));return;}
       if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
       if(g('stepLieuPrive'))_sd.lieu_prive=g('stepLieuPrive').value.trim();
-      if(!_sd.lieu){toast('Lieu manquant','Précisez la ville ou l\'adresse');return;}
+      if(!_sd.lieu){toast(t('t_location_req'),t('t_location_addr_req'));return;}
     }
   }
   if(step.id==='prix'){
     if(g('stepPrix'))_sd.prix=parseInt(g('stepPrix').value)||0;
     if(g('stepPlaces'))_sd.places=parseInt(g('stepPlaces').value)||5;
-    if(!_sd.prix){toast('Prix manquant','Entrez le prix');return;}
+    if(!_sd.prix){toast(t('t_price_req'),'Entrez le prix');return;}
   }
-  if(step.id==='desc'&&g('stepDesc'))_sd.desc=g('stepDesc').value.trim();
+  if(step.id==='desc'){if(g('stepDesc'))_sd.desc=g('stepDesc').value.trim();if(!_sd.desc){toast(t('t_desc_req')||'Description requise','Décrivez votre cours en quelques mots');return;}}
   var total=STEP_DEFS.length;
   if(_sc<total-1){
     _sc++;
@@ -11837,20 +11842,23 @@ async function subCrStep(){
     var _dates=_computeRecDates();
     if(!_dates.length)throw new Error('Date invalide');
     var _published=0;
+    var _firstVisioUrl='';
+    var _isVisioMode=_sd.mode==='visio';
     for(var _di=0;_di<_dates.length;_di++){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
+      var _visioUrl=_isVisioMode?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'';
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
-        lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
+        lieu:_isVisioMode?'Visio':_sd.lieu,
         lieu_prive:_sd.lieu_prive||'',
         lieu_type:_sd.lieu_type||'',
         prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
         description:_sd.desc||'',
         prof_id:user.id,professeur_id:user.id,
         mode:_sd.mode||'presentiel',
-        visio_url:_sd.mode==='visio'?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'',
+        visio_url:_visioUrl,
         prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
         couleur_sujet:_sc2,background:_bg,
         emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
@@ -11861,12 +11869,73 @@ async function subCrStep(){
       var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
       var data=await r.json();
       if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
+      if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
       _published++;
     }
-    haptic([10,50,100,50,10]);closeCrStep();
-    toast('Cours publi\u00e9\u00a0!',_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
-    await loadData();buildCards();buildAccLists();
-  }catch(e){toast('Erreur',e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
+    haptic([10,50,100,50,10]);
+    loadData().then(function(){buildCards();buildAccLists();});
+    _showCoursePublishedStep(_firstVisioUrl,_published);
+  }catch(e){toast(t('t_error'),e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
+}
+
+function _showCoursePublishedStep(visioUrl,nbSeances){
+  // Masquer la barre de progression et les boutons nav
+  var fill=g('stepFill');if(fill)fill.parentElement.parentElement.style.display='none';
+  var back=g('stepBackBtn');if(back)back.style.visibility='hidden';
+  var closeBtn=g('stepCloseBtn');if(closeBtn)closeBtn.style.display='none';
+
+  // Contenu de l'écran de succès
+  var body=g('stepBody');if(!body)return;
+  var visioBlock='';
+  if(visioUrl){
+    visioBlock='<div style="width:100%;margin-top:24px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">'+t('wiz_lien_visio')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:16px;padding:14px 16px">'
+      +'<div style="flex:1;font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(visioUrl)+'</div>'
+      +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(visioUrl)+'\')" style="flex-shrink:0;background:transparent;border:none;padding:6px;cursor:pointer;color:var(--or);-webkit-tap-highlight-color:transparent">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'
+      +'</button>'
+      +'</div>'
+      +(nbSeances>1?'<div style="margin-top:8px;font-size:12px;color:var(--lite)">'+t('wiz_chaque_seance_note')+'</div>':'')
+      +'</div>';
+  }
+
+  body.innerHTML=
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px 0;width:100%">'
+    // Icone succès animée
+    +'<div style="width:80px;height:80px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:_checkPop .4s cubic-bezier(.34,1.56,.64,1)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>'
+    +'</div>'
+    +'<div style="font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:8px">'+t('wiz_cours_publie')+'</div>'
+    +'<div style="font-size:15px;color:var(--lite);text-align:center;line-height:1.6">'+(nbSeances>1?nbSeances+'\u00a0'+t('wiz_seances_prog'):t('wiz_cours_visible'))+'</div>'
+    +visioBlock
+    +'</div>';
+
+  // Injecter l'animation si pas encore présente
+  if(!g('_checkPopStyle')){
+    var st=document.createElement('style');st.id='_checkPopStyle';
+    st.textContent='@keyframes _checkPop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}';
+    document.head.appendChild(st);
+  }
+
+  // Bouton CTA → fermer
+  var cta=g('stepCta');
+  if(cta){cta.disabled=false;cta.textContent='OK';cta.onclick=function(){closeCrStep();};}
+}
+
+function _copyVisioUrl(url){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      toast('Lien copié','');haptic(4);
+    }).catch(function(){_fallbackCopyVisio(url);});
+  }else{_fallbackCopyVisio(url);}
+}
+
+function _fallbackCopyVisio(url){
+  var ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-999px;left:-999px';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('Lien copié','');haptic(4);}catch(e){}
+  document.body.removeChild(ta);
 }
 
 // ---- Override openCr ----
@@ -11874,10 +11943,10 @@ async function subCrStep(){
   var _oc=openCr;
   openCr=function(){
     if(!user||!user.id){showLoginPrompt();return;}
-    if(user.role!=='professeur'){toast('Acc\u00e8s refus\u00e9','Seuls les professeurs peuvent proposer des cours');return;}
+    if(user.role!=='professeur'){toast(t('t_denied'),t('t_prof_only'));return;}
     if(user.verified===false){
-      if(getCniStatus()==='none'){toast('Pi\u00e8ce d\'identit\u00e9 requise','Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
-      else{toast('V\u00e9rification en cours','Votre identit\u00e9 est en cours de v\u00e9rification. Vous pourrez publier des cours sous 24h.');}
+      if(getCniStatus()==='none'){toast(t('t_cni_req'),'Envoyez votre CNI depuis votre profil pour publier des cours');openCniSheet();}
+      else{toast(t('t_verif_pending'),t('t_verif_pending_sub'));}
       return;
     }
     openCrStep();
@@ -11963,7 +12032,7 @@ function retryPayment(){
   var p=g('popupFailed');if(p)p.style.display='none';
   var cid=window._lastCancelledCoursId||null;
   if(!cid){try{var r=localStorage.getItem('cp_stripe_pending');if(r){var d=JSON.parse(r);cid=d.cours_id||null;}}catch(e){}}
-  if(!cid){toast('Cours introuvable','Selectionnez le cours');return;}
+  if(!cid){toast(t('t_course_not_found'),t('t_select_course'));return;}
   if(!user||!user.id){showLoginPrompt();return;}
   setTimeout(function(){openR(cid);},200);
 }
@@ -11998,8 +12067,8 @@ function _calBuildHeader(myCours){
   // Segment bar HTML (tous les utilisateurs)
   var segHtml='<div id="mesSegBar" style="padding:8px 0 14px">'
     +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
-    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
-    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">'+t('cal_upcoming')+'</button>'
+    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">'+t('cal_past')+'</button>'
     +'</div></div>';
 
   hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
@@ -12276,12 +12345,12 @@ function _renderCalCourses(){
       var ncYmd=_calYmd(ncD);
       nextHint='<button onclick="_calJumpTo('+wDiff+',\''+ncYmd+'\')" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,43,.08);color:var(--or);border:none;border-radius:50px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
-        +'Prochain cours&nbsp;: '+ncLbl+'</button>';
+        +t('cal_next_course')+'&nbsp;: '+ncLbl+'</button>';
     }
     el.innerHTML='<div class="mes-cal-empty">'
       +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
-      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">'+t('cal_no_course_day')+'</div>'
+      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?t('cal_no_course_prof'):t('cal_no_course_eleve'))+'</div>'
       +nextHint
       +'</div>';
     return;
@@ -12294,9 +12363,9 @@ function _renderCalCourses(){
 
 function _bindMesCards(el){
   el.querySelectorAll('.mes-card').forEach(function(card){card.onclick=function(){openR(card.dataset.cid);};});
-  el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast('Copié\u00a0!','');});};});
+  el.querySelectorAll('.mes-code-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var code=btn.dataset.code;if(navigator.clipboard)navigator.clipboard.writeText(code).then(function(){toast(t('t_copied'),'');});};});
   el.querySelectorAll('.mes-visio-add').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();openAddVisioLink(btn.dataset.cid);};});
-  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('Lien copié\u00a0!','');});}};});
+  el.querySelectorAll('.mes-link-copy').forEach(function(btn){btn.onclick=function(e){e.stopPropagation();var link=btn.dataset.link;if(navigator.share){navigator.share({title:'CoursPool',url:link}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast(t('t_link_copied'),'');});}};});
 }
 
 function mesSetSeg(seg){
@@ -12412,12 +12481,12 @@ function openAddVisioLink(coursId){
 // ---- Ajouter au calendrier ----
 function addToCalendar(coursId){
   var c=C.find(function(x){return x.id==coursId;});
-  if(!c){toast('Erreur','Cours introuvable');return;}
+  if(!c){toast(t('t_error'),'Cours introuvable');return;}
 
   function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
   function toIcsDate(d){return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');}
   var dtStart=new Date(c.dt);
-  if(isNaN(dtStart)){toast('Erreur','Date du cours introuvable');return;}
+  if(isNaN(dtStart)){toast(t('t_error'),'Date du cours introuvable');return;}
   var dtEnd=new Date(dtStart.getTime()+60*60*1000);
   var icsText=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//CoursPool//CoursPool//FR',
     'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
@@ -12496,7 +12565,7 @@ function addToCalendar(coursId){
 function openShareCoursSheet(){
   var myC=C.filter(function(c){return user&&c.pr===user.id&&!_isCoursPass(c);})
     .sort(function(a,b){return new Date(a.dt)-new Date(b.dt);});
-  if(!myC.length){toast('Aucun cours à venir','Publiez un nouveau cours pour le partager');return;}
+  if(!myC.length){toast(t('empty_resa_title'),t('t_aucun_cours_share_sub'));return;}
   var bd=document.createElement('div');
   bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:900;display:flex;align-items:flex-end;justify-content:center';
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
@@ -12564,7 +12633,9 @@ async function sendCoursCardMsg(c){
 // ============================================================
 // PROFILE — Home grid + Detail view navigation
 // ============================================================
-var ACC_TITLES={'R':'Mes cours','F':'Suivis','H':'Historique','P':'Mon profil','Rev':'Revenus','Rmb':'Remboursements','Avis':'Mes avis'};
+var ACC_TITLES={};
+function _initAccTitles(){ACC_TITLES={'R':t('acc_tab_cours'),'F':t('acc_tab_suivis'),'H':t('acc_tab_histo'),'P':t('acc_tab_profil'),'Rev':t('acc_tab_revenus'),'Rmb':t('acc_tab_remb'),'Avis':t('acc_tab_avis')};}
+_initAccTitles();
 
 function showAccHome(){
   var pg=g('pgAcc');
@@ -12707,7 +12778,7 @@ async function submitEditMsg(msgId, btn){
       var ew=wrap.querySelector('.msg-edit-wrap');if(ew)ew.remove();
       var ac=wrap.querySelector('.msg-actions');if(ac)ac.style.display='';
       haptic(6);
-    }else{toast('Erreur','Impossible de modifier');}
+    }else{toast(t('t_error'),t('t_edit_error'));}
   }catch(e){toast(t('t_net_error'),'');}
   finally{btn.disabled=false;btn.textContent='OK';}
 }
@@ -12725,8 +12796,8 @@ async function deleteMsg(msgId){
         if(row){row.style.transition='opacity .25s,max-height .3s';row.style.opacity='0';row.style.maxHeight='0';row.style.overflow='hidden';setTimeout(function(){row.remove();},300);}
         else if(wrap)wrap.remove();
       }
-      haptic([10,30]);toast('Message supprimé','');
-    }else{toast('Erreur','Impossible de supprimer');}
+      haptic([10,30]);toast(t('t_message_deleted'),'');
+    }else{toast(t('t_error'),t('t_delete_error'));}
   }catch(e){toast(t('t_net_error'),'');}
 }
 
@@ -12827,7 +12898,7 @@ async function _confirmDeleteAccount(){
     var r=await fetch(API+'/users/'+uid,{method:'DELETE',headers:apiH()});
     ok=r.ok||r.status===404; // 404 = déjà supprimé, on continue
   }catch(e){}
-  if(!ok){toast('Erreur','Impossible de supprimer le compte. Réessayez ou contactez le support.');return;}
+  if(!ok){toast(t('t_error'),t('t_delete_acc_error'));return;}
   // 3. Sign out Supabase (comptes OAuth)
   try{if(window._supabase)await window._supabase.auth.signOut();}catch(e){}
   // 4. Nettoyer Sentry
@@ -12839,7 +12910,7 @@ async function _confirmDeleteAccount(){
   try{localStorage.clear();sessionStorage.clear();}catch(e){}
   user=null;
   haptic(10);
-  toast('Compte supprimé','Toutes vos données ont été effacées.');
+  toast(t('t_account_deleted'),'Toutes vos données ont été effacées.');
   setTimeout(function(){location.reload();},1800);
 }
 
@@ -12853,7 +12924,7 @@ async function toggleTuteurMode(){
     var epRow=g('enfantPrenomRow');if(epRow)epRow.style.display='none';
     try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:false})});}catch(e){}
     haptic(6);
-    toast('Statut désactivé','Vous n\'apparaissez plus comme parent');
+    toast(t('t_parent_disabled'),'Vous n\'apparaissez plus comme parent');
     return;
   }
   // 1. Vérification âge ≥ 18
@@ -12861,7 +12932,7 @@ async function toggleTuteurMode(){
     var age=new Date().getFullYear()-user.birth_year;
     if(age<18){
       haptic(3);
-      toast('Réservé aux parents','Vous devez avoir 18 ans ou plus pour activer ce statut');
+      toast(t('t_parent_only'),'Vous devez avoir 18 ans ou plus pour activer ce statut');
       return;
     }
   }
@@ -12901,7 +12972,7 @@ async function confirmActivateTuteur(){
   // 2. Prénom obligatoire
   if(!prenom){
     if(prenomInp){prenomInp.style.borderColor='#EF4444';setTimeout(function(){prenomInp.style.borderColor='';},700);}
-    toast('Prénom requis','Indiquez le prénom de votre enfant pour continuer');
+    toast(t('t_firstname_req'),'Indiquez le prénom de votre enfant pour continuer');
     return;
   }
   closeQuickSheet();
@@ -12914,7 +12985,7 @@ async function confirmActivateTuteur(){
   var epInp=g('enfantPrenomInput');if(epInp)epInp.value=prenom;
   try{await fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({is_tuteur:true,enfant_prenom:prenom})});}catch(e){}
   haptic(6);
-  toast('Statut activé 👨‍👧','Les profs voient que vous réservez pour '+prenom);
+  toast(t('t_parent_enabled'),'Les profs voient que vous réservez pour '+prenom);
 }
 
 function saveEnfantPrenom(val){
@@ -12923,7 +12994,7 @@ function saveEnfantPrenom(val){
   try{localStorage.setItem('cp_enfant_prenom',val.trim());}catch(e){}
   fetch(API+'/profiles/'+user.id,{method:'PATCH',headers:apiH(),body:JSON.stringify({enfant_prenom:val.trim()})}).catch(function(){});
   haptic(4);
-  toast('Prénom enregistré','');
+  toast(t('t_firstname_saved'),'');
 }
 function openMsgContactSheet(){
   var opts=[
@@ -12939,8 +13010,8 @@ function openMsgContactSheet(){
   var cur=user&&user.contact_pref||'all';
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
     +'<div style="padding:16px 20px 8px">'
-    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Messages entrants</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Qui peut vous contacter sur CoursPool ?</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">'+t('msg_incoming_title')+'</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">'+t('msg_incoming_subtitle')+'</div>'
     +'</div>'
     +'<div style="padding:8px 16px 32px;display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function(o){
@@ -12995,7 +13066,7 @@ function blockUser(uid,nm){
   var convBanner=g('msgBlockedBanner');if(convBanner)convBanner.style.display='block';
   var inp=g('msgInputBar');if(inp)inp.style.display='none';
   haptic(10);
-  toast('Utilisateur bloqué',esc(nm||'Cet utilisateur')+' ne peut plus vous contacter.');
+  toast(t('t_user_blocked'),esc(nm||'Cet utilisateur')+' ne peut plus vous contacter.');
 }
 
 function unblockUser(uid,nm){
@@ -13003,7 +13074,7 @@ function unblockUser(uid,nm){
   var convBanner=g('msgBlockedBanner');if(convBanner)convBanner.style.display='none';
   var inp=g('msgInputBar');if(inp)inp.style.display='';
   haptic(6);
-  toast('Utilisateur débloqué','Vous pouvez à nouveau échanger des messages.');
+  toast(t('t_user_unblocked'),'Vous pouvez à nouveau échanger des messages.');
 }
 
 function openMsgMoreOptions(){
@@ -13055,9 +13126,9 @@ function _confirmBlockUser(uid,nm){
 
 // ── Export données RGPD ─────────────────────────────────────────────────────
 async function exportMesDonnees(){
-  if(!user){toast('Connexion requise','');return;}
+  if(!user){toast(t('t_login_to_report'),'');return;}
   closeSettings();
-  toast('Préparation…','Collecte de vos données en cours');
+  toast(t('t_preparing'),'Collecte de vos données en cours');
   var data={
     export_date:new Date().toISOString(),
     notice:'Cet export contient toutes les données personnelles associées à votre compte CoursPool, conformément au RGPD (Art. 15 et 20).',
@@ -13106,11 +13177,11 @@ async function exportMesDonnees(){
   document.body.appendChild(a);a.click();
   setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
   haptic(6);
-  toast('Export téléchargé','Fichier JSON avec toutes vos données personnelles.');
+  toast(t('t_export_done'),'Fichier JSON avec toutes vos données personnelles.');
 }
 
 function openSignalement(context,targetId,targetName){
-  if(!user){toast('Connexion requise','Connectez-vous pour signaler');return;}
+  if(!user){toast(t('t_login_to_report'),t('t_login_to_report_s'));return;}
   var WARN='<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
   var CIRC='<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
   var CLOK='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>';
@@ -13177,8 +13248,8 @@ async function submitSignalement(context,targetId,targetName,motif,motifLabel){
       role:user.role||'',user_id:user.id
     })});
     haptic(12);
-    toast('Signalement envoyé','Notre équipe va examiner ce contenu. Merci.');
-  }catch(e){toast('Erreur',"Impossible d'envoyer le signalement");}
+    toast(t('t_report_sent'),'Notre équipe va examiner ce contenu. Merci.');
+  }catch(e){toast(t('t_error'),"Impossible d'envoyer le signalement");}
 }
 
 // ---- Quick sheet helper ----
@@ -13228,6 +13299,10 @@ function applyLangDOM(){
   document.documentElement.lang=window._i18nLang||'fr';
   var lbl=document.getElementById('currentLangLabel');
   if(lbl)lbl.textContent=(_LANG_FLAGS[window._i18nLang]||'')+' '+(_LANG_NAMES[window._i18nLang]||'Français');
+  var loginCode=document.getElementById('loginLangCode');
+  if(loginCode)loginCode.textContent=(window._i18nLang||'fr').toUpperCase();
+  _initAccTitles();
+  _initStepDefs();
 }
 
 function applyLang(){
@@ -13293,12 +13368,12 @@ function _updateSearchPill(val,sub){
   var main=g('searchPillMain'),subEl=g('searchPillSub'),clr=g('searchPillClear');
   if(val){
     if(main){main.textContent=val;main.style.color='#222';}
-    if(subEl){subEl.textContent=sub||'Matière · Professeur · Code privé';subEl.style.display='block';}
+    if(subEl){subEl.textContent=sub||t('search_sub');subEl.style.display='block';}
     if(clr)clr.style.display='flex';
     var pill=g('searchPill');
     if(pill)pill.style.boxShadow='0 2px 8px rgba(232,97,26,.18),0 0 0 1.5px rgba(232,97,26,.35)';
   } else {
-    if(main){main.textContent='Que cherches-tu ?';main.style.color='#222';}
+    if(main){main.textContent=t('search_title');main.style.color='#222';}
     if(subEl){subEl.textContent='Matière · Professeur · Code privé';subEl.style.display='block';}
     if(clr)clr.style.display='none';
     var pill2=g('searchPill');
@@ -13581,11 +13656,17 @@ function initSwipeNav(){
     if(bniMes&&bniMes.style.display!=='none')t.push('mes');
     var bniProfs=g('bniProfs');
     if(bniProfs&&bniProfs.style.display!=='none')t.push('profs');
+    var bniEspEl=g('bniEsp');
+    if(bniEspEl&&bniEspEl.style.display!=='none')t.push('esp');
     t.push('acc');
     return t;
   }
 
   function _curTab(){
+    // Détecter "espace" : pgAcc actif + onglet Esp actif
+    var pgAccEl=g('pgAcc');
+    var asecEspEl=g('asecEsp');
+    if(pgAccEl&&pgAccEl.classList.contains('on')&&asecEspEl&&asecEspEl.classList.contains('on'))return'esp';
     var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc',pgMesProfs:'profs'};
     for(var id in map){var el=g(id);if(el&&el.classList.contains('on'))return map[id];}
     return'exp';

@@ -998,32 +998,27 @@ var _mptSteps=[
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Bienvenue dans Mes Profs !',
-    sub:'Retrouve ici les profs dont tu as rejoint l\'espace privé, et ceux que tu suis depuis l\'explorateur.'
+    titleKey:'mpt_title_1',sub_key:'mpt_sub_1'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
     bg:'rgba(99,102,241,.08)',
-    title:'Suis un prof',
-    sub:'Depuis l\'explorateur, ouvre le profil d\'un prof et appuie sur "Suivre". Il apparaît ici dans "Suivis" pour ne rater aucun de ses prochains cours.'
+    titleKey:'mpt_title_2',sub_key:'mpt_sub_2'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Rejoins l\'espace d\'un prof',
-    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
+    titleKey:'mpt_title_3',sub_key:'mpt_sub_3'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
     bg:'rgba(99,102,241,.08)',
-    title:'Cours à venir',
-    sub:'Accède aux prochains cours de ton prof, réserve ta place et rejoins les sessions visio directement depuis l\'app.'
+    titleKey:'mpt_title_4',sub_key:'mpt_sub_4'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
     bg:'rgba(34,192,105,.08)',
-    title:'Fiches & Publications',
-    sub:'Consulte les fiches de cours et les annonces publiées par ton professeur, accessibles depuis son espace.'
+    titleKey:'mpt_title_5',sub_key:'mpt_sub_5'
   }
 ];
 
@@ -1048,11 +1043,11 @@ function _mptRender(){
   var isLast=_mptStep===_mptSteps.length-1;
   if(track){track.innerHTML='<div style="text-align:center;padding:28px 0 20px">'
     +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
-    +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-    +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+    +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+t(s.titleKey)+'</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t(s.sub_key)+'</div>'
     +'</div>';}
   if(dots){dots.innerHTML=_mptSteps.map(function(_,i){return'<div onclick="mptGoTo('+i+')" style="width:'+(i===_mptStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_mptStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';}).join('');}
-  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
+  if(skipBtn)skipBtn.textContent=isLast?t('mpt_done'):t('mpt_skip');
 }
 
 function _mptInitSwipe(sheet){
@@ -2909,9 +2904,9 @@ function buildAccLists(){
       +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
       +'</div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
-      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">'+t('no_prof_followed')+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">'+t('follow_profs_desc')+'</div>'
+      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('explore_courses_btn')+'</button>'
       +'</div>';
   } else {
     var folRows=fIds.map(function(id,i){
@@ -5080,39 +5075,27 @@ var _espTutoStep=0;
 var _espTutoSteps=[
   {
     svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Bienvenue dans ton Espace !',
-    sub:'Tout ce dont tu as besoin pour gérer tes cours et tes élèves est ici, en un seul endroit.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_1',sub_key:'esp_sub_1'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Code d\'accès élèves',
-    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et accéder à tes contenus.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_2',sub_key:'esp_sub_2'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Mes cours',
-    sub:'Retrouve ici tous tes cours à venir et passés. Les cours que tu as créés sont distingués de ceux que tu as réservés.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_3',sub_key:'esp_sub_3'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-    bg:'rgba(99,102,241,.08)',
-    title:'Mes élèves',
-    sub:'Retrouve tous les élèves inscrits à ton espace. Valide ou refuse les nouvelles demandes d\'accès.'
+    bg:'rgba(99,102,241,.08)',titleKey:'esp_title_4',sub_key:'esp_sub_4'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
-    bg:'rgba(249,115,22,.08)',
-    title:'Publications',
-    sub:'Écris des annonces pour tes élèves : infos de cours, rappels, messages importants. Tes élèves les voient directement sur ton profil.'
+    bg:'rgba(249,115,22,.08)',titleKey:'esp_title_5',sub_key:'esp_sub_5'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
-    bg:'rgba(34,192,105,.08)',
-    title:'Ma bibliothèque',
-    sub:'Crée des fiches de cours et ajoute des documents. Tu choisis quels élèves y ont accès.'
+    bg:'rgba(34,192,105,.08)',titleKey:'esp_title_6',sub_key:'esp_sub_6'
   }
 ];
 
@@ -5139,8 +5122,8 @@ function _espTutoRender(){
     track.innerHTML=''
       +'<div style="text-align:center;padding:28px 0 20px">'
       +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
-      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+t(s.titleKey)+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t(s.sub_key)+'</div>'
       +'</div>';
   }
   if(dots){
@@ -5148,7 +5131,7 @@ function _espTutoRender(){
       return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
-  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
+  if(skipBtn)skipBtn.textContent=isLast?t('mpt_done'):t('mpt_skip');
 }
 
 function _espTutoInitSwipe(sheet){
@@ -5252,7 +5235,7 @@ function espLoadStudents(){
   var uid=user&&user.id;if(!uid)return;
   var myCours=C.filter(function(c){return c.pr===uid&&!_isCoursPass(c);});
   if(!myCours.length){
-    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun cours publié pour l\'instant.</div>';
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">'+t('no_course_published')+'</div>';
     if(badge)badge.style.display='none';
     return;
   }
@@ -6420,7 +6403,7 @@ function _loadProfAvis(){
       if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
       if(avgEl)avgEl.textContent='—';
       if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
-      if(countEl)countEl.textContent='Aucun avis pour le moment';
+      if(countEl)countEl.textContent=t('no_reviews_yet');
       return;
     }
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
