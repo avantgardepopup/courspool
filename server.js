@@ -1768,7 +1768,8 @@ app.post('/webhooks/supabase', express.json(), async (req, res) => {
           `🔄 **Changement statut compte**\n` +
           `> **Utilisateur :** ${nom}\n` +
           `> **Email :** \`${record.email || '?'}\`\n` +
-          `> **Avant :** ${oldStatut || '?'} → **Après :** ${newStatut}`
+          `> **Avant :** ${oldStatut || '?'} → **Après :** ${newStatut}`,
+          process.env.DISCORD_WEBHOOK_SUPABASE
         );
       }
 
@@ -1781,7 +1782,8 @@ app.post('/webhooks/supabase', express.json(), async (req, res) => {
           `⚠️ **Changement de rôle détecté**\n` +
           `> **Utilisateur :** ${nom} (\`${record.id}\`)\n` +
           `> **Avant :** ${oldRole || '?'} → **Après :** ${newRole}\n` +
-          `> Si ce changement n'a pas été initié par l'app, vérifiez immédiatement.`
+          `> Si ce changement n'a pas été initié par l'app, vérifiez immédiatement.`,
+          process.env.DISCORD_WEBHOOK_SUPABASE
         );
       }
     }
