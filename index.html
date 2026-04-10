@@ -2488,7 +2488,13 @@
   <div class="modal">
     <div class="mhd">
       <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Inscrits</div><div style="font-size:17px;font-weight:800" id="elevesTitre" data-i18n="students_title">Élèves inscrits</div></div>
-      <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="bdElevesGroupe" style="display:none;align-items:center;gap:6px;background:var(--orp);color:var(--or);border:none;border-radius:10px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+          Groupe
+        </button>
+        <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+      </div>
     </div>
     <div class="mbd">
       <div id="elevesList"></div>

@@ -4077,19 +4077,18 @@ function openR(id){haptic(4);
   var btnEleves=g('btnVoirEleves');
   var btnNoter=g('btnNoterCours');
   var btnGroupe=g('btnGroupe');
+  if(btnGroupe)btnGroupe.style.display='none'; // uniquement dans bdEleves pour le prof
   if(isOwner){
     if(btnConf)btnConf.style.display='none';
     if(btnContact)btnContact.style.display='none';
     if(btnDel)btnDel.style.display='flex';
     if(btnEleves)btnEleves.style.display='flex';
     if(btnNoter)btnNoter.style.display='none';
-    if(btnGroupe)btnGroupe.style.display=c.fl>0?'flex':'none';
   } else {
     if(btnConf){btnConf.style.display='flex';btnConf.onclick=confR;}
     if(btnContact)btnContact.style.display='flex';
     if(btnDel)btnDel.style.display='none';
     if(btnEleves)btnEleves.style.display='none';
-    if(btnGroupe)btnGroupe.style.display=res[id]?'flex':'none';
     // Bouton "Laisser un avis" : cours passé depuis >1h, réservé, pas encore noté
     if(btnNoter){
       var _canNote=(function(){
@@ -4112,6 +4111,10 @@ async function openEleves(id){
   var c=C.find(function(x){return x.id==id;});
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' '+(c.fl>1?t('eleves_inscrits'):t('eleve_inscrit'));
+  // Bouton groupe dans bdEleves (prof uniquement)
+  var _bge=g('bdElevesGroupe');
+  if(_bge)_bge.style.display=c.fl>0?'flex':'none';
+  if(_bge)_bge.onclick=function(){closeM('bdEleves');setTimeout(function(){openGroupeMsg(id);},200);};
   var list=g('elevesList');
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_loading')+'</div>';
   openM('bdEleves');
