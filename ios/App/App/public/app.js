@@ -508,9 +508,14 @@ function buildFavPage(){
         return;
       }
       carousel.innerHTML='';
-      // Masonry: two columns, right column offset by 20px
-      var colL=document.createElement('div');colL.className='fav2-col';
-      var colR=document.createElement('div');colR.className='fav2-col';colR.style.marginTop='20px';
+      // Masonry : 2 colonnes mobile, 3 colonnes iPad (≥768px)
+      var _numCols=window.innerWidth>=768?3:2;
+      var _cols=[];
+      for(var _ci=0;_ci<_numCols;_ci++){
+        var _col=document.createElement('div');_col.className='fav2-col';
+        if(_ci>0)_col.style.marginTop=(_ci===1?'20px':(_numCols===3?'10px':'20px'));
+        _cols.push(_col);
+      }
       var _cardIdx=0;
       _favActive.forEach(function(id){
         var c=C.find(function(x){return x.id==id;});
@@ -529,11 +534,10 @@ function buildFavPage(){
         } else {
           el=_buildFavCard2Col(c,_cardIdx);
         }
-        (_cardIdx%2===0?colL:colR).appendChild(el);
+        _cols[_cardIdx%_numCols].appendChild(el);
         _cardIdx++;
       });
-      carousel.appendChild(colL);
-      carousel.appendChild(colR);
+      _cols.forEach(function(col){carousel.appendChild(col);});
     }
   }
 
@@ -2258,6 +2262,8 @@ function navTo(tab,_skipHistory){
   } else if(tab==='msg'){
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
+    // iPad : cacher la nav dans la messagerie
+    if(window.innerWidth>=768){var _bnavMsg=g('bnav');if(_bnavMsg)_bnavMsg.classList.add('ipad-msg');}
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
@@ -2294,8 +2300,8 @@ function _springIcon(el){
 function restoreNav(){
   var nav=g('bnav');
   if(nav&&user)nav.style.display='flex';
-  // Nettoyer les classes iPad messaging (sécurité si restoreNav appelé sans closeMsgConv)
-  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');}
+  // Nettoyer les classes iPad messaging
+  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');}
   var _bbR=g('bnavIpadBack');if(_bbR)_bbR.classList.remove('visible');
 
   // Restaurer le bouton Explorer
