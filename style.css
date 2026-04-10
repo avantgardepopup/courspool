@@ -844,6 +844,8 @@ html.dk .fav2-swipe-wrap{box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),0 4px 
 }
 .fav2-card:active,.fav2-card.tapped{transform:scale(.97);}
 html.dk .fav2-card{background:var(--wh);}
+.fav2-card .card-badge-mode-new{font-size:9px;padding:3px 7px;gap:3px;}
+.fav2-card .card-badge-mode-new svg{width:7px;height:7px;}
 /* floating subject pill + prof avatar at top (like explorer) */
 .fav2-subj{
   font-size:10px;font-weight:800;color:#fff;
