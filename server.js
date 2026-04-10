@@ -891,8 +891,11 @@ app.get('/cours', async (req, res) => {
     query = query.ilike('sujet', '%' + safeSubjet + '%');
   }
   if (search) {
-    const s = search.slice(0, 100).replace(/[%_\\]/g, c => '\\' + c);
-    query = query.or(`titre.ilike.%${s}%,sujet.ilike.%${s}%,lieu.ilike.%${s}%,prof_nom.ilike.%${s}%`);
+    // Échappe les wildcards LIKE + retire les caractères spéciaux PostgREST (),(). pour éviter l'injection de filtre
+    const s = search.slice(0, 100)
+      .replace(/[%_\\]/g, c => '\\' + c)
+      .replace(/[(),."']/g, '');
+    if (s) query = query.or(`titre.ilike.%${s}%,sujet.ilike.%${s}%,lieu.ilike.%${s}%,prof_nom.ilike.%${s}%`);
   }
   if (niveau_filter) query = query.eq('niveau', niveau_filter);
 
@@ -3013,5 +3016,11 @@ if (SELF_URL) {
   }, 10 * 60 * 1000); // toutes les 10 minutes
   console.log('Keep-alive actif:', SELF_URL);
 }
+
+// Timeouts HTTP — protection contre les attaques Slowloris
+// (connexions lentes qui gardent le serveur occupé indéfiniment)
+server.setTimeout(30000);        // 30s max pour recevoir une requête complète
+server.keepAliveTimeout = 65000; // 65s > load balancer Railway (60s) — évite les connexions zombies
+server.headersTimeout = 66000;   // légèrement supérieur à keepAliveTimeout
 
 server.listen(PORT, () => console.log('CoursPool API + Socket.io sur le port ' + PORT));
