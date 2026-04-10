@@ -97,6 +97,24 @@ app.use(function(req, res, next) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   // Désactive les fonctionnalités sensibles du navigateur non utilisées par l'app
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  // Content Security Policy — liste blanche des ressources autorisées
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    // Scripts : app locale + Sentry + Stripe
+    "script-src 'self' 'unsafe-inline' https://browser.sentry-cdn.com https://js.stripe.com",
+    // Styles : app locale + inline (requis par Stripe Elements)
+    "style-src 'self' 'unsafe-inline'",
+    // Images : app locale + data URIs (avatars) + Supabase storage (photos profils)
+    "img-src 'self' data: blob: https://*.supabase.co",
+    // Connexions réseau autorisées
+    "connect-src 'self' https://devoted-achievement-production-fdfa.up.railway.app wss://devoted-achievement-production-fdfa.up.railway.app https://*.supabase.co https://o4511145728737280.ingest.de.sentry.io",
+    // Frames : Stripe uniquement (pour le formulaire de paiement)
+    "frame-src https://js.stripe.com https://hooks.stripe.com",
+    // Fonts : app locale
+    "font-src 'self' data:",
+    // Workers : Sentry utilise un worker
+    "worker-src blob:"
+  ].join('; '));
   next();
 });
 
