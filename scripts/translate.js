@@ -969,6 +969,28 @@ const SOURCE = {
   verif_id_rejected:  'Document refusé — renvoyer',
   verif_id_resubmit:  'Appuyez pour soumettre à nouveau',
 
+  // Blocs statut certifications (profil prof)
+  verif_section:           'Vérification',
+  verif_a_obtenir:         'À obtenir',
+  verif_badge_ok:          'Vérifié',
+  verif_badge_pending_lbl: 'En cours',
+  verif_badge_refused:     'Refusé',
+  verif_ineligible:        'Non éligible',
+  verif_cni_send:          'Envoyez votre pièce d\'identité',
+  verif_cni_ok:            'CNI contrôlée par CoursPool',
+  verif_cni_retry:         'Renvoyer ma pièce d\'identité',
+  verif_dip_send:          'Envoyez votre diplôme',
+  verif_cas_send:          'Envoyez votre attestation',
+
+  // Nudge badges post-CNI
+  nudge_votre_profil:  'Votre profil',
+  nudge_aller_plus:    'Allez encore plus loin',
+  nudge_dip_desc:      'Montrez vos qualifications aux élèves',
+  nudge_cas_desc:      'Attestation de moralité vérifiée',
+  nudge_ajouter:       'Ajouter',
+  nudge_identite_ok:   'Votre identité est vérifiée ✓ — complétez votre profil pour inspirer encore plus confiance aux élèves.',
+  nudge_complete:      'Complétez votre profil pour inspirer confiance aux élèves et vous démarquer.',
+
   // Envoi en cours (contact form / signalement)
   txt_envoi:  'Envoi…',
   txt_choose: 'Choisir…',

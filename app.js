@@ -8669,9 +8669,7 @@ function _scheduleBadgeNudge(){
     // Sous-titre adapté au statut réel — ne jamais dire "vérifiée" si pas encore validé
     var nudgeSub=g('nudgeSubText');
     if(nudgeSub){
-      nudgeSub.textContent=user.verified
-        ?'Votre identité est vérifiée \u2713 \u2014 complétez votre profil pour inspirer encore plus confiance aux élèves.'
-        :'Complétez votre profil pour inspirer confiance aux élèves et vous démarquer.';
+      nudgeSub.textContent=user.verified?t('nudge_identite_ok'):t('nudge_complete');
     }
     // Masquer le bouton diplôme si déjà uploadé/vérifié
     var nbtn=g('nudgeDiplomeBtn');
@@ -8752,37 +8750,37 @@ function updateVerifStatusBlock(){
   if(status==='none'){
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iorS+'">'+_icoIdW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Envoyez votre pièce d\'identité</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">À obtenir</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_identite')+'</div><div class="tp-trust-sub">'+t('verif_cni_send')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">'+t('verif_a_obtenir')+'</div>'
       +'</div>'
-      +'<button onclick="openCniSheet()" style="'+_btnSty+';background:var(--or);color:#fff">Commencer la vérification</button>';
+      +'<button onclick="openCniSheet()" style="'+_btnSty+';background:var(--or);color:#fff">'+t('cni_start_btn')+'</button>';
   } else if(status==='verified'){
     html='<div class="tp-trust-card">'
       +'<div style="'+_iorS+'">'+_icoIdW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_identite')+'</div><div class="tp-trust-sub">'+t('verif_cni_ok')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">'+t('verif_badge_ok')+'</div>'
       +'</div>';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
       +'<div style="'+_iIcoS+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(245,158,11,.14)">'+_icoIdW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_identite')+'</div><div class="tp-trust-sub">'+t('cni_24h')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">'+t('verif_badge_pending_lbl')+'</div>'
       +'</div>';
   } else if(status==='rejected_retry'){
-    var raison=esc(user.rejection_reason||'Document refusé');
+    var raison=esc(user.rejection_reason||t('verif_badge_refused'));
     if(user)user.cni_uploaded=false;
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iIcoS+'background:#EF4444;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(239,68,68,.14)">'+_icoIdW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+raison+'</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FEF2F2;color:#991B1B">Refusé</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_identite')+'</div><div class="tp-trust-sub">'+raison+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FEF2F2;color:#991B1B">'+t('verif_badge_refused')+'</div>'
       +'</div>'
-      +'<button onclick="openCniSheet()" style="'+_btnSty+';background:#EF4444;color:#fff">Renvoyer ma pièce d\'identité</button>';
+      +'<button onclick="openCniSheet()" style="'+_btnSty+';background:#EF4444;color:#fff">'+t('verif_cni_retry')+'</button>';
   } else if(status==='rejected_final'){
-    var raison=esc(user.rejection_reason||'Non éligible');
+    var raison=esc(user.rejection_reason||t('verif_ineligible'));
     html='<div class="tp-trust-card">'
       +'<div style="'+_iIcoS+'background:#9CA3AF;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(156,163,175,.14)">'+_icoIdW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">'+raison+'</div></div>'
-      +'<div class="tp-trust-badge" style="background:#F3F4F6;color:#6B7280">Non éligible</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_identite')+'</div><div class="tp-trust-sub">'+raison+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#F3F4F6;color:#6B7280">'+t('verif_ineligible')+'</div>'
       +'</div>';
   }
   block.style.display='block';block.innerHTML=html;
@@ -8899,23 +8897,23 @@ function updateDiplomeStatusBlock(){
   if(status==='none'){
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iobS+'">'+_icoDipW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Envoyez votre diplôme</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">À obtenir</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_diplome')+'</div><div class="tp-trust-sub">'+t('verif_dip_send')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">'+t('verif_a_obtenir')+'</div>'
       +'</div>'
-      +'<button onclick="openDiplomeSheet()" style="'+_btnDSty+';background:#4F46E5;color:#fff">Envoyer mon diplôme</button>';
+      +'<button onclick="openDiplomeSheet()" style="'+_btnDSty+';background:#4F46E5;color:#fff">'+t('dip_btn')+'</button>';
     block.style.display='block';
   } else if(status==='verified'){
     html='<div class="tp-trust-card">'
       +'<div style="'+_iobS+'">'+_icoDipW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Badge affiché sur votre profil</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">Vérifié</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_diplome')+'</div><div class="tp-trust-sub">'+t('dip_badge')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">'+t('verif_badge_ok')+'</div>'
       +'</div>';
     block.style.display='block';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
       +'<div style="'+_iIcoD+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(245,158,11,.14)">'+_icoDipW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_diplome')+'</div><div class="tp-trust-sub">'+t('cni_24h')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">'+t('verif_badge_pending_lbl')+'</div>'
       +'</div>';
     block.style.display='block';
   } else {
@@ -8947,23 +8945,23 @@ function updateCasierStatusBlock(){
   if(status==='none'){
     html='<div class="tp-trust-card" style="margin-bottom:8px">'
       +'<div style="'+_iogS2+'">'+_icoShldW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Envoyez votre attestation</div></div>'
-      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#059669">À obtenir</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_confiance')+'</div><div class="tp-trust-sub">'+t('verif_cas_send')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#059669">'+t('verif_a_obtenir')+'</div>'
       +'</div>'
-      +'<button onclick="openCasierSheet()" style="'+_btnCSty+';background:#10B981;color:#fff">Envoyer mon attestation</button>';
+      +'<button onclick="openCasierSheet()" style="'+_btnCSty+';background:#10B981;color:#fff">'+t('cas_btn')+'</button>';
     block.style.display='block';
   } else if(status==='verified'){
     html='<div class="tp-trust-card">'
       +'<div style="'+_iogS2+'">'+_icoShldW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Badge affiché sur votre profil</div></div>'
-      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Vérifié</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_confiance')+'</div><div class="tp-trust-sub">'+t('dip_badge')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">'+t('verif_badge_ok')+'</div>'
       +'</div>';
     block.style.display='block';
   } else if(status==='pending'){
     html='<div class="tp-trust-card">'
       +'<div style="'+_iIcoC2+'background:#F59E0B;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 3px rgba(245,158,11,.14)">'+_icoShldW2+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Vérification sous 24h</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">En cours</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('mp_confiance')+'</div><div class="tp-trust-sub">'+t('cni_24h')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFFBEB;color:#92400E">'+t('verif_badge_pending_lbl')+'</div>'
       +'</div>';
     block.style.display='block';
   } else {
