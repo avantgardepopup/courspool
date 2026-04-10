@@ -27,7 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>CoursPool utilise votre caméra pour photographier votre diplôme et votre photo de profil</string>
+	<string>CoursPool utilise votre caméra pour les cours en visio et pour votre photo de profil</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>CoursPool utilise votre microphone pour les cours en visio</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>CoursPool accède à vos photos pour votre diplôme et votre photo de profil</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

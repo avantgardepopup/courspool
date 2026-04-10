@@ -13931,15 +13931,26 @@ function snapNavPill(nav){
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
+var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
+var _isRecording=false,_intentionalLeave=false;
+var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 
 function openVisioModal(url){
   if(!url)return;
   var roomName=url.split('/').pop();
   _isOwner=!!(user&&user.role==='professeur');
-  if(!g('bdVisio')){var bd=document.createElement('div');bd.id='bdVisio';bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#111;display:none;flex-direction:column';bd.innerHTML=_buildVisioHTML();document.body.appendChild(bd);}
-  g('bdVisio').style.display='flex';
+  _intentionalLeave=false;
+  var existing=g('bdVisio');if(existing)existing.remove();
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
+  bd.innerHTML=_buildVisioHTML();
+  document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
-  _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;_sharing=false;_boardActive=false;_raisedHands={};
+  _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
+  _sharing=false;_boardActive=false;_raisedHands={};
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};
+  _isRecording=false;
   if(_callTimer)clearInterval(_callTimer);
   _updateVisioTimer();
   _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
@@ -13948,31 +13959,54 @@ function openVisioModal(url){
 }
 
 function _buildVisioHTML(){
-  var cs='width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var cs='width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08);transition:all .22s cubic-bezier(.34,1.56,.64,1);';
   return ''
-    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);gap:12px;z-index:2;flex-shrink:0">'
-    +'<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7)">Cours en visio</div>'
-    +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums">00:00</div>'
-    +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Quitter</button>'
+    +'<style>@keyframes _vBlink{0%,100%{opacity:1}50%{opacity:.2}}@keyframes _vFloatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}</style>'
+    // Header
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);gap:12px;z-index:2;flex-shrink:0;box-shadow:0 1px 0 rgba(255,255,255,.06)">'
+    +'<div style="display:flex;align-items:center;gap:8px;min-width:0">'
+    +'<span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap">Cours en visio</span>'
+    +'<div id="_vRecDot" style="display:none;width:8px;height:8px;border-radius:50%;background:#e53e3e;animation:_vBlink 1s infinite;flex-shrink:0"></div>'
     +'</div>'
-    +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.13);border-bottom:1px solid rgba(255,107,43,.22);z-index:2;flex-shrink:0"></div>'
-    // Zone centrale : grille vidéo + tableau (flex-direction:column partagée)
-    +'<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">'
-    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0;transition:flex .3s"></div>'
+    +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;flex-shrink:0">00:00</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+    +(_isOwner?'<button onclick="_vToggleRecord()" id="_vRecBtn" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:50px;padding:5px 12px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s">⏺ Enreg.</button>':'')
+    +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s">✕ Quitter</button>'
+    +'</div></div>'
+    // Raised hands panel
+    +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.1);border-bottom:1px solid rgba(255,107,43,.2);z-index:2;flex-shrink:0"></div>'
+    // Muted-while-speaking banner
+    +'<div id="_vMutedBanner" style="display:none;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(229,62,62,.85);backdrop-filter:blur(8px);z-index:5;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'
+    +'<span style="font-size:13px;font-weight:700;color:#fff">Vous êtes muté — cliquez sur le micro pour parler</span>'
+    +'</div>'
+    // Central zone: video grid + whiteboard + people panel
+    +'<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
+    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0"></div>'
     +'<div id="_vBoard" style="display:none;flex:0 0 60%;min-height:0;border-top:2px solid rgba(255,107,43,.35);position:relative;background:#fff">'
-    +'<div style="position:absolute;top:6px;right:8px;z-index:10">'
-    +'<button onclick="_vToggleBoard()" style="background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)">✕ Fermer le tableau</button>'
-    +'</div>'
+    +'<div style="position:absolute;top:6px;right:8px;z-index:10"><button onclick="_vToggleBoard()" style="background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)">✕ Fermer le tableau</button></div>'
     +'<iframe id="_vBoardIframe" src="" style="width:100%;height:100%;border:none" allow="clipboard-read; clipboard-write"></iframe>'
     +'</div>'
+    // People panel (slide-in from right)
+    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:260px;background:rgba(10,10,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
+    +'<div style="padding:14px 16px 10px;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">Participants</div>'
+    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
     +'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-shrink:0">'
+    +'</div>'
+    // Reactions panel (above controls)
+    +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:rgba(10,10,20,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+    +['👍','❓','👏','🎉','🤔','👋'].map(function(e){return'<button onclick="_vSendReaction(\''+e+'\')" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1)">'+e+'</button>';}).join('')
+    +'</div>'
+    // Controls bar
+    +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;box-shadow:0 -1px 0 rgba(255,255,255,.06)">'
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'font-size:20px" title="Lever la main">✋</button>'
     +'<button id="_vBoardBtn" onclick="_vToggleBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8h4M7 12h4M15 8l2 4-2 4"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:#e53e3e;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
+    +'<button id="_vReactBtn" onclick="_vToggleReact()" style="'+cs+'font-size:20px" title="Réactions">😊</button>'
+    +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
+    +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
 }
 
@@ -13980,6 +14014,15 @@ function _vMicSvg(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(
 function _vCamSvg(off){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(off?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(off?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
 
 function _updateVisioTimer(){var el=g('_vTimer');if(!el)return;var m=Math.floor(_callSec/60),s=_callSec%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+function _vNetSvg(q){
+  var c=q==='good'?'#22C069':q==='low'?'#f59e0b':'#fc8181';var d='rgba(255,255,255,.2)';
+  return'<svg viewBox="0 0 15 12" width="15" height="12" fill="none">'
+    +'<rect x="0" y="8" width="3" height="4" rx="0.5" fill="'+c+'"/>'
+    +'<rect x="5" y="5" width="3" height="7" rx="0.5" fill="'+(q!=='very-low'?c:d)+'"/>'
+    +'<rect x="10" y="2" width="3" height="10" rx="0.5" fill="'+(q==='good'?c:d)+'"/>'
+    +'</svg>';
+}
 
 async function _joinDailyRoom(url,roomName){
   var grid=g('_vGrid');if(grid)grid.innerHTML='<div style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:14px;height:100%">Connexion…</div>';
@@ -13990,23 +14033,70 @@ async function _joinDailyRoom(url,roomName){
     if(typeof DailyIframe==='undefined'){toast('SDK visio non chargé','');return;}
     if(_callObj){try{await _callObj.leave();}catch(e){}try{_callObj.destroy();}catch(e){}_callObj=null;}
     _callObj=DailyIframe.createCallObject({audioSource:true,videoSource:true});
-    _callObj.on('joined-meeting',_vOnJoined)
-            .on('participant-joined',_vOnPartChange)
-            .on('participant-updated',_vOnPartChange)
-            .on('participant-left',_vOnPartLeft)
-            .on('track-started',_vOnTrack)
-            .on('track-stopped',_vOnTrack)
-            .on('app-message',_vOnMsg)
-            .on('error',function(e){console.error('[Daily]',e);});
+    _callObj
+      .on('joined-meeting',_vOnJoined)
+      .on('participant-joined',_vOnPartChange)
+      .on('participant-updated',_vOnPartChange)
+      .on('participant-left',_vOnPartLeft)
+      .on('track-started',_vOnTrack)
+      .on('track-stopped',_vOnTrack)
+      .on('app-message',_vOnMsg)
+      .on('active-speaker-change',_vOnActiveSpeaker)
+      .on('network-quality-change',_vOnNetQuality)
+      .on('error',function(e){
+        console.error('[Daily]',e);
+        if(!_intentionalLeave){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+      })
+      .on('left-meeting',function(){
+        if(!_intentionalLeave&&_visioCurrentUrl){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+      });
     _isOwner=td.is_owner||_isOwner;
     await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
     if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
   }catch(e){console.error('[Visio join]',e);toast('Impossible de rejoindre','');}
 }
 
-function _vOnJoined(){_vRenderGrid();}
-function _vOnPartChange(){_vRenderGrid();_vUpdateHands();}
-function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();}
+function _vOnJoined(){
+  _vRenderGrid();
+  try{
+    var local=_callObj.participants().local;
+    var audioTrack=local&&local.tracks&&local.tracks.audio&&local.tracks.audio.persistentTrack;
+    if(audioTrack){
+      _audioCtx=new AudioContext();
+      _audioSrc=_audioCtx.createMediaStreamSource(new MediaStream([audioTrack]));
+      _audioAnalyser=_audioCtx.createAnalyser();
+      _audioAnalyser.fftSize=256;
+      _audioSrc.connect(_audioAnalyser);
+      _mutedSpeakTimer=setInterval(_vCheckMutedSpeaking,300);
+    }
+  }catch(e){console.warn('[Visio audioCtx]',e);}
+}
+
+function _vCheckMutedSpeaking(){
+  if(!_localMuted||!_audioAnalyser)return;
+  var buf=new Uint8Array(_audioAnalyser.frequencyBinCount);
+  _audioAnalyser.getByteFrequencyData(buf);
+  var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i];
+  var banner=g('_vMutedBanner');
+  if(banner)banner.style.display=(sum/buf.length)>12?'flex':'none';
+}
+
+function _vOnActiveSpeaker(evt){
+  var sid=evt&&evt.activeSpeaker&&evt.activeSpeaker.peerId;
+  _activeSpeakerSid=sid||null;
+  document.querySelectorAll('[id^="_vt-"]').forEach(function(el){el.style.boxShadow='';});
+  if(sid){var t=g('_vt-'+sid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
+}
+
+function _vOnNetQuality(evt){
+  var p=evt&&evt.participant;if(!p)return;
+  var sid=p.local?'local':p.session_id;if(!sid)return;
+  _netQuality[sid]=evt.threshold||'good';
+  var ind=g('_vnet-'+sid);if(ind)ind.innerHTML=_vNetSvg(evt.threshold||'good');
+}
+
+function _vOnPartChange(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
+function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
 
 function _vOnTrack(evt){
   var p=evt.participant;if(!p)return;
@@ -14014,12 +14104,11 @@ function _vOnTrack(evt){
   var vid=g('_vtv-'+sid);
   if(vid){
     var vt=p.tracks&&p.tracks.video;
-    if(vt&&vt.state==='playable'&&vt.track){vid.srcObject=new MediaStream([vt.track]);vid.style.display='';var av=g('_vav-'+sid);if(av)av.style.display='none';}
-    else{vid.style.display='none';var av=g('_vav-'+sid);if(av)av.style.display='flex';}
+    if(vt&&vt.state==='playable'&&vt.track){vid.srcObject=new MediaStream([vt.track]);vid.style.display='';var av2=g('_vav-'+sid);if(av2)av2.style.display='none';}
+    else{vid.style.display='none';var av2=g('_vav-'+sid);if(av2)av2.style.display='flex';}
   }
   if(!p.local){
-    var aud=g('_vta-'+sid);
-    var at=p.tracks&&p.tracks.audio;
+    var aud=g('_vta-'+sid);var at=p.tracks&&p.tracks.audio;
     if(aud&&at&&at.state==='playable'&&at.track&&!aud.srcObject){aud.srcObject=new MediaStream([at.track]);}
   }
 }
@@ -14027,16 +14116,17 @@ function _vOnTrack(evt){
 function _vOnMsg(evt){
   var m=evt.data||{};var from=evt.fromId;
   if(m.type==='raise_hand'){
-    _raisedHands[from]={name:m.name||'Élève',sid:from};
-    _vUpdateHands();if(_isOwner)haptic(2);
+    _raisedHands[from]={name:m.name||'Élève',sid:from,ts:Date.now()};
+    _vUpdateHands();_vUpdatePeople();if(_isOwner)haptic(2);
     var t=g('_vthand-'+from);if(t)t.style.display='flex';
   }else if(m.type==='lower_hand'){
-    delete _raisedHands[from];_vUpdateHands();
+    delete _raisedHands[from];_vUpdateHands();_vUpdatePeople();
     var t=g('_vthand-'+from);if(t)t.style.display='none';
   }else if(m.type==='give_floor'){
     if(_callObj&&m.to===_callObj.participants().local.session_id){
       _callObj.setLocalAudio(true);_localMuted=false;
       var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(false);
+      var banner=g('_vMutedBanner');if(banner)banner.style.display='none';
       toast('🎤 Le prof vous donne la parole','');haptic(3);
     }
   }else if(m.type==='mute_req'){
@@ -14045,6 +14135,8 @@ function _vOnMsg(evt){
       var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);
       toast('Votre micro a été coupé','');
     }
+  }else if(m.type==='reaction'){
+    _vShowFloatReact(from,m.emoji);
   }
 }
 
@@ -14052,8 +14144,6 @@ function _vRenderGrid(){
   if(!_callObj)return;
   var parts=_callObj.participants();var keys=Object.keys(parts);
   var grid=g('_vGrid');if(!grid)return;
-  var n=keys.length;
-  grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
   var seen={};
   keys.forEach(function(k){
     var p=parts[k];var sid=p.local?'local':p.session_id;seen[sid]=1;
@@ -14061,87 +14151,176 @@ function _vRenderGrid(){
     else{_vUpdateTileMeta(p,sid);}
   });
   grid.querySelectorAll('[id^="_vt-"]').forEach(function(el){if(!seen[el.id.replace('_vt-','')])el.remove();});
+  _vApplyLayout();
+  if(_activeSpeakerSid){var t=g('_vt-'+_activeSpeakerSid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
+}
+
+function _vApplyLayout(){
+  var grid=g('_vGrid');if(!grid)return;
+  var tiles=grid.querySelectorAll('[id^="_vt-"]');var n=tiles.length;
+  if(!_pinnedSid){
+    grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
+    grid.style.gridTemplateRows='';
+    tiles.forEach(function(t){t.style.gridColumn='';t.style.gridRow='';t.style.height='';t.style.minHeight='120px';});
+  }else{
+    var others=n-1;var cols=Math.max(1,Math.min(others,3));
+    grid.style.gridTemplateColumns='repeat('+cols+',1fr)';
+    grid.style.gridTemplateRows=others>0?'1fr 90px':'1fr';
+    tiles.forEach(function(t){
+      var sid=t.id.replace('_vt-','');
+      if(sid===_pinnedSid){t.style.gridColumn='1 / -1';t.style.gridRow='1';t.style.minHeight='0';t.style.height='';}
+      else{t.style.gridColumn='';t.style.gridRow='2';t.style.height='90px';t.style.minHeight='0';}
+    });
+  }
 }
 
 function _vBuildTile(p,sid){
   var isLocal=p.local;var name=p.user_name||'Participant';
   var wrap=document.createElement('div');
   wrap.id='_vt-'+sid;
-  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;';
-  // Video
+  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;';
+  wrap.onclick=function(e){if(e.target.tagName==='BUTTON')return;_vPin(sid);};
   var vid=document.createElement('video');
   vid.id='_vtv-'+sid;vid.autoplay=true;vid.playsInline=true;vid.muted=isLocal;
   vid.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none;'+(isLocal?'transform:scaleX(-1);':'');
-  // Avatar
   var av=document.createElement('div');
   av.id='_vav-'+sid;
-  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#FF6B2B,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;';
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(255,69,0,.28);';
   av.textContent=name.charAt(0).toUpperCase();
-  // Label
+  // Label with network quality indicator
   var lbl=document.createElement('div');
   lbl.id='_vtl-'+sid;
-  lbl.style.cssText='position:absolute;bottom:8px;left:10px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;z-index:3;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);';
-  lbl.textContent=(isLocal?'Vous':name);
-  // Hand indicator
+  lbl.style.cssText='position:absolute;bottom:8px;left:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:3;';
+  var nameSpan=document.createElement('span');
+  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);max-width:calc(100% - 26px);';
+  nameSpan.textContent=(isLocal?'Vous':name);
+  var netInd=document.createElement('div');
+  netInd.id='_vnet-'+sid;netInd.style.cssText='flex-shrink:0;opacity:.8;';
+  netInd.innerHTML=_vNetSvg('good');
+  lbl.appendChild(nameSpan);lbl.appendChild(netInd);
   var hand=document.createElement('div');
   hand.id='_vthand-'+sid;
-  hand.style.cssText='position:absolute;top:8px;right:8px;font-size:22px;display:none;z-index:3;background:rgba(0,0,0,.4);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;';
+  hand.style.cssText='position:absolute;top:8px;right:8px;font-size:20px;display:none;z-index:3;background:rgba(0,0,0,.5);border-radius:50%;width:34px;height:34px;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
   hand.textContent='✋';
-  // Prof controls on remote tiles
+  // Floating reaction area
+  var reactArea=document.createElement('div');
+  reactArea.id='_vreact-'+sid;
+  reactArea.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;';
+  // Pin indicator
+  var pinInd=document.createElement('div');
+  pinInd.id='_vpin-'+sid;
+  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  pinInd.textContent='📌 Épinglé';
   if(_isOwner&&!isLocal){
     var pc=document.createElement('div');
     pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
     pc.innerHTML=''
-      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px)">🎤 Parole</button>'
-      +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px)">🔇 Mute</button>';
+      +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🎤 Parole</button>'
+      +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🔇 Mute</button>';
     wrap.appendChild(pc);
   }
-  // Audio for remote
   if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
-  wrap.appendChild(vid);wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(hand);
-  // Attach existing tracks
+  wrap.appendChild(vid);wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(hand);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
   _vOnTrack({participant:p});
   return wrap;
 }
 
 function _vUpdateTileMeta(p,sid){
-  var lbl=g('_vtl-'+sid);if(lbl)lbl.textContent=(p.local?'Vous':(p.user_name||'Participant'));
+  var ns=g('_vtl-'+sid)&&g('_vtl-'+sid).querySelector('span');
+  if(ns)ns.textContent=(p.local?'Vous':(p.user_name||'Participant'));
   _vOnTrack({participant:p});
+}
+
+function _vPin(sid){
+  if(_pinnedSid===sid){
+    _pinnedSid=null;var pi=g('_vpin-'+sid);if(pi)pi.style.display='none';
+  }else{
+    if(_pinnedSid){var old=g('_vpin-'+_pinnedSid);if(old)old.style.display='none';}
+    _pinnedSid=sid;var pi=g('_vpin-'+sid);if(pi)pi.style.display='block';
+  }
+  _vApplyLayout();haptic(1);
 }
 
 function _vUpdateHands(){
   var panel=g('_vHands');if(!panel)return;
   var keys=Object.keys(_raisedHands);
   if(!_isOwner||!keys.length){panel.style.display='none';return;}
+  // Sort chronologically by timestamp
+  keys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
   panel.style.display='flex';
-  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">✋ Mains levées</div>'
+  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;flex-shrink:0">✋ Mains levées ('+keys.length+')</div>'
     +keys.map(function(sid){var h=_raisedHands[sid];return''
-      +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(255,255,255,.07)">'
       +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(h.name)+'</span>'
       +'<div style="display:flex;gap:6px;flex-shrink:0">'
-      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:#22C069;border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Donner la parole</button>'
+      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:linear-gradient(148deg,#22C069,#16a34a);border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(34,192,105,.3)">🎤 Donner la parole</button>'
       +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">✕</button>'
       +'</div></div>';
     }).join('');
 }
 
-function _vToggleMic(){if(!_callObj)return;_localMuted=!_localMuted;_callObj.setLocalAudio(!_localMuted);var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);haptic(1);}
+function _vUpdatePeople(){
+  var list=g('_vPeopleList');if(!list||!_callObj||!_peopleOpen)return;
+  var parts=_callObj.participants();
+  list.innerHTML=Object.keys(parts).map(function(k){
+    var p=parts[k];var sid=p.local?'local':p.session_id;
+    var name=p.user_name||(p.local?'Vous':'Participant');
+    var micOn=p.tracks&&p.tracks.audio&&p.tracks.audio.state==='playable';
+    var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
+    var hasHand=!!_raisedHands[sid];
+    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.25)">'+name.charAt(0).toUpperCase()+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (Vous)':'')+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">'
+      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600">🎤 On</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600">🔇 Muet</span>')
+      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600">📷 On</span>':'')
+      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600">✋</span>':'')
+      +'</div></div>'
+      +(_isOwner&&!p.local?'<div style="display:flex;gap:5px;flex-shrink:0">'
+        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.2);border:1px solid rgba(34,192,105,.4);color:#22C069;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" title="Donner la parole">🎤</button>'
+        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.2);border:1px solid rgba(229,62,62,.4);color:#fc8181;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" title="Couper micro">🔇</button>'
+        +'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function _vToggleMic(){
+  if(!_callObj)return;_localMuted=!_localMuted;_callObj.setLocalAudio(!_localMuted);
+  var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);
+  if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
+  haptic(1);
+}
 function _vToggleCam(){if(!_callObj)return;_localCamOff=!_localCamOff;_callObj.setLocalVideo(!_localCamOff);var b=g('_vCam');if(b)b.innerHTML=_vCamSvg(_localCamOff);haptic(1);}
-function _vToggleShare(){if(!_callObj)return;if(!_sharing){_callObj.startScreenShare().then(function(){_sharing=true;var b=g('_vShare');if(b)b.style.background='rgba(255,107,43,.5)';}).catch(function(){toast('Partage d\'écran indisponible','');});}else{_callObj.stopScreenShare();_sharing=false;var b=g('_vShare');if(b)b.style.background='rgba(255,255,255,.15)';}}
+function _vToggleShare(){
+  if(!_callObj)return;var b=g('_vShare');
+  if(!_sharing){
+    _callObj.startScreenShare().then(function(){_sharing=true;if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}}).catch(function(){toast('Partage d\'écran indisponible','');});
+  }else{
+    _callObj.stopScreenShare();_sharing=false;if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+  }
+}
 function _vToggleHand(){
   if(!_callObj)return;_handRaised=!_handRaised;
   var parts=_callObj.participants();var local=parts.local||{};
   var myName=local.user_name||'Élève';var mySid=local.session_id||'local';
-  if(_handRaised){_callObj.sendAppMessage({type:'raise_hand',name:myName},'*');_raisedHands[mySid]={name:myName,sid:mySid};var b=g('_vHand');if(b)b.style.background='rgba(255,107,43,.5)';toast('Main levée ✋','');}
-  else{_callObj.sendAppMessage({type:'lower_hand'},'*');delete _raisedHands[mySid];var b=g('_vHand');if(b)b.style.background='rgba(255,255,255,.15)';}
+  var b=g('_vHand');
+  if(_handRaised){
+    _callObj.sendAppMessage({type:'raise_hand',name:myName},'*');
+    _raisedHands[mySid]={name:myName,sid:mySid,ts:Date.now()};
+    if(b){b.style.background='rgba(255,107,43,.55)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
+    toast('Main levée ✋','');
+  }else{
+    _callObj.sendAppMessage({type:'lower_hand'},'*');delete _raisedHands[mySid];
+    if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+  }
   _vUpdateHands();haptic(1);
 }
 function _vGiveFloor(sid){
   if(!_callObj||!_isOwner)return;
-  var parts=_callObj.participants();var p=parts[sid];
-  var targetSid=p?p.session_id:sid;
+  var parts=_callObj.participants();var p=parts[sid];var targetSid=p?p.session_id:sid;
   _callObj.sendAppMessage({type:'give_floor',to:targetSid},'*');
-  delete _raisedHands[sid];_vUpdateHands();
+  delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();
   var t=g('_vthand-'+sid);if(t)t.style.display='none';
   haptic(2);toast('🎤 Parole donnée','');
 }
@@ -14153,7 +14332,52 @@ function _vMuteP(sid){
   _callObj.sendAppMessage({type:'mute_req',to:targetSid},'*');
   delete _raisedHands[sid];_vUpdateHands();haptic(1);
 }
-function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+
+function _vToggleReact(){
+  _reactOpen=!_reactOpen;
+  var panel=g('_vReactPanel');if(panel)panel.style.display=_reactOpen?'flex':'none';
+  var btn=g('_vReactBtn');
+  if(btn){btn.style.background=_reactOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_reactOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+}
+function _vSendReaction(emoji){
+  if(!_callObj)return;
+  var parts=_callObj.participants();var local=parts.local||{};var mySid=local.session_id||'local';
+  _callObj.sendAppMessage({type:'reaction',emoji:emoji},'*');
+  _vShowFloatReact(mySid,emoji);haptic(1);
+}
+function _vShowFloatReact(sid,emoji){
+  var area=g('_vreact-'+sid);if(!area)return;
+  var el=document.createElement('div');el.textContent=emoji;
+  el.style.cssText='position:absolute;bottom:20%;left:'+(20+Math.random()*60)+'%;font-size:28px;animation:_vFloatUp 1.4s ease-out forwards;pointer-events:none;';
+  area.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1500);
+}
+function _vTogglePeople(){
+  _peopleOpen=!_peopleOpen;
+  var panel=g('_vPeople');if(panel)panel.style.display=_peopleOpen?'flex':'none';
+  var btn=g('_vPeopleBtn');
+  if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+  if(_peopleOpen)_vUpdatePeople();
+}
+function _vToggleRecord(){
+  if(!_callObj||!_isOwner)return;
+  if(!_isRecording){
+    _callObj.startRecording().then(function(){
+      _isRecording=true;
+      var dot=g('_vRecDot');if(dot)dot.style.display='block';
+      var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.35)';btn.style.borderColor='rgba(229,62,62,.7)';}
+      toast('⏺ Enregistrement démarré','');haptic(2);
+    }).catch(function(e){toast('Enregistrement non disponible','');console.warn('[Rec]',e);});
+  }else{
+    _callObj.stopRecording().then(function(){
+      _isRecording=false;
+      var dot=g('_vRecDot');if(dot)dot.style.display='none';
+      var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.18)';btn.style.borderColor='rgba(229,62,62,.35)';}
+      toast('Enregistrement terminé','');haptic(1);
+    }).catch(function(e){console.warn('[Rec]',e);});
+  }
+}
 
 function _getWhiteboardUrl(visioUrl){
   // Dérive un room ID + encryption key Excalidraw depuis le nom de la room Daily
@@ -14172,29 +14396,28 @@ function _vToggleBoard(){
   _boardActive=!_boardActive;
   var board=g('_vBoard');var grid=g('_vGrid');var btn=g('_vBoardBtn');
   if(_boardActive){
-    var iframe=g('_vBoardIframe');
-    if(iframe&&!iframe.src){iframe.src=_getWhiteboardUrl(_visioCurrentUrl);}
+    var iframe=g('_vBoardIframe');if(iframe&&!iframe.src)iframe.src=_getWhiteboardUrl(_visioCurrentUrl);
     if(board)board.style.display='block';
     if(grid){grid.style.flex='0 0 35%';grid.style.minHeight='0';}
-    if(btn)btn.style.background='rgba(255,107,43,.55)';
+    if(btn){btn.style.background='rgba(255,107,43,.55)';btn.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
     toast('Tableau blanc ouvert — collaboratif en temps réel','');
   }else{
     if(board)board.style.display='none';
     if(grid){grid.style.flex='1';grid.style.minHeight='0';}
-    if(btn)btn.style.background='rgba(255,255,255,.15)';
+    if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
   }
   haptic(1);
 }
 
 function closeVisioModal(){
+  _intentionalLeave=true;
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+  if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
+  if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
   if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
-  var grid=g('_vGrid');if(grid)grid.innerHTML='';
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;
-  var board=g('_vBoard');if(board)board.style.display='none';
-  var iframe=g('_vBoardIframe');if(iframe)iframe.src='';
-  var grid=g('_vGrid');if(grid)grid.style.flex='1';
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_isRecording=false;
   var nav=g('bnav');if(nav)nav.style.display='';
   haptic(4);
 }

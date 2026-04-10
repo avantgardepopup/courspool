@@ -998,32 +998,27 @@ var _mptSteps=[
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Bienvenue dans Mes Profs !',
-    sub:'Retrouve ici les profs dont tu as rejoint l\'espace privé, et ceux que tu suis depuis l\'explorateur.'
+    titleKey:'mpt_title_1',sub_key:'mpt_sub_1'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
     bg:'rgba(99,102,241,.08)',
-    title:'Suis un prof',
-    sub:'Depuis l\'explorateur, ouvre le profil d\'un prof et appuie sur "Suivre". Il apparaît ici dans "Suivis" pour ne rater aucun de ses prochains cours.'
+    titleKey:'mpt_title_2',sub_key:'mpt_sub_2'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
     bg:'rgba(255,107,43,.08)',
-    title:'Rejoins l\'espace d\'un prof',
-    sub:'Appuie sur "+ Rejoindre" et entre le code fourni par ton prof. Il apparaît dans "Espaces rejoints" : tu accèdes alors à ses cours, fiches et annonces privées.'
+    titleKey:'mpt_title_3',sub_key:'mpt_sub_3'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
     bg:'rgba(99,102,241,.08)',
-    title:'Cours à venir',
-    sub:'Accède aux prochains cours de ton prof, réserve ta place et rejoins les sessions visio directement depuis l\'app.'
+    titleKey:'mpt_title_4',sub_key:'mpt_sub_4'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
     bg:'rgba(34,192,105,.08)',
-    title:'Fiches & Publications',
-    sub:'Consulte les fiches de cours et les annonces publiées par ton professeur, accessibles depuis son espace.'
+    titleKey:'mpt_title_5',sub_key:'mpt_sub_5'
   }
 ];
 
@@ -1048,11 +1043,11 @@ function _mptRender(){
   var isLast=_mptStep===_mptSteps.length-1;
   if(track){track.innerHTML='<div style="text-align:center;padding:28px 0 20px">'
     +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
-    +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-    +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+    +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+t(s.titleKey)+'</div>'
+    +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t(s.sub_key)+'</div>'
     +'</div>';}
   if(dots){dots.innerHTML=_mptSteps.map(function(_,i){return'<div onclick="mptGoTo('+i+')" style="width:'+(i===_mptStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_mptStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';}).join('');}
-  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
+  if(skipBtn)skipBtn.textContent=isLast?t('mpt_done'):t('mpt_skip');
 }
 
 function _mptInitSwipe(sheet){
@@ -2772,9 +2767,9 @@ function buildAccLists(){
       var _allProfIds=new Set(fIds.concat(_enrolledProfIds));
       var _nbHistorique=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);}).length;
       stats.innerHTML=
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">À venir</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">Profs</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">Historique</div></div>';
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">'+t('cal_upcoming')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">'+t('stat_profs_lbl')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">'+t('acc_historique')+'</div></div>';
     }
   }
   // Rôle pill
@@ -2866,7 +2861,7 @@ function buildAccLists(){
         +'<div style="background:'+_bg+';padding:14px 16px 12px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
         +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(subjL(c.subj))+'</span>'
-        +(isPast?'<span class="rbadge bdone" style="font-size:10px">Terminé</span>':'<span class="rbadge bup" style="font-size:10px">À venir</span>')
+        +(isPast?'<span class="rbadge bdone" style="font-size:10px">'+t('badge_done')+'</span>':'<span class="rbadge bup" style="font-size:10px">'+t('badge_upcoming')+'</span>')
         +'</div>'
         +'<div style="font-size:15px;font-weight:800;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
         +'</div>'
@@ -2909,9 +2904,9 @@ function buildAccLists(){
       +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
       +'</div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
-      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">'+t('no_prof_followed')+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">'+t('follow_profs_desc')+'</div>'
+      +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('explore_courses_btn')+'</button>'
       +'</div>';
   } else {
     var folRows=fIds.map(function(id,i){
@@ -2951,9 +2946,9 @@ function buildAccLists(){
         +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
         +'</div>'
-        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">Aucun professeur suivi</div>'
-        +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">Suivez vos profs préférés pour être<br>alerté dès qu\'un nouveau cours est publié.</div>'
-        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Explorer les cours →</button>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em">'+t('no_prof_followed')+'</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px">'+t('follow_profs_desc')+'</div>'
+        +'<button onclick="navTo(\'exp\')" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">'+t('explore_courses_btn')+'</button>'
         +'</div>';
     } else {
       lf.innerHTML='<div class="cp-fol-list" style="background:var(--wh);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04)">'+folRows+'</div>';
@@ -3584,7 +3579,7 @@ function loadMore(){
 // ============================================================
 var MATIERES = [
   // --- Sciences exactes ---
-  {label:'Maths',                  key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Mathématiques',           key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
   {label:'Statistiques',           key:'stats',          color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
   {label:'Physique',               key:'physique',       color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
   {label:'Chimie',                 key:'chimie',         color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
@@ -3643,7 +3638,7 @@ var MATIERES = [
   {label:'Violon',                 key:'violon',         color:'#92400E', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2000)'},
   {label:'Saxophone',              key:'saxo',           color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
   // --- Sciences humaines ---
-  {label:'Histoire-Géo',           key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Histoire',                key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
   {label:'Psychologie',            key:'psycho',         color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
   {label:'Sociologie',             key:'socio',          color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
   {label:'Géographie',             key:'geographie',     color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
@@ -5080,39 +5075,27 @@ var _espTutoStep=0;
 var _espTutoSteps=[
   {
     svg:'<svg viewBox="0 0 48 48" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="15" rx="3"/><rect x="6" y="27" width="15" height="15" rx="3"/><rect x="27" y="27" width="15" height="15" rx="3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Bienvenue dans ton Espace !',
-    sub:'Tout ce dont tu as besoin pour gérer tes cours et tes élèves est ici, en un seul endroit.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_1',sub_key:'esp_sub_1'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Code d\'accès élèves',
-    sub:'Partage ton code unique avec tes élèves. Ils l\'entrent dans l\'app pour rejoindre ton espace et accéder à tes contenus.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_2',sub_key:'esp_sub_2'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>',
-    bg:'rgba(255,107,43,.08)',
-    title:'Mes cours',
-    sub:'Retrouve ici tous tes cours à venir et passés. Les cours que tu as créés sont distingués de ceux que tu as réservés.'
+    bg:'rgba(255,107,43,.08)',titleKey:'esp_title_3',sub_key:'esp_sub_3'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
-    bg:'rgba(99,102,241,.08)',
-    title:'Mes élèves',
-    sub:'Retrouve tous les élèves inscrits à ton espace. Valide ou refuse les nouvelles demandes d\'accès.'
+    bg:'rgba(99,102,241,.08)',titleKey:'esp_title_4',sub_key:'esp_sub_4'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
-    bg:'rgba(249,115,22,.08)',
-    title:'Publications',
-    sub:'Écris des annonces pour tes élèves : infos de cours, rappels, messages importants. Tes élèves les voient directement sur ton profil.'
+    bg:'rgba(249,115,22,.08)',titleKey:'esp_title_5',sub_key:'esp_sub_5'
   },
   {
     svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="56" height="56"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
-    bg:'rgba(34,192,105,.08)',
-    title:'Ma bibliothèque',
-    sub:'Crée des fiches de cours et ajoute des documents. Tu choisis quels élèves y ont accès.'
+    bg:'rgba(34,192,105,.08)',titleKey:'esp_title_6',sub_key:'esp_sub_6'
   }
 ];
 
@@ -5139,8 +5122,8 @@ function _espTutoRender(){
     track.innerHTML=''
       +'<div style="text-align:center;padding:28px 0 20px">'
       +'<div style="width:96px;height:96px;border-radius:50%;background:'+s.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 28px rgba(255,107,43,.15)">'+s.svg+'</div>'
-      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+s.title+'</div>'
-      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+s.sub+'</div>'
+      +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em;line-height:1.25">'+t(s.titleKey)+'</div>'
+      +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t(s.sub_key)+'</div>'
       +'</div>';
   }
   if(dots){
@@ -5148,7 +5131,7 @@ function _espTutoRender(){
       return'<div onclick="espTutoGoTo('+i+')" style="width:'+(i===_espTutoStep?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_espTutoStep?'var(--or)':'var(--bdr)')+';transition:all .25s;cursor:pointer"></div>';
     }).join('');
   }
-  if(skipBtn)skipBtn.textContent=isLast?'Terminer':'Passer';
+  if(skipBtn)skipBtn.textContent=isLast?t('mpt_done'):t('mpt_skip');
 }
 
 function _espTutoInitSwipe(sheet){
@@ -5252,7 +5235,7 @@ function espLoadStudents(){
   var uid=user&&user.id;if(!uid)return;
   var myCours=C.filter(function(c){return c.pr===uid&&!_isCoursPass(c);});
   if(!myCours.length){
-    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun cours publié pour l\'instant.</div>';
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">'+t('no_course_published')+'</div>';
     if(badge)badge.style.display='none';
     return;
   }
@@ -6420,7 +6403,7 @@ function _loadProfAvis(){
       if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
       if(avgEl)avgEl.textContent='—';
       if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
-      if(countEl)countEl.textContent='Aucun avis pour le moment';
+      if(countEl)countEl.textContent=t('no_reviews_yet');
       return;
     }
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
@@ -6589,8 +6572,8 @@ function espLoadMesCours(){
         +'</div>';
     });
   }
-  renderRows(upcoming,'upcoming','À venir');
-  renderRows(past,'past','Passés');
+  renderRows(upcoming,'upcoming',t('cal_upcoming'));
+  renderRows(past,'past',t('cal_past'));
   el.innerHTML=html||'<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours.</div>';
 }
 
@@ -6986,7 +6969,7 @@ var CR_MAT_ICONS={
   cinema:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="5" y1="5" x2="5" y2="19"/><line x1="9" y1="5" x2="9" y2="19"/><line x1="1" y1="10" x2="5" y2="10"/><line x1="9" y1="10" x2="16" y2="10"/><line x1="1" y1="14" x2="5" y2="14"/><line x1="9" y1="14" x2="16" y2="14"/>',
   bd:'<polygon points="12,2 14.9,8 21.5,8.9 16.8,13.6 17.9,20.1 12,17 6.1,20.1 7.2,13.6 2.5,8.9 9.1,8"/>',
   dessin:'<path d="M2 20h20M5 20V10M12 20V4M19 20v-6"/><circle cx="12" cy="2" r="2"/>',
-  peinture:'<circle cx="13.5" cy="6.5" r="2.5"/><path d="M17.5 12c2.5 2.5 2.5 7 0 9.5-2.5 2.5-7 2.5-9.5 0M6 2c3 0 5 2 7 4-1.5 1.5-3 3-4 5C7 9 5 7 2 6c2-2 4-4 4-4z"/>',
+  peinture:'<circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
   aquarelle:'<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>',
   arts:'<circle cx="12" cy="12" r="3"/><path d="M12 3a9 9 0 100 18A9 9 0 0012 3z"/><path d="M12 8a1 1 0 100-2 1 1 0 000 2zM17 12a1 1 0 100-2 1 1 0 000 2zM12 17a1 1 0 100-2 1 1 0 000 2zM7 12a1 1 0 100-2 1 1 0 000 2z"/>',
   calligraphie:'<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
@@ -6994,10 +6977,10 @@ var CR_MAT_ICONS={
   illustration:'<path d="M3 17l5-5 4 4 5-5 4 4"/><rect x="3" y="3" width="18" height="14" rx="2"/>',
   musique:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   piano:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><rect x="5" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="11" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="17" y="4" width="3" height="6" rx="1" fill="currentColor"/>',
-  guitare:'<ellipse cx="12" cy="16" rx="6" ry="5"/><ellipse cx="12" cy="10" rx="4" ry="3"/><line x1="12" y1="7" x2="12" y2="2"/><line x1="9" y1="2" x2="15" y2="2"/><circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/>',
+  guitare:'<ellipse cx="12" cy="17" rx="5" ry="4.5"/><ellipse cx="12" cy="9" rx="3.5" ry="3"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="10" y1="2" x2="14" y2="2"/><circle cx="12" cy="17" r="1.5" fill="currentColor" stroke="none"/>',
   chant:'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
   batterie:'<line x1="6" y1="4" x2="18" y2="16"/><line x1="18" y1="4" x2="6" y2="16"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>',
-  violon:'<path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1.1.4 2.1 1 2.9L8.5 13c-.3.7-.5 1.4-.5 2C8 17.8 9.8 21 12 21s4-3.2 4-6c0-.6-.2-1.3-.5-2L14 8.4c.6-.8 1-1.8 1-2.9C15 3.5 13.5 2 12 2z"/><line x1="10.2" y1="11.5" x2="8.5" y2="11.5"/><line x1="13.8" y1="11.5" x2="15.5" y2="11.5"/>',
+  violon:'<path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1.1.4 2.1 1 2.9L8.5 13c-.3.7-.5 1.4-.5 2C8 17.8 9.8 21 12 21s4-3.2 4-6c0-.6-.2-1.3-.5-2L14 8.4c.6-.8 1-1.8 1-2.9C15 3.5 13.5 2 12 2z"/><line x1="9.5" y1="11.5" x2="11" y2="11.5"/><line x1="13" y1="11.5" x2="14.5" y2="11.5"/>',
   saxo:'<path d="M14 3h-3a1 1 0 00-1 1v1a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1z"/><path d="M13 6v8.5a4.5 4.5 0 01-9 0V11h2"/><path d="M8 9h4"/><path d="M8 13h3"/>',
   histoire:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
   psycho:'<path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.53A3 3 0 016 9.5a3 3 0 010-6H9.5z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.53A3 3 0 0118 9.5a3 3 0 000-6H14.5z"/>',
@@ -7030,16 +7013,16 @@ var CR_MAT_ICONS={
   tennis:'<circle cx="12" cy="12" r="10"/><path d="M2.5 12h19M12 2.5c-4 6-4 13 0 19M12 2.5c4 6 4 13 0 19"/>',
   football:'<circle cx="12" cy="12" r="10"/><path d="M12 7l3 2-1 4H10l-1-4 3-2z"/><path d="M12 7V2M15 9l5-3M9 9l-5-3M14 13l3 5M10 13l-3 5"/>',
   basket:'<circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.9 4.9c4 4 4 10.2 0 14.2M19.1 4.9c-4 4-4 10.2 0 14.2"/>',
-  running:'<circle cx="15" cy="3" r="2"/><path d="M20 8l-4 2-3-2-4 4"/><path d="M9 12l-3 8"/><path d="M13 10l2 9"/>',
-  boxe:'<path d="M7 10a5 5 0 0110 0v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4z"/><path d="M5 12h2"/><path d="M9 10V8a3 3 0 016 0v2"/><rect x="7" y="16" width="10" height="5" rx="2"/>',
+  running:'<circle cx="13" cy="4" r="2"/><path d="M5 20l3.5-3.5 2.5 2.5 3-7 4 4"/><path d="M7 9l2-3 4 1 3-3"/>',
+  boxe:'<path d="M8 6a4 4 0 018 0v5H8V6z"/><rect x="6" y="11" width="12" height="5" rx="2"/><path d="M9 16v2a3 3 0 006 0v-2"/>',
   golf:'<circle cx="12" cy="18" r="3"/><path d="M12 15V3"/><path d="M12 3l7 4-7 4"/>',
   nutrition:'<path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/>',
   devperso:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
   cuisine:'<line x1="18" y1="2" x2="18" y2="22"/><path d="M6 2v5a4 4 0 004 4 4 4 0 004-4V2"/><line x1="10" y1="11" x2="10" y2="22"/>',
   patisserie:'<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M3 11V8a4 4 0 014-4h10a4 4 0 014 4v3"/><path d="M7 11V8M12 11V8M17 11V8"/><circle cx="7" cy="16" r="1"/><circle cx="12" cy="16" r="1"/><circle cx="17" cy="16" r="1"/>',
-  jardinage:'<path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M3 7c9.5 0 9.5-4 9.5-4S21 7 21 12H3V7z"/>',
+  jardinage:'<path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
   bricolage:'<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>',
-  couture:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="11.41" y1="11.41" x2="6.5" y2="14.5"/>',
+  couture:'<circle cx="12" cy="12" r="9"/><path d="M3.6 9c4.8-2.4 9.6 2.4 14.4 0"/><path d="M3.6 15c4.8-2.4 9.6 2.4 14.4 0"/><line x1="12" y1="3" x2="12" y2="21"/>',
   broderie:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
   poterie:'<path d="M12 3c-4 0-7 2-7 5s3 5 7 5 7-2 7-5-3-5-7-5z"/><path d="M5 8v9a3 3 0 003 3h8a3 3 0 003-3V8"/>',
   jeux:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>',
@@ -7525,7 +7508,7 @@ async function loadMessages(){
             var _isProf2=user&&_mc.pr===user.id;
             var _isEnrolled2=!!res[_mc.id];
             if(_isProf2||(_isEnrolled2&&_vInWin)){
-              var _vBtn='<a href="'+safeUrl(_mc.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;text-decoration:none;box-sizing:border-box" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</a>';
+              var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();openVisioModal(\''+escH(_mc.visio_url)+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
               txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
             }
           }
@@ -7789,7 +7772,7 @@ async function loadConversations(){
     // Merger et trier par date décroissante
     var allItems=html.concat(groupeItems).sort(function(a,b){return b.ts-a.ts;});
     var _isProf2=user&&user.role==='professeur';
-    var _emptyDesc2=_isProf2?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
+    var _emptyDesc2=_isProf2?t('msg_empty_prof'):t('msg_empty_eleve');
     var _emptyHtml='<div style="text-align:center;padding:60px 24px"><div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div><div style="font-size:13px;color:var(--lite)">'+_emptyDesc2+'</div></div>';
     var _convHtml=allItems.length?allItems.map(function(i){return i.html;}).join(''):_emptyHtml;
     lm.style.cssText='';lm.innerHTML=_convHtml;
@@ -11834,7 +11817,7 @@ function stepNext(){
     if(g('stepPlaces'))_sd.places=parseInt(g('stepPlaces').value)||5;
     if(!_sd.prix){toast(t('t_price_req'),'Entrez le prix');return;}
   }
-  if(step.id==='desc'&&g('stepDesc'))_sd.desc=g('stepDesc').value.trim();
+  if(step.id==='desc'){if(g('stepDesc'))_sd.desc=g('stepDesc').value.trim();if(!_sd.desc){toast(t('t_desc_req')||'Description requise','Décrivez votre cours en quelques mots');return;}}
   var total=STEP_DEFS.length;
   if(_sc<total-1){
     _sc++;
@@ -11865,7 +11848,7 @@ async function subCrStep(){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
-      var _visioUrl=_isVisioMode?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'';
+      var _visioUrl=''; // room Daily.co créée côté serveur
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
         lieu:_isVisioMode?'Visio':_sd.lieu,
@@ -12084,8 +12067,8 @@ function _calBuildHeader(myCours){
   // Segment bar HTML (tous les utilisateurs)
   var segHtml='<div id="mesSegBar" style="padding:8px 0 14px">'
     +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
-    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
-    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">'+t('cal_upcoming')+'</button>'
+    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">'+t('cal_past')+'</button>'
     +'</div></div>';
 
   hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
@@ -12362,12 +12345,12 @@ function _renderCalCourses(){
       var ncYmd=_calYmd(ncD);
       nextHint='<button onclick="_calJumpTo('+wDiff+',\''+ncYmd+'\')" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,43,.08);color:var(--or);border:none;border-radius:50px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
-        +'Prochain cours&nbsp;: '+ncLbl+'</button>';
+        +t('cal_next_course')+'&nbsp;: '+ncLbl+'</button>';
     }
     el.innerHTML='<div class="mes-cal-empty">'
       +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
-      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">'+t('cal_no_course_day')+'</div>'
+      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?t('cal_no_course_prof'):t('cal_no_course_eleve'))+'</div>'
       +nextHint
       +'</div>';
     return;
@@ -12440,9 +12423,9 @@ function buildMesCard(c,isPast,isProf,kind){
     var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
     if(isProf){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
-      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
+      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
     } else if(!!res[c.id]){
-      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre en visio</a>';}
+      if(c.visio_url&&_vInWin){visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre en visio</button>';}
       else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
     }
   }
@@ -13027,8 +13010,8 @@ function openMsgContactSheet(){
   var cur=user&&user.contact_pref||'all';
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
     +'<div style="padding:16px 20px 8px">'
-    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Messages entrants</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Qui peut vous contacter sur CoursPool ?</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">'+t('msg_incoming_title')+'</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">'+t('msg_incoming_subtitle')+'</div>'
     +'</div>'
     +'<div style="padding:8px 16px 32px;display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function(o){
@@ -13944,3 +13927,497 @@ function snapNavPill(nav){
   var nav=g('bnav');
   if(nav)_obs.observe(nav,{attributes:true,attributeFilter:['class']});
 })();
+
+// ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
+var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
+var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
+var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
+var _isRecording=false,_intentionalLeave=false;
+var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
+
+function openVisioModal(url){
+  if(!url)return;
+  var roomName=url.split('/').pop();
+  _isOwner=!!(user&&user.role==='professeur');
+  _intentionalLeave=false;
+  var existing=g('bdVisio');if(existing)existing.remove();
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
+  bd.innerHTML=_buildVisioHTML();
+  document.body.appendChild(bd);
+  var nav=g('bnav');if(nav)nav.style.display='none';
+  _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
+  _sharing=false;_boardActive=false;_raisedHands={};
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};
+  _isRecording=false;
+  if(_callTimer)clearInterval(_callTimer);
+  _updateVisioTimer();
+  _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
+  _joinDailyRoom(url,roomName);
+  haptic(1);
+}
+
+function _buildVisioHTML(){
+  var cs='width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08);transition:all .22s cubic-bezier(.34,1.56,.64,1);';
+  return ''
+    +'<style>@keyframes _vBlink{0%,100%{opacity:1}50%{opacity:.2}}@keyframes _vFloatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}</style>'
+    // Header
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);gap:12px;z-index:2;flex-shrink:0;box-shadow:0 1px 0 rgba(255,255,255,.06)">'
+    +'<div style="display:flex;align-items:center;gap:8px;min-width:0">'
+    +'<span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap">Cours en visio</span>'
+    +'<div id="_vRecDot" style="display:none;width:8px;height:8px;border-radius:50%;background:#e53e3e;animation:_vBlink 1s infinite;flex-shrink:0"></div>'
+    +'</div>'
+    +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;flex-shrink:0">00:00</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+    +(_isOwner?'<button onclick="_vToggleRecord()" id="_vRecBtn" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:50px;padding:5px 12px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s">⏺ Enreg.</button>':'')
+    +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s">✕ Quitter</button>'
+    +'</div></div>'
+    // Raised hands panel
+    +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.1);border-bottom:1px solid rgba(255,107,43,.2);z-index:2;flex-shrink:0"></div>'
+    // Muted-while-speaking banner
+    +'<div id="_vMutedBanner" style="display:none;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(229,62,62,.85);backdrop-filter:blur(8px);z-index:5;flex-shrink:0">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'
+    +'<span style="font-size:13px;font-weight:700;color:#fff">Vous êtes muté — cliquez sur le micro pour parler</span>'
+    +'</div>'
+    // Central zone: video grid + whiteboard + people panel
+    +'<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
+    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0"></div>'
+    +'<div id="_vBoard" style="display:none;flex:0 0 60%;min-height:0;border-top:2px solid rgba(255,107,43,.35);position:relative;background:#fff">'
+    +'<div style="position:absolute;top:6px;right:8px;z-index:10"><button onclick="_vToggleBoard()" style="background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)">✕ Fermer le tableau</button></div>'
+    +'<iframe id="_vBoardIframe" src="" style="width:100%;height:100%;border:none" allow="clipboard-read; clipboard-write"></iframe>'
+    +'</div>'
+    // People panel (slide-in from right)
+    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:260px;background:rgba(10,10,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
+    +'<div style="padding:14px 16px 10px;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">Participants</div>'
+    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
+    +'</div>'
+    +'</div>'
+    // Reactions panel (above controls)
+    +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:rgba(10,10,20,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+    +['👍','❓','👏','🎉','🤔','👋'].map(function(e){return'<button onclick="_vSendReaction(\''+e+'\')" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1)">'+e+'</button>';}).join('')
+    +'</div>'
+    // Controls bar
+    +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;box-shadow:0 -1px 0 rgba(255,255,255,.06)">'
+    +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
+    +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
+    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'font-size:20px" title="Lever la main">✋</button>'
+    +'<button id="_vBoardBtn" onclick="_vToggleBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8h4M7 12h4M15 8l2 4-2 4"/></svg></button>'
+    +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
+    +'<button id="_vReactBtn" onclick="_vToggleReact()" style="'+cs+'font-size:20px" title="Réactions">😊</button>'
+    +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
+    +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
+    +'</div>';
+}
+
+function _vMicSvg(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(muted?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(muted?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';}
+function _vCamSvg(off){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(off?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(off?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
+
+function _updateVisioTimer(){var el=g('_vTimer');if(!el)return;var m=Math.floor(_callSec/60),s=_callSec%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+function _vNetSvg(q){
+  var c=q==='good'?'#22C069':q==='low'?'#f59e0b':'#fc8181';var d='rgba(255,255,255,.2)';
+  return'<svg viewBox="0 0 15 12" width="15" height="12" fill="none">'
+    +'<rect x="0" y="8" width="3" height="4" rx="0.5" fill="'+c+'"/>'
+    +'<rect x="5" y="5" width="3" height="7" rx="0.5" fill="'+(q!=='very-low'?c:d)+'"/>'
+    +'<rect x="10" y="2" width="3" height="10" rx="0.5" fill="'+(q==='good'?c:d)+'"/>'
+    +'</svg>';
+}
+
+async function _joinDailyRoom(url,roomName){
+  var grid=g('_vGrid');if(grid)grid.innerHTML='<div style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:14px;height:100%">Connexion…</div>';
+  try{
+    var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
+    var td=await tr.json();
+    if(!td.token){toast('Erreur token visio','');return;}
+    if(typeof DailyIframe==='undefined'){toast('SDK visio non chargé','');return;}
+    if(_callObj){try{await _callObj.leave();}catch(e){}try{_callObj.destroy();}catch(e){}_callObj=null;}
+    _callObj=DailyIframe.createCallObject({audioSource:true,videoSource:true});
+    _callObj
+      .on('joined-meeting',_vOnJoined)
+      .on('participant-joined',_vOnPartChange)
+      .on('participant-updated',_vOnPartChange)
+      .on('participant-left',_vOnPartLeft)
+      .on('track-started',_vOnTrack)
+      .on('track-stopped',_vOnTrack)
+      .on('app-message',_vOnMsg)
+      .on('active-speaker-change',_vOnActiveSpeaker)
+      .on('network-quality-change',_vOnNetQuality)
+      .on('error',function(e){
+        console.error('[Daily]',e);
+        if(!_intentionalLeave){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+      })
+      .on('left-meeting',function(){
+        if(!_intentionalLeave&&_visioCurrentUrl){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+      });
+    _isOwner=td.is_owner||_isOwner;
+    await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
+    if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
+  }catch(e){console.error('[Visio join]',e);toast('Impossible de rejoindre','');}
+}
+
+function _vOnJoined(){
+  _vRenderGrid();
+  try{
+    var local=_callObj.participants().local;
+    var audioTrack=local&&local.tracks&&local.tracks.audio&&local.tracks.audio.persistentTrack;
+    if(audioTrack){
+      _audioCtx=new AudioContext();
+      _audioSrc=_audioCtx.createMediaStreamSource(new MediaStream([audioTrack]));
+      _audioAnalyser=_audioCtx.createAnalyser();
+      _audioAnalyser.fftSize=256;
+      _audioSrc.connect(_audioAnalyser);
+      _mutedSpeakTimer=setInterval(_vCheckMutedSpeaking,300);
+    }
+  }catch(e){console.warn('[Visio audioCtx]',e);}
+}
+
+function _vCheckMutedSpeaking(){
+  if(!_localMuted||!_audioAnalyser)return;
+  var buf=new Uint8Array(_audioAnalyser.frequencyBinCount);
+  _audioAnalyser.getByteFrequencyData(buf);
+  var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i];
+  var banner=g('_vMutedBanner');
+  if(banner)banner.style.display=(sum/buf.length)>12?'flex':'none';
+}
+
+function _vOnActiveSpeaker(evt){
+  var sid=evt&&evt.activeSpeaker&&evt.activeSpeaker.peerId;
+  _activeSpeakerSid=sid||null;
+  document.querySelectorAll('[id^="_vt-"]').forEach(function(el){el.style.boxShadow='';});
+  if(sid){var t=g('_vt-'+sid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
+}
+
+function _vOnNetQuality(evt){
+  var p=evt&&evt.participant;if(!p)return;
+  var sid=p.local?'local':p.session_id;if(!sid)return;
+  _netQuality[sid]=evt.threshold||'good';
+  var ind=g('_vnet-'+sid);if(ind)ind.innerHTML=_vNetSvg(evt.threshold||'good');
+}
+
+function _vOnPartChange(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
+function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
+
+function _vOnTrack(evt){
+  var p=evt.participant;if(!p)return;
+  var sid=p.local?'local':p.session_id;
+  var vid=g('_vtv-'+sid);
+  if(vid){
+    var vt=p.tracks&&p.tracks.video;
+    if(vt&&vt.state==='playable'&&vt.track){vid.srcObject=new MediaStream([vt.track]);vid.style.display='';var av2=g('_vav-'+sid);if(av2)av2.style.display='none';}
+    else{vid.style.display='none';var av2=g('_vav-'+sid);if(av2)av2.style.display='flex';}
+  }
+  if(!p.local){
+    var aud=g('_vta-'+sid);var at=p.tracks&&p.tracks.audio;
+    if(aud&&at&&at.state==='playable'&&at.track&&!aud.srcObject){aud.srcObject=new MediaStream([at.track]);}
+  }
+}
+
+function _vOnMsg(evt){
+  var m=evt.data||{};var from=evt.fromId;
+  if(m.type==='raise_hand'){
+    _raisedHands[from]={name:m.name||'Élève',sid:from,ts:Date.now()};
+    _vUpdateHands();_vUpdatePeople();if(_isOwner)haptic(2);
+    var t=g('_vthand-'+from);if(t)t.style.display='flex';
+  }else if(m.type==='lower_hand'){
+    delete _raisedHands[from];_vUpdateHands();_vUpdatePeople();
+    var t=g('_vthand-'+from);if(t)t.style.display='none';
+  }else if(m.type==='give_floor'){
+    if(_callObj&&m.to===_callObj.participants().local.session_id){
+      _callObj.setLocalAudio(true);_localMuted=false;
+      var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(false);
+      var banner=g('_vMutedBanner');if(banner)banner.style.display='none';
+      toast('🎤 Le prof vous donne la parole','');haptic(3);
+    }
+  }else if(m.type==='mute_req'){
+    if(_callObj&&m.to===_callObj.participants().local.session_id){
+      _callObj.setLocalAudio(false);_localMuted=true;
+      var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);
+      toast('Votre micro a été coupé','');
+    }
+  }else if(m.type==='reaction'){
+    _vShowFloatReact(from,m.emoji);
+  }
+}
+
+function _vRenderGrid(){
+  if(!_callObj)return;
+  var parts=_callObj.participants();var keys=Object.keys(parts);
+  var grid=g('_vGrid');if(!grid)return;
+  var seen={};
+  keys.forEach(function(k){
+    var p=parts[k];var sid=p.local?'local':p.session_id;seen[sid]=1;
+    if(!g('_vt-'+sid)){grid.appendChild(_vBuildTile(p,sid));}
+    else{_vUpdateTileMeta(p,sid);}
+  });
+  grid.querySelectorAll('[id^="_vt-"]').forEach(function(el){if(!seen[el.id.replace('_vt-','')])el.remove();});
+  _vApplyLayout();
+  if(_activeSpeakerSid){var t=g('_vt-'+_activeSpeakerSid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
+}
+
+function _vApplyLayout(){
+  var grid=g('_vGrid');if(!grid)return;
+  var tiles=grid.querySelectorAll('[id^="_vt-"]');var n=tiles.length;
+  if(!_pinnedSid){
+    grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
+    grid.style.gridTemplateRows='';
+    tiles.forEach(function(t){t.style.gridColumn='';t.style.gridRow='';t.style.height='';t.style.minHeight='120px';});
+  }else{
+    var others=n-1;var cols=Math.max(1,Math.min(others,3));
+    grid.style.gridTemplateColumns='repeat('+cols+',1fr)';
+    grid.style.gridTemplateRows=others>0?'1fr 90px':'1fr';
+    tiles.forEach(function(t){
+      var sid=t.id.replace('_vt-','');
+      if(sid===_pinnedSid){t.style.gridColumn='1 / -1';t.style.gridRow='1';t.style.minHeight='0';t.style.height='';}
+      else{t.style.gridColumn='';t.style.gridRow='2';t.style.height='90px';t.style.minHeight='0';}
+    });
+  }
+}
+
+function _vBuildTile(p,sid){
+  var isLocal=p.local;var name=p.user_name||'Participant';
+  var wrap=document.createElement('div');
+  wrap.id='_vt-'+sid;
+  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;';
+  wrap.onclick=function(e){if(e.target.tagName==='BUTTON')return;_vPin(sid);};
+  var vid=document.createElement('video');
+  vid.id='_vtv-'+sid;vid.autoplay=true;vid.playsInline=true;vid.muted=isLocal;
+  vid.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none;'+(isLocal?'transform:scaleX(-1);':'');
+  var av=document.createElement('div');
+  av.id='_vav-'+sid;
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(255,69,0,.28);';
+  av.textContent=name.charAt(0).toUpperCase();
+  // Label with network quality indicator
+  var lbl=document.createElement('div');
+  lbl.id='_vtl-'+sid;
+  lbl.style.cssText='position:absolute;bottom:8px;left:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:3;';
+  var nameSpan=document.createElement('span');
+  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);max-width:calc(100% - 26px);';
+  nameSpan.textContent=(isLocal?'Vous':name);
+  var netInd=document.createElement('div');
+  netInd.id='_vnet-'+sid;netInd.style.cssText='flex-shrink:0;opacity:.8;';
+  netInd.innerHTML=_vNetSvg('good');
+  lbl.appendChild(nameSpan);lbl.appendChild(netInd);
+  var hand=document.createElement('div');
+  hand.id='_vthand-'+sid;
+  hand.style.cssText='position:absolute;top:8px;right:8px;font-size:20px;display:none;z-index:3;background:rgba(0,0,0,.5);border-radius:50%;width:34px;height:34px;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
+  hand.textContent='✋';
+  // Floating reaction area
+  var reactArea=document.createElement('div');
+  reactArea.id='_vreact-'+sid;
+  reactArea.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;';
+  // Pin indicator
+  var pinInd=document.createElement('div');
+  pinInd.id='_vpin-'+sid;
+  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  pinInd.textContent='📌 Épinglé';
+  if(_isOwner&&!isLocal){
+    var pc=document.createElement('div');
+    pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
+    pc.innerHTML=''
+      +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🎤 Parole</button>'
+      +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🔇 Mute</button>';
+    wrap.appendChild(pc);
+  }
+  if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
+  wrap.appendChild(vid);wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(hand);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
+  _vOnTrack({participant:p});
+  return wrap;
+}
+
+function _vUpdateTileMeta(p,sid){
+  var ns=g('_vtl-'+sid)&&g('_vtl-'+sid).querySelector('span');
+  if(ns)ns.textContent=(p.local?'Vous':(p.user_name||'Participant'));
+  _vOnTrack({participant:p});
+}
+
+function _vPin(sid){
+  if(_pinnedSid===sid){
+    _pinnedSid=null;var pi=g('_vpin-'+sid);if(pi)pi.style.display='none';
+  }else{
+    if(_pinnedSid){var old=g('_vpin-'+_pinnedSid);if(old)old.style.display='none';}
+    _pinnedSid=sid;var pi=g('_vpin-'+sid);if(pi)pi.style.display='block';
+  }
+  _vApplyLayout();haptic(1);
+}
+
+function _vUpdateHands(){
+  var panel=g('_vHands');if(!panel)return;
+  var keys=Object.keys(_raisedHands);
+  if(!_isOwner||!keys.length){panel.style.display='none';return;}
+  // Sort chronologically by timestamp
+  keys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
+  panel.style.display='flex';
+  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;flex-shrink:0">✋ Mains levées ('+keys.length+')</div>'
+    +keys.map(function(sid){var h=_raisedHands[sid];return''
+      +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(255,255,255,.07)">'
+      +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(h.name)+'</span>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:linear-gradient(148deg,#22C069,#16a34a);border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(34,192,105,.3)">🎤 Donner la parole</button>'
+      +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">✕</button>'
+      +'</div></div>';
+    }).join('');
+}
+
+function _vUpdatePeople(){
+  var list=g('_vPeopleList');if(!list||!_callObj||!_peopleOpen)return;
+  var parts=_callObj.participants();
+  list.innerHTML=Object.keys(parts).map(function(k){
+    var p=parts[k];var sid=p.local?'local':p.session_id;
+    var name=p.user_name||(p.local?'Vous':'Participant');
+    var micOn=p.tracks&&p.tracks.audio&&p.tracks.audio.state==='playable';
+    var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
+    var hasHand=!!_raisedHands[sid];
+    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.25)">'+name.charAt(0).toUpperCase()+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (Vous)':'')+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">'
+      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600">🎤 On</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600">🔇 Muet</span>')
+      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600">📷 On</span>':'')
+      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600">✋</span>':'')
+      +'</div></div>'
+      +(_isOwner&&!p.local?'<div style="display:flex;gap:5px;flex-shrink:0">'
+        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.2);border:1px solid rgba(34,192,105,.4);color:#22C069;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" title="Donner la parole">🎤</button>'
+        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.2);border:1px solid rgba(229,62,62,.4);color:#fc8181;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" title="Couper micro">🔇</button>'
+        +'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+function _vToggleMic(){
+  if(!_callObj)return;_localMuted=!_localMuted;_callObj.setLocalAudio(!_localMuted);
+  var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);
+  if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
+  haptic(1);
+}
+function _vToggleCam(){if(!_callObj)return;_localCamOff=!_localCamOff;_callObj.setLocalVideo(!_localCamOff);var b=g('_vCam');if(b)b.innerHTML=_vCamSvg(_localCamOff);haptic(1);}
+function _vToggleShare(){
+  if(!_callObj)return;var b=g('_vShare');
+  if(!_sharing){
+    _callObj.startScreenShare().then(function(){_sharing=true;if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}}).catch(function(){toast('Partage d\'écran indisponible','');});
+  }else{
+    _callObj.stopScreenShare();_sharing=false;if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+  }
+}
+function _vToggleHand(){
+  if(!_callObj)return;_handRaised=!_handRaised;
+  var parts=_callObj.participants();var local=parts.local||{};
+  var myName=local.user_name||'Élève';var mySid=local.session_id||'local';
+  var b=g('_vHand');
+  if(_handRaised){
+    _callObj.sendAppMessage({type:'raise_hand',name:myName},'*');
+    _raisedHands[mySid]={name:myName,sid:mySid,ts:Date.now()};
+    if(b){b.style.background='rgba(255,107,43,.55)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
+    toast('Main levée ✋','');
+  }else{
+    _callObj.sendAppMessage({type:'lower_hand'},'*');delete _raisedHands[mySid];
+    if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+  }
+  _vUpdateHands();haptic(1);
+}
+function _vGiveFloor(sid){
+  if(!_callObj||!_isOwner)return;
+  var parts=_callObj.participants();var p=parts[sid];var targetSid=p?p.session_id:sid;
+  _callObj.sendAppMessage({type:'give_floor',to:targetSid},'*');
+  delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();
+  var t=g('_vthand-'+sid);if(t)t.style.display='none';
+  haptic(2);toast('🎤 Parole donnée','');
+}
+function _vMuteP(sid){
+  if(!_callObj||!_isOwner)return;
+  var parts=_callObj.participants();var p=parts[sid];
+  if(p){try{_callObj.updateParticipant(sid,{setAudio:false});}catch(e){}}
+  var targetSid=p?p.session_id:sid;
+  _callObj.sendAppMessage({type:'mute_req',to:targetSid},'*');
+  delete _raisedHands[sid];_vUpdateHands();haptic(1);
+}
+function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+
+function _vToggleReact(){
+  _reactOpen=!_reactOpen;
+  var panel=g('_vReactPanel');if(panel)panel.style.display=_reactOpen?'flex':'none';
+  var btn=g('_vReactBtn');
+  if(btn){btn.style.background=_reactOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_reactOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+}
+function _vSendReaction(emoji){
+  if(!_callObj)return;
+  var parts=_callObj.participants();var local=parts.local||{};var mySid=local.session_id||'local';
+  _callObj.sendAppMessage({type:'reaction',emoji:emoji},'*');
+  _vShowFloatReact(mySid,emoji);haptic(1);
+}
+function _vShowFloatReact(sid,emoji){
+  var area=g('_vreact-'+sid);if(!area)return;
+  var el=document.createElement('div');el.textContent=emoji;
+  el.style.cssText='position:absolute;bottom:20%;left:'+(20+Math.random()*60)+'%;font-size:28px;animation:_vFloatUp 1.4s ease-out forwards;pointer-events:none;';
+  area.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1500);
+}
+function _vTogglePeople(){
+  _peopleOpen=!_peopleOpen;
+  var panel=g('_vPeople');if(panel)panel.style.display=_peopleOpen?'flex':'none';
+  var btn=g('_vPeopleBtn');
+  if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+  if(_peopleOpen)_vUpdatePeople();
+}
+function _vToggleRecord(){
+  if(!_callObj||!_isOwner)return;
+  if(!_isRecording){
+    _callObj.startRecording().then(function(){
+      _isRecording=true;
+      var dot=g('_vRecDot');if(dot)dot.style.display='block';
+      var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.35)';btn.style.borderColor='rgba(229,62,62,.7)';}
+      toast('⏺ Enregistrement démarré','');haptic(2);
+    }).catch(function(e){toast('Enregistrement non disponible','');console.warn('[Rec]',e);});
+  }else{
+    _callObj.stopRecording().then(function(){
+      _isRecording=false;
+      var dot=g('_vRecDot');if(dot)dot.style.display='none';
+      var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.18)';btn.style.borderColor='rgba(229,62,62,.35)';}
+      toast('Enregistrement terminé','');haptic(1);
+    }).catch(function(e){console.warn('[Rec]',e);});
+  }
+}
+
+function _getWhiteboardUrl(visioUrl){
+  // Dérive un room ID + encryption key Excalidraw depuis le nom de la room Daily
+  var roomName=visioUrl.split('/').pop();
+  var h1=0,h2=0;
+  for(var i=0;i<roomName.length;i++){h1=(Math.imul(h1,31)+roomName.charCodeAt(i))>>>0;h2=(Math.imul(h2,37)+roomName.charCodeAt(i))>>>0;}
+  var h3=(Math.imul(h1,1664525)+1013904223)>>>0;var h4=(Math.imul(h2,1664525)+1013904223)>>>0;
+  var roomId=(h1.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0')+h3.toString(16).padStart(4,'0')).slice(0,20);
+  var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  var key='';var seed=h3^h4;
+  for(var j=0;j<22;j++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;key+=chars[seed>>>26];}
+  return'https://excalidraw.com/#room='+roomId+','+key;
+}
+
+function _vToggleBoard(){
+  _boardActive=!_boardActive;
+  var board=g('_vBoard');var grid=g('_vGrid');var btn=g('_vBoardBtn');
+  if(_boardActive){
+    var iframe=g('_vBoardIframe');if(iframe&&!iframe.src)iframe.src=_getWhiteboardUrl(_visioCurrentUrl);
+    if(board)board.style.display='block';
+    if(grid){grid.style.flex='0 0 35%';grid.style.minHeight='0';}
+    if(btn){btn.style.background='rgba(255,107,43,.55)';btn.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
+    toast('Tableau blanc ouvert — collaboratif en temps réel','');
+  }else{
+    if(board)board.style.display='none';
+    if(grid){grid.style.flex='1';grid.style.minHeight='0';}
+    if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
+  }
+  haptic(1);
+}
+
+function closeVisioModal(){
+  _intentionalLeave=true;
+  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+  if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
+  if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
+  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
+  var bd=g('bdVisio');if(bd)bd.style.display='none';
+  _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_isRecording=false;
+  var nav=g('bnav');if(nav)nav.style.display='';
+  haptic(4);
+}
