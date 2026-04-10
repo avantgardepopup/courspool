@@ -3844,6 +3844,15 @@ function doFilter(){
     if(mobInp)mobInp.value=val;
   }
   val=val.trim();
+  // ── DEBUG VISIO : taper "##visio URL" ou "##visio" dans la recherche ──
+  if(val.startsWith('##visio')){
+    var _vUrl=val.slice(7).trim()||'https://courspool.daily.co/test-dev';
+    var _srch=g('srch');if(_srch)_srch.value='';
+    var _mob=g('mobSearchInput');if(_mob)_mob.value='';
+    if(typeof collapseSearch==='function')collapseSearch();
+    openVisioModal(_vUrl);
+    return;
+  }
   checkCodeInSearch(val);
   if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);
