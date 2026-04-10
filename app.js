@@ -14910,11 +14910,28 @@ function _vOpenBoard(){
     rb.style.display='flex';
     requestAnimationFrame(function(){rb.style.transform='scale(1)';});
   };
-  rb.onclick=function(){
+  // Restore badge: tap = show pip, drag = move badge
+  var _rbSX=0,_rbSY=0,_rbOX=0,_rbOY=0,_rbMoved=false;
+  rb.addEventListener('pointerdown',function(e){
+    e.preventDefault();
+    _rbSX=e.clientX;_rbSY=e.clientY;
+    _rbOX=parseInt(rb.style.left)||0;_rbOY=parseInt(rb.style.top)||0;
+    _rbMoved=false;rb.setPointerCapture(e.pointerId);
+    rb.style.transition='none';
+  },{passive:false});
+  rb.addEventListener('pointermove',function(e){
+    var dx=e.clientX-_rbSX,dy=e.clientY-_rbSY;
+    if(!_rbMoved&&Math.hypot(dx,dy)<6)return;
+    _rbMoved=true;
+    rb.style.left=Math.max(0,Math.min(window.innerWidth-44,_rbOX+dx))+'px';
+    rb.style.top=Math.max(0,Math.min(window.innerHeight-44,_rbOY+dy))+'px';
+  },{passive:true});
+  rb.addEventListener('pointerup',function(){
+    if(_rbMoved)return; // drag → don't show pip
     rb.style.display='none';
     pip.style.transition='transform 300ms cubic-bezier(.34,1.56,.64,1),opacity .18s ease';
     pip.style.transform='scale(1)';pip.style.opacity='1';pip.style.pointerEvents='';
-  };
+  },{passive:true});
   document.body.appendChild(rb);
   ph.appendChild(hb);
   pip.appendChild(ph);
