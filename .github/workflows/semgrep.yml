@@ -1,0 +1,93 @@
+name: Agent 3 — Analyse statique de sécurité (Semgrep)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lancer Semgrep
+        id: semgrep
+        run: |
+          # Règles de sécurité OWASP + Node.js + JavaScript
+          semgrep \
+            --config "p/owasp-top-ten" \
+            --config "p/nodejs" \
+            --config "p/javascript" \
+            --config "p/secrets" \
+            --json \
+            --output semgrep-results.json \
+            --no-rewrite-rule-ids \
+            . || true
+
+          # Compter les findings par sévérité
+          ERROR=$(cat semgrep-results.json | node -e "
+            const d=require('fs').readFileSync('/dev/stdin','utf8');
+            const j=JSON.parse(d);
+            console.log((j.results||[]).filter(r=>r.extra?.severity==='ERROR').length);
+          " 2>/dev/null || echo "0")
+          WARNING=$(cat semgrep-results.json | node -e "
+            const d=require('fs').readFileSync('/dev/stdin','utf8');
+            const j=JSON.parse(d);
+            console.log((j.results||[]).filter(r=>r.extra?.severity==='WARNING').length);
+          " 2>/dev/null || echo "0")
+          TOTAL=$((ERROR + WARNING))
+
+          echo "errors=$ERROR" >> $GITHUB_OUTPUT
+          echo "warnings=$WARNING" >> $GITHUB_OUTPUT
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+          # Extraire les 3 premiers findings (fichier + règle)
+          FINDINGS=$(cat semgrep-results.json | node -e "
+            const d=require('fs').readFileSync('/dev/stdin','utf8');
+            const j=JSON.parse(d);
+            const r=(j.results||[]).slice(0,3).map(r=>
+              r.path+':'+r.start.line+' — '+r.check_id.split('.').pop()
+            ).join('\n> ');
+            console.log(r||'aucun');
+          " 2>/dev/null || echo "voir logs")
+
+          # Échapper les guillemets pour JSON
+          FINDINGS_ESCAPED=$(echo "$FINDINGS" | sed 's/"/\\"/g')
+          echo "findings=$FINDINGS_ESCAPED" >> $GITHUB_OUTPUT
+
+      - name: Notifier Discord si problèmes détectés
+        if: steps.semgrep.outputs.total != '0'
+        run: |
+          ERRORS="${{ steps.semgrep.outputs.errors }}"
+          WARNINGS="${{ steps.semgrep.outputs.warnings }}"
+          TOTAL="${{ steps.semgrep.outputs.total }}"
+          FINDINGS="${{ steps.semgrep.outputs.findings }}"
+          COMMIT="${{ github.sha }}"
+          SHORT_SHA="${COMMIT:0:7}"
+
+          if [ "$ERRORS" -gt "0" ]; then
+            EMOJI="🚨"
+            URGENCE="Failles critiques détectées"
+          else
+            EMOJI="⚠️"
+            URGENCE="Avertissements de sécurité"
+          fi
+
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"${EMOJI} **Semgrep — ${URGENCE}**\n> **Commit :** \`${SHORT_SHA}\`\n> Erreurs : ${ERRORS} | Avertissements : ${WARNINGS}\n> **Findings :**\n> ${FINDINGS}\n> Vérifie les logs GitHub Actions pour le détail complet.\"
+            }"
+
+      - name: Confirmer Discord si aucun problème
+        if: steps.semgrep.outputs.total == '0'
+        run: |
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"✅ **Semgrep — Aucune faille détectée**\n> Analyse OWASP Top 10 + Node.js + JavaScript OK.\"
+            }"

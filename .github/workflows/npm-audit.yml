@@ -1,0 +1,84 @@
+name: Agent 1 — Vulnérabilités dépendances
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  schedule:
+    - cron: '0 7 * * 1' # Chaque lundi à 9h Paris
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer les dépendances
+        run: npm ci --ignore-scripts
+
+      - name: Lancer npm audit
+        id: audit
+        run: |
+          # Audit JSON complet
+          npm audit --json > audit.json 2>/dev/null || true
+
+          # Compter par sévérité
+          CRITICAL=$(cat audit.json | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.critical||0)")
+          HIGH=$(cat audit.json | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.high||0)")
+          MODERATE=$(cat audit.json | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.moderate||0)")
+          LOW=$(cat audit.json | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8');const j=JSON.parse(d);console.log(j.metadata?.vulnerabilities?.low||0)")
+          TOTAL=$((CRITICAL + HIGH + MODERATE + LOW))
+
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "moderate=$MODERATE" >> $GITHUB_OUTPUT
+          echo "low=$LOW" >> $GITHUB_OUTPUT
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+          # Extraire les noms des packages vulnérables (max 5)
+          PACKAGES=$(cat audit.json | node -e "
+            const d=require('fs').readFileSync('/dev/stdin','utf8');
+            const j=JSON.parse(d);
+            const vulns=Object.keys(j.vulnerabilities||{}).slice(0,5);
+            console.log(vulns.join(', ')||'aucun');
+          ")
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+
+      - name: Notifier Discord si vulnérabilités
+        if: steps.audit.outputs.total != '0'
+        run: |
+          CRITICAL="${{ steps.audit.outputs.critical }}"
+          HIGH="${{ steps.audit.outputs.high }}"
+          MODERATE="${{ steps.audit.outputs.moderate }}"
+          LOW="${{ steps.audit.outputs.low }}"
+          TOTAL="${{ steps.audit.outputs.total }}"
+          PACKAGES="${{ steps.audit.outputs.packages }}"
+
+          if [ "$CRITICAL" -gt "0" ] || [ "$HIGH" -gt "0" ]; then
+            EMOJI="🚨"
+            URGENCE="ACTION REQUISE"
+          else
+            EMOJI="⚠️"
+            URGENCE="À traiter prochainement"
+          fi
+
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"${EMOJI} **npm audit — ${TOTAL} vulnérabilité(s) détectée(s)**\n> **${URGENCE}**\n> Critique : ${CRITICAL} | Haute : ${HIGH} | Modérée : ${MODERATE} | Faible : ${LOW}\n> **Packages :** ${PACKAGES}\n> Lance \`npm audit fix\` ou vérifie les PRs Dependabot.\"
+            }"
+
+      - name: Notifier Discord si aucune vulnérabilité (push uniquement)
+        if: steps.audit.outputs.total == '0' && github.event_name == 'push'
+        run: |
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"✅ **npm audit — Aucune vulnérabilité**\n> Toutes les dépendances sont propres.\"
+            }"
