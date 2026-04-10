@@ -1968,8 +1968,29 @@ app.get('/profiles/:id', async (req, res) => {
 });
 
 // MESSAGES — envoyer
+// Rate limiting messages — 20 messages par minute par user
+const msgRateLimitMap = new Map();
+setInterval(function() {
+  const cutoff = Date.now() - 60 * 1000;
+  msgRateLimitMap.forEach(function(d, k) { if (d.start < cutoff) msgRateLimitMap.delete(k); });
+}, 60 * 1000);
+
 app.post('/messages', requireAuth, async (req, res) => {
   const expediteur_id = req.user.id;
+  // Rate limiting par user (pas par IP — un user = une identité)
+  const now = Date.now();
+  if (!msgRateLimitMap.has(expediteur_id)) {
+    msgRateLimitMap.set(expediteur_id, { count: 1, start: now });
+  } else {
+    const d = msgRateLimitMap.get(expediteur_id);
+    if (now - d.start > 60 * 1000) {
+      msgRateLimitMap.set(expediteur_id, { count: 1, start: now });
+    } else if (d.count >= 20) {
+      return res.status(429).json({ error: 'Trop de messages envoyés. Réessayez dans une minute.' });
+    } else {
+      d.count++;
+    }
+  }
   const { destinataire_id, contenu } = req.body;
   if (!destinataire_id || !contenu) return res.status(400).json({ error: 'Données manquantes' });
   if (contenu.length > 2000) return res.status(400).json({ error: 'Message trop long (2000 caractères max)' });
