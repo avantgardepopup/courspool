@@ -288,6 +288,33 @@ const supabase = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } }
 );
 
+// ── DAILY.CO HELPER ──────────────────────────────────────────
+async function createDailyRoom() {
+  const key = process.env.DAILY_API_KEY;
+  if (!key) return null;
+  const name = 'courspool-' + Math.random().toString(36).slice(2, 10);
+  try {
+    const resp = await fetch('https://api.daily.co/v1/rooms', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        privacy: 'public',
+        properties: {
+          enable_chat: true,
+          enable_screenshare: true,
+          max_participants: 20,
+          start_video_off: false,
+          start_audio_off: false
+        }
+      })
+    });
+    if (!resp.ok) { console.error('[Daily] room creation failed', await resp.text()); return null; }
+    const data = await resp.json();
+    return data.url || null;
+  } catch (e) { console.error('[Daily] fetch error', e); return null; }
+}
+
 // ── MIDDLEWARES AUTH ──────────────────────────────────────────
 // Cache "bloqué" en mémoire — évite 1 requête Supabase par appel authentifié
 const _blockedCache = new Map(); // uid → { blocked: bool, ts: number }
@@ -943,8 +970,10 @@ app.post('/cours', requireAuth, async (req, res) => {
     const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
     const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
     const safeProfPhoto = profData?.photo_url || prof_photo || null;
+    // Créer une room Daily.co si mode visio (ignore le visio_url du client)
+    const safeVisioUrl = safeMode === 'visio' ? (await createDailyRoom() || visio_url || null) : null;
     const { data, error } = await supabase.from('cours')
-      .insert([{ titre, sujet, couleur_sujet, background, date_heure, date_iso: date_iso || null, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: visio_url || null }])
+      .insert([{ titre, sujet, couleur_sujet, background, date_heure, date_iso: date_iso || null, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: safeVisioUrl }])
       .select();
     if (error) {
       console.error('[POST /cours] Supabase error:', JSON.stringify(error));

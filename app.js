@@ -7508,7 +7508,7 @@ async function loadMessages(){
             var _isProf2=user&&_mc.pr===user.id;
             var _isEnrolled2=!!res[_mc.id];
             if(_isProf2||(_isEnrolled2&&_vInWin)){
-              var _vBtn='<a href="'+safeUrl(_mc.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;text-decoration:none;box-sizing:border-box" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</a>';
+              var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();openVisioModal(\''+escH(_mc.visio_url)+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
               txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
             }
           }
@@ -11848,7 +11848,7 @@ async function subCrStep(){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
-      var _visioUrl=_isVisioMode?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'';
+      var _visioUrl=''; // room Daily.co créée côté serveur
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
         lieu:_isVisioMode?'Visio':_sd.lieu,
@@ -12423,9 +12423,9 @@ function buildMesCard(c,isPast,isProf,kind){
     var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
     if(isProf){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
-      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="flex:1;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre</a><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
+      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
     } else if(!!res[c.id]){
-      if(c.visio_url&&_vInWin){visio='<a href="'+safeUrl(c.visio_url)+'" target="_blank" class="btn-visio" style="margin-top:10px;width:100%;justify-content:center;text-decoration:none" onclick="event.stopPropagation()">Rejoindre en visio</a>';}
+      if(c.visio_url&&_vInWin){visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre en visio</button>';}
       else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
     }
   }
@@ -13927,3 +13927,32 @@ function snapNavPill(nav){
   var nav=g('bnav');
   if(nav)_obs.observe(nav,{attributes:true,attributeFilter:['class']});
 })();
+
+// ── VISIO DAILY.CO ────────────────────────────────────────────
+function openVisioModal(url){
+  if(!url)return;
+  var bd=g('bdVisio');
+  if(!bd){
+    bd=document.createElement('div');
+    bd.id='bdVisio';
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;display:none';
+    bd.innerHTML=''
+      +'<div style="position:absolute;top:0;left:0;right:0;z-index:1;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;justify-content:flex-end;pointer-events:none">'
+      +'<button onclick="closeVisioModal()" style="pointer-events:auto;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">✕ Quitter</button>'
+      +'</div>'
+      +'<iframe id="_visioIframe" allow="camera; microphone; fullscreen; display-capture; autoplay" allowfullscreen style="flex:1;border:none;width:100%;height:100%"></iframe>';
+    document.body.appendChild(bd);
+  }
+  var iframe=g('_visioIframe');
+  if(iframe)iframe.src=url;
+  bd.style.display='flex';
+  var nav=g('bnav');if(nav)nav.style.display='none';
+  haptic(1);
+}
+
+function closeVisioModal(){
+  var bd=g('bdVisio');if(bd)bd.style.display='none';
+  var iframe=g('_visioIframe');if(iframe)iframe.src='';
+  var nav=g('bnav');if(nav)nav.style.display='';
+  haptic(4);
+}

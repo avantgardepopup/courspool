@@ -8,8 +8,13 @@
     "allowNavigation": [
       "js.stripe.com",
       "hooks.stripe.com",
-      "devoted-achievement-production-fdfa.up.railway.app"
+      "devoted-achievement-production-fdfa.up.railway.app",
+      "*.daily.co"
     ]
+  },
+  "ios": {
+    "allowsInlineMediaPlayback": true,
+    "mediaTypesRequiringUserActionForPlayback": []
   },
   "plugins": {
     "Keyboard": {
