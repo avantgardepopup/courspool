@@ -6,11 +6,12 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-    # Seulement les événements Production (success ou failure) — ignore les previews
+    # Seulement Production — exclut les previews Vercel (noms auto-générés)
     if: |
-      github.event.deployment.environment == 'Production' &&
       (github.event.deployment_status.state == 'success' ||
-       github.event.deployment_status.state == 'failure')
+       github.event.deployment_status.state == 'failure') &&
+      (github.event.deployment.environment == 'Production' ||
+       github.event.deployment.environment == 'production')
     steps:
       - name: Notifier Discord
         run: |
