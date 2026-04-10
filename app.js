@@ -14962,10 +14962,13 @@ function _brdToggleItalic(){_brdTextItalic=!_brdTextItalic;_boardRenderSubbar();
 function _brdSetAlign(al){_brdTextAlign=al;_boardRenderSubbar();_brdRenderActiveTxtBar();_brdUpdateActiveText();}
 function _brdUpdateActiveText(){
   var inp=document.getElementById('_brdActiveInp');if(!inp)return;
+  var fszScreen=Math.round(_brdTextSize*_brdZoom);
   inp.style.fontWeight=_brdTextBold?'700':'400';
   inp.style.fontStyle=_brdTextItalic?'italic':'normal';
-  inp.style.fontSize=_brdTextSize+'px';
+  inp.style.fontSize=fszScreen+'px';
   inp.style.textAlign=_brdTextAlign;
+  inp.style.color=_brdColor;inp.style.caretColor=_brdColor;
+  inp.dispatchEvent(new Event('input')); // re-triggers live canvas preview
 }
 function _brdBuildTxtBarHTML(){
   var ic='rgba(255,255,255,.7)';
@@ -15384,28 +15387,46 @@ function _boardExport(){
 
 function _boardInsertText(cx,cy){
   if(!_brdC)return;
-  // Remove any existing text editor
+  // Remove any existing editor without waiting for its blur
   var old=document.getElementById('_brdActiveInp');if(old&&old.parentNode)old.parentNode.removeChild(old);
   var oldBar=document.getElementById('_brdTxtBar');if(oldBar&&oldBar.parentNode)oldBar.parentNode.removeChild(oldBar);
+  _brdActiveTxtBarEl=null;
+  // Snapshot canvas so we can do live preview as user types
+  var snapshot=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
   var r=_brdC.getBoundingClientRect();
-  // Screen position = canvas BoundingRect origin + canvas CSS coord * zoom
   var sx=r.left+cx*_brdZoom, sy=r.top+cy*_brdZoom;
+  function getFontStr(){
+    return (_brdTextItalic?'italic ':'normal ')+(_brdTextBold?'700':'400')+' '+_brdTextSize+'px "Plus Jakarta Sans",sans-serif';
+  }
+  function getTextX(){return _brdTextAlign==='center'?cx+70:_brdTextAlign==='right'?cx+140:cx;}
+  // Live-draw text on canvas as user types
+  function drawPreview(txt){
+    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(snapshot,0,0);_brdX.restore();
+    if(!txt)return;
+    _brdX.save();
+    _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
+    _brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;_brdX.textAlign=_brdTextAlign;
+    var lineH=_brdTextSize*1.45;var tx=getTextX();
+    txt.split('\n').forEach(function(line,i){_brdX.fillText(line,tx,cy+_brdTextSize+i*lineH);});
+    _brdX.restore();
+  }
+  // Textarea: transparent so canvas shows through, font scaled to match canvas zoom
+  var fszScreen=Math.round(_brdTextSize*_brdZoom);
   var inp=document.createElement('textarea');
   inp.id='_brdActiveInp';
-  inp.style.cssText='position:fixed;left:'+sx+'px;top:'+(sy-4)+'px;z-index:10100;'
-    +'background:rgba(255,255,255,.97);border:2px solid #FF6B2B;border-radius:8px;'
-    +'font-family:"Plus Jakarta Sans",sans-serif;font-size:'+_brdTextSize+'px;'
+  inp.style.cssText='position:fixed;left:'+sx+'px;top:'+sy+'px;z-index:10100;'
+    +'background:transparent;border:1.5px dashed rgba(255,107,43,.55);border-radius:6px;'
+    +'font-family:"Plus Jakarta Sans",sans-serif;font-size:'+fszScreen+'px;'
     +'font-weight:'+(_brdTextBold?'700':'400')+';font-style:'+(_brdTextItalic?'italic':'normal')+';'
-    +'text-align:'+_brdTextAlign+';color:'+_brdColor+';'
-    +'padding:6px 10px;min-width:140px;min-height:42px;max-width:280px;'
-    +'outline:none;resize:none;box-shadow:0 4px 24px rgba(0,0,0,.2);line-height:1.45;overflow:hidden;';
+    +'text-align:'+_brdTextAlign+';color:'+_brdColor+';caret-color:'+_brdColor+';'
+    +'padding:4px 8px;min-width:120px;min-height:'+(fszScreen+14)+'px;max-width:280px;'
+    +'outline:none;resize:none;overflow:hidden;line-height:1.45;-webkit-text-size-adjust:none;';
   document.body.appendChild(inp);
-  // Floating formatting bar below textarea
+  // Formatting bar
   var bar=document.createElement('div');
   bar.id='_brdTxtBar';
   bar.style.cssText='position:fixed;z-index:10101;background:#1e2230;border-radius:12px;'
-    +'display:flex;align-items:center;gap:2px;padding:4px 6px;'
-    +'box-shadow:0 4px 24px rgba(0,0,0,.45);';
+    +'display:flex;align-items:center;gap:2px;padding:4px 6px;box-shadow:0 4px 24px rgba(0,0,0,.45);';
   bar.innerHTML=_brdBuildTxtBarHTML();
   _brdActiveTxtBarEl=bar;
   document.body.appendChild(bar);
@@ -15413,32 +15434,33 @@ function _boardInsertText(cx,cy){
     var ib=inp.getBoundingClientRect();
     var bw=bar.offsetWidth||220;
     var bleft=Math.min(Math.max(ib.left,8),window.innerWidth-bw-8);
-    // Place bar below textarea, but shift up if keyboard is covering it
     var vvBottom=window.visualViewport?(window.visualViewport.offsetTop+window.visualViewport.height):window.innerHeight;
-    var barTop=ib.bottom+6;
-    if(barTop+36>vvBottom-8)barTop=vvBottom-44;
-    bar.style.left=bleft+'px';
-    bar.style.top=barTop+'px';
+    var barTop=ib.bottom+8;
+    if(barTop+38>vvBottom-8)barTop=Math.max(8,vvBottom-48);
+    bar.style.left=bleft+'px';bar.style.top=barTop+'px';
   }
   function adjustForKeyboard(){
     if(!window.visualViewport)return;
     var vvBottom=window.visualViewport.offsetTop+window.visualViewport.height;
     var ib=inp.getBoundingClientRect();
-    if(ib.bottom>vvBottom-60){
-      var newTop=parseFloat(inp.style.top)-(ib.bottom-vvBottom+60);
+    if(ib.bottom>vvBottom-54){
+      var newTop=parseFloat(inp.style.top)-(ib.bottom-vvBottom+54);
       inp.style.top=Math.max(8,newTop)+'px';
     }
     updateBarPos();
   }
   inp.addEventListener('input',function(){
     inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';
+    drawPreview(inp.value);
     updateBarPos();
   });
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',adjustForKeyboard);
     window.visualViewport.addEventListener('scroll',adjustForKeyboard);
   }
-  requestAnimationFrame(function(){inp.focus();updateBarPos();});
+  // Focus immediately — iOS requires this to be synchronous in touch handler
+  inp.focus();
+  updateBarPos();
   var committed=false;
   var commit=function(){
     if(committed)return;committed=true;
@@ -15450,24 +15472,23 @@ function _boardInsertText(cx,cy){
     if(bar.parentNode)bar.parentNode.removeChild(bar);
     var txt=inp.value.trim();
     if(inp.parentNode)inp.parentNode.removeChild(inp);
+    // Restore snapshot then draw final committed text
+    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(snapshot,0,0);_brdX.restore();
     if(!txt)return;
-    var fontStr=(_brdTextItalic?'italic ':'normal ')
-      +(_brdTextBold?'700':'400')+' '
-      +_brdTextSize+'px "Plus Jakarta Sans",sans-serif';
     _brdX.save();
-    _brdX.font=fontStr;
-    _brdX.fillStyle=_brdColor;_brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
-    _brdX.textAlign=_brdTextAlign;
-    var lineH=_brdTextSize*1.45;
-    var tx=cx;
-    if(_brdTextAlign==='center')tx=cx+70;
-    else if(_brdTextAlign==='right')tx=cx+140;
+    _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
+    _brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;_brdX.textAlign=_brdTextAlign;
+    var lineH=_brdTextSize*1.45;var tx=getTextX();
     txt.split('\n').forEach(function(line,i){_brdX.fillText(line,tx,cy+_brdTextSize+i*lineH);});
     _brdX.restore();
     _boardSaveHist();
   };
-  inp.addEventListener('blur',function(){setTimeout(commit,180);});
-  inp.addEventListener('keydown',function(ev){if(ev.key==='Escape'){inp.value='';commit();}});
+  inp.addEventListener('blur',function(){setTimeout(commit,200);});
+  inp.addEventListener('keydown',function(ev){
+    // Enter (without Shift) = commit; Shift+Enter = newline
+    if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();commit();}
+    if(ev.key==='Escape'){inp.value='';drawPreview('');commit();}
+  });
 }
 
 // ── PiP drag ──
