@@ -438,7 +438,7 @@ function _buildFavCard2Col(c,idx){
   var modeBg=isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)';
   var modeCo=isV?'#0055B3':'#007A38';
   // Variable height image zone (cycles for masonry rhythm)
-  var imgH=[90,120,100][(idx||0)%3];
+  var imgH=[72,95,82][(idx||0)%3];
   // Wrapper (clips swipe animation + carries shadow/border)
   var wrap=document.createElement('div');
   wrap.className='fav2-swipe-wrap';
@@ -2278,6 +2278,11 @@ function navTo(tab,_skipHistory){
     var br4=g('btnRefresh');if(br4)br4.style.display='none';
     restoreNav();
     buildMesProfs();
+  } else if(tab==='esp'){
+    if(pgAcc)pgAcc.classList.add('on');
+    var br5=g('btnRefresh');if(br5)br5.style.display='none';
+    restoreNav();
+    goEspProf();
   }
 }
 
@@ -13703,11 +13708,17 @@ function initSwipeNav(){
     if(bniMes&&bniMes.style.display!=='none')t.push('mes');
     var bniProfs=g('bniProfs');
     if(bniProfs&&bniProfs.style.display!=='none')t.push('profs');
+    var bniEspEl=g('bniEsp');
+    if(bniEspEl&&bniEspEl.style.display!=='none')t.push('esp');
     t.push('acc');
     return t;
   }
 
   function _curTab(){
+    // Détecter "espace" : pgAcc actif + onglet Esp actif
+    var pgAccEl=g('pgAcc');
+    var asecEspEl=g('asecEsp');
+    if(pgAccEl&&pgAccEl.classList.contains('on')&&asecEspEl&&asecEspEl.classList.contains('on'))return'esp';
     var map={pgExp:'exp',pgFav:'fav',pgMes:'mes',pgMsg:'msg',pgAcc:'acc',pgMesProfs:'profs'};
     for(var id in map){var el=g(id);if(el&&el.classList.contains('on'))return map[id];}
     return'exp';
