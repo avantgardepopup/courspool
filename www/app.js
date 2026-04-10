@@ -459,7 +459,7 @@ function _buildFavCard2Col(c,idx){
   div.innerHTML='<div class="fav2-img" style="height:'+imgH+'px;background:linear-gradient(135deg,'+mat.color+'55,'+mat.color+'22);position:relative;overflow:hidden">'
     +'<div style="position:absolute;top:9px;left:9px;right:44px;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:5px">'
     +'<span class="fav2-subj" style="background:'+mat.color+';position:static;max-width:100%">'+esc(subjL(c.subj)||t('card_cours')||'Cours')+'</span>'
-    +'<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;color:'+modeSolid+';font-size:9px;font-weight:700;border-radius:50px;padding:3px 7px 3px 5px;box-shadow:0 1px 4px rgba(0,0,0,.15)">'+modeIco+(isV?'Visio':'Présentiel')+'</span>'
+    +'<span class="card-badge-mode-new">'+modeIco+(isV?t('filter_mode_vis').replace(/\s*\(.*\)/,''):t('filter_mode_pres').replace(/\s*\(.*\)/,''))+'</span>'
     +'</div>'
     +'<div class="fav2-av-wrap" style="background:'+profCol+'">'+avInner+'</div>'
     +'</div>'
@@ -3311,7 +3311,7 @@ function _buildCourseCard(c){
   wrap.addEventListener('touchend',function(){this.classList.remove('tapped');});
   wrap.addEventListener('touchcancel',function(){this.classList.remove('tapped');});
   wrap.innerHTML=
-    subjBadge+modeBadge+profAvDiv+
+    '<div class="card-badges-row">'+subjBadge+modeBadge+'</div>'+profAvDiv+
     '<div class="card card-new'+(c.prive?' card-prive':'')+'">'+
       '<div class="card-body-new">'+
         '<div class="card-title-new">'+esc(c.title)+'</div>'+
