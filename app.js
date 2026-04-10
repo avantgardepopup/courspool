@@ -14632,6 +14632,7 @@ var _brdZoom=1,_brdPanX=0,_brdPanY=0; // zoom & pan state
 var _brdPinchInitDist=0,_brdPinchInitZoom=1,_brdPinchInitPanX=0,_brdPinchInitPanY=0,_brdPinchInitCX=0,_brdPinchInitCY=0;
 var _brdSnapTimer=null; // hold-to-snap line straightening
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
+var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
@@ -14678,6 +14679,19 @@ function _buildBoardInner(){
     +'</div>'
     // Floating bottom pill toolbar (like app nav bar)
     +'<div id="_brdSub" style="position:absolute;bottom:max(env(safe-area-inset-bottom,16px),16px);left:50%;transform:translateX(-50%);display:flex;align-items:center;background:rgba(30,30,40,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:36px;box-shadow:0 8px 32px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.10);padding:6px 10px;gap:3px;overflow-x:auto;scrollbar-width:none;max-width:calc(100% - 32px);touch-action:manipulation;z-index:10;"></div>'
+    // Rotate-phone overlay (portrait phone only)
+    +'<div id="_brdRotate" style="display:none;position:absolute;inset:0;z-index:30;background:#0c0e14;flex-direction:column;align-items:center;justify-content:center;gap:18px;pointer-events:none;">'
+    +'<div id="_brdRotIcon" style="font-size:0;">'
+    +'<svg viewBox="0 0 80 80" fill="none" width="72" height="72">'
+    +'<rect x="22" y="8" width="36" height="56" rx="6" stroke="#FF6B2B" stroke-width="3"/>'
+    +'<circle cx="40" cy="57" r="3" fill="#FF6B2B" opacity=".6"/>'
+    +'<path d="M58 26l8 8-8 8" stroke="rgba(255,255,255,.35)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<line x1="66" y1="34" x2="76" y2="34" stroke="rgba(255,255,255,.35)" stroke-width="2.5" stroke-linecap="round"/>'
+    +'</svg>'
+    +'</div>'
+    +'<div style="font-size:16px;font-weight:700;color:#fff;text-align:center;line-height:1.4;padding:0 40px;">Tourne ton téléphone</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.45);text-align:center;">Le tableau est optimisé en mode paysage</div>'
+    +'</div>'
     +'</div>';
 }
 
@@ -14834,6 +14848,7 @@ function _vCloseBoard(){
   if(_brdSel.active)_brdCommitSel();
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
+  if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
   if(_brdC&&_brdX&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}catch(e){}}
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   var pip=g('_vPip');var grid=g('_vGrid');
@@ -14848,19 +14863,66 @@ function _vCloseBoard(){
   haptic(1);
 }
 
+// Stored resize listener so we can remove it when closing
+var _brdOrientHandler=null;
+
+function _brdIsPhonePortrait(){
+  // Phone class: smallest screen dimension < 500px AND currently portrait
+  return window.innerWidth < window.innerHeight && Math.min(screen.width,screen.height)<500;
+}
+function _brdCheckOrientation(){
+  var rotEl=g('_brdRotate');
+  var canv=g('_vBoardCanvas');
+  var bgC=g('_vBoardBg');
+  var page=g('_brdPage');
+  var scroll=g('_brdScroll');
+  if(!rotEl||!canv)return;
+  if(_brdIsPhonePortrait()){
+    // Show overlay, hide canvas area, animate icon
+    rotEl.style.display='flex';
+    if(canv)canv.style.display='none';
+    if(bgC)bgC.style.display='none';
+    // Pulse animation on icon
+    var ic=g('_brdRotIcon');
+    if(ic){
+      ic.style.transition='transform .6s cubic-bezier(.34,1.56,.64,1)';
+      ic.style.transform='rotate(0deg)';
+      setTimeout(function(){ic.style.transform='rotate(90deg)';
+        setTimeout(function(){ic.style.transform='rotate(0deg)';},700);},100);
+    }
+  } else {
+    // Landscape or tablet → hide overlay, re-init canvas with new dimensions
+    rotEl.style.display='none';
+    if(canv)canv.style.display='';
+    if(bgC)bgC.style.display='';
+    _boardInitCanvas();
+  }
+}
+
 function _boardInitCanvas(){
   var canv=g('_vBoardCanvas');if(!canv)return;
   var scroll=g('_brdScroll');if(!scroll)return;
   var page=g('_brdPage');
+  // Show rotate prompt instead if phone portrait
+  if(_brdIsPhonePortrait()){_brdCheckOrientation();return;}
+  // Add orientation listener once
+  if(!_brdOrientHandler){
+    _brdOrientHandler=function(){setTimeout(_brdCheckOrientation,120);};
+    window.addEventListener('resize',_brdOrientHandler);
+  }
   var dpr=window.devicePixelRatio||1;
-  // Size the white page: fill scroll area with gray margin around it
   var sw=scroll.clientWidth||window.innerWidth;
   var sh=scroll.clientHeight||(window.innerHeight-180);
-  var margin=32;
-  var pw=Math.min(sw-margin*2,(sh-margin*2)*(4/3));
-  pw=Math.max(pw,180);
-  var ph=Math.round(pw*(3/4));
-  pw=Math.round(pw);
+  // Phone (landscape) → fill the full available area; tablet/desktop → 4:3 with margin
+  var isPhone=Math.min(screen.width,screen.height)<500;
+  var pw,ph;
+  if(isPhone){
+    var m=6;pw=Math.max(sw-m*2,180);ph=Math.max(sh-m*2,100);
+  }else{
+    var margin=32;
+    pw=Math.min(sw-margin*2,(sh-margin*2)*(4/3));
+    pw=Math.max(pw,180);ph=Math.round(pw*(3/4));pw=Math.round(pw);
+  }
   if(page){page.style.width=pw+'px';page.style.height=ph+'px';}
   // Foreground canvas (strokes)
   canv.width=Math.round(pw*dpr);canv.height=Math.round(ph*dpr);
@@ -14897,10 +14959,36 @@ function _boardDrawBg(){
   for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
 }
 function _boardClearFg(){if(_brdX&&_brdC)_brdX.clearRect(0,0,_brdC.width,_brdC.height);}
+var _brdPanHideTimer=null;
 function _boardApplyTransform(){
   var page=g('_brdPage');if(!page)return;
   page.style.transformOrigin='center center';
   page.style.transform='translate('+_brdPanX+'px,'+_brdPanY+'px) scale('+_brdZoom+')';
+  // Hide sub-toolbar + text editor while panning/zooming; restore after gesture ends
+  var sub=g('_brdSub');if(sub)sub.style.opacity='0';
+  var txtInp=g('_brdActiveInp');if(txtInp)txtInp.style.opacity='0';
+  var txtBar=g('_brdTxtBar');if(txtBar)txtBar.style.opacity='0';
+  if(_brdPanHideTimer)clearTimeout(_brdPanHideTimer);
+  _brdPanHideTimer=setTimeout(function(){
+    var sub=g('_brdSub');if(sub)sub.style.opacity='';
+    var bar=g('_brdTxtBar');if(bar)bar.style.opacity='';
+    // Reposition textarea to match canvas after pan/zoom
+    var inp=g('_brdActiveInp');
+    if(inp&&_brdC&&_brdTextAnchor){
+      var r=_brdC.getBoundingClientRect();
+      inp.style.left=(r.left+_brdTextAnchor.cx*_brdZoom)+'px';
+      inp.style.top=(r.top+_brdTextAnchor.cy*_brdZoom)+'px';
+      inp.style.opacity='';
+      if(bar){
+        var ib=inp.getBoundingClientRect();
+        var bw=bar.offsetWidth||220;
+        var bl=Math.min(Math.max(ib.left,8),window.innerWidth-bw-8);
+        var vvb=window.visualViewport?(window.visualViewport.offsetTop+window.visualViewport.height):window.innerHeight;
+        var bt=ib.bottom+8;if(bt+38>vvb-8)bt=Math.max(8,vvb-48);
+        bar.style.left=bl+'px';bar.style.top=bt+'px';
+      }
+    }else if(inp){inp.style.opacity='';}
+  },320);
 }
 
 function _boardSaveHist(){
@@ -15443,6 +15531,7 @@ function _boardInsertText(cx,cy){
   var old=document.getElementById('_brdActiveInp');if(old&&old.parentNode)old.parentNode.removeChild(old);
   var oldBar=document.getElementById('_brdTxtBar');if(oldBar&&oldBar.parentNode)oldBar.parentNode.removeChild(oldBar);
   _brdActiveTxtBarEl=null;
+  _brdTextAnchor={cx:cx,cy:cy}; // for repositioning after pan/zoom
   // Snapshot canvas so we can do live preview as user types
   var snapshot=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
   var r=_brdC.getBoundingClientRect();
@@ -15516,7 +15605,7 @@ function _boardInsertText(cx,cy){
   var committed=false;
   var commit=function(){
     if(committed)return;committed=true;
-    _brdActiveTxtBarEl=null;
+    _brdActiveTxtBarEl=null;_brdTextAnchor=null;
     if(window.visualViewport){
       window.visualViewport.removeEventListener('resize',adjustForKeyboard);
       window.visualViewport.removeEventListener('scroll',adjustForKeyboard);
