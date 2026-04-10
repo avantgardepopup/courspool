@@ -2772,9 +2772,9 @@ function buildAccLists(){
       var _allProfIds=new Set(fIds.concat(_enrolledProfIds));
       var _nbHistorique=rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return !c||_isCoursPass(c);}).length;
       stats.innerHTML=
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">À venir</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">Profs</div></div>'+
-        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">Historique</div></div>';
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'R\',document.getElementById(\'aTabR\'))"><div style="'+_scVal+'">'+rIds.filter(function(id){var c=C.find(function(x){return x.id==id;});return c&&!_isCoursPass(c);}).length+'</div><div style="'+_scLbl+'">'+t('cal_upcoming')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="navTo(\'profs\')"><div style="'+_scVal+'">'+_allProfIds.size+'</div><div style="'+_scLbl+'">'+t('stat_profs_lbl')+'</div></div>'+
+        '<div class="cp-stat-card" style="'+_scSty+'" onclick="switchATab(\'H\',document.getElementById(\'aTabH\'))"><div style="'+_scVal+'">'+_nbHistorique+'</div><div style="'+_scLbl+'">'+t('acc_historique')+'</div></div>';
     }
   }
   // Rôle pill
@@ -2866,7 +2866,7 @@ function buildAccLists(){
         +'<div style="background:'+_bg+';padding:14px 16px 12px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
         +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+_color+'">'+esc(subjL(c.subj))+'</span>'
-        +(isPast?'<span class="rbadge bdone" style="font-size:10px">Terminé</span>':'<span class="rbadge bup" style="font-size:10px">À venir</span>')
+        +(isPast?'<span class="rbadge bdone" style="font-size:10px">'+t('badge_done')+'</span>':'<span class="rbadge bup" style="font-size:10px">'+t('badge_upcoming')+'</span>')
         +'</div>'
         +'<div style="font-size:15px;font-weight:800;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(c.title)+'</div>'
         +'</div>'
@@ -6589,8 +6589,8 @@ function espLoadMesCours(){
         +'</div>';
     });
   }
-  renderRows(upcoming,'upcoming','À venir');
-  renderRows(past,'past','Passés');
+  renderRows(upcoming,'upcoming',t('cal_upcoming'));
+  renderRows(past,'past',t('cal_past'));
   el.innerHTML=html||'<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun cours.</div>';
 }
 
@@ -7789,7 +7789,7 @@ async function loadConversations(){
     // Merger et trier par date décroissante
     var allItems=html.concat(groupeItems).sort(function(a,b){return b.ts-a.ts;});
     var _isProf2=user&&user.role==='professeur';
-    var _emptyDesc2=_isProf2?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
+    var _emptyDesc2=_isProf2?t('msg_empty_prof'):t('msg_empty_eleve');
     var _emptyHtml='<div style="text-align:center;padding:60px 24px"><div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div><div style="font-size:13px;color:var(--lite)">'+_emptyDesc2+'</div></div>';
     var _convHtml=allItems.length?allItems.map(function(i){return i.html;}).join(''):_emptyHtml;
     lm.style.cssText='';lm.innerHTML=_convHtml;
@@ -12084,8 +12084,8 @@ function _calBuildHeader(myCours){
   // Segment bar HTML (tous les utilisateurs)
   var segHtml='<div id="mesSegBar" style="padding:8px 0 14px">'
     +'<div style="display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px">'
-    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">À venir</button>'
-    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">Passés</button>'
+    +'<button id="mesSegUpcoming" class="mes-seg-btn'+(_mesSeg!=='past'?' on':'')+'" onclick="mesSetSeg(\'upcoming\')">'+t('cal_upcoming')+'</button>'
+    +'<button id="mesSegPast" class="mes-seg-btn'+(_mesSeg==='past'?' on':'')+'" onclick="mesSetSeg(\'past\')">'+t('cal_past')+'</button>'
     +'</div></div>';
 
   hd.style.padding=''; // toujours laisser le CSS par défaut (safe-area incluse)
@@ -12362,12 +12362,12 @@ function _renderCalCourses(){
       var ncYmd=_calYmd(ncD);
       nextHint='<button onclick="_calJumpTo('+wDiff+',\''+ncYmd+'\')" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,43,.08);color:var(--or);border:none;border-radius:50px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>'
-        +'Prochain cours&nbsp;: '+ncLbl+'</button>';
+        +t('cal_next_course')+'&nbsp;: '+ncLbl+'</button>';
     }
     el.innerHTML='<div class="mes-cal-empty">'
       +'<div class="mes-cal-empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun cours ce jour</div>'
-      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?'Aucun cours publié ou réservé':'Pas de cours réservé')+'</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:6px">'+t('cal_no_course_day')+'</div>'
+      +'<div style="font-size:13px;color:var(--lite)">'+(isProf?t('cal_no_course_prof'):t('cal_no_course_eleve'))+'</div>'
       +nextHint
       +'</div>';
     return;
@@ -13027,8 +13027,8 @@ function openMsgContactSheet(){
   var cur=user&&user.contact_pref||'all';
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
     +'<div style="padding:16px 20px 8px">'
-    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Messages entrants</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Qui peut vous contacter sur CoursPool ?</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">'+t('msg_incoming_title')+'</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">'+t('msg_incoming_subtitle')+'</div>'
     +'</div>'
     +'<div style="padding:8px 16px 32px;display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function(o){
