@@ -219,6 +219,11 @@ const SOURCE = {
   acc_notifs:        'Notifications, CGU…',
   acc_cours_avenir:  'Cours à venir',
   acc_profs_suivis:  'Professeurs suivis',
+  acc_mes_profs:     'Mes Profs',
+  acc_mon_espace:    'Mon Espace',
+  acc_eleves_ressources: 'Élèves & ressources',
+  acc_mes_avis:      'Mes avis',
+  acc_notes_commentaires: 'Notes & commentaires',
 
   // Profil
   prof_prenom:       'Prénom',
@@ -698,10 +703,14 @@ const SOURCE = {
   // Préférences messagerie
   msg_pref_all:          'Tous les élèves',
   msg_pref_all_sub:      "N'importe quel élève peut vous écrire",
-  msg_pref_enrolled:     'Inscrits uniquement',
-  msg_pref_enrolled_sub: 'Réservé aux élèves inscrits à vos cours',
-  msg_pref_none:         'Désactivée',
-  msg_pref_none_sub:     'Personne ne peut vous envoyer de message',
+  msg_pref_enrolled:          'Inscrits uniquement',
+  msg_pref_enrolled_sub:      'Réservé aux élèves inscrits à vos cours',
+  msg_pref_enrolled_space:    'Espace élèves',
+  msg_pref_enrolled_space_sub:'Messages de vos professeurs inscrits',
+  msg_pref_none:              'Désactivée',
+  msg_pref_none_sub:          'Personne ne peut vous envoyer de message',
+  msg_incoming_title:         'Nouveau message',
+  msg_incoming_subtitle:      'Vous avez un nouveau message',
 
   // Types de lieu (création cours)
   lieu_home:      'À domicile',
@@ -780,10 +789,15 @@ const SOURCE = {
   lbl_statut_pro:      'Statut professionnel',
 
   // Wizard création cours — boutons de navigation
-  wiz_back_cancel:     'Annuler',
-  wiz_back_prev:       'Étape précédente',
-  wiz_publish:         'Publier',
-  wiz_continuer:       'Continuer',
+  wiz_back_cancel:       'Annuler',
+  wiz_back_prev:         'Étape précédente',
+  wiz_publish:           'Publier',
+  wiz_continuer:         'Continuer',
+  wiz_cours_publie:      'Cours publié !',
+  wiz_cours_visible:     'Votre cours est maintenant visible',
+  wiz_lien_visio:        'Lien visio automatique',
+  wiz_seances_prog:      'Séances programmées',
+  wiz_chaque_seance_note:'Chaque séance est notée',
 
   // Suppression compte
   delete_account_btn:  'Supprimer définitivement',
@@ -792,10 +806,17 @@ const SOURCE = {
   card_reserve:  'Réserver',
   card_consult:  'Consulter',
   card_calendar: 'Calendrier',
-  cal_add_title: 'Ajouter au calendrier',
-  cal_apple:     'Calendrier Apple',
-  cal_google:    'Google Agenda',
-  cal_download:  'Télécharger .ics (Outlook, Apple…)',
+  card_cours:    'Cours',
+  cal_add_title:       'Ajouter au calendrier',
+  cal_apple:           'Calendrier Apple',
+  cal_google:          'Google Agenda',
+  cal_download:        'Télécharger .ics (Outlook, Apple…)',
+  cal_upcoming:        'À venir',
+  cal_past:            'Passés',
+  cal_next_course:     'Prochain cours',
+  cal_no_course_day:   'Aucun cours ce jour',
+  cal_no_course_eleve: 'Aucun cours prévu',
+  cal_no_course_prof:  'Aucun cours programmé',
 
   // Places et prix (cours cards / détail)
   places_max:    'places max',
@@ -845,7 +866,9 @@ const SOURCE = {
   ctx_message:  'Conversation',
 
   // Cours privé — badge
-  badge_prive:  'Privé',
+  badge_prive:    'Privé',
+  badge_done:     'Terminé',
+  badge_upcoming: 'À venir',
 
   // Chargement/erreur openEleves
   err_eleves_load: 'Impossible de charger.',
@@ -853,6 +876,7 @@ const SOURCE = {
 
   // Annuler dans calendrier
   txt_annuler: 'Annuler',
+  btn_annuler: 'Annuler',
 
   // Dates relatives (messagerie)
   date_today: "Aujourd'hui",
@@ -999,6 +1023,7 @@ const SOURCE = {
   t_connect_required:   'Connexion requise',
   t_connect_to_book:    'Connectez-vous pour réserver',
   t_desc_required:      'Description requise',
+  t_desc_req:           'Description requise',
   t_desc_req_sub:       'Décrivez votre cours en quelques mots',
   t_course_not_found:   'Cours introuvable',
   t_no_upcoming:        'Aucun cours à venir',
@@ -1313,6 +1338,20 @@ const SOURCE = {
   t_msg_envoye:       'Message envoyé ✓',
   t_msg_envoye_sub:   'On vous répond sous 24h',
   t_aucun_cours_share_sub: 'Publiez un nouveau cours pour le partager',
+
+  // États vides — mes profs / profil
+  no_prof_followed:   'Aucun professeur suivi',
+  follow_profs_desc:  'Suivez des professeurs pour voir leurs cours ici',
+  explore_courses_btn:'Explorer les cours',
+  no_course_published:'Aucun cours publié',
+  no_reviews_yet:     'Aucun avis pour le moment',
+
+  // Statistiques profil
+  stat_profs_lbl:     'Profs',
+
+  // Tutoriel professeur — navigation
+  mpt_done:           'Terminé',
+  mpt_skip:           'Passer',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────
