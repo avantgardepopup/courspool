@@ -2300,6 +2300,11 @@ function _springIcon(el){
 function restoreNav(){
   var nav=g('bnav');
   if(nav&&user)nav.style.display='flex';
+  // Sur mobile (< 769px), réinitialiser les styles inline de position
+  // qui peuvent rester après un drag en mode desktop/paysage
+  if(nav&&window.innerWidth<769){
+    nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
+  }
   // Nettoyer les classes iPad messaging
   if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');}
   var _bbR=g('bnavIpadBack');if(_bbR){_bbR.classList.remove('visible');delete _bbR.dataset.action;}
@@ -5266,7 +5271,7 @@ function espLoadStudents(){
     if(badge){badge.textContent=total>0?total+'':'';badge.style.display=total>0?'inline-flex':'none';}
     var withStudents=results.filter(function(r){return r.list.length>0;});
     if(!withStudents.length){
-      el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun élève inscrit à tes cours pour l\'instant.</div>';
+      el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">'+t('esp_no_eleve')+'</div>';
       return;
     }
     el.innerHTML=withStudents.map(function(r){
@@ -5287,8 +5292,8 @@ function espLoadStudents(){
         if(pid){if(!P[pid])P[pid]={};P[pid].is_tuteur=isTut;}
         return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bdr)">'
           +'<div style="width:32px;height:32px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+av+'</div>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+(isTut?'<span style="font-size:9px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">Tuteur</span>':'')+'</div>'+(enfNm?'<div style="font-size:11px;color:var(--lite);margin-top:1px">👧 Pour '+esc(enfNm)+'</div>':'')+'</div>'
-          +(paid?'<span style="font-size:10px;font-weight:700;background:rgba(16,185,129,.12);color:#059669;border-radius:50px;padding:2px 8px;flex-shrink:0">Payé</span>':'<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#D97706;border-radius:50px;padding:2px 8px;flex-shrink:0">En attente</span>')
+          +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(nm)+(isTut?'<span style="font-size:9px;font-weight:700;color:#8B5CF6;background:#F5F3FF;border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle">'+t('role_tuteur')+'</span>':'')+'</div>'+(enfNm?'<div style="font-size:11px;color:var(--lite);margin-top:1px">👧 Pour '+esc(enfNm)+'</div>':'')+'</div>'
+          +(paid?'<span style="font-size:10px;font-weight:700;background:rgba(16,185,129,.12);color:#059669;border-radius:50px;padding:2px 8px;flex-shrink:0">'+t('paiement_paye')+'</span>':'<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#D97706;border-radius:50px;padding:2px 8px;flex-shrink:0">'+t('paiement_attente')+'</span>')
           +'</div>';
       }).join('');
       return'<div style="margin-bottom:12px;background:var(--bg);border-radius:14px;padding:10px 12px">'
@@ -5309,7 +5314,7 @@ function espLoadReceivedDocs(){
   el.innerHTML='<div class="skeleton" style="height:52px;border-radius:12px;margin-bottom:8px"></div><div class="skeleton" style="height:52px;border-radius:12px"></div>';
   fetch(API+'/teacher/received-submissions',{headers:apiH()}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(data){
     if(!Array.isArray(data)||!data.length){
-      el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun document reçu pour l\'instant.</div>';
+      el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">'+t('esp_no_doc')+'</div>';
       return;
     }
     var badge=g('espReceivedBadge');
@@ -5323,7 +5328,7 @@ function espLoadReceivedDocs(){
         +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
         +'</div>'
         +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.title||'Document sans titre')+'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s.title||t('esp_doc_sans_titre'))+'</div>'
         +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(nm)+(dt?' · '+dt:'')+'</div>'
         +'</div>'
         +(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:var(--wh);border:none;flex-shrink:0;-webkit-tap-highlight-color:transparent">'
@@ -5332,7 +5337,7 @@ function espLoadReceivedDocs(){
         +'</div>';
     }).join('');
   }).catch(function(){
-    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">Aucun document reçu pour l\'instant.</div>';
+    el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:12px 0;text-align:center">'+t('esp_no_doc')+'</div>';
   });
 }
 
@@ -5342,7 +5347,7 @@ function espLoadResources(){
   var uid=user&&user.id;if(!uid)return;
   fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
     if(!list||!list.length){
-      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucune ressource publiée.</div>';
+      if(el)el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">'+t('esp_no_ressource')+'</div>';
       return;
     }
     if(el)el.innerHTML=list.map(function(r){
@@ -5352,7 +5357,7 @@ function espLoadResources(){
         +'<div style="font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.title)+'</div>'
         +'<div style="font-size:11px;color:var(--lite)">'+esc(r.type)+'</div>'
         +'</div>'
-        +'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="color:var(--or);font-size:11px;font-weight:700;flex-shrink:0">Voir</a>'
+        +'<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="color:var(--or);font-size:11px;font-weight:700;flex-shrink:0">'+t('esp_voir_lien')+'</a>'
         +'<button onclick="espDeleteRes(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
         +'</button>'
@@ -12674,7 +12679,7 @@ function showAccHome(){
 
 // Override switchATab to show detail view + update topbar title
 (function(){
-  var _tabTitleKeys={R:'acc_mes_cours',F:'acc_suivis',H:'acc_historique',P:'acc_mon_profil',Rev:'acc_revenus',Rmb:'settings_remb',Esp:'Mon Espace'};
+  var _tabTitleKeys={R:'acc_mes_cours',F:'acc_suivis',H:'acc_historique',P:'acc_mon_profil',Rev:'acc_revenus',Rmb:'settings_remb',Esp:'acc_mon_espace'};
   var _orig=switchATab;
   switchATab=function(s,el){
     _orig(s,el);
@@ -13650,6 +13655,15 @@ function _stepOptClick(el){
     if(window.innerWidth >= 769){
       nav.style.cursor = 'grab';
     }
+    // Réinitialiser la position si on passe en mode mobile (rotation)
+    window.addEventListener('resize',function(){
+      if(window.innerWidth<769){
+        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
+        nav.style.cursor='';
+      }else{
+        nav.style.cursor='grab';
+      }
+    });
   }
 
   // Attendre que le DOM soit prêt
