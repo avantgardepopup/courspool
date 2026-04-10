@@ -9799,7 +9799,7 @@ async function openPaymentSheet(id,pourAmi){
     var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:id,user_id:user.id,pour_ami:pourAmi})});
     var data=await r.json();
     if(data.error){
-      if(data.locking){toast('⏳ Réservation en cours','Une place est en cours de réservation, réessayez dans quelques minutes.',true);}
+      if(data.locking){toast('Réservation en cours','Une place est en cours de réservation, réessayez dans quelques minutes.',true);}
       else{toast(t('t_error'),data.error,true);}
       closePaymentSheet();return;
     }
