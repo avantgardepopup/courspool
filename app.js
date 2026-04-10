@@ -13968,6 +13968,7 @@ function _vOpenDemo(){
   bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
   bd.innerHTML=_buildVisioHTML();
   document.body.appendChild(bd);
+  _vInitCommentSwipe();
   var nav=g('bnav');if(nav)nav.style.display='none';
   _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
@@ -14051,6 +14052,7 @@ function openVisioModal(url){
   bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
   bd.innerHTML=_buildVisioHTML();
   document.body.appendChild(bd);
+  _vInitCommentSwipe();
   var nav=g('bnav');if(nav)nav.style.display='none';
   _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
   _sharing=false;_boardActive=false;_openFloor=false;_raisedHands={};
@@ -14094,7 +14096,7 @@ function _buildVisioHTML(){
     +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
     +'</div>'
     // Comment panel (slide-in from right)
-    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:rgba(10,10,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
+    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:rgba(10,10,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
     +'<div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
     +'<span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em">Commentaires</span>'
     +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
@@ -14621,7 +14623,7 @@ function _vShowFloatReact(sid,emoji){
 }
 function _vTogglePeople(){
   _peopleOpen=!_peopleOpen;
-  if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp)cp.style.display='none';var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
+  if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp){cp.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';cp.style.transform='translateX(100%)';}var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
   var panel=g('_vPeople');if(panel)panel.style.display=_peopleOpen?'flex':'none';
   var btn=g('_vPeopleBtn');
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
@@ -14630,10 +14632,40 @@ function _vTogglePeople(){
 function _vToggleComment(){
   _vCommentOpen=!_vCommentOpen;
   if(_vCommentOpen&&_peopleOpen){_peopleOpen=false;var pp=g('_vPeople');if(pp)pp.style.display='none';var pb=g('_vPeopleBtn');if(pb){pb.style.background='rgba(255,255,255,.12)';pb.style.boxShadow='';}}
-  var panel=g('_vComment');if(panel)panel.style.display=_vCommentOpen?'flex':'none';
+  var panel=g('_vComment');
+  if(panel){panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_vCommentOpen?'translateX(0)':'translateX(100%)';}
   var btn=g('_vCommentBtn');
   if(btn){btn.style.background=_vCommentOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_vCommentOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
+}
+function _vInitCommentSwipe(){
+  var panel=g('_vComment');if(!panel)return;
+  var _csx=0,_csy=0,_ctracking=false,_cvert=false;
+  panel.addEventListener('touchstart',function(e){
+    _csx=e.touches[0].clientX;_csy=e.touches[0].clientY;_ctracking=true;_cvert=false;
+    panel.style.transition='none';
+  },{passive:true});
+  panel.addEventListener('touchmove',function(e){
+    if(!_ctracking)return;
+    var dx=e.touches[0].clientX-_csx,dy=e.touches[0].clientY-_csy;
+    if(!_cvert&&Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>8){_cvert=true;}
+    if(_cvert){panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';panel.style.transform='translateX(0)';return;}
+    if(dx>0)panel.style.transform='translateX('+Math.round(dx)+'px)';
+  },{passive:true});
+  panel.addEventListener('touchend',function(e){
+    if(!_ctracking)return;_ctracking=false;
+    if(_cvert)return;
+    var dx=e.changedTouches[0].clientX-_csx;
+    if(dx>70){
+      _vCommentOpen=false;
+      panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
+      panel.style.transform='translateX(100%)';
+      var btn=g('_vCommentBtn');if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
+    }else{
+      panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
+      panel.style.transform='translateX(0)';
+    }
+  },{passive:true});
 }
 function _vToggleCommentAllow(){
   if(!_isOwner)return;
