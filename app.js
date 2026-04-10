@@ -14430,10 +14430,10 @@ function _vBuildTile(p,sid){
   if(_isOwner&&!isLocal){
     var pc=document.createElement('div');
     pc.id='_vpc-'+sid;
-    pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
+    pc.style.cssText='position:absolute;top:0;right:0;bottom:0;width:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:3;background:rgba(0,0,0,.42);backdrop-filter:blur(8px);border-radius:0 12px 12px 0;';
     pc.innerHTML=''
-      +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
-      +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Mute</button>';
+      +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" title="Donner la parole" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+      +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" title="Couper le micro" style="background:rgba(229,62,62,.85);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>';
     wrap.appendChild(pc);
   }
   if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
@@ -15700,24 +15700,19 @@ function _boardInsertText(cx,cy){
     if(barTop+38>vvBottom-8)barTop=Math.max(8,vvBottom-48);
     bar.style.left=bleft+'px';bar.style.top=barTop+'px';
   }
-  function adjustForKeyboard(){
-    if(!window.visualViewport)return;
-    var vvBottom=window.visualViewport.offsetTop+window.visualViewport.height;
-    var ib=inp.getBoundingClientRect();
-    if(ib.bottom>vvBottom-54){
-      var newTop=parseFloat(inp.style.top)-(ib.bottom-vvBottom+54);
-      inp.style.top=Math.max(8,newTop)+'px';
-    }
-    updateBarPos();
-  }
   inp.addEventListener('input',function(){
     inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';
     drawPreview(inp.value);
     updateBarPos();
   });
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',adjustForKeyboard);
-    window.visualViewport.addEventListener('scroll',adjustForKeyboard);
+  // Pan the board to keep text visible — never move inp directly
+  var _kbPanOffset=0;
+  function _reanchorInp(){
+    if(!_brdC||!_brdTextAnchor)return;
+    var r2=_brdC.getBoundingClientRect();
+    inp.style.left=(r2.left+_brdTextAnchor.cx*_brdZoom)+'px';
+    inp.style.top=(r2.top+_brdTextAnchor.cy*_brdZoom)+'px';
+    inp.style.opacity='';
   }
   // Capacitor native keyboard events (iOS WKWebView)
   var kbShowFn=function(e){
@@ -15725,14 +15720,20 @@ function _boardInsertText(cx,cy){
     var vvBottom=window.innerHeight-kbH;
     var ib=inp.getBoundingClientRect();
     if(ib.bottom>vvBottom-54){
-      inp.style.top=Math.max(8,parseFloat(inp.style.top)-(ib.bottom-vvBottom+54))+'px';
+      var delta=ib.bottom-(vvBottom-54);
+      _kbPanOffset+=delta;
+      _brdPanY-=delta;
+      _boardApplyTransform();
+      _reanchorInp();
     }
     updateBarPos();
   };
   var kbHideFn=function(){
-    if(_brdC&&_brdTextAnchor){
-      var r=_brdC.getBoundingClientRect();
-      inp.style.top=(r.top+_brdTextAnchor.cy*_brdZoom)+'px';
+    if(_kbPanOffset){
+      _brdPanY+=_kbPanOffset;
+      _kbPanOffset=0;
+      _boardApplyTransform();
+      _reanchorInp();
     }
     updateBarPos();
   };
