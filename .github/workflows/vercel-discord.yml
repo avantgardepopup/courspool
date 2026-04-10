@@ -30,6 +30,6 @@ jobs:
             DETAIL="> **Commit :** \`${SHORT_SHA}\`\n> **URL :** ${URL}"
           fi
 
-          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_VERCEL }}" \
             -H "Content-Type: application/json" \
             -d "{\"content\": \"${EMOJI} **${LABEL}**\n${DETAIL}\"}"
