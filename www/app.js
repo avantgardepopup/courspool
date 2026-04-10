@@ -2742,7 +2742,7 @@ function switchATab(s,el){
   el.classList.add('on');
   // Vibration légère
   if(navigator.vibrate)navigator.vibrate(6);
-  if(s==='Rev'){loadRevenues();loadStripeConnectStatus();}
+  if(s==='Rev'){loadRevenues();loadPayouts();loadStripeConnectStatus();}
   if(s==='P'){updateVerifStatusBlock();updateDiplomeStatusBlock();updateCasierStatusBlock();}
   if(s==='H'){buildHistorique();}
   if(s==='R'){ buildAccLists(); }
@@ -4076,6 +4076,8 @@ function openR(id){haptic(4);
   var btnDel=g('btnDelCours');
   var btnEleves=g('btnVoirEleves');
   var btnNoter=g('btnNoterCours');
+  var btnGroupe=g('btnGroupe');
+  if(btnGroupe)btnGroupe.style.display='none'; // uniquement dans bdEleves pour le prof
   if(isOwner){
     if(btnConf)btnConf.style.display='none';
     if(btnContact)btnContact.style.display='none';
@@ -4109,6 +4111,10 @@ async function openEleves(id){
   var c=C.find(function(x){return x.id==id;});
   if(!c)return;
   g('elevesTitre').textContent=c.title+' — '+c.fl+' '+(c.fl>1?t('eleves_inscrits'):t('eleve_inscrit'));
+  // Bouton groupe dans bdEleves (prof uniquement)
+  var _bge=g('bdElevesGroupe');
+  if(_bge)_bge.style.display=c.fl>0?'flex':'none';
+  if(_bge)_bge.onclick=function(){closeM('bdEleves');setTimeout(function(){openGroupeMsg(id);},200);};
   var list=g('elevesList');
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_loading')+'</div>';
   openM('bdEleves');
@@ -4440,11 +4446,7 @@ function _openPrLegacy(pid){
     var _avgAll=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(P[pid])P[pid].n=_avgAll;
     var _mpNEl=g('mpN');if(_mpNEl)_mpNEl.textContent='★ '+_avgAll;
-    var stars=function(n){
-      var s='';
-      for(var i=1;i<=5;i++)s+='<svg viewBox="0 0 24 24" width="13" height="13" fill="'+(i<=n?'#FBBF24':'none')+'" stroke="'+(i<=n?'#FBBF24':'#D1D5DB')+'" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-      return s;
-    };
+    var stars=function(n){return _avisSvgStars(n,13);};
     var html=notes.slice(0,3).map(function(a){
       var isTuteur=!!a.is_tuteur;
       var roleLabel=isTuteur?t('role_tuteur'):t('role_eleve');
@@ -6091,69 +6093,6 @@ function elveUnlockSheet(pid,kind,id,extra){
   haptic(4);
 }
 
-// ── ENVOYER UN DOCUMENT (sheet) ───────────────────────────────────────────
-function openSendDocSheet(){
-  var pid=_curPrFull;if(!pid)return;
-  haptic(4);
-  var bd=document.createElement('div');
-  bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:900;display:flex;align-items:flex-end;justify-content:center;transition:padding-bottom .18s';
-  var sheet=document.createElement('div');
-  sheet.style.cssText='background:var(--wh);border-radius:28px 28px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px));animation:mi .28s cubic-bezier(.32,1,.6,1);box-sizing:border-box';
-  sheet.innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
-    +'<div style="width:42px;height:42px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'
-    +'</div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Envoyer un document</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Partagez un fichier avec votre prof</div></div>'
-    +'</div>'
-    +'<input id="_sendDocTitle" type="text" placeholder="Nom du document" class="esp-input" style="margin-bottom:10px">'
-    +'<input id="_sendDocUrl" type="url" placeholder="Lien (Drive, Notion, Dropbox…)" class="esp-input" style="margin-bottom:16px">'
-    +'<button onclick="mpfSubmitDocSheet(this)" class="esp2-btn-submit" style="width:100%">Envoyer</button>'
-    +'<button id="_sendDocCancel" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
-  // Keyboard avoidance — même pattern que openEnrollSheet : on pad le sheet, pas le backdrop
-  var _sdKbShow=function(e){
-    var h=(e&&e.keyboardHeight)||0;
-    if(h>0){sheet.style.paddingBottom=(h+16)+'px';sheet.style.transition='padding-bottom .22s ease';}
-  };
-  var _sdKbHide=function(){
-    sheet.style.paddingBottom='max(32px,env(safe-area-inset-bottom,32px))';
-    sheet.style.transition='padding-bottom .18s ease';
-  };
-  window.addEventListener('keyboardWillShow',_sdKbShow);
-  window.addEventListener('keyboardWillHide',_sdKbHide);
-  bd.onclick=function(e){
-    if(e.target===bd){
-      window.removeEventListener('keyboardWillShow',_sdKbShow);
-      window.removeEventListener('keyboardWillHide',_sdKbHide);
-      bd.remove();
-    }
-  };
-  function _sdClose(){
-    window.removeEventListener('keyboardWillShow',_sdKbShow);
-    window.removeEventListener('keyboardWillHide',_sdKbHide);
-    bd.remove();
-  }
-  bd.appendChild(sheet);document.body.appendChild(bd);
-  var cancelBtn=document.getElementById('_sendDocCancel');
-  if(cancelBtn)cancelBtn.onclick=_sdClose;
-  setTimeout(function(){var inp=document.getElementById('_sendDocTitle');if(inp)inp.focus();},200);
-}
-
-function mpfSubmitDocSheet(btn){
-  var pid=_curPrFull;if(!pid)return;
-  var title=(document.getElementById('_sendDocTitle')||{value:''}).value.trim();
-  var url=(document.getElementById('_sendDocUrl')||{value:''}).value.trim();
-  if(!title){toast(t('t_doc_name_req'),'');return;}
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||undefined})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(d.error){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast(t('t_error'),d.error);return;}
-      haptic(8);toast(t('t_doc_sent_success'),'');
-      var bd=btn&&btn.parentElement;while(bd&&!bd.style.cssText.includes('rgba(0,0,0,.5)'))bd=bd.parentElement;
-      if(bd)bd.remove();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Envoyer';}toast(t('t_net_error'),'');});
-}
 
 function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
@@ -6418,19 +6357,20 @@ function _loadMpfAvis(pid){
     if(P[pid])P[pid].nb_avis=notes.length;
     var _rtEl2=g('tpStRating');if(_rtEl2){_rtEl2.textContent=_avg+'★';_rtEl2.style.color='#FF9500';}
     if(g('tpStAvis'))g('tpStAvis').textContent=notes.length;
-    var starsHtml=function(n){
-      var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;
-    };
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     avisContainer.innerHTML=notes.slice(0,10).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid #F0F0F0">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
         +'<div style="font-size:13px;font-weight:600;color:#222">'+esc(a.prenom||'Élève')+'</div>'
-        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
-        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +(date?'<div style="font-size:11px;color:#999">'+date+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:2px;margin-bottom:'+(a.commentaire?'6':'0')+'px">'+_avisSvgStars(a.note||0,13)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55">'+esc(a.commentaire)+'</div>':'')
         +'</div>'
         +'</div>';
     }).join('');
@@ -6440,6 +6380,11 @@ function _loadMpfAvis(pid){
 }
 
 // ── MES AVIS (compte prof) ──────────────────────────────────────────────
+function _avisSvgStar(filled,sz){
+  return'<svg viewBox="0 0 24 24" width="'+sz+'" height="'+sz+'" fill="'+(filled?'#FBBF24':'none')+'" stroke="'+(filled?'#FBBF24':'#D1D5DB')+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+}
+function _avisSvgStars(n,sz){var s='';for(var i=1;i<=5;i++)s+=_avisSvgStar(i<=Math.round(n),sz||13);return s;}
+
 function _loadProfAvis(){
   if(!user)return;
   var listEl=g('profAvisList');
@@ -6451,25 +6396,28 @@ function _loadProfAvis(){
     if(!notes||!notes.length){
       if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
       if(avgEl)avgEl.textContent='—';
-      if(starsEl)starsEl.textContent='☆☆☆☆☆';
+      if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
       if(countEl)countEl.textContent='Aucun avis pour le moment';
       return;
     }
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(avgEl){avgEl.textContent=avg;}
-    var starsHtml=function(n){var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;};
-    if(starsEl)starsEl.textContent=starsHtml(avg);
+    if(starsEl)starsEl.innerHTML=_avisSvgStars(avg,17);
     if(countEl)countEl.textContent=notes.length+' avis';
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--bdr)">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+esc(a.prenom||'Élève')+'</div>'
-        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
-        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +(date?'<div style="font-size:11px;color:var(--lite)">'+date+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:2px;margin-bottom:'+(a.commentaire?'6':'0')+'px">'+_avisSvgStars(a.note||0,13)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55">'+esc(a.commentaire)+'</div>':'')
         +'</div>'
         +'</div>';
     }).join('');
@@ -6530,59 +6478,6 @@ function _loadMpfFeed(pid){
   }).catch(function(){el.innerHTML='';});
 }
 
-function _loadMpfContenu(pid){
-  var el=g('mpfEspContenu');if(!el)return;
-  el.innerHTML='<div class="skeleton" style="height:90px;border-radius:16px;margin-bottom:10px"></div>';
-  fetch(API+'/teacher/'+pid+'/content',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-    if(_curPrFull!==pid)return;
-    if(!data||!data.length){
-      el.innerHTML='<div style="text-align:center;padding:32px 20px;color:var(--lite)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36" style="opacity:.3;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>'
-        +'<div style="font-size:14px;font-weight:600">Aucun cours disponible</div>'
-        +'<div style="font-size:12px;margin-top:4px">Le prof n\'a pas encore publié de contenu</div></div>';
-      return;
-    }
-    el.innerHTML=data.map(function(c){
-      var ico=c.access_type==='password'?'🔐':c.access_type==='premium'?'💎':'🔓';
-      var typeIco={text:'📝',video:'🎥',pdf:'📄',link:'🔗'}[c.content_type]||'📚';
-      var isUnlocked=c.is_unlocked;
-      var tag=c.access_type==='password'?'Mot de passe requis':c.access_type==='premium'?'Premium · '+(c.price||'?')+'€/mois':'Accès libre';
-      var tagColor=c.access_type==='password'?'#8B5CF6':c.access_type==='premium'?'#F59E0B':'#10B981';
-      var body='';
-      if(isUnlocked){
-        if(c.description)body+='<div class="contenu-desc">'+esc(c.description)+'</div>';
-        if(c.content_url)body+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" class="contenu-link">'+typeIco+' Voir le contenu</a>';
-      }else if(c.access_type==='password'){
-        body+='<div id="cttPwForm_'+c.id+'" style="display:flex;gap:8px;margin-top:10px">'
-          +'<input type="text" placeholder="Mot de passe" class="esp-input" style="flex:1;font-size:13px;padding:8px 10px" id="cttPwInp_'+c.id+'">'
-          +'<button onclick="mpfUnlockContent(\''+pid+'\',\''+c.id+'\')" class="esp-btn esp-btn-prim" style="font-size:12px;padding:8px 12px">OK</button>'
-          +'</div>';
-      }else if(c.access_type==='premium'){
-        body+='<div style="margin-top:10px"><button onclick="contPrFull()" class="esp-btn esp-btn-prim" style="font-size:12px">Contacter le prof pour s\'abonner</button></div>';
-      }
-      return'<div class="contenu-card">'
-        +'<div class="contenu-card-head">'
-        +'<span style="font-size:20px">'+ico+'</span>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div class="contenu-title">'+esc(c.title)+'</div>'
-        +'<div class="contenu-tag" style="color:'+tagColor+';background:'+tagColor+'18">'+tag+'</div>'
-        +'</div>'
-        +'</div>'
-        +body
-        +'</div>';
-    }).join('');
-  }).catch(function(){el.innerHTML='';});
-}
-
-function mpfUnlockContent(pid,cid){
-  var inp=g('cttPwInp_'+cid);if(!inp)return;
-  var pw=inp.value.trim();if(!pw)return;
-  fetch(API+'/teacher/'+pid+'/content/'+cid+'/unlock',{method:'POST',headers:apiH(),body:JSON.stringify({password:pw})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(d.error){toast(t('t_wrong_password'),'');haptic(2);return;}
-      haptic(8);toast(t('t_content_unlocked'),'');_loadMpfContenu(pid);
-    }).catch(function(){});
-}
 
 function _loadMpfRessourcesEsp(pid){
   var el=g('mpfEspRessources');if(!el)return;
@@ -6602,47 +6497,6 @@ function _loadMpfRessourcesEsp(pid){
   }).catch(function(){el.innerHTML='';});
 }
 
-function _loadMpfSubmissions(pid){
-  var el=g('mpfMySubmissions');if(!el||!user)return;
-  fetch(API+'/teacher/'+pid+'/submissions',{headers:apiH()}).then(function(r){return r.json();}).then(function(data){
-    if(_curPrFull!==pid)return;
-    if(!data||!data.length){el.innerHTML='<div style="font-size:12px;color:var(--lite);padding:4px 0">Aucun dépôt envoyé</div>';return;}
-    el.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Envoyés</div>'
-      +data.map(function(s){
-      var d=new Date(s.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-      return'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.title)+'</div><div style="font-size:11px;color:var(--lite)">'+d+'</div></div>'
-        +(s.url?'<a href="'+esc(s.url)+'" target="_blank" style="font-size:11px;color:var(--or);font-weight:700;flex-shrink:0">Voir</a>':'')
-        +'<button onclick="mpfDeleteSub(\''+pid+'\',\''+s.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
-        +'</div>';
-    }).join('');
-  }).catch(function(){});
-}
-
-function mpfSubmitDoc(){
-  var pid=_curPrFull;if(!pid)return;
-  var title=((g('mpfSubTitle')||{}).value||'').trim();
-  var url=((g('mpfSubUrl')||{}).value||'').trim();
-  if(!title){toast(t('t_doc_name_req'),'');return;}
-  var btn=document.querySelector('.esp2-btn-submit');
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+pid+'/submissions',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,url:url||null})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Envoyer';}
-      if(d.error){toast(t('t_error'),d.error);return;}
-      haptic(4);toast(t('t_doc_sent_success'),'');
-      if(g('mpfSubTitle'))g('mpfSubTitle').value='';
-      if(g('mpfSubUrl'))g('mpfSubUrl').value='';
-      _loadMpfSubmissions(pid);
-    }).catch(function(){if(btn){btn.disabled=false;}});
-}
-
-function mpfDeleteSub(pid,sid){
-  fetch(API+'/teacher/'+pid+'/submissions/'+sid,{method:'DELETE',headers:apiH()}).then(function(){
-    haptic(4);_loadMpfSubmissions(pid);
-  });
-}
 
 function _loadMpfNote(pid){
   var el=g('mpfEspNotes');var sec=g('mpfEspNoteSection');if(!el||!user)return;
@@ -6654,78 +6508,6 @@ function _loadMpfNote(pid){
   }).catch(function(){if(sec)sec.style.display='none';});
 }
 
-// ── GESTION CONTENUS CÔTÉ PROF ───────────────────────────────────────────
-function espCttAccessChange(sel){
-  var pw=g('espCttPwBox'),pr=g('espCttPriceBox');
-  if(pw)pw.style.display=sel.value==='password'?'block':'none';
-  if(pr)pr.style.display=sel.value==='premium'?'block':'none';
-}
-
-function espToggleAddContenu(btn){
-  var f=g('espContenuForm');if(!f)return;
-  var show=f.style.display==='none';
-  f.style.display=show?'flex':'none';
-  if(btn)btn.textContent=show?'Annuler':'+ Ajouter';
-}
-
-function espSubmitContenu(){
-  var uid=user&&user.id;if(!uid)return;
-  var title=((g('espCttTitle')||{}).value||'').trim();
-  if(!title){toast(t('t_title_link_req'),'');return;}
-  var desc=((g('espCttDesc')||{}).value||'').trim();
-  var url=((g('espCttUrl')||{}).value||'').trim();
-  var type=(g('espCttType')||{}).value||'text';
-  var access=(g('espCttAccess')||{}).value||'enrolled';
-  var pw=access==='password'?((g('espCttPw')||{}).value||'').trim():null;
-  var price=access==='premium'?parseInt((g('espCttPrice')||{}).value||'0',10):0;
-  if(access==='password'&&!pw){toast(t('t_passwd_req'),'');return;}
-  var btn=document.querySelector('#espContenuForm .esp-btn-prim');
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  fetch(API+'/teacher/'+uid+'/content',{method:'POST',headers:apiH(),body:JSON.stringify({title:title,description:desc,content_url:url||null,content_type:type,access_type:access,password:pw,price:price})})
-    .then(function(r){return r.json();}).then(function(d){
-      if(btn){btn.disabled=false;btn.textContent='Publier';}
-      if(d.error){toast(t('t_error'),d.error);return;}
-      haptic(8);toast(t('t_content_published'),'');
-      if(g('espCttTitle'))g('espCttTitle').value='';
-      if(g('espCttDesc'))g('espCttDesc').value='';
-      if(g('espCttUrl'))g('espCttUrl').value='';
-      var f=g('espContenuForm');if(f)f.style.display='none';
-      var ab=document.querySelector('[onclick="espToggleAddContenu(this)"]');if(ab)ab.textContent='+ Ajouter';
-      espLoadContenu();
-    }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Publier';}});
-}
-
-function espLoadContenu(){
-  var uid=user&&user.id;if(!uid)return;
-  var el=g('espContenu');if(!el)return;
-  el.innerHTML='<div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:8px"></div>';
-  var ACCESS_LABEL={'enrolled':'🔓 Accès libre','password':'🔐 Mot de passe','premium':'💎 Premium'};
-  var TYPE_ICON={text:'📝',video:'🎥',pdf:'📄',link:'🔗'};
-  fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).then(function(list){
-    if(!list||!list.length){el.innerHTML='<div style="color:var(--lite);font-size:13px;padding:10px 0">Aucun contenu publié.</div>';return;}
-    el.innerHTML=list.map(function(c){
-      var label=ACCESS_LABEL[c.access_type]||c.access_type;
-      var tIco=TYPE_ICON[c.content_type]||'📚';
-      return'<div style="background:var(--wh);border:1px solid var(--bdr);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:18px;flex-shrink:0">'+tIco+'</span>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title)+'</div>'
-        +'<div style="font-size:11px;color:var(--lite);margin-top:2px">'+label+(c.price?' · '+c.price+'€/mois':'')+'</div>'
-        +'</div>'
-        +'<button onclick="espDeleteContenu(\''+c.id+'\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--lite);flex-shrink:0">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>'
-        +'</button>'
-        +'</div>';
-    }).join('');
-  }).catch(function(){el.innerHTML='';});
-}
-
-function espDeleteContenu(id){
-  var uid=user&&user.id;if(!uid)return;
-  fetch(API+'/teacher/'+uid+'/content/'+id,{method:'DELETE',headers:apiH()}).then(function(){
-    haptic(4);espLoadContenu();
-  });
-}
 
 // ── MES COURS (prof) ──────────────────────────────────────────────────────
 function goMesCoursPage(){
@@ -6904,15 +6686,13 @@ function toggleEsp2Card(id,section){
   if(opening){
     // Côté élève
     var pid=_curPrFull;
-    if(section==='cours'){_loadMpfContenu(pid);_loadMpfRessourcesEsp(pid);}
-    if(section==='docs'){_loadMpfSubmissions(pid);}
+    if(section==='cours'){_loadMpfRessourcesEsp(pid);}
     // Côté prof
     if(section==='code')espLoadCode();
     if(section==='eleves')espLoadStudents();
     if(section==='annonces')espLoadAnnonces();
     if(section==='received')espLoadReceivedDocs();
     if(section==='ressources'){espLoadResources();espLoadFiches();}
-    if(section==='contenu')espLoadContenu();
     if(section==='mesCours')espLoadMesCours();
   }
 }
@@ -7864,6 +7644,28 @@ var _convCache=''; // cache HTML de la liste pour affichage immédiat
 var _convRetries=0; // compteur de tentatives auto (cold start / timeout iOS)
 var _convRetryTimer=null; // handle du timer de retry — annulable
 var _convGen=0; // génération — écarte les résultats périmés (requêtes en retard)
+function _groupeAvatarStack(membres,total){
+  var AV_SIZE=30,AV_OFFSET=16;
+  var COLORS=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444'];
+  var shown=membres.slice(0,2);
+  var extra=total-shown.length;
+  var circles=shown.map(function(m,i){
+    var bg=m.photo?'#ddd':COLORS[i%COLORS.length];
+    var inner=m.photo
+      ?'<img src="'+esc(m.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      :'<span style="font-size:10px;font-weight:700;color:#fff">'+esc((m.nom||'?')[0].toUpperCase())+'</span>';
+    return'<div style="position:absolute;left:'+(i*AV_OFFSET)+'px;top:50%;transform:translateY(-50%);z-index:'+(3-i)+';width:'+AV_SIZE+'px;height:'+AV_SIZE+'px;border-radius:50%;border:2px solid var(--wh);background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+inner+'</div>';
+  });
+  if(extra>0){
+    var xLeft=shown.length*AV_OFFSET;
+    circles.push('<div style="position:absolute;left:'+xLeft+'px;top:50%;transform:translateY(-50%);z-index:0;width:'+AV_SIZE+'px;height:'+AV_SIZE+'px;border-radius:50%;border:2px solid var(--wh);background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--mid)">+'+extra+'</div>');
+  }
+  var cols=shown.length+(extra>0?1:0);
+  var w=(cols-1)*AV_OFFSET+AV_SIZE;
+  // Enveloppe de la même taille que .msg-av (52px) pour garder l'alignement
+  return'<div style="width:52px;height:52px;flex-shrink:0;position:relative;display:flex;align-items:center"><div style="position:relative;width:'+w+'px;height:'+AV_SIZE+'px">'+circles.join('')+'</div></div>';
+}
+
 async function loadConversations(){
   if(!user)return;
   var lm=g('listM');
@@ -7886,22 +7688,11 @@ async function loadConversations(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     _convRetries=0; // succès — réinitialiser le compteur de tentatives
-    if(!Array.isArray(msgs)||!msgs.length){
-      var _isProf=user&&user.role==='professeur';
-      var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.style.cssText='';
-      lm.innerHTML='<div style="text-align:center;padding:60px 24px">'
-        +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-        +'</div>'
-        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
-        +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
-        +'</div>';
-      _convLoading=false;return;
-    }
-    // Grouper par interlocuteur
+    if(!Array.isArray(msgs))msgs=[];
+    // Grouper par interlocuteur (ignorer les messages groupe)
     var convs={};
     msgs.forEach(function(m){
+      if(m.groupe_cours_id)return; // messages groupe traités séparément
       var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
       if(!otherId||otherId===user.id)return;
       if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
@@ -7944,9 +7735,40 @@ async function loadConversations(){
       else if(_pc.startsWith('%%ESP%%')){try{var _ep=JSON.parse(_pc.slice(7));preview=(_ep.t==='fiche'?'📄 Fiche de cours':_ep.t==='pub'?'📢 Publication':_ep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_ep.title?' · '+esc(_ep.title.slice(0,22)):'');}catch(e){preview='📎 Contenu partagé';}}
       else preview=esc(_pc.slice(0,35))+(_pc.length>35?'…':'');
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
-    }).join('');
-    var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">'+t('msg_empty_conv')+'</div>';
+      return{ts:new Date(m.created_at).getTime(),html:'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>'};
+    });
+
+    // Fetch conversations groupe
+    var groupeItems=[];
+    try{
+      var rg=await fetch(API+'/groupe-conversations/'+user.id,{headers:apiH()});
+      if(rg.ok){
+        var gconvs=await rg.json();
+        (gconvs||[]).forEach(function(g){
+          var gm=g.last_message||{};
+          var gIsMe=gm.sender_id===user.id;
+          var gNonLu=g.unread>0;
+          if(gNonLu)nonLus+=g.unread;
+          var gTime=gm.created_at?new Date(gm.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+          var gPc=gm.contenu||'';
+          var gPreview;
+          if(gPc.startsWith('%%ESP%%')){try{var _gep=JSON.parse(gPc.slice(7));gPreview=(_gep.t==='fiche'?'📄 Fiche':_gep.t==='pub'?'📢 Publication':_gep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_gep.title?' · '+esc(_gep.title.slice(0,20)):'');}catch(e){gPreview='📎 Contenu';}}
+          else gPreview=esc(gPc.slice(0,35))+(gPc.length>35?'…':'');
+          var gUnreadDot=gNonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
+          var gStack=_groupeAvatarStack(g.membres||[],g.total_membres||1);
+          var gTitle=esc(g.cours_title||'Groupe');
+          var gCid=escH(String(g.cours_id));
+          groupeItems.push({ts:new Date(gm.created_at||0).getTime(),html:'<div class="msg-row'+(gNonLu?' msg-unread':'')+'" onclick="openGroupeMsg(\''+gCid+'\')" style="align-items:center">'+gStack+'<div class="msg-info" style="margin-left:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+gTitle+'</div><div style="font-size:11px;color:'+(gNonLu?'var(--or)':'var(--lite)')+';font-weight:'+(gNonLu?'700':'400')+'">'+gTime+'</div></div><div class="msg-preview">'+(gIsMe?'Vous · ':((gm.sender_nom||'').split(' ')[0]+' · '))+gPreview+'</div></div>'+gUnreadDot+'</div>'});
+        });
+      }
+    }catch(_){}
+
+    // Merger et trier par date décroissante
+    var allItems=html.concat(groupeItems).sort(function(a,b){return b.ts-a.ts;});
+    var _isProf2=user&&user.role==='professeur';
+    var _emptyDesc2=_isProf2?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
+    var _emptyHtml='<div style="text-align:center;padding:60px 24px"><div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div><div style="font-size:13px;color:var(--lite)">'+_emptyDesc2+'</div></div>';
+    var _convHtml=allItems.length?allItems.map(function(i){return i.html;}).join(''):_emptyHtml;
     lm.style.cssText='';lm.innerHTML=_convHtml;
     lm.querySelectorAll('.msg-row').forEach(function(r){
       r.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
@@ -8364,6 +8186,11 @@ function openGroupeMsg(coursId){
   var bd = g('bdGroupe'); if(bd) bd.style.display = 'flex';
   haptic(4);
 
+  // Marquer les messages groupe comme lus
+  fetch(API+'/messages/groupe/lu/'+coursId,{method:'PUT',headers:apiH()}).catch(function(){});
+  // Invalider le cache de conversations pour que le badge se mette à jour
+  _convCache=null;
+
   _loadGroupeMsgs();
   clearInterval(_groupePollTimer);
   _groupePollTimer = setInterval(_loadGroupeMsgs, 4000);
@@ -8435,7 +8262,12 @@ async function _loadGroupeMsgs(){
       var time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var nm = m.sender_nom || 'Utilisateur';
       var ini = nm[0]||'?';
-      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end">'+esc(ini)+'</div>';
+      var _sCol=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#0EA5E9','#EC4899'];
+      var _senderHash=(m.sender_id||'').split('').reduce(function(h,c){return h+c.charCodeAt(0);},0);
+      var _avBg=_sCol[_senderHash%_sCol.length];
+      var _avPhoto=(P[m.sender_id]&&P[m.sender_id].photo)||null;
+      var _avInner=_avPhoto?'<img src="'+esc(_avPhoto)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':esc(ini.toUpperCase());
+      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:'+(_avPhoto?'transparent':_avBg)+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end;overflow:hidden">'+_avInner+'</div>';
       var nameHtml = isMe ? '' : '<div style="font-size:11px;color:var(--lite);margin-bottom:2px;padding-left:34px">'+esc(nm)+'</div>';
       var bg = isMe ? 'linear-gradient(135deg,var(--or),var(--ord))' : 'var(--wh)';
       var col = isMe ? '#fff' : 'var(--ink)';
@@ -9775,6 +9607,44 @@ async function loadRevenues() {
 
   } catch(e) {
     list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('err_revenues')+'<br><a onclick="loadRevenues()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
+  }
+}
+
+async function loadPayouts() {
+  if (!user || user.role !== 'professeur') return;
+  var el = g('revPayouts');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  try {
+    var r = await fetch(API + '/stripe/connect/payouts/' + user.id, {headers: apiH()});
+    var data = await r.json();
+    if (!Array.isArray(data) || !data.length) {
+      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">Aucun virement pour le moment.</div>';
+      return;
+    }
+    var STATUS_LABEL = {paid: 'Reçu', pending: 'En cours', in_transit: 'En transit', failed: 'Échoué', canceled: 'Annulé'};
+    var STATUS_COLOR = {paid: 'var(--green)', pending: 'var(--or)', in_transit: 'var(--or)', failed: '#EF4444', canceled: 'var(--lite)'};
+    el.innerHTML = data.map(function(p) {
+      var d = new Date(p.arrival_date);
+      var dateStr = d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric'});
+      var label = STATUS_LABEL[p.status] || p.status;
+      var color = STATUS_COLOR[p.status] || 'var(--lite)';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bdr)">'
+        + '<div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(34,192,105,.15),rgba(34,192,105,.05));display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'
+        + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">Virement bancaire</div>'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-top:3px">'
+        + '<span style="font-size:11px;color:var(--lite)">'+dateStr+'</span>'
+        + '<span style="font-size:10px;font-weight:700;color:'+color+';background:'+color+'1a;border-radius:4px;padding:1px 6px">'+label+'</span>'
+        + '</div>'
+        + '</div>'
+        + '<div style="font-size:16px;font-weight:800;color:#22C069">'+p.amount.toFixed(2)+'€</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Erreur de chargement.<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
   }
 }
 
@@ -11958,20 +11828,23 @@ async function subCrStep(){
     var _dates=_computeRecDates();
     if(!_dates.length)throw new Error('Date invalide');
     var _published=0;
+    var _firstVisioUrl='';
+    var _isVisioMode=_sd.mode==='visio';
     for(var _di=0;_di<_dates.length;_di++){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
+      var _visioUrl=_isVisioMode?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'';
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
-        lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
+        lieu:_isVisioMode?'Visio':_sd.lieu,
         lieu_prive:_sd.lieu_prive||'',
         lieu_type:_sd.lieu_type||'',
         prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
         description:_sd.desc||'',
         prof_id:user.id,professeur_id:user.id,
         mode:_sd.mode||'presentiel',
-        visio_url:_sd.mode==='visio'?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'',
+        visio_url:_visioUrl,
         prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
         couleur_sujet:_sc2,background:_bg,
         emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
@@ -11982,12 +11855,64 @@ async function subCrStep(){
       var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
       var data=await r.json();
       if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
+      if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
       _published++;
     }
     haptic([10,50,100,50,10]);closeCrStep();
-    toast(t('t_course_published'),_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
     await loadData();buildCards();buildAccLists();
+    if(_isVisioMode&&_firstVisioUrl){
+      _showVisioPublishedSheet(_firstVisioUrl,_published);
+    }else{
+      toast(t('t_course_published'),_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
+    }
   }catch(e){toast(t('t_error'),e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
+}
+
+function _showVisioPublishedSheet(url,nbSeances){
+  var old=g('_visioPublishedBd');if(old)old.remove();
+  var bd=document.createElement('div');
+  bd.id='_visioPublishedBd';
+  bd.style.cssText='position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-end;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
+  bd.innerHTML=
+    '<div style="width:100%;background:var(--wh);border-radius:28px 28px 0 0;padding:0 0 max(28px,calc(env(safe-area-inset-bottom,0px)+20px));box-shadow:0 -8px 40px rgba(0,0,0,.18)">'
+    +'<div style="text-align:center;padding:14px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="padding:20px 22px 0">'
+    // Icone success
+    +'<div style="width:56px;height:56px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>'
+    +'</div>'
+    +'<div style="font-size:19px;font-weight:800;color:var(--ink);text-align:center;letter-spacing:-.02em;margin-bottom:6px">Cours publié\u00a0!</div>'
+    +'<div style="font-size:13.5px;color:var(--lite);text-align:center;line-height:1.5;margin-bottom:20px">'+(nbSeances>1?nbSeances+' séances programmées':'Votre cours est maintenant visible')+'</div>'
+    // Bloc lien visio
+    +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Lien de visio</div>'
+    +'<div style="display:flex;align-items:center;gap:10px;background:rgba(0,113,227,.06);border:1.5px solid rgba(0,113,227,.18);border-radius:16px;padding:13px 14px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#0055B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
+    +'<div id="_visioUrlTxt" style="flex:1;font-size:12px;font-weight:600;color:#0055B3;word-break:break-all;line-height:1.4">'+escH(url)+'</div>'
+    +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(url)+'\')" style="flex-shrink:0;background:#0055B3;color:#fff;border:none;border-radius:10px;padding:8px 13px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Copier</button>'
+    +'</div>'
+    +(nbSeances>1?'<div style="margin-top:8px;font-size:11.5px;color:var(--lite);line-height:1.45">Chaque séance a son propre lien, retrouvez-les dans vos cours.</div>':'')
+    +'</div>'
+    +'<div style="padding:18px 22px 0">'
+    +'<button onclick="document.getElementById(\'_visioPublishedBd\').remove()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">OK</button>'
+    +'</div>'
+    +'</div>';
+  bd.addEventListener('click',function(e){if(e.target===bd)bd.remove();});
+  document.body.appendChild(bd);
+}
+
+function _copyVisioUrl(url){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}
+    }).catch(function(){_fallbackCopyVisio(url);});
+  }else{_fallbackCopyVisio(url);}
+}
+
+function _fallbackCopyVisio(url){
+  var ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-999px;left:-999px';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}}catch(e){}
+  document.body.removeChild(ta);
 }
 
 // ---- Override openCr ----

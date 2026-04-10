@@ -1294,6 +1294,12 @@
           <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revList">
             <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>
           </div>
+          <!-- Historique des virements -->
+          <div style="font-size:12px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;padding:20px 0 10px">Virements reçus</div>
+          <div style="margin:0 16px;border-radius:16px;overflow:hidden;background:var(--wh);border:1px solid var(--bdr)" id="revPayouts">
+            <div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>
+          </div>
+
           <div style="padding:14px 16px;text-align:center">
             <div style="font-size:12px;color:var(--lite);line-height:1.6">Vos paiements sont sécurisés et virés automatiquement sur votre compte bancaire.</div>
           </div>
@@ -1467,7 +1473,7 @@
           <div id="profAvisScore" style="display:flex;align-items:center;gap:16px;background:var(--wh);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid var(--bdr)">
             <div style="text-align:center;flex-shrink:0">
               <div id="profAvisAvg" style="font-size:40px;font-weight:900;color:#FF9500;letter-spacing:-.04em">—</div>
-              <div id="profAvisStars" style="font-size:18px;color:#FF9500;letter-spacing:.05em;margin-top:-4px">☆☆☆☆☆</div>
+              <div id="profAvisStars" style="display:flex;gap:3px;justify-content:center;margin-top:4px"></div>
             </div>
             <div style="flex:1">
               <div id="profAvisCount" style="font-size:13px;color:var(--lite);font-weight:600">Aucun avis pour le moment</div>
@@ -1995,12 +2001,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="tp-esp-sep"></div>
-          <div class="tp-esp-row" onclick="openSendDocSheet()">
-            <div class="tp-esp-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Envoyer un document</div><div class="tp-esp-sub">Partagez un fichier avec votre prof</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
-          <div class="tp-esp-sep"></div>
           <div class="tp-esp-row" onclick="contPrFull()">
             <div class="tp-esp-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
             <div class="tp-esp-text"><div class="tp-esp-title">Écrire au professeur</div><div class="tp-esp-sub">Message direct</div></div>
@@ -2488,7 +2488,13 @@
   <div class="modal">
     <div class="mhd">
       <div><div style="font-size:11px;color:var(--lite);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">Inscrits</div><div style="font-size:17px;font-weight:800" id="elevesTitre" data-i18n="students_title">Élèves inscrits</div></div>
-      <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="bdElevesGroupe" style="display:none;align-items:center;gap:6px;background:var(--orp);color:var(--or);border:none;border-radius:10px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+          Groupe
+        </button>
+        <button class="mcl" onclick="closeM('bdEleves')">✕</button>
+      </div>
     </div>
     <div class="mbd">
       <div id="elevesList"></div>

@@ -2240,6 +2240,24 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
   }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
+// STRIPE CONNECT — historique des virements (payouts)
+app.get('/stripe/connect/payouts/:prof_id', requireAuth, async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.prof_id) return res.status(403).json({ error: 'Non autorisé' });
+    const { data: prof } = await supabase.from('profiles').select('stripe_account_id').eq('id', req.params.prof_id).single();
+    if (!prof?.stripe_account_id) return res.json([]);
+    const payouts = await stripe.payouts.list({ limit: 20 }, { stripeAccount: prof.stripe_account_id });
+    res.json(payouts.data.map(p => ({
+      id: p.id,
+      amount: p.amount / 100,
+      currency: p.currency,
+      status: p.status,
+      arrival_date: p.arrival_date * 1000,
+      description: p.description,
+    })));
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
 // PROFILES — récupérer profil par ID
 app.get('/profiles/:id', async (req, res) => {
   res.set('Cache-Control', 'no-store');
@@ -3065,141 +3083,6 @@ app.get('/teacher/my-students', requireAuth, async (req, res) => {
       photo_url: profMap[r.student_id]?.photo_url || null,
       enrolled_at: r.created_at,
     })));
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-// ── CONTENUS COURS (accès libre / mot de passe / premium) ──────────────────
-// SQL requis :
-// CREATE TABLE IF NOT EXISTS teacher_content (
-//   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   teacher_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-//   title TEXT NOT NULL, description TEXT DEFAULT '',
-//   content_url TEXT, content_type TEXT DEFAULT 'text',
-//   access_type TEXT DEFAULT 'enrolled', -- 'enrolled','password','premium'
-//   password TEXT, price INTEGER DEFAULT 0,
-//   is_published BOOLEAN DEFAULT true, created_at TIMESTAMPTZ DEFAULT NOW()
-// );
-// CREATE TABLE IF NOT EXISTS content_access (
-//   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   content_id UUID NOT NULL REFERENCES teacher_content(id) ON DELETE CASCADE,
-//   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-//   granted_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(content_id, student_id)
-// );
-// CREATE TABLE IF NOT EXISTS student_submissions (
-//   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//   teacher_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-//   student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-//   title TEXT NOT NULL, url TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
-// );
-
-app.get('/teacher/:id/content', requireAuth, async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
-    const isProf = req.user.id === req.params.id;
-    if (!isProf) {
-      const { data: enr } = await supabase.from('teacher_students')
-        .select('id').eq('teacher_id', req.params.id).eq('student_id', req.user.id).maybeSingle();
-      if (!enr) return res.status(403).json({ error: 'Non inscrit' });
-    }
-    const { data: contents, error } = await supabase.from('teacher_content')
-      .select('*').eq('teacher_id', req.params.id).eq('is_published', true)
-      .order('created_at', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    if (isProf) return res.json(contents || []);
-    // Pour les élèves : masquer le mot de passe, indiquer si débloqué
-    const pwIds = (contents || []).filter(c => c.access_type === 'password').map(c => c.id);
-    let unlocked = new Set();
-    if (pwIds.length) {
-      const { data: acc } = await supabase.from('content_access')
-        .select('content_id').eq('student_id', req.user.id).in('content_id', pwIds);
-      (acc || []).forEach(a => unlocked.add(a.content_id));
-    }
-    res.json((contents || []).map(c => ({
-      ...c, password: undefined,
-      is_unlocked: c.access_type === 'enrolled' || unlocked.has(c.id),
-    })));
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-app.post('/teacher/:id/content', requireAuth, async (req, res) => {
-  try {
-    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
-    const { title, description, content_url, content_type, access_type, password, price } = req.body;
-    if (!title) return res.status(400).json({ error: 'Titre requis' });
-    const hashedPassword = (access_type === 'password' && password)
-      ? await bcrypt.hash(password, 10) : null;
-    const { data, error } = await supabase.from('teacher_content')
-      .insert({ teacher_id: req.params.id, title: title.trim(),
-        description: (description||'').trim(), content_url: content_url||null,
-        content_type: content_type||'text', access_type: access_type||'enrolled',
-        password: hashedPassword, price: price||0 })
-      .select().single();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-app.delete('/teacher/:id/content/:cid', requireAuth, async (req, res) => {
-  try {
-    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
-    const { error } = await supabase.from('teacher_content')
-      .delete().eq('id', req.params.cid).eq('teacher_id', req.params.id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-app.post('/teacher/:id/content/:cid/unlock', requireAuth, async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
-    const { password } = req.body;
-    const { data: c } = await supabase.from('teacher_content')
-      .select('id,password,access_type').eq('id', req.params.cid).eq('teacher_id', req.params.id).single();
-    if (!c) return res.status(404).json({ error: 'Contenu introuvable' });
-    if (c.access_type !== 'password') return res.status(400).json({ error: 'Non protégé par mot de passe' });
-    const isHash = c.password && c.password.startsWith('$2b$');
-    const match = isHash ? await bcrypt.compare(password, c.password) : (c.password === password);
-    if (!c.password || !match) return res.status(400).json({ error: 'Mot de passe incorrect' });
-    await supabase.from('content_access')
-      .upsert({ content_id: req.params.cid, student_id: req.user.id }, { onConflict: 'content_id,student_id' });
-    res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-// ── DÉPÔTS ÉLÈVES ──────────────────────────────────────────────────────────
-app.get('/teacher/:id/submissions', requireAuth, async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
-    const isProf = req.user.id === req.params.id;
-    let q = supabase.from('student_submissions').select('*').eq('teacher_id', req.params.id);
-    if (!isProf) q = q.eq('student_id', req.user.id);
-    const { data, error } = await q.order('created_at', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data || []);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-app.post('/teacher/:id/submissions', requireAuth, async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
-    const { title, url } = req.body;
-    if (!title) return res.status(400).json({ error: 'Titre requis' });
-    const { data, error } = await supabase.from('student_submissions')
-      .insert({ teacher_id: req.params.id, student_id: req.user.id, title: title.trim(), url: url||null })
-      .select().single();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
-});
-
-app.delete('/teacher/:id/submissions/:sid', requireAuth, async (req, res) => {
-  try {
-    if (!req.user) return res.status(401).json({ error: 'Non autorisé' });
-    const { data: sub } = await supabase.from('student_submissions').select('student_id,teacher_id').eq('id', req.params.sid).single();
-    if (!sub) return res.status(404).json({ error: 'Introuvable' });
-    if (req.user.id !== sub.student_id && req.user.id !== sub.teacher_id) return res.status(403).json({ error: 'Non autorisé' });
-    await supabase.from('student_submissions').delete().eq('id', req.params.sid);
-    res.json({ success: true });
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
