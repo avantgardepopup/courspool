@@ -11567,7 +11567,8 @@ function stepRender(idx){
     ];
     var _stpBtn3='width:44px;height:44px;border-radius:50%;border:none;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);font-size:22px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s';
     html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    _recOpts.forEach(function(opt){
+    _recOpts.forEach(function(opt,i){
+      if(i===1)html+='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="flex:1;height:1px;background:var(--bdr)"></div><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">Cours récurrent</div><div style="flex:1;height:1px;background:var(--bdr)"></div></div>';
       var isSel=_sd.recurrence===opt.val;
       html+='<div class="rec-opt" data-rv="'+opt.val+'" onclick="_setRecurrence(\''+opt.val+'\')" style="'
         +(isSel?'background:rgba(255,107,43,.04);box-shadow:0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.2);':'background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);')
