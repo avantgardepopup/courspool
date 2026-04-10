@@ -11936,7 +11936,7 @@ function _showCoursePublishedStep(visioUrl,nbSeances){
 function _copyVisioUrl(url){
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(url).then(function(){
-      var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}
+      toast('Lien copié','');haptic(4);
     }).catch(function(){_fallbackCopyVisio(url);});
   }else{_fallbackCopyVisio(url);}
 }
@@ -11944,7 +11944,7 @@ function _copyVisioUrl(url){
 function _fallbackCopyVisio(url){
   var ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-999px;left:-999px';
   document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}}catch(e){}
+  try{document.execCommand('copy');toast('Lien copié','');haptic(4);}catch(e){}
   document.body.removeChild(ta);
 }
 

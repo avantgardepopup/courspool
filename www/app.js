@@ -6098,8 +6098,8 @@ function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
   var grid=g('biblioGrid');if(!grid)return;
   grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
-  var ACCESS_LABEL={enrolled:'Inscrits',password:'Mot de passe',share:'Via lien'};
-  var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  var ACCESS_LABEL={enrolled:'Inscrits',followers:'Inscrits',public:'Public',private:'Privé',password:'Mot de passe',share:'Via lien'};
+  var TYPE_ICON={pdf:'PDF',video:'Vidéo',article:'Article',exercice:'Exercice',fiche:'Fiche',text:'Texte',link:'Lien'};
   function _biblioIco(kind,type){
     var bg,stroke,path;
     if(kind==='fiche'){bg='rgba(34,197,94,.12)';stroke='#16A34A';path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';}
@@ -6112,26 +6112,23 @@ function loadBibliotheque(){
       +'</div>';
   }
   function _biblioAccessSvg(type){
-    if(type==='password')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
-    if(type==='share')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
-    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>';
+    if(type==='public')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>';
+    if(type==='private')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
   }
   // Fetch announcements (fiches) + resources
   Promise.all([
     fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-    fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
   ]).then(function(results){
     var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
     var _fData;try{_fData=JSON.parse(localStorage.getItem('cp_fiche_data')||'{}');}catch(e){_fData={};}
     var fiches=(results[0]||[]).filter(function(a){return a.type==='fiche'||_fIds.has(String(a.id));});
     fiches=fiches.map(function(f){var c=_fData[String(f.id)]||{};return Object.assign({},f,{title:f.title||c.title||'',content:f.content||c.content||''});});
     var resources=results[1]||[];
-    var content=results[2]||[];
     var items=[];
-    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',password:f.password||'',created_at:f.created_at});});
-    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_type||'enrolled',password:r.password||'',created_at:r.created_at});});
-    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',type:c.content_type||'',access:c.access_type||'enrolled',password:c.password||'',created_at:c.created_at});});
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_level||'followers',created_at:r.created_at});});
     items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
     if(!items.length){
       grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
@@ -6173,11 +6170,18 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
-  var opts=[
-    {val:'enrolled',label:'Tous les inscrits',sub:'Visible par les élèves inscrits',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/>',stroke:'var(--mid)',bg:'var(--bg)'},
-    {val:'password',label:'Mot de passe',sub:'Protégé par un code secret',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'},
-    {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--mid)',bg:'var(--bg)'}
-  ];
+  // Options différentes selon le type : fiches utilisent enrolled/private/public, ressources utilisent followers/public/private
+  var opts=kind==='fiche'
+    ?[
+      {val:'enrolled',label:'Inscrits',sub:'Visible par tous les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+    ]
+    :[
+      {val:'followers',label:'Inscrits',sub:'Visible par les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+    ];
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
   html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">'+t('vis_label')+'</div>';
   html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">'+t('vis_desc')+'</div>';
@@ -6197,10 +6201,7 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   bd.appendChild(sheet);
   document.body.appendChild(bd);
   window._biblioPickAccess=function(k,i,v){
-    if(v==='password'){
-      bd.remove();
-      _biblioAskPassword(function(pw){biblioSetAccess(k,i,v,pw);});
-    }else{bd.remove();biblioSetAccess(k,i,v);}
+    bd.remove();biblioSetAccess(k,i,v);
   };
   haptic(4);
 }
@@ -6232,25 +6233,50 @@ function _biblioAskPassword(onDone){
   haptic(4);
 }
 
-function biblioSetAccess(kind,id,access,pw){
+function biblioSetAccess(kind,id,access){
   var uid=user&&user.id;if(!uid)return;
-  var endpoints={resource:'/teacher/'+uid+'/resources/'+id,content:'/teacher/'+uid+'/content/'+id,fiche:'/teacher/'+uid+'/announcements/'+id};
-  var ep=endpoints[kind];if(!ep)return;
+  var ep,body;
+  if(kind==='fiche'){
+    ep='/teacher/'+uid+'/announcements/'+id;
+    body={access_type:access};
+  }else if(kind==='resource'){
+    ep='/teacher/'+uid+'/resources/'+id;
+    body={access_level:access};
+  }else{return;}
   haptic(4);
-  var body={access_type:access};if(pw)body.password=pw;
   fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify(body)})
-    .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.error){toast(t('t_error'),d.error);return;}
+      loadBibliotheque();
+    })
     .catch(function(){toast(t('t_net_error'),'');});
 }
 
 // ── AJOUTER UN DOCUMENT ───────────────────────────────────────────────────
+var _addDocType='pdf';
+var _addDocAccess='followers';
+
+function _addDocPickType(val,btn){
+  _addDocType=val;
+  var btns=document.querySelectorAll('#addDocTypeGrid .add-doc-type-btn');
+  btns.forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val===val);});
+  haptic(4);
+}
+
+function _addDocPickAccess(val,btn){
+  _addDocAccess=val;
+  var btns=document.querySelectorAll('#addDocAccessGrid .add-doc-type-btn');
+  btns.forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val===val);});
+  haptic(4);
+}
+
 function openAddDoc(){
   var el=g('bdAddDoc');if(!el)return;
+  // Reset pickers
+  _addDocType='pdf';_addDocAccess='followers';
+  document.querySelectorAll('#addDocTypeGrid .add-doc-type-btn').forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val==='pdf');});
+  document.querySelectorAll('#addDocAccessGrid .add-doc-type-btn').forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val==='followers');});
   el.style.display='flex';
-  var sel=g('addDocAccess');
-  if(sel)sel.addEventListener('change',function(){
-    var pw=g('addDocPwBox');if(pw)pw.style.display=sel.value==='password'?'block':'none';
-  },{once:false});
   haptic(4);
 }
 
@@ -6263,13 +6289,10 @@ function addDocSubmit(){
   var uid=user&&user.id;if(!uid)return;
   var title=(g('addDocTitle').value||'').trim();
   var url=(g('addDocUrl').value||'').trim();
-  var type=g('addDocType').value;
-  var access=g('addDocAccess').value;
-  var pw=access==='password'?(g('addDocPw').value||'').trim():'';
   if(!title||!url){toast(t('t_fill_title_link'),'');return;}
   var btn=g('addDocBtn');if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
-    body:JSON.stringify({title:title,url:url,type:type,access_type:access,password:pw||undefined})})
+    body:JSON.stringify({title:title,url:url,type:_addDocType,access_level:_addDocAccess})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Ajouter';}
       if(d.error){toast(t('t_error'),d.error);return;}
@@ -11508,10 +11531,10 @@ function stepRender(idx){
       +'<div style="'+_stpLbl+'">'+t('cr_step_prix_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnPrixM" style="'+_stpBtn+'">−</button>'
-      +'<div id="stepPrixDisp" style="'+_stpNum+'">'+(_sd.prix||0)+'</div>'
+      +'<input id="stepPrix" type="number" inputmode="numeric" min="0" max="9999" value="'+(_sd.prix||'')+'" placeholder="0" style="'+_stpNum+';border:none;background:transparent;outline:none;font-family:inherit;width:120px;-moz-appearance:textfield;" oninput="_sd.prix=parseInt(this.value)||0;var d=g(\'stepPrixDisp\');if(d)d.textContent=this.value||\'0\';stepPxCalc();">'
       +'<button id="btnPrixP" style="'+_stpBtn+'">+</button>'
       +'</div>'
-      +'<input type="hidden" id="stepPrix" value="'+(_sd.prix||0)+'">'
+      +'<div id="stepPrixDisp" style="display:none"></div>'
       +'</div>'
       // Séparateur
       +'<div style="height:1px;background:var(--bdr)"></div>'
@@ -11544,7 +11567,8 @@ function stepRender(idx){
     ];
     var _stpBtn3='width:44px;height:44px;border-radius:50%;border:none;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);font-size:22px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s';
     html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
-    _recOpts.forEach(function(opt){
+    _recOpts.forEach(function(opt,i){
+      if(i===1)html+='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="flex:1;height:1px;background:var(--bdr)"></div><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">Cours récurrent</div><div style="flex:1;height:1px;background:var(--bdr)"></div></div>';
       var isSel=_sd.recurrence===opt.val;
       html+='<div class="rec-opt" data-rv="'+opt.val+'" onclick="_setRecurrence(\''+opt.val+'\')" style="'
         +(isSel?'background:rgba(255,107,43,.04);box-shadow:0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.2);':'background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);')
@@ -11624,7 +11648,7 @@ function stepRender(idx){
   if(_slEl)_slEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var nx=g('stepLieuPrive');if(nx){nx.focus();var sb=g('stepBody');if(sb)sb.scrollTop=sb.scrollHeight;}}});
   var _slpEl=g('stepLieuPrive');
   if(_slpEl)_slpEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}});
-  wire('stepPrix',function(){_sd.prix=parseInt(this.value)||0;stepPxCalc();});
+  // stepPrix est maintenant un input direct avec oninput inline — pas de wire séparé
   wire('stepPlaces',function(){_sd.places=parseInt(this.value)||5;stepPxCalc();});
   wire('stepDesc',function(){if(this.value.length>400)this.value=this.value.slice(0,400);_sd.desc=this.value;var cnt=g('stepDescCount');if(cnt)cnt.textContent=this.value.length+'/400';});
 
@@ -11633,7 +11657,7 @@ function stepRender(idx){
   function _stpUpd(field,v){
     var inp=g(field==='prix'?'stepPrix':'stepPlaces');
     var disp=g(field==='prix'?'stepPrixDisp':'stepPlacesDisp');
-    if(inp)inp.value=v;
+    if(inp)inp.value=v||'';
     if(disp)disp.textContent=v;
     if(field==='prix')_sd.prix=v; else _sd.places=v;
     stepPxCalc();haptic(4);
@@ -11858,52 +11882,61 @@ async function subCrStep(){
       if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
       _published++;
     }
-    haptic([10,50,100,50,10]);closeCrStep();
-    await loadData();buildCards();buildAccLists();
-    if(_isVisioMode&&_firstVisioUrl){
-      _showVisioPublishedSheet(_firstVisioUrl,_published);
-    }else{
-      toast(t('t_course_published'),_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
-    }
+    haptic([10,50,100,50,10]);
+    loadData().then(function(){buildCards();buildAccLists();});
+    _showCoursePublishedStep(_firstVisioUrl,_published);
   }catch(e){toast(t('t_error'),e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
 }
 
-function _showVisioPublishedSheet(url,nbSeances){
-  var old=g('_visioPublishedBd');if(old)old.remove();
-  var bd=document.createElement('div');
-  bd.id='_visioPublishedBd';
-  bd.style.cssText='position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-end;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
-  bd.innerHTML=
-    '<div style="width:100%;background:var(--wh);border-radius:28px 28px 0 0;padding:0 0 max(28px,calc(env(safe-area-inset-bottom,0px)+20px));box-shadow:0 -8px 40px rgba(0,0,0,.18)">'
-    +'<div style="text-align:center;padding:14px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="padding:20px 22px 0">'
-    // Icone success
-    +'<div style="width:56px;height:56px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>'
+function _showCoursePublishedStep(visioUrl,nbSeances){
+  // Masquer la barre de progression et les boutons nav
+  var fill=g('stepFill');if(fill)fill.parentElement.parentElement.style.display='none';
+  var back=g('stepBackBtn');if(back)back.style.visibility='hidden';
+  var closeBtn=g('stepCloseBtn');if(closeBtn)closeBtn.style.display='none';
+
+  // Contenu de l'écran de succès
+  var body=g('stepBody');if(!body)return;
+  var visioBlock='';
+  if(visioUrl){
+    visioBlock='<div style="width:100%;margin-top:24px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">Lien de visio</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:16px;padding:14px 16px">'
+      +'<div style="flex:1;font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(visioUrl)+'</div>'
+      +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(visioUrl)+'\')" style="flex-shrink:0;background:transparent;border:none;padding:6px;cursor:pointer;color:var(--or);-webkit-tap-highlight-color:transparent">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'
+      +'</button>'
+      +'</div>'
+      +(nbSeances>1?'<div style="margin-top:8px;font-size:12px;color:var(--lite)">Chaque séance a son propre lien — retrouvez-les dans vos cours.</div>':'')
+      +'</div>';
+  }
+
+  body.innerHTML=
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px 0;width:100%">'
+    // Icone succès animée
+    +'<div style="width:80px;height:80px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:_checkPop .4s cubic-bezier(.34,1.56,.64,1)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>'
     +'</div>'
-    +'<div style="font-size:19px;font-weight:800;color:var(--ink);text-align:center;letter-spacing:-.02em;margin-bottom:6px">Cours publié\u00a0!</div>'
-    +'<div style="font-size:13.5px;color:var(--lite);text-align:center;line-height:1.5;margin-bottom:20px">'+(nbSeances>1?nbSeances+' séances programmées':'Votre cours est maintenant visible')+'</div>'
-    // Bloc lien visio
-    +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Lien de visio</div>'
-    +'<div style="display:flex;align-items:center;gap:10px;background:rgba(0,113,227,.06);border:1.5px solid rgba(0,113,227,.18);border-radius:16px;padding:13px 14px">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#0055B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
-    +'<div id="_visioUrlTxt" style="flex:1;font-size:12px;font-weight:600;color:#0055B3;word-break:break-all;line-height:1.4">'+escH(url)+'</div>'
-    +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(url)+'\')" style="flex-shrink:0;background:#0055B3;color:#fff;border:none;border-radius:10px;padding:8px 13px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Copier</button>'
-    +'</div>'
-    +(nbSeances>1?'<div style="margin-top:8px;font-size:11.5px;color:var(--lite);line-height:1.45">Chaque séance a son propre lien, retrouvez-les dans vos cours.</div>':'')
-    +'</div>'
-    +'<div style="padding:18px 22px 0">'
-    +'<button onclick="document.getElementById(\'_visioPublishedBd\').remove()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">OK</button>'
-    +'</div>'
+    +'<div style="font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:8px">Cours publié\u00a0!</div>'
+    +'<div style="font-size:15px;color:var(--lite);text-align:center;line-height:1.6">'+(nbSeances>1?nbSeances+' séances programmées':'Votre cours est maintenant visible')+'</div>'
+    +visioBlock
     +'</div>';
-  bd.addEventListener('click',function(e){if(e.target===bd)bd.remove();});
-  document.body.appendChild(bd);
+
+  // Injecter l'animation si pas encore présente
+  if(!g('_checkPopStyle')){
+    var st=document.createElement('style');st.id='_checkPopStyle';
+    st.textContent='@keyframes _checkPop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}';
+    document.head.appendChild(st);
+  }
+
+  // Bouton CTA → fermer
+  var cta=g('stepCta');
+  if(cta){cta.disabled=false;cta.textContent='OK';cta.onclick=function(){closeCrStep();};}
 }
 
 function _copyVisioUrl(url){
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(url).then(function(){
-      var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}
+      toast('Lien copié','');haptic(4);
     }).catch(function(){_fallbackCopyVisio(url);});
   }else{_fallbackCopyVisio(url);}
 }
@@ -11911,7 +11944,7 @@ function _copyVisioUrl(url){
 function _fallbackCopyVisio(url){
   var ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-999px;left:-999px';
   document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}}catch(e){}
+  try{document.execCommand('copy');toast('Lien copié','');haptic(4);}catch(e){}
   document.body.removeChild(ta);
 }
 
