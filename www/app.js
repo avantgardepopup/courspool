@@ -11311,6 +11311,13 @@ function openCrStep(){
   _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
+  // Réinitialiser les boutons nav (peuvent avoir été mutés par _showCoursePublishedStep)
+  var _ctaBtn=g('stepCta');if(_ctaBtn)_ctaBtn.onclick=stepNext;
+  var _backBtn=g('stepBackBtn');if(_backBtn)_backBtn.onclick=stepBack;
+  var _closeBtn=g('stepCloseBtn');if(_closeBtn)_closeBtn.onclick=closeCrStep;
+  var _fill=g('stepFill');if(_fill)_fill.parentElement.parentElement.style.display='';
+  var _backBtnEl=g('stepBackBtn');if(_backBtnEl)_backBtnEl.style.visibility='';
+  var _closeBtnEl=g('stepCloseBtn');if(_closeBtnEl)_closeBtnEl.style.display='';
   stepRender(0);
   g('bdCrStep').classList.add('active');
   setTimeout(_crStepVpAdjust,50);
