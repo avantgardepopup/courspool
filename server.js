@@ -1637,6 +1637,59 @@ app.delete('/users/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// EXPORT RGPD — téléchargement de toutes les données de l'utilisateur (droit à la portabilité)
+app.get('/users/me/export', requireAuth, async (req, res) => {
+  const id = req.user.id;
+  try {
+    const [
+      { data: profile },
+      { data: cours },
+      { data: reservations },
+      { data: follows },
+      { data: notations },
+      { data: messages_sent },
+      { data: messages_received },
+      { data: contacts },
+    ] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', id).single(),
+      supabase.from('cours').select('*').eq('professeur_id', id),
+      supabase.from('reservations').select('*').eq('user_id', id),
+      supabase.from('follows').select('*').eq('user_id', id),
+      supabase.from('notations').select('*').eq('eleve_id', id),
+      supabase.from('messages').select('*').eq('sender_id', id),
+      supabase.from('messages').select('*').eq('receiver_id', id),
+      supabase.from('contacts').select('*').eq('user_id', id),
+    ]);
+
+    // Retirer les champs sensibles internes du profil
+    if (profile) {
+      delete profile.stripe_account_id;
+      delete profile.stripe_customer_id;
+    }
+
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      user_id: id,
+      profile: profile || {},
+      cours: cours || [],
+      reservations: reservations || [],
+      follows: follows || [],
+      notations: notations || [],
+      messages_sent: messages_sent || [],
+      messages_received: messages_received || [],
+      contacts: contacts || [],
+    };
+
+    _secLog('data_export', req, { userId: id });
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="courspool-mes-donnees-${new Date().toISOString().slice(0,10)}.json"`);
+    res.json(exportData);
+  } catch(e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // PATCH profil — mise à jour par l'utilisateur lui-même (champs autorisés uniquement)
 app.patch('/profiles/:id', requireAuth, async (req, res) => {
   res.set('Cache-Control', 'no-store');
