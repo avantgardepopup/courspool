@@ -270,6 +270,16 @@ const supabase = createClient(
 const _blockedCache = new Map(); // uid → { blocked: bool, ts: number }
 const BLOCKED_CACHE_TTL = 60000; // 1 minute
 
+// Blacklist de sessions révoquées — clé: "${sub}:${iat}", valeur: timestamp d'expiration
+const _revokedSessions = new Map();
+// Nettoyage automatique toutes les 15 min — supprime les entrées expirées
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, exp] of _revokedSessions) {
+    if (now > exp) _revokedSessions.delete(key);
+  }
+}, 15 * 60 * 1000);
+
 async function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Token manquant' });
@@ -292,6 +302,11 @@ async function requireAuth(req, res, next) {
       payload = { sub: u.id, email: u.email };
     }
     if (!payload?.sub) return res.status(401).json({ error: 'Token invalide' });
+
+    // Vérification blacklist session révoquée (logout explicite)
+    const sessionKey = `${payload.sub}:${payload.iat}`;
+    if (_revokedSessions.has(sessionKey)) return res.status(401).json({ error: 'Session expirée, veuillez vous reconnecter' });
+
     req.user = { id: payload.sub, email: payload.email };
 
     // Vérification "bloqué" avec cache 1 minute — on récupère aussi le role
@@ -825,6 +840,29 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
     console.log(`[AUTH] Login réussi — email: ${email} | ip: ${ip}`);
     res.json({ user: data.user, session: data.session, profile });
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// AUTH — déconnexion (révocation de la session courante)
+app.post('/auth/logout', requireAuth, (req, res) => {
+  const auth = req.headers.authorization;
+  const token = auth?.slice(7);
+  if (token) {
+    try {
+      const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+      if (SUPABASE_JWT_SECRET) {
+        const payload = jwt.decode(token); // déjà vérifié par requireAuth, decode suffit
+        if (payload?.sub && payload?.iat) {
+          const sessionKey = `${payload.sub}:${payload.iat}`;
+          // Blacklister jusqu'à l'expiration naturelle du token (+ 60s de marge)
+          const expMs = payload.exp ? payload.exp * 1000 : Date.now() + 3600000;
+          _revokedSessions.set(sessionKey, expMs + 60000);
+        }
+      }
+    } catch(e) { /* ignore — le token est déjà invalide */ }
+  }
+  // Invalider aussi le cache "bloqué" pour forcer une re-vérification si reconnexion
+  _blockedCache.delete(req.user.id);
+  res.json({ ok: true });
 });
 
 // COURS — récupérer tous

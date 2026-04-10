@@ -3053,6 +3053,8 @@ function saveProf(){
 
 function doLogout(){
   var _fkLogout=_folKey(); // sauvegarder la clé AVANT user=null (sinon _folKey() retourne null)
+  // Révoquer la session côté serveur (blacklist du token)
+  if(user&&user.access_token){fetch(API+'/auth/logout',{method:'POST',headers:apiH()}).catch(function(){});}
   _followsInitialized=false;
   user=null;
   _tutoLaunched=false;
