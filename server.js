@@ -1685,7 +1685,8 @@ app.post('/stripe/webhook', async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.rawBody, sig, secret);
   } catch(e) {
-    console.log('[Webhook] signature invalide:', e.message);
+    console.warn('[Webhook] signature invalide:', e.message);
+    discordAlert(`🚨 **Webhook Stripe — signature invalide**\n> Quelqu'un envoie de faux événements Stripe.\n> **Erreur :** ${e.message}`);
     return res.status(400).send('Webhook signature invalide');
   }
 
@@ -1718,6 +1719,18 @@ app.post('/stripe/webhook', async (req, res) => {
   } else if (event.type === 'payment_intent.payment_failed') {
     const pi = event.data.object;
     console.log('[Webhook] payment_intent.payment_failed — pi:', pi.id, '— raison:', pi.last_payment_error?.message);
+  } else if (event.type === 'charge.dispute.created') {
+    // Chargeback — un élève conteste le paiement auprès de sa banque
+    const dispute = event.data.object;
+    const amount = (dispute.amount / 100).toFixed(2);
+    console.warn('[Webhook] Chargeback reçu — dispute:', dispute.id, '— montant:', amount, '€');
+    discordAlert(
+      `🚨 **Chargeback (contestation de paiement)**\n` +
+      `> **Dispute ID :** \`${dispute.id}\`\n` +
+      `> **Montant contesté :** ${amount}€\n` +
+      `> **Raison :** ${dispute.reason || 'non précisée'}\n` +
+      `> Action requise dans le dashboard Stripe sous 7 jours.`
+    );
   }
 
   res.json({ received: true });
