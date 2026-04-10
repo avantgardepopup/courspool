@@ -11958,20 +11958,23 @@ async function subCrStep(){
     var _dates=_computeRecDates();
     if(!_dates.length)throw new Error('Date invalide');
     var _published=0;
+    var _firstVisioUrl='';
+    var _isVisioMode=_sd.mode==='visio';
     for(var _di=0;_di<_dates.length;_di++){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
+      var _visioUrl=_isVisioMode?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'';
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
-        lieu:_sd.mode==='visio'?'Visio':_sd.lieu,
+        lieu:_isVisioMode?'Visio':_sd.lieu,
         lieu_prive:_sd.lieu_prive||'',
         lieu_type:_sd.lieu_type||'',
         prix_total:_sd.prix,places_max:_sd.places,duree:_sd.duree||60,
         description:_sd.desc||'',
         prof_id:user.id,professeur_id:user.id,
         mode:_sd.mode||'presentiel',
-        visio_url:_sd.mode==='visio'?('https://meet.jit.si/CoursPool-'+Math.random().toString(36).slice(2,8).toUpperCase()):'',
+        visio_url:_visioUrl,
         prive:_sd.prive||false,code_acces:_sd.prive?(_sd.code_acces||''):null,
         couleur_sujet:_sc2,background:_bg,
         emoji:_sd.prive?'\uD83D\uDD12':'\uD83D\uDCDA',
@@ -11982,12 +11985,64 @@ async function subCrStep(){
       var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
       var data=await r.json();
       if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
+      if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
       _published++;
     }
     haptic([10,50,100,50,10]);closeCrStep();
-    toast(t('t_course_published'),_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
     await loadData();buildCards();buildAccLists();
+    if(_isVisioMode&&_firstVisioUrl){
+      _showVisioPublishedSheet(_firstVisioUrl,_published);
+    }else{
+      toast(t('t_course_published'),_published>1?_published+' s\u00e9ances programm\u00e9es':'Votre cours est maintenant visible');
+    }
   }catch(e){toast(t('t_error'),e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
+}
+
+function _showVisioPublishedSheet(url,nbSeances){
+  var old=g('_visioPublishedBd');if(old)old.remove();
+  var bd=document.createElement('div');
+  bd.id='_visioPublishedBd';
+  bd.style.cssText='position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-end;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
+  bd.innerHTML=
+    '<div style="width:100%;background:var(--wh);border-radius:28px 28px 0 0;padding:0 0 max(28px,calc(env(safe-area-inset-bottom,0px)+20px));box-shadow:0 -8px 40px rgba(0,0,0,.18)">'
+    +'<div style="text-align:center;padding:14px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
+    +'<div style="padding:20px 22px 0">'
+    // Icone success
+    +'<div style="width:56px;height:56px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polyline points="20 6 9 17 4 12"/></svg>'
+    +'</div>'
+    +'<div style="font-size:19px;font-weight:800;color:var(--ink);text-align:center;letter-spacing:-.02em;margin-bottom:6px">Cours publié\u00a0!</div>'
+    +'<div style="font-size:13.5px;color:var(--lite);text-align:center;line-height:1.5;margin-bottom:20px">'+(nbSeances>1?nbSeances+' séances programmées':'Votre cours est maintenant visible')+'</div>'
+    // Bloc lien visio
+    +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Lien de visio</div>'
+    +'<div style="display:flex;align-items:center;gap:10px;background:rgba(0,113,227,.06);border:1.5px solid rgba(0,113,227,.18);border-radius:16px;padding:13px 14px">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#0055B3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
+    +'<div id="_visioUrlTxt" style="flex:1;font-size:12px;font-weight:600;color:#0055B3;word-break:break-all;line-height:1.4">'+escH(url)+'</div>'
+    +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(url)+'\')" style="flex-shrink:0;background:#0055B3;color:#fff;border:none;border-radius:10px;padding:8px 13px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Copier</button>'
+    +'</div>'
+    +(nbSeances>1?'<div style="margin-top:8px;font-size:11.5px;color:var(--lite);line-height:1.45">Chaque séance a son propre lien, retrouvez-les dans vos cours.</div>':'')
+    +'</div>'
+    +'<div style="padding:18px 22px 0">'
+    +'<button onclick="document.getElementById(\'_visioPublishedBd\').remove()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">OK</button>'
+    +'</div>'
+    +'</div>';
+  bd.addEventListener('click',function(e){if(e.target===bd)bd.remove();});
+  document.body.appendChild(bd);
+}
+
+function _copyVisioUrl(url){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}
+    }).catch(function(){_fallbackCopyVisio(url);});
+  }else{_fallbackCopyVisio(url);}
+}
+
+function _fallbackCopyVisio(url){
+  var ta=document.createElement('textarea');ta.value=url;ta.style.cssText='position:fixed;top:-999px;left:-999px';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');var btn=g('_visioCopyBtn');if(btn){btn.textContent='Copié\u00a0!';btn.style.background='#22C55E';}}catch(e){}
+  document.body.removeChild(ta);
 }
 
 // ---- Override openCr ----
