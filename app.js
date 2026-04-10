@@ -14533,12 +14533,29 @@ function _vToggleCam(){
   haptic(1);
 }
 function _vToggleShare(){
-  if(!_callObj){if(_isDemoMode)toast('Non disponible en démo','');return;}var b=g('_vShare');
+  if(!_callObj){if(_isDemoMode)toast('Non disponible en démo','');return;}
+  var b=g('_vShare');
   if(!_sharing){
-    _callObj.startScreenShare().then(function(){_sharing=true;if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}}).catch(function(){toast('Partage d\'écran indisponible','');});
+    try{
+      _callObj.startScreenShare()
+        .then(function(){
+          _sharing=true;
+          if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
+        })
+        .catch(function(e){
+          console.warn('[Share]',e);
+          toast('Partage d\'écran non disponible sur cet appareil','');
+        });
+    }catch(e){
+      console.warn('[Share sync]',e);
+      toast('Partage d\'écran non disponible sur cet appareil','');
+    }
   }else{
-    _callObj.stopScreenShare();_sharing=false;if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+    try{_callObj.stopScreenShare();}catch(e){}
+    _sharing=false;
+    if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
   }
+  haptic(1);
 }
 function _vToggleHand(){
   if(!_callObj&&!_isDemoMode)return;
@@ -14839,6 +14856,9 @@ function _boardRenderSubbar(){
     });
   }
   // ── Colors (not eraser, not select) ──
+  if(_brdTool==='select'){
+    h+='<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.45);white-space:nowrap;padding:0 10px;letter-spacing:.01em;">Glissez pour sélectionner</span>';
+  }
   if(_brdTool!=='eraser'&&_brdTool!=='select'){
     h+=sep;
     _BC.forEach(function(c){
@@ -15160,7 +15180,7 @@ function _boardUpdateToolbar(){_boardRenderSubbar();}
 function _boardToolTap(tool){
   if(_brdSel.active)_brdCommitSel();
   _brdTool=tool;
-  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='select'?'default':'crosshair';
+  if(_brdC)_brdC.style.cursor=tool==='text'?'text':'crosshair';
   _boardRenderSubbar();haptic(1);
 }
 function _boardSetTool(tool){_boardToolTap(tool);}
@@ -15275,10 +15295,15 @@ function _boardMove(e){
   _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
   var ptCount=Object.keys(_brdActivePointers).length;
   if(ptCount>=2){
+    // 2-finger detected: cancel any in-progress stroke and restore canvas to pre-stroke state
+    if(_brdDraw&&_brdSnap&&_brdX){
+      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+      _brdSnap=null;_brdSS=null;
+    }
     _brdDraw=false;
     if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
     e.preventDefault();
-    // Pinch-to-zoom + 2-finger pan
+    // Pinch-to-zoom + 2-finger pan (priority over all tools)
     if(_brdPinchInitDist>0){
       var pts=Object.values(_brdActivePointers);
       var cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2;
@@ -15344,7 +15369,10 @@ function _boardUp(e){
   if(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser'){
     _boardSaveHist();
   }else if(_brdTool==='shape'&&_brdSnap&&_brdSS){
-    var p=_boardGetPos(e);_boardDrawShape(_brdSS.x,_brdSS.y,p.x,p.y);
+    var p=_boardGetPos(e);
+    // Restore clean canvas (remove the live preview drawn in _boardMove)
+    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _boardDrawShape(_brdSS.x,_brdSS.y,p.x,p.y);
     _brdSnap=null;_brdSS=null;_boardSaveHist();
   }else if(_brdTool==='select'&&_brdSS&&_brdSnap){
     var p=_boardGetPos(e);
@@ -15353,7 +15381,7 @@ function _boardUp(e){
     var sx=Math.min(_brdSS.x,p.x),sy=Math.min(_brdSS.y,p.y);
     var sw=Math.abs(p.x-_brdSS.x),sh=Math.abs(p.y-_brdSS.y);
     _brdSS=null;_brdSnap=null;
-    if(sw>12&&sh>12)_brdActivateSel(sx,sy,sw,sh);
+    if(sw>4&&sh>4)_brdActivateSel(sx,sy,sw,sh);
   }
   _brdPts=[];
 }
@@ -15674,6 +15702,25 @@ function _boardInsertText(cx,cy){
     window.visualViewport.addEventListener('resize',adjustForKeyboard);
     window.visualViewport.addEventListener('scroll',adjustForKeyboard);
   }
+  // Capacitor native keyboard events (iOS WKWebView)
+  var kbShowFn=function(e){
+    var kbH=(e&&e.keyboardHeight)||0;if(!kbH)return;
+    var vvBottom=window.innerHeight-kbH;
+    var ib=inp.getBoundingClientRect();
+    if(ib.bottom>vvBottom-54){
+      inp.style.top=Math.max(8,parseFloat(inp.style.top)-(ib.bottom-vvBottom+54))+'px';
+    }
+    updateBarPos();
+  };
+  var kbHideFn=function(){
+    if(_brdC&&_brdTextAnchor){
+      var r=_brdC.getBoundingClientRect();
+      inp.style.top=(r.top+_brdTextAnchor.cy*_brdZoom)+'px';
+    }
+    updateBarPos();
+  };
+  window.addEventListener('keyboardWillShow',kbShowFn);
+  window.addEventListener('keyboardWillHide',kbHideFn);
   // Focus immediately — iOS requires this to be synchronous in touch handler
   inp.focus();
   updateBarPos();
@@ -15685,6 +15732,8 @@ function _boardInsertText(cx,cy){
       window.visualViewport.removeEventListener('resize',adjustForKeyboard);
       window.visualViewport.removeEventListener('scroll',adjustForKeyboard);
     }
+    window.removeEventListener('keyboardWillShow',kbShowFn);
+    window.removeEventListener('keyboardWillHide',kbHideFn);
     if(bar.parentNode)bar.parentNode.removeChild(bar);
     var txt=inp.value.trim();
     if(inp.parentNode)inp.parentNode.removeChild(inp);
@@ -15709,30 +15758,27 @@ function _boardInsertText(cx,cy){
 
 // ── PiP drag ──
 function _pipInitDrag(handle,pip){
-  var dn=function(e){
-    if(e.touches&&e.touches.length>1)return;
-    e.preventDefault();_pipDragging=true;
-    var s=(e.touches&&e.touches[0])||e;
-    _pipDSX=s.clientX;_pipDSY=s.clientY;
-    _pipDOX=parseInt(pip.style.left)||0;_pipDOY=parseInt(pip.style.top)||0;
+  // Body drag: pointer events with threshold (6px) — works anywhere on pip
+  var _bPtrs={}; // {pointerId: {sx,sy,ox,oy,active}}
+  pip.addEventListener('pointerdown',function(e){
+    if(e.target.tagName==='BUTTON')return; // don't intercept button taps
+    _bPtrs[e.pointerId]={sx:e.clientX,sy:e.clientY,ox:parseInt(pip.style.left)||0,oy:parseInt(pip.style.top)||0,active:false};
+  },{passive:true});
+  pip.addEventListener('pointermove',function(e){
+    var ptr=_bPtrs[e.pointerId];if(!ptr)return;
+    if(Object.keys(_bPtrs).length>1){ptr.active=false;return;} // pinch has priority
+    var dx=e.clientX-ptr.sx,dy=e.clientY-ptr.sy;
+    if(!ptr.active&&Math.hypot(dx,dy)<6)return;
+    ptr.active=true;
+    e.preventDefault();e.stopPropagation();
     pip.style.transition='none';
-  };
-  var mv=function(e){
-    if(!_pipDragging)return;
-    if(e.touches&&e.touches.length>1){_pipDragging=false;return;}
-    e.preventDefault();
-    var s=(e.touches&&e.touches[0])||e;
-    var dx=s.clientX-_pipDSX,dy=s.clientY-_pipDSY;
-    _pipX=Math.max(0,Math.min(window.innerWidth-_PW[_pipSzIdx],_pipDOX+dx));
-    _pipY=Math.max(0,Math.min(window.innerHeight-_PH[_pipSzIdx],_pipDOY+dy));
+    _pipX=Math.max(0,Math.min(window.innerWidth-_PW[_pipSzIdx],ptr.ox+dx));
+    _pipY=Math.max(0,Math.min(window.innerHeight-_PH[_pipSzIdx],ptr.oy+dy));
     pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
-  };
-  var up=function(){_pipDragging=false;};
-  handle.addEventListener('mousedown',dn,{passive:false});
-  handle.addEventListener('touchstart',dn,{passive:false});
-  document.addEventListener('mousemove',mv,{passive:false});
-  document.addEventListener('touchmove',mv,{passive:false});
-  document.addEventListener('mouseup',up);document.addEventListener('touchend',up);
+  },{passive:false});
+  var _bEnd=function(e){delete _bPtrs[e.pointerId];};
+  pip.addEventListener('pointerup',_bEnd,{passive:true});
+  pip.addEventListener('pointercancel',_bEnd,{passive:true});
 }
 function _pipInitPinch(pip){
   var _ppPtrs={},initDist=0,initIdx=0,lastNi=-1;
