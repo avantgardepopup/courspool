@@ -1144,6 +1144,35 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+// VISIO — générer un meeting token Daily.co
+app.post('/visio/token', requireAuth, async (req, res) => {
+  const key = process.env.DAILY_API_KEY;
+  if (!key) return res.status(503).json({ error: 'Visio non configurée' });
+  const { room_name } = req.body;
+  if (!room_name || !/^[a-z0-9\-]+$/.test(room_name)) {
+    return res.status(400).json({ error: 'room_name invalide' });
+  }
+  try {
+    const { data: prof } = await supabase.from('profiles').select('prenom,nom').eq('id', req.user.id).single();
+    const userName = prof ? ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() : (req.user.email || 'Participant');
+    const isOwner = req.user.role === 'professeur';
+    const resp = await fetch('https://api.daily.co/v1/meeting-tokens', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: {
+        room_name,
+        user_name: userName,
+        is_owner: isOwner,
+        start_audio_off: !isOwner,
+        start_video_off: false
+      }})
+    });
+    if (!resp.ok) { console.error('[Daily token]', await resp.text()); return res.status(500).json({ error: 'Erreur Daily' }); }
+    const data = await resp.json();
+    res.json({ token: data.token, user_name: userName, is_owner: isOwner });
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
 // STRIPE — créer une session de paiement
 app.post('/stripe/checkout', requireAuth, async (req, res) => {
   const { cours_id, cours_titre, pour_ami } = req.body;

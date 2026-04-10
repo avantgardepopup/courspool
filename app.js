@@ -13928,31 +13928,229 @@ function snapNavPill(nav){
   if(nav)_obs.observe(nav,{attributes:true,attributeFilter:['class']});
 })();
 
-// ── VISIO DAILY.CO ────────────────────────────────────────────
+// ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
+var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
+var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false;
+
 function openVisioModal(url){
   if(!url)return;
-  var bd=g('bdVisio');
-  if(!bd){
-    bd=document.createElement('div');
-    bd.id='bdVisio';
-    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;display:none';
-    bd.innerHTML=''
-      +'<div style="position:absolute;top:0;left:0;right:0;z-index:1;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;justify-content:flex-end;pointer-events:none">'
-      +'<button onclick="closeVisioModal()" style="pointer-events:auto;background:rgba(0,0,0,.65);border:none;color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">✕ Quitter</button>'
-      +'</div>'
-      +'<iframe id="_visioIframe" allow="camera; microphone; fullscreen; display-capture; autoplay" allowfullscreen style="flex:1;border:none;width:100%;height:100%"></iframe>';
-    document.body.appendChild(bd);
-  }
-  var iframe=g('_visioIframe');
-  if(iframe)iframe.src=url;
-  bd.style.display='flex';
+  var roomName=url.split('/').pop();
+  _isOwner=!!(user&&user.role==='professeur');
+  if(!g('bdVisio')){var bd=document.createElement('div');bd.id='bdVisio';bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#111;display:none;flex-direction:column';bd.innerHTML=_buildVisioHTML();document.body.appendChild(bd);}
+  g('bdVisio').style.display='flex';
   var nav=g('bnav');if(nav)nav.style.display='none';
+  _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;_sharing=false;_raisedHands={};
+  if(_callTimer)clearInterval(_callTimer);
+  _updateVisioTimer();
+  _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
+  _joinDailyRoom(url,roomName);
   haptic(1);
 }
 
+function _buildVisioHTML(){
+  var cs='width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  return ''
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);gap:12px;z-index:2;flex-shrink:0">'
+    +'<div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7)">Cours en visio</div>'
+    +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums">00:00</div>'
+    +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Quitter</button>'
+    +'</div>'
+    +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.13);border-bottom:1px solid rgba(255,107,43,.22);z-index:2;flex-shrink:0"></div>'
+    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0"></div>'
+    +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-shrink:0">'
+    +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
+    +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
+    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'font-size:20px" title="Lever la main">✋</button>'
+    +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
+    +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:#e53e3e;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
+    +'</div>';
+}
+
+function _vMicSvg(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(muted?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(muted?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';}
+function _vCamSvg(off){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(off?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(off?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
+
+function _updateVisioTimer(){var el=g('_vTimer');if(!el)return;var m=Math.floor(_callSec/60),s=_callSec%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+
+async function _joinDailyRoom(url,roomName){
+  var grid=g('_vGrid');if(grid)grid.innerHTML='<div style="display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:14px;height:100%">Connexion…</div>';
+  try{
+    var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
+    var td=await tr.json();
+    if(!td.token){toast('Erreur token visio','');return;}
+    if(typeof DailyIframe==='undefined'){toast('SDK visio non chargé','');return;}
+    if(_callObj){try{await _callObj.leave();}catch(e){}try{_callObj.destroy();}catch(e){}_callObj=null;}
+    _callObj=DailyIframe.createCallObject({audioSource:true,videoSource:true});
+    _callObj.on('joined-meeting',_vOnJoined)
+            .on('participant-joined',_vOnPartChange)
+            .on('participant-updated',_vOnPartChange)
+            .on('participant-left',_vOnPartLeft)
+            .on('track-started',_vOnTrack)
+            .on('track-stopped',_vOnTrack)
+            .on('app-message',_vOnMsg)
+            .on('error',function(e){console.error('[Daily]',e);});
+    _isOwner=td.is_owner||_isOwner;
+    await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
+    if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
+  }catch(e){console.error('[Visio join]',e);toast('Impossible de rejoindre','');}
+}
+
+function _vOnJoined(){_vRenderGrid();}
+function _vOnPartChange(){_vRenderGrid();_vUpdateHands();}
+function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();}
+
+function _vOnTrack(evt){
+  var p=evt.participant;if(!p)return;
+  var sid=p.local?'local':p.session_id;
+  var vid=g('_vtv-'+sid);
+  if(vid){
+    var vt=p.tracks&&p.tracks.video;
+    if(vt&&vt.state==='playable'&&vt.track){vid.srcObject=new MediaStream([vt.track]);vid.style.display='';var av=g('_vav-'+sid);if(av)av.style.display='none';}
+    else{vid.style.display='none';var av=g('_vav-'+sid);if(av)av.style.display='flex';}
+  }
+  if(!p.local){
+    var aud=g('_vta-'+sid);
+    var at=p.tracks&&p.tracks.audio;
+    if(aud&&at&&at.state==='playable'&&at.track&&!aud.srcObject){aud.srcObject=new MediaStream([at.track]);}
+  }
+}
+
+function _vOnMsg(evt){
+  var m=evt.data||{};var from=evt.fromId;
+  if(m.type==='raise_hand'){
+    _raisedHands[from]={name:m.name||'Élève',sid:from};
+    _vUpdateHands();if(_isOwner)haptic(2);
+    var t=g('_vthand-'+from);if(t)t.style.display='flex';
+  }else if(m.type==='lower_hand'){
+    delete _raisedHands[from];_vUpdateHands();
+    var t=g('_vthand-'+from);if(t)t.style.display='none';
+  }else if(m.type==='give_floor'){
+    if(_callObj&&m.to===_callObj.participants().local.session_id){
+      _callObj.setLocalAudio(true);_localMuted=false;
+      var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(false);
+      toast('🎤 Le prof vous donne la parole','');haptic(3);
+    }
+  }else if(m.type==='mute_req'){
+    if(_callObj&&m.to===_callObj.participants().local.session_id){
+      _callObj.setLocalAudio(false);_localMuted=true;
+      var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);
+      toast('Votre micro a été coupé','');
+    }
+  }
+}
+
+function _vRenderGrid(){
+  if(!_callObj)return;
+  var parts=_callObj.participants();var keys=Object.keys(parts);
+  var grid=g('_vGrid');if(!grid)return;
+  var n=keys.length;
+  grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
+  var seen={};
+  keys.forEach(function(k){
+    var p=parts[k];var sid=p.local?'local':p.session_id;seen[sid]=1;
+    if(!g('_vt-'+sid)){grid.appendChild(_vBuildTile(p,sid));}
+    else{_vUpdateTileMeta(p,sid);}
+  });
+  grid.querySelectorAll('[id^="_vt-"]').forEach(function(el){if(!seen[el.id.replace('_vt-','')])el.remove();});
+}
+
+function _vBuildTile(p,sid){
+  var isLocal=p.local;var name=p.user_name||'Participant';
+  var wrap=document.createElement('div');
+  wrap.id='_vt-'+sid;
+  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;';
+  // Video
+  var vid=document.createElement('video');
+  vid.id='_vtv-'+sid;vid.autoplay=true;vid.playsInline=true;vid.muted=isLocal;
+  vid.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none;'+(isLocal?'transform:scaleX(-1);':'');
+  // Avatar
+  var av=document.createElement('div');
+  av.id='_vav-'+sid;
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#FF6B2B,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;';
+  av.textContent=name.charAt(0).toUpperCase();
+  // Label
+  var lbl=document.createElement('div');
+  lbl.id='_vtl-'+sid;
+  lbl.style.cssText='position:absolute;bottom:8px;left:10px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;z-index:3;max-width:75%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);';
+  lbl.textContent=(isLocal?'Vous':name);
+  // Hand indicator
+  var hand=document.createElement('div');
+  hand.id='_vthand-'+sid;
+  hand.style.cssText='position:absolute;top:8px;right:8px;font-size:22px;display:none;z-index:3;background:rgba(0,0,0,.4);border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;';
+  hand.textContent='✋';
+  // Prof controls on remote tiles
+  if(_isOwner&&!isLocal){
+    var pc=document.createElement('div');
+    pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
+    pc.innerHTML=''
+      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px)">🎤 Parole</button>'
+      +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px)">🔇 Mute</button>';
+    wrap.appendChild(pc);
+  }
+  // Audio for remote
+  if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
+  wrap.appendChild(vid);wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(hand);
+  // Attach existing tracks
+  _vOnTrack({participant:p});
+  return wrap;
+}
+
+function _vUpdateTileMeta(p,sid){
+  var lbl=g('_vtl-'+sid);if(lbl)lbl.textContent=(p.local?'Vous':(p.user_name||'Participant'));
+  _vOnTrack({participant:p});
+}
+
+function _vUpdateHands(){
+  var panel=g('_vHands');if(!panel)return;
+  var keys=Object.keys(_raisedHands);
+  if(!_isOwner||!keys.length){panel.style.display='none';return;}
+  panel.style.display='flex';
+  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">✋ Mains levées</div>'
+    +keys.map(function(sid){var h=_raisedHands[sid];return''
+      +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px">'
+      +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(h.name)+'</span>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:#22C069;border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Donner la parole</button>'
+      +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">✕</button>'
+      +'</div></div>';
+    }).join('');
+}
+
+function _vToggleMic(){if(!_callObj)return;_localMuted=!_localMuted;_callObj.setLocalAudio(!_localMuted);var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);haptic(1);}
+function _vToggleCam(){if(!_callObj)return;_localCamOff=!_localCamOff;_callObj.setLocalVideo(!_localCamOff);var b=g('_vCam');if(b)b.innerHTML=_vCamSvg(_localCamOff);haptic(1);}
+function _vToggleShare(){if(!_callObj)return;if(!_sharing){_callObj.startScreenShare().then(function(){_sharing=true;var b=g('_vShare');if(b)b.style.background='rgba(255,107,43,.5)';}).catch(function(){toast('Partage d\'écran indisponible','');});}else{_callObj.stopScreenShare();_sharing=false;var b=g('_vShare');if(b)b.style.background='rgba(255,255,255,.15)';}}
+function _vToggleHand(){
+  if(!_callObj)return;_handRaised=!_handRaised;
+  var parts=_callObj.participants();var local=parts.local||{};
+  var myName=local.user_name||'Élève';var mySid=local.session_id||'local';
+  if(_handRaised){_callObj.sendAppMessage({type:'raise_hand',name:myName},'*');_raisedHands[mySid]={name:myName,sid:mySid};var b=g('_vHand');if(b)b.style.background='rgba(255,107,43,.5)';toast('Main levée ✋','');}
+  else{_callObj.sendAppMessage({type:'lower_hand'},'*');delete _raisedHands[mySid];var b=g('_vHand');if(b)b.style.background='rgba(255,255,255,.15)';}
+  _vUpdateHands();haptic(1);
+}
+function _vGiveFloor(sid){
+  if(!_callObj||!_isOwner)return;
+  var parts=_callObj.participants();var p=parts[sid];
+  var targetSid=p?p.session_id:sid;
+  _callObj.sendAppMessage({type:'give_floor',to:targetSid},'*');
+  delete _raisedHands[sid];_vUpdateHands();
+  var t=g('_vthand-'+sid);if(t)t.style.display='none';
+  haptic(2);toast('🎤 Parole donnée','');
+}
+function _vMuteP(sid){
+  if(!_callObj||!_isOwner)return;
+  var parts=_callObj.participants();var p=parts[sid];
+  if(p){try{_callObj.updateParticipant(sid,{setAudio:false});}catch(e){}}
+  var targetSid=p?p.session_id:sid;
+  _callObj.sendAppMessage({type:'mute_req',to:targetSid},'*');
+  delete _raisedHands[sid];_vUpdateHands();haptic(1);
+}
+function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+
 function closeVisioModal(){
+  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
-  var iframe=g('_visioIframe');if(iframe)iframe.src='';
+  var grid=g('_vGrid');if(grid)grid.innerHTML='';
+  _raisedHands={};_handRaised=false;_sharing=false;
   var nav=g('bnav');if(nav)nav.style.display='';
   haptic(4);
 }
