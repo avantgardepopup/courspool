@@ -640,7 +640,7 @@ function buildMesProfs(){
   }
   if(empty)empty.style.display='none';
   if(!carousel)return;
-  var _STATUT_LBL={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var _STATUT_LBL={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
   var _trashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
   var _delZone='<div style="position:absolute;right:0;top:0;bottom:0;width:88px;background:#FF3B30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:0 20px 20px 0;opacity:0;pointer-events:none">'+_trashSvg+'<span style="font-size:10px;font-weight:700;color:#fff;letter-spacing:.01em">Retirer</span></div>';
   function _profCardWrap(cardHtml){
@@ -663,7 +663,7 @@ function buildMesProfs(){
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=photo?'none':col;
       var statut=_STATUT_LBL[p.statut]||null;
-      var subLine='<span style="color:var(--or);font-weight:600">Espace inscrit</span>'+(statut?'<span style="color:var(--lite)"> · '+esc(statut)+'</span>':'');
+      var subLine='<span style="color:var(--or);font-weight:600">'+t('espace_inscrit')+'</span>'+(statut?'<span style="color:var(--lite)"> · '+esc(statut)+'</span>':'');
       var card='<div onclick="openProfEspace(\''+ep.id+'\')" class="cp-prof-card" data-pid="'+ep.id+'" data-type="enrolled" style="background:var(--wh);border-radius:20px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
@@ -678,7 +678,7 @@ function buildMesProfs(){
   }
   // Section : suivis (sans espace)
   if(folIds.length){
-    html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 20px 8px">Suivis</div>';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 20px 8px">'+t('acc_profs_suivis')+'</div>';
     folIds.forEach(function(pid){
       var p=P[pid]||{};
       var cours=C.filter(function(x){return x.pr===pid;});
@@ -688,7 +688,7 @@ function buildMesProfs(){
       var ini=(p.i||(p.nm?p.nm[0]:'?')||'?').toUpperCase();
       var av=(fresh&&p.photo)?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=\'1\'">':ini;
       var avBg=(fresh&&p.photo)?'none':col;
-      var statut=fresh?(_STATUT_LBL[p.statut]||p.rl||'Professeur'):'';
+      var statut=fresh?(_STATUT_LBL[p.statut]||p.rl||t('reg_prof')):'';
       var card='<div onclick="openPrFull(\''+pid+'\')" class="cp-prof-card" data-pid="'+pid+'" data-type="followed" style="background:var(--wh);border-radius:20px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;-webkit-tap-highlight-color:transparent">'
         +'<div style="width:50px;height:50px;border-radius:50%;flex-shrink:0;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden">'+av+'</div>'
         +'<div style="flex:1;min-width:0">'
@@ -732,7 +732,7 @@ function openEspaceEleve(pid){
   if(hdEl){
     hdEl.innerHTML='<div style="width:52px;height:52px;border-radius:50%;background:'+avBg+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0">'+avHtml+'</div>'
       +'<div><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+esc(nm)+'</div>'
-      +'<div style="font-size:13px;color:var(--or);font-weight:600;margin-top:2px">Espace inscrit</div></div>';
+      +'<div style="font-size:13px;color:var(--or);font-weight:600;margin-top:2px">'+t('espace_inscrit')+'</div></div>';
   }
   // Show page
   var bd=g('bdEspaceEleve');if(bd){bd.style.display='flex';}
@@ -882,15 +882,15 @@ function openEnrollSheet(){
   sheet.innerHTML=
     '<style>#_enrollCodeInp::placeholder{color:'+phColor+' !important;-webkit-text-fill-color:'+phColor+' !important;opacity:1;letter-spacing:.04em;font-family:inherit;font-size:16px;font-weight:400;text-transform:none;}</style>'
     +'<div style="text-align:center;margin-bottom:20px"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">Rejoindre un espace</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Entre le code partagé par ton professeur</div>'
+    +'<div style="font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">'+t('enroll_title')+'</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">'+t('enroll_sub')+'</div>'
     // Carte code — style ss-card, clean et premium
     +'<div id="_enrollCard" style="background:'+cardBg+';border-radius:20px;box-shadow:'+cardShadow+';display:flex;align-items:center;padding:17px 18px;margin-bottom:6px;box-sizing:border-box;transition:box-shadow .18s">'
       +'<input id="_enrollCodeInp" type="text" placeholder="Code d\'accès" maxlength="6" enterkeyhint="go" autocomplete="off" spellcheck="false" oninput="_enrollLive(this)" style="flex:1;border:none;outline:none;background:transparent;-webkit-appearance:none;font-family:\'SF Mono\',Menlo,Monaco,Courier,monospace;font-size:18px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:'+inpColor+';-webkit-text-fill-color:'+inpColor+';padding:0;margin:0;min-width:0;height:auto;caret-color:var(--or)">'
     +'</div>'
     +'<div id="_enrollHint" style="font-size:12px;color:var(--lite);padding:0 4px;margin-bottom:4px;min-height:18px;transition:opacity .15s"></div>'
     +'<div id="_enrollErr" style="display:none;font-size:12px;color:#EF4444;line-height:1.5;padding:0 4px;margin-bottom:8px"></div>'
-    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:4px">Rejoindre</button>'
+    +'<button id="_enrollBtn" onclick="submitEnrollSheet()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-top:4px">'+t('enroll_btn')+'</button>'
     +'<button onclick="if(_enrollBd){if(_enrollBd._cleanupKb)_enrollBd._cleanupKb();_enrollBd.remove();_enrollBd=null;}" style="width:100%;background:none;border:none;color:var(--lite);font-family:inherit;font-size:14px;cursor:pointer;padding:12px;margin-top:2px">Annuler</button>';
   bd.appendChild(sheet);document.body.appendChild(bd);
   bd.onclick=function(e){if(e.target===bd){if(bd._cleanupKb)bd._cleanupKb();bd.remove();_enrollBd=null;}};
@@ -2132,10 +2132,10 @@ var MOB_TITLES={
 
 function getGreeting(){
   var h=new Date().getHours();
-  if(h>=5&&h<12)return'Bonjour';
-  if(h>=12&&h<18)return'Bon après-midi';
-  if(h>=18&&h<22)return'Bonsoir';
-  return'Bonne nuit';
+  if(h>=5&&h<12)return t('greet_morning');
+  if(h>=12&&h<18)return t('greet_afternoon');
+  if(h>=18&&h<22)return t('greet_evening');
+  return t('greet_night');
 }
 
 
@@ -7737,11 +7737,11 @@ async function loadConversations(){
       var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var _pc=m.contenu||'';
       var preview;
-      if(_pc.includes('chat-cours-card')||_pc.includes('"mode":"'))preview='📚 Cours partagé';
-      else if(_pc.startsWith('%%ESP%%')){try{var _ep=JSON.parse(_pc.slice(7));preview=(_ep.t==='fiche'?'📄 Fiche de cours':_ep.t==='pub'?'📢 Publication':_ep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_ep.title?' · '+esc(_ep.title.slice(0,22)):'');}catch(e){preview='📎 Contenu partagé';}}
+      if(_pc.includes('chat-cours-card')||_pc.includes('"mode":"'))preview=t('msg_prv_cours');
+      else if(_pc.startsWith('%%ESP%%')){try{var _ep=JSON.parse(_pc.slice(7));preview=(_ep.t==='fiche'?t('msg_prv_fiche'):_ep.t==='pub'?t('msg_prv_pub'):_ep.t==='sondage'?t('msg_prv_sondage'):t('msg_prv_contenu'))+(_ep.title?' · '+esc(_ep.title.slice(0,22)):'');}catch(e){preview=t('msg_prv_contenu_p');}}
       else preview=esc(_pc.slice(0,35))+(_pc.length>35?'…':'');
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return{ts:new Date(m.created_at).getTime(),html:'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>'};
+      return{ts:new Date(m.created_at).getTime(),html:'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?t('msg_you')+' · ':'')+preview+'</div></div>'+unreadDot+'</div>'};
     });
 
     // Fetch conversations groupe
@@ -7764,7 +7764,7 @@ async function loadConversations(){
           var gStack=_groupeAvatarStack(g.membres||[],g.total_membres||1);
           var gTitle=esc(g.cours_title||'Groupe');
           var gCid=escH(String(g.cours_id));
-          groupeItems.push({ts:new Date(gm.created_at||0).getTime(),html:'<div class="msg-row'+(gNonLu?' msg-unread':'')+'" onclick="openGroupeMsg(\''+gCid+'\')" style="align-items:center">'+gStack+'<div class="msg-info" style="margin-left:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+gTitle+'</div><div style="font-size:11px;color:'+(gNonLu?'var(--or)':'var(--lite)')+';font-weight:'+(gNonLu?'700':'400')+'">'+gTime+'</div></div><div class="msg-preview">'+(gIsMe?'Vous · ':((gm.sender_nom||'').split(' ')[0]+' · '))+gPreview+'</div></div>'+gUnreadDot+'</div>'});
+          groupeItems.push({ts:new Date(gm.created_at||0).getTime(),html:'<div class="msg-row'+(gNonLu?' msg-unread':'')+'" onclick="openGroupeMsg(\''+gCid+'\')" style="align-items:center">'+gStack+'<div class="msg-info" style="margin-left:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+gTitle+'</div><div style="font-size:11px;color:'+(gNonLu?'var(--or)':'var(--lite)')+';font-weight:'+(gNonLu?'700':'400')+'">'+gTime+'</div></div><div class="msg-preview">'+(gIsMe?t('msg_you')+' · ':((gm.sender_nom||'').split(' ')[0]+' · '))+gPreview+'</div></div>'+gUnreadDot+'</div>'});
         });
       }
     }catch(_){}
@@ -13170,14 +13170,20 @@ async function exportMesDonnees(){
   }catch(e){}
 
   var json=JSON.stringify(data,null,2);
+  var filename='courspool-mes-donnees-'+new Date().toISOString().slice(0,10)+'.json';
   var blob=new Blob([json],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='courspool-mes-donnees-'+new Date().toISOString().slice(0,10)+'.json';
-  document.body.appendChild(a);a.click();
-  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  // Fallback Web Share API (iOS Capacitor) si disponible
+  if(navigator.canShare&&navigator.canShare({files:[new File([blob],filename,{type:'application/json'})]})){
+    navigator.share({files:[new File([blob],filename,{type:'application/json'})],title:'Mes données CoursPool'}).catch(function(){});
+  }else{
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1000);
+  }
   haptic(6);
-  toast(t('t_export_done'),'Fichier JSON avec toutes vos données personnelles.');
+  toast(t('t_export_done'),t('t_preparing_sub'));
 }
 
 function openSignalement(context,targetId,targetName){
