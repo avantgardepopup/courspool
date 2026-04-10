@@ -6,11 +6,11 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-    # Ignorer les environnements de preview, seulement Production et échecs
+    # Seulement les événements Production (success ou failure) — ignore les previews
     if: |
-      github.event.deployment_status.state == 'failure' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment.environment == 'Production')
+      github.event.deployment.environment == 'Production' &&
+      (github.event.deployment_status.state == 'success' ||
+       github.event.deployment_status.state == 'failure')
     steps:
       - name: Notifier Discord
         run: |
