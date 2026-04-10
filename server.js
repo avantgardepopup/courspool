@@ -1551,6 +1551,9 @@ app.delete('/users/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   console.log('[DELETE /users] début suppression:', id);
   try {
+    // Récupérer les infos du profil avant suppression pour l'alerte Discord
+    const { data: deletedProfile } = await supabase.from('profiles').select('prenom,nom,email,role').eq('id', id).single();
+
     // 1. Rembourser et annuler tous les cours du prof
     const { data: profCours } = await supabase.from('cours').select('id').eq('professeur_id', id);
     for (const cours of (profCours || [])) {
@@ -1604,6 +1607,17 @@ app.delete('/users/:id', requireAdmin, async (req, res) => {
     }
 
     await logAdminAction(req.user.id, 'delete_user', id, {});
+    const nom = deletedProfile ? `${deletedProfile.prenom || ''} ${deletedProfile.nom || ''}`.trim() : '?';
+    const email = deletedProfile?.email || '?';
+    const role = deletedProfile?.role || '?';
+    discordAlert(
+      `🗑️ **Compte supprimé**\n` +
+      `> **Nom :** ${nom}\n` +
+      `> **Email :** \`${email}\`\n` +
+      `> **Rôle :** ${role}\n` +
+      `> **Supprimé par admin :** \`${req.user.id}\`\n` +
+      `> **ID :** \`${id}\``
+    );
     res.json({ success: true });
   } catch(e) {
     console.log('[DELETE /users] exception:', e.message);
