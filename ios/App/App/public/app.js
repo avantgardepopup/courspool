@@ -2262,8 +2262,8 @@ function navTo(tab,_skipHistory){
   } else if(tab==='msg'){
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
-    // iPad : cacher la nav dans la messagerie
-    if(window.innerWidth>=768){var _bnavMsg=g('bnav');if(_bnavMsg)_bnavMsg.classList.add('ipad-msg');}
+    // iPad : cacher la nav + montrer bouton retour
+    if(window.innerWidth>=768){var _bnavMsg=g('bnav');if(_bnavMsg)_bnavMsg.classList.add('ipad-msg');var _bbb=g('bnavIpadBack');if(_bbb){_bbb.dataset.action='msg';_bbb.classList.add('visible');}}
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
@@ -2302,7 +2302,7 @@ function restoreNav(){
   if(nav&&user)nav.style.display='flex';
   // Nettoyer les classes iPad messaging
   if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');}
-  var _bbR=g('bnavIpadBack');if(_bbR)_bbR.classList.remove('visible');
+  var _bbR=g('bnavIpadBack');if(_bbR){_bbR.classList.remove('visible');delete _bbR.dataset.action;}
 
   // Restaurer le bouton Explorer
   var bniExp=g('bniExp');
@@ -7452,6 +7452,12 @@ function openMsg(profNm,destId,avatar){
     pollDelay=Math.min(pollDelay+500,8000);
   }
   schedulePoll();
+}
+
+function _bnavIpadBackAction(){
+  var btn=g('bnavIpadBack');
+  if(btn&&btn.dataset.action==='msg'){navTo('exp');}
+  else{closeMsgConv();}
 }
 
 function closeMsgConv(){
@@ -13955,7 +13961,7 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
-  _isOwner=true;_intentionalLeave=false;
+  _isDemoMode=true;_isOwner=true;_intentionalLeave=false;
   var existing=g('bdVisio');if(existing)existing.remove();
   var bd=document.createElement('div');
   bd.id='bdVisio';
@@ -13989,7 +13995,7 @@ function _vOpenDemo(){
 function _vBuildDemoTile(f){
   var wrap=document.createElement('div');
   wrap.id='_vt-'+f.sid;
-  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;';
+  wrap.style.cssText='position:relative;background:linear-gradient(160deg,#1e1e30,#12121f);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.35),0 0 0 0.5px rgba(255,255,255,.06);';
   wrap.onclick=function(){_vPin(f.sid);};
   var av=document.createElement('div');
   av.id='_vav-'+f.sid;
@@ -14011,12 +14017,13 @@ function _vBuildDemoTile(f){
   var pinInd=document.createElement('div');
   pinInd.id='_vpin-'+f.sid;
   pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
-  pinInd.textContent='📌 Épinglé';
+  pinInd.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg> Épinglé';
+  pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
   if(!f.local){
     var pc=document.createElement('div');
     pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
-    pc.innerHTML='<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🎤 Parole</button>'
-      +'<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🔇 Mute</button>';
+    pc.innerHTML='<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
+      +'<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Mute</button>';
     wrap.appendChild(pc);
   }
   wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
@@ -14024,12 +14031,13 @@ function _vBuildDemoTile(f){
 }
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
-var _isRecording=false,_intentionalLeave=false;
+var _isRecording=false,_intentionalLeave=false,_isDemoMode=false;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 
 function openVisioModal(url){
   if(!url)return;
   var roomName=url.split('/').pop();
+  _isDemoMode=false;
   _isOwner=!!(user&&user.role==='professeur');
   _intentionalLeave=false;
   var existing=g('bdVisio');if(existing)existing.remove();
@@ -14062,7 +14070,7 @@ function _buildVisioHTML(){
     +'</div>'
     +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;flex-shrink:0">00:00</div>'
     +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
-    +(_isOwner?'<button onclick="_vToggleRecord()" id="_vRecBtn" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:50px;padding:5px 12px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s">⏺ Enreg.</button>':'')
+    +(_isOwner?'<button onclick="_vToggleRecord()" id="_vRecBtn" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:50px;padding:5px 12px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 10 10" fill="#fc8181" width="10" height="10"><circle cx="5" cy="5" r="5"/></svg>Enreg.</button>':'')
     +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s">✕ Quitter</button>'
     +'</div></div>'
     // Raised hands panel
@@ -14074,7 +14082,7 @@ function _buildVisioHTML(){
     +'</div>'
     // Central zone: video grid + whiteboard + people panel
     +'<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
-    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0"></div>'
+    +'<div id="_vGrid" style="flex:1;display:grid;gap:8px;overflow:hidden;background:#0d0d18;padding:8px;min-height:0"></div>'
     +'<div id="_vBoard" style="display:none;flex:0 0 60%;min-height:0;border-top:2px solid rgba(255,107,43,.35);position:relative;background:#fff">'
     +'<div style="position:absolute;top:6px;right:8px;z-index:10"><button onclick="_vToggleBoard()" style="background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)">✕ Fermer le tableau</button></div>'
     +'<iframe id="_vBoardIframe" src="" style="width:100%;height:100%;border:none" allow="clipboard-read; clipboard-write"></iframe>'
@@ -14093,10 +14101,10 @@ function _buildVisioHTML(){
     +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;box-shadow:0 -1px 0 rgba(255,255,255,.06)">'
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
-    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'font-size:20px" title="Lever la main">✋</button>'
+    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M18 11V6a2 2 0 00-4 0v5M14 10V4a2 2 0 00-4 0v6M10 10.5V6a2 2 0 00-4 0v8l-2-1.5a1.5 1.5 0 00-2 2l3 4a5 5 0 0010 0V9a2 2 0 00-4 0z"/></svg></button>'
     +'<button id="_vBoardBtn" onclick="_vToggleBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8h4M7 12h4M15 8l2 4-2 4"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +'<button id="_vReactBtn" onclick="_vToggleReact()" style="'+cs+'font-size:20px" title="Réactions">😊</button>'
+    +'<button id="_vReactBtn" onclick="_vToggleReact()" style="'+cs+'" title="Réactions"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="22" height="22"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="#fff" stroke="none"/><circle cx="15" cy="9" r="1" fill="#fff" stroke="none"/></svg></button>'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
     +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
@@ -14270,7 +14278,7 @@ function _vBuildTile(p,sid){
   var isLocal=p.local;var name=p.user_name||'Participant';
   var wrap=document.createElement('div');
   wrap.id='_vt-'+sid;
-  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;';
+  wrap.style.cssText='position:relative;background:linear-gradient(160deg,#1e1e30,#12121f);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.35),0 0 0 0.5px rgba(255,255,255,.06);';
   wrap.onclick=function(e){if(e.target.tagName==='BUTTON')return;_vPin(sid);};
   var vid=document.createElement('video');
   vid.id='_vtv-'+sid;vid.autoplay=true;vid.playsInline=true;vid.muted=isLocal;
@@ -14302,13 +14310,14 @@ function _vBuildTile(p,sid){
   var pinInd=document.createElement('div');
   pinInd.id='_vpin-'+sid;
   pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
-  pinInd.textContent='📌 Épinglé';
+  pinInd.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg> Épinglé';
+  pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
   if(_isOwner&&!isLocal){
     var pc=document.createElement('div');
     pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
     pc.innerHTML=''
-      +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🎤 Parole</button>'
-      +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🔇 Mute</button>';
+      +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
+      +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Mute</button>';
     wrap.appendChild(pc);
   }
   if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
@@ -14340,13 +14349,15 @@ function _vUpdateHands(){
   // Sort chronologically by timestamp
   keys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
   panel.style.display='flex';
-  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;flex-shrink:0">✋ Mains levées ('+keys.length+')</div>'
+  var _micSvgS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>';
+  var _xSvgS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;flex-shrink:0">Mains levées ('+keys.length+')</div>'
     +keys.map(function(sid){var h=_raisedHands[sid];return''
       +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(255,255,255,.07)">'
       +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(h.name)+'</span>'
       +'<div style="display:flex;gap:6px;flex-shrink:0">'
-      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:linear-gradient(148deg,#22C069,#16a34a);border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(34,192,105,.3)">🎤 Donner la parole</button>'
-      +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">✕</button>'
+      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:linear-gradient(148deg,#22C069,#16a34a);border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(34,192,105,.3);display:flex;align-items:center;gap:5px">'+_micSvgS+'Parole</button>'
+      +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center">'+_xSvgS+'</button>'
       +'</div></div>';
     }).join('');
 }
@@ -14364,28 +14375,36 @@ function _vUpdatePeople(){
       +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.25)">'+name.charAt(0).toUpperCase()+'</div>'
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (Vous)':'')+'</div>'
-      +'<div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">'
-      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600">🎤 On</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600">🔇 Muet</span>')
-      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600">📷 On</span>':'')
-      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600">✋</span>':'')
+      +'<div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;align-items:center">'
+      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Micro</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Muet</span>')
+      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cam</span>':'')
+      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600">Main levée</span>':'')
       +'</div></div>'
       +(_isOwner&&!p.local?'<div style="display:flex;gap:5px;flex-shrink:0">'
-        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.2);border:1px solid rgba(34,192,105,.4);color:#22C069;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" title="Donner la parole">🎤</button>'
-        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.2);border:1px solid rgba(229,62,62,.4);color:#fc8181;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer" title="Couper micro">🔇</button>'
+        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.2);border:1px solid rgba(34,192,105,.4);color:#22C069;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.2);border:1px solid rgba(229,62,62,.4);color:#fc8181;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
         +'</div>':'')
       +'</div>';
   }).join('');
 }
 
 function _vToggleMic(){
-  if(!_callObj)return;_localMuted=!_localMuted;_callObj.setLocalAudio(!_localMuted);
+  if(!_callObj&&!_isDemoMode)return;
+  _localMuted=!_localMuted;
+  if(_callObj)_callObj.setLocalAudio(!_localMuted);
   var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);
   if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
   haptic(1);
 }
-function _vToggleCam(){if(!_callObj)return;_localCamOff=!_localCamOff;_callObj.setLocalVideo(!_localCamOff);var b=g('_vCam');if(b)b.innerHTML=_vCamSvg(_localCamOff);haptic(1);}
+function _vToggleCam(){
+  if(!_callObj&&!_isDemoMode)return;
+  _localCamOff=!_localCamOff;
+  if(_callObj)_callObj.setLocalVideo(!_localCamOff);
+  var b=g('_vCam');if(b)b.innerHTML=_vCamSvg(_localCamOff);
+  haptic(1);
+}
 function _vToggleShare(){
-  if(!_callObj)return;var b=g('_vShare');
+  if(!_callObj){if(_isDemoMode)toast('Non disponible en démo','');return;}var b=g('_vShare');
   if(!_sharing){
     _callObj.startScreenShare().then(function(){_sharing=true;if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}}).catch(function(){toast('Partage d\'écran indisponible','');});
   }else{
@@ -14393,17 +14412,19 @@ function _vToggleShare(){
   }
 }
 function _vToggleHand(){
-  if(!_callObj)return;_handRaised=!_handRaised;
-  var parts=_callObj.participants();var local=parts.local||{};
-  var myName=local.user_name||'Élève';var mySid=local.session_id||'local';
+  if(!_callObj&&!_isDemoMode)return;
+  _handRaised=!_handRaised;
+  var myName='Vous';var mySid='local';
+  if(_callObj){var parts=_callObj.participants();var local=parts.local||{};myName=local.user_name||'Élève';mySid=local.session_id||'local';}
   var b=g('_vHand');
   if(_handRaised){
-    _callObj.sendAppMessage({type:'raise_hand',name:myName},'*');
+    if(_callObj)_callObj.sendAppMessage({type:'raise_hand',name:myName},'*');
     _raisedHands[mySid]={name:myName,sid:mySid,ts:Date.now()};
     if(b){b.style.background='rgba(255,107,43,.55)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
-    toast('Main levée ✋','');
+    toast('Main levée','');
   }else{
-    _callObj.sendAppMessage({type:'lower_hand'},'*');delete _raisedHands[mySid];
+    if(_callObj)_callObj.sendAppMessage({type:'lower_hand'},'*');
+    delete _raisedHands[mySid];
     if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
   }
   _vUpdateHands();haptic(1);
@@ -14414,7 +14435,7 @@ function _vGiveFloor(sid){
   _callObj.sendAppMessage({type:'give_floor',to:targetSid},'*');
   delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();
   var t=g('_vthand-'+sid);if(t)t.style.display='none';
-  haptic(2);toast('🎤 Parole donnée','');
+  haptic(2);toast('Parole donnée','');
 }
 function _vMuteP(sid){
   if(!_callObj||!_isOwner)return;
@@ -14433,9 +14454,8 @@ function _vToggleReact(){
   if(btn){btn.style.background=_reactOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_reactOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
 }
 function _vSendReaction(emoji){
-  if(!_callObj)return;
-  var parts=_callObj.participants();var local=parts.local||{};var mySid=local.session_id||'local';
-  _callObj.sendAppMessage({type:'reaction',emoji:emoji},'*');
+  var mySid=_isDemoMode?'demo-local':'local';
+  if(_callObj){var parts=_callObj.participants();var local=parts.local||{};mySid=local.session_id||'local';_callObj.sendAppMessage({type:'reaction',emoji:emoji},'*');}
   _vShowFloatReact(mySid,emoji);haptic(1);
 }
 function _vShowFloatReact(sid,emoji){
@@ -14453,21 +14473,25 @@ function _vTogglePeople(){
   if(_peopleOpen)_vUpdatePeople();
 }
 function _vToggleRecord(){
-  if(!_callObj||!_isOwner)return;
+  if(!_isOwner||(!_callObj&&!_isDemoMode))return;
+  var _recStart=function(){
+    _isRecording=true;
+    var dot=g('_vRecDot');if(dot)dot.style.display='block';
+    var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.35)';btn.style.borderColor='rgba(229,62,62,.7)';}
+    toast('Enregistrement démarré','');haptic(2);
+  };
+  var _recStop=function(){
+    _isRecording=false;
+    var dot=g('_vRecDot');if(dot)dot.style.display='none';
+    var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.18)';btn.style.borderColor='rgba(229,62,62,.35)';}
+    toast('Enregistrement terminé','');haptic(1);
+  };
   if(!_isRecording){
-    _callObj.startRecording().then(function(){
-      _isRecording=true;
-      var dot=g('_vRecDot');if(dot)dot.style.display='block';
-      var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.35)';btn.style.borderColor='rgba(229,62,62,.7)';}
-      toast('⏺ Enregistrement démarré','');haptic(2);
-    }).catch(function(e){toast('Enregistrement non disponible','');console.warn('[Rec]',e);});
+    if(_callObj)_callObj.startRecording().then(_recStart).catch(function(e){toast('Enregistrement non disponible','');console.warn('[Rec]',e);});
+    else _recStart();
   }else{
-    _callObj.stopRecording().then(function(){
-      _isRecording=false;
-      var dot=g('_vRecDot');if(dot)dot.style.display='none';
-      var btn=g('_vRecBtn');if(btn){btn.style.background='rgba(229,62,62,.18)';btn.style.borderColor='rgba(229,62,62,.35)';}
-      toast('Enregistrement terminé','');haptic(1);
-    }).catch(function(e){console.warn('[Rec]',e);});
+    if(_callObj)_callObj.stopRecording().then(_recStop).catch(function(e){console.warn('[Rec]',e);});
+    else _recStop();
   }
 }
 
@@ -14502,7 +14526,7 @@ function _vToggleBoard(){
 }
 
 function closeVisioModal(){
-  _intentionalLeave=true;
+  _isDemoMode=false;_intentionalLeave=true;
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
   if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}

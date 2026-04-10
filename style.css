@@ -3503,34 +3503,69 @@ html.cap-ios #bnavIpadBack.visible {
   }
 }
 
-/* ── IPAD Capacitor — barre de nav pleine largeur (override pill desktop) ── */
+/* ── IPAD Capacitor — nav pill flottante centrée ── */
 @media (min-width: 768px) {
   html.cap-ios .bnav {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    border-radius: 0 !important;
-    transform: none !important;
-    padding-top: 10px !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px) !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    cursor: default !important;
-    box-shadow: 0 -2px 16px rgba(0,0,0,.06) !important;
-    gap: 0 !important;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px)) !important;
+    left: 50% !important;
+    right: auto !important;
+    width: auto !important;
+    transform: translateX(-50%) !important;
+    border-radius: 50px !important;
+    border-top: none !important;
+    padding: 6px 10px !important;
+    box-shadow: 0 8px 40px rgba(0,0,0,.14), 0 0 0 1px rgba(0,0,0,.07) !important;
+    gap: 2px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    transition: transform 380ms cubic-bezier(.34,1.56,.64,1), opacity 240ms ease !important;
   }
-  html.cap-ios .bnav::after { display: block !important; }
-  html.cap-ios .bnav:active { cursor: default !important; }
+  html.cap-ios .bnav::after { display: none !important; }
   html.cap-ios .bni {
-    padding: 8px 0 !important;
-    flex: 1 !important;
-    min-width: 0 !important;
+    flex: none !important;
+    padding: 9px 14px !important;
+    border-radius: 40px !important;
+    min-width: 52px !important;
     gap: 3px !important;
+    transition: background .18s, transform .12s cubic-bezier(.34,1.56,.64,1), color .15s !important;
   }
-  /* Messagerie iPad : cacher nav complètement */
+  html.cap-ios .bni:active {
+    transform: scale(.82) !important;
+    opacity: 1 !important;
+    transition: transform .07s ease !important;
+  }
+  html.cap-ios .bni svg { width: 22px !important; height: 22px !important; }
+  html.cap-ios .bni-lbl { font-size: 10px !important; }
+  html.cap-ios .bni.on {
+    background: linear-gradient(145deg, #FF7D42, #FF4500) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(255,69,0,.35) !important;
+  }
+  html.cap-ios .bni.on svg { stroke: #fff !important; }
+  html.cap-ios .bni.on .bni-lbl { color: #fff !important; font-weight: 600 !important; }
+  html.dk.cap-ios .bnav {
+    background: rgba(14,12,10,0.95) !important;
+    box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.07) !important;
+  }
+  html.dk.cap-ios .bni.on { background: linear-gradient(145deg, #FF7D42, #FF4500) !important; }
+  /* ipad-back : slide la pill vers la gauche */
+  html.cap-ios .bnav.ipad-back {
+    opacity: 0 !important;
+    transform: translateX(calc(-50% - 120px)) scale(0.75) !important;
+    pointer-events: none !important;
+  }
+  /* Messagerie iPad : cacher nav + bouton retour géré par JS */
   html.cap-ios .bnav.ipad-msg { display: none !important; }
+  /* FAB sur iPad pill : même style que desktop */
+  html.cap-ios #bniAdd {
+    padding: 8px !important;
+    border-radius: 50% !important;
+    min-width: unset !important;
+  }
+  html.cap-ios #bniAdd .bni-add-circle {
+    width: 50px !important; height: 50px !important;
+    margin-top: -18px !important;
+  }
 }
 
 /* iPad portrait (768–899px) : footer sur 2 lignes pour éviter le chevauchement */
