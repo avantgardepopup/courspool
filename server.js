@@ -1745,6 +1745,59 @@ app.get('/stripe/payments', requireAdmin, async (req, res) => {
 });
 
 
+// SUPABASE — webhook (événements base de données → Discord)
+// Configuré dans Supabase Dashboard → Database → Webhooks
+app.post('/webhooks/supabase', express.json(), async (req, res) => {
+  // Vérification du secret partagé (header custom configuré dans Supabase)
+  const secret = req.headers['x-webhook-secret'];
+  if (!process.env.SUPABASE_WEBHOOK_SECRET || secret !== process.env.SUPABASE_WEBHOOK_SECRET) {
+    console.warn('[Supabase Webhook] Secret invalide ou manquant');
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
+
+  const { type, table, record, old_record } = req.body;
+
+  try {
+    // Changement de statut de compte (blocage, rejet, activation)
+    if (table === 'profiles' && type === 'UPDATE') {
+      const oldStatut = old_record?.statut_compte;
+      const newStatut = record?.statut_compte;
+      if (oldStatut !== newStatut && newStatut) {
+        const nom = `${record.prenom || ''} ${record.nom || ''}`.trim() || '?';
+        discordAlert(
+          `🔄 **Changement statut compte**\n` +
+          `> **Utilisateur :** ${nom}\n` +
+          `> **Email :** \`${record.email || '?'}\`\n` +
+          `> **Avant :** ${oldStatut || '?'} → **Après :** ${newStatut}`
+        );
+      }
+
+      // Changement de rôle (très suspect si non initié par l'app)
+      const oldRole = old_record?.role;
+      const newRole = record?.role;
+      if (oldRole !== newRole && newRole) {
+        const nom = `${record.prenom || ''} ${record.nom || ''}`.trim() || '?';
+        discordAlert(
+          `⚠️ **Changement de rôle détecté**\n` +
+          `> **Utilisateur :** ${nom} (\`${record.id}\`)\n` +
+          `> **Avant :** ${oldRole || '?'} → **Après :** ${newRole}\n` +
+          `> Si ce changement n'a pas été initié par l'app, vérifiez immédiatement.`
+        );
+      }
+    }
+
+    // Nouveau cours créé (pour info — pas d'alerte par défaut, logué seulement)
+    if (table === 'cours' && type === 'INSERT') {
+      console.log(`[Supabase Webhook] Nouveau cours: ${record?.id} — prof: ${record?.professeur_id}`);
+    }
+
+    res.json({ ok: true });
+  } catch(e) {
+    console.error('[Supabase Webhook] Erreur:', e.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // STRIPE — webhook (signature vérifiée, route publique)
 app.post('/stripe/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];

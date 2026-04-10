@@ -1,0 +1,35 @@
+name: Vercel Déploiement → Discord
+
+on:
+  deployment_status:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    # Ignorer les environnements de preview, seulement Production et échecs
+    if: |
+      github.event.deployment_status.state == 'failure' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    steps:
+      - name: Notifier Discord
+        run: |
+          STATUS="${{ github.event.deployment_status.state }}"
+          ENV="${{ github.event.deployment.environment }}"
+          URL="${{ github.event.deployment_status.target_url }}"
+          COMMIT="${{ github.event.deployment.sha }}"
+          SHORT_SHA="${COMMIT:0:7}"
+
+          if [ "$STATUS" = "failure" ]; then
+            EMOJI="🚨"
+            LABEL="Déploiement Vercel ÉCHOUÉ"
+            DETAIL="> Le site est peut-être cassé. Vérifie les logs Vercel.\n> **Commit :** \`${SHORT_SHA}\`\n> **Environnement :** ${ENV}"
+          else
+            EMOJI="✅"
+            LABEL="Déploiement Vercel réussi"
+            DETAIL="> **Commit :** \`${SHORT_SHA}\`\n> **URL :** ${URL}"
+          fi
+
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"${EMOJI} **${LABEL}**\n${DETAIL}\"}"
