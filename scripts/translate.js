@@ -254,6 +254,20 @@ const SOURCE = {
   esp_doc_sans_titre:  'Document sans titre',
   esp_voir_lien:       'Voir',
 
+  // Guide tuto Mon Espace (6 étapes)
+  esp_title_1: 'Bienvenue dans ton Espace !',
+  esp_sub_1:   'Ton espace prof centralise tout ce dont tu as besoin pour gérer tes élèves et tes cours.',
+  esp_title_2: "Code d'accès élèves",
+  esp_sub_2:   "Partage ton code unique avec tes élèves pour qu'ils rejoignent ton espace privé.",
+  esp_title_3: 'Tes cours en un clin d\'œil',
+  esp_sub_3:   'Retrouve ici tous tes cours créés et vois combien d\'élèves se sont inscrits.',
+  esp_title_4: 'Suis tes élèves',
+  esp_sub_4:   'Consulte la liste de tes élèves, leur statut de paiement et leurs coordonnées.',
+  esp_title_5: 'Publie des annonces',
+  esp_sub_5:   'Partage des informations importantes ou des rappels visibles uniquement par tes élèves.',
+  esp_title_6: 'Ta bibliothèque',
+  esp_sub_6:   'Mets à disposition des fiches de cours, exercices et documents pour tes élèves.',
+
   // Profil
   prof_prenom:       'Prénom',
   prof_nom:          'Nom',
@@ -785,6 +799,8 @@ const SOURCE = {
   // Messagerie — états vides / connexion
   msg_reconnecting:    'Reconnexion...',
   msg_empty_conv:      'Aucune conversation',
+  msg_empty_prof:      'Tes élèves peuvent t\'écrire depuis la fiche d\'un cours.',
+  msg_empty_eleve:     'Démarre une conversation depuis le profil d\'un professeur.',
   msg_empty_group:     'Aucun message pour l\'instant.<br>Soyez le premier à écrire !',
 
   // Historique
