@@ -784,7 +784,7 @@ app.post('/auth/oauth-profile', requireAuth, async (req, res) => {
       profile = data || existing;
     }
     res.json({ success: true, profile });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // AUTH — inscription
@@ -861,7 +861,7 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
     }
     _secLog('login_ok', req, { email, userId: data.user.id });
     res.json({ user: data.user, session: data.session, profile });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // AUTH — déconnexion (révocation de la session courante)
@@ -916,7 +916,7 @@ app.get('/cours', async (req, res) => {
     if (error) return res.status(500).json({ error });
     const cours = (data || []).map(function(c) { const r = Object.assign({}, c); delete r.code_acces; return r; });
     res.json({ cours, total: count, page, limit, pages: Math.ceil(count / limit) });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // COURS — créer
@@ -969,7 +969,7 @@ app.post('/cours', requireAuth, async (req, res) => {
     }
     io.emit('cours_update', { action: 'create', cours: data[0] }); // broadcast public
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // COURS — accès par code privé
@@ -985,7 +985,7 @@ app.get('/cours/code/:code', async (req, res) => {
       .single();
     if (error || !data) return res.status(404).json({ error: 'Cours introuvable' });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // COURS — export calendrier .ics
@@ -1032,7 +1032,7 @@ app.get('/cours/:id/ics', requireAuth, async (req, res) => {
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="' + filename + '"');
     res.send(ics);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // COURS — supprimer
@@ -1045,7 +1045,7 @@ app.delete('/cours/:id', requireAuth, async (req, res) => {
     if (error) return res.status(500).json({ error });
     io.emit('cours_update', { action: 'delete', cours_id: req.params.id });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // COURS — modifier (champs autorisés uniquement)
@@ -1067,7 +1067,7 @@ app.patch('/cours/:id', requireAuth, async (req, res) => {
     const { data, error } = await supabase.from('cours').update(updates).eq('id', req.params.id).select();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data[0] || {});
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // RESERVATIONS — créer
@@ -1090,7 +1090,7 @@ app.post('/reservations', requireAuth, async (req, res) => {
     await supabase.from('cours').update({ places_prises: resCount || 0 }).eq('id', cours_id);
     io.emit('reservation_update', { cours_id, places_prises: resCount || 0 });
     res.json(data[0]);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // RESERVATIONS — réserver pour un ami
@@ -1101,7 +1101,7 @@ app.post('/reservations/ami', requireAuth, async (req, res) => {
     const { count: resCountAmi } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
     await supabase.from('cours').update({ places_prises: resCountAmi || 0 }).eq('id', cours_id);
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // RESERVATIONS — récupérer par user
@@ -1111,7 +1111,7 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
     const { data, error } = await supabase.from('reservations').select('*, cours(*)').eq('user_id', req.params.user_id);
     if (error) return res.status(500).json({ error });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // STRIPE — créer une session de paiement
@@ -1152,7 +1152,7 @@ app.post('/stripe/checkout', requireAuth, async (req, res) => {
     res.json({ url: session.url });
   } catch (e) {
     console.log('Stripe error:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: \'Erreur serveur\' });
   }
 });
 
@@ -1194,7 +1194,7 @@ app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
     res.json({ client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id, montant });
   } catch (e) {
     console.log('PaymentIntent error:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: \'Erreur serveur\' });
   }
 });
 
@@ -1306,7 +1306,7 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.log('Confirm payment error:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: \'Erreur serveur\' });
   }
 });
 
@@ -1430,7 +1430,7 @@ app.post('/stripe/confirm', requireAuth, async (req, res) => {
 
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: \'Erreur serveur\' });
   }
 });
 app.post('/follows', requireAuth, async (req, res) => {
@@ -1444,7 +1444,7 @@ app.post('/follows', requireAuth, async (req, res) => {
     const nb_eleves = count || 0;
     io.to(professeur_id).emit('follow_update', { professeur_id, action: 'follow', nb_eleves });
     res.json({ success: true, nb_eleves });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // FOLLOWS — supprimer (désabonnement)
@@ -1459,7 +1459,7 @@ app.delete('/follows', requireAuth, async (req, res) => {
     const nb_eleves = count || 0;
     io.to(professeur_id).emit('follow_update', { professeur_id, action: 'unfollow', nb_eleves });
     res.json({ success: true, nb_eleves });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // FOLLOWS — vérifier si un élève suit un prof (doit être avant /:user_id)
@@ -1476,7 +1476,7 @@ app.get('/follows/:user_id', async (req, res) => {
     const { data, error } = await supabase.from('follows').select('*').eq('user_id', req.params.user_id);
     if (error) return res.status(500).json({ error });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // EMAIL — vérification prof
@@ -1555,7 +1555,7 @@ app.post('/contact', authRateLimit, async (req, res) => {
     }).catch(e => console.log('Contact email user error:', e.message));
 
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // DELETE user — suppression complète (profil + auth)
@@ -1633,7 +1633,7 @@ app.delete('/users/:id', requireAdmin, async (req, res) => {
     res.json({ success: true });
   } catch(e) {
     console.log('[DELETE /users] exception:', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: \'Erreur serveur\' });
   }
 });
 
@@ -1666,7 +1666,7 @@ app.patch('/profiles/:id', requireAuth, async (req, res) => {
     const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true, profile: data });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/email/verification', requireAdmin, async (req, res) => {
@@ -1689,7 +1689,7 @@ app.post('/email/verification', requireAdmin, async (req, res) => {
       await logAdminAction(req.user.id, 'reject_cni_final', prof_id, { raison });
     }
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // DIPLÔME — vérification admin (email + update)
@@ -1713,7 +1713,7 @@ app.post('/email/diplome-verification', requireAdmin, async (req, res) => {
       req.app.get('io').to(prof_id).emit('diplome_update', { professeur_id: prof_id, diplome_verifie: false });
     }
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // PROFIL DE CONFIANCE — vérification admin
@@ -1736,7 +1736,7 @@ app.post('/email/casier-verification', requireAdmin, async (req, res) => {
       req.app.get('io').to(prof_id).emit('casier_update', { professeur_id: prof_id, casier_verifie: false });
     }
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // STRIPE — récupérer les paiements réels
@@ -1752,7 +1752,7 @@ app.get('/stripe/payments', requireAdmin, async (req, res) => {
     }));
     res.json(result);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: \'Erreur serveur\' });
   }
 });
 
@@ -1890,7 +1890,7 @@ app.get('/reservations/cours/:cours_id', requireAuth, async (req, res) => {
       prenom:r.profiles?.prenom||'',nom:r.profiles?.nom||'',email:r.profiles?.email||''
     }));
     res.json(enriched);
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // RESERVATIONS — annuler une réservation élève
@@ -1910,7 +1910,7 @@ app.post('/reservations/:id/cancel', requireAuth, async (req, res) => {
       try{await stripe.refunds.create({payment_intent:reservation.stripe_payment_intent_id});rembourse=true;}catch(e){console.log('Refund error:',e.message);}
     }
     res.json({success:true,rembourse});
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // COURS — annuler cours complet + rembourser tous les élèves
@@ -1930,7 +1930,7 @@ app.post('/cours/:id/cancel', requireAuth, async (req, res) => {
     await supabase.from('cours').delete().eq('id',req.params.id);
     io.emit('cours_update', { action: 'cancel', cours_id: req.params.id });
     res.json({success:true,remboursements});
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // STRIPE — paiements d'un prof
@@ -1945,7 +1945,7 @@ app.get('/stripe/payments/prof/:prof_id', requireAuth, async (req, res) => {
     if(!reservations)return res.json([]);
     const result=reservations.map(r=>({id:r.cours_id+'_'+r.created_at,amount:r.montant_paye||0,currency:'eur',status:'succeeded',created:r.created_at,cours_titre:coursMap[r.cours_id]||'Cours'}));
     res.json(result);
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // STRIPE — remboursements émis par un prof
@@ -1966,7 +1966,7 @@ app.get('/stripe/refunds/prof/:prof_id', requireAuth, async (req, res) => {
         cours_titre: r.payment_intent.description || 'Cours CoursPool',
       }));
     res.json(result);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // GROUPE — envoyer un message à plusieurs élèves d'un cours
@@ -2024,7 +2024,7 @@ app.post('/messages/groupe', requireAuth, async (req, res) => {
       });
     });
     res.json({ success: true, sent: eleves.length });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // GROUPE — récupérer messages d'un cours
@@ -2058,7 +2058,7 @@ app.get('/messages/groupe/:cours_id', requireAuth, async (req, res) => {
       sender_nom: m.sender_nom || profileMap[m.sender_id] || 'Utilisateur'
     }));
     res.json(enriched);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // GROUPE — toggle autorisation élèves d'écrire
@@ -2070,7 +2070,7 @@ app.patch('/cours/:id/groupe', requireAuth, async (req, res) => {
     if (cours.professeur_id !== req.user.id && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
     await supabase.from('cours').update({ eleves_peuvent_ecrire }).eq('id', req.params.id);
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 
@@ -2085,7 +2085,7 @@ app.post('/stripe/connect/create', requireAuth, async (req, res) => {
     const account=await stripe.accounts.create({type:'express',email,capabilities:{transfers:{requested:true},card_payments:{requested:true}},business_type:'individual',metadata:{prof_id}});
     await supabase.from('profiles').update({stripe_account_id:account.id}).eq('id',prof_id);
     res.json({account_id:account.id});
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // STRIPE CONNECT — setup intent IBAN
@@ -2095,7 +2095,7 @@ app.post('/stripe/connect/setup-intent', requireAuth, async (req, res) => {
   try{
     const setupIntent=await stripe.setupIntents.create({payment_method_types:['sepa_debit'],usage:'off_session'},{stripeAccount:stripe_account_id});
     res.json({client_secret:setupIntent.client_secret});
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // STRIPE CONNECT — IBAN sauvegardé
@@ -2106,7 +2106,7 @@ app.post('/stripe/connect/iban-saved', requireAuth, async (req, res) => {
   try{
     await supabase.from('profiles').update({stripe_account_id,iban_configured:true}).eq('id',prof_id);
     res.json({success:true});
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // STRIPE CONNECT — statut par prof_id
@@ -2116,7 +2116,7 @@ app.get('/stripe/connect/status-prof/:prof_id', async (req, res) => {
     if(!prof?.stripe_account_id)return res.json({stripe_account_id:null,charges_enabled:false,details_submitted:false});
     const account=await stripe.accounts.retrieve(prof.stripe_account_id);
     res.json({stripe_account_id:prof.stripe_account_id,charges_enabled:account.charges_enabled,payouts_enabled:account.payouts_enabled,details_submitted:account.details_submitted});
-  }catch(e){res.status(500).json({error:e.message});}
+  }catch(e){console.error(e);res.status(500).json({error:'Erreur serveur'});}
 });
 
 // PROFILES — récupérer profil par ID
@@ -2132,7 +2132,7 @@ app.get('/profiles/:id', async (req, res) => {
     profile.nb_eleves = count || 0;
     profile.cours_donnes = coursDonnes || 0;
     res.json(profile);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — envoyer
@@ -2170,7 +2170,7 @@ app.post('/messages', requireAuth, async (req, res) => {
     const msg = data[0];
     io.to(destinataire_id).emit('new_message', { expediteur_id, destinataire_id, id: msg.id, contenu: msg.contenu, created_at: msg.created_at });
     res.json(msg);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — compteur non lus (léger, pour le badge)
@@ -2179,7 +2179,7 @@ app.get('/messages/unread-count', requireAuth, async (req, res) => {
     const { count, error } = await supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', req.user.id).eq('lu', false);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ count: count || 0 });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — récupérer conversation
@@ -2193,7 +2193,7 @@ app.get('/messages/:user1/:user2', requireAuth, async (req, res) => {
       .order('created_at', { ascending: true });
     if (error) return res.status(500).json({ error });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — toutes conversations d'un user (limité + enrichi avec profils)
@@ -2219,7 +2219,7 @@ app.get('/conversations/:user_id', requireAuth, async (req, res) => {
       return { ...m, other_nom: ((p.prenom || '') + ' ' + (p.nom || '')).trim() || null, other_photo: p.photo_url || null };
     });
     res.json(enriched);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // MESSAGES — marquer comme lu
@@ -2232,7 +2232,7 @@ app.put('/messages/lu/:user_id', requireAuth, async (req, res) => {
       .eq('receiver_id', req.params.user_id).eq('sender_id', expediteur_id).eq('lu', false);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // UPLOAD PHOTO PROFIL
@@ -2339,7 +2339,7 @@ app.post('/upload/photo', requireAuth, async (req, res) => {
       await supabase.from('profiles').update({ photo_url: base64 }).eq('id', userId);
       res.json({ url: base64 });
     } catch(e2) {
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ error: \'Erreur serveur\' });
     }
   }
 });
@@ -2362,7 +2362,7 @@ app.post('/notations', requireAuth, async (req, res) => {
       io.to(professeur_id).emit('note_update', { professeur_id, note_moyenne: moyenne });
     }
     res.json(data[0]);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // NOTATIONS — récupérer par prof
@@ -2372,7 +2372,7 @@ app.get('/notations/:professeur_id', async (req, res) => {
       .eq('professeur_id', req.params.professeur_id).order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 // ============================================================
@@ -2437,7 +2437,7 @@ app.post('/push/subscribe', requireAuth, async (req, res) => {
       updated_at: new Date().toISOString()
     }], { onConflict: 'endpoint' });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // PUSH — se désabonner
@@ -2448,7 +2448,7 @@ app.delete('/push/subscribe', requireAuth, async (req, res) => {
   try {
     await supabase.from('push_subscriptions').delete().eq('user_id', user_id);
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // PUSH — notif prof : un élève a réservé son cours (admin seulement — l'appel interne est direct via pushToUser)
@@ -2488,7 +2488,7 @@ app.post('/push/new-cours', requireAuth, async (req, res) => {
       sent++;
     }));
     res.json({ success: true, sent });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // PUSH — broadcast admin → tous les profs ou tous les élèves
@@ -2505,7 +2505,7 @@ app.post('/push/broadcast', requireAdmin, async (req, res) => {
     };
     const sent = await broadcastToRole(role, payload);
     res.json({ success: true, sent });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // PUSH — relance profs inactifs (cron ou manuel via admin)
@@ -2530,7 +2530,7 @@ app.post('/push/relance-profs', requireAdmin, async (req, res) => {
       sent++;
     }));
     res.json({ success: true, sent });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // PUSH — relance élèves inactifs
@@ -2554,7 +2554,7 @@ app.post('/push/relance-eleves', requireAdmin, async (req, res) => {
       sent++;
     }));
     res.json({ success: true, sent });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ============================================================
@@ -2620,7 +2620,7 @@ app.patch('/admin/users/:id', requireAdmin, async (req, res) => {
       : 'update_profile';
     await logAdminAction(req.user.id, action, req.params.id, updates);
     res.json({ success: true, profile: data });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ADMIN — statistiques push subscriptions
@@ -2636,7 +2636,7 @@ app.post('/admin/reset-test-data', requireAdmin, async (req, res) => {
     await supabase.from('reservations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('cours').update({ places_prises: 0 }).neq('id', '00000000-0000-0000-0000-000000000000');
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── Sentry error handler — AVANT le middleware d'erreur custom ────────────
@@ -2733,7 +2733,7 @@ app.get('/teacher/:id/announcements', async (req, res) => {
       .select('*').eq('teacher_id', req.params.id).order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error });
     res.json(data || []);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/announcements', requireAuth, async (req, res) => {
@@ -2749,7 +2749,7 @@ app.post('/teacher/:id/announcements', requireAuth, async (req, res) => {
       .insert(row).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.patch('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) => {
@@ -2768,7 +2768,7 @@ app.patch('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) =>
       .update(updates).eq('id', req.params.ann_id).eq('teacher_id', req.params.id).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.delete('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) => {
@@ -2778,7 +2778,7 @@ app.delete('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) =
       .delete().eq('id', req.params.ann_id).eq('teacher_id', req.params.id);
     if (error) return res.status(500).json({ error });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/announcements/:ann_id/vote', requireAuth, async (req, res) => {
@@ -2799,7 +2799,7 @@ app.post('/teacher/:id/announcements/:ann_id/vote', requireAuth, async (req, res
       .update({ content: JSON.stringify(poll) }).eq('id', req.params.ann_id).select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── TEACHER RESOURCES ─────────────────────────────────────────────────────────
@@ -2811,7 +2811,7 @@ app.get('/teacher/:id/resources', async (req, res) => {
     const { data, error } = await query;
     if (error) return res.status(500).json({ error });
     res.json(data || []);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/resources', requireAuth, async (req, res) => {
@@ -2824,7 +2824,7 @@ app.post('/teacher/:id/resources', requireAuth, async (req, res) => {
       .select().single();
     if (error) return res.status(500).json({ error });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.delete('/teacher/:id/resources/:res_id', requireAuth, async (req, res) => {
@@ -2834,7 +2834,7 @@ app.delete('/teacher/:id/resources/:res_id', requireAuth, async (req, res) => {
       .delete().eq('id', req.params.res_id).eq('teacher_id', req.params.id);
     if (error) return res.status(500).json({ error });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── TEACHER ENROLLMENT ────────────────────────────────────────────────────────
@@ -2845,7 +2845,7 @@ app.get('/teacher/:id/is-enrolled', requireAuth, async (req, res) => {
       .select('id').eq('teacher_id', req.params.id).eq('student_id', req.user.id).maybeSingle();
     if (error) return res.status(500).json({ error });
     res.json({ enrolled: !!data });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/enroll', requireAuth, async (req, res) => {
@@ -2872,7 +2872,7 @@ app.post('/teacher/enroll', requireAuth, async (req, res) => {
       .upsert({ teacher_id: resolvedTeacherId, student_id: req.user.id }, { onConflict: 'teacher_id,student_id' });
     if (insErr) return res.status(500).json({ error: insErr.message });
     res.json({ success: true, teacher_id: resolvedTeacherId });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── STUDENT NOTES ─────────────────────────────────────────────────────────────
@@ -2885,7 +2885,7 @@ app.get('/teacher/:id/student-notes/:student_id', requireAuth, async (req, res) 
       .select('*').eq('teacher_id', req.params.id).eq('student_id', req.params.student_id).maybeSingle();
     if (error) return res.status(500).json({ error });
     res.json(data || null);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/student-notes', requireAuth, async (req, res) => {
@@ -2898,7 +2898,7 @@ app.post('/teacher/:id/student-notes', requireAuth, async (req, res) => {
       .select().single();
     if (error) return res.status(500).json({ error });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── ESPACE PROFESSEUR — code d'accès + élèves ─────────────────────────────
@@ -2909,7 +2909,7 @@ app.get('/teacher/my-code', requireAuth, async (req, res) => {
       .select('teacher_code').eq('id', req.user.id).single();
     if (error) return res.status(500).json({ error: error.message });
     res.json({ teacher_code: data?.teacher_code || null });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/generate-code', requireAuth, async (req, res) => {
@@ -2921,7 +2921,7 @@ app.post('/teacher/generate-code', requireAuth, async (req, res) => {
     const { error } = await supabase.from('profiles').update({ teacher_code: code }).eq('id', req.user.id);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ teacher_code: code });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.get('/teacher/my-students', requireAuth, async (req, res) => {
@@ -2944,7 +2944,7 @@ app.get('/teacher/my-students', requireAuth, async (req, res) => {
       photo_url: profMap[r.student_id]?.photo_url || null,
       enrolled_at: r.created_at,
     })));
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── CONTENUS COURS (accès libre / mot de passe / premium) ──────────────────
@@ -2997,7 +2997,7 @@ app.get('/teacher/:id/content', requireAuth, async (req, res) => {
       ...c, password: undefined,
       is_unlocked: c.access_type === 'enrolled' || unlocked.has(c.id),
     })));
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/content', requireAuth, async (req, res) => {
@@ -3015,7 +3015,7 @@ app.post('/teacher/:id/content', requireAuth, async (req, res) => {
       .select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.delete('/teacher/:id/content/:cid', requireAuth, async (req, res) => {
@@ -3025,7 +3025,7 @@ app.delete('/teacher/:id/content/:cid', requireAuth, async (req, res) => {
       .delete().eq('id', req.params.cid).eq('teacher_id', req.params.id);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/content/:cid/unlock', requireAuth, async (req, res) => {
@@ -3042,7 +3042,7 @@ app.post('/teacher/:id/content/:cid/unlock', requireAuth, async (req, res) => {
     await supabase.from('content_access')
       .upsert({ content_id: req.params.cid, student_id: req.user.id }, { onConflict: 'content_id,student_id' });
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 // ── DÉPÔTS ÉLÈVES ──────────────────────────────────────────────────────────
@@ -3055,7 +3055,7 @@ app.get('/teacher/:id/submissions', requireAuth, async (req, res) => {
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
     res.json(data || []);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.post('/teacher/:id/submissions', requireAuth, async (req, res) => {
@@ -3068,7 +3068,7 @@ app.post('/teacher/:id/submissions', requireAuth, async (req, res) => {
       .select().single();
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 app.delete('/teacher/:id/submissions/:sid', requireAuth, async (req, res) => {
@@ -3079,7 +3079,7 @@ app.delete('/teacher/:id/submissions/:sid', requireAuth, async (req, res) => {
     if (req.user.id !== sub.student_id && req.user.id !== sub.teacher_id) return res.status(403).json({ error: 'Non autorisé' });
     await supabase.from('student_submissions').delete().eq('id', req.params.sid);
     res.json({ success: true });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { res.status(500).json({ error: \'Erreur serveur\' }); }
 });
 
 const PORT = process.env.PORT || 3000;
