@@ -438,7 +438,7 @@ function _buildFavCard2Col(c,idx){
   var modeBg=isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)';
   var modeCo=isV?'#0055B3':'#007A38';
   // Variable height image zone (cycles for masonry rhythm)
-  var imgH=[90,120,100][(idx||0)%3];
+  var imgH=[72,95,82][(idx||0)%3];
   // Wrapper (clips swipe animation + carries shadow/border)
   var wrap=document.createElement('div');
   wrap.className='fav2-swipe-wrap';

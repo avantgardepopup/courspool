@@ -529,13 +529,13 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
   justify-content: center;
   flex-shrink: 0;
   margin-top: -24px;
-  box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 8px 28px rgba(255,69,0,.55);
+  box-shadow: 0 0 0 5px rgba(255,107,43,.45), 0 0 0 10px rgba(255,107,43,.15), 0 8px 28px rgba(255,69,0,.55);
   transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
   animation: fabPulse 2.4s ease-in-out infinite;
 }
 @keyframes fabPulse {
-  0%,100% { box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 8px 28px rgba(255,69,0,.55), 0 0 0 0 rgba(255,107,43,.0); }
-  50%      { box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 8px 28px rgba(255,69,0,.7),  0 0 0 10px rgba(255,107,43,.18); }
+  0%,100% { box-shadow: 0 0 0 5px rgba(255,107,43,.45), 0 0 0 10px rgba(255,107,43,.15), 0 8px 28px rgba(255,69,0,.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,107,43,.55), 0 0 0 14px rgba(255,107,43,.18), 0 8px 32px rgba(255,69,0,.7); }
 }
 .bni-fab-lbl {
   font-size: 11px;
@@ -548,15 +548,15 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
 .bni-fab:active .bni-add-circle {
   transform: scale(.88);
   animation: none;
-  box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 4px 14px rgba(255,69,0,.4);
+  box-shadow: 0 0 0 5px rgba(255,107,43,.45), 0 0 0 10px rgba(255,107,43,.12), 0 4px 14px rgba(255,69,0,.4);
 }
 html.dk .bni-fab .bni-add-circle {
-  box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 8px 28px rgba(255,69,0,.6);
+  box-shadow: 0 0 0 5px rgba(255,107,43,.4), 0 0 0 10px rgba(255,107,43,.12), 0 8px 28px rgba(255,69,0,.6);
   animation: fabPulseDk 2.4s ease-in-out infinite;
 }
 @keyframes fabPulseDk {
-  0%,100% { box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 8px 28px rgba(255,69,0,.6),  0 0 0 0 rgba(255,107,43,.0); }
-  50%      { box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 8px 28px rgba(255,69,0,.75), 0 0 0 10px rgba(255,107,43,.22); }
+  0%,100% { box-shadow: 0 0 0 5px rgba(255,107,43,.4),  0 0 0 10px rgba(255,107,43,.12), 0 8px 28px rgba(255,69,0,.6); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,107,43,.52), 0 0 0 14px rgba(255,107,43,.16), 0 8px 32px rgba(255,69,0,.75); }
 }
 html.dk .bni-fab:active .bni-add-circle {
   animation: none;
@@ -862,8 +862,8 @@ html.dk .fav2-card{background:var(--wh);}
   box-shadow:0 2px 8px rgba(0,0,0,.15);
   flex-shrink:0;
 }
-.fav2-body{padding:10px 10px 10px;}
-.fav2-title{font-size:14px;font-weight:700;color:var(--ink);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px;letter-spacing:-.02em;}
+.fav2-body{padding:8px 9px 9px;}
+.fav2-title{font-size:13px;font-weight:700;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;letter-spacing:-.02em;}
 .fav2-sched{
   display:inline-flex;align-items:center;gap:5px;
   font-size:10.5px;font-weight:600;color:var(--ink);
