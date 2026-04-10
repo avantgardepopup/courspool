@@ -164,8 +164,8 @@ app.use(function(req, res, next) {
 });
 
 // ── Alertes Discord ───────────────────────────────────────────
-async function discordAlert(message) {
-  const url = process.env.DISCORD_WEBHOOK_URL;
+async function discordAlert(message, webhook) {
+  const url = webhook || process.env.DISCORD_WEBHOOK_URL;
   if (!url) return;
   try {
     await fetch(url, {
@@ -174,6 +174,10 @@ async function discordAlert(message) {
       body: JSON.stringify({ content: message })
     });
   } catch(e) {}
+}
+
+async function discordStripeAlert(message) {
+  await discordAlert(message, process.env.DISCORD_WEBHOOK_STRIPE || process.env.DISCORD_WEBHOOK_URL);
 }
 
 // Compteur de tentatives échouées par IP (fenêtre 5 min)
@@ -1166,7 +1170,7 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
     const expectedAmount = Math.round(parseFloat(montant) * 100);
     if (pi.amount !== expectedAmount) {
       console.error(`[STRIPE] Montant incohérent — pi.amount: ${pi.amount} | attendu: ${expectedAmount} | payment_intent: ${payment_intent_id}`);
-      discordAlert(`⚠️ **Montant Stripe incohérent**\n> **PI :** \`${payment_intent_id}\`\n> **Encaissé :** ${pi.amount/100}€ | **Attendu :** ${expectedAmount/100}€`);
+      discordStripeAlert(`⚠️ **Montant Stripe incohérent**\n> **PI :** \`${payment_intent_id}\`\n> **Encaissé :** ${pi.amount/100}€ | **Attendu :** ${expectedAmount/100}€`);
       return res.status(400).json({ error: 'Montant incohérent' });
     }
 
@@ -1192,9 +1196,9 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
           await stripe.refunds.create({ payment_intent: payment_intent_id });
         } catch(refundErr) {
           console.error(`[STRIPE] Échec remboursement auto: ${refundErr.message}`);
-          discordAlert(`🚨 **Échec remboursement auto**\n> **PI :** \`${payment_intent_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant :** ${montant}€\n> Remboursement manuel requis.`);
+          discordStripeAlert(`🚨 **Échec remboursement auto**\n> **PI :** \`${payment_intent_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant :** ${montant}€\n> Remboursement manuel requis.`);
         }
-        discordAlert(`ℹ️ **Surbooking évité — remboursement auto**\n> **Cours :** ${coursCheck.titre}\n> **Élève :** \`${user_id}\`\n> **Montant remboursé :** ${montant}€`);
+        discordStripeAlert(`ℹ️ **Surbooking évité — remboursement auto**\n> **Cours :** ${coursCheck.titre}\n> **Élève :** \`${user_id}\`\n> **Montant remboursé :** ${montant}€`);
         return res.status(409).json({ error: 'Ce cours est complet. Vous allez être remboursé sous 5-10 jours ouvrés.' });
       }
     }
@@ -1686,7 +1690,7 @@ app.post('/stripe/webhook', async (req, res) => {
     event = stripe.webhooks.constructEvent(req.rawBody, sig, secret);
   } catch(e) {
     console.warn('[Webhook] signature invalide:', e.message);
-    discordAlert(`🚨 **Webhook Stripe — signature invalide**\n> Quelqu'un envoie de faux événements Stripe.\n> **Erreur :** ${e.message}`);
+    discordStripeAlert(`🚨 **Webhook Stripe — signature invalide**\n> Quelqu'un envoie de faux événements Stripe.\n> **Erreur :** ${e.message}`);
     return res.status(400).send('Webhook signature invalide');
   }
 
@@ -1724,7 +1728,7 @@ app.post('/stripe/webhook', async (req, res) => {
     const dispute = event.data.object;
     const amount = (dispute.amount / 100).toFixed(2);
     console.warn('[Webhook] Chargeback reçu — dispute:', dispute.id, '— montant:', amount, '€');
-    discordAlert(
+    discordStripeAlert(
       `🚨 **Chargeback (contestation de paiement)**\n` +
       `> **Dispute ID :** \`${dispute.id}\`\n` +
       `> **Montant contesté :** ${amount}€\n` +
