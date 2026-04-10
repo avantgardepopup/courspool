@@ -14529,15 +14529,13 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>'
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
-    // GoodNotes-style sub-toolbar: white pill centered in gray band
-    +'<div style="background:#e6e6eb;flex-shrink:0;display:flex;justify-content:center;align-items:center;padding:7px 16px;">'
-    +'<div id="_brdSub" style="display:flex;align-items:center;background:#fff;border-radius:28px;box-shadow:0 2px 12px rgba(0,0,0,.13),0 0 0 1px rgba(0,0,0,.06);padding:4px 8px;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%;"></div>'
-    +'</div>'
-    // Canvas zone: GoodNotes gray, centered white page
+    // Canvas zone: gray bg, centered white page, floating pill at bottom
     +'<div id="_brdScroll" style="flex:1;background:#d4d4d9;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;position:relative;">'
     +'<div id="_brdPage" style="background:#fff;box-shadow:0 3px 28px rgba(0,0,0,.18),0 1px 4px rgba(0,0,0,.08);position:relative;flex-shrink:0;">'
     +'<canvas id="_vBoardCanvas" style="display:block;touch-action:none;"></canvas>'
     +'</div>'
+    // Floating bottom pill toolbar (like app nav bar)
+    +'<div id="_brdSub" style="position:absolute;bottom:max(env(safe-area-inset-bottom,16px),16px);left:50%;transform:translateX(-50%);display:flex;align-items:center;background:rgba(30,30,40,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:36px;box-shadow:0 8px 32px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.10);padding:6px 10px;gap:3px;overflow-x:auto;scrollbar-width:none;max-width:calc(100% - 32px);touch-action:manipulation;z-index:10;"></div>'
     +'</div>';
 }
 
@@ -14545,29 +14543,30 @@ function _buildBoardInner(){
 function _boardRenderSubbar(){
   var sub=g('_brdSub');if(!sub)return;
   var h='';
+  // Dark pill → light icon colors
+  var ic='rgba(255,255,255,.80)';  // inactive icon stroke
   var tb=function(id,onclick,active,svg,title){
-    var bg=active?'background:rgba(0,0,0,.07);':'background:transparent;';
-    return '<button id="'+id+'" onclick="'+onclick+'" title="'+(title||'')+'" style="'+bg+'border:none;cursor:pointer;width:38px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;">'
+    var bg=active?'background:rgba(255,255,255,.18);':'background:transparent;';
+    return '<button id="'+id+'" onclick="'+onclick+'" title="'+(title||'')+'" style="'+bg+'border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;">'
       +svg+'</button>';
   };
-  var sep='<div style="width:1px;height:22px;background:rgba(0,0,0,.1);margin:0 5px;flex-shrink:0;"></div>';
-  var tc=_brdTool==='pen'||_brdTool==='marker'?_brdColor:'#444';
+  var sep='<div style="width:1px;height:24px;background:rgba(255,255,255,.15);margin:0 4px;flex-shrink:0;"></div>';
   // ── Tool icons ──
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?_brdColor:'#444')+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
     ,'Stylo');
   h+=tb('_bTMk',"_boardToolTap('marker')",_brdTool==='marker',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='marker'?_brdColor:'#444')+'" stroke-width="1.7" stroke-linecap="round" width="19" height="19">'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='marker'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19">'
     +'<path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>'
     ,'Marqueur');
   h+=tb('_bTEr',"_boardToolTap('eraser')",_brdTool==='eraser',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.7" stroke-linecap="round" width="19" height="19"><path d="M20 20H7L3 16l10-10 7 7-2 2"/><path d="M6 15l3 3"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><path d="M20 20H7L3 16l10-10 7 7-2 2"/><path d="M6 15l3 3"/></svg>'
     ,'Gomme');
   h+=tb('_bTTx',"_boardToolTap('text')",_brdTool==='text',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.7" stroke-linecap="round" width="19" height="19"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='text'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
     ,'Texte');
   h+=tb('_bTSh',"_boardToolTap('shape')",_brdTool==='shape',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.7" stroke-linecap="round" width="19" height="19"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="7" r="4"/><path d="M12 22l4.5-8h-9z"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='shape'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="7" r="4"/><path d="M12 22l4.5-8h-9z"/></svg>'
     ,'Formes');
   h+=sep;
   // ── Context-sensitive: sizes or shape picker ──
@@ -14579,21 +14578,20 @@ function _boardRenderSubbar(){
       {t:'arrow',svg:'<line x1="4" y1="20" x2="20" y2="4"/><polyline points="14 4 20 4 20 10"/>'}];
     shapes.forEach(function(sh){
       var a=_brdShType===sh.t;
-      h+='<button onclick="_boardSetShape(\''+sh.t+'\')" style="background:'+(a?'rgba(0,0,0,.07)':'transparent')+';border:none;cursor:pointer;width:38px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(a?'#FF6B2B':'#444')+'" stroke-width="1.9" stroke-linecap="round" width="18" height="18">'+sh.svg+'</svg></button>';
+      h+='<button onclick="_boardSetShape(\''+sh.t+'\')" style="background:'+(a?'rgba(255,255,255,.18)':'transparent')+';border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(a?'#FF6B2B':ic)+'" stroke-width="1.9" stroke-linecap="round" width="18" height="18">'+sh.svg+'</svg></button>';
     });
   }else if(_brdTool==='eraser'){
     [{sz:14,h:3},{sz:28,h:6},{sz:52,h:11}].forEach(function(s){
       var a=_brdEr===s.sz;
-      h+='<button onclick="_boardSetEraserSz('+s.sz+')" style="background:'+(a?'rgba(0,0,0,.07)':'transparent')+';border:none;cursor:pointer;width:42px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-        +'<div style="width:28px;height:'+s.h+'px;background:'+(a?'#333':'#aaa')+';border-radius:2px;"></div></button>';
+      h+='<button onclick="_boardSetEraserSz('+s.sz+')" style="background:'+(a?'rgba(255,255,255,.18)':'transparent')+';border:none;cursor:pointer;width:42px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<div style="width:28px;height:'+s.h+'px;background:'+(a?'#fff':'rgba(255,255,255,.4)')+';border-radius:2px;"></div></button>';
     });
   }else{
-    // Stroke sizes (visual dashes like GoodNotes)
     [{sz:2,h:2},{sz:5,h:5},{sz:11,h:9}].forEach(function(s){
       var a=_brdSz===s.sz;
-      h+='<button onclick="_boardSetSize('+s.sz+')" style="background:'+(a?'rgba(0,0,0,.07)':'transparent')+';border:none;cursor:pointer;width:42px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-        +'<div style="width:30px;height:'+s.h+'px;background:'+(a?_brdColor:'#aaa')+';border-radius:'+(s.h/2)+'px;"></div></button>';
+      h+='<button onclick="_boardSetSize('+s.sz+')" style="background:'+(a?'rgba(255,255,255,.18)':'transparent')+';border:none;cursor:pointer;width:42px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<div style="width:30px;height:'+s.h+'px;background:'+(a?_brdColor:'rgba(255,255,255,.4)')+';border-radius:'+(s.h/2)+'px;"></div></button>';
     });
   }
   // ── Colors (only when not eraser) ──
@@ -14602,10 +14600,10 @@ function _boardRenderSubbar(){
     _BC.forEach(function(c){
       var a=c===_brdColor;
       h+='<button onclick="_boardSetColor(\''+c+'\')" style="width:26px;height:26px;border-radius:50%;background:'+c+';border:none;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;margin:0 2px;'
-        +(a?'box-shadow:0 0 0 2px #fff,0 0 0 4px '+c+',0 0 0 5.5px rgba(0,0,0,.25);':'box-shadow:0 0 0 1.5px rgba(0,0,0,.18);')
+        +(a?'box-shadow:0 0 0 2px rgba(30,30,40,.9),0 0 0 4px '+c+';':'box-shadow:0 0 0 1.5px rgba(255,255,255,.25);')
         +'"></button>';
     });
-    h+='<label style="width:26px;height:26px;border-radius:50%;background:conic-gradient(red,#ff0,lime,cyan,blue,magenta,red);cursor:pointer;flex-shrink:0;position:relative;display:block;box-shadow:0 0 0 1.5px rgba(0,0,0,.18);margin:0 2px;overflow:hidden;">'
+    h+='<label style="width:26px;height:26px;border-radius:50%;background:conic-gradient(red,#ff0,lime,cyan,blue,magenta,red);cursor:pointer;flex-shrink:0;position:relative;display:block;box-shadow:0 0 0 1.5px rgba(255,255,255,.25);margin:0 2px;overflow:hidden;">'
       +'<input type="color" value="'+_brdColor+'" oninput="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
   }
   sub.innerHTML=h;
