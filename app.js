@@ -4440,11 +4440,7 @@ function _openPrLegacy(pid){
     var _avgAll=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(P[pid])P[pid].n=_avgAll;
     var _mpNEl=g('mpN');if(_mpNEl)_mpNEl.textContent='★ '+_avgAll;
-    var stars=function(n){
-      var s='';
-      for(var i=1;i<=5;i++)s+='<svg viewBox="0 0 24 24" width="13" height="13" fill="'+(i<=n?'#FBBF24':'none')+'" stroke="'+(i<=n?'#FBBF24':'#D1D5DB')+'" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-      return s;
-    };
+    var stars=function(n){return _avisSvgStars(n,13);};
     var html=notes.slice(0,3).map(function(a){
       var isTuteur=!!a.is_tuteur;
       var roleLabel=isTuteur?t('role_tuteur'):t('role_eleve');
@@ -6418,19 +6414,20 @@ function _loadMpfAvis(pid){
     if(P[pid])P[pid].nb_avis=notes.length;
     var _rtEl2=g('tpStRating');if(_rtEl2){_rtEl2.textContent=_avg+'★';_rtEl2.style.color='#FF9500';}
     if(g('tpStAvis'))g('tpStAvis').textContent=notes.length;
-    var starsHtml=function(n){
-      var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;
-    };
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     avisContainer.innerHTML=notes.slice(0,10).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid #F0F0F0">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
         +'<div style="font-size:13px;font-weight:600;color:#222">'+esc(a.prenom||'Élève')+'</div>'
-        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
-        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +(date?'<div style="font-size:11px;color:#999">'+date+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:2px;margin-bottom:'+(a.commentaire?'6':'0')+'px">'+_avisSvgStars(a.note||0,13)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:#555;line-height:1.55">'+esc(a.commentaire)+'</div>':'')
         +'</div>'
         +'</div>';
     }).join('');
@@ -6440,6 +6437,11 @@ function _loadMpfAvis(pid){
 }
 
 // ── MES AVIS (compte prof) ──────────────────────────────────────────────
+function _avisSvgStar(filled,sz){
+  return'<svg viewBox="0 0 24 24" width="'+sz+'" height="'+sz+'" fill="'+(filled?'#FBBF24':'none')+'" stroke="'+(filled?'#FBBF24':'#D1D5DB')+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+}
+function _avisSvgStars(n,sz){var s='';for(var i=1;i<=5;i++)s+=_avisSvgStar(i<=Math.round(n),sz||13);return s;}
+
 function _loadProfAvis(){
   if(!user)return;
   var listEl=g('profAvisList');
@@ -6451,25 +6453,28 @@ function _loadProfAvis(){
     if(!notes||!notes.length){
       if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
       if(avgEl)avgEl.textContent='—';
-      if(starsEl)starsEl.textContent='☆☆☆☆☆';
+      if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
       if(countEl)countEl.textContent='Aucun avis pour le moment';
       return;
     }
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(avgEl){avgEl.textContent=avg;}
-    var starsHtml=function(n){var s='';for(var i=1;i<=5;i++)s+=(i<=Math.round(n)?'★':'☆');return s;};
-    if(starsEl)starsEl.textContent=starsHtml(avg);
+    if(starsEl)starsEl.innerHTML=_avisSvgStars(avg,17);
     if(countEl)countEl.textContent=notes.length+' avis';
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--bdr)">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
         +'<div style="font-size:13px;font-weight:600;color:var(--ink)">'+esc(a.prenom||'Élève')+'</div>'
-        +'<div style="color:#FF9500;font-size:13px;letter-spacing:.03em;margin:2px 0">'+starsHtml(a.note||0)+'</div>'
-        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55;margin-top:4px">'+esc(a.commentaire)+'</div>':'')
+        +(date?'<div style="font-size:11px;color:var(--lite)">'+date+'</div>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:2px;margin-bottom:'+(a.commentaire?'6':'0')+'px">'+_avisSvgStars(a.note||0,13)+'</div>'
+        +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.55">'+esc(a.commentaire)+'</div>':'')
         +'</div>'
         +'</div>';
     }).join('');
