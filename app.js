@@ -14497,7 +14497,11 @@ var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect';
 var _brdHist=[],_brdHistIdx=-1;
 var _brdDraw=false,_brdPts=[],_brdSnap=null,_brdSS=null;
-var _brdActivePointers={}; // track active pointer IDs to detect pinch
+var _brdActivePointers={}; // {pointerId:{x,y}} — track all active pointers
+var _brdBgC=null,_brdBgX=null; // background canvas (grid)
+var _brdZoom=1,_brdPanX=0,_brdPanY=0; // zoom & pan state
+var _brdPinchInitDist=0,_brdPinchInitZoom=1,_brdPinchInitPanX=0,_brdPinchInitPanY=0,_brdPinchInitCX=0,_brdPinchInitCY=0;
+var _brdSnapTimer=null; // hold-to-snap line straightening
 var _pipSzIdx=1,_pipX=null,_pipY=null;
 var _pipDragging=false,_pipDSX=0,_pipDSY=0,_pipDOX=0,_pipDOY=0;
 var _PW=[200,300,420],_PH=[112,168,236];
@@ -14520,7 +14524,7 @@ function _buildBoardInner(){
     +'<span style="font-size:11.5px;font-weight:600;">Cours</span></button>'
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
     // Chrome-style page tabs strip
-    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;overflow-x:auto;gap:2px;padding:6px 4px 0;scrollbar-width:none;min-width:0;-webkit-overflow-scrolling:touch;"></div>'
+    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow:hidden;"></div>'
     +'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>'
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
     +'<button id="_bU" onclick="_boardUndo()" style="'+ib+'width:36px;" title="Annuler">'
@@ -14532,7 +14536,8 @@ function _buildBoardInner(){
     // Canvas zone: gray bg, centered white page, floating pill at bottom
     +'<div id="_brdScroll" style="flex:1;background:#d4d4d9;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;position:relative;">'
     +'<div id="_brdPage" style="background:#fff;box-shadow:0 3px 28px rgba(0,0,0,.18),0 1px 4px rgba(0,0,0,.08);position:relative;flex-shrink:0;">'
-    +'<canvas id="_vBoardCanvas" style="display:block;touch-action:none;"></canvas>'
+    +'<canvas id="_vBoardBg" style="position:absolute;top:0;left:0;pointer-events:none;display:block;"></canvas>'
+    +'<canvas id="_vBoardCanvas" style="display:block;touch-action:none;position:relative;"></canvas>'
     +'</div>'
     // Floating bottom pill toolbar (like app nav bar)
     +'<div id="_brdSub" style="position:absolute;bottom:max(env(safe-area-inset-bottom,16px),16px);left:50%;transform:translateX(-50%);display:flex;align-items:center;background:rgba(30,30,40,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:36px;box-shadow:0 8px 32px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.10);padding:6px 10px;gap:3px;overflow-x:auto;scrollbar-width:none;max-width:calc(100% - 32px);touch-action:manipulation;z-index:10;"></div>'
@@ -14604,7 +14609,7 @@ function _boardRenderSubbar(){
         +'"></button>';
     });
     h+='<label style="width:26px;height:26px;border-radius:50%;background:conic-gradient(red,#ff0,lime,cyan,blue,magenta,red);cursor:pointer;flex-shrink:0;position:relative;display:block;box-shadow:0 0 0 1.5px rgba(255,255,255,.25);margin:0 2px;overflow:hidden;">'
-      +'<input type="color" value="'+_brdColor+'" oninput="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
+      +'<input type="color" value="'+_brdColor+'" onchange="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
   }
   sub.innerHTML=h;
 }
@@ -14685,11 +14690,17 @@ function _boardInitCanvas(){
   var ph=Math.round(pw*(3/4));
   pw=Math.round(pw);
   if(page){page.style.width=pw+'px';page.style.height=ph+'px';}
+  // Foreground canvas (strokes)
   canv.width=Math.round(pw*dpr);canv.height=Math.round(ph*dpr);
   canv.style.width=pw+'px';canv.style.height=ph+'px';
   _brdC=canv;_brdX=canv.getContext('2d');
   _brdX.scale(dpr,dpr);
+  // Background canvas (grid — never erased)
+  var bgC=g('_vBoardBg');
+  if(bgC){bgC.width=Math.round(pw*dpr);bgC.height=Math.round(ph*dpr);bgC.style.width=pw+'px';bgC.style.height=ph+'px';_brdBgC=bgC;_brdBgX=bgC.getContext('2d');_brdBgX.scale(dpr,dpr);}
   _boardDrawBg();
+  // Reset zoom/pan
+  _brdZoom=1;_brdPanX=0;_brdPanY=0;_brdPinchInitDist=0;
   if(_brdPages[_brdPageIdx]){
     _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
     _brdX.putImageData(_brdPages[_brdPageIdx],0,0);
@@ -14704,15 +14715,20 @@ function _boardInitCanvas(){
 }
 
 function _boardDrawBg(){
-  if(!_brdX||!_brdC)return;
-  var w=parseInt(_brdC.style.width)||(_brdC.width/(window.devicePixelRatio||1));
-  var h=parseInt(_brdC.style.height)||(_brdC.height/(window.devicePixelRatio||1));
-  // White page background
-  _brdX.fillStyle='#ffffff';_brdX.fillRect(0,0,w,h);
-  // Subtle grid (GoodNotes style — light, doesn't fill edge-to-edge)
-  var step=24;_brdX.strokeStyle='rgba(0,0,0,0.055)';_brdX.lineWidth=0.6;
-  for(var x=step;x<w;x+=step){_brdX.beginPath();_brdX.moveTo(x,0);_brdX.lineTo(x,h);_brdX.stroke();}
-  for(var y=step;y<h;y+=step){_brdX.beginPath();_brdX.moveTo(0,y);_brdX.lineTo(w,y);_brdX.stroke();}
+  // Draw white + grid on the BACKGROUND canvas (so eraser never touches it)
+  if(!_brdBgX||!_brdBgC)return;
+  var w=parseInt(_brdBgC.style.width)||(_brdBgC.width/(window.devicePixelRatio||1));
+  var h=parseInt(_brdBgC.style.height)||(_brdBgC.height/(window.devicePixelRatio||1));
+  _brdBgX.fillStyle='#ffffff';_brdBgX.fillRect(0,0,w,h);
+  var step=24;_brdBgX.strokeStyle='rgba(0,0,0,0.055)';_brdBgX.lineWidth=0.6;
+  for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
+  for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
+}
+function _boardClearFg(){if(_brdX&&_brdC)_brdX.clearRect(0,0,_brdC.width,_brdC.height);}
+function _boardApplyTransform(){
+  var page=g('_brdPage');if(!page)return;
+  page.style.transformOrigin='center center';
+  page.style.transform='translate('+_brdPanX+'px,'+_brdPanY+'px) scale('+_brdZoom+')';
 }
 
 function _boardSaveHist(){
@@ -14740,19 +14756,21 @@ function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
 function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
+  // Chrome-style: tabs fill full width, shrink equally as more are added
+  var tabStyle='flex:1;min-width:0;overflow:hidden;';
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
-    h+='<div style="display:flex;align-items:flex-end;flex-shrink:0;">'
-      +'<button onclick="_boardGoPage('+i+')" style="'
+    h+='<button onclick="_boardGoPage('+i+')" style="'
+      +tabStyle
       +'background:'+(a?'rgba(255,255,255,.92)':'rgba(255,255,255,.14)')+';'
       +'color:'+(a?'#222':'rgba(255,255,255,.72)')+';'
       +'border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:'+(a?'600':'400')+';'
-      +'padding:4px 8px 5px 10px;height:28px;border-radius:6px 6px 0 0;'
-      +'display:flex;align-items:center;gap:5px;white-space:nowrap;'
+      +'padding:4px 6px 5px 8px;height:28px;border-radius:6px 6px 0 0;'
+      +'display:flex;align-items:center;gap:4px;'
       +'-webkit-tap-highlight-color:transparent;">'
-      +'<span>Page '+(i+1)+'</span>'
-      +(_brdPages.length>1?'<span onclick="event.stopPropagation();_boardDeletePage('+i+')" style="opacity:.5;font-size:14px;line-height:1;font-weight:300;padding:0 1px;">×</span>':'')
-      +'</button></div>';
+      +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Page '+(i+1)+'</span>'
+      +(_brdPages.length>1?'<span onclick="event.stopPropagation();_boardDeletePage('+i+')" style="opacity:.55;font-size:14px;line-height:1;font-weight:300;flex-shrink:0;">×</span>':'')
+      +'</button>';
   }
   tabs.innerHTML=h;
   var at=tabs.children[_brdPageIdx];
@@ -14763,33 +14781,33 @@ function _boardDeletePage(idx){
   _brdPages.splice(idx,1);
   if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
   _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardDrawBg();
+  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
   _brdX.restore();_boardUpdatePageTabs();haptic(1);
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
   _boardSavePage();_brdPageIdx=idx;
   _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardDrawBg();
+  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
   _brdX.restore();_boardUpdatePageTabs();haptic(1);
 }
 function _boardSavePage(){if(_brdC&&_brdX)_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}
 function _boardAddPage(){
   _boardSavePage();_brdPages.push(null);_brdPageIdx=_brdPages.length-1;
-  _boardDrawBg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
+  _boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
 }
 function _boardPrevPage(){
   if(_brdPageIdx<=0||!_brdX)return;
   _boardSavePage();_brdPageIdx--;
   _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardDrawBg();
+  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
   _brdX.restore();_boardUpdatePageLabel();haptic(1);
 }
 function _boardNextPage(){
   if(_brdPageIdx>=_brdPages.length-1||!_brdX)return;
   _boardSavePage();_brdPageIdx++;
   _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardDrawBg();
+  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
   _brdX.restore();_boardUpdatePageLabel();haptic(1);
 }
 
@@ -14810,7 +14828,8 @@ function _boardGetPos(e){
   var canv=_brdC;if(!canv)return{x:0,y:0};
   var r=canv.getBoundingClientRect();
   var src=(e.changedTouches&&e.changedTouches[0])||(e.touches&&e.touches[0])||e;
-  return{x:(src.clientX-r.left),y:(src.clientY-r.top)};
+  // Divide by zoom so canvas coords are correct regardless of zoom level
+  return{x:(src.clientX-r.left)/_brdZoom,y:(src.clientY-r.top)/_brdZoom};
 }
 function _boardAttachEvents(canv){
   _brdActivePointers={};
@@ -14822,17 +14841,31 @@ function _boardAttachEvents(canv){
 }
 function _boardDown(e){
   e.preventDefault();
-  _brdActivePointers[e.pointerId]=true;
-  // 2+ fingers on canvas = pinch gesture, not drawing
-  if(Object.keys(_brdActivePointers).length>1){_brdDraw=false;return;}
+  _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ptCount=Object.keys(_brdActivePointers).length;
+  if(ptCount>1){
+    _brdDraw=false;
+    if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+    if(ptCount===2){
+      // Initialize pinch-to-zoom
+      var pts=Object.values(_brdActivePointers);
+      _brdPinchInitDist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+      _brdPinchInitZoom=_brdZoom;
+      _brdPinchInitPanX=_brdPanX;_brdPinchInitPanY=_brdPanY;
+      _brdPinchInitCX=(pts[0].x+pts[1].x)/2;_brdPinchInitCY=(pts[0].y+pts[1].y)/2;
+    }
+    return;
+  }
   var p=_boardGetPos(e);
   _brdDraw=true;_brdPts=[p];
   if(_brdTool==='pen'){
+    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
     _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz;
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   }else if(_brdTool==='marker'){
+    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
     _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*2.5;
     _brdX.lineCap='square';_brdX.lineJoin='round';
@@ -14849,12 +14882,44 @@ function _boardDown(e){
   }
 }
 function _boardMove(e){
+  _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ptCount=Object.keys(_brdActivePointers).length;
+  if(ptCount>=2){
+    _brdDraw=false;
+    if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+    e.preventDefault();
+    // Pinch-to-zoom + 2-finger pan
+    if(_brdPinchInitDist>0){
+      var pts=Object.values(_brdActivePointers);
+      var cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2;
+      var dist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+      _brdZoom=Math.max(0.3,Math.min(5,_brdPinchInitZoom*(dist/_brdPinchInitDist)));
+      _brdPanX=_brdPinchInitPanX+(cx-_brdPinchInitCX);
+      _brdPanY=_brdPinchInitPanY+(cy-_brdPinchInitCY);
+      _boardApplyTransform();
+    }
+    return;
+  }
   if(!_brdDraw)return;
-  // Cancel stroke if second finger joined
-  if(Object.keys(_brdActivePointers).length>1){_brdDraw=false;return;}
   e.preventDefault();
   var p=_boardGetPos(e);
   if(_brdTool==='pen'||_brdTool==='marker'){
+    // Hold finger still for 700ms → snap to straight line
+    if(_brdSnapTimer)clearTimeout(_brdSnapTimer);
+    var snapP=p;
+    _brdSnapTimer=setTimeout(function(){
+      if(!_brdDraw||!_brdSnap||_brdPts.length<2)return;
+      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+      var fp=_brdPts[0];
+      _brdX.beginPath();_brdX.moveTo(fp.x,fp.y);_brdX.lineTo(snapP.x,snapP.y);
+      _brdX.strokeStyle=_brdColor;
+      _brdX.lineWidth=_brdTool==='marker'?_brdSz*2.5:_brdSz;
+      _brdX.lineCap='round';_brdX.lineJoin='round';
+      _brdX.globalAlpha=_brdTool==='marker'?0.38:1;
+      _brdX.globalCompositeOperation='source-over';
+      _brdX.stroke();
+      _brdX.globalAlpha=1;_brdDraw=false;_boardSaveHist();haptic(2);
+    },700);
     _brdPts.push(p);var n=_brdPts.length;
     if(n>=3){
       var p1=_brdPts[n-2],p2=_brdPts[n-1];
@@ -14873,6 +14938,8 @@ function _boardMove(e){
 }
 function _boardUp(e){
   delete _brdActivePointers[e.pointerId];
+  if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+  if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
