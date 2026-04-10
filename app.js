@@ -14871,17 +14871,32 @@ function _vOpenBoard(){
   grid.querySelectorAll('[id^="_vt-"]').forEach(function(t){t.style.display='none';});
   _vPipFeaturedSid=null; // reset so _vApplyLayout picks the right featured tile
   pip.appendChild(grid);_vApplyLayout();
-  // Drag handle
+  // Drag handle — single hide-bubble button
   var ph=document.createElement('div');
-  ph.style.cssText='position:absolute;top:0;left:0;right:0;height:30px;background:linear-gradient(rgba(0,0,0,.55),transparent);z-index:3;display:flex;align-items:center;justify-content:space-between;padding:5px 6px;touch-action:none;cursor:grab;';
+  ph.style.cssText='position:absolute;top:0;left:0;right:0;height:30px;background:linear-gradient(rgba(0,0,0,.55),transparent);z-index:3;display:flex;align-items:center;justify-content:flex-end;padding:5px 6px;touch-action:none;cursor:grab;';
   var bs='background:rgba(0,0,0,.45);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);flex-shrink:0;-webkit-tap-highlight-color:transparent;';
-  var sb=document.createElement('button');sb.style.cssText=bs+'font-size:14px;font-weight:900;letter-spacing:1px;color:#fff;line-height:1;';
-  sb.textContent='···';
-  sb.onclick=function(e){e.stopPropagation();_pipCycleSize();};
-  var cb=document.createElement('button');cb.style.cssText=bs.replace('rgba(0,0,0,.45)','rgba(255,107,43,.8)');
-  cb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="15 18 9 12 15 6"/></svg>';
-  cb.onclick=function(e){e.stopPropagation();_vCloseBoard();};
-  ph.appendChild(sb);ph.appendChild(cb);
+  var hb=document.createElement('button');hb.style.cssText=bs;
+  hb.title='Masquer la bulle';
+  hb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  // Restore badge (shown when pip is hidden)
+  var rb=document.createElement('button');
+  rb.id='_vPipRestoreBtn';
+  rb.style.cssText='position:fixed;z-index:10051;width:44px;height:44px;border-radius:50%;background:rgba(13,13,24,.9);border:1.5px solid rgba(255,255,255,.15);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent;backdrop-filter:blur(10px);left:'+(_pipX+sw/2-22)+'px;top:'+(_pipY+sh/2-22)+'px;transition:transform .18s cubic-bezier(.34,1.56,.64,1);';
+  rb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+  hb.onclick=function(e){
+    e.stopPropagation();
+    pip.style.transition='transform .22s ease,opacity .18s ease';
+    pip.style.transform='scale(0.1)';pip.style.opacity='0';pip.style.pointerEvents='none';
+    rb.style.display='flex';
+    requestAnimationFrame(function(){rb.style.transform='scale(1)';});
+  };
+  rb.onclick=function(){
+    rb.style.display='none';
+    pip.style.transition='transform 300ms cubic-bezier(.34,1.56,.64,1),opacity .18s ease';
+    pip.style.transform='scale(1)';pip.style.opacity='1';pip.style.pointerEvents='';
+  };
+  document.body.appendChild(rb);
+  ph.appendChild(hb);
   pip.appendChild(ph);
   document.body.appendChild(pip);
   // Spring entrance animation
@@ -14911,6 +14926,7 @@ function _vCloseBoard(){
   if(_brdC&&_brdX&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}catch(e){}}
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   var pip=g('_vPip');var grid=g('_vGrid');
+  var rb=g('_vPipRestoreBtn');if(rb)rb.remove();
   if(pip&&grid){
     if(grid.parentNode===pip)pip.removeChild(grid);
     var main=g('_vMain');var people=g('_vPeople');
