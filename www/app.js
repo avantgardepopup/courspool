@@ -14508,7 +14508,12 @@ function _buildBoardInner(){
   var ib='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
   return ''
     // Top nav bar (dark blue, GoodNotes style)
-    +'<div style="display:flex;align-items:stretch;background:'+NAV+';flex-shrink:0;height:calc(46px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);">'
+    // Outer wrapper: full dark blue background including status bar area
+    +'<div style="background:'+NAV+';flex-shrink:0;">'
+    // Safe-area spacer: always at least 20px so status bar is never hidden
+    +'<div style="height:max(env(safe-area-inset-top,20px),20px);"></div>'
+    // Actual nav content row (fixed 46px)
+    +'<div style="display:flex;align-items:stretch;height:46px;padding:0 2px;">'
     +'<button onclick="_vCloseBoard()" style="'+ib+'padding:0 10px;gap:3px;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>'
     +'<span style="font-size:11.5px;font-weight:600;">Cours</span></button>'
@@ -14521,7 +14526,8 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button>'
     +'<button id="_bRd" onclick="_boardRedo()" style="'+ib+'width:36px;" title="Refaire">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>'
-    +'</div>'
+    +'</div>'  // close nav content row
+    +'</div>'  // close outer blue wrapper
     // GoodNotes-style sub-toolbar: white pill centered in gray band
     +'<div style="background:#e6e6eb;flex-shrink:0;display:flex;justify-content:center;align-items:center;padding:7px 16px;">'
     +'<div id="_brdSub" style="display:flex;align-items:center;background:#fff;border-radius:28px;box-shadow:0 2px 12px rgba(0,0,0,.13),0 0 0 1px rgba(0,0,0,.06);padding:4px 8px;gap:2px;overflow-x:auto;scrollbar-width:none;max-width:100%;"></div>'
@@ -14616,7 +14622,7 @@ function _vOpenBoard(){
   if(_pipY===null)_pipY=window.innerHeight-sh-100;
   var pip=document.createElement('div');
   pip.id='_vPip';
-  pip.style.cssText='position:fixed;z-index:10050;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);width:'+sw+'px;height:'+sh+'px;left:'+_pipX+'px;top:'+_pipY+'px;background:#0d0d18;user-select:none;-webkit-user-select:none;';
+  pip.style.cssText='position:fixed;z-index:10050;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);width:'+sw+'px;height:'+sh+'px;left:'+_pipX+'px;top:'+_pipY+'px;background:#0d0d18;user-select:none;-webkit-user-select:none;touch-action:none;transform:scale(0.82);opacity:0;transition:transform 380ms cubic-bezier(.34,1.56,.64,1),opacity 220ms ease;';
   grid.style.cssText='position:absolute;inset:0;display:grid;gap:4px;padding:4px;box-sizing:border-box;background:#0d0d18;';
   pip.appendChild(grid);_vApplyLayout();
   // Drag handle
@@ -14632,15 +14638,18 @@ function _vOpenBoard(){
   ph.appendChild(sb);ph.appendChild(cb);
   pip.appendChild(ph);
   document.body.appendChild(pip);
+  // Spring entrance animation
+  requestAnimationFrame(function(){pip.style.transform='scale(1)';pip.style.opacity='1';});
   _pipInitDrag(ph,pip);
   _pipInitPinch(pip);
   // Board overlay
   var bo=document.createElement('div');
   bo.id='_vBoardOuter';
-  bo.style.cssText='position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;overflow:hidden;';
+  // Emil: prevent jarring appearance — fade+scale in
+  bo.style.cssText='position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:scale(.98);transition:opacity 180ms ease-out,transform 220ms cubic-bezier(.22,.61,.36,1);';
   bo.innerHTML=_buildBoardInner();
   bdV.appendChild(bo);
-  requestAnimationFrame(function(){_boardInitCanvas();});
+  requestAnimationFrame(function(){bo.style.opacity='1';bo.style.transform='scale(1)';_boardInitCanvas();});
   var btn=g('_vBoardBtn');
   if(btn){btn.style.background='rgba(255,107,43,.55)';btn.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
   haptic(1);
@@ -14936,28 +14945,37 @@ function _pipInitDrag(handle,pip){
   document.addEventListener('mouseup',up);document.addEventListener('touchend',up);
 }
 function _pipInitPinch(pip){
-  var initDist=0,initIdx=0,pinching=false;
+  var initDist=0,initIdx=0,pinching=false,lastNi=-1;
+  function dist2(e){var t0=e.touches[0],t1=e.touches[1];return Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);}
   pip.addEventListener('touchstart',function(e){
     if(e.touches.length===2){
-      pinching=true;
-      var t0=e.touches[0],t1=e.touches[1];
-      initDist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);
-      initIdx=_pipSzIdx;
+      pinching=true;_pipDragging=false; // cancel any drag
+      initDist=dist2(e);initIdx=_pipSzIdx;lastNi=_pipSzIdx;
       e.preventDefault();e.stopPropagation();
     }
   },{passive:false});
   pip.addEventListener('touchmove',function(e){
     if(!pinching||e.touches.length!==2)return;
     e.preventDefault();e.stopPropagation();
-    var t0=e.touches[0],t1=e.touches[1];
-    var d=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);
-    var r=d/initDist;
+    var d=dist2(e),r=d/initDist;
+    // Snap to size: pinch-out (r>1.18) → bigger, pinch-in (r<0.85) → smaller
     var ni=initIdx;
-    if(r>1.35)ni=Math.min(initIdx+1,2);
-    else if(r<0.72)ni=Math.max(initIdx-1,0);
-    if(ni!==_pipSzIdx){_pipSzIdx=ni;var sw=_PW[ni],sh=_PH[ni];_pipX=Math.max(0,Math.min(window.innerWidth-sw,_pipX||0));_pipY=Math.max(0,Math.min(window.innerHeight-sh,_pipY||0));pip.style.width=sw+'px';pip.style.height=sh+'px';pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';_vApplyLayout();haptic(1);}
+    if(r>1.18)ni=Math.min(initIdx+1,2);
+    else if(r<0.85)ni=Math.max(initIdx-1,0);
+    if(ni!==lastNi){
+      lastNi=ni;_pipSzIdx=ni;
+      var sw=_PW[ni],sh=_PH[ni];
+      _pipX=Math.max(0,Math.min(window.innerWidth-sw,_pipX||0));
+      _pipY=Math.max(0,Math.min(window.innerHeight-sh,_pipY||0));
+      pip.style.transition='width 280ms cubic-bezier(.34,1.56,.64,1),height 280ms cubic-bezier(.34,1.56,.64,1)';
+      pip.style.width=sw+'px';pip.style.height=sh+'px';
+      pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
+      _vApplyLayout();haptic(1);
+      // Reset so next threshold triggers another snap
+      setTimeout(function(){initDist=dist2.bind(null,{touches:e.touches})();initIdx=ni;},300);
+    }
   },{passive:false});
-  pip.addEventListener('touchend',function(){pinching=false;},{passive:true});
+  pip.addEventListener('touchend',function(e){if(e.touches.length<2){pinching=false;}},{passive:true});
 }
 function _pipCycleSize(){
   _pipSzIdx=(_pipSzIdx+1)%3;
@@ -14965,7 +14983,7 @@ function _pipCycleSize(){
   var sw=_PW[_pipSzIdx],sh=_PH[_pipSzIdx];
   _pipX=Math.max(0,Math.min(window.innerWidth-sw,_pipX||0));
   _pipY=Math.max(0,Math.min(window.innerHeight-sh,_pipY||0));
-  pip.style.cssText='position:fixed;z-index:10050;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5);transition:width .3s cubic-bezier(.34,1.56,.64,1),height .3s cubic-bezier(.34,1.56,.64,1);width:'+sw+'px;height:'+sh+'px;left:'+_pipX+'px;top:'+_pipY+'px;background:#0d0d18;user-select:none;-webkit-user-select:none;';
+  pip.style.cssText='position:fixed;z-index:10050;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5);touch-action:none;transition:width 300ms cubic-bezier(.34,1.56,.64,1),height 300ms cubic-bezier(.34,1.56,.64,1);width:'+sw+'px;height:'+sh+'px;left:'+_pipX+'px;top:'+_pipY+'px;background:#0d0d18;user-select:none;-webkit-user-select:none;';
   _vApplyLayout();haptic(1);
 }
 
