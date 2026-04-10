@@ -14497,6 +14497,7 @@ var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect';
 var _brdHist=[],_brdHistIdx=-1;
 var _brdDraw=false,_brdPts=[],_brdSnap=null,_brdSS=null;
+var _brdActivePointers={}; // track active pointer IDs to detect pinch
 var _pipSzIdx=1,_pipX=null,_pipY=null;
 var _pipDragging=false,_pipDSX=0,_pipDSY=0,_pipDOX=0,_pipDOY=0;
 var _PW=[200,300,420],_PH=[112,168,236];
@@ -14814,14 +14815,18 @@ function _boardGetPos(e){
   return{x:(src.clientX-r.left),y:(src.clientY-r.top)};
 }
 function _boardAttachEvents(canv){
+  _brdActivePointers={};
   canv.addEventListener('pointerdown',_boardDown,{passive:false});
   canv.addEventListener('pointermove',_boardMove,{passive:false});
   canv.addEventListener('pointerup',_boardUp,{passive:false});
-  canv.addEventListener('pointercancel',_boardUp,{passive:false});
-  canv.addEventListener('pointerleave',_boardUp,{passive:false});
+  canv.addEventListener('pointercancel',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
+  canv.addEventListener('pointerleave',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
 }
 function _boardDown(e){
   e.preventDefault();
+  _brdActivePointers[e.pointerId]=true;
+  // 2+ fingers on canvas = pinch gesture, not drawing
+  if(Object.keys(_brdActivePointers).length>1){_brdDraw=false;return;}
   var p=_boardGetPos(e);
   _brdDraw=true;_brdPts=[p];
   if(_brdTool==='pen'){
@@ -14847,6 +14852,8 @@ function _boardDown(e){
 }
 function _boardMove(e){
   if(!_brdDraw)return;
+  // Cancel stroke if second finger joined
+  if(Object.keys(_brdActivePointers).length>1){_brdDraw=false;return;}
   e.preventDefault();
   var p=_boardGetPos(e);
   if(_brdTool==='pen'||_brdTool==='marker'){
@@ -14867,6 +14874,7 @@ function _boardMove(e){
   }
 }
 function _boardUp(e){
+  delete _brdActivePointers[e.pointerId];
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
@@ -14945,21 +14953,25 @@ function _pipInitDrag(handle,pip){
   document.addEventListener('mouseup',up);document.addEventListener('touchend',up);
 }
 function _pipInitPinch(pip){
-  var initDist=0,initIdx=0,pinching=false,lastNi=-1;
-  function dist2(e){var t0=e.touches[0],t1=e.touches[1];return Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);}
-  pip.addEventListener('touchstart',function(e){
-    if(e.touches.length===2){
-      pinching=true;_pipDragging=false; // cancel any drag
-      initDist=dist2(e);initIdx=_pipSzIdx;lastNi=_pipSzIdx;
-      e.preventDefault();e.stopPropagation();
+  var _ppPtrs={},initDist=0,initIdx=0,lastNi=-1;
+  function _ppDist(){
+    var pts=Object.values(_ppPtrs);if(pts.length<2)return 0;
+    return Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+  }
+  pip.addEventListener('pointerdown',function(e){
+    _ppPtrs[e.pointerId]={x:e.clientX,y:e.clientY};
+    try{pip.setPointerCapture(e.pointerId);}catch(err){}
+    if(Object.keys(_ppPtrs).length===2){
+      _pipDragging=false;
+      initDist=_ppDist();initIdx=_pipSzIdx;lastNi=_pipSzIdx;
     }
   },{passive:false});
-  pip.addEventListener('touchmove',function(e){
-    if(!pinching||e.touches.length!==2)return;
+  pip.addEventListener('pointermove',function(e){
+    if(!_ppPtrs[e.pointerId])return;
+    _ppPtrs[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(Object.keys(_ppPtrs).length<2||!initDist)return;
     e.preventDefault();e.stopPropagation();
-    var d=dist2(e),r=d/initDist;
-    // Snap to size: pinch-out (r>1.18) → bigger, pinch-in (r<0.85) → smaller
-    var ni=initIdx;
+    var r=_ppDist()/initDist,ni=initIdx;
     if(r>1.18)ni=Math.min(initIdx+1,2);
     else if(r<0.85)ni=Math.max(initIdx-1,0);
     if(ni!==lastNi){
@@ -14971,11 +14983,15 @@ function _pipInitPinch(pip){
       pip.style.width=sw+'px';pip.style.height=sh+'px';
       pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
       _vApplyLayout();haptic(1);
-      // Reset so next threshold triggers another snap
-      setTimeout(function(){initDist=dist2.bind(null,{touches:e.touches})();initIdx=ni;},300);
+      setTimeout(function(){if(Object.keys(_ppPtrs).length>=2){initDist=_ppDist();initIdx=ni;}},300);
     }
   },{passive:false});
-  pip.addEventListener('touchend',function(e){if(e.touches.length<2){pinching=false;}},{passive:true});
+  function _ppEnd(e){
+    delete _ppPtrs[e.pointerId];
+    if(Object.keys(_ppPtrs).length<2)initDist=0;
+  }
+  pip.addEventListener('pointerup',_ppEnd,{passive:true});
+  pip.addEventListener('pointercancel',_ppEnd,{passive:true});
 }
 function _pipCycleSize(){
   _pipSzIdx=(_pipSzIdx+1)%3;
