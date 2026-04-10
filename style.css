@@ -993,6 +993,9 @@ html.dk .esp2-card{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,
   cursor:pointer;font-family:inherit;width:100%;margin-top:8px;
 }
 .esp2-btn-submit:active{opacity:.8;}
+/* Masque les flèches natives sur l'input prix du stepper */
+#stepPrix::-webkit-outer-spin-button,
+#stepPrix::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 /* Boutons picker type/accès popup doc */
 .add-doc-type-btn{
   background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;

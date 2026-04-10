@@ -11531,10 +11531,10 @@ function stepRender(idx){
       +'<div style="'+_stpLbl+'">'+t('cr_step_prix_lbl')+'</div>'
       +'<div style="display:flex;align-items:center;justify-content:center;gap:20px">'
       +'<button id="btnPrixM" style="'+_stpBtn+'">−</button>'
-      +'<div id="stepPrixDisp" style="'+_stpNum+'">'+(_sd.prix||0)+'</div>'
+      +'<input id="stepPrix" type="number" inputmode="numeric" min="0" max="9999" value="'+(_sd.prix||'')+'" placeholder="0" style="'+_stpNum+';border:none;background:transparent;outline:none;font-family:inherit;width:120px;-moz-appearance:textfield;" oninput="_sd.prix=parseInt(this.value)||0;var d=g(\'stepPrixDisp\');if(d)d.textContent=this.value||\'0\';stepPxCalc();">'
       +'<button id="btnPrixP" style="'+_stpBtn+'">+</button>'
       +'</div>'
-      +'<input type="hidden" id="stepPrix" value="'+(_sd.prix||0)+'">'
+      +'<div id="stepPrixDisp" style="display:none"></div>'
       +'</div>'
       // Séparateur
       +'<div style="height:1px;background:var(--bdr)"></div>'
@@ -11647,7 +11647,7 @@ function stepRender(idx){
   if(_slEl)_slEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var nx=g('stepLieuPrive');if(nx){nx.focus();var sb=g('stepBody');if(sb)sb.scrollTop=sb.scrollHeight;}}});
   var _slpEl=g('stepLieuPrive');
   if(_slpEl)_slpEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}});
-  wire('stepPrix',function(){_sd.prix=parseInt(this.value)||0;stepPxCalc();});
+  // stepPrix est maintenant un input direct avec oninput inline — pas de wire séparé
   wire('stepPlaces',function(){_sd.places=parseInt(this.value)||5;stepPxCalc();});
   wire('stepDesc',function(){if(this.value.length>400)this.value=this.value.slice(0,400);_sd.desc=this.value;var cnt=g('stepDescCount');if(cnt)cnt.textContent=this.value.length+'/400';});
 
@@ -11656,7 +11656,7 @@ function stepRender(idx){
   function _stpUpd(field,v){
     var inp=g(field==='prix'?'stepPrix':'stepPlaces');
     var disp=g(field==='prix'?'stepPrixDisp':'stepPlacesDisp');
-    if(inp)inp.value=v;
+    if(inp)inp.value=v||'';
     if(disp)disp.textContent=v;
     if(field==='prix')_sd.prix=v; else _sd.places=v;
     stepPxCalc();haptic(4);
