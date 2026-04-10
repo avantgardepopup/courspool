@@ -15758,15 +15758,72 @@ function _boardInsertText(cx,cy){
 
 // ── PiP drag ──
 function _pipInitDrag(handle,pip){
-  // Body drag: pointer events with threshold (6px) — works anywhere on pip
-  var _bPtrs={}; // {pointerId: {sx,sy,ox,oy,active}}
+  // Unified pointer handler: single finger = drag, two fingers = pinch resize
+  var _ptrs={}; // {pointerId:{sx,sy,ox,oy,cx,cy,active}}
+  var _pinchInitDist=0,_pinchInitIdx=0,_pinchLastNi=-1;
+
+  function _dist(){
+    var v=Object.values(_ptrs);if(v.length<2)return 0;
+    return Math.hypot(v[1].cx-v[0].cx,v[1].cy-v[0].cy);
+  }
+  function _mid(){
+    var v=Object.values(_ptrs);
+    return{x:(v[0].cx+v[1].cx)/2,y:(v[0].cy+v[1].cy)/2};
+  }
+
   pip.addEventListener('pointerdown',function(e){
-    if(e.target.tagName==='BUTTON')return; // don't intercept button taps
-    _bPtrs[e.pointerId]={sx:e.clientX,sy:e.clientY,ox:parseInt(pip.style.left)||0,oy:parseInt(pip.style.top)||0,active:false};
-  },{passive:true});
+    if(e.target.tagName==='BUTTON')return;
+    var curX=parseInt(pip.style.left)||0,curY=parseInt(pip.style.top)||0;
+    _ptrs[e.pointerId]={sx:e.clientX,sy:e.clientY,ox:curX,oy:curY,cx:e.clientX,cy:e.clientY,active:false};
+    try{pip.setPointerCapture(e.pointerId);}catch(err){}
+
+    if(Object.keys(_ptrs).length===2){
+      // Second finger arrived — undo any single-finger drag that started
+      Object.values(_ptrs).forEach(function(p){
+        if(p.active){
+          // restore to position before drag started
+          pip.style.left=p.ox+'px';pip.style.top=p.oy+'px';
+          _pipX=p.ox;_pipY=p.oy;
+        }
+        p.active=false;
+      });
+      _pinchInitDist=_dist();_pinchInitIdx=_pipSzIdx;_pinchLastNi=_pipSzIdx;
+    }
+  },{passive:false});
+
   pip.addEventListener('pointermove',function(e){
-    var ptr=_bPtrs[e.pointerId];if(!ptr)return;
-    if(Object.keys(_bPtrs).length>1){ptr.active=false;return;} // pinch has priority
+    var ptr=_ptrs[e.pointerId];if(!ptr)return;
+    ptr.cx=e.clientX;ptr.cy=e.clientY;
+    var cnt=Object.keys(_ptrs).length;
+
+    if(cnt>=2){
+      // ── Pinch resize anchored to pinch center ──
+      if(!_pinchInitDist)return;
+      e.preventDefault();e.stopPropagation();
+      var d=_dist(),r=d/_pinchInitDist;
+      var ni=_pinchInitIdx;
+      if(r>1.18)ni=Math.min(_pinchInitIdx+1,2);
+      else if(r<0.85)ni=Math.max(_pinchInitIdx-1,0);
+      if(ni!==_pinchLastNi){
+        var m=_mid();
+        var oldSw=_PW[_pinchLastNi<0?_pipSzIdx:_pinchLastNi];
+        var oldSh=_PH[_pinchLastNi<0?_pipSzIdx:_pinchLastNi];
+        var sw=_PW[ni],sh=_PH[ni];
+        // Keep pinch midpoint fixed: adjust pip position so center stays under fingers
+        var relX=(m.x-_pipX)/oldSw,relY=(m.y-_pipY)/oldSh;
+        _pipX=Math.round(Math.max(0,Math.min(window.innerWidth-sw, m.x-relX*sw)));
+        _pipY=Math.round(Math.max(0,Math.min(window.innerHeight-sh,m.y-relY*sh)));
+        _pinchLastNi=ni;_pipSzIdx=ni;
+        pip.style.transition='width 240ms cubic-bezier(.34,1.56,.64,1),height 240ms cubic-bezier(.34,1.56,.64,1)';
+        pip.style.width=sw+'px';pip.style.height=sh+'px';
+        pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
+        _vApplyLayout();haptic(1);
+        setTimeout(function(){if(Object.keys(_ptrs).length>=2){_pinchInitDist=_dist();_pinchInitIdx=ni;}},260);
+      }
+      return;
+    }
+
+    // ── Single-finger drag with 6px threshold ──
     var dx=e.clientX-ptr.sx,dy=e.clientY-ptr.sy;
     if(!ptr.active&&Math.hypot(dx,dy)<6)return;
     ptr.active=true;
@@ -15776,51 +15833,15 @@ function _pipInitDrag(handle,pip){
     _pipY=Math.max(0,Math.min(window.innerHeight-_PH[_pipSzIdx],ptr.oy+dy));
     pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
   },{passive:false});
-  var _bEnd=function(e){delete _bPtrs[e.pointerId];};
-  pip.addEventListener('pointerup',_bEnd,{passive:true});
-  pip.addEventListener('pointercancel',_bEnd,{passive:true});
-}
-function _pipInitPinch(pip){
-  var _ppPtrs={},initDist=0,initIdx=0,lastNi=-1;
-  function _ppDist(){
-    var pts=Object.values(_ppPtrs);if(pts.length<2)return 0;
-    return Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+
+  function _end(e){
+    delete _ptrs[e.pointerId];
+    if(Object.keys(_ptrs).length<2)_pinchInitDist=0;
   }
-  pip.addEventListener('pointerdown',function(e){
-    _ppPtrs[e.pointerId]={x:e.clientX,y:e.clientY};
-    try{pip.setPointerCapture(e.pointerId);}catch(err){}
-    if(Object.keys(_ppPtrs).length===2){
-      _pipDragging=false;
-      initDist=_ppDist();initIdx=_pipSzIdx;lastNi=_pipSzIdx;
-    }
-  },{passive:false});
-  pip.addEventListener('pointermove',function(e){
-    if(!_ppPtrs[e.pointerId])return;
-    _ppPtrs[e.pointerId]={x:e.clientX,y:e.clientY};
-    if(Object.keys(_ppPtrs).length<2||!initDist)return;
-    e.preventDefault();e.stopPropagation();
-    var r=_ppDist()/initDist,ni=initIdx;
-    if(r>1.18)ni=Math.min(initIdx+1,2);
-    else if(r<0.85)ni=Math.max(initIdx-1,0);
-    if(ni!==lastNi){
-      lastNi=ni;_pipSzIdx=ni;
-      var sw=_PW[ni],sh=_PH[ni];
-      _pipX=Math.max(0,Math.min(window.innerWidth-sw,_pipX||0));
-      _pipY=Math.max(0,Math.min(window.innerHeight-sh,_pipY||0));
-      pip.style.transition='width 280ms cubic-bezier(.34,1.56,.64,1),height 280ms cubic-bezier(.34,1.56,.64,1)';
-      pip.style.width=sw+'px';pip.style.height=sh+'px';
-      pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
-      _vApplyLayout();haptic(1);
-      setTimeout(function(){if(Object.keys(_ppPtrs).length>=2){initDist=_ppDist();initIdx=ni;}},300);
-    }
-  },{passive:false});
-  function _ppEnd(e){
-    delete _ppPtrs[e.pointerId];
-    if(Object.keys(_ppPtrs).length<2)initDist=0;
-  }
-  pip.addEventListener('pointerup',_ppEnd,{passive:true});
-  pip.addEventListener('pointercancel',_ppEnd,{passive:true});
+  pip.addEventListener('pointerup',_end,{passive:true});
+  pip.addEventListener('pointercancel',_end,{passive:true});
 }
+function _pipInitPinch(pip){} // merged into _pipInitDrag
 function _pipCycleSize(){
   _pipSzIdx=(_pipSzIdx+1)%3;
   var pip=g('_vPip');if(!pip)return;
