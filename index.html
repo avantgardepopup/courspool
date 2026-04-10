@@ -2223,24 +2223,29 @@
     <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
     <div style="padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Ajouter un document</div>
-      <button onclick="closeAddDoc()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)">✕</button>
+      <button onclick="closeAddDoc()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">
+    <div style="padding:0 20px;display:flex;flex-direction:column;gap:12px">
       <input id="addDocTitle" type="text" placeholder="Titre du document" class="esp-input">
       <input id="addDocUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
-      <select id="addDocType" class="esp-input">
-        <option value="pdf">PDF</option>
-        <option value="video">Vidéo</option>
-        <option value="article">Article / lien</option>
-        <option value="exercice">Exercice</option>
-      </select>
-      <select id="addDocAccess" class="esp-input">
-        <option value="enrolled">🔓 Visible par tous les inscrits</option>
-        <option value="password">🔐 Protégé par mot de passe</option>
-        <option value="share">🔗 Visible uniquement via partage</option>
-      </select>
-      <div id="addDocPwBox" style="display:none">
-        <input id="addDocPw" type="text" placeholder="Mot de passe à donner" class="esp-input">
+      <!-- Type de document -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Type</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="addDocTypeGrid">
+          <button onclick="_addDocPickType('pdf',this)" class="add-doc-type-btn add-doc-type-sel" data-val="pdf">PDF</button>
+          <button onclick="_addDocPickType('video',this)" class="add-doc-type-btn" data-val="video">Vidéo</button>
+          <button onclick="_addDocPickType('article',this)" class="add-doc-type-btn" data-val="article">Article</button>
+          <button onclick="_addDocPickType('exercice',this)" class="add-doc-type-btn" data-val="exercice">Exercice</button>
+        </div>
+      </div>
+      <!-- Visibilité -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Visibilité</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="addDocAccessGrid">
+          <button onclick="_addDocPickAccess('followers',this)" class="add-doc-type-btn add-doc-type-sel" data-val="followers">Inscrits</button>
+          <button onclick="_addDocPickAccess('public',this)" class="add-doc-type-btn" data-val="public">Public</button>
+          <button onclick="_addDocPickAccess('private',this)" class="add-doc-type-btn" data-val="private">Privé</button>
+        </div>
       </div>
     </div>
     <div style="padding:16px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px))">

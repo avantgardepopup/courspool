@@ -993,6 +993,17 @@ html.dk .esp2-card{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,
   cursor:pointer;font-family:inherit;width:100%;margin-top:8px;
 }
 .esp2-btn-submit:active{opacity:.8;}
+/* Boutons picker type/accès popup doc */
+.add-doc-type-btn{
+  background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;
+  padding:10px 8px;font-size:13px;font-weight:600;color:var(--mid);
+  cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;
+  transition:all .15s;
+}
+.add-doc-type-btn:active{opacity:.7;}
+.add-doc-type-sel{
+  background:rgba(255,107,43,.06);border-color:var(--or);color:var(--or);
+}
 /* Popup plein écran publications */
 #bdEspPubs{
   position:fixed;inset:0;z-index:600;background:var(--wh);
@@ -1966,10 +1977,14 @@ html.dk .biblio-card{background:#1C1C1E;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 
   display:inline-flex;align-items:center;gap:5px;
   font-size:10px;font-weight:700;padding:3px 9px;border-radius:50px;letter-spacing:.02em;text-transform:uppercase;
 }
-.biblio-access-badge.enrolled{background:rgba(34,197,94,.12);color:#16A34A;}
+.biblio-access-badge.enrolled,.biblio-access-badge.followers{background:rgba(34,197,94,.12);color:#16A34A;}
+.biblio-access-badge.public{background:rgba(99,102,241,.1);color:#6366F1;}
+.biblio-access-badge.private{background:rgba(100,116,139,.1);color:#64748B;}
 .biblio-access-badge.password{background:rgba(59,130,246,.1);color:#2563EB;}
 .biblio-access-badge.share{background:rgba(255,107,43,.1);color:var(--or);}
-html.dk .biblio-access-badge.enrolled{background:rgba(34,197,94,.18);}
+html.dk .biblio-access-badge.enrolled,html.dk .biblio-access-badge.followers{background:rgba(34,197,94,.18);}
+html.dk .biblio-access-badge.public{background:rgba(99,102,241,.18);}
+html.dk .biblio-access-badge.private{background:rgba(100,116,139,.18);}
 html.dk .biblio-access-badge.password{background:rgba(59,130,246,.18);}
 html.dk .biblio-access-badge.share{background:rgba(255,107,43,.18);}
 .biblio-card-actions{display:flex;gap:5px;flex-shrink:0;align-items:center;}

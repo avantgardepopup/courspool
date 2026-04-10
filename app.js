@@ -6098,8 +6098,8 @@ function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
   var grid=g('biblioGrid');if(!grid)return;
   grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
-  var ACCESS_LABEL={enrolled:'Inscrits',password:'Mot de passe',share:'Via lien'};
-  var TYPE_ICON={pdf:'📄',video:'🎥',article:'📰',exercice:'✏️',fiche:'📋',text:'📝',link:'🔗'};
+  var ACCESS_LABEL={enrolled:'Inscrits',followers:'Inscrits',public:'Public',private:'Privé',password:'Mot de passe',share:'Via lien'};
+  var TYPE_ICON={pdf:'PDF',video:'Vidéo',article:'Article',exercice:'Exercice',fiche:'Fiche',text:'Texte',link:'Lien'};
   function _biblioIco(kind,type){
     var bg,stroke,path;
     if(kind==='fiche'){bg='rgba(34,197,94,.12)';stroke='#16A34A';path='<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>';}
@@ -6112,26 +6112,23 @@ function loadBibliotheque(){
       +'</div>';
   }
   function _biblioAccessSvg(type){
-    if(type==='password')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
-    if(type==='share')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>';
-    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>';
+    if(type==='public')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>';
+    if(type==='private')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+    return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
   }
   // Fetch announcements (fiches) + resources
   Promise.all([
     fetch(API+'/teacher/'+uid+'/announcements',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-    fetch(API+'/teacher/'+uid+'/content',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
+    fetch(API+'/teacher/'+uid+'/resources',{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];})
   ]).then(function(results){
     var _fIds;try{_fIds=new Set(JSON.parse(localStorage.getItem('cp_fiche_ids')||'[]'));}catch(e){_fIds=new Set();}
     var _fData;try{_fData=JSON.parse(localStorage.getItem('cp_fiche_data')||'{}');}catch(e){_fData={};}
     var fiches=(results[0]||[]).filter(function(a){return a.type==='fiche'||_fIds.has(String(a.id));});
     fiches=fiches.map(function(f){var c=_fData[String(f.id)]||{};return Object.assign({},f,{title:f.title||c.title||'',content:f.content||c.content||''});});
     var resources=results[1]||[];
-    var content=results[2]||[];
     var items=[];
-    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',password:f.password||'',created_at:f.created_at});});
-    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_type||'enrolled',password:r.password||'',created_at:r.created_at});});
-    content.forEach(function(c){items.push({id:c.id,kind:'content',title:c.title||'Contenu',type:c.content_type||'',access:c.access_type||'enrolled',password:c.password||'',created_at:c.created_at});});
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_level||'followers',created_at:r.created_at});});
     items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
     if(!items.length){
       grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
@@ -6173,11 +6170,18 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px;padding-bottom:max(28px,env(safe-area-inset-bottom,28px))';
-  var opts=[
-    {val:'enrolled',label:'Tous les inscrits',sub:'Visible par les élèves inscrits',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><line x1="12" y1="15" x2="12" y2="17"/>',stroke:'var(--mid)',bg:'var(--bg)'},
-    {val:'password',label:'Mot de passe',sub:'Protégé par un code secret',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'},
-    {val:'share',label:'Via lien',sub:'Accessible via un lien de partage',svgPath:'<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>',stroke:'var(--mid)',bg:'var(--bg)'}
-  ];
+  // Options différentes selon le type : fiches utilisent enrolled/private/public, ressources utilisent followers/public/private
+  var opts=kind==='fiche'
+    ?[
+      {val:'enrolled',label:'Inscrits',sub:'Visible par tous les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+    ]
+    :[
+      {val:'followers',label:'Inscrits',sub:'Visible par les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+    ];
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
   html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">'+t('vis_label')+'</div>';
   html+='<div style="font-size:13px;color:var(--lite);margin-bottom:18px">'+t('vis_desc')+'</div>';
@@ -6197,10 +6201,7 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   bd.appendChild(sheet);
   document.body.appendChild(bd);
   window._biblioPickAccess=function(k,i,v){
-    if(v==='password'){
-      bd.remove();
-      _biblioAskPassword(function(pw){biblioSetAccess(k,i,v,pw);});
-    }else{bd.remove();biblioSetAccess(k,i,v);}
+    bd.remove();biblioSetAccess(k,i,v);
   };
   haptic(4);
 }
@@ -6232,25 +6233,50 @@ function _biblioAskPassword(onDone){
   haptic(4);
 }
 
-function biblioSetAccess(kind,id,access,pw){
+function biblioSetAccess(kind,id,access){
   var uid=user&&user.id;if(!uid)return;
-  var endpoints={resource:'/teacher/'+uid+'/resources/'+id,content:'/teacher/'+uid+'/content/'+id,fiche:'/teacher/'+uid+'/announcements/'+id};
-  var ep=endpoints[kind];if(!ep)return;
+  var ep,body;
+  if(kind==='fiche'){
+    ep='/teacher/'+uid+'/announcements/'+id;
+    body={access_type:access};
+  }else if(kind==='resource'){
+    ep='/teacher/'+uid+'/resources/'+id;
+    body={access_level:access};
+  }else{return;}
   haptic(4);
-  var body={access_type:access};if(pw)body.password=pw;
   fetch(API+ep,{method:'PATCH',headers:apiH(),body:JSON.stringify(body)})
-    .then(function(r){return r.json();}).then(function(){loadBibliotheque();})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.error){toast(t('t_error'),d.error);return;}
+      loadBibliotheque();
+    })
     .catch(function(){toast(t('t_net_error'),'');});
 }
 
 // ── AJOUTER UN DOCUMENT ───────────────────────────────────────────────────
+var _addDocType='pdf';
+var _addDocAccess='followers';
+
+function _addDocPickType(val,btn){
+  _addDocType=val;
+  var btns=document.querySelectorAll('#addDocTypeGrid .add-doc-type-btn');
+  btns.forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val===val);});
+  haptic(4);
+}
+
+function _addDocPickAccess(val,btn){
+  _addDocAccess=val;
+  var btns=document.querySelectorAll('#addDocAccessGrid .add-doc-type-btn');
+  btns.forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val===val);});
+  haptic(4);
+}
+
 function openAddDoc(){
   var el=g('bdAddDoc');if(!el)return;
+  // Reset pickers
+  _addDocType='pdf';_addDocAccess='followers';
+  document.querySelectorAll('#addDocTypeGrid .add-doc-type-btn').forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val==='pdf');});
+  document.querySelectorAll('#addDocAccessGrid .add-doc-type-btn').forEach(function(b){b.classList.toggle('add-doc-type-sel',b.dataset.val==='followers');});
   el.style.display='flex';
-  var sel=g('addDocAccess');
-  if(sel)sel.addEventListener('change',function(){
-    var pw=g('addDocPwBox');if(pw)pw.style.display=sel.value==='password'?'block':'none';
-  },{once:false});
   haptic(4);
 }
 
@@ -6263,13 +6289,10 @@ function addDocSubmit(){
   var uid=user&&user.id;if(!uid)return;
   var title=(g('addDocTitle').value||'').trim();
   var url=(g('addDocUrl').value||'').trim();
-  var type=g('addDocType').value;
-  var access=g('addDocAccess').value;
-  var pw=access==='password'?(g('addDocPw').value||'').trim():'';
   if(!title||!url){toast(t('t_fill_title_link'),'');return;}
   var btn=g('addDocBtn');if(btn){btn.disabled=true;btn.textContent='…';}
   fetch(API+'/teacher/'+uid+'/resources',{method:'POST',headers:apiH(),
-    body:JSON.stringify({title:title,url:url,type:type,access_type:access,password:pw||undefined})})
+    body:JSON.stringify({title:title,url:url,type:_addDocType,access_level:_addDocAccess})})
     .then(function(r){return r.json();}).then(function(d){
       if(btn){btn.disabled=false;btn.textContent='Ajouter';}
       if(d.error){toast(t('t_error'),d.error);return;}

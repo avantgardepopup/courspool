@@ -2966,6 +2966,24 @@ app.post('/teacher/:id/resources', requireAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+app.patch('/teacher/:id/resources/:res_id', requireAuth, async (req, res) => {
+  try {
+    if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
+    const { access_level, title } = req.body;
+    const updates = {};
+    if (access_level !== undefined) {
+      if (!['public','followers','private'].includes(access_level)) return res.status(400).json({ error: 'Valeur invalide' });
+      updates.access_level = access_level;
+    }
+    if (title !== undefined) updates.title = title.trim();
+    if (!Object.keys(updates).length) return res.status(400).json({ error: 'Rien à mettre à jour' });
+    const { data, error } = await supabase.from('teacher_resources')
+      .update(updates).eq('id', req.params.res_id).eq('teacher_id', req.params.id).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
 app.delete('/teacher/:id/resources/:res_id', requireAuth, async (req, res) => {
   try {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
