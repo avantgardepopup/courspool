@@ -2114,6 +2114,74 @@ app.get('/messages/groupe/:cours_id', requireAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+// GROUPE — liste des conversations groupe pour un user
+app.get('/groupe-conversations/:user_id', requireAuth, async (req, res) => {
+  const uid = req.params.user_id;
+  if (!UUID_RE.test(uid)) return res.status(400).json({ error: 'ID invalide' });
+  if (req.user.id !== uid && !isAdmin(req.user.id)) return res.status(403).json({ error: 'Non autorisé' });
+  try {
+    const [{ data: resv }, { data: ownedCours }] = await Promise.all([
+      supabase.from('reservations').select('cours_id').eq('user_id', uid),
+      supabase.from('cours').select('id,titre,professeur_id').eq('professeur_id', uid)
+    ]);
+    const allCoursIds = [...new Set([
+      ...(ownedCours || []).map(c => c.id),
+      ...(resv || []).map(r => r.cours_id)
+    ])];
+    if (!allCoursIds.length) return res.json([]);
+
+    const { data: msgs } = await supabase.from('messages')
+      .select('*').in('groupe_cours_id', allCoursIds)
+      .order('created_at', { ascending: false }).limit(500);
+
+    const lastMsg = {}, unreadCount = {};
+    (msgs || []).forEach(m => {
+      const gid = m.groupe_cours_id;
+      if (!lastMsg[gid]) lastMsg[gid] = m;
+      if (!m.lu && m.receiver_id === uid) unreadCount[gid] = (unreadCount[gid] || 0) + 1;
+    });
+
+    const activeGroupIds = Object.keys(lastMsg);
+    if (!activeGroupIds.length) return res.json([]);
+
+    const { data: coursData } = await supabase.from('cours')
+      .select('id,titre,professeur_id').in('id', activeGroupIds);
+    const coursMap = {};
+    (coursData || []).forEach(c => { coursMap[c.id] = c; });
+
+    const results = await Promise.all(activeGroupIds.map(async (cid) => {
+      const cours = coursMap[cid] || {};
+      const { data: members } = await supabase.from('reservations')
+        .select('user_id').eq('cours_id', cid);
+      const totalMembers = (members || []).length + 1; // +1 pour le prof
+      const memberIds = [...new Set([cours.professeur_id, ...(members || []).map(m => m.user_id)].filter(Boolean))];
+      const { data: profiles } = memberIds.length
+        ? await supabase.from('profiles').select('id,prenom,photo_url').in('id', memberIds.slice(0, 2))
+        : { data: [] };
+      return {
+        cours_id: cid,
+        cours_title: cours.titre || 'Cours',
+        last_message: lastMsg[cid],
+        unread: unreadCount[cid] || 0,
+        total_membres: totalMembers,
+        membres: (profiles || []).map(p => ({ id: p.id, nom: p.prenom || '?', photo: p.photo_url || null }))
+      };
+    }));
+
+    res.json(results.sort((a, b) => new Date(b.last_message.created_at) - new Date(a.last_message.created_at)));
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// GROUPE — marquer messages comme lus
+app.put('/messages/groupe/lu/:cours_id', requireAuth, async (req, res) => {
+  try {
+    await supabase.from('messages').update({ lu: true })
+      .eq('groupe_cours_id', req.params.cours_id)
+      .eq('receiver_id', req.user.id).eq('lu', false);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
 // GROUPE — toggle autorisation élèves d'écrire
 app.patch('/cours/:id/groupe', requireAuth, async (req, res) => {
   const { eleves_peuvent_ecrire } = req.body;

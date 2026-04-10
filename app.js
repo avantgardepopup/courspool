@@ -4076,17 +4076,20 @@ function openR(id){haptic(4);
   var btnDel=g('btnDelCours');
   var btnEleves=g('btnVoirEleves');
   var btnNoter=g('btnNoterCours');
+  var btnGroupe=g('btnGroupe');
   if(isOwner){
     if(btnConf)btnConf.style.display='none';
     if(btnContact)btnContact.style.display='none';
     if(btnDel)btnDel.style.display='flex';
     if(btnEleves)btnEleves.style.display='flex';
     if(btnNoter)btnNoter.style.display='none';
+    if(btnGroupe)btnGroupe.style.display=c.fl>0?'flex':'none';
   } else {
     if(btnConf){btnConf.style.display='flex';btnConf.onclick=confR;}
     if(btnContact)btnContact.style.display='flex';
     if(btnDel)btnDel.style.display='none';
     if(btnEleves)btnEleves.style.display='none';
+    if(btnGroupe)btnGroupe.style.display=res[id]?'flex':'none';
     // Bouton "Laisser un avis" : cours passé depuis >1h, réservé, pas encore noté
     if(btnNoter){
       var _canNote=(function(){
@@ -7869,6 +7872,28 @@ var _convCache=''; // cache HTML de la liste pour affichage immédiat
 var _convRetries=0; // compteur de tentatives auto (cold start / timeout iOS)
 var _convRetryTimer=null; // handle du timer de retry — annulable
 var _convGen=0; // génération — écarte les résultats périmés (requêtes en retard)
+function _groupeAvatarStack(membres,total){
+  var AV_SIZE=30,AV_OFFSET=16;
+  var COLORS=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444'];
+  var shown=membres.slice(0,2);
+  var extra=total-shown.length;
+  var circles=shown.map(function(m,i){
+    var bg=m.photo?'#ddd':COLORS[i%COLORS.length];
+    var inner=m.photo
+      ?'<img src="'+esc(m.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      :'<span style="font-size:10px;font-weight:700;color:#fff">'+esc((m.nom||'?')[0].toUpperCase())+'</span>';
+    return'<div style="position:absolute;left:'+(i*AV_OFFSET)+'px;top:50%;transform:translateY(-50%);z-index:'+(3-i)+';width:'+AV_SIZE+'px;height:'+AV_SIZE+'px;border-radius:50%;border:2px solid var(--wh);background:'+bg+';display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">'+inner+'</div>';
+  });
+  if(extra>0){
+    var xLeft=shown.length*AV_OFFSET;
+    circles.push('<div style="position:absolute;left:'+xLeft+'px;top:50%;transform:translateY(-50%);z-index:0;width:'+AV_SIZE+'px;height:'+AV_SIZE+'px;border-radius:50%;border:2px solid var(--wh);background:var(--bdr);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--mid)">+'+extra+'</div>');
+  }
+  var cols=shown.length+(extra>0?1:0);
+  var w=(cols-1)*AV_OFFSET+AV_SIZE;
+  // Enveloppe de la même taille que .msg-av (52px) pour garder l'alignement
+  return'<div style="width:52px;height:52px;flex-shrink:0;position:relative;display:flex;align-items:center"><div style="position:relative;width:'+w+'px;height:'+AV_SIZE+'px">'+circles.join('')+'</div></div>';
+}
+
 async function loadConversations(){
   if(!user)return;
   var lm=g('listM');
@@ -7891,22 +7916,11 @@ async function loadConversations(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     var msgs=await r.json();
     _convRetries=0; // succès — réinitialiser le compteur de tentatives
-    if(!Array.isArray(msgs)||!msgs.length){
-      var _isProf=user&&user.role==='professeur';
-      var _emptyDesc=_isProf?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
-      lm.style.cssText='';
-      lm.innerHTML='<div style="text-align:center;padding:60px 24px">'
-        +'<div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">'
-        +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-        +'</div>'
-        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div>'
-        +'<div style="font-size:13px;color:var(--lite)">'+_emptyDesc+'</div>'
-        +'</div>';
-      _convLoading=false;return;
-    }
-    // Grouper par interlocuteur
+    if(!Array.isArray(msgs))msgs=[];
+    // Grouper par interlocuteur (ignorer les messages groupe)
     var convs={};
     msgs.forEach(function(m){
+      if(m.groupe_cours_id)return; // messages groupe traités séparément
       var otherId=m.sender_id===user.id?m.receiver_id:m.sender_id;
       if(!otherId||otherId===user.id)return;
       if(!convs[otherId]||new Date(m.created_at)>new Date(convs[otherId].created_at))convs[otherId]=m;
@@ -7949,9 +7963,40 @@ async function loadConversations(){
       else if(_pc.startsWith('%%ESP%%')){try{var _ep=JSON.parse(_pc.slice(7));preview=(_ep.t==='fiche'?'📄 Fiche de cours':_ep.t==='pub'?'📢 Publication':_ep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_ep.title?' · '+esc(_ep.title.slice(0,22)):'');}catch(e){preview='📎 Contenu partagé';}}
       else preview=esc(_pc.slice(0,35))+(_pc.length>35?'…':'');
       var unreadDot=nonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
-      return'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>';
-    }).join('');
-    var _convHtml=html||'<div style="text-align:center;padding:20px;color:var(--lite)">'+t('msg_empty_conv')+'</div>';
+      return{ts:new Date(m.created_at).getTime(),html:'<div class="msg-row'+(nonLu?' msg-unread':'')+'" data-uid="'+otherId+'" onclick="openMsg(\''+esc(nm).replace(/&#39;/g,"\\'")+'\'\,\''+otherId+'\',\''+esc(photo||'')+'\')"><div class="msg-av" data-prof="'+otherId+'" style="background:'+col+'">'+av+'</div><div class="msg-info"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" data-profnm="'+otherId+'">'+esc(nm)+'</div><div style="font-size:11px;color:'+(nonLu?'var(--or)':'var(--lite)')+';font-weight:'+(nonLu?'700':'400')+'">'+time+'</div></div><div class="msg-preview">'+(isMe?'Vous · ':'')+preview+'</div></div>'+unreadDot+'</div>'};
+    });
+
+    // Fetch conversations groupe
+    var groupeItems=[];
+    try{
+      var rg=await fetch(API+'/groupe-conversations/'+user.id,{headers:apiH()});
+      if(rg.ok){
+        var gconvs=await rg.json();
+        (gconvs||[]).forEach(function(g){
+          var gm=g.last_message||{};
+          var gIsMe=gm.sender_id===user.id;
+          var gNonLu=g.unread>0;
+          if(gNonLu)nonLus+=g.unread;
+          var gTime=gm.created_at?new Date(gm.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+          var gPc=gm.contenu||'';
+          var gPreview;
+          if(gPc.startsWith('%%ESP%%')){try{var _gep=JSON.parse(gPc.slice(7));gPreview=(_gep.t==='fiche'?'📄 Fiche':_gep.t==='pub'?'📢 Publication':_gep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_gep.title?' · '+esc(_gep.title.slice(0,20)):'');}catch(e){gPreview='📎 Contenu';}}
+          else gPreview=esc(gPc.slice(0,35))+(gPc.length>35?'…':'');
+          var gUnreadDot=gNonLu?'<div style="width:10px;height:10px;min-width:10px;border-radius:50%;background:var(--or);flex-shrink:0;align-self:center;box-shadow:0 0 0 3px rgba(255,107,43,.15)"></div>':'';
+          var gStack=_groupeAvatarStack(g.membres||[],g.total_membres||1);
+          var gTitle=esc(g.cours_title||'Groupe');
+          var gCid=escH(String(g.cours_id));
+          groupeItems.push({ts:new Date(gm.created_at||0).getTime(),html:'<div class="msg-row'+(gNonLu?' msg-unread':'')+'" onclick="openGroupeMsg(\''+gCid+'\')" style="align-items:center">'+gStack+'<div class="msg-info" style="margin-left:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><div class="msg-name" style="display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'+gTitle+'</div><div style="font-size:11px;color:'+(gNonLu?'var(--or)':'var(--lite)')+';font-weight:'+(gNonLu?'700':'400')+'">'+gTime+'</div></div><div class="msg-preview">'+(gIsMe?'Vous · ':((gm.sender_nom||'').split(' ')[0]+' · '))+gPreview+'</div></div>'+gUnreadDot+'</div>'});
+        });
+      }
+    }catch(_){}
+
+    // Merger et trier par date décroissante
+    var allItems=html.concat(groupeItems).sort(function(a,b){return b.ts-a.ts;});
+    var _isProf2=user&&user.role==='professeur';
+    var _emptyDesc2=_isProf2?'Entamez une conversation ou attendez qu\'un élève vous contacte':'Contactez un professeur depuis un cours';
+    var _emptyHtml='<div style="text-align:center;padding:60px 24px"><div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div><div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px">'+t('msg_empty_conv')+'</div><div style="font-size:13px;color:var(--lite)">'+_emptyDesc2+'</div></div>';
+    var _convHtml=allItems.length?allItems.map(function(i){return i.html;}).join(''):_emptyHtml;
     lm.style.cssText='';lm.innerHTML=_convHtml;
     lm.querySelectorAll('.msg-row').forEach(function(r){
       r.addEventListener('touchstart',function(){this.classList.add('tapped');},{passive:true});
@@ -8369,6 +8414,11 @@ function openGroupeMsg(coursId){
   var bd = g('bdGroupe'); if(bd) bd.style.display = 'flex';
   haptic(4);
 
+  // Marquer les messages groupe comme lus
+  fetch(API+'/messages/groupe/lu/'+coursId,{method:'PUT',headers:apiH()}).catch(function(){});
+  // Invalider le cache de conversations pour que le badge se mette à jour
+  _convCache=null;
+
   _loadGroupeMsgs();
   clearInterval(_groupePollTimer);
   _groupePollTimer = setInterval(_loadGroupeMsgs, 4000);
@@ -8440,7 +8490,12 @@ async function _loadGroupeMsgs(){
       var time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var nm = m.sender_nom || 'Utilisateur';
       var ini = nm[0]||'?';
-      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF8C55,var(--ord));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end">'+esc(ini)+'</div>';
+      var _sCol=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#0EA5E9','#EC4899'];
+      var _senderHash=(m.sender_id||'').split('').reduce(function(h,c){return h+c.charCodeAt(0);},0);
+      var _avBg=_sCol[_senderHash%_sCol.length];
+      var _avPhoto=(P[m.sender_id]&&P[m.sender_id].photo)||null;
+      var _avInner=_avPhoto?'<img src="'+esc(_avPhoto)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':esc(ini.toUpperCase());
+      var avHtml = isMe ? '' : '<div style="width:28px;height:28px;border-radius:50%;background:'+(_avPhoto?'transparent':_avBg)+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-end;overflow:hidden">'+_avInner+'</div>';
       var nameHtml = isMe ? '' : '<div style="font-size:11px;color:var(--lite);margin-bottom:2px;padding-left:34px">'+esc(nm)+'</div>';
       var bg = isMe ? 'linear-gradient(135deg,var(--or),var(--ord))' : 'var(--wh)';
       var col = isMe ? '#fff' : 'var(--ink)';
