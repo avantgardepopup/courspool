@@ -14034,7 +14034,7 @@ function _vBuildDemoTile(f){
 }
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
-var _isRecording=false,_intentionalLeave=false,_isDemoMode=false;
+var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
 var _vPipFeaturedSid=null; // currently displayed SID in PiP mode
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 var _vComments=[],_vCommentOpen=false,_vCommentAllowed=true;
@@ -14053,7 +14053,7 @@ function openVisioModal(url){
   document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
   _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
-  _sharing=false;_boardActive=false;_raisedHands={};
+  _sharing=false;_boardActive=false;_openFloor=false;_raisedHands={};
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
   _isRecording=false;
   if(_callTimer)clearInterval(_callTimer);
@@ -14186,6 +14186,7 @@ async function _joinDailyRoom(url,roomName){
 
 function _vOnJoined(){
   _vRenderGrid();
+  if(_isOwner)_vUpdateHands(); // show prof controls panel (open floor button)
   try{
     var local=_callObj.participants().local;
     var audioTrack=local&&local.tracks&&local.tracks.audio&&local.tracks.audio.persistentTrack;
@@ -14201,12 +14202,26 @@ function _vOnJoined(){
 }
 
 function _vCheckMutedSpeaking(){
-  if(!_localMuted||!_audioAnalyser)return;
+  if(!_audioAnalyser)return;
   var buf=new Uint8Array(_audioAnalyser.frequencyBinCount);
   _audioAnalyser.getByteFrequencyData(buf);
   var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i];
+  var avg=sum/buf.length;
+  var isSpeaking=avg>12;
+  // Muted-while-speaking banner
   var banner=g('_vMutedBanner');
-  if(banner)banner.style.display=(sum/buf.length)>12?'flex':'none';
+  if(banner)banner.style.display=(_localMuted&&isSpeaking)?'flex':'none';
+  // Speaking indicator: green pulse on mic button when unmuted and speaking
+  var micBtn=g('_vMic');
+  if(micBtn){
+    if(!_localMuted&&isSpeaking){
+      micBtn.style.boxShadow='0 0 0 3px rgba(34,192,105,.75),0 0 20px rgba(34,192,105,.4),0 2px 8px rgba(0,0,0,.3)';
+      micBtn.style.background='rgba(34,192,105,.25)';
+    }else{
+      micBtn.style.boxShadow='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
+      micBtn.style.background='rgba(255,255,255,.12)';
+    }
+  }
 }
 
 function _vOnActiveSpeaker(evt){
@@ -14254,16 +14269,31 @@ function _vOnMsg(evt){
   }else if(m.type==='give_floor'){
     if(_callObj&&m.to===_callObj.participants().local.session_id){
       _callObj.setLocalAudio(true);_localMuted=false;
+      _floorGranted=true;
       var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(false);
       var banner=g('_vMutedBanner');if(banner)banner.style.display='none';
       toast('🎤 Le prof vous donne la parole','');haptic(3);
     }
   }else if(m.type==='mute_req'){
     if(_callObj&&m.to===_callObj.participants().local.session_id){
-      _callObj.setLocalAudio(false);_localMuted=true;
+      _callObj.setLocalAudio(false);_localMuted=true;_floorGranted=false;
       var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);
       toast('Votre micro a été coupé','');
     }
+  }else if(m.type==='open_floor'){
+    _openFloor=!!m.enabled;
+    if(!_isOwner){
+      var hb=g('_vHand');
+      if(_openFloor){
+        // Open floor: student can toggle mic freely
+        toast('🎤 Parole libre — vous pouvez parler','');haptic(2);
+        if(hb){hb.style.background='rgba(34,192,105,.3)';hb.style.boxShadow='0 0 0 2px rgba(34,192,105,.7)';}
+      }else{
+        toast('Parole libre désactivée','');
+        if(hb){hb.style.background='rgba(255,255,255,.12)';hb.style.boxShadow='';}
+      }
+    }
+    if(_isOwner)_vUpdateHands();
   }else if(m.type==='reaction'){
     _vShowFloatReact(from,m.emoji);
   }else if(m.type==='comment'){
@@ -14308,6 +14338,8 @@ function _vApplyLayout(){
     var newFeat=_vGetPipFeaturedSid(sids);
     grid.style.gridTemplateColumns='1fr';grid.style.gridTemplateRows='1fr';
     grid.style.padding='0';grid.style.gap='0';grid.style.borderRadius='0';
+    // Always hide teacher control buttons in PiP (too cluttered on small bubble)
+    tiles.forEach(function(t){var sid2=t.id.replace('_vt-','');var pc=g('_vpc-'+sid2);if(pc)pc.style.display='none';});
     if(newFeat!==_vPipFeaturedSid){
       // Animate: fade old out → show new
       var oldEl=_vPipFeaturedSid?g('_vt-'+_vPipFeaturedSid):null;
@@ -14338,6 +14370,8 @@ function _vApplyLayout(){
   // ── Normal full-screen mode ──
   _vPipFeaturedSid=null;
   grid.style.padding='8px';grid.style.gap='8px';
+  // Restore teacher controls visibility
+  tiles.forEach(function(t){var sid2=t.id.replace('_vt-','');var pc=g('_vpc-'+sid2);if(pc)pc.style.display='flex';});
   tiles.forEach(function(t){t.style.display='';t.style.opacity='';t.style.transition='';t.style.borderRadius='16px';});
   if(!_pinnedSid){
     grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
@@ -14395,6 +14429,7 @@ function _vBuildTile(p,sid){
   pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
   if(_isOwner&&!isLocal){
     var pc=document.createElement('div');
+    pc.id='_vpc-'+sid;
     pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
     pc.innerHTML=''
       +'<button onclick="event.stopPropagation();_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
@@ -14426,16 +14461,25 @@ function _vPin(sid){
 function _vUpdateHands(){
   var panel=g('_vHands');if(!panel)return;
   var keys=Object.keys(_raisedHands);
-  if(!_isOwner||!keys.length){panel.style.display='none';return;}
-  // Sort chronologically by timestamp
-  keys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
+  if(!_isOwner){panel.style.display='none';return;}
+  // Always show panel for prof (even empty) to show open-floor toggle
   panel.style.display='flex';
   var _micSvgS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>';
   var _xSvgS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  panel.innerHTML='<div style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;flex-shrink:0">Mains levées ('+keys.length+')</div>'
+  // Sort chronologically by timestamp
+  keys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
+  panel.innerHTML=''
+    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-bottom:'+(keys.length?'6':'0')+'px">'
+    +'<span style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase">'+(keys.length?'Mains levées ('+keys.length+')':'Parole')+'</span>'
+    +'<button onclick="_vToggleOpenFloor()" style="'
+      +(_openFloor?'background:rgba(34,192,105,.85);box-shadow:0 0 0 1.5px rgba(34,192,105,.6),0 2px 8px rgba(34,192,105,.3);':'background:rgba(255,255,255,.12);')
+      +'border:none;color:#fff;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s">'
+    +_micSvgS+(_openFloor?'Parole libre ✓':'Parole libre')
+    +'</button>'
+    +'</div>'
     +keys.map(function(sid){var h=_raisedHands[sid];return''
       +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(255,255,255,.07)">'
-      +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(h.name)+'</span>'
+      +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✋ '+escH(h.name)+'</span>'
       +'<div style="display:flex;gap:6px;flex-shrink:0">'
       +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:linear-gradient(148deg,#22C069,#16a34a);border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(34,192,105,.3);display:flex;align-items:center;gap:5px">'+_micSvgS+'Parole</button>'
       +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center">'+_xSvgS+'</button>'
@@ -14471,6 +14515,10 @@ function _vUpdatePeople(){
 
 function _vToggleMic(){
   if(!_callObj&&!_isDemoMode)return;
+  // Students can unmute only if prof gave floor or open floor is active
+  if(_localMuted&&!_isOwner&&!_openFloor&&!_floorGranted){
+    toast('✋ Lève la main pour demander la parole','');haptic(1);return;
+  }
   _localMuted=!_localMuted;
   if(_callObj)_callObj.setLocalAudio(!_localMuted);
   var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);
@@ -14527,6 +14575,14 @@ function _vMuteP(sid){
   delete _raisedHands[sid];_vUpdateHands();haptic(1);
 }
 function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+function _vToggleOpenFloor(){
+  if(!_isOwner)return;
+  _openFloor=!_openFloor;
+  if(_callObj)_callObj.sendAppMessage({type:'open_floor',enabled:_openFloor},'*');
+  _vUpdateHands();
+  toast(_openFloor?'🎤 Parole libre activée pour tous':'Parole libre désactivée','');
+  haptic(2);
+}
 
 function _vToggleReact(){
   _reactOpen=!_reactOpen;
@@ -14811,6 +14867,9 @@ function _vOpenBoard(){
   pip.id='_vPip';
   pip.style.cssText='position:fixed;z-index:10050;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);width:'+sw+'px;height:'+sh+'px;left:'+_pipX+'px;top:'+_pipY+'px;background:#0d0d18;user-select:none;-webkit-user-select:none;touch-action:none;transform:scale(0.82);opacity:0;transition:transform 380ms cubic-bezier(.34,1.56,.64,1),opacity 220ms ease;';
   grid.style.cssText='position:absolute;inset:0;display:grid;gap:4px;padding:4px;box-sizing:border-box;background:#0d0d18;';
+  // Hide all tiles before appending to prevent flash of all participants
+  grid.querySelectorAll('[id^="_vt-"]').forEach(function(t){t.style.display='none';});
+  _vPipFeaturedSid=null; // reset so _vApplyLayout picks the right featured tile
   pip.appendChild(grid);_vApplyLayout();
   // Drag handle
   var ph=document.createElement('div');
@@ -14903,13 +14962,13 @@ function _boardInitCanvas(){
   var canv=g('_vBoardCanvas');if(!canv)return;
   var scroll=g('_brdScroll');if(!scroll)return;
   var page=g('_brdPage');
-  // Show rotate prompt instead if phone portrait
-  if(_brdIsPhonePortrait()){_brdCheckOrientation();return;}
-  // Add orientation listener once
+  // Register orientation listener FIRST (before portrait check, so rotating from portrait works)
   if(!_brdOrientHandler){
     _brdOrientHandler=function(){setTimeout(_brdCheckOrientation,120);};
     window.addEventListener('resize',_brdOrientHandler);
   }
+  // Show rotate prompt instead if phone portrait
+  if(_brdIsPhonePortrait()){_brdCheckOrientation();return;}
   var dpr=window.devicePixelRatio||1;
   var sw=scroll.clientWidth||window.innerWidth;
   var sh=scroll.clientHeight||(window.innerHeight-180);
@@ -15720,7 +15779,7 @@ function closeVisioModal(){
   if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
   if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
-  _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;
+  _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
   var nav=g('bnav');if(nav)nav.style.display='';
   haptic(4);
