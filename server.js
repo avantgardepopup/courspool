@@ -2944,9 +2944,17 @@ app.post('/teacher/:id/announcements/:ann_id/vote', requireAuth, async (req, res
 // ── TEACHER RESOURCES ─────────────────────────────────────────────────────────
 app.get('/teacher/:id/resources', async (req, res) => {
   try {
-    const isFollower = req.user && req.user.id;
+    const isOwner = req.user && req.user.id === req.params.id;
     let query = supabase.from('teacher_resources').select('*').eq('teacher_id', req.params.id).order('created_at', { ascending: false });
-    if (!isFollower) query = query.eq('access_level', 'public');
+    if (isOwner) {
+      // Le prof voit tout
+    } else if (req.user && req.user.id) {
+      // Élève connecté : voit public + followers, pas private
+      query = query.in('access_level', ['public', 'followers']);
+    } else {
+      // Non connecté : voit uniquement public
+      query = query.eq('access_level', 'public');
+    }
     const { data, error } = await query;
     if (error) return res.status(500).json({ error });
     res.json(data || []);
