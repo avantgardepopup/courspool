@@ -180,6 +180,14 @@ async function discordStripeAlert(message) {
   await discordAlert(message, process.env.DISCORD_WEBHOOK_STRIPE || process.env.DISCORD_WEBHOOK_URL);
 }
 
+// ── Log de sécurité structuré ─────────────────────────────────
+function _secLog(event, req, extra = {}) {
+  const ip = req?.ip || req?.connection?.remoteAddress || '?';
+  const ua = (req?.headers?.['user-agent'] || '').slice(0, 150);
+  const ts = new Date().toISOString();
+  console.log(JSON.stringify({ ts, event, ip, ua, ...extra }));
+}
+
 // Compteur de tentatives échouées par IP (fenêtre 5 min)
 const failedLoginMap = new Map();
 setInterval(function() {
@@ -187,7 +195,7 @@ setInterval(function() {
   failedLoginMap.forEach(function(data, ip) { if (data.firstFail < cutoff) failedLoginMap.delete(ip); });
 }, 5 * 60 * 1000);
 
-function recordFailedLogin(ip, email) {
+function recordFailedLogin(ip, email, req) {
   const now = Date.now();
   const cutoff = now - 5 * 60 * 1000;
   if (!failedLoginMap.has(ip) || failedLoginMap.get(ip).firstFail < cutoff) {
@@ -195,15 +203,17 @@ function recordFailedLogin(ip, email) {
   } else {
     const d = failedLoginMap.get(ip);
     d.count++;
-    // Alerte à partir de 3 échecs en 5 min, une seule fois par fenêtre
+    // Alerte à partir de 5 échecs en 5 min, une seule fois par fenêtre
     if (d.count >= 5 && !d.alerted) {
       d.alerted = true;
       const time = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
+      const ua = (req?.headers?.['user-agent'] || '').slice(0, 120);
       discordAlert(
         `🚨 **Tentatives de connexion suspectes**\n` +
         `> **IP :** \`${ip}\`\n` +
         `> **Dernier email :** \`${email}\`\n` +
         `> **Tentatives :** ${d.count} échecs en moins de 5 min\n` +
+        `> **User-Agent :** ${ua || '?'}\n` +
         `> **Heure :** ${time}`
       );
     }
@@ -332,8 +342,9 @@ function requireAdmin(req, res, next) {
   if (!req.user || !req.user.id) return res.status(401).json({ error: 'Non authentifié' });
   if (!isAdmin(req.user.id)) {
     const ip = req.ip || req.connection.remoteAddress;
-    console.warn(`[ADMIN] Tentative d'accès non autorisé — user: ${req.user.id} | ip: ${ip} | route: ${req.method} ${req.path}`);
-    discordAlert(`🚨 **Tentative d'accès admin non autorisé**\n> **User ID :** \`${req.user.id}\`\n> **IP :** \`${ip}\`\n> **Route :** ${req.method} ${req.path}`);
+    const ua = (req.headers?.['user-agent'] || '').slice(0, 120);
+    _secLog('admin_unauthorized', req, { userId: req.user.id, route: `${req.method} ${req.path}` });
+    discordAlert(`🚨 **Tentative d'accès admin non autorisé**\n> **User ID :** \`${req.user.id}\`\n> **IP :** \`${ip}\`\n> **Route :** ${req.method} ${req.path}\n> **User-Agent :** ${ua || '?'}`);
     return res.status(403).json({ error: 'Accès admin requis' });
   }
   next();
@@ -795,8 +806,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
       matieres: req.body.matieres || null,
       verified: role === 'eleve' ? true : false
     }]);
-    const ip = req.ip || req.connection.remoteAddress;
-    console.log(`[AUTH] Inscription — email: ${email} | role: ${role} | ip: ${ip}`);
+    _secLog('register', req, { email, role, userId: data.user.id });
     // Email de bienvenue
     const userName = (prenom + ' ' + (nom||'')).trim();
     sendEmailWelcome(email, prenom || userName, role).catch(() => {});
@@ -828,16 +838,16 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      console.warn(`[AUTH] Échec login — email: ${email} | ip: ${ip} | raison: ${error.message}`);
-      recordFailedLogin(ip, email);
+      _secLog('login_fail', req, { email, reason: error.message });
+      recordFailedLogin(ip, email, req);
       return res.status(400).json({ error: error.message });
     }
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
     if (profile?.statut_compte === 'bloqué') {
-      console.warn(`[AUTH] Tentative login compte bloqué — email: ${email} | ip: ${ip}`);
+      _secLog('login_blocked', req, { email, userId: data.user.id });
       return res.status(403).json({ error: 'Compte bloqué' });
     }
-    console.log(`[AUTH] Login réussi — email: ${email} | ip: ${ip}`);
+    _secLog('login_ok', req, { email, userId: data.user.id });
     res.json({ user: data.user, session: data.session, profile });
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
