@@ -9,7 +9,8 @@
       "js.stripe.com",
       "hooks.stripe.com",
       "devoted-achievement-production-fdfa.up.railway.app",
-      "*.daily.co"
+      "*.daily.co",
+      "*.excalidraw.com"
     ]
   },
   "ios": {

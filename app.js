@@ -13930,7 +13930,7 @@ function snapNavPill(nav){
 
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
-var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false;
+var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 
 function openVisioModal(url){
   if(!url)return;
@@ -13939,7 +13939,7 @@ function openVisioModal(url){
   if(!g('bdVisio')){var bd=document.createElement('div');bd.id='bdVisio';bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#111;display:none;flex-direction:column';bd.innerHTML=_buildVisioHTML();document.body.appendChild(bd);}
   g('bdVisio').style.display='flex';
   var nav=g('bnav');if(nav)nav.style.display='none';
-  _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;_sharing=false;_raisedHands={};
+  _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;_sharing=false;_boardActive=false;_raisedHands={};
   if(_callTimer)clearInterval(_callTimer);
   _updateVisioTimer();
   _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
@@ -13956,11 +13956,21 @@ function _buildVisioHTML(){
     +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Quitter</button>'
     +'</div>'
     +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.13);border-bottom:1px solid rgba(255,107,43,.22);z-index:2;flex-shrink:0"></div>'
-    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0"></div>'
+    // Zone centrale : grille vidéo + tableau (flex-direction:column partagée)
+    +'<div style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">'
+    +'<div id="_vGrid" style="flex:1;display:grid;gap:2px;overflow:hidden;background:#000;min-height:0;transition:flex .3s"></div>'
+    +'<div id="_vBoard" style="display:none;flex:0 0 60%;min-height:0;border-top:2px solid rgba(255,107,43,.35);position:relative;background:#fff">'
+    +'<div style="position:absolute;top:6px;right:8px;z-index:10">'
+    +'<button onclick="_vToggleBoard()" style="background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)">✕ Fermer le tableau</button>'
+    +'</div>'
+    +'<iframe id="_vBoardIframe" src="" style="width:100%;height:100%;border:none" allow="clipboard-read; clipboard-write"></iframe>'
+    +'</div>'
+    +'</div>'
     +'<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(0,0,0,.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-shrink:0">'
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'font-size:20px" title="Lever la main">✋</button>'
+    +'<button id="_vBoardBtn" onclick="_vToggleBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 8h4M7 12h4M15 8l2 4-2 4"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
     +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:#e53e3e;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
@@ -14145,12 +14155,46 @@ function _vMuteP(sid){
 }
 function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
 
+function _getWhiteboardUrl(visioUrl){
+  // Dérive un room ID + encryption key Excalidraw depuis le nom de la room Daily
+  var roomName=visioUrl.split('/').pop();
+  var h1=0,h2=0;
+  for(var i=0;i<roomName.length;i++){h1=(Math.imul(h1,31)+roomName.charCodeAt(i))>>>0;h2=(Math.imul(h2,37)+roomName.charCodeAt(i))>>>0;}
+  var h3=(Math.imul(h1,1664525)+1013904223)>>>0;var h4=(Math.imul(h2,1664525)+1013904223)>>>0;
+  var roomId=(h1.toString(16).padStart(8,'0')+h2.toString(16).padStart(8,'0')+h3.toString(16).padStart(4,'0')).slice(0,20);
+  var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  var key='';var seed=h3^h4;
+  for(var j=0;j<22;j++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;key+=chars[seed>>>26];}
+  return'https://excalidraw.com/#room='+roomId+','+key;
+}
+
+function _vToggleBoard(){
+  _boardActive=!_boardActive;
+  var board=g('_vBoard');var grid=g('_vGrid');var btn=g('_vBoardBtn');
+  if(_boardActive){
+    var iframe=g('_vBoardIframe');
+    if(iframe&&!iframe.src){iframe.src=_getWhiteboardUrl(_visioCurrentUrl);}
+    if(board)board.style.display='block';
+    if(grid){grid.style.flex='0 0 35%';grid.style.minHeight='0';}
+    if(btn)btn.style.background='rgba(255,107,43,.55)';
+    toast('Tableau blanc ouvert — collaboratif en temps réel','');
+  }else{
+    if(board)board.style.display='none';
+    if(grid){grid.style.flex='1';grid.style.minHeight='0';}
+    if(btn)btn.style.background='rgba(255,255,255,.15)';
+  }
+  haptic(1);
+}
+
 function closeVisioModal(){
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
   var grid=g('_vGrid');if(grid)grid.innerHTML='';
-  _raisedHands={};_handRaised=false;_sharing=false;
+  _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;
+  var board=g('_vBoard');if(board)board.style.display='none';
+  var iframe=g('_vBoardIframe');if(iframe)iframe.src='';
+  var grid=g('_vGrid');if(grid)grid.style.flex='1';
   var nav=g('bnav');if(nav)nav.style.display='';
   haptic(4);
 }
