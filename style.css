@@ -529,8 +529,13 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
   justify-content: center;
   flex-shrink: 0;
   margin-top: -24px;
-  box-shadow: 0 0 0 5px rgba(255,255,255,.97), 0 8px 24px rgba(255,69,0,.5);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 8px 28px rgba(255,69,0,.55);
   transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+  animation: fabPulse 2.4s ease-in-out infinite;
+}
+@keyframes fabPulse {
+  0%,100% { box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 8px 28px rgba(255,69,0,.55), 0 0 0 0 rgba(255,107,43,.0); }
+  50%      { box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 8px 28px rgba(255,69,0,.7),  0 0 0 10px rgba(255,107,43,.18); }
 }
 .bni-fab-lbl {
   font-size: 11px;
@@ -542,13 +547,20 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
 .bni-fab:active { opacity: 1; transform: none; }
 .bni-fab:active .bni-add-circle {
   transform: scale(.88);
-  box-shadow: 0 0 0 5px rgba(255,255,255,.97), 0 4px 14px rgba(255,69,0,.4);
+  animation: none;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.35), 0 4px 14px rgba(255,69,0,.4);
 }
 html.dk .bni-fab .bni-add-circle {
-  box-shadow: 0 0 0 5px rgb(18,17,16), 0 8px 24px rgba(255,69,0,.55);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 8px 28px rgba(255,69,0,.6);
+  animation: fabPulseDk 2.4s ease-in-out infinite;
+}
+@keyframes fabPulseDk {
+  0%,100% { box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 8px 28px rgba(255,69,0,.6),  0 0 0 0 rgba(255,107,43,.0); }
+  50%      { box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 8px 28px rgba(255,69,0,.75), 0 0 0 10px rgba(255,107,43,.22); }
 }
 html.dk .bni-fab:active .bni-add-circle {
-  box-shadow: 0 0 0 5px rgb(18,17,16), 0 4px 14px rgba(255,69,0,.4);
+  animation: none;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.18), 0 4px 14px rgba(255,69,0,.4);
 }
 .bnav.on { display: flex; }
 /* Pseudo-élément qui étend le fond jusqu'au bas absolu de l'écran (home indicator iOS) */
@@ -1235,6 +1247,7 @@ html.dk .fav-cours-card-title,html.dk .fav-prof-name{color:var(--ink);}
 /* mobile nav — floating pill, no bottom bar */
 .rban{background:var(--or);border-radius:12px;padding:46px 16px 16px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
 .rban::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.07);z-index:0;}
+.rban .card-badge-subj{position:absolute;top:10px;left:14px;max-width:calc(100% - 90px);}
 .bdn{background:var(--bg);border-radius:12px;padding:12px;margin-bottom:12px;}
 .br{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;}
 .br:not(:last-child){border-bottom:1px solid var(--bdr);}
