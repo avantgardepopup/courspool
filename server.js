@@ -1057,9 +1057,11 @@ app.post('/stripe/payment-intent', requireAuth, async (req, res) => {
     // Vérifier que le cours n'est pas complet (places réelles + verrous temporaires)
     if (!pour_ami) {
       const locked = lockedPlacesCount(cours_id, user_id);
-      const placesEffectives = cours.places_prises + locked;
-      if (placesEffectives >= cours.places_max) {
-        return res.status(400).json({ error: 'Ce cours est complet' });
+      if (cours.places_prises >= cours.places_max) {
+        return res.status(400).json({ error: 'Ce cours est complet', full: true });
+      }
+      if (cours.places_prises + locked >= cours.places_max) {
+        return res.status(400).json({ error: 'Une réservation est en cours, réessayez dans quelques minutes.', locking: true });
       }
     }
     const montant = Math.round((cours.prix_total / (cours.places_max || 1)) * 100) / 100;
