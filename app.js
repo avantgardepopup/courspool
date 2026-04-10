@@ -11882,99 +11882,55 @@ async function subCrStep(){
       if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
       _published++;
     }
-    haptic([10,50,100,50,10]);closeCrStep();
-    await loadData();buildCards();buildAccLists();
-    _showCoursePublishedSheet({
-      titre:_sd.titre,
-      matiere:_sd.matiere_key||_sd.matiere||'',
-      mode:_sd.mode,
-      prix:_sd.prix,
-      places:_sd.places,
-      lieu:_sd.lieu||'',
-      date:_dates[0],
-      nbSeances:_published,
-      visioUrl:_firstVisioUrl||''
-    });
+    haptic([10,50,100,50,10]);
+    loadData().then(function(){buildCards();buildAccLists();});
+    _showCoursePublishedStep(_firstVisioUrl,_published);
   }catch(e){toast(t('t_error'),e.message||'Impossible de publier');if(cta){cta.disabled=false;cta.textContent='Publier';}}
 }
 
-function _showCoursePublishedSheet(o){
-  var old=g('_coursePublishedBd');if(old)old.remove();
-  var bd=document.createElement('div');
-  bd.id='_coursePublishedBd';
-  bd.style.cssText='position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-end;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
+function _showCoursePublishedStep(visioUrl,nbSeances){
+  // Masquer la barre de progression et les boutons nav
+  var fill=g('stepFill');if(fill)fill.parentElement.parentElement.style.display='none';
+  var back=g('stepBackBtn');if(back)back.style.visibility='hidden';
+  var closeBtn=g('stepCloseBtn');if(closeBtn)closeBtn.style.display='none';
 
-  var mat=MATIERES.find(function(m){return m.key===o.matiere;});
-  var matColor=mat?mat.color:'#7C3AED';
-  var matLabel=mat?mL(mat):(o.matiere||'Cours');
-  var dateStr='';
-  if(o.date){
-    var d=o.date;
-    dateStr=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' à '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-    dateStr=dateStr.charAt(0).toUpperCase()+dateStr.slice(1);
-  }
-  var ppEleve=o.prix&&o.places?Math.ceil(o.prix/o.places):0;
-  var isVisio=o.mode==='visio';
-
-  // Rows de la fiche
-  var rows='';
-  if(dateStr)rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bdr)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>'
-    +'<div style="font-size:14px;color:var(--ink);font-weight:500">'+esc(dateStr)+'</div></div>';
-  rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bdr)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="18" height="18" style="flex-shrink:0">'+(isVisio?'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>'  :'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>')+'</svg>'
-    +'<div style="font-size:14px;color:var(--ink);font-weight:500">'+(isVisio?'Cours en ligne':(o.lieu?esc(o.lieu):'À définir'))+'</div></div>';
-  if(o.prix)rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bdr)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
-    +'<div style="font-size:14px;color:var(--ink);font-weight:500"><strong>'+o.prix+'€</strong> au total'+(ppEleve?' · <strong style="color:var(--or)">'+ppEleve+'€</strong>/élève ('+o.places+' places)':'')+'</div></div>';
-  if(o.nbSeances>1)rows+='<div style="display:flex;align-items:center;gap:12px;padding:12px 0">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="18" height="18" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>'
-    +'<div style="font-size:14px;color:var(--ink);font-weight:500"><strong>'+o.nbSeances+'</strong> séances programmées</div></div>';
-
-  // Bloc lien visio
+  // Contenu de l'écran de succès
+  var body=g('stepBody');if(!body)return;
   var visioBlock='';
-  if(isVisio&&o.visioUrl){
-    visioBlock='<div style="margin-top:16px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Lien de visio</div>'
-      +'<div style="display:flex;align-items:center;gap:10px;background:rgba(0,113,227,.06);border:1.5px solid rgba(0,113,227,.18);border-radius:14px;padding:12px 14px">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#0055B3" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
-      +'<div style="flex:1;font-size:12px;font-weight:600;color:#0055B3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(o.visioUrl)+'</div>'
-      +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(o.visioUrl)+'\')" style="flex-shrink:0;background:#0055B3;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Copier</button>'
+  if(visioUrl){
+    visioBlock='<div style="width:100%;margin-top:24px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">Lien de visio</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:16px;padding:14px 16px">'
+      +'<div style="flex:1;font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(visioUrl)+'</div>'
+      +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(visioUrl)+'\')" style="flex-shrink:0;background:transparent;border:none;padding:6px;cursor:pointer;color:var(--or);-webkit-tap-highlight-color:transparent">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'
+      +'</button>'
       +'</div>'
-      +(o.nbSeances>1?'<div style="margin-top:6px;font-size:11.5px;color:var(--lite)">Chaque séance a son propre lien — retrouvez-les dans vos cours.</div>':'')
+      +(nbSeances>1?'<div style="margin-top:8px;font-size:12px;color:var(--lite)">Chaque séance a son propre lien — retrouvez-les dans vos cours.</div>':'')
       +'</div>';
   }
 
-  bd.innerHTML=
-    '<div style="width:100%;max-width:480px;background:var(--wh);border-radius:28px 28px 0 0;padding:0 0 max(28px,calc(env(safe-area-inset-bottom,0px)+20px));box-shadow:0 -8px 40px rgba(0,0,0,.18)">'
-    +'<div style="text-align:center;padding:14px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="padding:20px 22px 0">'
-    // Header
-    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">'
-    +'<div style="width:52px;height:52px;background:#ECFDF5;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><polyline points="20 6 9 17 4 12"/></svg>'
+  body.innerHTML=
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px 0;width:100%">'
+    // Icone succès animée
+    +'<div style="width:80px;height:80px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:_checkPop .4s cubic-bezier(.34,1.56,.64,1)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>'
     +'</div>'
-    +'<div>'
-    +'<div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Cours publié\u00a0!</div>'
-    +'<div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:700;color:'+matColor+';background:'+matColor+'18;border-radius:50px;padding:3px 10px">'+esc(matLabel)+'</div>'
-    +'</div>'
-    +'</div>'
-    // Titre du cours
-    +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.4">'+esc(o.titre||'Cours sans titre')+'</div>'
-    // Fiche détails
-    +'<div style="background:var(--bg);border-radius:16px;padding:4px 14px">'+rows+'</div>'
-    // Lien visio si applicable
+    +'<div style="font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:8px">Cours publié\u00a0!</div>'
+    +'<div style="font-size:15px;color:var(--lite);text-align:center;line-height:1.6">'+(nbSeances>1?nbSeances+' séances programmées':'Votre cours est maintenant visible')+'</div>'
     +visioBlock
-    +'</div>'
-    +'<div style="padding:18px 22px 0">'
-    +'<button id="_coursePublishedOkBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:16px;padding:15px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">OK</button>'
-    +'</div>'
     +'</div>';
 
-  bd.addEventListener('click',function(e){if(e.target===bd)bd.remove();});
-  document.body.appendChild(bd);
-  var okBtn=document.getElementById('_coursePublishedOkBtn');
-  if(okBtn)okBtn.onclick=function(){bd.remove();};
+  // Injecter l'animation si pas encore présente
+  if(!g('_checkPopStyle')){
+    var st=document.createElement('style');st.id='_checkPopStyle';
+    st.textContent='@keyframes _checkPop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}';
+    document.head.appendChild(st);
+  }
+
+  // Bouton CTA → fermer
+  var cta=g('stepCta');
+  if(cta){cta.disabled=false;cta.textContent='OK';cta.onclick=function(){closeCrStep();};}
 }
 
 function _copyVisioUrl(url){
