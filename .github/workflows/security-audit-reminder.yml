@@ -1,0 +1,56 @@
+name: Rappel audit sécurité
+
+on:
+  schedule:
+    # Chaque lundi à 9h00 (heure Paris = UTC+2 en été → 7h UTC)
+    - cron: '0 7 * * 1'
+    # 1er de chaque mois à 9h → audit mensuel
+    - cron: '0 7 1 * *'
+    # 1er janvier et 1er juillet → audit semestriel
+    - cron: '0 7 1 1,7 *'
+  workflow_dispatch: # Lancer manuellement si besoin
+
+jobs:
+  weekly-reminder:
+    name: Rappel hebdomadaire
+    # Tourne chaque lundi (jour de semaine = 1)
+    if: github.event_name == 'workflow_dispatch' || (github.event.schedule == '0 7 * * 1' && !startsWith(github.event.schedule, '0 7 1'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rappel hebdomadaire Discord
+        run: |
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "**Checklist sécurité hebdomadaire**\n> Prend 5 min, fais-le maintenant.\n\n**À vérifier cette semaine :**\n> `npm audit` dans le repo CoursPool — repère les nouvelles CVE\n> Sentry `#front-end` et `#back-end` — des erreurs récurrentes non résolues ?\n> Railway Logs — pics d'\''erreurs 500 inhabituels ?\n> `#alertes-securite` — tentatives de brute-force cette semaine ?\n> `#stripe-alertes` — transactions suspectes ou chargebacks ?"
+            }'
+
+  monthly-reminder:
+    name: Rappel mensuel
+    # Tourne le 1er de chaque mois
+    if: github.event.schedule == '0 7 1 * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rappel mensuel Discord
+        run: |
+          MONTH=$(date +%B)
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"**Audit mensuel — ${MONTH}**\n\n**Dépendances**\n> Dependabot : des PRs en attente à merger ?\n> Vérifie les changelogs des mises à jour mergées ce mois\n\n**Accès & Secrets**\n> Railway : des variables d'env inutilisées ou exposées ?\n> Vercel : des membres avec accès non nécessaires ?\n> Supabase : des API keys exposées dans les logs ?\n> Stripe : restricted keys bien en place (pas la clé secrète full) ?\n\n**Monitoring**\n> Sentry : erreurs résolues ce mois ? Nouvelles tendances ?\n> Volume de requêtes Railway — tendance anormale ?\"
+            }"
+
+  semiannual-reminder:
+    name: Rappel semestriel
+    # Tourne le 1er janvier et 1er juillet
+    if: github.event.schedule == '0 7 1 1,7 *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rappel semestriel Discord
+        run: |
+          YEAR=$(date +%Y)
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"**Audit semestriel — ${YEAR}**\n\n**Rotation des secrets (à faire maintenant)**\n> Railway : régénérer STRIPE_SECRET_KEY, JWT_SECRET, RESEND_API_KEY\n> Supabase : régénérer SUPABASE_SECRET_KEY\n> Discord : vérifier que les webhooks fonctionnent toujours\n> GitHub : révoquer les anciens personal access tokens\n\n**Revue des accès admin**\n> ADMIN_USER_IDS dans Railway — supprimer les anciens comptes admin\n> Supabase RLS (Row Level Security) — les règles sont-elles toujours adaptées ?\n> Vercel & Railway : supprimer les membres qui n'\''ont plus accès\n\n**Revue technique**\n> SRI (intégrité Sentry) — vérifier que le hash est toujours valide\n> CSP — de nouveaux domaines à autoriser ou à retirer ?\n> Stripe API version — une migration requise ?\n> npm audit complet + mise à jour des dépendances majeures\"
+            }"
