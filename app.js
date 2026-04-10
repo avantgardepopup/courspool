@@ -2502,7 +2502,7 @@ async function checkStripeReturn(){
       else{setTimeout(tryOpenCours,1200);}
       return;
     }
-    if(!paid||!coursId){checkPrivateCoursAccess();return;}
+    if(!paid||!coursId){checkPrivateCoursAccess();_checkResumePayment();return;}
     localStorage.removeItem('cp_stripe_pending');
     if(!pourAmi){res[coursId]=true;try{localStorage.setItem('cp_res',JSON.stringify(Object.keys(res)));}catch(e){}}
     await loadData();
@@ -2529,6 +2529,51 @@ async function checkStripeReturn(){
 }
 
 function shake(id){var e=g(id);e.style.animation='shake .3s';setTimeout(function(){e.style.animation=''},400);}
+
+// Reprendre un paiement interrompu (crash app, perte réseau)
+function _checkResumePayment(){
+  if(!user||!user.id)return;
+  try{
+    var raw=localStorage.getItem('cp_pay_resume');
+    if(!raw)return;
+    var d=JSON.parse(raw);
+    // Verrou valide 5 min — même durée que le verrou serveur
+    if(!d.pi||!d.cs||!d.cid||Date.now()-d.ts>5*60*1000){
+      localStorage.removeItem('cp_pay_resume');
+      return;
+    }
+    // Proposer de reprendre après un court délai
+    setTimeout(function(){
+      var cours=C.find(function(x){return String(x.id)===String(d.cid);});
+      var titre=cours?cours.titre:'votre cours';
+      if(confirm('Vous avez un paiement en cours pour "'+titre+'". Voulez-vous le finaliser ?')){
+        // Rouvrir la sheet avec le client_secret existant (pas de nouveau PI)
+        _payCoursId=d.cid;
+        _payIntentId=d.pi;
+        var sheet=g('bdPayment');
+        if(sheet){
+          sheet.style.display='flex';
+          document.body.style.overflow='hidden';
+          if(!_stripeInstance&&window.Stripe)_stripeInstance=Stripe(STRIPE_PK);
+          if(_stripeInstance){
+            var dk=document.documentElement.classList.contains('dk');
+            var appearance={theme:dk?'night':'stripe',variables:{colorPrimary:'#FF6B2B',borderRadius:'10px',fontFamily:'Plus Jakarta Sans, system-ui, sans-serif',fontSizeBase:'15px',spacingUnit:'4px'}};
+            _payElements=_stripeInstance.elements({clientSecret:d.cs,appearance:appearance});
+            var pe=_payElements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
+            var el=g('stripe-payment-element');if(el){el.innerHTML='';pe.mount('#stripe-payment-element');}
+            var btn=g('payBtn'),btnTxt=g('payBtnTxt');
+            if(cours){var pp=cours.sp>0?Math.ceil(cours.tot/cours.sp):0;g('payCoursTitle').textContent=cours.titre;g('payAmount').textContent=pp+'€';if(btnTxt)btnTxt.textContent='Payer '+pp+'€';}
+            pe.on('ready',function(){if(btn){btn.disabled=false;btn.style.opacity='1';}});
+          }
+        }
+      } else {
+        // Refus — libérer le verrou et nettoyer
+        localStorage.removeItem('cp_pay_resume');
+        fetch(API+'/stripe/cancel-lock',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:d.pi})}).catch(function(){});
+      }
+    },1500);
+  }catch(e){}
+}
 
 // PAGES
 function goAccount(){
@@ -9756,6 +9801,10 @@ async function openPaymentSheet(id,pourAmi){
     if(data.error){toast(t('t_error'),data.error,true);closePaymentSheet();return;}
     if(data.already_reserved){toast(t('t_already_res'),t('t_already_res_s'));closePaymentSheet();return;}
     _payIntentId=data.payment_intent_id||null;
+    // Sauvegarder pour reprendre si l'app crash
+    if(_payIntentId){
+      try{localStorage.setItem('cp_pay_resume',JSON.stringify({pi:_payIntentId,cs:data.client_secret,cid:_payCoursId,ts:Date.now()}));}catch(e){}
+    }
     if(!_stripeInstance){if(!window.Stripe){toast(t('t_error'),t('t_payment_svc'),true);closePaymentSheet();return;}_stripeInstance=Stripe(STRIPE_PK);}
     var dk=document.documentElement.classList.contains('dk');
     var appearance={
@@ -9803,6 +9852,7 @@ async function submitPayment(){
       var d2=await r2.json();
       if(d2.success||d2.already_existed){
         _payIntentId=null; // paiement réussi — ne pas cancel le verrou
+        try{localStorage.removeItem('cp_pay_resume');}catch(e){}
         closePaymentSheet();
         localStorage.removeItem('cp_stripe_pending');
         if(!_payPourAmi)res[_payCoursId]=true;
@@ -9853,6 +9903,7 @@ function closePaymentSheet(){
   if(_payIntentId){
     var pid=_payIntentId;
     _payIntentId=null;
+    try{localStorage.removeItem('cp_pay_resume');}catch(e){}
     fetch(API+'/stripe/cancel-lock',{method:'POST',headers:apiH(),body:JSON.stringify({payment_intent_id:pid})}).catch(function(){});
   }
 }

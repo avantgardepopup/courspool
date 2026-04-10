@@ -191,7 +191,7 @@ function recordFailedLogin(ip, email) {
 // ── Verrous temporaires de places (10 min) ────────────────────
 // clé : `${cours_id}:${user_id}` → { payment_intent_id, expiresAt }
 const placeLocks = new Map();
-const LOCK_TTL = 10 * 60 * 1000; // 10 minutes
+const LOCK_TTL = 5 * 60 * 1000; // 5 minutes
 
 setInterval(function() {
   const now = Date.now();
