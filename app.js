@@ -11906,14 +11906,14 @@ function _showCoursePublishedStep(visioUrl,nbSeances){
   var visioBlock='';
   if(visioUrl){
     visioBlock='<div style="width:100%;margin-top:24px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">Lien de visio</div>'
+      +'<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px">'+t('wiz_lien_visio')+'</div>'
       +'<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:16px;padding:14px 16px">'
       +'<div style="flex:1;font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(visioUrl)+'</div>'
       +'<button id="_visioCopyBtn" onclick="_copyVisioUrl(\''+escH(visioUrl)+'\')" style="flex-shrink:0;background:transparent;border:none;padding:6px;cursor:pointer;color:var(--or);-webkit-tap-highlight-color:transparent">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'
       +'</button>'
       +'</div>'
-      +(nbSeances>1?'<div style="margin-top:8px;font-size:12px;color:var(--lite)">Chaque séance a son propre lien — retrouvez-les dans vos cours.</div>':'')
+      +(nbSeances>1?'<div style="margin-top:8px;font-size:12px;color:var(--lite)">'+t('wiz_chaque_seance_note')+'</div>':'')
       +'</div>';
   }
 
@@ -11923,8 +11923,8 @@ function _showCoursePublishedStep(visioUrl,nbSeances){
     +'<div style="width:80px;height:80px;background:#ECFDF5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;animation:_checkPop .4s cubic-bezier(.34,1.56,.64,1)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>'
     +'</div>'
-    +'<div style="font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:8px">Cours publié\u00a0!</div>'
-    +'<div style="font-size:15px;color:var(--lite);text-align:center;line-height:1.6">'+(nbSeances>1?nbSeances+' séances programmées':'Votre cours est maintenant visible')+'</div>'
+    +'<div style="font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:8px">'+t('wiz_cours_publie')+'</div>'
+    +'<div style="font-size:15px;color:var(--lite);text-align:center;line-height:1.6">'+(nbSeances>1?nbSeances+'\u00a0'+t('wiz_seances_prog'):t('wiz_cours_visible'))+'</div>'
     +visioBlock
     +'</div>';
 
