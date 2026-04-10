@@ -309,7 +309,14 @@ async function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!isAdmin(req.user.id)) return res.status(403).json({ error: 'Accès admin requis' });
+  // Vérifier d'abord que l'utilisateur est authentifié
+  if (!req.user || !req.user.id) return res.status(401).json({ error: 'Non authentifié' });
+  if (!isAdmin(req.user.id)) {
+    const ip = req.ip || req.connection.remoteAddress;
+    console.warn(`[ADMIN] Tentative d'accès non autorisé — user: ${req.user.id} | ip: ${ip} | route: ${req.method} ${req.path}`);
+    discordAlert(`🚨 **Tentative d'accès admin non autorisé**\n> **User ID :** \`${req.user.id}\`\n> **IP :** \`${ip}\`\n> **Route :** ${req.method} ${req.path}`);
+    return res.status(403).json({ error: 'Accès admin requis' });
+  }
   next();
 }
 
