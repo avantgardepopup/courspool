@@ -2142,11 +2142,18 @@ app.put('/messages/lu/:user_id', requireAuth, async (req, res) => {
 });
 
 // UPLOAD PHOTO PROFIL
+const _ALLOWED_DOC_EXTS = ['jpg','jpeg','png','webp','pdf'];
+function _validateStoragePath(storagePath) {
+  const ext = (storagePath.split('.').pop() || '').toLowerCase();
+  return _ALLOWED_DOC_EXTS.includes(ext);
+}
+
 // CNI — upload pièce d'identité
 app.post('/upload/cni', requireAuth, async (req, res) => {
   const { storagePath, userId, filename } = req.body;
   if (!storagePath || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
+  if (!_validateStoragePath(storagePath)) return res.status(400).json({ error: 'Type de fichier non autorisé' });
   try {
     const { data: urlData } = supabase.storage.from('verification').getPublicUrl(storagePath);
     const cniUrl = urlData.publicUrl;
@@ -2169,6 +2176,7 @@ app.post('/upload/diplome', requireAuth, async (req, res) => {
   if (!storagePath || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Réservé aux professeurs' });
+  if (!_validateStoragePath(storagePath)) return res.status(400).json({ error: 'Type de fichier non autorisé' });
   try {
     const { data: urlData } = supabase.storage.from('verification').getPublicUrl(storagePath);
     const diplomeUrl = urlData.publicUrl;
@@ -2187,6 +2195,7 @@ app.post('/upload/casier', requireAuth, async (req, res) => {
   if (!storagePath || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
   if (req.user.role !== 'professeur') return res.status(403).json({ error: 'Réservé aux professeurs' });
+  if (!_validateStoragePath(storagePath)) return res.status(400).json({ error: 'Type de fichier non autorisé' });
   try {
     const { data: urlData } = supabase.storage.from('verification').getPublicUrl(storagePath);
     const casierUrl = urlData.publicUrl;
@@ -2203,6 +2212,14 @@ app.post('/upload/photo', requireAuth, async (req, res) => {
   const { base64, userId, filename } = req.body;
   if (!base64 || !userId) return res.status(400).json({ error: 'Données manquantes' });
   if (req.user.id !== userId) return res.status(403).json({ error: 'Non autorisé' });
+  // Valider le préfixe MIME du base64 — bloque les fichiers non-image déguisés
+  if (!/^data:image\/(jpeg|png|webp);base64,/.test(base64)) {
+    return res.status(400).json({ error: 'Format d\'image non autorisé (JPG, PNG ou WEBP uniquement)' });
+  }
+  // Limiter la taille du base64 (2 Mo encodé ≈ ~2.7 Mo base64)
+  if (base64.length > 3 * 1024 * 1024) {
+    return res.status(400).json({ error: 'Image trop lourde (2 Mo max)' });
+  }
   try {
     const buffer = Buffer.from(base64.split(',')[1], 'base64');
     const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
