@@ -2,4 +2,6 @@ node_modules/
 ios/
 .claude/
 www/
+.env
+.env.*
 .env.seed
