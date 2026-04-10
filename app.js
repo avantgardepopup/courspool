@@ -15738,7 +15738,7 @@ function _boardInsertText(cx,cy){
     updateBarPos();
   });
   // Pan the board to keep text visible — never move inp directly
-  var _kbPanOffset=0;
+  var _kbPanOffset=0,_kbLastH=0;
   function _reanchorInp(){
     if(!_brdC||!_brdTextAnchor)return;
     var r2=_brdC.getBoundingClientRect();
@@ -15746,31 +15746,38 @@ function _boardInsertText(cx,cy){
     inp.style.top=(r2.top+_brdTextAnchor.cy*_brdZoom)+'px';
     inp.style.opacity='';
   }
-  // Capacitor native keyboard events (iOS WKWebView)
-  var kbShowFn=function(e){
-    var kbH=(e&&e.keyboardHeight)||0;if(!kbH)return;
-    var vvBottom=window.innerHeight-kbH;
-    var ib=inp.getBoundingClientRect();
-    if(ib.bottom>vvBottom-54){
-      var delta=ib.bottom-(vvBottom-54);
-      _kbPanOffset+=delta;
-      _brdPanY-=delta;
-      _boardApplyTransform();
-      _reanchorInp();
+  function _applyKbPan(kbH){
+    if(kbH===_kbLastH)return;
+    // Undo previous pan first
+    if(_kbPanOffset){_brdPanY+=_kbPanOffset;_kbPanOffset=0;}
+    _kbLastH=kbH;
+    if(kbH>0){
+      var vvBottom=window.innerHeight-kbH;
+      // Re-read inp position AFTER undoing previous pan
+      _boardApplyTransform();_reanchorInp();
+      var ib=inp.getBoundingClientRect();
+      if(ib.bottom>vvBottom-54){
+        var delta=ib.bottom-(vvBottom-54);
+        _kbPanOffset=delta;_brdPanY-=delta;
+        _boardApplyTransform();_reanchorInp();
+      }
+    }else{
+      _boardApplyTransform();_reanchorInp();
     }
     updateBarPos();
-  };
-  var kbHideFn=function(){
-    if(_kbPanOffset){
-      _brdPanY+=_kbPanOffset;
-      _kbPanOffset=0;
-      _boardApplyTransform();
-      _reanchorInp();
-    }
-    updateBarPos();
+  }
+  // Capacitor native keyboard (iOS WKWebView via @capacitor/keyboard)
+  var kbShowFn=function(e){_applyKbPan((e&&e.keyboardHeight)||0);};
+  var kbHideFn=function(){_applyKbPan(0);};
+  // Web fallback: visualViewport shrinks when soft keyboard opens
+  var vvResizeFn=function(){
+    if(!window.visualViewport)return;
+    var kbH=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    _applyKbPan(kbH>50?Math.round(kbH):0);
   };
   window.addEventListener('keyboardWillShow',kbShowFn);
   window.addEventListener('keyboardWillHide',kbHideFn);
+  if(window.visualViewport)window.visualViewport.addEventListener('resize',vvResizeFn,{passive:true});
   // Focus immediately — iOS requires this to be synchronous in touch handler
   inp.focus();
   updateBarPos();
@@ -15778,10 +15785,7 @@ function _boardInsertText(cx,cy){
   var commit=function(){
     if(committed)return;committed=true;
     _brdActiveTxtBarEl=null;_brdTextAnchor=null;
-    if(window.visualViewport){
-      window.visualViewport.removeEventListener('resize',adjustForKeyboard);
-      window.visualViewport.removeEventListener('scroll',adjustForKeyboard);
-    }
+    if(window.visualViewport)window.visualViewport.removeEventListener('resize',vvResizeFn);
     window.removeEventListener('keyboardWillShow',kbShowFn);
     window.removeEventListener('keyboardWillHide',kbHideFn);
     if(bar.parentNode)bar.parentNode.removeChild(bar);
