@@ -15831,11 +15831,11 @@ function _pipInitDrag(handle,pip){
         _pipX=Math.round(Math.max(0,Math.min(window.innerWidth-sw, m.x-relX*sw)));
         _pipY=Math.round(Math.max(0,Math.min(window.innerHeight-sh,m.y-relY*sh)));
         _pinchLastNi=ni;_pipSzIdx=ni;
-        pip.style.transition='width 240ms cubic-bezier(.34,1.56,.64,1),height 240ms cubic-bezier(.34,1.56,.64,1)';
+        pip.style.transition='none'; // no transition during pinch — avoids jerk from width/height lag
         pip.style.width=sw+'px';pip.style.height=sh+'px';
         pip.style.left=_pipX+'px';pip.style.top=_pipY+'px';
         _vApplyLayout();haptic(1);
-        setTimeout(function(){if(Object.keys(_ptrs).length>=2){_pinchInitDist=_dist();_pinchInitIdx=ni;}},260);
+        setTimeout(function(){if(Object.keys(_ptrs).length>=2){_pinchInitDist=_dist();_pinchInitIdx=ni;}},160);
       }
       return;
     }
