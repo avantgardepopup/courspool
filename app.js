@@ -3584,7 +3584,7 @@ function loadMore(){
 // ============================================================
 var MATIERES = [
   // --- Sciences exactes ---
-  {label:'Maths',                  key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
+  {label:'Mathématiques',           key:'maths',          color:'#3B82F6', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1E3A5F)'},
   {label:'Statistiques',           key:'stats',          color:'#60A5FA', bg:'linear-gradient(135deg,#EFF6FF,#BFDBFE)', bgDark:'linear-gradient(135deg,#0F1F3D,#1A3560)'},
   {label:'Physique',               key:'physique',       color:'#6366F1', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1E1F5E)'},
   {label:'Chimie',                 key:'chimie',         color:'#06B6D4', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
@@ -3643,7 +3643,7 @@ var MATIERES = [
   {label:'Violon',                 key:'violon',         color:'#92400E', bg:'linear-gradient(135deg,#FFFBEB,#FDE68A)', bgDark:'linear-gradient(135deg,#2D1500,#4A2000)'},
   {label:'Saxophone',              key:'saxo',           color:'#F59E0B', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#4A2E00)'},
   // --- Sciences humaines ---
-  {label:'Histoire-Géo',           key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
+  {label:'Histoire',                key:'histoire',       color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', bgDark:'linear-gradient(135deg,#2D1A00,#3D2200)'},
   {label:'Psychologie',            key:'psycho',         color:'#A78BFA', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', bgDark:'linear-gradient(135deg,#1A1035,#2A1B5E)'},
   {label:'Sociologie',             key:'socio',          color:'#818CF8', bg:'linear-gradient(135deg,#EEF2FF,#E0E7FF)', bgDark:'linear-gradient(135deg,#0F1235,#1A1F5E)'},
   {label:'Géographie',             key:'geographie',     color:'#22D3EE', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', bgDark:'linear-gradient(135deg,#032835,#064E5E)'},
@@ -6986,7 +6986,7 @@ var CR_MAT_ICONS={
   cinema:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="5" y1="5" x2="5" y2="19"/><line x1="9" y1="5" x2="9" y2="19"/><line x1="1" y1="10" x2="5" y2="10"/><line x1="9" y1="10" x2="16" y2="10"/><line x1="1" y1="14" x2="5" y2="14"/><line x1="9" y1="14" x2="16" y2="14"/>',
   bd:'<polygon points="12,2 14.9,8 21.5,8.9 16.8,13.6 17.9,20.1 12,17 6.1,20.1 7.2,13.6 2.5,8.9 9.1,8"/>',
   dessin:'<path d="M2 20h20M5 20V10M12 20V4M19 20v-6"/><circle cx="12" cy="2" r="2"/>',
-  peinture:'<circle cx="13.5" cy="6.5" r="2.5"/><path d="M17.5 12c2.5 2.5 2.5 7 0 9.5-2.5 2.5-7 2.5-9.5 0M6 2c3 0 5 2 7 4-1.5 1.5-3 3-4 5C7 9 5 7 2 6c2-2 4-4 4-4z"/>',
+  peinture:'<circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
   aquarelle:'<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>',
   arts:'<circle cx="12" cy="12" r="3"/><path d="M12 3a9 9 0 100 18A9 9 0 0012 3z"/><path d="M12 8a1 1 0 100-2 1 1 0 000 2zM17 12a1 1 0 100-2 1 1 0 000 2zM12 17a1 1 0 100-2 1 1 0 000 2zM7 12a1 1 0 100-2 1 1 0 000 2z"/>',
   calligraphie:'<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
@@ -6994,10 +6994,10 @@ var CR_MAT_ICONS={
   illustration:'<path d="M3 17l5-5 4 4 5-5 4 4"/><rect x="3" y="3" width="18" height="14" rx="2"/>',
   musique:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   piano:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><rect x="5" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="11" y="4" width="3" height="6" rx="1" fill="currentColor"/><rect x="17" y="4" width="3" height="6" rx="1" fill="currentColor"/>',
-  guitare:'<ellipse cx="12" cy="16" rx="6" ry="5"/><ellipse cx="12" cy="10" rx="4" ry="3"/><line x1="12" y1="7" x2="12" y2="2"/><line x1="9" y1="2" x2="15" y2="2"/><circle cx="12" cy="16" r="1.5" fill="currentColor" stroke="none"/>',
+  guitare:'<ellipse cx="12" cy="17" rx="5" ry="4.5"/><ellipse cx="12" cy="9" rx="3.5" ry="3"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="10" y1="2" x2="14" y2="2"/><circle cx="12" cy="17" r="1.5" fill="currentColor" stroke="none"/>',
   chant:'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
   batterie:'<line x1="6" y1="4" x2="18" y2="16"/><line x1="18" y1="4" x2="6" y2="16"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>',
-  violon:'<path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1.1.4 2.1 1 2.9L8.5 13c-.3.7-.5 1.4-.5 2C8 17.8 9.8 21 12 21s4-3.2 4-6c0-.6-.2-1.3-.5-2L14 8.4c.6-.8 1-1.8 1-2.9C15 3.5 13.5 2 12 2z"/><line x1="10.2" y1="11.5" x2="8.5" y2="11.5"/><line x1="13.8" y1="11.5" x2="15.5" y2="11.5"/>',
+  violon:'<path d="M12 2c-1.5 0-3 1.5-3 3.5 0 1.1.4 2.1 1 2.9L8.5 13c-.3.7-.5 1.4-.5 2C8 17.8 9.8 21 12 21s4-3.2 4-6c0-.6-.2-1.3-.5-2L14 8.4c.6-.8 1-1.8 1-2.9C15 3.5 13.5 2 12 2z"/><line x1="9.5" y1="11.5" x2="11" y2="11.5"/><line x1="13" y1="11.5" x2="14.5" y2="11.5"/>',
   saxo:'<path d="M14 3h-3a1 1 0 00-1 1v1a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1z"/><path d="M13 6v8.5a4.5 4.5 0 01-9 0V11h2"/><path d="M8 9h4"/><path d="M8 13h3"/>',
   histoire:'<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
   psycho:'<path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.53A3 3 0 016 9.5a3 3 0 010-6H9.5z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.53A3 3 0 0118 9.5a3 3 0 000-6H14.5z"/>',
@@ -7030,16 +7030,16 @@ var CR_MAT_ICONS={
   tennis:'<circle cx="12" cy="12" r="10"/><path d="M2.5 12h19M12 2.5c-4 6-4 13 0 19M12 2.5c4 6 4 13 0 19"/>',
   football:'<circle cx="12" cy="12" r="10"/><path d="M12 7l3 2-1 4H10l-1-4 3-2z"/><path d="M12 7V2M15 9l5-3M9 9l-5-3M14 13l3 5M10 13l-3 5"/>',
   basket:'<circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.9 4.9c4 4 4 10.2 0 14.2M19.1 4.9c-4 4-4 10.2 0 14.2"/>',
-  running:'<circle cx="15" cy="3" r="2"/><path d="M20 8l-4 2-3-2-4 4"/><path d="M9 12l-3 8"/><path d="M13 10l2 9"/>',
-  boxe:'<path d="M7 10a5 5 0 0110 0v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4z"/><path d="M5 12h2"/><path d="M9 10V8a3 3 0 016 0v2"/><rect x="7" y="16" width="10" height="5" rx="2"/>',
+  running:'<circle cx="13" cy="4" r="2"/><path d="M5 20l3.5-3.5 2.5 2.5 3-7 4 4"/><path d="M7 9l2-3 4 1 3-3"/>',
+  boxe:'<path d="M8 6a4 4 0 018 0v5H8V6z"/><rect x="6" y="11" width="12" height="5" rx="2"/><path d="M9 16v2a3 3 0 006 0v-2"/>',
   golf:'<circle cx="12" cy="18" r="3"/><path d="M12 15V3"/><path d="M12 3l7 4-7 4"/>',
   nutrition:'<path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/>',
   devperso:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
   cuisine:'<line x1="18" y1="2" x2="18" y2="22"/><path d="M6 2v5a4 4 0 004 4 4 4 0 004-4V2"/><line x1="10" y1="11" x2="10" y2="22"/>',
   patisserie:'<rect x="3" y="11" width="18" height="10" rx="2"/><path d="M3 11V8a4 4 0 014-4h10a4 4 0 014 4v3"/><path d="M7 11V8M12 11V8M17 11V8"/><circle cx="7" cy="16" r="1"/><circle cx="12" cy="16" r="1"/><circle cx="17" cy="16" r="1"/>',
-  jardinage:'<path d="M12 22V12"/><path d="M5 17l7-5 7 5"/><path d="M3 7c9.5 0 9.5-4 9.5-4S21 7 21 12H3V7z"/>',
+  jardinage:'<path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
   bricolage:'<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>',
-  couture:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="11.41" y1="11.41" x2="6.5" y2="14.5"/>',
+  couture:'<circle cx="12" cy="12" r="9"/><path d="M3.6 9c4.8-2.4 9.6 2.4 14.4 0"/><path d="M3.6 15c4.8-2.4 9.6 2.4 14.4 0"/><line x1="12" y1="3" x2="12" y2="21"/>',
   broderie:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
   poterie:'<path d="M12 3c-4 0-7 2-7 5s3 5 7 5 7-2 7-5-3-5-7-5z"/><path d="M5 8v9a3 3 0 003 3h8a3 3 0 003-3V8"/>',
   jeux:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>',
@@ -11834,7 +11834,7 @@ function stepNext(){
     if(g('stepPlaces'))_sd.places=parseInt(g('stepPlaces').value)||5;
     if(!_sd.prix){toast(t('t_price_req'),'Entrez le prix');return;}
   }
-  if(step.id==='desc'&&g('stepDesc'))_sd.desc=g('stepDesc').value.trim();
+  if(step.id==='desc'){if(g('stepDesc'))_sd.desc=g('stepDesc').value.trim();if(!_sd.desc){toast(t('t_desc_req')||'Description requise','Décrivez votre cours en quelques mots');return;}}
   var total=STEP_DEFS.length;
   if(_sc<total-1){
     _sc++;
