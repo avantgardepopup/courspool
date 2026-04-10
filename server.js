@@ -156,6 +156,18 @@ app.use(function(req, res, next) {
   }
   
   if (data.count >= maxRequests) {
+    // Alerte Discord si l'IP dépasse 3x la limite (attaque probable)
+    if (data.count === maxRequests * 3 && !data.alerted) {
+      data.alerted = true;
+      const ua = (req.headers?.['user-agent'] || '').slice(0, 120);
+      discordAlert(
+        `⚡ **Abus de rate limit détecté**\n` +
+        `> **IP :** \`${ip}\`\n` +
+        `> **Requêtes :** ${data.count} en 1 min (limite : ${maxRequests})\n` +
+        `> **Route :** ${req.method} ${req.path}\n` +
+        `> **User-Agent :** ${ua || '?'}`
+      );
+    }
     return res.status(429).json({ error: 'Trop de requêtes. Réessayez dans une minute.' });
   }
   
@@ -3092,4 +3104,13 @@ server.setTimeout(30000);        // 30s max pour recevoir une requête complète
 server.keepAliveTimeout = 65000; // 65s > load balancer Railway (60s) — évite les connexions zombies
 server.headersTimeout = 66000;   // légèrement supérieur à keepAliveTimeout
 
-server.listen(PORT, () => console.log('CoursPool API + Socket.io sur le port ' + PORT));
+server.listen(PORT, () => {
+  console.log('CoursPool API + Socket.io sur le port ' + PORT);
+  const time = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
+  discordAlert(
+    `🟢 **Serveur démarré**\n` +
+    `> **Heure :** ${time}\n` +
+    `> La blacklist de sessions et les place locks ont été réinitialisés.\n` +
+    `> Surveille les 5 prochaines minutes.`
+  );
+});
