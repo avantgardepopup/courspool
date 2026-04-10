@@ -3844,13 +3844,14 @@ function doFilter(){
     if(mobInp)mobInp.value=val;
   }
   val=val.trim();
-  // ── DEBUG VISIO : taper "##visio URL" ou "##visio" dans la recherche ──
+  // ── DEBUG VISIO : taper "##visio" (démo UI) ou "##visio URL" (vraie salle) ──
   if(val.startsWith('##visio')){
-    var _vUrl=val.slice(7).trim()||'https://courspool.daily.co/test-dev';
+    var _vRaw=val.slice(7).trim();
     var _srch=g('srch');if(_srch)_srch.value='';
     var _mob=g('mobSearchInput');if(_mob)_mob.value='';
     if(typeof collapseSearch==='function')collapseSearch();
-    openVisioModal(_vUrl);
+    if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
+    else{_vOpenDemo();}
     return;
   }
   checkCodeInSearch(val);
@@ -13951,6 +13952,76 @@ function snapNavPill(nav){
 
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
+
+// ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
+function _vOpenDemo(){
+  _isOwner=true;_intentionalLeave=false;
+  var existing=g('bdVisio');if(existing)existing.remove();
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
+  bd.innerHTML=_buildVisioHTML();
+  document.body.appendChild(bd);
+  var nav=g('bnav');if(nav)nav.style.display='none';
+  _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};
+  _isRecording=false;
+  if(_callTimer)clearInterval(_callTimer);
+  _updateVisioTimer();
+  _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
+  // Populate grid with fake participants
+  var grid=g('_vGrid');if(!grid)return;
+  var fakes=[
+    {sid:'demo-local', name:'Vous',     color:'linear-gradient(148deg,#FF7D42,#FF4500)', net:'good',  local:true},
+    {sid:'demo-p1',    name:'Marie D.', color:'linear-gradient(148deg,#7C3AED,#5B21B6)', net:'good',  local:false},
+    {sid:'demo-p2',    name:'Thomas L.',color:'linear-gradient(148deg,#0ea5e9,#0369a1)', net:'low',   local:false},
+  ];
+  fakes.forEach(function(f){grid.appendChild(_vBuildDemoTile(f));});
+  _vApplyLayout();
+  // Simulate active speaker after 1s
+  setTimeout(function(){
+    var t=g('_vt-demo-p1');
+    if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';
+  },1000);
+  haptic(1);
+}
+
+function _vBuildDemoTile(f){
+  var wrap=document.createElement('div');
+  wrap.id='_vt-'+f.sid;
+  wrap.style.cssText='position:relative;background:#1a1a2e;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;cursor:pointer;transition:box-shadow .2s;';
+  wrap.onclick=function(){_vPin(f.sid);};
+  var av=document.createElement('div');
+  av.id='_vav-'+f.sid;
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:'+f.color+';display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.3);';
+  av.textContent=f.name.charAt(0).toUpperCase();
+  var lbl=document.createElement('div');
+  lbl.id='_vtl-'+f.sid;
+  lbl.style.cssText='position:absolute;bottom:8px;left:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:3;';
+  var nameSpan=document.createElement('span');
+  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);max-width:calc(100% - 26px);';
+  nameSpan.textContent=f.name;
+  var netInd=document.createElement('div');
+  netInd.id='_vnet-'+f.sid;netInd.style.cssText='flex-shrink:0;opacity:.8;';
+  netInd.innerHTML=_vNetSvg(f.net);
+  lbl.appendChild(nameSpan);lbl.appendChild(netInd);
+  var reactArea=document.createElement('div');
+  reactArea.id='_vreact-'+f.sid;
+  reactArea.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;';
+  var pinInd=document.createElement('div');
+  pinInd.id='_vpin-'+f.sid;
+  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  pinInd.textContent='📌 Épinglé';
+  if(!f.local){
+    var pc=document.createElement('div');
+    pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
+    pc.innerHTML='<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(34,192,105,.85);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🎤 Parole</button>'
+      +'<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="background:rgba(229,62,62,.75);border:none;color:#fff;border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3)">🔇 Mute</button>';
+    wrap.appendChild(pc);
+  }
+  wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
+  return wrap;
+}
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false;
