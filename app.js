@@ -3563,16 +3563,19 @@ function renderPage(){
   grid.appendChild(_frag);
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
-  // Animation entrée : cards déjà visibles → apparaissent immédiatement (pas de flash)
-  // Cards sous le fold → masquées, animées quand elles entrent dans le viewport
-  if(typeof IntersectionObserver!=='undefined'){
+  // Animation entrée : uniquement sur desktop (hover:hover) pour éviter les cards blanches
+  // sur mobile (scroll rapide, tab-switch → animationend ne fire pas → opacity:0 bloqué)
+  if(typeof IntersectionObserver!=='undefined'&&window.matchMedia('(hover:hover)').matches){
     var _vH=window.innerHeight||document.documentElement.clientHeight;
     var _io=new IntersectionObserver(function(entries){
       entries.forEach(function(e){
         if(!e.isIntersecting)return;
         _io.unobserve(e.target);
         e.target.classList.add('card-in');
+        // Fallback : retirer card-below après 600ms si animationend ne fire pas
+        var _fb=setTimeout(function(){e.target.classList.remove('card-in','card-below');},600);
         e.target.addEventListener('animationend',function(){
+          clearTimeout(_fb);
           e.target.classList.remove('card-in','card-below');
         },{once:true});
       });
@@ -13949,6 +13952,7 @@ function initNavDrag(){
     var defX=Math.max(0,(sw-nw)/2),defY=sh-nh-28;
     var x=saved.x!==undefined?Math.min(Math.max(0,saved.x),sw-nw):defX;
     var y=saved.y!==undefined?Math.min(Math.max(0,saved.y),sh-nh):defY;
+    nav.style.bottom='auto';nav.style.right='auto';
     nav.style.left=x+'px';nav.style.top=y+'px';
   },120);
   var d={on:false,sx:0,sy:0,sl:0,st:0,moved:false};
@@ -13964,12 +13968,14 @@ function initNavDrag(){
     if(Math.abs(dx)>5||Math.abs(dy)>5)d.moved=true;
     if(!d.moved)return;
     var sw=window.innerWidth,sh=window.innerHeight;
+    nav.style.bottom='auto';nav.style.right='auto';
     nav.style.left=Math.max(0,Math.min(sw-nav.offsetWidth,d.sl+dx))+'px';
     nav.style.top=Math.max(0,Math.min(sh-nav.offsetHeight,d.st+dy))+'px';
   }
   function end(){
-    if(!d.on)return;d.on=false;nav.style.opacity='';
-    if(d.moved){snapNavPill(nav);}else{nav.style.boxShadow='';}
+    if(!d.on)return;d.on=false;d.moved=false;nav.style.opacity='';
+    nav.style.boxShadow='';
+    if(d.moved){snapNavPill(nav);}
   }
   nav.addEventListener('mousedown',function(e){start(e.clientX,e.clientY);});
   document.addEventListener('mousemove',function(e){move(e.clientX,e.clientY);});
@@ -13977,6 +13983,7 @@ function initNavDrag(){
   nav.addEventListener('touchstart',function(e){if(e.touches.length===1)start(e.touches[0].clientX,e.touches[0].clientY);},{passive:true});
   document.addEventListener('touchmove',function(e){if(d.on&&d.moved)e.preventDefault();if(e.touches.length)move(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
   document.addEventListener('touchend',end);
+  document.addEventListener('touchcancel',end); // évite que d.on reste bloqué à true (OS cancel : appel entrant, palm rejection)
   // Bloquer le click sur les enfants si c'était un drag
   nav.addEventListener('click',function(e){if(d.moved){e.stopPropagation();e.preventDefault();}},true);
 }
