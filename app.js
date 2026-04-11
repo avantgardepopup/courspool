@@ -2240,6 +2240,8 @@ function navTo(tab,_skipHistory){
   ['bniExp','bniFav','bniMsg','bniProfs','bniMes','bniEsp'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var appEl=g('app');if(appEl)appEl.scrollTop=0;
   var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes'),pgMesProfs=g('pgMesProfs');
+  // Couper l'animation en cours avant display:none pour éviter le flash noir iOS
+  [pgExp,pgAcc,pgMsg,pgFav,pgMes,pgMesProfs].forEach(function(p){if(p&&p.classList.contains('on')){p.style.animation='none';}});
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
