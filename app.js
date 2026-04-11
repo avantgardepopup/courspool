@@ -14240,64 +14240,65 @@ function _vShowPreJoin(onJoin){
   var ini=name.charAt(0).toUpperCase();
   var col=(user&&user.col)||'linear-gradient(148deg,#FF7D42,#FF4500)';
   window._vPreJoinCallback=onJoin;
-  window._pjMicWanted=true;
-  window._pjCamWanted=true;
+  window._pjMicWanted=false;
+  window._pjCamWanted=false;
 
   var isIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
 
   var bd=document.createElement('div');
   bd.id='bdVisio';
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
 
   if(isIosNative){
     // ── UI iOS : toggles seulement, sans preview caméra ──
+    // Mise en page flex colonne avec header safe-area correct
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
+    var svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    var svgCam='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+    var togOff='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+    var knobL='position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s,right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);';
     bd.innerHTML=''
-      +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
-      +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
+      // Header : bouton Annuler aligné à droite
+      +'<div style="display:flex;justify-content:flex-end;padding:14px 16px 0;">'
+      +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">✕ Annuler</button>'
+      +'</div>'
+      // Contenu centré
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;">'
+      +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
       // Avatar
       +'<div style="width:80px;height:80px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4);margin-bottom:8px;">'+ini+'</div>'
       +'<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:32px;">'+name+'</div>'
       // Toggles
       +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">'
-      // Micro
+      // Micro — OFF par défaut
       +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
-      +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(34,192,105,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
-      +'</div>'
+      +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
-      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;">En attente…</div>'
+      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivé</div>'
       +'</div>'
-      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="width:48px;height:28px;border-radius:14px;background:#22C069;border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">'
-      +'<div id="_pjMicKnob" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>'
+      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff+'">'
+      +'<div id="_pjMicKnob" style="'+knobL+'"></div>'
       +'</button>'
       +'</div>'
-      // Caméra
+      // Caméra — OFF par défaut
       +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
-      +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(34,192,105,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
-      +'</div>'
+      +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
-      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;">Activée</div>'
+      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivée</div>'
       +'</div>'
-      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="width:48px;height:28px;border-radius:14px;background:#22C069;border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">'
-      +'<div id="_pjCamKnob" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>'
+      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff+'">'
+      +'<div id="_pjCamKnob" style="'+knobL+'"></div>'
       +'</button>'
       +'</div>'
       +'</div>'
       // Rejoindre
-      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
+      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>'
+      +'</div>'; // fin contenu centré
     document.body.appendChild(bd);
     var nav=g('bnav');if(nav)nav.style.display='none';
     haptic(1);
-    // Demander seulement le micro
-    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-      navigator.mediaDevices.getUserMedia({audio:true,video:false})
-        .then(function(stream){_preJoinStream=stream;_pjUpdateToggle('mic',true,'Autorisé');})
-        .catch(function(){window._pjMicWanted=false;_pjUpdateToggle('mic',false,'Refusé');});
-    }
     return;
   }
 
@@ -14382,10 +14383,16 @@ function _pjUpdateToggle(dev,on,label){
   var btn=g(dev==='mic'?'_pjMicToggle':'_pjCamToggle');
   var knob=g(dev==='mic'?'_pjMicKnob':'_pjCamKnob');
   var wrap=g(dev==='mic'?'_pjMicIconWrap':'_pjCamIconWrap');
-  if(st){st.textContent=label;st.style.color=on?'rgba(255,255,255,.65)':'rgba(255,255,255,.3)';}
+  if(st){st.textContent=label;st.style.color=on?'rgba(255,255,255,.65)':'rgba(255,255,255,.35)';}
   if(btn){btn.style.background=on?'#22C069':'rgba(255,255,255,.2)';}
-  if(knob){knob.style.right=on?'3px':'auto';knob.style.left=on?'auto':'3px';}
-  if(wrap){wrap.style.background=on?'rgba(34,192,105,.18)':'rgba(255,255,255,.08)';}
+  if(knob){
+    if(on){knob.style.left='auto';knob.style.right='3px';}
+    else{knob.style.right='auto';knob.style.left='3px';}
+  }
+  if(wrap){
+    wrap.style.background=on?'rgba(34,192,105,.18)':'rgba(255,255,255,.08)';
+    wrap.style.color=on?'#22C069':'rgba(255,255,255,.4)';
+  }
 }
 function _pjSetSt(dev,ok){
   var el=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
