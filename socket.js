@@ -270,6 +270,9 @@ function initSocket() {
   _socket.on('board_sync', function(data) {
     if (typeof _brdOnSync === 'function') _brdOnSync(data);
   });
+  _socket.on('board_sync_request', function(data) {
+    if (typeof _brdOnSyncRequest === 'function') _brdOnSyncRequest(data);
+  });
   _socket.on('board_perm', function(data) {
     if (typeof _brdOnPerm === 'function') _brdOnPerm(data);
   });

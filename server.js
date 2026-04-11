@@ -74,10 +74,13 @@ io.use(async (socket, next) => {
 // ── Tableau blanc collaboratif — rooms en mémoire ────────────
 // { ops:[], snapshot:null, editors:Set<userId>, ownerId, participants:Map<userId,name> }
 const boardRooms = new Map();
+// socketId → Set<roomId> — pour nettoyage sur disconnect
+const socketBoardRooms = new Map();
 
 // ── Chaque client rejoint sa propre room ─────────────────────
 io.on('connection', (socket) => {
   socket.join(socket.userId);
+  socketBoardRooms.set(socket.id, new Set());
 
   // ── Board: prof initialise la room ──────────────────────────
   socket.on('board_init', ({roomId, userName}) => {
@@ -91,22 +94,38 @@ io.on('connection', (socket) => {
       });
     }
     socket.join('board_' + roomId);
+    const sRooms = socketBoardRooms.get(socket.id);
+    if (sRooms) sRooms.add(roomId);
   });
 
   // ── Board: élève ou retardataire rejoint ─────────────────────
   socket.on('board_join', ({roomId, userName}) => {
     if (!roomId) return;
     socket.join('board_' + roomId);
+    const sRooms = socketBoardRooms.get(socket.id);
+    if (sRooms) sRooms.add(roomId);
     const room = boardRooms.get(roomId);
     if (!room) return;
     room.participants.set(socket.userId, userName || '?');
-    // Envoyer l'état actuel au nouveau venu
-    socket.emit('board_sync', {
-      snapshot: room.snapshot,
-      ops: room.ops,
-      editors: [...room.editors],
-      participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
-    });
+    // Demander un snapshot frais au propriétaire plutôt qu'envoyer le snapshot stocké
+    const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
+    if (ownerSocketId) {
+      // Le propriétaire est connecté — lui demander un snapshot ciblé
+      io.to(ownerSocketId).emit('board_sync_request', {
+        roomId, targetSocketId: socket.id,
+        ops: room.ops,
+        editors: [...room.editors],
+        participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
+      });
+    } else {
+      // Propriétaire déconnecté — envoyer ce qu'on a (ops + snapshot stocké)
+      socket.emit('board_sync', {
+        snapshot: room.snapshot,
+        ops: room.ops,
+        editors: [...room.editors],
+        participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
+      });
+    }
     // Prévenir les autres
     socket.to('board_' + roomId).emit('board_participant_joined', {
       userId: socket.userId, userName: userName || '?'
@@ -145,12 +164,26 @@ io.on('connection', (socket) => {
     socket.to('board_' + roomId).emit('board_op', op);
   });
 
-  // ── Board: snapshot canvas (pour les retardataires) ──────────
+  // ── Board: snapshot canvas (stockage serveur) ────────────────
   socket.on('board_snapshot', ({roomId, snapshot}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;
     room.snapshot = snapshot;
     room.ops = []; // snapshot remplace le log d'ops
+  });
+
+  // ── Board: snapshot ciblé vers un retardataire précis ────────
+  socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    room.snapshot = snapshot; // mettre à jour le snapshot stocké aussi
+    room.ops = [];
+    io.to(targetSocketId).emit('board_sync', {
+      snapshot,
+      ops: [],
+      editors: [...room.editors],
+      participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
+    });
   });
 
   // ── Board: accorder le droit de dessiner ─────────────────────
@@ -175,8 +208,28 @@ io.on('connection', (socket) => {
     const room = boardRooms.get(roomId);
     if (!room) return;
     room.participants.delete(socket.userId);
+    room.editors.delete(socket.userId);
     socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
     if (room.ownerId === socket.userId) boardRooms.delete(roomId);
+    const sRooms = socketBoardRooms.get(socket.id);
+    if (sRooms) sRooms.delete(roomId);
+  });
+
+  // ── Nettoyage sur déconnexion ─────────────────────────────────
+  socket.on('disconnect', () => {
+    const sRooms = socketBoardRooms.get(socket.id);
+    if (sRooms) {
+      for (const roomId of sRooms) {
+        const room = boardRooms.get(roomId);
+        if (!room) continue;
+        room.participants.delete(socket.userId);
+        room.editors.delete(socket.userId);
+        socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
+        // Supprimer la room si le propriétaire part
+        if (room.ownerId === socket.userId) boardRooms.delete(roomId);
+      }
+      socketBoardRooms.delete(socket.id);
+    }
   });
 });
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -433,6 +486,13 @@ setInterval(() => {
     if (now > exp) _revokedSessions.delete(key);
   }
 }, 15 * 60 * 1000);
+// Nettoyage du cache "bloqué" toutes les 5 min — évite la croissance infinie
+setInterval(() => {
+  const cutoff = Date.now() - BLOCKED_CACHE_TTL;
+  for (const [uid, entry] of _blockedCache) {
+    if (entry.ts < cutoff) _blockedCache.delete(uid);
+  }
+}, 5 * 60 * 1000);
 
 async function requireAuth(req, res, next) {
   const auth = req.headers.authorization;

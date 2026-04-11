@@ -14875,7 +14875,7 @@ var _brdSnapTimer=null; // hold-to-snap line straightening
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
-var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[],_brdSnapshotThrottle=0;
+var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
 var _brdRemoteStrokes={},_brdLastPtEmit=0;
 var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
@@ -15177,7 +15177,7 @@ function _vCloseBoard(){
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
-  if(_brdC&&_brdX&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}catch(e){}}
+  if(_brdC&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}catch(e){}}
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   var pip=g('_vPip');var grid=g('_vGrid');
   var rb=g('_vPipRestoreBtn');if(rb)rb.remove();
@@ -15228,6 +15228,21 @@ function _brdCheckOrientation(){
   }
 }
 
+// Dessine une page (data URL JPEG) sur le canvas principal — async
+function _boardRestorePage(dataUrl,cb){
+  if(!_brdC||!_brdX){if(cb)cb();return;}
+  var img=new Image();
+  img.onload=function(){
+    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
+    _brdX.clearRect(0,0,_brdC.width,_brdC.height);
+    _brdX.drawImage(img,0,0);
+    _brdX.restore();
+    if(cb)cb();
+  };
+  img.onerror=function(){if(cb)cb();};
+  img.src=dataUrl;
+}
+
 function _boardInitCanvas(){
   var canv=g('_vBoardCanvas');if(!canv)return;
   var scroll=g('_brdScroll');if(!scroll)return;
@@ -15264,17 +15279,17 @@ function _boardInitCanvas(){
   _boardDrawBg();
   // Reset zoom/pan
   _brdZoom=1;_brdPanX=0;_brdPanY=0;_brdPinchInitDist=0;
+  var _initDone=function(){
+    if(!_brdHist.length){_brdHist=[{idx:0,data:_brdPages[0]||null}];_brdHistIdx=0;}
+    _boardAttachEvents(canv);
+    _boardUpdatePageTabs();
+    _boardRenderSubbar();
+  };
   if(_brdPages[_brdPageIdx]){
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-    _brdX.putImageData(_brdPages[_brdPageIdx],0,0);
-    _brdX.restore();
+    _boardRestorePage(_brdPages[_brdPageIdx],_initDone);
   }else{
-    _brdPages[_brdPageIdx]=_brdX.getImageData(0,0,canv.width,canv.height);
+    _initDone();
   }
-  if(!_brdHist.length){_brdHist=[{idx:0,data:_brdPages[0]}];_brdHistIdx=0;}
-  _boardAttachEvents(canv);
-  _boardUpdatePageTabs();
-  _boardRenderSubbar();
 }
 
 function _boardDrawBg(){
@@ -15321,25 +15336,25 @@ function _boardApplyTransform(){
 }
 
 function _boardSaveHist(){
-  if(!_brdC||!_brdX)return;
+  if(!_brdC)return;
   if(_brdHistIdx<_brdHist.length-1)_brdHist.splice(_brdHistIdx+1);
-  var d=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+  var d=_brdC.toDataURL('image/jpeg',0.6);
   _brdHist.push({idx:_brdPageIdx,data:d});
-  if(_brdHist.length>25)_brdHist.shift();else _brdHistIdx++;
+  if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
 }
 function _boardUndo(){
   if(_brdHistIdx<=0||!_brdX)return;
   _brdHistIdx--;
   var st=_brdHist[_brdHistIdx];_brdPageIdx=st.idx;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(st.data,0,0);_brdX.restore();
-  _boardUpdatePageLabel();haptic(1);
+  _boardRestorePage(st.data,function(){_boardUpdatePageLabel();});
+  haptic(1);
 }
 function _boardRedo(){
   if(_brdHistIdx>=_brdHist.length-1||!_brdX)return;
   _brdHistIdx++;
   var st=_brdHist[_brdHistIdx];_brdPageIdx=st.idx;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(st.data,0,0);_brdX.restore();
-  _boardUpdatePageLabel();haptic(1);
+  _boardRestorePage(st.data,function(){_boardUpdatePageLabel();});
+  haptic(1);
 }
 function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
 function _boardUpdatePageTabs(){
@@ -15371,9 +15386,12 @@ function _boardDeletePage(idx){
   if(_brdPages.length<=1)return;
   _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);
   if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageTabs();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
+  }else{
+    _boardClearFg();_boardUpdatePageTabs();
+  }
+  haptic(1);
 }
 function _boardRenamePage(idx){
   var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||'';
@@ -15385,11 +15403,14 @@ function _boardRenamePage(idx){
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
   _boardSavePage();_brdPageIdx=idx;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageTabs();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
+  }else{
+    _boardClearFg();_boardUpdatePageTabs();
+  }
+  haptic(1);
 }
-function _boardSavePage(){if(_brdC&&_brdX)_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}
+function _boardSavePage(){if(_brdC)_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}
 function _boardAddPage(){
   _boardSavePage();_brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
   _boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
@@ -15397,16 +15418,22 @@ function _boardAddPage(){
 function _boardPrevPage(){
   if(_brdPageIdx<=0||!_brdX)return;
   _boardSavePage();_brdPageIdx--;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageLabel();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
+  }else{
+    _boardClearFg();_boardUpdatePageLabel();
+  }
+  haptic(1);
 }
 function _boardNextPage(){
   if(_brdPageIdx>=_brdPages.length-1||!_brdX)return;
   _boardSavePage();_brdPageIdx++;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageLabel();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
+  }else{
+    _boardClearFg();_boardUpdatePageLabel();
+  }
+  haptic(1);
 }
 
 // ── New toolbar & popup system ──
@@ -16179,19 +16206,19 @@ function closeVisioModal(){
 
 // ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
 
-// Émettre un op de dessin + throttle snapshot pour les retardataires
+// Émettre un op de dessin
 function _brdEmitOp(op){
   if(!_brdRoomId||typeof _socket==='undefined'||!_socket||!_socket.connected)return;
   op.pageIdx=_brdPageIdx;
   _socket.emit('board_op',{roomId:_brdRoomId,op:op});
-  // Snapshot throttlé toutes les 3s pour les retardataires
-  var now=Date.now();
-  if(now-_brdSnapshotThrottle>3000){
-    _brdSnapshotThrottle=now;
-    if(_brdC){
-      var snap=_brdC.toDataURL('image/jpeg',0.45);
-      _socket.emit('board_snapshot',{roomId:_brdRoomId,snapshot:snap});
-    }
+}
+
+// Répondre à une demande de snapshot ciblée (seul le propriétaire reçoit cet event)
+function _brdOnSyncRequest(data){
+  if(!_brdC||!_brdRoomId||!data.targetSocketId)return;
+  var snap=_brdC.toDataURL('image/jpeg',0.55);
+  if(typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_snapshot_for',{roomId:_brdRoomId,targetSocketId:data.targetSocketId,snapshot:snap});
   }
 }
 
