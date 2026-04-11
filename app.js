@@ -14962,6 +14962,9 @@ function _buildBoardInner(){
       :''
     )
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button onclick="_vToggleComment()" style="'+glassBtn+'" title="Commentaires">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
     +'</div>'  // close floating bar
@@ -15230,6 +15233,11 @@ function _vOpenBoard(){
   bo.style.cssText='position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:scale(.98);transition:opacity 180ms ease-out,transform 220ms cubic-bezier(.22,.61,.36,1);';
   bo.innerHTML=_buildBoardInner();
   bdV.appendChild(bo);
+  // Sortir _vComment et _vCommentTab de _vMain (overflow:hidden → stacking context)
+  // pour les rendre frères de _vBoardOuter → z-index:10 bat z-index:4
+  var _vcEl=g('_vComment'),_vtEl=g('_vCommentTab');
+  if(_vcEl)bdV.appendChild(_vcEl);
+  if(_vtEl)bdV.appendChild(_vtEl);
   requestAnimationFrame(function(){bo.style.opacity='1';bo.style.transform='scale(1)';_boardInitCanvas();});
   var btn=g('_vBoardBtn');
   if(btn){btn.style.background='rgba(255,107,43,.55)';btn.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
@@ -15250,6 +15258,11 @@ function _vCloseBoard(){
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
   if(_brdC&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}catch(e){}}
   var bo=g('_vBoardOuter');if(bo)bo.remove();
+  // Remettre _vComment et _vCommentTab dans _vMain
+  var _vmEl=g('_vMain');
+  var _vcEl=g('_vComment'),_vtEl=g('_vCommentTab');
+  if(_vcEl&&_vmEl)_vmEl.appendChild(_vcEl);
+  if(_vtEl&&_vmEl)_vmEl.appendChild(_vtEl);
   var pip=g('_vPip');var grid=g('_vGrid');
   var rb=g('_vPipRestoreBtn');if(rb)rb.remove();
   if(pip&&grid){
