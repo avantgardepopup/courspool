@@ -14501,7 +14501,7 @@ function _buildVisioHTML(){
     +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
     +'</div>'
     +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;"></div>'
-    +'<div style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
+    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
     +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
@@ -15138,8 +15138,46 @@ function _vToggleComment(){
   if(tab){tab.style.opacity=_vCommentOpen?'0':'1';tab.style.pointerEvents=_vCommentOpen?'none':'auto';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
 }
+// ── Keyboard awareness pour la barre de saisie commentaires ──
+function _vSetupCommentKeyboard(){
+  var bar=g('_vCommentBar');if(!bar)return;
+  var _ckbH=0;
+  function _ckbApply(){
+    bar.style.paddingBottom=(_ckbH>0?_ckbH:null)||'calc(env(safe-area-inset-bottom,0px) + 10px)';
+  }
+  // Capacitor : keyboardWillShow donne la hauteur exacte
+  var _ckbShow=function(e){_ckbH=(e&&e.keyboardHeight)||0;_ckbApply();};
+  var _ckbHide=function(){_ckbH=0;_ckbApply();};
+  // Web fallback : visualViewport
+  var _ckbVP=function(){
+    if(!window.visualViewport)return;
+    var kh=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    _ckbH=kh;_ckbApply();
+  };
+  var inp=g('_vCommentInput');
+  if(inp){
+    inp.addEventListener('focus',function(){
+      window.addEventListener('keyboardWillShow',_ckbShow);
+      window.addEventListener('keyboardWillHide',_ckbHide);
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize',_ckbVP,{passive:true});
+        window.visualViewport.addEventListener('scroll',_ckbVP,{passive:true});
+      }
+    },{passive:true});
+    inp.addEventListener('blur',function(){
+      window.removeEventListener('keyboardWillShow',_ckbShow);
+      window.removeEventListener('keyboardWillHide',_ckbHide);
+      if(window.visualViewport){
+        window.visualViewport.removeEventListener('resize',_ckbVP);
+        window.visualViewport.removeEventListener('scroll',_ckbVP);
+      }
+      _ckbH=0;_ckbApply();
+    },{passive:true});
+  }
+}
 function _vInitCommentSwipe(){
   var panel=g('_vComment');if(!panel)return;
+  _vSetupCommentKeyboard();
   var _csx=0,_csy=0,_ctracking=false,_cvert=false;
   panel.addEventListener('touchstart',function(e){
     _csx=e.touches[0].clientX;_csy=e.touches[0].clientY;_ctracking=true;_cvert=false;
