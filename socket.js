@@ -74,6 +74,14 @@ function initSocket() {
 
   _socket.on('reconnect', function(attempt) {
     console.log('[Socket] 🔄 reconnecté après', attempt, 'tentative(s)');
+    // Re-rejoindre la board room si le tableau était ouvert au moment de la déconnexion
+    if (typeof _brdRoomId !== 'undefined' && _brdRoomId &&
+        typeof _boardActive !== 'undefined' && _boardActive) {
+      var uName = (typeof user !== 'undefined' && user && (user.prenom || user.email)) || '?';
+      var ev = (typeof _isOwner !== 'undefined' && _isOwner) ? 'board_init' : 'board_join';
+      _socket.emit(ev, {roomId: _brdRoomId, userName: uName});
+      console.log('[Socket] 🔄 board room re-join après reconnexion:', _brdRoomId);
+    }
   });
 
   // ── follow_update : nb_eleves en temps réel ──────────────────────────────

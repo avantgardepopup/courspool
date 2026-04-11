@@ -14919,6 +14919,7 @@ var _brdBgC=null,_brdBgX=null; // background canvas (grid)
 var _brdZoom=1,_brdPanX=0,_brdPanY=0; // zoom & pan state
 var _brdPinchInitDist=0,_brdPinchInitZoom=1,_brdPinchInitPanX=0,_brdPinchInitPanY=0,_brdPinchInitCX=0,_brdPinchInitCY=0;
 var _brdSnapTimer=null; // hold-to-snap line straightening
+var _brdEraserCursorEl=null; // cercle curseur gomme
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
@@ -15281,6 +15282,7 @@ function _vCloseBoard(){
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);_brdKeyHandler=null;}
   if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
   if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}
+  _brdCleanEraserCursor();
   if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
   _brdRestorePending=false;_brdRestoreEpoch=0;
   var bo=g('_vBoardOuter');if(bo)bo.remove();
@@ -15424,6 +15426,41 @@ function _boardDrawBg(){
   var step=24;_brdBgX.strokeStyle='rgba(0,0,0,0.055)';_brdBgX.lineWidth=0.6;
   for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
   for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
+}
+// ── Snapshot helpers (canvas offscreen — GPU, pas de copie CPU getImageData) ──
+function _brdMakeSnap(){
+  if(!_brdC)return null;
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  tmp.getContext('2d').drawImage(_brdC,0,0);
+  return tmp;
+}
+function _brdRestoreSnap(snap){
+  if(!snap||!_brdX||!_brdC)return;
+  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
+  _brdX.clearRect(0,0,_brdC.width,_brdC.height);
+  _brdX.drawImage(snap,0,0);
+  _brdX.restore();
+}
+// ── Curseur gomme ──────────────────────────────────────────────────────────
+function _brdShowEraserCursor(x,y){
+  var page=g('_brdPage');if(!page)return;
+  if(!_brdEraserCursorEl){
+    _brdEraserCursorEl=document.createElement('div');
+    _brdEraserCursorEl.style.cssText='position:absolute;border-radius:50%;border:1.5px solid rgba(80,80,80,.75);pointer-events:none;z-index:55;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.4);transition:width .05s,height .05s;';
+    page.appendChild(_brdEraserCursorEl);
+  }
+  var sz=_brdEr*_brdZoom;
+  _brdEraserCursorEl.style.width=sz+'px';_brdEraserCursorEl.style.height=sz+'px';
+  _brdEraserCursorEl.style.left=(x*_brdZoom)+'px';_brdEraserCursorEl.style.top=(y*_brdZoom)+'px';
+  _brdEraserCursorEl.style.display='block';
+}
+function _brdHideEraserCursor(){
+  if(_brdEraserCursorEl)_brdEraserCursorEl.style.display='none';
+}
+function _brdCleanEraserCursor(){
+  if(_brdEraserCursorEl&&_brdEraserCursorEl.parentNode)_brdEraserCursorEl.parentNode.removeChild(_brdEraserCursorEl);
+  _brdEraserCursorEl=null;
 }
 function _boardClearFg(){
   if(!_brdX||!_brdC)return;
@@ -15734,14 +15771,14 @@ function _boardDown(e){
     return;
   }
   if(_brdTool==='pen'){
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    _brdSnap=_brdMakeSnap();
     var pressure=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:1;
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
     _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*Math.max(0.3,pressure);
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   }else if(_brdTool==='marker'){
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    _brdSnap=_brdMakeSnap();
     var pressure=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:1;
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
     _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*2.5*Math.max(0.3,pressure);
@@ -15752,14 +15789,15 @@ function _boardDown(e){
     _brdX.strokeStyle='rgba(0,0,0,1)';_brdX.lineWidth=_brdEr;
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
+    if(_brdC)_brdC.style.cursor='none'; // curseur remplacé par le cercle SVG
   }else if(_brdTool==='shape'){
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);_brdSS=p;
+    _brdSnap=_brdMakeSnap();_brdSS=p;
   }else if(_brdTool==='text'){
     _boardInsertText(p.x,p.y);_brdDraw=false;
   }else if(_brdTool==='select'){
     // Commit any active selection first
     if(_brdSel.active)_brdCommitSel();
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    _brdSnap=_brdMakeSnap();
     _brdSS=p;
   }
 }
@@ -15769,7 +15807,7 @@ function _boardMove(e){
   if(ptCount>=2){
     // 2-finger detected: cancel any in-progress stroke and restore canvas to pre-stroke state
     if(_brdDraw&&_brdSnap&&_brdX){
-      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+      _brdRestoreSnap(_brdSnap);
       _brdSnap=null;_brdSS=null;
     }
     _brdDraw=false;
@@ -15831,7 +15869,7 @@ function _boardMove(e){
     _brdSnapTimer=setTimeout(function(){
       if(_snapIndicator){_snapIndicator.style.opacity='0';_snapIndicator.style.transform='translate(-50%,-50%) scale(0)';}
       if(!_brdDraw||!_brdSnap||_brdPts.length<2)return;
-      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+      _brdRestoreSnap(_brdSnap);
       var fp=_brdPts[0];
       _brdX.beginPath();_brdX.moveTo(fp.x,fp.y);_brdX.lineTo(snapP.x,snapP.y);
       _brdX.strokeStyle=_brdColor;
@@ -15855,15 +15893,16 @@ function _boardMove(e){
       _brdX.beginPath();_brdX.moveTo(mx,my);
     }else if(n===2){_brdX.lineTo(p.x,p.y);_brdX.stroke();}
   }else if(_brdTool==='eraser'){
+    _brdShowEraserCursor(p.x,p.y);
     _brdX.lineTo(p.x,p.y);_brdX.stroke();
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
   }else if(_brdTool==='shape'&&_brdSnap&&_brdSS){
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
     _boardDrawShape(_brdSS.x,_brdSS.y,p.x,p.y);
   }else if(_brdTool==='select'&&_brdDraw&&_brdSS&&_brdSnap){
     // Draw dashed selection preview
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     _brdX.save();
     _brdX.strokeStyle='#FF6B2B';_brdX.lineWidth=2/_brdZoom;
     _brdX.setLineDash([6/_brdZoom,3/_brdZoom]);
@@ -15879,6 +15918,7 @@ function _boardUp(e){
   if(_sr){_sr.style.opacity='0';_sr.style.transform='translate(-50%,-50%) scale(0)';}
   if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
   if(_brdTool==='hand'){if(_brdC)_brdC.style.cursor='grab';_brdPts=[];_brdDraw=false;return;}
+  if(_brdTool==='eraser'){_brdHideEraserCursor();if(_brdC)_brdC.style.cursor='crosshair';}
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
@@ -15899,7 +15939,7 @@ function _boardUp(e){
     var p=_boardGetPos(e);
     var _ssx=_brdSS.x,_ssy=_brdSS.y; // capture avant nulling
     // Restore clean canvas (remove the live preview drawn in _boardMove)
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     _boardDrawShape(_ssx,_ssy,p.x,p.y);
     _brdSnap=null;_brdSS=null;_boardSaveHist();
     // Émettre l'op de forme
@@ -15909,7 +15949,7 @@ function _boardUp(e){
   }else if(_brdTool==='select'&&_brdSS&&_brdSnap){
     var p=_boardGetPos(e);
     // Restore clean canvas (remove the dashed rect)
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     var sx=Math.min(_brdSS.x,p.x),sy=Math.min(_brdSS.y,p.y);
     var sw=Math.abs(p.x-_brdSS.x),sh=Math.abs(p.y-_brdSS.y);
     _brdSS=null;_brdSnap=null;
@@ -16086,6 +16126,12 @@ function _brdCommitSel(){
   _brdX.restore();
   _boardSaveHist();
   _brdCleanSel();
+  // Émettre un snapshot de la page pour que les distants voient le résultat du déplacement/rotation
+  if(_brdRoomId&&_brdCanEdit&&_brdC){
+    _boardSavePage();
+    var snap=_brdPages[_brdPageIdx];
+    if(snap)_brdEmitOp({type:'snapshot',data:snap});
+  }
 }
 function _brdCancelSel(){_boardSaveHist();_brdCleanSel();}
 function _brdCleanSel(){
@@ -16199,8 +16245,8 @@ function _boardInsertText(cx,cy){
   var oldBar=document.getElementById('_brdTxtBar');if(oldBar&&oldBar.parentNode)oldBar.parentNode.removeChild(oldBar);
   _brdActiveTxtBarEl=null;
   _brdTextAnchor={cx:cx,cy:cy}; // for repositioning after pan/zoom
-  // Snapshot canvas so we can do live preview as user types
-  var snapshot=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+  // Snapshot canvas so we can do live preview as user types (canvas GPU copy)
+  var snapshot=_brdMakeSnap();
   var r=_brdC.getBoundingClientRect();
   var sx=r.left+cx*_brdZoom, sy=r.top+cy*_brdZoom;
   function getFontStr(){
@@ -16209,7 +16255,7 @@ function _boardInsertText(cx,cy){
   function getTextX(){return _brdTextAlign==='center'?cx+70:_brdTextAlign==='right'?cx+140:cx;}
   // Live-draw text on canvas as user types
   function drawPreview(txt){
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(snapshot,0,0);_brdX.restore();
+    _brdRestoreSnap(snapshot);
     if(!txt)return;
     _brdX.save();
     _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
@@ -16596,6 +16642,10 @@ function _brdDecimate(pts,step){
 // Note : PAS de scale(dpr,dpr) — le contexte a déjà ce scale depuis _boardInitCanvas
 function _brdApplyRemoteOp(op){
   if(!_brdC||!_brdX)return;
+  // Snapshot complet — remplace le contenu de la page (ex: après commit sélection)
+  if(op.type==='snapshot'&&op.data){
+    _boardRestorePage(op.data);return;
+  }
   if(op.type==='stroke'||op.type==='erase'){
     var pts=op.pts;if(!pts||pts.length<2)return;
     _brdX.save();
@@ -16630,7 +16680,7 @@ function _brdApplyRemoteOp(op){
     op.content.split('\n').forEach(function(ln,i){_brdX.fillText(ln,op.x,op.y+i*lh);});
     _brdX.restore();
   }
-  _boardSaveHist();
+  if(op.type!=='snapshot')_boardSaveHist();
 }
 
 // Recevoir l'état complet (nouveau venu ou reconnexion)
