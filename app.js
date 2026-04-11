@@ -14912,6 +14912,7 @@ var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
 var _brdPageNames=[];
 var _brdTextSize=16,_brdTextBold=false,_brdTextItalic=false,_brdTextAlign='left';
 var _brdHist=[],_brdHistIdx=-1;
+var _brdPageHists=[]; // historique sauvegardé par page pour undo/redo persistant
 var _brdDraw=false,_brdPts=[],_brdSnap=null,_brdSS=null;
 var _brdActivePointers={}; // {pointerId:{x,y}} — track all active pointers
 var _brdBgC=null,_brdBgX=null; // background canvas (grid)
@@ -14922,7 +14923,7 @@ var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
-var _brdRemoteStrokes={},_brdLastPtEmit=0;
+var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
 var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
@@ -15270,6 +15271,9 @@ function _vCloseBoard(){
     _socket.emit('board_leave',{roomId:_brdRoomId});
   }
   if(typeof _brdCleanRemoteCursors==='function')_brdCleanRemoteCursors();
+  // Annuler les RAFs curseur en attente pour éviter des accès DOM post-fermeture
+  Object.keys(_brdCursorRAF).forEach(function(id){cancelAnimationFrame(_brdCursorRAF[id]);});
+  _brdCursorRAF={};_brdCursorPt={};
   _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
@@ -15524,42 +15528,61 @@ function _boardDeletePage(idx){
   _brdEmitPageDelete(idx);
 }
 function _boardRenamePage(idx){
-  var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||'';
-  var name=prompt('Nom de la page :',cur||('Page '+(idx+1)));
-  if(name===null)return;
-  _brdPageNames[idx]=name.trim();
-  _boardUpdatePageTabs();haptic(1);
-  _brdEmitPageRename(idx,_brdPageNames[idx]);
+  // Inline rename : remplace le label de l'onglet par un <input> sans bloquer le thread
+  var tabs=g('_brdTabs');if(!tabs)return;
+  var tab=tabs.children[idx];if(!tab)return;
+  var span=tab.querySelector('span');if(!span)return;
+  var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||('Page '+(idx+1));
+  var inp=document.createElement('input');
+  inp.type='text';inp.value=cur;inp.maxLength=24;
+  inp.style.cssText='width:100%;background:transparent;border:none;border-bottom:1.5px solid #FF6B2B;outline:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;padding:0;min-width:0;';
+  span.innerHTML='';span.appendChild(inp);
+  inp.focus();inp.select();
+  function _commit(){
+    var name=(inp.value||'').trim()||cur;
+    _brdPageNames[idx]=name;
+    _boardUpdatePageTabs();haptic(1);
+    _brdEmitPageRename(idx,name);
+  }
+  inp.addEventListener('blur',_commit,{once:true});
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();inp.blur();}
+    else if(e.key==='Escape'){inp.value=cur;inp.blur();}
+  });
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
-  // Only save current page if no restore is in flight — if a restore is pending,
-  // the canvas still shows the PREVIOUS page's content, not the current page's.
-  // _brdPages[_brdPageIdx] already holds the correct data in that case.
+  // Only save current page if no restore is in flight
   if(!_brdRestorePending)_boardSavePage();
+  // Sauvegarder l'historique de la page courante avant de partir
+  _brdPageHists[_brdPageIdx]={hist:_brdHist.slice(),idx:_brdHistIdx};
   _brdPageIdx=idx;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){
-      // Réinitialiser l'historique pour cette page (undo/redo par page)
-      _brdHist=[];_brdHistIdx=-1;_boardSaveHist();
+      // Restaurer l'historique de la page destination (ou en créer un nouveau)
+      var saved=_brdPageHists[_brdPageIdx];
+      if(saved){_brdHist=saved.hist.slice();_brdHistIdx=saved.idx;}
+      else{_brdHist=[];_brdHistIdx=-1;_boardSaveHist();}
       _boardUpdatePageTabs();
     });
   }else{
     _brdRestorePending=false;_boardClearFg();
-    _brdHist=[];_brdHistIdx=-1;_boardSaveHist();
+    var saved=_brdPageHists[_brdPageIdx];
+    if(saved){_brdHist=saved.hist.slice();_brdHistIdx=saved.idx;}
+    else{_brdHist=[];_brdHistIdx=-1;_boardSaveHist();}
     _boardUpdatePageTabs();
   }
   haptic(1);
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // Canvas offscreen : fond blanc + contenu fg — sans toucher le canvas principal
+  // PNG lossless pour le stockage local — élimine la dégradation JPEG cumulée sur chaque navigate
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   var tX=tmp.getContext('2d');
   tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
   tX.drawImage(_brdC,0,0);
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.7);
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
 }
 function _boardAddPage(){
   if(!_brdRestorePending)_boardSavePage();
@@ -15691,8 +15714,12 @@ function _boardDown(e){
   e.preventDefault();
   // Bloquer le dessin si pas autorisé (mode collaboratif, élève en lecture seule)
   if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='select'){
-    if(typeof toast==='function')toast('Lecture seule','Demande la permission au prof pour dessiner');
-    if(typeof haptic==='function')haptic(1);
+    var _now=Date.now();
+    if(_now-_brdROToastT>2500){
+      _brdROToastT=_now;
+      if(typeof toast==='function')toast('Lecture seule','Demande la permission au prof pour dessiner');
+      if(typeof haptic==='function')haptic(1);
+    }
     return;
   }
   _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
@@ -15802,11 +15829,13 @@ function _boardMove(e){
     if(_brdSnapTimer)clearTimeout(_brdSnapTimer);
     var snapP=p;
     // Indicateur visuel snap : petit cercle qui grossit pendant l'attente
-    var _snapIndicator=document.getElementById('_brdSnapRing');
-    if(!_snapIndicator){
+    // SnapRing : toujours attaché à la page courante pour survivre aux changements de page
+    var _snapPg=g('_brdPage');
+    var _snapIndicator=_snapPg&&_snapPg.querySelector('#_brdSnapRing');
+    if(!_snapIndicator&&_snapPg){
       _snapIndicator=document.createElement('div');_snapIndicator.id='_brdSnapRing';
       _snapIndicator.style.cssText='position:absolute;pointer-events:none;z-index:60;border-radius:50%;border:2px solid #FF6B2B;transform:translate(-50%,-50%) scale(0);transition:transform .65s ease,opacity .65s ease;opacity:0;width:28px;height:28px;';
-      var pg=g('_brdPage');if(pg)pg.appendChild(_snapIndicator);
+      _snapPg.appendChild(_snapIndicator);
     }
     if(_snapIndicator){
       _snapIndicator.style.left=(p.x*_brdZoom)+'px';_snapIndicator.style.top=(p.y*_brdZoom)+'px';
@@ -16417,7 +16446,7 @@ function _pipCycleSize(){
 function closeVisioModal(){
   _isDemoMode=false;_intentionalLeave=true;
   if(_boardActive){_vCloseBoard();}
-  _brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdC=null;_brdX=null;
+  _brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;
   _pipX=null;_pipY=null;
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
@@ -16447,9 +16476,25 @@ function _brdEmitOp(op){
 // Répondre à une demande de snapshot ciblée (seul le propriétaire reçoit cet event)
 function _brdOnSyncRequest(data){
   if(!_brdC||!_brdRoomId||!data.targetSocketId)return;
-  var snap=_brdC.toDataURL('image/jpeg',0.55);
+  // Sauvegarder la page courante avant d'en extraire le snapshot
+  _boardSavePage();
+  // Composer le snapshot en incluant le fond blanc (pas de JPEG noir si canvas transparent)
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  var tX=tmp.getContext('2d');
+  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
+  if(_brdBgC)tX.drawImage(_brdBgC,0,0);
+  tX.drawImage(_brdC,0,0);
+  var snap=tmp.toDataURL('image/jpeg',0.6);
   if(typeof _socket!=='undefined'&&_socket&&_socket.connected){
-    _socket.emit('board_snapshot_for',{roomId:_brdRoomId,targetSocketId:data.targetSocketId,snapshot:snap});
+    _socket.emit('board_snapshot_for',{
+      roomId:_brdRoomId,
+      targetSocketId:data.targetSocketId,
+      snapshot:snap,
+      pageIdx:_brdPageIdx,
+      pageNames:_brdPageNames.slice(),
+      pageCount:_brdPages.length
+    });
   }
 }
 
@@ -16461,6 +16506,7 @@ function _brdUserColor(uid){
   return _brdCursorColors[h%_brdCursorColors.length];
 }
 function _brdOnRemoteStrokeStart(d){
+  if(!d||!d.userId)return;
   var col=_brdUserColor(d.userId);
   _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col};
   var part=_brdParticipants.find(function(x){return x.id===d.userId;});
@@ -16490,10 +16536,10 @@ function _brdOnRemoteStrokeEnd(d){
 }
 
 // Dessiner un segment de trait reçu en temps réel
+// Note : PAS de scale(dpr,dpr) ici — le contexte est déjà scale(dpr,dpr) depuis _boardInitCanvas
 function _brdDrawRemoteSegment(stroke,pt){
   if(!_brdC||!_brdX||!stroke.lastPt)return;
-  var dpr=window.devicePixelRatio||1;
-  _brdX.save();_brdX.scale(dpr,dpr);
+  _brdX.save();
   _brdX.beginPath();_brdX.moveTo(stroke.lastPt.x,stroke.lastPt.y);_brdX.lineTo(pt.x,pt.y);
   if(stroke.tool==='eraser'){
     _brdX.globalCompositeOperation='destination-out';
@@ -16527,14 +16573,16 @@ function _brdShowRemoteCursor(userId,name,color){
 }
 
 // Déplacer le curseur d'un utilisateur distant (coords canvas → coords page DOM)
-// RAF throttling : une seule mise à jour par frame même si plusieurs pts arrivent
-var _brdCursorRAF={};
+// RAF throttling : une seule mise à jour par frame, utilise TOUJOURS le dernier pt connu
+var _brdCursorRAF={},_brdCursorPt={};
 function _brdMoveRemoteCursor(userId,pt){
-  if(_brdCursorRAF[userId])return; // déjà planifié pour cette frame
+  _brdCursorPt[userId]=pt; // toujours stocker le dernier point reçu
+  if(_brdCursorRAF[userId])return; // RAF déjà planifié pour cette frame
   _brdCursorRAF[userId]=requestAnimationFrame(function(){
     delete _brdCursorRAF[userId];
     var el=document.getElementById('_brdCursor-'+userId);
-    if(el){el.style.left=(pt.x*_brdZoom)+'px';el.style.top=(pt.y*_brdZoom)+'px';}
+    var lp=_brdCursorPt[userId];
+    if(el&&lp){el.style.left=(lp.x*_brdZoom)+'px';el.style.top=(lp.y*_brdZoom)+'px';}
   });
 }
 
@@ -16557,12 +16605,12 @@ function _brdDecimate(pts,step){
 }
 
 // Appliquer un op reçu d'un autre utilisateur
+// Note : PAS de scale(dpr,dpr) — le contexte a déjà ce scale depuis _boardInitCanvas
 function _brdApplyRemoteOp(op){
   if(!_brdC||!_brdX)return;
-  var dpr=window.devicePixelRatio||1;
   if(op.type==='stroke'||op.type==='erase'){
     var pts=op.pts;if(!pts||pts.length<2)return;
-    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.save();
     _brdX.beginPath();_brdX.moveTo(pts[0].x,pts[0].y);
     for(var i=1;i<pts.length;i++)_brdX.lineTo(pts[i].x,pts[i].y);
     if(op.type==='erase'){
@@ -16580,12 +16628,12 @@ function _brdApplyRemoteOp(op){
   }else if(op.type==='shape'){
     var oc=_brdColor,os=_brdSz,ot=_brdShType,of=_brdShFill;
     _brdColor=op.color;_brdSz=op.size;_brdShType=op.shType;_brdShFill=op.fill;
-    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.save();
     _boardDrawShape(op.x1,op.y1,op.x2,op.y2);
     _brdX.restore();
     _brdColor=oc;_brdSz=os;_brdShType=ot;_brdShFill=of;
   }else if(op.type==='text'){
-    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.save();
     _brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
     var fw=(op.bold?'700':'400'),fi=(op.italic?'italic':'normal');
     _brdX.font=fi+' '+fw+' '+op.textSize+'px "Plus Jakarta Sans",sans-serif';
@@ -16600,12 +16648,20 @@ function _brdApplyRemoteOp(op){
 // Recevoir l'état complet (nouveau venu ou reconnexion)
 function _brdOnSync(data){
   if(!_brdC||!_brdX)return;
-  // Appliquer le snapshot si présent
+  // Sync pages distantes (noms + nb pages)
+  if(data.pageNames&&Array.isArray(data.pageNames)){
+    _brdPageNames=data.pageNames.slice();
+    while(_brdPages.length<_brdPageNames.length)_brdPages.push(null);
+    _boardUpdatePageTabs();
+  }
+  // Appliquer le snapshot si présent — utiliser identity transform comme _boardRestorePage
   if(data.snapshot){
     var img=new Image();
     img.onload=function(){
+      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
       _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-      _brdX.drawImage(img,0,0,_brdC.width,_brdC.height);
+      _brdX.drawImage(img,0,0);
+      _brdX.restore();
       // Puis rejouer les ops reçus depuis le dernier snapshot
       if(data.ops)data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
     };
