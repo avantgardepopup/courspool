@@ -2499,7 +2499,7 @@
     "cr_visio_ext_desc": "Paste your Jitsi, Zoom or Google Meet link.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio not yet available",
-    "visio_not_yet_sub": "Class starts at {time}. Please come back 15 min before.",
+    "visio_not_yet_sub": "Class starts at {heure}. Please come back 15 min before.",
     "mes_rejoindre_visio": "Join us on video"
   },
   "es": {
@@ -3746,7 +3746,7 @@
     "cr_visio_ext_desc": "Pega tu enlace de Jitsi, Zoom o Google Meet.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio aún no está disponible",
-    "visio_not_yet_sub": "La clase empieza a las {hora}. Por favor, vuelve 15 minutos antes.",
+    "visio_not_yet_sub": "La clase empieza a las {heure}. Por favor, vuelve 15 minutos antes.",
     "mes_rejoindre_visio": "Unirse por vídeo"
   },
   "de": {
@@ -4993,7 +4993,7 @@
     "cr_visio_ext_desc": "Fügen Sie Ihren Jitsi-, Zoom- oder Google Meet-Link ein.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio noch nicht verfügbar",
-    "visio_not_yet_sub": "Der Unterricht beginnt um {Uhr}. Kommen Sie 15 Minuten vorher zurück.",
+    "visio_not_yet_sub": "Der Unterricht beginnt um {heure}. Kommen Sie 15 Minuten vorher zurück.",
     "mes_rejoindre_visio": "Per Video zuschalten"
   },
   "it": {
@@ -6240,7 +6240,7 @@
     "cr_visio_ext_desc": "Incollare il link di Jitsi, Zoom o Google Meet.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio non ancora disponibile",
-    "visio_not_yet_sub": "La lezione inizia a {ora}. Si prega di tornare 15 minuti prima.",
+    "visio_not_yet_sub": "La lezione inizia a {heure}. Si prega di tornare 15 minuti prima.",
     "mes_rejoindre_visio": "Partecipa con un video"
   },
   "pt": {
@@ -7487,7 +7487,7 @@
     "cr_visio_ext_desc": "Cole a sua ligação Jitsi, Zoom ou Google Meet.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio ainda não disponível",
-    "visio_not_yet_sub": "A aula começa às {horas}. Por favor, volte 15 minutos antes.",
+    "visio_not_yet_sub": "A aula começa às {heure}. Por favor, volte 15 minutos antes.",
     "mes_rejoindre_visio": "Aderir por vídeo"
   },
   "da": {
@@ -8165,7 +8165,7 @@
     "fol_remove": "Opfølgning",
     "confirm_cancel_swap": "Hvis du vil aflyse, skal du kontakte {prof} - refusionen foretages af læreren.\n\nÅbne postkassen ?",
     "res_extra_place": "Reservation af en ekstra plads - €{pp} pr. person.",
-    "search_code_join": "🔒 Deltag i det private kursus \"{kode}\"?",
+    "search_code_join": "🔒 Deltag i det private kursus \"{code}\"?",
     "msg_reconnecting": "At genskabe forbindelsen...",
     "msg_empty_conv": "Ingen samtale",
     "msg_empty_prof": "Dine elever kan skrive til dig fra et lektionsark.",
@@ -8734,7 +8734,7 @@
     "cr_visio_ext_desc": "Indsæt dit Jitsi-, Zoom- eller Google Meet-link.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio er endnu ikke tilgængelig",
-    "visio_not_yet_sub": "Lektionen starter kl. {tidspunkt}. Kom venligst tilbage 15 minutter før.",
+    "visio_not_yet_sub": "Lektionen starter kl. {heure}. Kom venligst tilbage 15 minutter før.",
     "mes_rejoindre_visio": "Deltag via video"
   },
   "fi": {
@@ -9981,7 +9981,7 @@
     "cr_visio_ext_desc": "Liitä Jitsi-, Zoom- tai Google Meet -linkki.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio ei vielä saatavilla",
-    "visio_not_yet_sub": "Oppitunti alkaa {aika}. Tule takaisin 15 minuuttia aikaisemmin.",
+    "visio_not_yet_sub": "Oppitunti alkaa {heure}. Tule takaisin 15 minuuttia aikaisemmin.",
     "mes_rejoindre_visio": "Liity videon avulla"
   },
   "sv": {
@@ -11228,7 +11228,7 @@
     "cr_visio_ext_desc": "Klistra in din Jitsi-, Zoom- eller Google Meet-länk.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio ännu inte tillgängligt",
-    "visio_not_yet_sub": "Lektionen börjar klockan {tid}. Kom tillbaka 15 minuter innan.",
+    "visio_not_yet_sub": "Lektionen börjar klockan {heure}. Kom tillbaka 15 minuter innan.",
     "mes_rejoindre_visio": "Anslut via video"
   },
   "pl": {
@@ -12475,7 +12475,7 @@
     "cr_visio_ext_desc": "Wklej link do Jitsi, Zoom lub Google Meet.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Visio nie jest jeszcze dostępny",
-    "visio_not_yet_sub": "Lekcja rozpoczyna się o {godzina}. Prosimy o powrót 15 minut wcześniej.",
+    "visio_not_yet_sub": "Lekcja rozpoczyna się o {heure}. Prosimy o powrót 15 minut wcześniej.",
     "mes_rejoindre_visio": "Dołącz przez wideo"
   },
   "el": {
@@ -13722,7 +13722,7 @@
     "cr_visio_ext_desc": "Επικολλήστε τον σύνδεσμο Jitsi, Zoom ή Google Meet.",
     "cr_visio_ext_ph": "https://meet.jit.si/...",
     "visio_not_yet": "Το Visio δεν είναι ακόμη διαθέσιμο",
-    "visio_not_yet_sub": "Το μάθημα ξεκινά την {ώρα}. Παρακαλείστε να έρθετε 15 λεπτά νωρίτερα.",
+    "visio_not_yet_sub": "Το μάθημα ξεκινά την {heure}. Παρακαλείστε να έρθετε 15 λεπτά νωρίτερα.",
     "mes_rejoindre_visio": "Συμμετοχή μέσω βίντεο"
   }
 };

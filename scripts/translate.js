@@ -1541,6 +1541,22 @@ const SOURCE = {
   mes_rejoindre_visio: 'Rejoindre en visio',
 };
 
+// ── Protection des variables {xxx} avant envoi à DeepL ────────────────────
+// DeepL traduit les noms de variables : {heure} → {time}, {code} → {kode}, etc.
+// On les remplace par des tokens opaques VARX_ avant et on restaure après.
+function protectVars(text) {
+  var vars = [];
+  var protected_ = text.replace(/\{[^}]+\}/g, function(match) {
+    var token = 'VARX' + vars.length + '_';
+    vars.push(match);
+    return token;
+  });
+  return { text: protected_, vars: vars };
+}
+function restoreVars(text, vars) {
+  return text.replace(/VARX(\d+)_/g, function(_, i) { return vars[parseInt(i)] || _; });
+}
+
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────
 function deeplTranslate(texts, targetLang) {
   return new Promise(function(resolve, reject) {
@@ -1549,9 +1565,13 @@ function deeplTranslate(texts, targetLang) {
       ? 'api-free.deepl.com'
       : 'api.deepl.com';
 
+    // Protéger les variables {xxx} avant envoi
+    var protectedData = texts.map(protectVars);
+    var protectedTexts = protectedData.map(function(d){ return d.text; });
+
     var body = 'source_lang=FR'
       + '&target_lang=' + targetLang
-      + texts.map(function(t){ return '&text=' + encodeURIComponent(t); }).join('');
+      + protectedTexts.map(function(t){ return '&text=' + encodeURIComponent(t); }).join('');
 
     var options = {
       hostname: host,
@@ -1571,7 +1591,10 @@ function deeplTranslate(texts, targetLang) {
         try {
           var json = JSON.parse(data);
           if (json.translations) {
-            resolve(json.translations.map(function(t){ return t.text; }));
+            // Restaurer les variables {xxx} dans chaque traduction
+            resolve(json.translations.map(function(t, i){
+              return restoreVars(t.text, protectedData[i].vars);
+            }));
           } else {
             reject(new Error('DeepL: ' + JSON.stringify(json)));
           }
