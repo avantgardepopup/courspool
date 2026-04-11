@@ -2951,7 +2951,7 @@ function buildAccLists(){
       // Toujours vérifier les données fraîches — _fetchProf retourne immédiatement si déjà _fresh
       _fetchProf(id);
       var cours=C.filter(function(c){return c.pr===id;});
-      var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
+      var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).map(subjL).join(', '):'';
       var _now2=Date.now();
       var prochainCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now2);}).length;
       var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
@@ -4981,7 +4981,7 @@ function _tpRenderMatieres(list,primary){
   chips.innerHTML=list.map(function(m){
     var mat=findMatiere(m);
     var col=mat?mat.color:'#9CA3AF';
-    return'<span style="background:'+col+';color:#fff;border-radius:50px;padding:5px 13px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,.15)">'+esc(m)+'</span>';
+    return'<span style="background:'+col+';color:#fff;border-radius:50px;padding:5px 13px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,.15)">'+esc(mat?mL(mat):m)+'</span>';
   }).join('');
   sect.style.display='block';
 }
