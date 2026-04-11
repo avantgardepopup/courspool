@@ -187,12 +187,26 @@ function initSocket() {
         var avHtml = '';
         if (!isMe) {
           var op = (typeof P !== 'undefined' && P[msgDestId]) || {};
-          var oPhoto = op.photo || null;
-          var oIni = op.i || (typeof msgDestinataire !== 'undefined' && msgDestinataire && msgDestinataire[0]) || '?';
+          var oPhotoRaw = op.photo || null;
+          // Valider l'URL photo — bloque javascript: et data: URI
+          var oPhoto = null;
+          if (oPhotoRaw) { try { var _pu=new URL(oPhotoRaw); if(_pu.protocol==='https:'||_pu.protocol==='http:') oPhoto=oPhotoRaw; } catch(e){} }
+          var oIni = op.i || ((typeof msgDestinataire !== 'undefined' && msgDestinataire) ? String(msgDestinataire)[0] : '?') || '?';
           var oCol = op.col || 'linear-gradient(135deg,#FF8C55,var(--ord))';
-          avHtml = '<div class="msg-bubble-av" style="background:' + oCol + '">'
-            + (oPhoto ? '<img src="' + oPhoto + '" style="width:100%;height:100%;object-fit:cover">' : oIni)
-            + '</div>';
+          if (oPhoto) {
+            // DOM API pour éviter toute injection string
+            var _avD = document.createElement('div');
+            _avD.className = 'msg-bubble-av';
+            _avD.style.background = oCol;
+            var _avI = document.createElement('img');
+            _avI.setAttribute('src', oPhoto);
+            _avI.style.cssText = 'width:100%;height:100%;object-fit:cover';
+            _avD.appendChild(_avI);
+            avHtml = _avD.outerHTML;
+          } else {
+            var safeIni = oIni.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            avHtml = '<div class="msg-bubble-av" style="background:' + oCol + '">' + safeIni + '</div>';
+          }
         }
         var bubble = '<div class="msg-bubble-row ' + (isMe ? 'me' : 'them') + '">'
           + (isMe ? '' : avHtml)

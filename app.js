@@ -1237,6 +1237,7 @@ async function loadData(page,silent){
     if(e.name==='AbortError'){
       var _gr=g('grid');if(_gr)_gr.innerHTML='';
       var _nc=g('nocard');if(_nc){_nc.style.display='block';var _nt=g('nocardTitle');if(_nt)_nt.textContent='Chargement...';}
+      if(typeof toast==='function')toast('Connexion lente','Les cours se rechargent automatiquement…');
       setTimeout(function(){loadData(1,true).then(function(){buildCards();});},5000);
     } else {
       console.log('loadData err',e);
@@ -14305,6 +14306,7 @@ function _vOnJoined(){
       _audioAnalyser=_audioCtx.createAnalyser();
       _audioAnalyser.fftSize=256;
       _audioSrc.connect(_audioAnalyser);
+      if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
       _mutedSpeakTimer=setInterval(_vCheckMutedSpeaking,300);
     }
   }catch(e){console.warn('[Visio audioCtx]',e);}
@@ -15914,11 +15916,12 @@ function _vTimerToggle(){
   _vTimerRunning=!_vTimerRunning;
   var btn=g('_vTimerPlayBtn');if(btn)btn.textContent=_vTimerRunning?'⏸ Pause':'▶ Start';
   if(_vTimerRunning){
+    clearInterval(_vTimerIv);
     _vTimerIv=setInterval(function(){
       if(_vTimerLeft<=0){clearInterval(_vTimerIv);_vTimerRunning=false;haptic(3);var b=g('_vTimerPlayBtn');if(b)b.textContent='▶ Start';_vTimerUpdateDisp();return;}
       _vTimerLeft--;_vTimerUpdateDisp();if(_vTimerLeft<=10)haptic(1);
     },1000);
-  }else{clearInterval(_vTimerIv);}
+  }else{clearInterval(_vTimerIv);_vTimerIv=null;}
 }
 function _vTimerReset(){
   clearInterval(_vTimerIv);_vTimerRunning=false;_vTimerLeft=_vTimerTotal;

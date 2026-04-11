@@ -72,10 +72,19 @@ io.use(async (socket, next) => {
 });
 
 // ── Tableau blanc collaboratif — rooms en mémoire ────────────
-// { ops:[], snapshot:null, editors:Set<userId>, ownerId, participants:Map<userId,name> }
+// { ops:[], snapshot:null, editors:Set<userId>, ownerId, participants:Map<userId,name>, lastActivity:ts }
 const boardRooms = new Map();
 // socketId → Set<roomId> — pour nettoyage sur disconnect
 const socketBoardRooms = new Map();
+// Purge des rooms inactives depuis plus de 2h (abandon sans disconnect propre)
+setInterval(() => {
+  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+  for (const [roomId, room] of boardRooms) {
+    if ((room.lastActivity || 0) < cutoff && room.participants.size === 0) {
+      boardRooms.delete(roomId);
+    }
+  }
+}, 30 * 60 * 1000);
 
 // ── Chaque client rejoint sa propre room ─────────────────────
 io.on('connection', (socket) => {
@@ -161,6 +170,7 @@ io.on('connection', (socket) => {
     if (!room || !room.editors.has(socket.userId)) return;
     op.userId = socket.userId;
     room.ops.push(op);
+    room.lastActivity = Date.now();
     socket.to('board_' + roomId).emit('board_op', op);
   });
 
@@ -387,6 +397,17 @@ function recordFailedLogin(ip, email, req) {
       );
     }
   }
+}
+
+// ── Mutex par cours — sérialise les réservations simultanées ─────
+// Évite la race condition entre check places_max et INSERT
+const _coursLocks = new Map();
+async function withCoursLock(cours_id, fn) {
+  while (_coursLocks.has(cours_id)) { await _coursLocks.get(cours_id); }
+  let resolve;
+  _coursLocks.set(cours_id, new Promise(r => { resolve = r; }));
+  try { return await fn(); }
+  finally { _coursLocks.delete(cours_id); resolve(); }
 }
 
 // ── Verrous temporaires de places (10 min) ────────────────────
@@ -1152,12 +1173,12 @@ app.post('/cours', requireAuth, async (req, res) => {
           if (!follows || !follows.length) return;
           const { data: profP } = await supabase.from('profiles').select('prenom,nom').eq('id', professeur_id).single();
           const profNom = profP ? (profP.prenom + ' ' + (profP.nom||'')).trim() : 'Un professeur';
-          await Promise.all(follows.map(f => pushToUser(f.user_id, {
+          await pushToUsers(follows.map(f => f.user_id), {
             title: `📚 Nouveau cours de ${profNom}`,
             body: `"${titreNotif}" est disponible — réservez avant que les places partent !`,
             tag: 'new-cours', icon: '/icon-192.png',
             data: { url: 'https://courspool.vercel.app' }
-          })));
+          });
         } catch(e) {}
       })();
     }
@@ -1270,20 +1291,31 @@ app.post('/reservations', requireAuth, async (req, res) => {
   const { cours_id, montant_paye, type_paiement } = req.body;
   if (!cours_id) return res.status(400).json({ error: 'Données manquantes' });
   try {
-    const { data: existing } = await supabase.from('reservations')
-      .select('id').eq('cours_id', cours_id).eq('user_id', user_id).single();
-    if (existing) return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
-    const { data, error } = await supabase.from('reservations')
-      .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
-      .select();
-    if (error) {
-      if (error.code === '23505') return res.status(400).json({ error: 'Vous avez déjà réservé ce cours' });
-      return res.status(500).json({ error: error.message });
-    }
-    const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
-    await supabase.from('cours').update({ places_prises: resCount || 0 }).eq('id', cours_id);
-    io.emit('reservation_update', { cours_id, places_prises: resCount || 0 });
-    res.json(data[0]);
+    const result = await withCoursLock(cours_id, async () => {
+      const { data: existing } = await supabase.from('reservations')
+        .select('id').eq('cours_id', cours_id).eq('user_id', user_id).maybeSingle();
+      if (existing) return { status: 400, body: { error: 'Vous avez déjà réservé ce cours' } };
+      // Vérifier les places disponibles (inclut les verrous Stripe en cours)
+      const { data: coursInfo } = await supabase.from('cours').select('places_max,places_prises').eq('id', cours_id).single();
+      if (coursInfo) {
+        const lockedCount = lockedPlacesCount(cours_id, user_id);
+        if (coursInfo.places_prises + lockedCount >= coursInfo.places_max) {
+          return { status: 409, body: { error: 'Ce cours est complet' } };
+        }
+      }
+      const { data, error } = await supabase.from('reservations')
+        .insert([{ cours_id, user_id, montant_paye: montant_paye||0, type_paiement: type_paiement||'total' }])
+        .select();
+      if (error) {
+        if (error.code === '23505') return { status: 400, body: { error: 'Vous avez déjà réservé ce cours' } };
+        return { status: 500, body: { error: error.message } };
+      }
+      const { count: resCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+      await supabase.from('cours').update({ places_prises: resCount || 0 }).eq('id', cours_id);
+      io.emit('reservation_update', { cours_id, places_prises: resCount || 0 });
+      return { status: 200, body: data[0] };
+    });
+    return res.status(result.status).json(result.body);
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -2552,9 +2584,9 @@ app.get('/messages/:user1/:user2', requireAuth, async (req, res) => {
   try {
     const { data, error } = await supabase.from('messages').select('*')
       .or(`and(sender_id.eq.${user1},receiver_id.eq.${user2}),and(sender_id.eq.${user2},receiver_id.eq.${user1})`)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false }).limit(200);
     if (error) return res.status(500).json({ error });
-    res.json(data);
+    res.json((data || []).reverse());
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
@@ -2672,12 +2704,20 @@ app.post('/upload/photo', requireAuth, async (req, res) => {
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(base64)) {
     return res.status(400).json({ error: 'Format d\'image non autorisé (JPG, PNG ou WEBP uniquement)' });
   }
-  // Limiter la taille du base64 (2 Mo encodé ≈ ~2.7 Mo base64)
-  if (base64.length > 3 * 1024 * 1024) {
-    return res.status(400).json({ error: 'Image trop lourde (2 Mo max)' });
+  // Limiter la taille du base64 (500 Ko binary ≈ ~680 Ko base64)
+  if (base64.length > 700 * 1024) {
+    return res.status(400).json({ error: 'Image trop lourde (500 Ko max)' });
   }
   try {
     const buffer = Buffer.from(base64.split(',')[1], 'base64');
+    // Vérification magic bytes — bloque les fichiers déguisés en image
+    const magic = buffer.slice(0, 4);
+    const isJpeg = magic[0] === 0xFF && magic[1] === 0xD8;
+    const isPng  = magic[0] === 0x89 && magic[1] === 0x50;
+    const isWebp = magic.toString('ascii', 0, 4) === 'RIFF';
+    if (!isJpeg && !isPng && !isWebp) {
+      return res.status(400).json({ error: 'Format d\'image invalide' });
+    }
     const ext = (filename ? filename.split('.').pop().toLowerCase() : 'jpg').replace('jpeg','jpg');
     const validExt = ['jpg','jpeg','png','webp'].includes(ext) ? ext : 'jpg';
     const path = userId + '/avatar.' + validExt;
@@ -2696,13 +2736,7 @@ app.post('/upload/photo', requireAuth, async (req, res) => {
     res.json({ url: publicUrl });
   } catch(e) {
     console.log('Upload error:', e.message);
-    // Fallback : sauvegarder base64 dans le profil
-    try {
-      await supabase.from('profiles').update({ photo_url: base64 }).eq('id', userId);
-      res.json({ url: base64 });
-    } catch(e2) {
-      res.status(500).json({ error: 'Erreur serveur' });
-    }
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
@@ -2731,8 +2765,9 @@ app.post('/notations', requireAuth, async (req, res) => {
 app.get('/notations/:professeur_id', async (req, res) => {
   try {
     const { data, error } = await supabase.from('notations').select('*')
-      .eq('professeur_id', req.params.professeur_id).order('created_at', { ascending: false });
+      .eq('professeur_id', req.params.professeur_id).order('created_at', { ascending: false }).limit(50);
     if (error) return res.status(500).json({ error });
+    res.set('Cache-Control', 'public, max-age=30');
     res.json(data);
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
@@ -2782,6 +2817,20 @@ async function pushToUser(userId, payload) {
     endpoint: s.endpoint,
     keys: { auth: s.auth, p256dh: s.p256dh }
   }, payload)));
+}
+
+// Helper : envoyer à plusieurs users en une seule query (évite N+1)
+// Envoie par chunks de 25 pour ne pas saturer webpush
+async function pushToUsers(userIds, payload) {
+  if (!userIds || !userIds.length) return;
+  const { data: subs } = await supabase.from('push_subscriptions').select('*').in('user_id', userIds);
+  if (!subs || !subs.length) return;
+  for (let i = 0; i < subs.length; i += 25) {
+    await Promise.all(subs.slice(i, i + 25).map(s => sendPushToSub({
+      endpoint: s.endpoint,
+      keys: { auth: s.auth, p256dh: s.p256dh }
+    }, payload)));
+  }
 }
 
 // PUSH — s'abonner (requireAuth via middleware global)
