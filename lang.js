@@ -1221,7 +1221,7 @@
     "follow_profs_desc": "Suivez des professeurs pour voir leurs cours ici",
     "explore_courses_btn": "Explorer les cours",
     "no_course_published": "Aucun cours publié",
-    "no_reviews_yet": "Pas encore d'avis pour le moment.",,
+    "no_reviews_yet": "Pas encore d'avis pour le moment.",
     "share_in_conv": "Share in conversation",
     "share_opt_cours_lbl": "A course",
     "share_opt_cours_sub": "Share one of your sessions",
@@ -1471,7 +1471,7 @@
     "reviews_err": "Αδύνατη η φόρτωση αξιολογήσεων.",
     "avis_suffix": "αξιολογήσεις",
     "pay_older": "παλαιότερες πληρωμές",
-    "no_reviews_yet": "Δεν υπάρχουν αξιολογήσεις ακόμα."
+    "no_reviews_yet": "Δεν υπάρχουν αξιολογήσεις ακόμα.",
     "stat_profs_lbl": "Profs",
     "mpt_done": "Terminé",
     "mpt_skip": "Passer",
