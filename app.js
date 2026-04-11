@@ -17263,7 +17263,8 @@ function closeVisioModal(){
   restoreNav();
   haptic(4);
   // Nettoyage asynchrone (erreurs silencieuses)
-  try{_isDemoMode=false;_intentionalLeave=true;}catch(e){}
+  // _visioCurrentUrl vidé en PREMIER pour bloquer tout reconnect automatique
+  try{_isDemoMode=false;_intentionalLeave=true;_visioCurrentUrl='';}catch(e){}
   try{if(_boardActive){_vCloseBoard();}}catch(e){}
   try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
   try{_pipX=null;_pipY=null;}catch(e){}
@@ -17275,7 +17276,13 @@ function closeVisioModal(){
   try{if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}_demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;}catch(e){}
   try{if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}}catch(e){}
   try{if(_demoAudioCtx){_demoAudioCtx.close();_demoAudioCtx=null;}}catch(e){}
-  try{if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){try{co.destroy();}catch(e){}});}}catch(e){}
+  try{if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){
+    try{co.destroy();}catch(e){}
+    // Forcer l'arrêt de tous les tracks WebRTC résiduels laissés par Daily
+    try{document.querySelectorAll('video,audio').forEach(function(el){
+      if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
+    });}catch(e){}
+  });}}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
   window._vPreJoinCallback=null;
