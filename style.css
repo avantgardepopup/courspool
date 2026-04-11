@@ -3297,7 +3297,7 @@ html.dk .card.card-new {
 html.dk .card-badge-mode-new { background: #22223A; }
 .card-prof-av {
   position: absolute;
-  top: 0; right: 14px;
+  top: 12px; right: 14px;
   z-index: 3;
   width: 56px; height: 56px;
   border-radius: 50%;

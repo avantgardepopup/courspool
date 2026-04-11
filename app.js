@@ -14956,12 +14956,8 @@ function _boardRenderSubbar(){
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
     ,'Stylo');
-  h+=tb('_bTMk',"_boardToolTap('marker')",_brdTool==='marker',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='marker'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19">'
-    +'<path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>'
-    ,'Marqueur');
   h+=tb('_bTEr',"_boardToolTap('eraser')",_brdTool==='eraser',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><path d="M20 20H7L3 16l10-10 7 7-2 2"/><path d="M6 15l3 3"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M3 21h18"/><path d="M6.5 21L3 16l9.5-9.5 6 6L12 19.5"/><path d="M12.5 6.5l6 6"/></svg>'
     ,'Gomme');
   h+=tb('_bTTx',"_boardToolTap('text')",_brdTool==='text',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='text'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
@@ -15106,6 +15102,27 @@ function _vOpenBoard(){
   document.body.appendChild(pip);
   // Spring entrance animation
   requestAnimationFrame(function(){pip.style.transform='scale(1)';pip.style.opacity='1';});
+  // Double-tap → expand pip back to full visio
+  var _pipDblTapT=0;
+  pip.addEventListener('click',function(e){
+    if(e.target===hb||hb.contains(e.target))return; // ignore hide button
+    var now=Date.now();
+    if(now-_pipDblTapT<320){
+      _pipDblTapT=0;
+      var r=pip.getBoundingClientRect();
+      var scaleX=window.innerWidth/r.width,scaleY=window.innerHeight/r.height;
+      var sc=Math.max(scaleX,scaleY)*1.05;
+      var dx=window.innerWidth/2-(r.left+r.width/2);
+      var dy=window.innerHeight/2-(r.top+r.height/2);
+      pip.style.transition='transform 320ms cubic-bezier(.4,0,.2,1),opacity 260ms ease,border-radius 300ms ease';
+      pip.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+      pip.style.borderRadius='0';
+      pip.style.opacity='0';
+      setTimeout(function(){_vCloseBoard();},300);
+    }else{
+      _pipDblTapT=now;
+    }
+  },{passive:true});
   _pipInitDrag(ph,pip);
   _pipInitPinch(pip);
   // Board overlay
@@ -15710,8 +15727,8 @@ function _brdShowSelBar(){
   };
   var sdiv='<div style="width:1px;height:24px;background:rgba(255,255,255,.13);margin:0 3px;flex-shrink:0;"></div>';
   bar.innerHTML=
-    ibtn('_brdSelRotate(-15)','<path d="M3 12a9 9 0 109-9"/><polyline points="3 7 3 12 8 12"/>','Tourner −15°')
-   +ibtn('_brdSelRotate(15)','<path d="M21 12a9 9 0 10-9-9"/><polyline points="21 7 21 12 16 12"/>','Tourner +15°')
+    ibtn('_brdSelRotate(-15)','<path d="M4.5 9A8.5 8.5 0 1 0 12 3.5"/><path d="M12 3.5L8.5 0.5 5.5 4.5"/>','Tourner −15°')
+   +ibtn('_brdSelRotate(15)','<path d="M19.5 9A8.5 8.5 0 1 1 12 3.5"/><path d="M12 3.5l3.5-3 3 4"/>','Tourner +15°')
    +sdiv
    +ibtn('_brdSelDuplicate()','<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>','Dupliquer')
    +sdiv
