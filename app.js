@@ -14889,6 +14889,7 @@ function _vToggleRecord(){
 var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
+var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
 var _brdPageNames=[];
 var _brdTextSize=16,_brdTextBold=false,_brdTextItalic=false,_brdTextAlign='left';
 var _brdHist=[],_brdHistIdx=-1;
@@ -14985,32 +14986,37 @@ function _boardRenderSubbar(){
   var h='';
   // Dark pill → light icon colors
   var ic='rgba(255,255,255,.80)';  // inactive icon stroke
-  var tb=function(id,onclick,active,svg,title){
+  var tb=function(id,onclick,active,svg,title,toolName){
+    var pinned=toolName&&_brdPinnedTool===toolName;
     var bg=active?'background:rgba(255,255,255,.18);':'background:transparent;';
-    return '<button id="'+id+'" onclick="'+onclick+'" title="'+(title||'')+'" style="'+bg+'border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;">'
+    var pinSt=pinned?'box-shadow:inset 0 -2.5px 0 #FF6B2B;':'';
+    var pdHandlers=toolName
+      ?'onpointerdown="_brdToolPD(\''+toolName+'\')" onpointerup="_brdToolPU()" onpointerleave="_brdToolPU()" onpointercancel="_brdToolPU()"'
+      :'';
+    return '<button id="'+id+'" onclick="'+onclick+'" '+pdHandlers+' title="'+(title||'')+'" style="'+bg+pinSt+'border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;">'
       +svg+'</button>';
   };
   var sep='<div style="width:1px;height:24px;background:rgba(255,255,255,.15);margin:0 4px;flex-shrink:0;"></div>';
   // ── Tool icons ──
   h+=tb('_bTHd',"_boardToolTap('hand')",_brdTool==='hand',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='hand'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 11V8a2 2 0 00-4 0v3"/><path d="M14 8V6a2 2 0 00-4 0v5"/><path d="M10 6.5V5a2 2 0 00-4 0v8"/><path d="M6 13s0 5 4 7h4c3 0 4-2 4-4v-5a2 2 0 00-4 0"/></svg>'
-    ,'Déplacer / zoomer');
+    ,'Déplacer / zoomer','hand');
   h+=tb('_bTSl',"_boardToolTap('select')",_brdTool==='select',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='select'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M5 3l14 9-7 1-4 7z"/></svg>'
-    ,'Sélection');
+    ,'Sélection','select');
   h+=sep;
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
-    ,'Stylo');
+    ,'Stylo','pen');
   h+=tb('_bTEr',"_boardToolTap('eraser')",_brdTool==='eraser',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M3 21h18"/><path d="M6.5 21L3 16l9.5-9.5 6 6L12 19.5"/><path d="M12.5 6.5l6 6"/></svg>'
-    ,'Gomme');
+    ,'Gomme','eraser');
   h+=tb('_bTTx',"_boardToolTap('text')",_brdTool==='text',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='text'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
-    ,'Texte');
+    ,'Texte','text');
   h+=tb('_bTSh',"_boardToolTap('shape')",_brdTool==='shape',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='shape'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="7" r="4"/><path d="M12 22l4.5-8h-9z"/></svg>'
-    ,'Formes');
+    ,'Formes','shape');
   h+=sep;
   // ── Context-sensitive: sizes or shape picker ──
   if(_brdTool==='shape'){
@@ -15474,7 +15480,20 @@ function _boardNextPage(){
 
 // ── New toolbar & popup system ──
 function _boardUpdateToolbar(){_boardRenderSubbar();}
+function _brdToolPD(tool){
+  _brdLPFired=false;
+  _brdLPTimer=setTimeout(function(){
+    _brdLPFired=true;
+    clearTimeout(_brdLPTimer);_brdLPTimer=null;
+    if(_brdPinnedTool===tool){_brdPinnedTool=null;}
+    else{_brdPinnedTool=tool;_brdTool=tool;if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';}
+    haptic(2);_boardRenderSubbar();
+  },480);
+}
+function _brdToolPU(){if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}}
 function _boardToolTap(tool){
+  if(_brdLPFired){_brdLPFired=false;return;} // long-press géré, ignorer le click
+  if(_brdPinnedTool&&_brdPinnedTool!==tool)return; // outil épinglé : blocage
   if(_brdSel.active)_brdCommitSel();
   _brdTool=tool;
   if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';
