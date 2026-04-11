@@ -2644,7 +2644,7 @@ function goAccount(){
     if(user.statut){
       var stInp=g('pfStatut');if(stInp)stInp.value=user.statut;
       var stLbl=g('pfStatutLabel');
-      if(stLbl){var stOpt=_STATUT_OPTIONS.filter(function(o){return o.val===user.statut;})[0];if(stOpt)stLbl.textContent=stOpt.label;}
+      if(stLbl){var stOpt=_getStatutOptions().filter(function(o){return o.val===user.statut;})[0];if(stOpt)stLbl.textContent=stOpt.label;}
       updateNiveauxPf(user.statut);
       if(user.niveau){
         var nivInp=g('pfNiveau');if(nivInp)nivInp.value=user.niveau;
@@ -4700,7 +4700,7 @@ function contPr(){
 
 function _renderMpfExtraInfo(p){
   var el=g('mpfExtraInfo');if(!el)return;
-  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
   var rows='';
   // Statut + lieu
   var statutLabel=p.statut?(STATUT[p.statut]||p.statut):null;
@@ -8541,14 +8541,14 @@ function _renderEspCardInner(d,isMe,time){
 // PICKER NATIF — bottom sheet liste d'options
 // ============================================================
 var _pickerType = null;
-var _STATUT_OPTIONS = [
-  {val:'etudiant', label:'Étudiant'},
-  {val:'prof_ecole', label:'Prof des écoles'},
-  {val:'prof_college', label:'Collège / lycée'},
-  {val:'prof_universite', label:'Enseignant-chercheur'},
-  {val:'auto', label:'Auto-entrepreneur'},
-  {val:'autre', label:'Autre'}
-];
+function _getStatutOptions(){return[
+  {val:'etudiant',      label:t('statut_etudiant')},
+  {val:'prof_ecole',   label:t('statut_prof_ecoles')},
+  {val:'prof_college', label:t('statut_prof_clg')},
+  {val:'prof_universite',label:t('statut_chercheur')},
+  {val:'auto',         label:t('statut_auto')},
+  {val:'autre',        label:t('statut_autre')},
+];}
 
 function openPicker(type){
   _pickerType = type;
@@ -8562,7 +8562,7 @@ function openPicker(type){
 
   if(type === 'statut'){
     title.textContent = t('lbl_statut_pro');
-    options = _STATUT_OPTIONS;
+    options = _getStatutOptions();
     currentVal = g('pfStatut') ? g('pfStatut').value : '';
   } else if(type === 'niveau'){
     var statut = g('pfStatut') ? g('pfStatut').value : '';
