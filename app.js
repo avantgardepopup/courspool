@@ -14028,13 +14028,36 @@ function _vOpenDemo(){
   ];
   fakes.forEach(function(f){grid.appendChild(_vBuildDemoTile(f));});
   _vApplyLayout();
-  // Simulate active speaker cycling for demo
-  setTimeout(function(){_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});},1000);
-  setInterval(function(){
-    if(!_boardActive)return;
-    var candidates=['demo-p1','demo-p2'];
-    _vOnActiveSpeaker({activeSpeaker:{peerId:candidates[Math.floor(Math.random()*candidates.length)]}});
-  },5000);
+  // Détection audio du micro local : la bulle montre le vrai locuteur en temps réel
+  _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
+  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+    _demoAudioStream=stream;
+    _demoAudioCtx=new AudioContext();
+    var src=_demoAudioCtx.createMediaStreamSource(stream);
+    var analyser=_demoAudioCtx.createAnalyser();analyser.fftSize=256;
+    src.connect(analyser);
+    var buf=new Uint8Array(analyser.frequencyBinCount);
+    var _localSpeakingNow=false,_silenceSince=Date.now();
+    _demoSpeakTimer=setInterval(function(){
+      if(!_isDemoMode){return;}
+      analyser.getByteFrequencyData(buf);
+      var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i];
+      var avg=sum/buf.length;
+      var speaking=avg>14;
+      if(speaking&&!_localSpeakingNow){
+        _localSpeakingNow=true;
+        _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});
+      }else if(!speaking&&_localSpeakingNow){
+        _silenceSince=Date.now();_localSpeakingNow=false;
+      }else if(!speaking&&!_localSpeakingNow&&Date.now()-_silenceSince>1800){
+        // Après 1.8s de silence, repasser sur l'autre participant
+        _silenceSince=Date.now()+3600000; // éviter de re-déclencher
+        _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
+      }
+    },150);
+  }).catch(function(){
+    // Pas de micro : bulle fixe sur demo-p1, pas d'animation aléatoire
+  });
   haptic(1);
 }
 
@@ -14081,6 +14104,7 @@ var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_n
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
 var _vPipFeaturedSid=null; // currently displayed SID in PiP mode
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
+var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
 var _vComments=[],_vCommentOpen=false,_vCommentAllowed=true;
 
 function openVisioModal(url){
@@ -14266,6 +14290,11 @@ function _vCheckMutedSpeaking(){
       micBtn.style.boxShadow='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
       micBtn.style.background='rgba(255,255,255,.12)';
     }
+  }
+  // PiP : si l'utilisateur local parle (et n'est pas muté), le mettre en locuteur actif
+  if(!_localMuted&&isSpeaking&&_activeSpeakerSid!=='local'){
+    _activeSpeakerSid='local';
+    if(_boardActive)_vApplyLayout();
   }
 }
 
@@ -15957,6 +15986,9 @@ function closeVisioModal(){
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
   if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
+  if(_demoSpeakTimer){clearInterval(_demoSpeakTimer);_demoSpeakTimer=null;}
+  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
   if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
