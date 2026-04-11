@@ -14157,6 +14157,17 @@ function _vBuildDemoTile(f){
   pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:#FF6B2B;color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.3);';
   pinInd.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg> Épinglé';
   pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
+  // Bouton caméra (local seulement) — coin bas-droit, à gauche du micro
+  if(f.local){
+    var camInd=document.createElement('button');
+    camInd.id='_vdcam-'+f.sid;
+    camInd.style.cssText='position:absolute;bottom:8px;right:44px;z-index:5;width:28px;height:28px;border-radius:50%;'
+      +'background:rgba(0,0,0,.65);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+      +'box-shadow:0 1px 6px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent;transition:background .15s;';
+    camInd.innerHTML=_vCamSvgSm(_localCamOff);
+    camInd.onclick=function(e){e.stopPropagation();_vToggleCam();};
+    wrap.appendChild(camInd);
+  }
   // Indicateur micro petit coin bas-droit (non-local = read-only, local = toggle)
   var micInd=document.createElement('button');
   micInd.id='_vdmic-'+f.sid;
@@ -14417,6 +14428,7 @@ function _buildVisioHTML(){
 function _vMicSvg(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(muted?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(muted?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';}
 function _vMicSvgSm(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(muted?'#fc8181':'rgba(255,255,255,.9)')+'" stroke-width="2.2" stroke-linecap="round" width="14" height="14">'+(muted?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';}
 function _vCamSvg(off){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(off?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(off?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
+function _vCamSvgSm(off){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(off?'#fc8181':'rgba(255,255,255,.9)')+'" stroke-width="2.2" stroke-linecap="round" width="14" height="14">'+(off?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
 
 function _updateVisioTimer(){var el=g('_vTimer');if(!el)return;var m=Math.floor(_callSec/60),s=_callSec%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
 
@@ -14845,8 +14857,18 @@ function _vToggleMic(){
 function _vToggleCam(){
   if(!_callObj&&!_isDemoMode)return;
   _localCamOff=!_localCamOff;
+  // Mettre à jour les boutons caméra (barre + tile)
+  var b=g('_vCam');if(b){b.innerHTML=_vCamSvg(_localCamOff);b.style.background=_localCamOff?'rgba(229,62,62,.35)':'rgba(255,255,255,.12)';}
+  var bsm=g('_vdcam-demo-local');if(bsm)bsm.innerHTML=_vCamSvgSm(_localCamOff);
+  if(_isDemoMode){
+    // Afficher/cacher la vidéo locale + avatar
+    var lv=g('_vLocalVid');
+    var lav=g('_vav-demo-local');
+    if(lv){lv.style.display=_localCamOff?'none':'block';}
+    if(lav){lav.style.display=_localCamOff?'flex':'none';}
+    haptic(1);return;
+  }
   if(_callObj)_callObj.setLocalVideo(!_localCamOff);
-  var b=g('_vCam');if(b)b.innerHTML=_vCamSvg(_localCamOff);
   haptic(1);
 }
 function _vToggleShare(){
