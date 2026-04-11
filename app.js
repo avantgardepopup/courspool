@@ -16102,7 +16102,7 @@ function _boardUp(e){
     var sx=Math.min(_brdSS.x,p.x),sy=Math.min(_brdSS.y,p.y);
     var sw=Math.abs(p.x-_brdSS.x),sh=Math.abs(p.y-_brdSS.y);
     _brdSS=null;_brdSnap=null;
-    if(sw>4&&sh>4)_brdActivateSel(sx,sy,sw,sh);
+    if(sw>15&&sh>15)_brdActivateSel(sx,sy,sw,sh);
   }
   _brdPts=[];
 }
@@ -16132,13 +16132,38 @@ function _boardDrawShape(x1,y1,x2,y2){
 function _brdActivateSel(x,y,w,h){
   if(_brdSel.active)_brdCommitSel();
   var dpr=window.devicePixelRatio||1;
-  // GPU copy (drawImage avec rect source) — évite la copie CPU de getImageData/putImageData
+  var ix=Math.round(x*dpr),iy=Math.round(y*dpr);
   var sdw=Math.round(w*dpr),sdh=Math.round(h*dpr);
+
+  // Trouver les bornes réelles des pixels non-transparents dans le rectangle dessiné
+  var imgData=_brdX.getImageData(ix,iy,sdw,sdh);
+  var data=imgData.data,minX=sdw,minY=sdh,maxX=-1,maxY=-1;
+  for(var py=0;py<sdh;py++){
+    for(var px=0;px<sdw;px++){
+      if(data[(py*sdw+px)*4+3]>10){ // alpha > ~4% = pixel réel
+        if(px<minX)minX=px;if(px>maxX)maxX=px;
+        if(py<minY)minY=py;if(py>maxY)maxY=py;
+      }
+    }
+  }
+  if(maxX===-1)return; // rectangle entièrement vide — ne rien faire
+
+  // Padding 4px logiques autour du contenu détecté
+  var pad=Math.round(4*dpr);
+  var cx=Math.max(0,minX-pad),cy=Math.max(0,minY-pad);
+  var cw=Math.min(sdw,maxX+1+pad)-cx,ch=Math.min(sdh,maxY+1+pad)-cy;
+
+  // Coordonnées logiques recadrées
+  var lx=x+cx/dpr,ly=y+cy/dpr,lw=cw/dpr,lh=ch/dpr;
+
+  // GPU copy uniquement sur la zone recadrée
   var oc=document.createElement('canvas');
-  oc.width=sdw;oc.height=sdh;
-  oc.getContext('2d').drawImage(_brdC,Math.round(x*dpr),Math.round(y*dpr),sdw,sdh,0,0,sdw,sdh);
+  oc.width=cw;oc.height=ch;
+  oc.getContext('2d').drawImage(_brdC,ix+cx,iy+cy,cw,ch,0,0,cw,ch);
+
+  // Effacer la zone d'origine entière (évite les résidus hors du crop)
   _brdX.clearRect(x,y,w,h);
-  _brdSel={active:true,x:x,y:y,w:w,h:h,angle:0,offC:oc,el:null,bar:null};
+  _brdSel={active:true,x:lx,y:ly,w:lw,h:lh,angle:0,offC:oc,el:null,bar:null};
   _brdShowSelOverlay();
 }
 function _brdShowSelOverlay(){
