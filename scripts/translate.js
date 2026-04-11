@@ -296,6 +296,38 @@ const SOURCE = {
   esp_doc_sans_titre:  'Document sans titre',
   esp_voir_lien:       'Voir',
 
+  // Popup partage messagerie (bouton +)
+  share_in_conv:         'Partager dans la conversation',
+  share_opt_cours_lbl:   'Un cours',
+  share_opt_cours_sub:   'Partage une de tes séances',
+  share_opt_fiche_lbl:   'Fiche de cours',
+  share_opt_fiche_sub:   'Partage une fiche depuis ton espace',
+  share_opt_pub_lbl:     'Publication',
+  share_opt_pub_sub:     'Partage une annonce ou publication',
+  share_opt_sondage_lbl: 'Sondage',
+  share_opt_sondage_sub: 'Pose une question au groupe',
+  share_loading:         'Chargement…',
+  share_no_content:      'Aucun contenu disponible dans ton espace',
+  share_fiches_title:    'Fiches de cours',
+  share_pubs_title:      'Publications',
+  share_untitled:        'Sans titre',
+  btn_fermer:            'Fermer',
+
+  // Cartes ESP dans la messagerie
+  esp_lbl_fiche:        'Fiche de cours',
+  esp_lbl_pub:          'Publication',
+  esp_lbl_sondage:      'Sondage',
+  esp_lbl_contenu:      'Contenu',
+  esp_voir_espace:      'Voir dans l\'espace →',
+
+  // Favoris
+  fav_voir:             'Voir',
+
+  // Avis
+  reviews_err:          'Impossible de charger les avis.',
+  avis_suffix:          'avis',
+  pay_older:            'paiements plus anciens',
+
   // Guide tuto Mon Espace (6 étapes)
   esp_title_1: 'Bienvenue dans ton Espace !',
   esp_sub_1:   'Ton espace prof centralise tout ce dont tu as besoin pour gérer tes élèves et tes cours.',
@@ -1458,7 +1490,7 @@ const SOURCE = {
   follow_profs_desc:  'Suivez des professeurs pour voir leurs cours ici',
   explore_courses_btn:'Explorer les cours',
   no_course_published:'Aucun cours publié',
-  no_reviews_yet:     'Aucun avis pour le moment',
+  no_reviews_yet:     'Pas encore d\'avis pour le moment.',
 
   // Statistiques profil
   stat_profs_lbl:     'Profs',
