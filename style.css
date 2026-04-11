@@ -532,11 +532,13 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
   margin-top: -24px;
   box-shadow: 0 0 0 5px rgba(255,107,43,.4), 0 8px 28px rgba(255,69,0,.55);
   transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
-  animation: fabPulse 2.4s ease-in-out infinite;
+  animation: fabPulse 1.8s cubic-bezier(.4,0,.6,1) infinite;
 }
 @keyframes fabPulse {
-  0%,100% { box-shadow: 0 0 0 5px rgba(255,107,43,.4),  0 8px 28px rgba(255,69,0,.55); }
-  50%      { box-shadow: 0 0 0 8px rgba(255,107,43,.25), 0 8px 32px rgba(255,69,0,.7); }
+  0%   { box-shadow: 0 0 0 0px  rgba(255,107,43,.75), 0 8px 28px rgba(255,69,0,.55); }
+  40%  { box-shadow: 0 0 0 12px rgba(255,107,43,.15), 0 8px 32px rgba(255,69,0,.65); }
+  70%  { box-shadow: 0 0 0 0px  rgba(255,107,43,0),   0 8px 28px rgba(255,69,0,.55); }
+  100% { box-shadow: 0 0 0 0px  rgba(255,107,43,0),   0 8px 28px rgba(255,69,0,.55); }
 }
 .bni-fab-lbl {
   font-size: 11px;
@@ -553,11 +555,13 @@ html.dk .pb.sec{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255
 }
 html.dk .bni-fab .bni-add-circle {
   box-shadow: 0 0 0 5px rgba(255,107,43,.35), 0 8px 28px rgba(255,69,0,.6);
-  animation: fabPulseDk 2.4s ease-in-out infinite;
+  animation: fabPulseDk 1.8s cubic-bezier(.4,0,.6,1) infinite;
 }
 @keyframes fabPulseDk {
-  0%,100% { box-shadow: 0 0 0 5px rgba(255,107,43,.35), 0 8px 28px rgba(255,69,0,.6); }
-  50%      { box-shadow: 0 0 0 8px rgba(255,107,43,.2),  0 8px 32px rgba(255,69,0,.75); }
+  0%   { box-shadow: 0 0 0 0px  rgba(255,107,43,.7),  0 8px 28px rgba(255,69,0,.6); }
+  40%  { box-shadow: 0 0 0 12px rgba(255,107,43,.12), 0 8px 32px rgba(255,69,0,.75); }
+  70%  { box-shadow: 0 0 0 0px  rgba(255,107,43,0),   0 8px 28px rgba(255,69,0,.6); }
+  100% { box-shadow: 0 0 0 0px  rgba(255,107,43,0),   0 8px 28px rgba(255,69,0,.6); }
 }
 html.dk .bni-fab:active .bni-add-circle {
   animation: none;
