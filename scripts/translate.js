@@ -838,6 +838,15 @@ const SOURCE = {
   msg_empty_eleve:     'Démarre une conversation depuis le profil d\'un professeur.',
   msg_empty_group:     'Aucun message pour l\'instant.<br>Soyez le premier à écrire !',
 
+  // Messagerie — aperçu dernier message & expéditeur
+  msg_you:             'Vous',
+  msg_prv_cours:       'Fiche de cours',
+  msg_prv_fiche:       'Fiche partagée',
+  msg_prv_pub:         'Annonce',
+  msg_prv_sondage:     'Sondage',
+  msg_prv_contenu:     'Contenu partagé',
+  msg_prv_contenu_p:   'Contenu partagé',
+
   // Historique
   hist_empty:          'Aucun cours passé pour le moment',
 
