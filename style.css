@@ -3526,8 +3526,8 @@ html.cap-ios #bnavIpadBack.visible {
   .card-body-new { padding: 44px 20px 16px; }
 }
 
-/* Cours : 2 colonnes sur petits écrans, 3 sur iPad Capacitor */
-@media (max-width: 767px) {
+/* Cours : 2 colonnes sur écrans moyens (tablettes portrait), 3 sur iPad, 1 sur téléphone */
+@media (min-width: 641px) and (max-width: 767px) {
   .grid { columns: 2; column-gap: 0; }
 }
 @media (min-width: 768px) {
