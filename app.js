@@ -14084,15 +14084,19 @@ function _ensureDemoAudio(callback){
 function _startDemoAudio(stream){
   _demoAudioStream=stream;
   if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
-  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}}
-  _demoAudioCtx=new AudioContext();
-  var src=_demoAudioCtx.createMediaStreamSource(stream);
-  _demoAnalyser=_demoAudioCtx.createAnalyser();
-  _demoAnalyser.fftSize=256;
-  src.connect(_demoAnalyser);
-  _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
-  _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
-  _demoAudioLoop();
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    _demoAudioCtx=new AC();
+    if(_demoAudioCtx.state==='suspended'){_demoAudioCtx.resume().catch(function(){});}
+    var src=_demoAudioCtx.createMediaStreamSource(stream);
+    _demoAnalyser=_demoAudioCtx.createAnalyser();
+    _demoAnalyser.fftSize=256;
+    src.connect(_demoAnalyser);
+    _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
+    _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
+    _demoAudioLoop();
+  }catch(e){_demoAudioCtx=null;_demoAnalyser=null;}
 }
 
 function _demoAudioLoop(){
@@ -14266,9 +14270,22 @@ function _vShowPreJoin(onJoin){
   haptic(1);
   // Stocker le callback pour _vConfirmPreJoin
   window._vPreJoinCallback=onJoin;
+  // Sur iOS Capacitor : caméra dans WKWebView peut crasher → audio seulement
+  var _pjIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
   // Demander mic + cam
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     _pjSetSt('mic',false);_pjSetSt('cam',false);return;
+  }
+  if(_pjIosNative){
+    // iOS natif : audio uniquement pour éviter le crash WKWebView caméra
+    navigator.mediaDevices.getUserMedia({audio:true,video:false})
+      .then(function(stream){
+        _preJoinStream=stream;
+        _pjSetSt('mic',true);_pjSetSt('cam',false);
+        _pjStartMicMeter(stream);
+      })
+      .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
+    return;
   }
   navigator.mediaDevices.getUserMedia({audio:true,video:true})
     .then(function(stream){
@@ -14302,7 +14319,9 @@ function _pjSetSt(dev,ok){
 }
 function _pjStartMicMeter(stream){
   try{
-    _preJoinAudioCtx=new AudioContext();
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    _preJoinAudioCtx=new AC();
+    if(_preJoinAudioCtx.state==='suspended'){_preJoinAudioCtx.resume().catch(function(){});}
     var src=_preJoinAudioCtx.createMediaStreamSource(stream);
     _preJoinAnalyser=_preJoinAudioCtx.createAnalyser();
     _preJoinAnalyser.fftSize=256;
