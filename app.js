@@ -14114,7 +14114,7 @@ function _vBuildDemoTile(f){
   wrap.onclick=function(){_vPin(f.sid);};
   var av=document.createElement('div');
   av.id='_vav-'+f.sid;
-  av.style.cssText='width:64px;height:64px;border-radius:50%;background:'+f.color+';display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.3);';
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:'+f.color+';display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;box-shadow:0 4px 18px rgba(0,0,0,.3);';
   av.textContent=f.name.charAt(0).toUpperCase();
   var lbl=document.createElement('div');
   lbl.id='_vtl-'+f.sid;
@@ -14489,7 +14489,7 @@ function _vApplyLayout(){
         setTimeout(function(){
           tiles.forEach(function(t){t.style.display='none';t.style.opacity='';t.style.transition='';});
           if(newEl){
-            newEl.style.display='';newEl.style.opacity='0';newEl.style.transition='opacity .22s';
+            newEl.style.display='flex';newEl.style.opacity='0';newEl.style.transition='opacity .22s';
             newEl.style.borderRadius='inherit';newEl.style.minHeight='0';newEl.style.height='';
             requestAnimationFrame(function(){newEl.style.opacity='1';});
           }
@@ -14499,7 +14499,7 @@ function _vApplyLayout(){
     }
     tiles.forEach(function(t){
       var isFeat=t.id.replace('_vt-','')=== newFeat;
-      t.style.display=isFeat?'':'none';
+      t.style.display=isFeat?'flex':'none';
       if(isFeat){t.style.borderRadius='inherit';t.style.minHeight='0';t.style.height='';t.style.gridColumn='';t.style.gridRow='';}
     });
     return;
@@ -14510,7 +14510,7 @@ function _vApplyLayout(){
   grid.style.padding='8px';grid.style.gap='8px';
   // Restore teacher controls visibility
   tiles.forEach(function(t){var sid2=t.id.replace('_vt-','');var pc=g('_vpc-'+sid2);if(pc)pc.style.display='flex';});
-  tiles.forEach(function(t){t.style.display='';t.style.opacity='';t.style.transition='';t.style.borderRadius='16px';});
+  tiles.forEach(function(t){t.style.display='flex';t.style.opacity='';t.style.transition='';t.style.borderRadius='16px';});
   if(!_pinnedSid){
     grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
     grid.style.gridTemplateRows='';
