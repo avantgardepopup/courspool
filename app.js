@@ -14239,7 +14239,12 @@ function _vShowPreJoin(onJoin){
     .then(function(stream){
       _preJoinStream=stream;
       var vid=g('_pjVideo');
-      if(vid){vid.srcObject=stream;vid.style.display='block';var av=g('_pjAv');if(av)av.style.display='none';}
+      if(vid){
+        var av=g('_pjAv');if(av)av.style.display='none';
+        vid.srcObject=stream;
+        vid.style.display='block';
+        vid.play().catch(function(){});
+      }
       _pjSetSt('mic',true);_pjSetSt('cam',true);
       _pjStartMicMeter(stream);
     })
