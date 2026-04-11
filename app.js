@@ -14887,6 +14887,12 @@ function _vToggleCam(){
   if(_callObj)_callObj.setLocalVideo(!_localCamOff);
   haptic(1);
 }
+function _vStopScreenShareDemo(s){
+  _sharing=false;
+  if(s){try{s.getTracks().forEach(function(t){t.stop();});}catch(e){}}
+  window._vDemoShareStream=null;
+  var badge=g('_vShareBadge');if(badge)badge.remove();
+}
 function _vToggleShare(){
   if(!_callObj&&!_isDemoMode)return;
   var b=g('_vShare');
@@ -14896,36 +14902,29 @@ function _vToggleShare(){
       if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
         toast('Partage d\'écran non disponible sur cet appareil','');return;
       }
-      toast('Sélectionne une fenêtre ou une autre application — pas cet onglet','');
-      navigator.mediaDevices.getDisplayMedia({video:{selfBrowserSurface:'exclude',displaySurface:'window'},audio:false})
+      navigator.mediaDevices.getDisplayMedia({video:{selfBrowserSurface:'exclude'},audio:false})
         .then(function(s){
           _sharing=true;
           if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
-          var lv=g('_vLocalVid');
-          if(lv){
-            if(lv.srcObject){lv.srcObject.getVideoTracks().forEach(function(t){t.stop();});}
-            lv.srcObject=s;lv.style.display='block';lv.play().catch(function(){});
-            // Désactiver le miroir pour le partage d'écran
-            lv.style.transform='none';
-            var lav=g('_vav-demo-local');if(lav)lav.style.display='none';
+          // Ne PAS afficher le stream dans la tuile locale — évite la boucle de feedback.
+          // On garde la caméra en cours et on montre un badge "Partage en cours"
+          var tile=g('_vt-demo-local');
+          if(tile){
+            var badge=document.createElement('div');
+            badge.id='_vShareBadge';
+            badge.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(255,107,43,.9);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:4px 12px;z-index:6;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+            badge.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Partage en cours';
+            tile.appendChild(badge);
           }
-          // Arrêt automatique quand l'utilisateur ferme via le navigateur
+          // Arrêt auto quand l'utilisateur ferme depuis le navigateur
           s.getVideoTracks()[0].onended=function(){
-            _sharing=false;
+            _vStopScreenShareDemo(s);
             if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
-            // Revenir à la caméra si elle n'était pas coupée
-            if(!_localCamOff&&navigator.mediaDevices){
-              navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(function(cs){
-                var lv2=g('_vLocalVid');
-                if(lv2){lv2.srcObject=cs;lv2.style.transform='scaleX(-1)';lv2.style.display='block';lv2.play().catch(function(){});}
-              }).catch(function(){});
-            }else{
-              var lv3=g('_vLocalVid');if(lv3){lv3.srcObject=null;lv3.style.display='none';lv3.style.transform='scaleX(-1)';}
-              var lav2=g('_vav-demo-local');if(lav2)lav2.style.display='flex';
-            }
           };
+          // Stocker pour pouvoir arrêter proprement
+          window._vDemoShareStream=s;
         })
-        .catch(function(){/* annulé par l'utilisateur */});
+        .catch(function(){/* annulé */});
       haptic(1);return;
     }
     // Vrai visio Daily.co
@@ -14945,20 +14944,8 @@ function _vToggleShare(){
     }
   }else{
     if(_isDemoMode){
-      var lv4=g('_vLocalVid');
-      if(lv4&&lv4.srcObject){lv4.srcObject.getVideoTracks().forEach(function(t){t.stop();});lv4.srcObject=null;}
-      _sharing=false;
+      _vStopScreenShareDemo(window._vDemoShareStream);
       if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
-      if(!_localCamOff&&navigator.mediaDevices){
-        navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(function(cs2){
-          var lv5=g('_vLocalVid');
-          if(lv5){lv5.srcObject=cs2;lv5.style.transform='scaleX(-1)';lv5.style.display='block';lv5.play().catch(function(){});}
-          var lav3=g('_vav-demo-local');if(lav3)lav3.style.display='none';
-        }).catch(function(){});
-      }else{
-        var lv6=g('_vLocalVid');if(lv6){lv6.srcObject=null;lv6.style.display='none';lv6.style.transform='scaleX(-1)';}
-        var lav4=g('_vav-demo-local');if(lav4)lav4.style.display='flex';
-      }
       haptic(1);return;
     }
     try{_callObj.stopScreenShare();}catch(e){}
@@ -17292,6 +17279,7 @@ function closeVisioModal(){
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
   window._vPreJoinCallback=null;
+  try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
 }
 
 // ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
