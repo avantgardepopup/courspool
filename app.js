@@ -14992,6 +14992,9 @@ function _boardRenderSubbar(){
   };
   var sep='<div style="width:1px;height:24px;background:rgba(255,255,255,.15);margin:0 4px;flex-shrink:0;"></div>';
   // ── Tool icons ──
+  h+=tb('_bTHd',"_boardToolTap('hand')",_brdTool==='hand',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='hand'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 11V8a2 2 0 00-4 0v3"/><path d="M14 8V6a2 2 0 00-4 0v5"/><path d="M10 6.5V5a2 2 0 00-4 0v8"/><path d="M6 13s0 5 4 7h4c3 0 4-2 4-4v-5a2 2 0 00-4 0"/></svg>'
+    ,'Déplacer / zoomer');
   h+=tb('_bTSl',"_boardToolTap('select')",_brdTool==='select',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='select'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M5 3l14 9-7 1-4 7z"/></svg>'
     ,'Sélection');
@@ -15474,7 +15477,7 @@ function _boardUpdateToolbar(){_boardRenderSubbar();}
 function _boardToolTap(tool){
   if(_brdSel.active)_brdCommitSel();
   _brdTool=tool;
-  if(_brdC)_brdC.style.cursor=tool==='text'?'text':'crosshair';
+  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';
   _boardRenderSubbar();haptic(1);
 }
 function _boardSetTool(tool){_boardToolTap(tool);}
@@ -15563,6 +15566,12 @@ function _boardDown(e){
   if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
     _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz});
   }
+  if(_brdTool==='hand'){
+    // 1-finger pan: store raw screen coords (not canvas coords)
+    _brdDraw=true;_brdPts=[{x:e.clientX,y:e.clientY}];
+    if(_brdC)_brdC.style.cursor='grabbing';
+    return;
+  }
   if(_brdTool==='pen'){
     _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
@@ -15617,6 +15626,16 @@ function _boardMove(e){
   }
   if(!_brdDraw)return;
   e.preventDefault();
+  // ── Main (hand) : pan 1 doigt ──
+  if(_brdTool==='hand'){
+    if(_brdPts.length){
+      var lp=_brdPts[0];
+      _brdPanX+=e.clientX-lp.x;_brdPanY+=e.clientY-lp.y;
+      _brdPts=[{x:e.clientX,y:e.clientY}];
+      _boardApplyTransform();
+    }
+    return;
+  }
   var p=_boardGetPos(e);
   // Émettre le point en temps réel (~50ms throttle)
   if(_brdRoomId&&_brdCanEdit&&(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser')){
@@ -15671,6 +15690,7 @@ function _boardUp(e){
   delete _brdActivePointers[e.pointerId];
   if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
   if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
+  if(_brdTool==='hand'){if(_brdC)_brdC.style.cursor='grab';_brdPts=[];_brdDraw=false;return;}
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
