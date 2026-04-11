@@ -12208,7 +12208,7 @@ function calSelectDay(ymd){
   _calSelDay=ymd;
   // Update header title
   var titleEl=document.querySelector('.mes-cal-title');
-  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_CAL_DAYS[d.getDay()]+' '+d.getDate()+' '+_CAL_MONTHS[d.getMonth()];}
+  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_calDay(d)+' '+d.getDate()+' '+_calMonth(d);}
   // Update chips
   document.querySelectorAll('.cal-chip').forEach(function(c){
     var on=c.dataset.ymd===ymd;
