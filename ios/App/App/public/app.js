@@ -15387,7 +15387,12 @@ function _boardDrawBg(){
   for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
   for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
 }
-function _boardClearFg(){if(_brdX&&_brdC)_brdX.clearRect(0,0,_brdC.width,_brdC.height);}
+function _boardClearFg(){
+  if(!_brdX||!_brdC)return;
+  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
+  _brdX.clearRect(0,0,_brdC.width,_brdC.height);
+  _brdX.restore();
+}
 var _brdPanHideTimer=null;
 function _boardApplyTransform(){
   var page=g('_brdPage');if(!page)return;
@@ -15423,7 +15428,13 @@ function _boardApplyTransform(){
 function _boardSaveHist(){
   if(!_brdC)return;
   if(_brdHistIdx<_brdHist.length-1)_brdHist.splice(_brdHistIdx+1);
-  var d=_brdC.toDataURL('image/jpeg',0.6);
+  // Offscreen canvas avec fond blanc pour éviter les artefacts noirs (JPEG + transparence)
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  var tX=tmp.getContext('2d');
+  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
+  tX.drawImage(_brdC,0,0);
+  var d=tmp.toDataURL('image/jpeg',0.6);
   _brdHist.push({idx:_brdPageIdx,data:d});
   if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
 }
@@ -15446,10 +15457,11 @@ function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
   // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
-  var tabStyle='flex:1;min-width:32px;overflow:hidden;';
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
     var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
+    // Tab actif : fond blanc + boutons ; tab inactif : semi-transparent + pas de boutons
+    var tabStyle='flex:1;min-width:'+(a?'72':'40')+'px;overflow:hidden;';
     h+='<button onclick="_boardGoPage('+i+')" style="'
       +tabStyle
       +'background:'+(a?'rgba(255,255,255,.92)':'rgba(255,255,255,.14)')+';'
@@ -15460,7 +15472,7 @@ function _boardUpdatePageTabs(){
       +'-webkit-tap-highlight-color:transparent;">'
       +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'
       +(_isOwner&&a?'<span onclick="event.stopPropagation();_boardRenamePage('+i+')" style="opacity:.5;font-size:11px;flex-shrink:0;padding:0 1px;">✏️</span>':'')
-      +(_isOwner&&_brdPages.length>1?'<span onclick="event.stopPropagation();_boardDeletePage('+i+')" style="opacity:.55;font-size:14px;line-height:1;font-weight:300;flex-shrink:0;">×</span>':'')
+      +(_isOwner&&a&&_brdPages.length>1?'<span onclick="event.stopPropagation();_boardDeletePage('+i+')" style="opacity:.55;font-size:16px;line-height:1;font-weight:300;flex-shrink:0;padding:0 2px;">×</span>':'')
       +'</button>';
   }
   tabs.innerHTML=h;
