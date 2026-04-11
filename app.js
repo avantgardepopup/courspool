@@ -14061,6 +14061,12 @@ function _vOpenDemo(){
   fakes.forEach(function(f){grid.appendChild(_vBuildDemoTile(f));});
   _vApplyLayout();
   _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
+  // Start mic audio analysis for speaking ring animation
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+      _startDemoAudio(stream);
+    }).catch(function(){/* micro refusé ou indisponible, pas bloquant */});
+  }
   haptic(1);
 }
 
@@ -15156,11 +15162,16 @@ function _vOpenBoard(){
   // Hide all tiles before appending to prevent flash of all participants
   grid.querySelectorAll('[id^="_vt-"]').forEach(function(t){t.style.display='none';});
   _vPipFeaturedSid=null; // reset so _vApplyLayout picks the right featured tile
-  pip.appendChild(grid);_vApplyLayout();
+  pip.appendChild(grid);
   // Drag handle — single hide-bubble button
   var ph=document.createElement('div');
   ph.style.cssText='position:absolute;top:0;left:0;right:0;height:30px;background:linear-gradient(rgba(0,0,0,.55),transparent);z-index:3;display:flex;align-items:center;justify-content:flex-end;padding:5px 6px;touch-action:none;cursor:grab;';
   var bs='background:rgba(0,0,0,.45);border:none;color:#fff;width:22px;height:22px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+  // Resize button — cycles through predefined pip sizes
+  var rsz=document.createElement('button');rsz.style.cssText=bs+'margin-right:4px;';
+  rsz.title='Redimensionner la bulle';
+  rsz.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+  rsz.onclick=function(e){e.stopPropagation();_pipCycleSize();};
   var hb=document.createElement('button');hb.style.cssText=bs;
   hb.title='Masquer la bulle';
   hb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
@@ -15199,9 +15210,11 @@ function _vOpenBoard(){
     pip.style.transform='scale(1)';pip.style.opacity='1';pip.style.pointerEvents='';
   },{passive:true});
   document.body.appendChild(rb);
-  ph.appendChild(hb);
+  ph.appendChild(rsz);ph.appendChild(hb);
   pip.appendChild(ph);
   document.body.appendChild(pip);
+  // Apply layout now that pip is in the document (getElementById works)
+  _vApplyLayout();
   // Spring entrance animation
   requestAnimationFrame(function(){pip.style.transform='scale(1)';pip.style.opacity='1';});
   // Double-tap → expand pip back to full visio
@@ -15257,6 +15270,7 @@ function _vCloseBoard(){
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
+  if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);_brdKeyHandler=null;}
   if(_brdC&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}catch(e){}}
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   // Remettre _vComment et _vCommentTab dans _vMain
@@ -15279,6 +15293,7 @@ function _vCloseBoard(){
 
 // Stored resize listener so we can remove it when closing
 var _brdOrientHandler=null;
+var _brdKeyHandler=null;
 
 function _brdIsPhonePortrait(){
   // Phone class: smallest screen dimension < 500px AND currently portrait
@@ -15623,6 +15638,21 @@ function _boardAttachEvents(canv){
   canv.addEventListener('pointerup',_boardUp,{passive:false});
   canv.addEventListener('pointercancel',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
   canv.addEventListener('pointerleave',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
+  // Keyboard zoom: Ctrl+= zoom in, Ctrl+- zoom out, Ctrl+0 reset
+  if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);}
+  _brdKeyHandler=function(e){
+    if(!_boardActive)return;
+    if(e.ctrlKey||e.metaKey){
+      if(e.key==='='||e.key==='+'||e.key==='ArrowUp'){
+        e.preventDefault();_brdZoom=Math.min(5,_brdZoom*1.2);_boardApplyTransform();
+      }else if(e.key==='-'||e.key==='ArrowDown'){
+        e.preventDefault();_brdZoom=Math.max(0.3,_brdZoom/1.2);_boardApplyTransform();
+      }else if(e.key==='0'){
+        e.preventDefault();_brdZoom=1;_brdPanX=0;_brdPanY=0;_boardApplyTransform();
+      }
+    }
+  };
+  document.addEventListener('keydown',_brdKeyHandler);
 }
 function _boardDown(e){
   e.preventDefault();
