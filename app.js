@@ -2278,8 +2278,6 @@ function navTo(tab,_skipHistory){
   } else if(tab==='msg'){
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
-    // iPad : cacher la nav + montrer bouton retour
-    if(window.innerWidth>=768){var _bnavMsg=g('bnav');if(_bnavMsg)_bnavMsg.classList.add('ipad-msg');var _bbb=g('bnavIpadBack');if(_bbb){_bbb.dataset.action='msg';_bbb.classList.add('visible');}}
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
@@ -7449,11 +7447,8 @@ function openMsg(profNm,destId,avatar){
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
-  var _isIpad=window.innerWidth>=768&&document.documentElement.classList.contains('cap-ios');
-  if(_isIpad){
-    if(bnav)bnav.classList.add('ipad-back');
-    var _bb=g('bnavIpadBack');if(_bb)_bb.classList.add('visible');
-  }else{
+  // Mobile uniquement : cacher la nav quand une conv est ouverte
+  if(window.innerWidth<768){
     if(bnav)bnav.classList.add('conv-mode');
   }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
@@ -7495,10 +7490,8 @@ function closeMsgConv(){
   if(convPane){convPane.style.display='none';convPane.style.bottom='';}
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
-  // Restaurer la nav (iPad: retirer ipad-back + cacher bouton rond ; mobile: retirer conv-mode)
   var bnav=g('bnav');
-  if(bnav){bnav.classList.remove('conv-mode');bnav.classList.remove('ipad-back');}
-  var _bb=g('bnavIpadBack');if(_bb)_bb.classList.remove('visible');
+  if(bnav){bnav.classList.remove('conv-mode');}
   // Restore normal nav state for messages page (bniMsg highlighted)
   restoreNav();
   var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
