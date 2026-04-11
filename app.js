@@ -15457,6 +15457,8 @@ function _brdShowEraserCursor(x,y){
     _brdEraserCursorEl.style.cssText='position:absolute;border-radius:50%;border:1.5px solid rgba(80,80,80,.75);pointer-events:none;z-index:55;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.4);transition:width .05s,height .05s;';
     page.appendChild(_brdEraserCursorEl);
   }
+  // Masquer le curseur CSS pour éviter le double curseur (cercle + crosshair)
+  if(_brdC)_brdC.style.cursor='none';
   var sz=_brdEr*_brdZoom;
   _brdEraserCursorEl.style.width=sz+'px';_brdEraserCursorEl.style.height=sz+'px';
   _brdEraserCursorEl.style.left=(x*_brdZoom)+'px';_brdEraserCursorEl.style.top=(y*_brdZoom)+'px';
@@ -15464,6 +15466,7 @@ function _brdShowEraserCursor(x,y){
 }
 function _brdHideEraserCursor(){
   if(_brdEraserCursorEl)_brdEraserCursorEl.style.display='none';
+  if(_brdC&&!_brdDraw)_brdC.style.cursor='crosshair';
 }
 function _brdCleanEraserCursor(){
   if(_brdEraserCursorEl&&_brdEraserCursorEl.parentNode)_brdEraserCursorEl.parentNode.removeChild(_brdEraserCursorEl);
@@ -16833,7 +16836,9 @@ function _brdOnRemotePageDelete(data){
   if(!_boardActive)return;
   if(typeof data.pageIdx==='number'&&data.pageIdx<_brdPages.length&&_brdPages.length>1){
     _brdPages.splice(data.pageIdx,1);_brdPageNames.splice(data.pageIdx,1);_brdPageHists.splice(data.pageIdx,1);
-    if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
+    // Ajuster _brdPageIdx : si la page supprimée précède la page courante, décrémenter
+    if(data.pageIdx<_brdPageIdx)_brdPageIdx--;
+    else if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
     if(_brdPages[_brdPageIdx]){
       _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
     }else{_boardClearFg();_boardUpdatePageTabs();}
