@@ -15203,11 +15203,12 @@ function _vOpenBoard(){
   },{passive:false});
   rb.addEventListener('pointermove',function(e){
     var dx=e.clientX-_rbSX,dy=e.clientY-_rbSY;
-    if(!_rbMoved&&Math.hypot(dx,dy)<6)return;
+    if(!_rbMoved&&Math.hypot(dx,dy)<12)return; // 12px threshold — 6px was too small for touch taps
     _rbMoved=true;
+    e.preventDefault();
     rb.style.left=Math.max(0,Math.min(window.innerWidth-44,_rbOX+dx))+'px';
     rb.style.top=Math.max(0,Math.min(window.innerHeight-44,_rbOY+dy))+'px';
-  },{passive:true});
+  },{passive:false});
   rb.addEventListener('pointerup',function(){
     if(_rbMoved)return; // drag → don't show pip
     rb.style.display='none';
@@ -15515,13 +15516,11 @@ function _boardApplyTransform(){
 function _boardSaveHist(){
   if(!_brdC)return;
   if(_brdHistIdx<_brdHist.length-1)_brdHist.splice(_brdHistIdx+1);
-  // Offscreen canvas avec fond blanc pour éviter les artefacts noirs (JPEG + transparence)
+  // PNG transparent — pas de fond blanc (la grille vit dans _brdBgC, comme _boardSavePage)
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
-  var tX=tmp.getContext('2d');
-  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
-  tX.drawImage(_brdC,0,0);
-  var d=tmp.toDataURL('image/jpeg',0.6);
+  tmp.getContext('2d').drawImage(_brdC,0,0);
+  var d=tmp.toDataURL('image/png');
   _brdHist.push({idx:_brdPageIdx,data:d});
   if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
 }
@@ -15603,6 +15602,11 @@ function _boardRenamePage(idx){
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
+  // Commit any active selection before leaving the page
+  if(_brdSel.active)_brdCommitSel();
+  // Hide orphan snap ring from previous interactions
+  var _sr=document.getElementById('_brdSnapRing');
+  if(_sr){_sr.style.opacity='0';_sr.style.transform='translate(-50%,-50%) scale(0)';}
   // Only save current page if no restore is in flight
   if(!_brdRestorePending)_boardSavePage();
   // Sauvegarder l'historique de la page courante avant de partir
@@ -15636,6 +15640,7 @@ function _boardSavePage(){
   _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
 }
 function _boardAddPage(){
+  if(_brdSel.active)_brdCommitSel();
   if(!_brdRestorePending)_boardSavePage();
   // Sauvegarder l'historique de la page courante avant de naviguer
   _brdPageHists[_brdPageIdx]={hist:_brdHist.slice(),idx:_brdHistIdx};
