@@ -15279,6 +15279,8 @@ function _vCloseBoard(){
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);_brdKeyHandler=null;}
+  if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+  if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}
   if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
   _brdRestorePending=false;_brdRestoreEpoch=0;
   var bo=g('_vBoardOuter');if(bo)bo.remove();
@@ -15495,7 +15497,7 @@ function _boardUpdatePageTabs(){
   // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
-    var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
+    var label=escH((_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1));
     // Tab actif : fond blanc + boutons ; tab inactif : semi-transparent + pas de boutons
     var tabStyle='flex:1;min-width:'+(a?'72':'40')+'px;overflow:hidden;';
     h+='<button onclick="_boardGoPage('+i+')" style="'
@@ -15507,8 +15509,8 @@ function _boardUpdatePageTabs(){
       +'display:flex;align-items:center;gap:4px;'
       +'-webkit-tap-highlight-color:transparent;">'
       +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'
-      +(_isOwner&&a?'<span onclick="event.stopPropagation();_boardRenamePage('+i+')" style="opacity:.5;font-size:11px;flex-shrink:0;padding:0 1px;">✏️</span>':'')
-      +(_isOwner&&a&&_brdPages.length>1?'<span onclick="event.stopPropagation();_boardDeletePage('+i+')" style="opacity:.55;font-size:16px;line-height:1;font-weight:300;flex-shrink:0;padding:0 2px;">×</span>':'')
+      +(_isOwner&&a?'<button onclick="event.stopPropagation();_boardRenamePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.55;font-size:11px;flex-shrink:0;padding:3px 3px;min-width:22px;min-height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;">✏️</button>':'')
+      +(_isOwner&&a&&_brdPages.length>1?'<button onclick="event.stopPropagation();_boardDeletePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.6;font-size:17px;line-height:1;font-weight:300;flex-shrink:0;padding:3px 3px;min-width:22px;min-height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;">×</button>':'')
       +'</button>';
   }
   tabs.innerHTML=h;
@@ -15517,7 +15519,7 @@ function _boardUpdatePageTabs(){
 }
 function _boardDeletePage(idx){
   if(_brdPages.length<=1)return;
-  _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);
+  _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);_brdPageHists.splice(idx,1);
   if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
@@ -15586,32 +15588,14 @@ function _boardSavePage(){
 }
 function _boardAddPage(){
   if(!_brdRestorePending)_boardSavePage();
+  // Sauvegarder l'historique de la page courante avant de naviguer
+  _brdPageHists[_brdPageIdx]={hist:_brdHist.slice(),idx:_brdHistIdx};
   _brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
   _brdRestorePending=false;_boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
   _brdEmitPageAdd();
 }
-function _boardPrevPage(){
-  if(_brdPageIdx<=0||!_brdX)return;
-  if(!_brdRestorePending)_boardSavePage();
-  _brdPageIdx--;
-  if(_brdPages[_brdPageIdx]){
-    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
-  }else{
-    _brdRestorePending=false;_boardClearFg();_boardUpdatePageLabel();
-  }
-  haptic(1);
-}
-function _boardNextPage(){
-  if(_brdPageIdx>=_brdPages.length-1||!_brdX)return;
-  if(!_brdRestorePending)_boardSavePage();
-  _brdPageIdx++;
-  if(_brdPages[_brdPageIdx]){
-    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
-  }else{
-    _brdRestorePending=false;_boardClearFg();_boardUpdatePageLabel();
-  }
-  haptic(1);
-}
+function _boardPrevPage(){if(_brdPageIdx>0)_boardGoPage(_brdPageIdx-1);}
+function _boardNextPage(){if(_brdPageIdx<_brdPages.length-1)_boardGoPage(_brdPageIdx+1);}
 
 // ── New toolbar & popup system ──
 function _boardUpdateToolbar(){_boardRenderSubbar();}
@@ -15739,9 +15723,9 @@ function _boardDown(e){
   }
   var p=_boardGetPos(e);
   _brdDraw=true;_brdPts=[p];
-  // Émettre début de trait en temps réel
+  // Émettre début de trait en temps réel (pageIdx inclus pour filtrage côté récepteur)
   if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
-    _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz});
+    _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz,pageIdx:_brdPageIdx});
   }
   if(_brdTool==='hand'){
     // 1-finger pan: store raw screen coords (not canvas coords)
@@ -15821,7 +15805,7 @@ function _boardMove(e){
     var _now=Date.now();
     if(_now-_brdLastPtEmit>=50&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
       _brdLastPtEmit=_now;
-      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y}});
+      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y},pageIdx:_brdPageIdx});
     }
   }
   if(_brdTool==='pen'||_brdTool==='marker'){
@@ -16508,15 +16492,18 @@ function _brdUserColor(uid){
 function _brdOnRemoteStrokeStart(d){
   if(!d||!d.userId)return;
   var col=_brdUserColor(d.userId);
-  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col};
+  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col,pageIdx:d.pageIdx};
   var part=_brdParticipants.find(function(x){return x.id===d.userId;});
   var name=part?part.name:'?';
   _brdShowRemoteCursor(d.userId,name,col);
 }
 
 function _brdOnRemotePt(d){
+  if(!d||!d.userId)return;
   var stroke=_brdRemoteStrokes[d.userId];
   if(!stroke||!_brdC||!_brdX)return;
+  // Ne dessiner que si l'utilisateur distant est sur la même page
+  if(typeof d.pageIdx==='number'&&d.pageIdx!==_brdPageIdx)return;
   var pt=d.pt;
   if(stroke.lastPt)_brdDrawRemoteSegment(stroke,pt);
   stroke.lastPt=pt;
@@ -16524,6 +16511,7 @@ function _brdOnRemotePt(d){
 }
 
 function _brdOnRemoteStrokeEnd(d){
+  if(!d||!d.userId)return;
   var stroke=_brdRemoteStrokes[d.userId];
   if(stroke)delete _brdRemoteStrokes[d.userId];
   // Garder le curseur visible 2s puis le retirer du DOM (évite la fuite mémoire)
@@ -16754,7 +16742,7 @@ function _brdOnRemotePageAdd(data){
 function _brdOnRemotePageDelete(data){
   if(!_boardActive)return;
   if(typeof data.pageIdx==='number'&&data.pageIdx<_brdPages.length&&_brdPages.length>1){
-    _brdPages.splice(data.pageIdx,1);_brdPageNames.splice(data.pageIdx,1);
+    _brdPages.splice(data.pageIdx,1);_brdPageNames.splice(data.pageIdx,1);_brdPageHists.splice(data.pageIdx,1);
     if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
     if(_brdPages[_brdPageIdx]){
       _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
