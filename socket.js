@@ -324,4 +324,10 @@ function initSocket() {
   _socket.on('board_page_rename', function(data) {
     if (typeof _brdOnRemotePageRename === 'function') _brdOnRemotePageRename(data);
   });
+  _socket.on('board_laser', function(d) {
+    if (typeof _brdOnRemoteLaser === 'function') _brdOnRemoteLaser(d);
+  });
+  _socket.on('board_laser_end', function(d) {
+    if (typeof _brdOnRemoteLaserEnd === 'function') _brdOnRemoteLaserEnd(d);
+  });
 }

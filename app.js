@@ -14909,6 +14909,9 @@ var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
 var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
+var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0;
+var _brdSpacePanning=false,_brdSpacePrevTool=null,_brdKeyUpHandler=null;
+var _brdClearConfirmT=0;
 var _brdPageNames=[];
 var _brdTextSize=16,_brdTextBold=false,_brdTextItalic=false,_brdTextAlign='left';
 var _brdHist=[],_brdHistIdx=-1;
@@ -14976,6 +14979,9 @@ function _buildBoardInner(){
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'" title="Effacer la page (double-tap)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" width="17" height="17"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>'
     +'</div>'  // close floating bar
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
@@ -15031,10 +15037,13 @@ function _boardRenderSubbar(){
   // ── Tool icons ──
   h+=tb('_bTHd',"_boardToolTap('hand')",_brdTool==='hand',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='hand'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 11V8a2 2 0 00-4 0v3"/><path d="M14 8V6a2 2 0 00-4 0v5"/><path d="M10 6.5V5a2 2 0 00-4 0v8"/><path d="M6 13s0 5 4 7h4c3 0 4-2 4-4v-5a2 2 0 00-4 0"/></svg>'
-    ,'Déplacer / zoomer','hand');
+    ,'Déplacer (H / espace)','hand');
   h+=tb('_bTSl',"_boardToolTap('select')",_brdTool==='select',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='select'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M5 3l14 9-7 1-4 7z"/></svg>'
-    ,'Sélection','select');
+    ,'Sélection (S)','select');
+  h+=tb('_bTLs',"_boardToolTap('laser')",_brdTool==='laser',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='laser'?'#ef4444':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><circle cx="12" cy="12" r="2.5" fill="'+(_brdTool==='laser'?'#ef4444':'none')+'"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="5.6" y1="5.6" x2="7" y2="7"/><line x1="17" y1="17" x2="18.4" y2="18.4"/><line x1="5.6" y1="18.4" x2="7" y2="17"/><line x1="17" y1="7" x2="18.4" y2="5.6"/></svg>'
+    ,'Pointeur laser (L)','laser');
   h+=sep;
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
@@ -15106,7 +15115,10 @@ function _boardRenderSubbar(){
   if(_brdTool==='select'){
     h+='<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.45);white-space:nowrap;padding:0 10px;letter-spacing:.01em;">Glissez pour sélectionner</span>';
   }
-  if(_brdTool!=='eraser'&&_brdTool!=='select'){
+  if(_brdTool==='laser'){
+    h+='<span style="font-size:11px;font-weight:600;color:rgba(239,68,68,.7);white-space:nowrap;padding:0 10px;letter-spacing:.01em;">Pointez sans dessiner</span>';
+  }
+  if(_brdTool!=='eraser'&&_brdTool!=='select'&&_brdTool!=='laser'){
     h+=sep;
     _BC.forEach(function(c){
       var a=c===_brdColor;
@@ -15282,6 +15294,11 @@ function _vCloseBoard(){
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);_brdKeyHandler=null;}
+  if(_brdKeyUpHandler){document.removeEventListener('keyup',_brdKeyUpHandler);_brdKeyUpHandler=null;}
+  _brdSpacePanning=false;_brdSpacePrevTool=null;
+  _brdCleanLaserDot();
+  Object.keys(_brdLaserHideT).forEach(function(id){clearTimeout(_brdLaserHideT[id]);});
+  _brdLaserHideT={};
   if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
   if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}
   _brdCleanEraserCursor();
@@ -15484,6 +15501,15 @@ function _boardClearFg(){
 var _brdPanHideTimer=null;
 function _boardApplyTransform(){
   var page=g('_brdPage');if(!page)return;
+  // Pan limits: keep at least 60px of the canvas visible on each side
+  var scroll=g('_brdScroll');
+  if(scroll){
+    var sw=scroll.clientWidth,sh=scroll.clientHeight;
+    var pw=parseFloat(page.style.width)||800,ph=parseFloat(page.style.height)||600;
+    var mx=sw/2+pw*_brdZoom/2-60,my=sh/2+ph*_brdZoom/2-60;
+    _brdPanX=Math.max(-mx,Math.min(mx,_brdPanX));
+    _brdPanY=Math.max(-my,Math.min(my,_brdPanY));
+  }
   page.style.transformOrigin='center center';
   page.style.transform='translate('+_brdPanX+'px,'+_brdPanY+'px) scale('+_brdZoom+')';
   // Hide sub-toolbar + text editor while panning/zooming; restore after gesture ends
@@ -15668,8 +15694,9 @@ function _boardToolTap(tool){
   if(_brdLPFired){_brdLPFired=false;return;} // long-press géré, ignorer le click
   if(_brdPinnedTool&&_brdPinnedTool!==tool)return; // outil épinglé : blocage
   if(_brdSel.active)_brdCommitSel();
+  if(_brdTool==='laser'&&tool!=='laser')_brdHideLaserDot();
   _brdTool=tool;
-  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';
+  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':tool==='laser'?'none':'crosshair';
   _boardRenderSubbar();haptic(1);
 }
 function _boardSetTool(tool){_boardToolTap(tool);}
@@ -15741,10 +15768,13 @@ function _boardAttachEvents(canv){
   canv.addEventListener('pointerup',_boardUp,{passive:false});
   canv.addEventListener('pointercancel',_boardPointerCancel,{passive:false});
   canv.addEventListener('pointerleave',_boardPointerLeave,{passive:false});
-  // Keyboard zoom: Ctrl+= zoom in, Ctrl+- zoom out, Ctrl+0 reset
+  // Keyboard shortcuts
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);}
+  if(_brdKeyUpHandler){document.removeEventListener('keyup',_brdKeyUpHandler);}
   _brdKeyHandler=function(e){
     if(!_boardActive)return;
+    var tag=(e.target&&e.target.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA')return; // don't steal focus from text fields
     if(e.ctrlKey||e.metaKey){
       if(e.key==='='||e.key==='+'||e.key==='ArrowUp'){
         e.preventDefault();_brdZoom=Math.min(5,_brdZoom*1.2);_boardApplyTransform();
@@ -15753,14 +15783,41 @@ function _boardAttachEvents(canv){
       }else if(e.key==='0'){
         e.preventDefault();_brdZoom=1;_brdPanX=0;_brdPanY=0;_boardApplyTransform();
       }
+    }else{
+      var k=e.key;
+      if(k==='p'||k==='P'){e.preventDefault();_boardToolTap('pen');}
+      else if(k==='e'||k==='E'){e.preventDefault();_boardToolTap('eraser');}
+      else if(k==='h'||k==='H'){e.preventDefault();_boardToolTap('hand');}
+      else if(k==='s'||k==='S'){e.preventDefault();_boardToolTap('select');}
+      else if(k==='t'||k==='T'){e.preventDefault();_boardToolTap('text');}
+      else if(k==='l'||k==='L'){e.preventDefault();_boardToolTap('laser');}
+      else if(k==='Escape'){
+        if(_brdSel.active)_brdCommitSel();
+        if(_brdTool!=='pen'){_brdPinnedTool=null;_boardToolTap('pen');}
+      }else if(k===' '&&!_brdSpacePanning){
+        e.preventDefault();
+        _brdSpacePanning=true;_brdSpacePrevTool=_brdTool;
+        _brdTool='hand';if(_brdC)_brdC.style.cursor='grab';
+        _boardRenderSubbar();
+      }
+    }
+  };
+  _brdKeyUpHandler=function(e){
+    if(!_boardActive)return;
+    if(e.key===' '&&_brdSpacePanning){
+      _brdSpacePanning=false;
+      _brdTool=_brdSpacePrevTool||'pen';
+      if(_brdC)_brdC.style.cursor=_brdTool==='text'?'text':_brdTool==='laser'?'none':'crosshair';
+      _boardRenderSubbar();
     }
   };
   document.addEventListener('keydown',_brdKeyHandler);
+  document.addEventListener('keyup',_brdKeyUpHandler);
 }
 function _boardDown(e){
   e.preventDefault();
-  // Bloquer tout dessin/modification si lecture seule (select inclus — il clearRect le canvas)
-  if(_brdRoomId&&!_brdCanEdit){
+  // Bloquer tout dessin/modification si lecture seule (sauf le laser : pointer-only, pas de dessin)
+  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='laser'){
     var _now=Date.now();
     if(_now-_brdROToastT>2500){
       _brdROToastT=_now;
@@ -15825,6 +15882,9 @@ function _boardDown(e){
     if(_brdSel.active)_brdCommitSel();
     _brdSnap=_brdMakeSnap();
     _brdSS=p;
+  }else if(_brdTool==='laser'){
+    _brdDraw=false; // laser doesn't draw — just shows the dot
+    _brdMoveLaserDot(p.x,p.y);
   }
 }
 function _boardMove(e){
@@ -15854,6 +15914,14 @@ function _boardMove(e){
   }
   // Eraser hover cursor — show ring even when not pressing (Apple Pencil, mouse)
   if(_brdTool==='eraser'&&!_brdDraw){var _eh=_boardGetPos(e);_brdShowEraserCursor(_eh.x,_eh.y);}
+  // Laser dot — follows pointer at all times (hover + press), no drawing
+  if(_brdTool==='laser'){
+    var _lp=_boardGetPos(e);_brdMoveLaserDot(_lp.x,_lp.y);
+    if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      var _lnow=Date.now();
+      if(_lnow-_brdLastLaserEmit>=50){_brdLastLaserEmit=_lnow;_socket.emit('board_laser',{roomId:_brdRoomId,pt:{x:_lp.x,y:_lp.y},pageIdx:_brdPageIdx});}
+    }
+  }
   if(!_brdDraw)return;
   e.preventDefault();
   // ── Main (hand) : pan 1 doigt ──
@@ -15948,6 +16016,12 @@ function _boardUp(e){
   if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
   if(_brdTool==='hand'){if(_brdC)_brdC.style.cursor='grab';_brdPts=[];_brdDraw=false;return;}
   if(_brdTool==='eraser'){_brdHideEraserCursor();if(_brdC)_brdC.style.cursor='crosshair';}
+  if(_brdTool==='laser'){
+    _brdHideLaserDot();
+    if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected)
+      _socket.emit('board_laser_end',{roomId:_brdRoomId});
+    return;
+  }
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
@@ -16669,11 +16743,86 @@ function _brdMoveRemoteCursor(userId,pt){
   });
 }
 
+// ── Pointeur laser local ─────────────────────────────────────────────────────
+function _brdShowLaserDot(x,y){
+  var page=g('_brdPage');if(!page)return;
+  if(!_brdLaserEl){
+    _brdLaserEl=document.createElement('div');
+    _brdLaserEl.style.cssText='position:absolute;pointer-events:none;z-index:100;'
+      +'width:18px;height:18px;border-radius:50%;background:rgba(239,68,68,.95);'
+      +'transform:translate(-50%,-50%);'
+      +'box-shadow:0 0 0 4px rgba(239,68,68,.25),0 0 14px rgba(239,68,68,.7);'
+      +'transition:opacity .1s;will-change:left,top;';
+    page.appendChild(_brdLaserEl);
+  }
+  _brdLaserEl.style.left=x+'px';_brdLaserEl.style.top=y+'px';
+  _brdLaserEl.style.opacity='1';_brdLaserEl.style.display='block';
+}
+function _brdMoveLaserDot(x,y){_brdShowLaserDot(x,y);}
+function _brdHideLaserDot(){
+  if(_brdLaserEl)_brdLaserEl.style.opacity='0';
+}
+function _brdCleanLaserDot(){
+  if(_brdLaserEl&&_brdLaserEl.parentNode)_brdLaserEl.parentNode.removeChild(_brdLaserEl);
+  _brdLaserEl=null;
+}
+// Laser distant (reçu via socket)
+function _brdOnRemoteLaser(d){
+  if(!d||!d.userId||!_boardActive)return;
+  if(typeof d.pageIdx==='number'&&d.pageIdx!==_brdPageIdx)return;
+  var page=g('_brdPage');if(!page)return;
+  var id='_brdLaser-'+d.userId;
+  var el=document.getElementById(id);
+  if(!el){
+    var col=_brdUserColor(d.userId);
+    el=document.createElement('div');el.id=id;
+    el.style.cssText='position:absolute;pointer-events:none;z-index:100;'
+      +'width:18px;height:18px;border-radius:50%;background:'+col+';'
+      +'transform:translate(-50%,-50%);'
+      +'box-shadow:0 0 0 4px rgba(0,0,0,.12),0 0 14px '+col+';'
+      +'transition:left .05s linear,top .05s linear,opacity .15s;will-change:left,top;';
+    page.appendChild(el);
+  }
+  el.style.left=d.pt.x+'px';el.style.top=d.pt.y+'px';el.style.opacity='1';
+  if(_brdLaserHideT[d.userId])clearTimeout(_brdLaserHideT[d.userId]);
+  _brdLaserHideT[d.userId]=setTimeout(function(){
+    if(el)el.style.opacity='0';delete _brdLaserHideT[d.userId];
+  },2500);
+}
+function _brdOnRemoteLaserEnd(d){
+  if(!d||!d.userId)return;
+  if(_brdLaserHideT[d.userId]){clearTimeout(_brdLaserHideT[d.userId]);delete _brdLaserHideT[d.userId];}
+  var el=document.getElementById('_brdLaser-'+d.userId);
+  if(el)el.style.opacity='0';
+}
+
+// ── Effacer la page (double-tap pour confirmer) ──────────────────────────────
+function _boardClearCurrentPage(){
+  if(_brdRoomId&&!_brdCanEdit)return; // lecture seule
+  var now=Date.now();
+  if(!_brdClearConfirmT||now-_brdClearConfirmT>2000){
+    _brdClearConfirmT=now;
+    if(typeof toast==='function')toast('Effacer la page','Tapez à nouveau pour confirmer',2000);
+    return;
+  }
+  _brdClearConfirmT=0;
+  if(_brdSel.active)_brdCleanSel();
+  _boardSaveHist();
+  _boardClearFg();
+  _boardSavePage();
+  _boardSaveHist();
+  _boardUpdatePageTabs();
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'clear',pageIdx:_brdPageIdx});
+  haptic(2);
+}
+
 // Nettoyer tous les curseurs distants (ex: fermeture du tableau)
 function _brdCleanRemoteCursors(){
   Object.keys(_brdRemoteStrokes).forEach(function(uid){
     var el=document.getElementById('_brdCursor-'+uid);
     if(el&&el.parentNode)el.parentNode.removeChild(el);
+    var le=document.getElementById('_brdLaser-'+uid);
+    if(le&&le.parentNode)le.parentNode.removeChild(le);
   });
   _brdRemoteStrokes={};
 }
@@ -16730,6 +16879,8 @@ function _brdApplyRemoteOp(op){
     var lh=op.textSize*1.45;
     op.content.split('\n').forEach(function(ln,i){_brdX.fillText(ln,op.x,op.y+i*lh);});
     _brdX.restore();
+  }else if(op.type==='clear'){
+    _boardSaveHist();_boardClearFg();_boardSavePage();_boardSaveHist();_boardUpdatePageTabs();
   }
   // Ne pas pousser dans _brdHist ici — les ops distants ne doivent pas polluer le undo local
 }
@@ -16797,6 +16948,9 @@ function _brdOnParticipantLeft(data){
   // Nettoyer le curseur DOM, le trait en cours et les RAFs en attente pour cet utilisateur
   var _plEl=document.getElementById('_brdCursor-'+data.userId);
   if(_plEl&&_plEl.parentNode)_plEl.parentNode.removeChild(_plEl);
+  var _plLaser=document.getElementById('_brdLaser-'+data.userId);
+  if(_plLaser&&_plLaser.parentNode)_plLaser.parentNode.removeChild(_plLaser);
+  if(_brdLaserHideT[data.userId]){clearTimeout(_brdLaserHideT[data.userId]);delete _brdLaserHideT[data.userId];}
   delete _brdRemoteStrokes[data.userId];
   if(_brdCursorRAF[data.userId]){cancelAnimationFrame(_brdCursorRAF[data.userId]);delete _brdCursorRAF[data.userId];}
   delete _brdCursorPt[data.userId];
