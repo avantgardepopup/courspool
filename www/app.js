@@ -14054,7 +14054,23 @@ function _vOpenDemo(){
     var grid=g('_vGrid');if(!grid)return;
     grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
     _vApplyLayout();
-    _ensureDemoAudio(_startDemoAudio);
+    // Réutiliser le stream du pré-join (évite de re-demander la permission)
+    var pjs=_preJoinStream;_preJoinStream=null;
+    if(pjs&&pjs.active){
+      // Attacher la vidéo au tile local
+      var vt=pjs.getVideoTracks();
+      if(vt.length){
+        var lv=g('_vLocalVid');
+        if(lv){lv.srcObject=new MediaStream(vt);lv.style.display='block';lv.play().catch(function(){});
+          var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
+      }
+      // Analyser l'audio
+      var at=pjs.getAudioTracks();
+      if(at.length){_startDemoAudio(new MediaStream(at));}
+      else{_ensureDemoAudio(_startDemoAudio);}
+    }else{
+      _ensureDemoAudio(_startDemoAudio);
+    }
     haptic(1);
   });
 }
@@ -14156,6 +14172,14 @@ function _vBuildDemoTile(f){
     micInd.onclick=function(e){e.stopPropagation();};
   }
   wrap.appendChild(micInd);
+  // Vidéo locale (caméra — remplie après le pré-join)
+  if(f.local){
+    var localVid=document.createElement('video');
+    localVid.id='_vLocalVid';
+    localVid.autoplay=true;localVid.muted=true;localVid.setAttribute('playsinline','');
+    localVid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none;z-index:0;border-radius:16px;';
+    wrap.appendChild(localVid);
+  }
   // Ring audio-réactif centré (local seulement)
   if(f.local){
     var ring=document.createElement('div');
@@ -14286,7 +14310,10 @@ function _pjStartMicMeter(stream){
 }
 function _vConfirmPreJoin(){
   var cb=window._vPreJoinCallback;
-  _vStopPreJoin();
+  // Stopper seulement l'analyse audio — garder le stream vivant pour le callback
+  if(_preJoinRAF){cancelAnimationFrame(_preJoinRAF);_preJoinRAF=null;}
+  if(_preJoinAudioCtx){try{_preJoinAudioCtx.close();}catch(e){}_preJoinAudioCtx=null;}
+  _preJoinAnalyser=null;
   if(typeof cb==='function')cb();
 }
 function _vCancelPreJoin(){
@@ -14317,6 +14344,8 @@ function openVisioModal(url){
     if(_callTimer)clearInterval(_callTimer);
     _updateVisioTimer();
     _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
+    // Stopper le stream pré-join avant que Daily prenne la main sur les devices
+    _vStopPreJoin();
     _joinDailyRoom(url,roomName);
     haptic(1);
   });
@@ -17154,6 +17183,7 @@ function closeVisioModal(){
   _pipX=null;_pipY=null;
   // Stopper toutes les sources audio/vidéo
   _vStopPreJoin();
+  var lv=g('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
   if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
