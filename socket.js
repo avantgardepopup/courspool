@@ -253,6 +253,23 @@ function initSocket() {
     }
   });
 
+  // ── Tableau blanc collaboratif ───────────────────────────────────────────
+  _socket.on('board_op', function(op) {
+    if (typeof _brdApplyRemoteOp === 'function') _brdApplyRemoteOp(op);
+  });
+  _socket.on('board_sync', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_perm', function(data) {
+    if (typeof _brdOnPerm === 'function') _brdOnPerm(data);
+  });
+  _socket.on('board_participant_joined', function(data) {
+    if (typeof _brdOnParticipantJoined === 'function') _brdOnParticipantJoined(data);
+  });
+  _socket.on('board_participant_left', function(data) {
+    if (typeof _brdOnParticipantLeft === 'function') _brdOnParticipantLeft(data);
+  });
+
   // ── note_update : note moyenne en temps réel ────────────────────────────
   _socket.on('note_update', function(data) {
     console.log('[Socket] note_update reçu:', data.professeur_id, '→', data.note_moyenne);

@@ -71,9 +71,90 @@ io.use(async (socket, next) => {
   } catch(e) { next(new Error('unauthorized')); }
 });
 
+// ── Tableau blanc collaboratif — rooms en mémoire ────────────
+// { ops:[], snapshot:null, editors:Set<userId>, ownerId, participants:Map<userId,name> }
+const boardRooms = new Map();
+
 // ── Chaque client rejoint sa propre room ─────────────────────
 io.on('connection', (socket) => {
   socket.join(socket.userId);
+
+  // ── Board: prof initialise la room ──────────────────────────
+  socket.on('board_init', ({roomId, userName}) => {
+    if (!roomId) return;
+    if (!boardRooms.has(roomId)) {
+      boardRooms.set(roomId, {
+        ops: [], snapshot: null,
+        editors: new Set([socket.userId]),
+        ownerId: socket.userId,
+        participants: new Map([[socket.userId, userName || '?']])
+      });
+    }
+    socket.join('board_' + roomId);
+  });
+
+  // ── Board: élève ou retardataire rejoint ─────────────────────
+  socket.on('board_join', ({roomId, userName}) => {
+    if (!roomId) return;
+    socket.join('board_' + roomId);
+    const room = boardRooms.get(roomId);
+    if (!room) return;
+    room.participants.set(socket.userId, userName || '?');
+    // Envoyer l'état actuel au nouveau venu
+    socket.emit('board_sync', {
+      snapshot: room.snapshot,
+      ops: room.ops,
+      editors: [...room.editors],
+      participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
+    });
+    // Prévenir les autres
+    socket.to('board_' + roomId).emit('board_participant_joined', {
+      userId: socket.userId, userName: userName || '?'
+    });
+  });
+
+  // ── Board: op de dessin ──────────────────────────────────────
+  socket.on('board_op', ({roomId, op}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.editors.has(socket.userId)) return;
+    op.userId = socket.userId;
+    room.ops.push(op);
+    socket.to('board_' + roomId).emit('board_op', op);
+  });
+
+  // ── Board: snapshot canvas (pour les retardataires) ──────────
+  socket.on('board_snapshot', ({roomId, snapshot}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.editors.has(socket.userId)) return;
+    room.snapshot = snapshot;
+    room.ops = []; // snapshot remplace le log d'ops
+  });
+
+  // ── Board: accorder le droit de dessiner ─────────────────────
+  socket.on('board_grant', ({roomId, userId}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    room.editors.add(userId);
+    io.to('board_' + roomId).emit('board_perm', {userId, canEdit: true});
+  });
+
+  // ── Board: révoquer le droit de dessiner ─────────────────────
+  socket.on('board_revoke', ({roomId, userId}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    room.editors.delete(userId);
+    io.to('board_' + roomId).emit('board_perm', {userId, canEdit: false});
+  });
+
+  // ── Board: quitter ───────────────────────────────────────────
+  socket.on('board_leave', ({roomId}) => {
+    socket.leave('board_' + roomId);
+    const room = boardRooms.get(roomId);
+    if (!room) return;
+    room.participants.delete(socket.userId);
+    socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
+    if (room.ownerId === socket.userId) boardRooms.delete(roomId);
+  });
 });
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);

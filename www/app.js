@@ -14875,6 +14875,7 @@ var _brdSnapTimer=null; // hold-to-snap line straightening
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
+var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[],_brdSnapshotThrottle=0;
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
 var _pipDragging=false,_pipDSX=0,_pipDSY=0,_pipDOX=0,_pipDOY=0;
@@ -14912,6 +14913,13 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
+    // Badge lecture seule (élève sans permission)
+    +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
+    +'<span style="font-size:11px;font-weight:600;color:#facc15;">Lecture seule</span>'
+    +'</div>'
+    // Panneau permissions prof (liste participants + boutons Autoriser)
+    +(_isOwner?'<div id="_brdPermPanel" style="display:none;position:fixed;right:12px;top:max(calc(env(safe-area-inset-top,20px)+72px),92px);z-index:200;background:rgba(20,20,35,.92);backdrop-filter:blur(12px);border-radius:14px;padding:10px 12px;min-width:160px;box-shadow:0 4px 24px rgba(0,0,0,.4);"></div>':'')
     // Canvas zone: gray bg, centered white page, floating pill at bottom
     +'<div id="_brdScroll" style="flex:1;background:#d4d4d9;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;position:relative;">'
     +'<div id="_brdPage" style="background:#fff;box-shadow:0 3px 28px rgba(0,0,0,.18),0 1px 4px rgba(0,0,0,.08);position:relative;flex-shrink:0;">'
@@ -14956,12 +14964,8 @@ function _boardRenderSubbar(){
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
     ,'Stylo');
-  h+=tb('_bTMk',"_boardToolTap('marker')",_brdTool==='marker',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='marker'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19">'
-    +'<path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>'
-    ,'Marqueur');
   h+=tb('_bTEr',"_boardToolTap('eraser')",_brdTool==='eraser',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><path d="M20 20H7L3 16l10-10 7 7-2 2"/><path d="M6 15l3 3"/></svg>'
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M3 21h18"/><path d="M6.5 21L3 16l9.5-9.5 6 6L12 19.5"/><path d="M12.5 6.5l6 6"/></svg>'
     ,'Gomme');
   h+=tb('_bTTx',"_boardToolTap('text')",_brdTool==='text',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='text'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
@@ -15047,6 +15051,23 @@ function _vOpenBoard(){
   var bdV=g('bdVisio');if(!bdV)return;
   var grid=g('_vGrid');if(!grid)return;
   if(!_brdPages.length)_brdPages.push(null);
+  // ── Init room collaborative ──────────────────────────────────
+  _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
+  if(!_isDemoMode&&typeof _socket!=='undefined'&&_socket&&_socket.connected&&_visioCurrentUrl){
+    var _rId=_visioCurrentUrl.split('/').pop();
+    if(_rId){
+      _brdRoomId=_rId;
+      var _uName=(user&&(user.prenom||user.email))||'?';
+      if(_isOwner){
+        _brdCanEdit=true;
+        _socket.emit('board_init',{roomId:_brdRoomId,userName:_uName});
+      }else{
+        _socket.emit('board_join',{roomId:_brdRoomId,userName:_uName});
+      }
+    }
+  }else if(_isDemoMode){
+    _brdCanEdit=true; // démo = local, tout autorisé
+  }
   // PiP setup
   var sw=_PW[_pipSzIdx],sh=_PH[_pipSzIdx];
   if(_pipX===null)_pipX=window.innerWidth-sw-20;
@@ -15106,6 +15127,27 @@ function _vOpenBoard(){
   document.body.appendChild(pip);
   // Spring entrance animation
   requestAnimationFrame(function(){pip.style.transform='scale(1)';pip.style.opacity='1';});
+  // Double-tap → expand pip back to full visio
+  var _pipDblTapT=0;
+  pip.addEventListener('click',function(e){
+    if(e.target===hb||hb.contains(e.target))return; // ignore hide button
+    var now=Date.now();
+    if(now-_pipDblTapT<320){
+      _pipDblTapT=0;
+      var r=pip.getBoundingClientRect();
+      var scaleX=window.innerWidth/r.width,scaleY=window.innerHeight/r.height;
+      var sc=Math.max(scaleX,scaleY)*1.05;
+      var dx=window.innerWidth/2-(r.left+r.width/2);
+      var dy=window.innerHeight/2-(r.top+r.height/2);
+      pip.style.transition='transform 320ms cubic-bezier(.4,0,.2,1),opacity 260ms ease,border-radius 300ms ease';
+      pip.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+      pip.style.borderRadius='0';
+      pip.style.opacity='0';
+      setTimeout(function(){_vCloseBoard();},300);
+    }else{
+      _pipDblTapT=now;
+    }
+  },{passive:true});
   _pipInitDrag(ph,pip);
   _pipInitPinch(pip);
   // Board overlay
@@ -15125,6 +15167,10 @@ function _vCloseBoard(){
   if(!_boardActive)return;
   _boardActive=false;
   if(_brdSel.active)_brdCommitSel();
+  if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_leave',{roomId:_brdRoomId});
+  }
+  _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
@@ -15431,6 +15477,8 @@ function _boardAttachEvents(canv){
 }
 function _boardDown(e){
   e.preventDefault();
+  // Bloquer le dessin si pas autorisé (mode collaboratif, élève en lecture seule)
+  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='select'){return;}
   _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
   var ptCount=Object.keys(_brdActivePointers).length;
   if(ptCount>1){
@@ -15553,12 +15601,24 @@ function _boardUp(e){
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   if(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser'){
     _boardSaveHist();
+    // Émettre l'op de trait
+    if(_brdRoomId&&_brdCanEdit&&_brdPts.length>=2){
+      var _dPts=_brdDecimate(_brdPts,3);
+      _brdEmitOp(_brdTool==='eraser'
+        ?{type:'erase',pts:_dPts,size:_brdEr}
+        :{type:'stroke',tool:_brdTool,pts:_dPts,color:_brdColor,size:_brdSz});
+    }
   }else if(_brdTool==='shape'&&_brdSnap&&_brdSS){
     var p=_boardGetPos(e);
+    var _ssx=_brdSS.x,_ssy=_brdSS.y; // capture avant nulling
     // Restore clean canvas (remove the live preview drawn in _boardMove)
     _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
-    _boardDrawShape(_brdSS.x,_brdSS.y,p.x,p.y);
+    _boardDrawShape(_ssx,_ssy,p.x,p.y);
     _brdSnap=null;_brdSS=null;_boardSaveHist();
+    // Émettre l'op de forme
+    if(_brdRoomId&&_brdCanEdit){
+      _brdEmitOp({type:'shape',shType:_brdShType,x1:_ssx,y1:_ssy,x2:p.x,y2:p.y,color:_brdColor,size:_brdSz,fill:_brdShFill});
+    }
   }else if(_brdTool==='select'&&_brdSS&&_brdSnap){
     var p=_boardGetPos(e);
     // Restore clean canvas (remove the dashed rect)
@@ -15710,8 +15770,8 @@ function _brdShowSelBar(){
   };
   var sdiv='<div style="width:1px;height:24px;background:rgba(255,255,255,.13);margin:0 3px;flex-shrink:0;"></div>';
   bar.innerHTML=
-    ibtn('_brdSelRotate(-15)','<path d="M3 12a9 9 0 109-9"/><polyline points="3 7 3 12 8 12"/>','Tourner −15°')
-   +ibtn('_brdSelRotate(15)','<path d="M21 12a9 9 0 10-9-9"/><polyline points="21 7 21 12 16 12"/>','Tourner +15°')
+    ibtn('_brdSelRotate(-15)','<path d="M4.5 9A8.5 8.5 0 1 0 12 3.5"/><path d="M12 3.5L8.5 0.5 5.5 4.5"/>','Tourner −15°')
+   +ibtn('_brdSelRotate(15)','<path d="M19.5 9A8.5 8.5 0 1 1 12 3.5"/><path d="M12 3.5l3.5-3 3 4"/>','Tourner +15°')
    +sdiv
    +ibtn('_brdSelDuplicate()','<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>','Dupliquer')
    +sdiv
@@ -15966,6 +16026,12 @@ function _boardInsertText(cx,cy){
     txt.split('\n').forEach(function(line,i){_brdX.fillText(line,tx,cy+_brdTextSize+i*lineH);});
     _brdX.restore();
     _boardSaveHist();
+    // Émettre l'op texte
+    if(_brdRoomId&&_brdCanEdit){
+      _brdEmitOp({type:'text',x:tx,y:cy+_brdTextSize,content:txt,
+        textSize:_brdTextSize,bold:_brdTextBold,italic:_brdTextItalic,
+        align:_brdTextAlign,color:_brdColor});
+    }
   };
   inp.addEventListener('blur',function(){setTimeout(commit,200);});
   inp.addEventListener('keydown',function(ev){
@@ -16090,4 +16156,159 @@ function closeVisioModal(){
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
   var nav=g('bnav');if(nav)nav.style.display='';
   haptic(4);
+}
+
+// ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
+
+// Émettre un op de dessin + throttle snapshot pour les retardataires
+function _brdEmitOp(op){
+  if(!_brdRoomId||typeof _socket==='undefined'||!_socket||!_socket.connected)return;
+  op.pageIdx=_brdPageIdx;
+  _socket.emit('board_op',{roomId:_brdRoomId,op:op});
+  // Snapshot throttlé toutes les 3s pour les retardataires
+  var now=Date.now();
+  if(now-_brdSnapshotThrottle>3000){
+    _brdSnapshotThrottle=now;
+    if(_brdC){
+      var snap=_brdC.toDataURL('image/jpeg',0.45);
+      _socket.emit('board_snapshot',{roomId:_brdRoomId,snapshot:snap});
+    }
+  }
+}
+
+// Décimer les points d'un trait (garde 1 point sur N)
+function _brdDecimate(pts,step){
+  if(pts.length<=4)return pts;
+  var r=[pts[0]];
+  for(var i=step;i<pts.length-1;i+=step)r.push(pts[i]);
+  r.push(pts[pts.length-1]);
+  return r;
+}
+
+// Appliquer un op reçu d'un autre utilisateur
+function _brdApplyRemoteOp(op){
+  if(!_brdC||!_brdX)return;
+  var dpr=window.devicePixelRatio||1;
+  if(op.type==='stroke'||op.type==='erase'){
+    var pts=op.pts;if(!pts||pts.length<2)return;
+    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.beginPath();_brdX.moveTo(pts[0].x,pts[0].y);
+    for(var i=1;i<pts.length;i++)_brdX.lineTo(pts[i].x,pts[i].y);
+    if(op.type==='erase'){
+      _brdX.globalCompositeOperation='destination-out';
+      _brdX.strokeStyle='rgba(0,0,0,1)';_brdX.lineWidth=op.size;
+    }else{
+      _brdX.globalCompositeOperation='source-over';
+      _brdX.strokeStyle=op.color;
+      _brdX.globalAlpha=op.tool==='marker'?0.38:1;
+      _brdX.lineWidth=op.tool==='marker'?op.size*2.5:op.size;
+    }
+    _brdX.lineCap='round';_brdX.lineJoin='round';_brdX.stroke();
+    _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
+    _brdX.restore();
+  }else if(op.type==='shape'){
+    var oc=_brdColor,os=_brdSz,ot=_brdShType,of=_brdShFill;
+    _brdColor=op.color;_brdSz=op.size;_brdShType=op.shType;_brdShFill=op.fill;
+    _brdX.save();_brdX.scale(dpr,dpr);
+    _boardDrawShape(op.x1,op.y1,op.x2,op.y2);
+    _brdX.restore();
+    _brdColor=oc;_brdSz=os;_brdShType=ot;_brdShFill=of;
+  }else if(op.type==='text'){
+    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
+    var fw=(op.bold?'700':'400'),fi=(op.italic?'italic':'normal');
+    _brdX.font=fi+' '+fw+' '+op.textSize+'px "Plus Jakarta Sans",sans-serif';
+    _brdX.fillStyle=op.color;_brdX.textAlign=op.align||'left';
+    var lh=op.textSize*1.45;
+    op.content.split('\n').forEach(function(ln,i){_brdX.fillText(ln,op.x,op.y+i*lh);});
+    _brdX.restore();
+  }
+  _boardSaveHist();
+}
+
+// Recevoir l'état complet (nouveau venu ou reconnexion)
+function _brdOnSync(data){
+  if(!_brdC||!_brdX)return;
+  // Appliquer le snapshot si présent
+  if(data.snapshot){
+    var img=new Image();
+    img.onload=function(){
+      _brdX.clearRect(0,0,_brdC.width,_brdC.height);
+      _brdX.drawImage(img,0,0,_brdC.width,_brdC.height);
+      // Puis rejouer les ops reçus depuis le dernier snapshot
+      if(data.ops)data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
+    };
+    img.src=data.snapshot;
+  }else if(data.ops){
+    data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
+  }
+  // Mettre à jour nos permissions
+  if(data.editors&&user){
+    _brdCanEdit=data.editors.indexOf(user.id)!==-1||_isOwner;
+    _brdUpdatePermUI();
+  }
+  // Participants
+  if(data.participants)_brdParticipants=data.participants;
+  _brdRenderPermPanel();
+}
+
+// Recevoir un changement de permission
+function _brdOnPerm(data){
+  if(!user)return;
+  if(data.userId===user.id){
+    _brdCanEdit=data.canEdit;
+    _brdUpdatePermUI();
+    if(data.canEdit)toast('✏️ Le prof vous autorise à dessiner','');
+    else toast('Accès dessin retiré','');
+  }
+  // Mettre à jour la liste participants
+  var p=_brdParticipants.find(function(x){return x.id===data.userId;});
+  if(p)p.canEdit=data.canEdit;
+  _brdRenderPermPanel();
+}
+
+// Nouveau participant rejoint la board room
+function _brdOnParticipantJoined(data){
+  if(!_brdParticipants.find(function(x){return x.id===data.userId;})){
+    _brdParticipants.push({id:data.userId,name:data.userName,canEdit:false});
+  }
+  _brdRenderPermPanel();
+}
+
+// Participant quitte
+function _brdOnParticipantLeft(data){
+  _brdParticipants=_brdParticipants.filter(function(x){return x.id!==data.userId;});
+  _brdRenderPermPanel();
+}
+
+// Mettre à jour l'UI du toolbar (cadenas visible si lecture seule)
+function _brdUpdatePermUI(){
+  var lock=g('_brdLockBadge');
+  if(lock)lock.style.display=(_brdRoomId&&!_brdCanEdit)?'flex':'none';
+}
+
+// Rendre le panneau de gestion des permissions (prof seulement)
+function _brdRenderPermPanel(){
+  var panel=g('_brdPermPanel');if(!panel)return;
+  if(!_isOwner||!_brdRoomId||_brdParticipants.length===0){
+    panel.style.display='none';return;
+  }
+  panel.style.display='block';
+  var others=_brdParticipants.filter(function(x){return !user||x.id!==user.id;});
+  panel.innerHTML='<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.04em;margin-bottom:6px;">PARTICIPANTS</div>'
+    +others.map(function(p){
+      var can=p.canEdit;
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;gap:8px;">'
+        +'<span style="font-size:12px;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">'+escH(p.name)+'</span>'
+        +'<button onclick="_brdToggleEdit(\''+p.id+'\','+can+')" style="flex-shrink:0;padding:3px 8px;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;background:'+(can?'#FF6B2B':'rgba(255,255,255,.12)')+';color:'+(can?'#fff':'rgba(255,255,255,.6)')+';">'+(can?'Retirer':'Autoriser')+'</button>'
+        +'</div>';
+    }).join('');
+}
+
+// Toggle permission d'un participant
+function _brdToggleEdit(userId,currentCanEdit){
+  if(!_brdRoomId||typeof _socket==='undefined'||!_socket)return;
+  var ev=currentCanEdit?'board_revoke':'board_grant';
+  _socket.emit(ev,{roomId:_brdRoomId,userId:userId});
+  haptic(1);
 }
