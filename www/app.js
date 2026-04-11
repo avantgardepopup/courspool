@@ -783,7 +783,7 @@ function _loadEleveEspCours(pid){
     var isV=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;
     var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
     var spots=c.sp-c.fl;
-    var spotsHtml=spots<=3&&spots>0?'<span style="font-size:10px;font-weight:700;background:#FFF0E8;color:#E04E10;border-radius:50px;padding:2px 7px">'+spots+' place'+(spots>1?'s':'')+' restante'+(spots>1?'s':'')+'</span>':'';
+    var spotsHtml=spots<=3&&spots>0?'<span style="font-size:10px;font-weight:700;background:#FFF0E8;color:#E04E10;border-radius:50px;padding:2px 7px">'+spots+' '+(spots>1?t('spot_restantes'):t('spot_restante'))+'</span>':'';
     return'<div onclick="closeEspaceEleve();setTimeout(function(){openR(\''+escH(c.id)+'\');},250);"'
       +' style="background:var(--wh);border-radius:16px;padding:14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.04);cursor:pointer;-webkit-tap-highlight-color:transparent">'
       +'<div style="display:flex;align-items:flex-start;gap:12px">'
@@ -3564,7 +3564,7 @@ function renderPage(){
   grid.innerHTML='';
   grid.appendChild(_frag);
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
-  if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
+  if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' '+t('exp_cours_restants');
   // Animation entrée : uniquement sur desktop (hover:hover) pour éviter les cards blanches
   // sur mobile (scroll rapide, tab-switch → animationend ne fire pas → opacity:0 bloqué)
   if(typeof IntersectionObserver!=='undefined'&&window.matchMedia('(hover:hover)').matches){
@@ -10011,7 +10011,7 @@ function showMoreMatieres(){
   var matieres=['Chimie','Biologie','SVT','Histoire','Géographie','Philosophie',
     'Français','Littérature','Musique','Arts','Sport','Droit','Médecine','Architecture',
     'Marketing','Comptabilité','Statistiques','Algorithmique','Design','Cinéma'];
-  var html='<div style="padding:20px"><div style="font-size:16px;font-weight:800;margin-bottom:16px">Choisir une matière</div>'
+  var html='<div style="padding:20px"><div style="font-size:16px;font-weight:800;margin-bottom:16px">'+t('mat_pick_title')+'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
     +matieres.map(function(m){
       return'<div onclick="pickSCustom(this)" class="so" style="justify-content:center" data-m="'+m+'">'+m+'</div>';
@@ -10022,7 +10022,7 @@ function showMoreMatieres(){
   modal.className='bd';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:3000;display:flex;align-items:flex-end;';
   modal.innerHTML='<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:70vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,20px)">'+html
-    +'<div style="padding:0 20px 20px"><button onclick="closeMatieres()" style="width:100%;padding:13px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;color:var(--mid)">Fermer</button></div></div>';
+    +'<div style="padding:0 20px 20px"><button onclick="closeMatieres()" style="width:100%;padding:13px;background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;color:var(--mid)">'+t('btn_fermer')+'</button></div></div>';
   modal.onclick=function(e){if(e.target===modal)closeMatieres();};
   document.body.appendChild(modal);
 }
@@ -10115,24 +10115,24 @@ document.addEventListener('click',function(e){
 
 // NIVEAUX
 var NIVEAUX={
-  etudiant:{label:'Votre niveau actuel',options:['Baccalauréat','BTS / BUT','Licence (L1-L3)','Master (M1-M2)','Doctorat']},
-  prof_ecole:{label:'Niveau enseigné',options:['Maternelle (TPS-GS)','CP - CE1','CE2 - CM1','CM2']},
-  prof_college:{label:'Niveau enseigné',options:['6ème - 5ème','4ème - 3ème','Seconde','Première','Terminale']},
-  prof_universite:{label:'Niveau enseigné',options:['Licence (L1-L3)','Master (M1-M2)','Doctorat']}
+  etudiant:{labelKey:'niv_label_etudiant',options:['Baccalauréat','BTS / BUT','Licence (L1-L3)','Master (M1-M2)','Doctorat']},
+  prof_ecole:{labelKey:'niv_label_enseigne',options:['Maternelle (TPS-GS)','CP - CE1','CE2 - CM1','CM2']},
+  prof_college:{labelKey:'niv_label_enseigne',options:['6ème - 5ème','4ème - 3ème','Seconde','Première','Terminale']},
+  prof_universite:{labelKey:'niv_label_enseigne',options:['Licence (L1-L3)','Master (M1-M2)','Doctorat']}
 };
 function updateNiveaux(statut){
   var nf=g('niveauField'),sel=g('rNiveau'),lbl=g('niveauLabel');
   if(!statut||!NIVEAUX[statut]){if(nf)nf.style.display='none';return;}
   var n=NIVEAUX[statut];nf.style.display='block';
-  if(lbl)lbl.textContent=n.label;
-  sel.innerHTML='<option value="">Choisir...</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
+  if(lbl)lbl.textContent=t(n.labelKey);
+  sel.innerHTML='<option value="">'+t('txt_choose')+'…</option>'+n.options.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');
 }
 function updateNiveauxPf(statut){
   var nf=g('pfNiveauField'),lbl=g('pfNiveauLabel'),valLbl=g('pfNiveauValLabel');
   if(!statut||!NIVEAUX[statut]){if(nf)nf.style.display='none';return;}
   var n=NIVEAUX[statut];
   if(nf)nf.style.display='';
-  if(lbl)lbl.textContent=n.label;
+  if(lbl)lbl.textContent=t(n.labelKey);
   // Reset le niveau si le statut change
   var pfNiv=g('pfNiveau');
   if(pfNiv)pfNiv.value='';
@@ -11316,7 +11316,7 @@ function _recPreview(){
   var dates=_computeRecDates();
   if(_sd.recurrence==='once'){prev.style.display='none';return;}
   prev.style.display='';
-  prev.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">S\u00e9ances programm\u00e9es</div>'
+  prev.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">'+t('wiz_seances_prog')+'</div>'
     +'<div style="display:flex;flex-direction:column;gap:6px">'
     +dates.map(function(d,i){
       var H=String(d.getHours()).padStart(2,'0'),mi=String(d.getMinutes()).padStart(2,'0');
@@ -11627,7 +11627,7 @@ function stepRender(idx){
     var _stpBtn3='width:44px;height:44px;border-radius:50%;border:none;background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);font-size:22px;font-weight:300;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:all .15s';
     html+='<div style="display:flex;flex-direction:column;gap:10px;width:100%">';
     _recOpts.forEach(function(opt,i){
-      if(i===1)html+='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="flex:1;height:1px;background:var(--bdr)"></div><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">Cours récurrent</div><div style="flex:1;height:1px;background:var(--bdr)"></div></div>';
+      if(i===1)html+='<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><div style="flex:1;height:1px;background:var(--bdr)"></div><div style="font-size:11px;font-weight:700;color:var(--lite);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">'+t('rec_cours_recurrent')+'</div><div style="flex:1;height:1px;background:var(--bdr)"></div></div>';
       var isSel=_sd.recurrence===opt.val;
       html+='<div class="rec-opt" data-rv="'+opt.val+'" onclick="_setRecurrence(\''+opt.val+'\')" style="'
         +(isSel?'background:rgba(255,107,43,.04);box-shadow:0 0 0 2px var(--or),0 6px 24px rgba(255,107,43,.2);':'background:var(--wh);box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);')
@@ -11897,7 +11897,7 @@ function stepNext(){
     if(g('stepPlaces'))_sd.places=parseInt(g('stepPlaces').value)||5;
     if(!_sd.prix){toast(t('t_price_req'),'Entrez le prix');return;}
   }
-  if(step.id==='desc'){if(g('stepDesc'))_sd.desc=g('stepDesc').value.trim();if(!_sd.desc){toast(t('t_desc_req')||'Description requise','Décrivez votre cours en quelques mots');return;}}
+  if(step.id==='desc'){if(g('stepDesc'))_sd.desc=g('stepDesc').value.trim();if(!_sd.desc||_sd.desc.length<60){toast(t('t_desc_req')||'Description requise',t('t_desc_req_sub')||'Minimum 60 caractères');return;}}
   var total=STEP_DEFS.length;
   if(_sc<total-1){
     _sc++;
@@ -14207,7 +14207,7 @@ function _buildVisioHTML(){
     // Header
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);gap:12px;z-index:2;flex-shrink:0;box-shadow:0 1px 0 rgba(255,255,255,.06)">'
     +'<div style="display:flex;align-items:center;gap:8px;min-width:0">'
-    +'<span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap">Cours en visio</span>'
+    +'<span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap">'+t('visio_header')+'</span>'
     +'<div id="_vRecDot" style="display:none;width:8px;height:8px;border-radius:50%;background:#e53e3e;animation:_vBlink 1s infinite;flex-shrink:0"></div>'
     +'</div>'
     +'<div id="_vTimer" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.45);font-variant-numeric:tabular-nums;flex-shrink:0">00:00</div>'
