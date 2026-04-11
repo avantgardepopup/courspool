@@ -1917,26 +1917,26 @@
 
     <!-- STATS BAR -->
     <div class="tp-stats-bar">
-      <div class="tp-stat"><div id="tpStRating" class="tp-stat-num tp-stat-rating">—</div><div class="tp-stat-lbl">Note</div></div>
+      <div class="tp-stat"><div id="tpStRating" class="tp-stat-num tp-stat-rating">—</div><div class="tp-stat-lbl" data-i18n="tp_stat_note">Note</div></div>
       <div class="tp-stat-sep"></div>
-      <div class="tp-stat"><div id="tpStAvis" class="tp-stat-num">0</div><div class="tp-stat-lbl">Avis</div></div>
+      <div class="tp-stat"><div id="tpStAvis" class="tp-stat-num">0</div><div class="tp-stat-lbl" data-i18n="tp_stat_avis">Avis</div></div>
       <div class="tp-stat-sep"></div>
-      <div class="tp-stat"><div id="tpStCours" class="tp-stat-num">0</div><div class="tp-stat-lbl">Cours</div></div>
+      <div class="tp-stat"><div id="tpStCours" class="tp-stat-num">0</div><div class="tp-stat-lbl" data-i18n="tp_stat_cours">Cours</div></div>
       <div class="tp-stat-sep"></div>
-      <div class="tp-stat"><div id="tpStEleves" class="tp-stat-num">0</div><div class="tp-stat-lbl">Élèves</div></div>
+      <div class="tp-stat"><div id="tpStEleves" class="tp-stat-num">0</div><div class="tp-stat-lbl" data-i18n="tp_stat_eleves">Élèves</div></div>
     </div>
 
     <!-- TABS -->
     <div class="tp-tab-bar" id="tpTabBar">
-      <button class="tp-tab on" id="tpTabPresentation" onclick="switchTpTab('presentation')">Présentation</button>
-      <button class="tp-tab" id="tpTabCours" onclick="switchTpTab('cours')">Cours</button>
-      <button class="tp-tab" id="tpTabAvis" onclick="switchTpTab('avis')">Avis</button>
-      <button class="tp-tab" id="tpTabEspace" onclick="switchTpTab('espace')">Espace</button>
+      <button class="tp-tab on" id="tpTabPresentation" onclick="switchTpTab('presentation')" data-i18n="tp_tab_presentation">Présentation</button>
+      <button class="tp-tab" id="tpTabCours" onclick="switchTpTab('cours')" data-i18n="tp_tab_cours">Cours</button>
+      <button class="tp-tab" id="tpTabAvis" onclick="switchTpTab('avis')" data-i18n="tp_tab_avis">Avis</button>
+      <button class="tp-tab" id="tpTabEspace" onclick="switchTpTab('espace')" data-i18n="tp_tab_espace">Espace</button>
     </div>
 
     <!-- PANEL: Présentation -->
     <div id="tpPanelPresentation" class="tp-panel">
-      <div class="tp-sec-title" id="tpCertTitle">Certification</div>
+      <div class="tp-sec-title" id="tpCertTitle" data-i18n="tp_cert_title">Certification</div>
       <div id="tpTrustCards" class="tp-trust-wrap"></div>
 
       <div id="tpBioSection" style="display:none;padding:0 16px 16px">
@@ -1944,12 +1944,12 @@
       </div>
 
       <div id="tpStatutSection" style="display:none;padding:0 16px 8px">
-        <div class="tp-sec-label">Statut &amp; formation</div>
+        <div class="tp-sec-label" data-i18n="tp_sec_statut">Statut &amp; formation</div>
         <div class="tp-card-list" id="tpStatutList"></div>
       </div>
 
       <div id="tpMatiereSection" style="display:none;padding:0 16px 16px">
-        <div class="tp-sec-label">Matières enseignées</div>
+        <div class="tp-sec-label" data-i18n="tp_sec_matieres">Matières enseignées</div>
         <div id="tpMatiereChips" class="tp-chips-wrap"></div>
       </div>
 
@@ -1977,11 +1977,11 @@
       <div id="tpEspaceCode" style="padding:24px 16px calc(env(safe-area-inset-bottom,0px) + 100px)">
         <div class="tp-espace-card">
           <div id="tpEspaceTitle" class="tp-espace-title"></div>
-          <div class="tp-espace-desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
+          <div class="tp-espace-desc" data-i18n="tp_espace_desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
           <div id="tpEspaceRow" class="tp-espace-row">
-            <input id="tpCodeInput" type="text" placeholder="Code d'accès" class="tp-code-input"
+            <input id="tpCodeInput" type="text" data-i18n-ph="tp_code_ph" placeholder="Code d'accès" class="tp-code-input"
               maxlength="6" oninput="_tpCodeLive(this)" autocomplete="off" spellcheck="false" enterkeyhint="go">
-            <button onclick="tpEnterCode()" class="tp-code-btn">Rejoindre</button>
+            <button onclick="tpEnterCode()" class="tp-code-btn" data-i18n="tp_code_btn">Rejoindre</button>
           </div>
           <div id="tpCodeHint" style="font-size:12px;color:#888;padding:4px 2px;min-height:18px"></div>
           <div id="tpCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:2px"></div>
@@ -1992,19 +1992,19 @@
         <div class="tp-esp-group">
           <div class="tp-esp-row" onclick="openEspPubs()">
             <div class="tp-esp-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Publications</div><div class="tp-esp-sub">Annonces de votre professeur</div></div>
+            <div class="tp-esp-text"><div class="tp-esp-title" data-i18n="tp_esp_pub_title">Publications</div><div class="tp-esp-sub" data-i18n="tp_esp_pub_sub">Annonces de votre professeur</div></div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="tp-esp-sep"></div>
           <div class="tp-esp-row" onclick="openElveBibliotheque(_curPrFull)">
             <div class="tp-esp-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Bibliothèque</div><div class="tp-esp-sub">Fiches et ressources du prof</div></div>
+            <div class="tp-esp-text"><div class="tp-esp-title" data-i18n="tp_esp_biblio_title">Bibliothèque</div><div class="tp-esp-sub" data-i18n="tp_esp_biblio_sub">Fiches et ressources du prof</div></div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="tp-esp-sep"></div>
           <div class="tp-esp-row" onclick="contPrFull()">
             <div class="tp-esp-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Écrire au professeur</div><div class="tp-esp-sub">Message direct</div></div>
+            <div class="tp-esp-text"><div class="tp-esp-title" data-i18n="tp_esp_msg_title">Écrire au professeur</div><div class="tp-esp-sub" data-i18n="tp_esp_msg_sub">Message direct</div></div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>

@@ -4444,7 +4444,7 @@ function _openPrLegacy(pid){
           +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
           +'<div style="font-size:11.5px;color:var(--mid);margin-top:2px">'+esc(fmtDt(c.dt))+'</div>'
           +'</div>'
-          +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
+          +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?t('mode_visio'):t('mode_pres'))+'</span>'
           +'</div>';
       }).join('')
       :'<div style="text-align:center;padding:28px 16px 16px"><div style="width:48px;height:48px;background:var(--bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>';
@@ -4775,7 +4775,7 @@ function openPrFull(pid){
     p.photo=cours[0].prof_photo||null;
   }
   var displayNm=p.nm||t('reg_prof'),displayIni=p.i||'?',displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',displayPhoto=p.photo||null;
-  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
 
   // Avatar
   var avEl=g('tpAvWrap');if(avEl){setAvatar(avEl,displayPhoto,displayIni,displayCol);avEl._photo=displayPhoto;}
@@ -4784,13 +4784,13 @@ function openPrFull(pid){
   // Since / role
   var sinceEl=g('tpSince');
   if(sinceEl){
-    var roleStr=p.statut?(STATUT[p.statut]||p.statut):'Enseignant';
-    sinceEl.textContent=roleStr+(p.created_at||p.since?' · Membre depuis '+(new Date(p.created_at||p.since)).getFullYear():'');
+    var roleStr=p.statut?(STATUT[p.statut]||p.statut):t('tp_default_role');
+    sinceEl.textContent=roleStr+(p.created_at||p.since?' · '+t('tp_membre_depuis')+' '+(new Date(p.created_at||p.since)).getFullYear():'');
   }
   // Contact button label
-  var cl=g('tpContactLabel');if(cl){var _pr=displayNm.split(' ')[0];cl.textContent='Contacter '+(_pr||displayNm);}
+  var cl=g('tpContactLabel');if(cl){var _pr=displayNm.split(' ')[0];cl.textContent=t('tp_contacter')+' '+(_pr||displayNm);}
   // Espace title
-  var et=g('tpEspaceTitle');if(et){var _pr2=displayNm.split(' ')[0];et.textContent='Espace privé de '+(_pr2||displayNm);}
+  var et=g('tpEspaceTitle');if(et){var _pr2=displayNm.split(' ')[0];et.textContent=t('tp_espace_de')+' '+(_pr2||displayNm);}
   // Follow badge (show for all profiles except own)
   var isOwnProfile=!!(user&&pid===user.id);
   var vb=g('tpVerifBadge');if(vb)vb.style.display=isOwnProfile?'none':'flex';
@@ -4856,13 +4856,13 @@ function openPrFull(pid){
       var mats=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
       _tpRenderMatieres(mats,mats.slice(0,2));
     }
-    if(prof.statut&&g('tpSince')){g('tpSince').textContent=(STATUT[prof.statut]||prof.statut)+(prof.created_at?' · Membre depuis '+new Date(prof.created_at).getFullYear():'');}
+    if(prof.statut&&g('tpSince')){g('tpSince').textContent=(STATUT[prof.statut]||prof.statut)+(prof.created_at?' · '+t('tp_membre_depuis')+' '+new Date(prof.created_at).getFullYear():'');}
     _tpRenderStatut(P[pid]);
     _tpBuildTrustCards(P[pid],pid);
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('tpStEleves'))g('tpStEleves').textContent=P[pid].e;}
-    var _cl=g('tpContactLabel');if(_cl){var _pr3=(prof.prenom||_apiNm||displayNm).split(' ')[0];_cl.textContent='Contacter '+_pr3;}
-    var _et=g('tpEspaceTitle');if(_et){var _pr4=(prof.prenom||_apiNm||displayNm).split(' ')[0];_et.textContent='Espace privé de '+_pr4;}
+    var _cl=g('tpContactLabel');if(_cl){var _pr3=(prof.prenom||_apiNm||displayNm).split(' ')[0];_cl.textContent=t('tp_contacter')+' '+_pr3;}
+    var _et=g('tpEspaceTitle');if(_et){var _pr4=(prof.prenom||_apiNm||displayNm).split(' ')[0];_et.textContent=t('tp_espace_de')+' '+_pr4;}
   }).catch(function(){});
   var el=g('bdPrFull');if(el){el.style.display='flex';el.classList.remove('closing');}
   if(g('tpScroll'))g('tpScroll').scrollTop=0;
@@ -4900,23 +4900,23 @@ function _tpBuildTrustCards(p,pid){
   if(_isVrf){
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'identite\')">'
       +'<div style="'+_ior+'">'+_icoIdW+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié ›</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('tp_identite_verifiee')+'</div><div class="tp-trust-sub">'+t('tp_cni_ctrl')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">'+t('tp_badge_verifie')+'</div>'
       +'</div>';
   }
   if(_isDip){
-    var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
+    var dipLabel=p.diplome||p.niveau||t('tp_diplome_verifie');
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'diplome\')">'
       +'<div style="'+_iob+'">'+_icoDipW+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">Vérifié ›</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('tp_diplome_verifie')+'</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">'+t('tp_badge_verifie')+'</div>'
       +'</div>';
   }
   if(_isCas){
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'confiance\')">'
       +'<div style="'+_iog+'">'+_icoShldW+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Casier judiciaire vérifié</div></div>'
-      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Certifié ›</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('tp_profil_confiance')+'</div><div class="tp-trust-sub">'+t('tp_casier_verifie')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">'+t('tp_badge_certifie')+'</div>'
       +'</div>';
   }
   box.innerHTML=h;
@@ -4925,7 +4925,7 @@ function _tpBuildTrustCards(p,pid){
 
 function _tpRenderStatut(p){
   var sect=g('tpStatutSection'),list=g('tpStatutList');if(!sect||!list)return;
-  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
   function _row(svgPath,bg,col,lbl,val){
     return'<div class="tp-card-row">'
       +'<div style="width:32px;height:32px;border-radius:9px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px">'
@@ -4942,15 +4942,15 @@ function _tpRenderStatut(p){
     lieu:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'
   };
   var rows='';
-  rows+=_row(_ico.statut,'#F5F3FF','#8B5CF6','Statut',p.statut?(STATUT[p.statut]||p.statut):'—');
+  rows+=_row(_ico.statut,'#F5F3FF','#8B5CF6',t('tp_row_statut'),p.statut?(STATUT[p.statut]||p.statut):'—');
   var dip=p.diplome||p.niveau||null;
-  rows+=_row(_ico.diplome,'#EEF2FF','#4F46E5','Diplôme',dip||'—');
+  rows+=_row(_ico.diplome,'#EEF2FF','#4F46E5',t('tp_row_diplome'),dip||'—');
   var fm=p.formations?String(p.formations).split('\n').filter(Boolean)[0]:null;
-  if(fm)rows+=_row(_ico.formation,'#EEF2FF','#4F46E5','Formations',fm+(p.formations.split('\n').filter(Boolean).length>1?' …':''));
+  if(fm)rows+=_row(_ico.formation,'#EEF2FF','#4F46E5',t('tp_row_formations'),fm+(p.formations.split('\n').filter(Boolean).length>1?' …':''));
   var exp=p.experiences||p.experience||null;
-  if(exp)rows+=_row(_ico.experience,'#F5F3FF','#8B5CF6','Expérience',String(exp).split('\n')[0]);
+  if(exp)rows+=_row(_ico.experience,'#F5F3FF','#8B5CF6',t('tp_row_experience'),String(exp).split('\n')[0]);
   var lieu=p.lieu_enseignement||p.lieu||null;
-  if(lieu)rows+=_row(_ico.lieu,'#FFF0E8','#FF6B2B','Lieu d\'enseignement',lieu);
+  if(lieu)rows+=_row(_ico.lieu,'#FFF0E8','#FF6B2B',t('tp_row_lieu'),lieu);
   if(!rows){sect.style.display='none';return;}
   list.innerHTML=rows;sect.style.display='block';
 }
@@ -4970,7 +4970,7 @@ function _tpBuildCourses(pid){
   var container=g('tpCoursList');if(!container)return;
   var cours=C.filter(function(c){return c.pr===pid&&!_isCoursPass(c)&&c.fl<c.sp;});
   if(!cours.length){
-    container.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Aucun cours disponible pour le moment.</div>';
+    container.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">'+t('tp_no_cours')+'</div>';
     return;
   }
   container.innerHTML='';
