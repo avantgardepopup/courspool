@@ -7567,7 +7567,7 @@ async function loadMessages(){
           var _st=getCourseState(_cid);
           if(_st==='past'||_st==='deleted'){
             var _isPastCard=_st==='past';
-            var _replaceLbl=_isPastCard?'Cours terminé':'Cours supprimé';
+            var _replaceLbl=_isPastCard?t('fav_cours_termine'):t('fav_cours_supprime');
             var _replaceIcon=_isPastCard
               ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
               :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
