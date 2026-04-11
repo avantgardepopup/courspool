@@ -15471,15 +15471,20 @@ function _boardRenderSubbar(){
 function _vOpenBoard(){
   if(window.innerWidth<768){
     var _bPop=document.createElement('div');
+    _bPop.id='_vBoardPop';
     _bPop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
     _bPop.innerHTML='<div style="background:#1a1a2e;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6);">'
-      +'<div style="font-size:36px;margin-bottom:14px">🖥️</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:rgba(255,107,43,.15);margin:0 auto 16px;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+      +'</div>'
       +'<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:10px">Tableau collaboratif</div>'
       +'<div style="font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:22px">Le tableau collaboratif est disponible sur iPad et ordinateur uniquement. Sur téléphone, profite du cours en visio !</div>'
-      +'<button onclick="this.closest(\'div[style*=\"inset:0\"]\').remove()" style="width:100%;padding:12px;background:#FF6B2B;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">OK, compris</button>'
+      +'<button id="_vBoardPopOk" style="width:100%;padding:12px;background:#FF6B2B;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;">OK, compris</button>'
       +'</div>';
     _bPop.onclick=function(e){if(e.target===_bPop)_bPop.remove();};
     document.body.appendChild(_bPop);
+    var _bOk=g('_vBoardPopOk');
+    if(_bOk)_bOk.onclick=function(){var p=g('_vBoardPop');if(p)p.remove();};
     return;
   }
   if(_boardActive)return;
