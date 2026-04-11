@@ -15631,6 +15631,10 @@ function _boardDeletePage(idx){
   if(_brdPages.length<=1)return;
   _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);_brdPageHists.splice(idx,1);
   if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
+  // Réinitialiser l'historique undo/redo pour la nouvelle page courante
+  var _dph=_brdPageHists[_brdPageIdx];
+  if(_dph){_brdHist=_dph.hist.slice();_brdHistIdx=_dph.idx;}
+  else{_brdHist=[];_brdHistIdx=-1;_boardSaveHist();}
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
   }else{
@@ -15798,6 +15802,12 @@ function _boardGetPos(e){
 function _boardPointerCancel(e){delete _brdActivePointers[e.pointerId];_boardUp(e);}
 function _boardPointerLeave(e){delete _brdActivePointers[e.pointerId];_boardUp(e);}
 function _boardAttachEvents(canv){
+  // Retirer d'abord les anciens listeners (évite les doublons si appelé plusieurs fois, ex: rotation)
+  canv.removeEventListener('pointerdown',_boardDown);
+  canv.removeEventListener('pointermove',_boardMove);
+  canv.removeEventListener('pointerup',_boardUp);
+  canv.removeEventListener('pointercancel',_boardPointerCancel);
+  canv.removeEventListener('pointerleave',_boardPointerLeave);
   _brdActivePointers={};
   canv.addEventListener('pointerdown',_boardDown,{passive:false});
   canv.addEventListener('pointermove',_boardMove,{passive:false});
@@ -16917,8 +16927,10 @@ function _brdApplyRemoteOp(op){
     op.content.split('\n').forEach(function(ln,i){_brdX.fillText(ln,op.x,op.y+i*lh);});
     _brdX.restore();
   }else if(op.type==='clear'){
+    if(typeof op.pageIdx==='number'&&op.pageIdx!==_brdPageIdx)return;
     _boardSaveHist();_boardClearFg();_boardSavePage();_boardSaveHist();_boardUpdatePageTabs();
   }else if(op.type==='bg'){
+    if(typeof op.pageIdx==='number'&&op.pageIdx!==_brdPageIdx)return;
     if(typeof op.bgType==='string'){
       _brdBgType=op.bgType;
       _boardDrawBg();
