@@ -14538,7 +14538,7 @@ function _vBuildTile(p,sid){
   vid.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none;'+(isLocal?'transform:scaleX(-1);':'');
   var av=document.createElement('div');
   av.id='_vav-'+sid;
-  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(255,69,0,.28);';
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;box-shadow:0 4px 18px rgba(255,69,0,.28);';
   av.textContent=name.charAt(0).toUpperCase();
   // Label with network quality indicator
   var lbl=document.createElement('div');
@@ -14574,7 +14574,7 @@ function _vBuildTile(p,sid){
       +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" title="Couper le micro" style="background:rgba(229,62,62,.85);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>';
     wrap.appendChild(pc);
   }
-  if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
+  if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;aud.style.display='none';wrap.appendChild(aud);}
   wrap.appendChild(vid);wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(hand);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
   _vOnTrack({participant:p});
   return wrap;

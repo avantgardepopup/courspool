@@ -133,6 +133,15 @@ window.addEventListener('popstate',function(e){
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
+// Helper : fetch avec timeout — évite que les fetches parallèles pendent indéfiniment
+function _ft(url,opts,ms){
+  ms=ms||10000;
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},ms);
+  var merged=Object.assign({},opts||{},{signal:ctrl.signal});
+  return fetch(url,merged).finally(function(){clearTimeout(tid);});
+}
+
 // Prefetch cours dès le chargement du script — endpoint public, pas besoin d'auth
 // Le fetch démarre pendant que le JS vérifie la session, économise ~300-500ms
 var _prefetchP=fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();}).catch(function(){return null;});
@@ -1237,6 +1246,7 @@ async function loadData(page,silent){
     if(e.name==='AbortError'){
       var _gr=g('grid');if(_gr)_gr.innerHTML='';
       var _nc=g('nocard');if(_nc){_nc.style.display='block';var _nt=g('nocardTitle');if(_nt)_nt.textContent='Chargement...';}
+      if(typeof toast==='function')toast('Connexion lente','Les cours se rechargent automatiquement…');
       setTimeout(function(){loadData(1,true).then(function(){buildCards();});},5000);
     } else {
       console.log('loadData err',e);
@@ -1952,8 +1962,8 @@ async function doLogin(){
       var _folDone2=false;
       var _dataP2=loadData();
       var _rfP2=Promise.all([
-        fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
+        _ft(API+'/reservations/'+uid,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return [];}),
+        _ft(API+'/follows/'+uid,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
       ]);
       // Afficher les cours dès qu'ils arrivent
       _dataP2.then(function(){
@@ -2412,8 +2422,8 @@ function goExplore(){
         var _uid=user.id;
         var _dataP=loadData(1,_hadCache);
         var _rfP=Promise.all([
-          fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → on garde fol du localStorage
+          _ft(API+'/reservations/'+user.id,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return [];}),
+          _ft(API+'/follows/'+user.id,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → on garde fol du localStorage
         ]);
         // Afficher les cours dès qu'ils arrivent (sans attendre res+follows)
         // loadData(1) avec silent=true si cache déjà affiché pour éviter les skeletons
@@ -3553,16 +3563,19 @@ function renderPage(){
   grid.appendChild(_frag);
   g('loadMoreWrap').style.display=filteredCards.length>currentPage*PAGE_SIZE?'block':'none';
   if(filteredCards.length>currentPage*PAGE_SIZE)g('loadMoreCount').textContent=(filteredCards.length-currentPage*PAGE_SIZE)+' cours restants';
-  // Animation entrée : cards déjà visibles → apparaissent immédiatement (pas de flash)
-  // Cards sous le fold → masquées, animées quand elles entrent dans le viewport
-  if(typeof IntersectionObserver!=='undefined'){
+  // Animation entrée : uniquement sur desktop (hover:hover) pour éviter les cards blanches
+  // sur mobile (scroll rapide, tab-switch → animationend ne fire pas → opacity:0 bloqué)
+  if(typeof IntersectionObserver!=='undefined'&&window.matchMedia('(hover:hover)').matches){
     var _vH=window.innerHeight||document.documentElement.clientHeight;
     var _io=new IntersectionObserver(function(entries){
       entries.forEach(function(e){
         if(!e.isIntersecting)return;
         _io.unobserve(e.target);
         e.target.classList.add('card-in');
+        // Fallback : retirer card-below après 600ms si animationend ne fire pas
+        var _fb=setTimeout(function(){e.target.classList.remove('card-in','card-below');},600);
         e.target.addEventListener('animationend',function(){
+          clearTimeout(_fb);
           e.target.classList.remove('card-in','card-below');
         },{once:true});
       });
@@ -3586,6 +3599,10 @@ function loadMore(){
     _loadingMore=false;
     currentPage=1;
     renderPage();
+  }).catch(function(e){
+    _loadingMore=false; // débloquer l'infinite scroll même en cas d'erreur réseau
+    _currentPage=Math.max(1,_currentPage-1); // rollback page
+    console.error('[loadMore] erreur chargement page',_currentPage+1,e);
   });
 }
 
@@ -4414,7 +4431,7 @@ function _openPrLegacy(pid){
       var icon=MAT_ICONS[key]||MAT_ICONS['autre'];
       return'<div style="display:inline-flex;align-items:center;gap:7px;background:var(--bg);border-radius:50px;padding:5px 12px 5px 5px;border:1.5px solid '+col+'30">'
         +'<div style="width:24px;height:24px;border-radius:50%;background:'+col+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+col+'">'+icon+'</div>'
-        +'<span style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap">'+esc(m)+'</span>'
+        +'<span style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap">'+(mat?mL(mat):esc(m))+'</span>'
         +'</div>';
     }).join('');
   }
@@ -10285,7 +10302,7 @@ function closeVilleFilter(){
   if(_locKbShowFn){window.removeEventListener('keyboardWillShow',_locKbShowFn);_locKbShowFn=null;}
   if(_locKbHideFn){window.removeEventListener('keyboardWillHide',_locKbHideFn);_locKbHideFn=null;}
 }
-function applyVilleFilter(){}
+function applyVilleFilter(){closeVilleFilter();applyFilter();}
 function clearVilleFilter(){
   locInputClear();
   closeVilleFilter();
@@ -13414,7 +13431,7 @@ function _ssSelectMatiere(){}
 function _ssUpdateMatLabel(){}
 function _ssSearch(){}
 function _ssClearAll(){}
-function _ssRequestGeoloc(){}
+function _ssRequestGeoloc(){if(typeof requestGeoloc==='function')requestGeoloc();}
 function _ssOnMatiereInput(){}
 function _ssPickMatiere(){}
 function _ssSubmitCode(){}
@@ -13423,7 +13440,7 @@ function _ssOnInput(val){var m=g('mobSearchInput');if(m)m.value=val;var s=g('src
 function _ssOnClear(){var m=g('mobSearchInput');if(m)m.value='';var s=g('srch');if(s)s.value='';currentPage=1;applyFilter();}
 function _ssUpdateResultCount(){}
 function _ssBuildSuggestions(){}
-function _ssUseGeoloc(){}
+function _ssUseGeoloc(){if(typeof requestGeoloc==='function')requestGeoloc();}
 function _ssOnFocus(){}
 
 function _updateSearchPill(val,sub){
@@ -13935,6 +13952,7 @@ function initNavDrag(){
     var defX=Math.max(0,(sw-nw)/2),defY=sh-nh-28;
     var x=saved.x!==undefined?Math.min(Math.max(0,saved.x),sw-nw):defX;
     var y=saved.y!==undefined?Math.min(Math.max(0,saved.y),sh-nh):defY;
+    nav.style.bottom='auto';nav.style.right='auto';
     nav.style.left=x+'px';nav.style.top=y+'px';
   },120);
   var d={on:false,sx:0,sy:0,sl:0,st:0,moved:false};
@@ -13950,12 +13968,14 @@ function initNavDrag(){
     if(Math.abs(dx)>5||Math.abs(dy)>5)d.moved=true;
     if(!d.moved)return;
     var sw=window.innerWidth,sh=window.innerHeight;
+    nav.style.bottom='auto';nav.style.right='auto';
     nav.style.left=Math.max(0,Math.min(sw-nav.offsetWidth,d.sl+dx))+'px';
     nav.style.top=Math.max(0,Math.min(sh-nav.offsetHeight,d.st+dy))+'px';
   }
   function end(){
-    if(!d.on)return;d.on=false;nav.style.opacity='';
-    if(d.moved){snapNavPill(nav);}else{nav.style.boxShadow='';}
+    if(!d.on)return;d.on=false;d.moved=false;nav.style.opacity='';
+    nav.style.boxShadow='';
+    if(d.moved){snapNavPill(nav);}
   }
   nav.addEventListener('mousedown',function(e){start(e.clientX,e.clientY);});
   document.addEventListener('mousemove',function(e){move(e.clientX,e.clientY);});
@@ -13963,6 +13983,7 @@ function initNavDrag(){
   nav.addEventListener('touchstart',function(e){if(e.touches.length===1)start(e.touches[0].clientX,e.touches[0].clientY);},{passive:true});
   document.addEventListener('touchmove',function(e){if(d.on&&d.moved)e.preventDefault();if(e.touches.length)move(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
   document.addEventListener('touchend',end);
+  document.addEventListener('touchcancel',end); // évite que d.on reste bloqué à true (OS cancel : appel entrant, palm rejection)
   // Bloquer le click sur les enfants si c'était un drag
   nav.addEventListener('click',function(e){if(d.moved){e.stopPropagation();e.preventDefault();}},true);
 }
@@ -14052,35 +14073,37 @@ function _startDemoAudio(stream){
 
 function _demoAudioLoop(){
   if(!_isDemoMode||!_demoAnalyser){_demoRAFId=null;return;}
-  _demoAnalyser.getByteFrequencyData(_demoBuf);
-  var sum=0;for(var i=0;i<_demoBuf.length;i++)sum+=_demoBuf[i];
-  var avg=sum/_demoBuf.length; // typiquement 0-90 pour la parole normale
+  try{
+    _demoAnalyser.getByteFrequencyData(_demoBuf);
+    var sum=0;for(var i=0;i<_demoBuf.length;i++)sum+=_demoBuf[i];
+    var avg=sum/_demoBuf.length; // typiquement 0-90 pour la parole normale
 
-  // ── Ring visuel : taille + glow proportionnels au volume ──
-  var ring=g('_vsring-demo-local');
-  if(ring&&!_localMuted){
-    var c=Math.min(avg,90);
-    var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
-    var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
-    var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
-    var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
-    var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
-    ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
-    ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
-    ring.style.opacity=avg>6?'1':'0';
-  }else if(ring){
-    ring.style.opacity='0';ring.style.transform='scale(1)';
-  }
+    // ── Ring visuel : taille + glow proportionnels au volume ──
+    var ring=g('_vsring-demo-local');
+    if(ring&&!_localMuted){
+      var c=Math.min(avg,90);
+      var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
+      var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
+      var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
+      var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
+      var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
+      ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
+      ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
+      ring.style.opacity=avg>6?'1':'0';
+    }else if(ring){
+      ring.style.opacity='0';ring.style.transform='scale(1)';
+    }
 
-  // ── Changement de locuteur PiP (throttlé à 150ms) ──
-  var now=Date.now();
-  if(now-_demoPipThrottle>150){
-    _demoPipThrottle=now;
-    var spk=avg>14;
-    if(spk&&!_demoLocalSpeaking){_demoLocalSpeaking=true;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});}
-    else if(!spk&&_demoLocalSpeaking){_demoSilenceSince=now;_demoLocalSpeaking=false;}
-    else if(!spk&&!_demoLocalSpeaking&&now-_demoSilenceSince>1800){_demoSilenceSince=now+3600000;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});}
-  }
+    // ── Changement de locuteur PiP (throttlé à 150ms) ──
+    var now=Date.now();
+    if(now-_demoPipThrottle>150){
+      _demoPipThrottle=now;
+      var spk=avg>14;
+      if(spk&&!_demoLocalSpeaking){_demoLocalSpeaking=true;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});}
+      else if(!spk&&_demoLocalSpeaking){_demoSilenceSince=now;_demoLocalSpeaking=false;}
+      else if(!spk&&!_demoLocalSpeaking&&now-_demoSilenceSince>1800){_demoSilenceSince=now+3600000;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});}
+    }
+  }catch(e){_demoRAFId=null;return;} // arrêt propre si analyser fermé
   _demoRAFId=requestAnimationFrame(_demoAudioLoop);
 }
 
@@ -14305,6 +14328,7 @@ function _vOnJoined(){
       _audioAnalyser=_audioCtx.createAnalyser();
       _audioAnalyser.fftSize=256;
       _audioSrc.connect(_audioAnalyser);
+      if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
       _mutedSpeakTimer=setInterval(_vCheckMutedSpeaking,300);
     }
   }catch(e){console.warn('[Visio audioCtx]',e);}
@@ -14514,7 +14538,7 @@ function _vBuildTile(p,sid){
   vid.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none;'+(isLocal?'transform:scaleX(-1);':'');
   var av=document.createElement('div');
   av.id='_vav-'+sid;
-  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(255,69,0,.28);';
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;box-shadow:0 4px 18px rgba(255,69,0,.28);';
   av.textContent=name.charAt(0).toUpperCase();
   // Label with network quality indicator
   var lbl=document.createElement('div');
@@ -14550,7 +14574,7 @@ function _vBuildTile(p,sid){
       +'<button onclick="event.stopPropagation();_vMuteP(\''+sid+'\')" title="Couper le micro" style="background:rgba(229,62,62,.85);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>';
     wrap.appendChild(pc);
   }
-  if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;wrap.appendChild(aud);}
+  if(!isLocal){var aud=document.createElement('audio');aud.id='_vta-'+sid;aud.autoplay=true;aud.style.display='none';wrap.appendChild(aud);}
   wrap.appendChild(vid);wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(hand);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
   _vOnTrack({participant:p});
   return wrap;
@@ -14875,7 +14899,9 @@ var _brdSnapTimer=null; // hold-to-snap line straightening
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
-var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[],_brdSnapshotThrottle=0;
+var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
+var _brdRemoteStrokes={},_brdLastPtEmit=0;
+var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
 var _pipDragging=false,_pipDSX=0,_pipDSY=0,_pipDOX=0,_pipDOY=0;
@@ -15170,11 +15196,12 @@ function _vCloseBoard(){
   if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
     _socket.emit('board_leave',{roomId:_brdRoomId});
   }
+  if(typeof _brdCleanRemoteCursors==='function')_brdCleanRemoteCursors();
   _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
-  if(_brdC&&_brdX&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}catch(e){}}
+  if(_brdC&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}catch(e){}}
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   var pip=g('_vPip');var grid=g('_vGrid');
   var rb=g('_vPipRestoreBtn');if(rb)rb.remove();
@@ -15225,6 +15252,21 @@ function _brdCheckOrientation(){
   }
 }
 
+// Dessine une page (data URL JPEG) sur le canvas principal — async
+function _boardRestorePage(dataUrl,cb){
+  if(!_brdC||!_brdX){if(cb)cb();return;}
+  var img=new Image();
+  img.onload=function(){
+    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
+    _brdX.clearRect(0,0,_brdC.width,_brdC.height);
+    _brdX.drawImage(img,0,0);
+    _brdX.restore();
+    if(cb)cb();
+  };
+  img.onerror=function(){if(cb)cb();};
+  img.src=dataUrl;
+}
+
 function _boardInitCanvas(){
   var canv=g('_vBoardCanvas');if(!canv)return;
   var scroll=g('_brdScroll');if(!scroll)return;
@@ -15261,17 +15303,17 @@ function _boardInitCanvas(){
   _boardDrawBg();
   // Reset zoom/pan
   _brdZoom=1;_brdPanX=0;_brdPanY=0;_brdPinchInitDist=0;
+  var _initDone=function(){
+    if(!_brdHist.length){_brdHist=[{idx:0,data:_brdPages[0]||null}];_brdHistIdx=0;}
+    _boardAttachEvents(canv);
+    _boardUpdatePageTabs();
+    _boardRenderSubbar();
+  };
   if(_brdPages[_brdPageIdx]){
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-    _brdX.putImageData(_brdPages[_brdPageIdx],0,0);
-    _brdX.restore();
+    _boardRestorePage(_brdPages[_brdPageIdx],_initDone);
   }else{
-    _brdPages[_brdPageIdx]=_brdX.getImageData(0,0,canv.width,canv.height);
+    _initDone();
   }
-  if(!_brdHist.length){_brdHist=[{idx:0,data:_brdPages[0]}];_brdHistIdx=0;}
-  _boardAttachEvents(canv);
-  _boardUpdatePageTabs();
-  _boardRenderSubbar();
 }
 
 function _boardDrawBg(){
@@ -15318,25 +15360,25 @@ function _boardApplyTransform(){
 }
 
 function _boardSaveHist(){
-  if(!_brdC||!_brdX)return;
+  if(!_brdC)return;
   if(_brdHistIdx<_brdHist.length-1)_brdHist.splice(_brdHistIdx+1);
-  var d=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+  var d=_brdC.toDataURL('image/jpeg',0.6);
   _brdHist.push({idx:_brdPageIdx,data:d});
-  if(_brdHist.length>25)_brdHist.shift();else _brdHistIdx++;
+  if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
 }
 function _boardUndo(){
   if(_brdHistIdx<=0||!_brdX)return;
   _brdHistIdx--;
   var st=_brdHist[_brdHistIdx];_brdPageIdx=st.idx;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(st.data,0,0);_brdX.restore();
-  _boardUpdatePageLabel();haptic(1);
+  _boardRestorePage(st.data,function(){_boardUpdatePageLabel();});
+  haptic(1);
 }
 function _boardRedo(){
   if(_brdHistIdx>=_brdHist.length-1||!_brdX)return;
   _brdHistIdx++;
   var st=_brdHist[_brdHistIdx];_brdPageIdx=st.idx;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(st.data,0,0);_brdX.restore();
-  _boardUpdatePageLabel();haptic(1);
+  _boardRestorePage(st.data,function(){_boardUpdatePageLabel();});
+  haptic(1);
 }
 function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
 function _boardUpdatePageTabs(){
@@ -15368,9 +15410,12 @@ function _boardDeletePage(idx){
   if(_brdPages.length<=1)return;
   _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);
   if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageTabs();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
+  }else{
+    _boardClearFg();_boardUpdatePageTabs();
+  }
+  haptic(1);
 }
 function _boardRenamePage(idx){
   var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||'';
@@ -15382,11 +15427,14 @@ function _boardRenamePage(idx){
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
   _boardSavePage();_brdPageIdx=idx;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageTabs();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
+  }else{
+    _boardClearFg();_boardUpdatePageTabs();
+  }
+  haptic(1);
 }
-function _boardSavePage(){if(_brdC&&_brdX)_brdPages[_brdPageIdx]=_brdX.getImageData(0,0,_brdC.width,_brdC.height);}
+function _boardSavePage(){if(_brdC)_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}
 function _boardAddPage(){
   _boardSavePage();_brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
   _boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
@@ -15394,16 +15442,22 @@ function _boardAddPage(){
 function _boardPrevPage(){
   if(_brdPageIdx<=0||!_brdX)return;
   _boardSavePage();_brdPageIdx--;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageLabel();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
+  }else{
+    _boardClearFg();_boardUpdatePageLabel();
+  }
+  haptic(1);
 }
 function _boardNextPage(){
   if(_brdPageIdx>=_brdPages.length-1||!_brdX)return;
   _boardSavePage();_brdPageIdx++;
-  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
-  if(_brdPages[_brdPageIdx])_brdX.putImageData(_brdPages[_brdPageIdx],0,0);else _boardClearFg();
-  _brdX.restore();_boardUpdatePageLabel();haptic(1);
+  if(_brdPages[_brdPageIdx]){
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
+  }else{
+    _boardClearFg();_boardUpdatePageLabel();
+  }
+  haptic(1);
 }
 
 // ── New toolbar & popup system ──
@@ -15496,6 +15550,10 @@ function _boardDown(e){
   }
   var p=_boardGetPos(e);
   _brdDraw=true;_brdPts=[p];
+  // Émettre début de trait en temps réel
+  if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz});
+  }
   if(_brdTool==='pen'){
     _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
@@ -15551,6 +15609,14 @@ function _boardMove(e){
   if(!_brdDraw)return;
   e.preventDefault();
   var p=_boardGetPos(e);
+  // Émettre le point en temps réel (~50ms throttle)
+  if(_brdRoomId&&_brdCanEdit&&(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser')){
+    var _now=Date.now();
+    if(_now-_brdLastPtEmit>=50&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      _brdLastPtEmit=_now;
+      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y}});
+    }
+  }
   if(_brdTool==='pen'||_brdTool==='marker'){
     // Hold finger still for 700ms → snap to straight line
     if(_brdSnapTimer)clearTimeout(_brdSnapTimer);
@@ -15601,7 +15667,11 @@ function _boardUp(e){
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   if(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser'){
     _boardSaveHist();
-    // Émettre l'op de trait
+    // Fin de trait temps réel
+    if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      _socket.emit('board_stroke_end',{roomId:_brdRoomId});
+    }
+    // Émettre l'op de trait complet (pour sync snapshot/retardataires)
     if(_brdRoomId&&_brdCanEdit&&_brdPts.length>=2){
       var _dPts=_brdDecimate(_brdPts,3);
       _brdEmitOp(_brdTool==='eraser'
@@ -15868,11 +15938,12 @@ function _vTimerToggle(){
   _vTimerRunning=!_vTimerRunning;
   var btn=g('_vTimerPlayBtn');if(btn)btn.textContent=_vTimerRunning?'⏸ Pause':'▶ Start';
   if(_vTimerRunning){
+    clearInterval(_vTimerIv);
     _vTimerIv=setInterval(function(){
       if(_vTimerLeft<=0){clearInterval(_vTimerIv);_vTimerRunning=false;haptic(3);var b=g('_vTimerPlayBtn');if(b)b.textContent='▶ Start';_vTimerUpdateDisp();return;}
       _vTimerLeft--;_vTimerUpdateDisp();if(_vTimerLeft<=10)haptic(1);
     },1000);
-  }else{clearInterval(_vTimerIv);}
+  }else{clearInterval(_vTimerIv);_vTimerIv=null;}
 }
 function _vTimerReset(){
   clearInterval(_vTimerIv);_vTimerRunning=false;_vTimerLeft=_vTimerTotal;
@@ -16160,20 +16231,103 @@ function closeVisioModal(){
 
 // ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
 
-// Émettre un op de dessin + throttle snapshot pour les retardataires
+// Émettre un op de dessin
 function _brdEmitOp(op){
   if(!_brdRoomId||typeof _socket==='undefined'||!_socket||!_socket.connected)return;
   op.pageIdx=_brdPageIdx;
   _socket.emit('board_op',{roomId:_brdRoomId,op:op});
-  // Snapshot throttlé toutes les 3s pour les retardataires
-  var now=Date.now();
-  if(now-_brdSnapshotThrottle>3000){
-    _brdSnapshotThrottle=now;
-    if(_brdC){
-      var snap=_brdC.toDataURL('image/jpeg',0.45);
-      _socket.emit('board_snapshot',{roomId:_brdRoomId,snapshot:snap});
-    }
+}
+
+// Répondre à une demande de snapshot ciblée (seul le propriétaire reçoit cet event)
+function _brdOnSyncRequest(data){
+  if(!_brdC||!_brdRoomId||!data.targetSocketId)return;
+  var snap=_brdC.toDataURL('image/jpeg',0.55);
+  if(typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_snapshot_for',{roomId:_brdRoomId,targetSocketId:data.targetSocketId,snapshot:snap});
   }
+}
+
+// ── Réception temps réel des traits des autres utilisateurs ──────────────────
+
+function _brdOnRemoteStrokeStart(d){
+  // Assigner une couleur de curseur unique par userId
+  var idx=Object.keys(_brdRemoteStrokes).length%_brdCursorColors.length;
+  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:_brdCursorColors[idx]};
+  // Trouver le nom du participant
+  var part=_brdParticipants.find(function(x){return x.id===d.userId;});
+  var name=part?part.name:'?';
+  _brdShowRemoteCursor(d.userId,name,_brdCursorColors[idx]);
+}
+
+function _brdOnRemotePt(d){
+  var stroke=_brdRemoteStrokes[d.userId];
+  if(!stroke||!_brdC||!_brdX)return;
+  var pt=d.pt;
+  if(stroke.lastPt)_brdDrawRemoteSegment(stroke,pt);
+  stroke.lastPt=pt;
+  _brdMoveRemoteCursor(d.userId,pt);
+}
+
+function _brdOnRemoteStrokeEnd(d){
+  var stroke=_brdRemoteStrokes[d.userId];
+  if(stroke)delete _brdRemoteStrokes[d.userId];
+  // Garder le curseur visible 2s puis le masquer
+  var el=document.getElementById('_brdCursor-'+d.userId);
+  if(el)setTimeout(function(){if(el.parentNode&&!_brdRemoteStrokes[d.userId])el.style.opacity='0';},2000);
+}
+
+// Dessiner un segment de trait reçu en temps réel
+function _brdDrawRemoteSegment(stroke,pt){
+  if(!_brdC||!_brdX||!stroke.lastPt)return;
+  var dpr=window.devicePixelRatio||1;
+  _brdX.save();_brdX.scale(dpr,dpr);
+  _brdX.beginPath();_brdX.moveTo(stroke.lastPt.x,stroke.lastPt.y);_brdX.lineTo(pt.x,pt.y);
+  if(stroke.tool==='eraser'){
+    _brdX.globalCompositeOperation='destination-out';
+    _brdX.strokeStyle='rgba(0,0,0,1)';_brdX.lineWidth=stroke.size;
+  }else{
+    _brdX.globalCompositeOperation='source-over';
+    _brdX.strokeStyle=stroke.color;
+    _brdX.globalAlpha=stroke.tool==='marker'?0.38:1;
+    _brdX.lineWidth=stroke.tool==='marker'?stroke.size*2.5:stroke.size;
+  }
+  _brdX.lineCap='round';_brdX.lineJoin='round';_brdX.stroke();
+  _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
+  _brdX.restore();
+}
+
+// Créer/afficher un curseur flottant pour un utilisateur distant
+function _brdShowRemoteCursor(userId,name,color){
+  var id='_brdCursor-'+userId;
+  var el=document.getElementById(id);
+  if(!el){
+    var page=g('_brdPage');if(!page)return;
+    el=document.createElement('div');
+    el.id=id;
+    el.style.cssText='position:absolute;pointer-events:none;z-index:50;transform:translate(-6px,-6px);transition:left .05s linear,top .05s linear,opacity .3s;will-change:left,top;';
+    el.innerHTML='<div style="width:12px;height:12px;border-radius:50%;background:'+color+';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>'
+      +'<div style="background:'+color+';color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;margin-top:2px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.2);">'+escH((name||'?').slice(0,10))+'</div>';
+    page.appendChild(el);
+  }
+  el.style.opacity='1';
+  return el;
+}
+
+// Déplacer le curseur d'un utilisateur distant (coords canvas → coords page DOM)
+function _brdMoveRemoteCursor(userId,pt){
+  var el=document.getElementById('_brdCursor-'+userId);
+  if(!el)return;
+  el.style.left=(pt.x*_brdZoom)+'px';
+  el.style.top=(pt.y*_brdZoom)+'px';
+}
+
+// Nettoyer tous les curseurs distants (ex: fermeture du tableau)
+function _brdCleanRemoteCursors(){
+  Object.keys(_brdRemoteStrokes).forEach(function(uid){
+    var el=document.getElementById('_brdCursor-'+uid);
+    if(el&&el.parentNode)el.parentNode.removeChild(el);
+  });
+  _brdRemoteStrokes={};
 }
 
 // Décimer les points d'un trait (garde 1 point sur N)
