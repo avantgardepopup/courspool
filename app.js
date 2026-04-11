@@ -15459,9 +15459,9 @@ function _brdShowEraserCursor(x,y){
   }
   // Masquer le curseur CSS pour éviter le double curseur (cercle + crosshair)
   if(_brdC)_brdC.style.cursor='none';
-  var sz=_brdEr*_brdZoom;
-  _brdEraserCursorEl.style.width=sz+'px';_brdEraserCursorEl.style.height=sz+'px';
-  _brdEraserCursorEl.style.left=(x*_brdZoom)+'px';_brdEraserCursorEl.style.top=(y*_brdZoom)+'px';
+  // Pas de * _brdZoom : l'élément est dans _brdPage déjà CSS-transformé scale(zoom)
+  _brdEraserCursorEl.style.width=_brdEr+'px';_brdEraserCursorEl.style.height=_brdEr+'px';
+  _brdEraserCursorEl.style.left=x+'px';_brdEraserCursorEl.style.top=y+'px';
   _brdEraserCursorEl.style.display='block';
 }
 function _brdHideEraserCursor(){
@@ -15671,7 +15671,7 @@ function _boardSetSize(sz){_brdSz=sz;_boardRenderSubbar();}
 function _boardSetEraserSz(sz){
   _brdEr=sz;
   if(_brdEraserCursorEl&&_brdEraserCursorEl.style.display!=='none'){
-    var _es=sz*_brdZoom;_brdEraserCursorEl.style.width=_es+'px';_brdEraserCursorEl.style.height=_es+'px';
+    _brdEraserCursorEl.style.width=sz+'px';_brdEraserCursorEl.style.height=sz+'px';
   }
   _boardRenderSubbar();
 }
@@ -15882,7 +15882,7 @@ function _boardMove(e){
       _snapPg.appendChild(_snapIndicator);
     }
     if(_snapIndicator){
-      _snapIndicator.style.left=(p.x*_brdZoom)+'px';_snapIndicator.style.top=(p.y*_brdZoom)+'px';
+      _snapIndicator.style.left=p.x+'px';_snapIndicator.style.top=p.y+'px'; // pas de * zoom : dans _brdPage déjà scale(zoom)
       _snapIndicator.style.transform='translate(-50%,-50%) scale(0)';_snapIndicator.style.opacity='0';
       requestAnimationFrame(function(){
         _snapIndicator.style.transform='translate(-50%,-50%) scale(1)';_snapIndicator.style.opacity='0.7';
@@ -16657,7 +16657,7 @@ function _brdMoveRemoteCursor(userId,pt){
     delete _brdCursorRAF[userId];
     var el=document.getElementById('_brdCursor-'+userId);
     var lp=_brdCursorPt[userId];
-    if(el&&lp){el.style.left=(lp.x*_brdZoom)+'px';el.style.top=(lp.y*_brdZoom)+'px';}
+    if(el&&lp){el.style.left=lp.x+'px';el.style.top=lp.y+'px';} // pas de * zoom : _brdPage est déjà scale(zoom)
   });
 }
 
