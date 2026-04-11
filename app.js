@@ -15140,19 +15140,21 @@ function _vToggleComment(){
 }
 // ── Keyboard awareness pour la barre de saisie commentaires ──
 function _vSetupCommentKeyboard(){
-  var bar=g('_vCommentBar');if(!bar)return;
+  var panel=g('_vComment');if(!panel)return;
   var _ckbH=0;
-  function _ckbApply(){
-    bar.style.paddingBottom=(_ckbH>0?_ckbH:null)||'calc(env(safe-area-inset-bottom,0px) + 10px)';
+  function _ckbApply(animate){
+    // Remonter le panneau entier au-dessus du clavier
+    panel.style.transition=animate?'bottom .25s ease':'none';
+    panel.style.bottom=(_ckbH>0?_ckbH+'px':'0');
   }
-  // Capacitor : keyboardWillShow donne la hauteur exacte
-  var _ckbShow=function(e){_ckbH=(e&&e.keyboardHeight)||0;_ckbApply();};
-  var _ckbHide=function(){_ckbH=0;_ckbApply();};
-  // Web fallback : visualViewport
+  // Capacitor Keyboard plugin — hauteur exacte, s'anime avec le clavier
+  var _ckbShow=function(e){_ckbH=(e&&e.keyboardHeight)||0;_ckbApply(true);};
+  var _ckbHide=function(){_ckbH=0;_ckbApply(true);};
+  // Fallback visualViewport (web / Safari)
   var _ckbVP=function(){
     if(!window.visualViewport)return;
     var kh=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
-    _ckbH=kh;_ckbApply();
+    if(Math.abs(kh-_ckbH)>10){_ckbH=kh;_ckbApply(false);}
   };
   var inp=g('_vCommentInput');
   if(inp){
@@ -15171,7 +15173,7 @@ function _vSetupCommentKeyboard(){
         window.visualViewport.removeEventListener('resize',_ckbVP);
         window.visualViewport.removeEventListener('scroll',_ckbVP);
       }
-      _ckbH=0;_ckbApply();
+      _ckbH=0;_ckbApply(true);
     },{passive:true});
   }
 }
