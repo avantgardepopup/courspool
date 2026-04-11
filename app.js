@@ -15115,7 +15115,7 @@ function _boardRenderSubbar(){
         +'"></button>';
     });
     h+='<label style="width:26px;height:26px;border-radius:50%;background:conic-gradient(red,#ff0,lime,cyan,blue,magenta,red);cursor:pointer;flex-shrink:0;position:relative;display:block;box-shadow:0 0 0 1.5px rgba(255,255,255,.25);margin:0 2px;overflow:hidden;">'
-      +'<input type="color" value="'+_brdColor+'" onchange="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
+      +'<input type="color" value="'+_brdColor+'" oninput="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
   }
   sub.innerHTML=h;
 }
@@ -15276,6 +15276,7 @@ function _vCloseBoard(){
   Object.keys(_brdCursorRAF).forEach(function(id){cancelAnimationFrame(_brdCursorRAF[id]);});
   _brdCursorRAF={};_brdCursorPt={};
   _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
+  _brdPinnedTool=null;_brdTool='pen';_brdActivePointers={};
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
@@ -15445,6 +15446,8 @@ function _brdRestoreSnap(snap){
 // ── Curseur gomme ──────────────────────────────────────────────────────────
 function _brdShowEraserCursor(x,y){
   var page=g('_brdPage');if(!page)return;
+  // Guard: after a page switch _brdPage is recreated — orphaned element must be replaced
+  if(_brdEraserCursorEl&&_brdEraserCursorEl.parentNode!==page)_brdCleanEraserCursor();
   if(!_brdEraserCursorEl){
     _brdEraserCursorEl=document.createElement('div');
     _brdEraserCursorEl.style.cssText='position:absolute;border-radius:50%;border:1.5px solid rgba(80,80,80,.75);pointer-events:none;z-index:55;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.4);transition:width .05s,height .05s;';
@@ -15658,7 +15661,13 @@ function _boardToolTap(tool){
 function _boardSetTool(tool){_boardToolTap(tool);}
 function _boardSetColor(c){_brdColor=c;_boardRenderSubbar();}
 function _boardSetSize(sz){_brdSz=sz;_boardRenderSubbar();}
-function _boardSetEraserSz(sz){_brdEr=sz;_boardRenderSubbar();}
+function _boardSetEraserSz(sz){
+  _brdEr=sz;
+  if(_brdEraserCursorEl&&_brdEraserCursorEl.style.display!=='none'){
+    var _es=sz*_brdZoom;_brdEraserCursorEl.style.width=_es+'px';_brdEraserCursorEl.style.height=_es+'px';
+  }
+  _boardRenderSubbar();
+}
 function _boardSetShape(t){_brdShType=t;_boardRenderSubbar();}
 function _boardToggleShFill(){_brdShFill=!_brdShFill;_boardRenderSubbar();}
 
@@ -15825,6 +15834,8 @@ function _boardMove(e){
     }
     return;
   }
+  // Eraser hover cursor — show ring even when not pressing (Apple Pencil, mouse)
+  if(_brdTool==='eraser'&&!_brdDraw){var _eh=_boardGetPos(e);_brdShowEraserCursor(_eh.x,_eh.y);}
   if(!_brdDraw)return;
   e.preventDefault();
   // ── Main (hand) : pan 1 doigt ──
@@ -16156,6 +16167,12 @@ function _brdSelDuplicate(){
   sel.x+=20;sel.y+=20;
   if(sel.el){sel.el.style.left=sel.x+'px';sel.el.style.top=sel.y+'px';}
   _brdUpdateSelBar();haptic(1);
+  // Émettre snapshot en collab pour que les pairs voient le duplicata
+  if(_brdRoomId&&_brdCanEdit&&_brdC){
+    _boardSavePage();
+    var _dsnap=_brdPages[_brdPageIdx];
+    if(_dsnap)_brdEmitOp({type:'snapshot',data:_dsnap});
+  }
 }
 
 // ── Timer ────────────────────────────────────────────────────────────────────
