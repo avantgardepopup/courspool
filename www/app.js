@@ -12479,13 +12479,14 @@ function buildMesCard(c,isPast,isProf,kind){
   // Badge type : 'published' = cours que le prof a créé, 'reserved' = cours réservé
   var kindBadge='';
   if(kind==='published'){
-    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.12);color:var(--or);border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">📌 Mon cours</span>';
+    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,43,.12);color:var(--or);border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">📌 '+t('cal_mon_cours')+'</span>';
   }else if(kind==='reserved'){
-    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(59,130,246,.1);color:#2563EB;border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">🎓 Réservé</span>';
+    kindBadge='<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(59,130,246,.1);color:#2563EB;border-radius:50px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-bottom:8px">🎓 '+t('cal_reserve')+'</span>';
   }
   var mf=findMatiere(c.subj||'')||MATIERES[MATIERES.length-1];
   var pp=c.sp>0?Math.ceil(c.tot/c.sp):0;
-  var mL=c.mode==='visio'?'Visio':'Pr\u00e9sentiel';
+  var mL=c.mode==='visio'?t('mode_visio'):t('mode_pres');
+  var _mcDt=c.dt_iso?new Date(c.dt_iso).toLocaleDateString(_dateLocale(),{weekday:'short',day:'numeric',month:'short'})+(c.heure?' · '+c.heure:''):(c.dt||'');
   var mC=c.mode==='visio'?'visio':'presentiel';
   var visio='';
   if(c.mode==='visio'){
@@ -12495,8 +12496,8 @@ function buildMesCard(c,isPast,isProf,kind){
     var _vNotYet=_vStart&&_vNow<_vStart-15*60*1000;
     var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'}):'';
     if(isProf){
-      if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
-      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
+      if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ '+t('visio_add_title')+'</button>';}
+      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">'+t('exp_join')+'</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">'+t('btn_modifier')+'</button></div>';}
     } else if(!!res[c.id]){
       // Toujours afficher le bouton Rejoindre pour les élèves inscrits en visio
       var _vOnclick=_vInWin&&c.visio_url
@@ -12506,9 +12507,9 @@ function buildMesCard(c,isPast,isProf,kind){
     }
   }
   var code='';
-  if(isProf&&c.prive&&c.code){code='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Code d&#39;acc\u00e8s</div><div style="font-size:18px;font-weight:800;letter-spacing:.18em;color:var(--ink)">'+escH(c.code)+'</div></div><button class="mes-code-copy" data-code="'+escH(c.code)+'" style="background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer">Copier</button></div>';}
+  if(isProf&&c.prive&&c.code){code='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">'+t('cal_code_acces')+'</div><div style="font-size:18px;font-weight:800;letter-spacing:.18em;color:var(--ink)">'+escH(c.code)+'</div></div><button class="mes-code-copy" data-code="'+escH(c.code)+'" style="background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer">'+t('esp_copier')+'</button></div>';}
   var shareLink='';
-  if(isProf){var sUrl='https://courspool.vercel.app/?cours='+escH(c.id);shareLink='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="min-width:0"><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Lien partageable</div><div style="font-size:12px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">courspool.vercel.app/?cours='+escH(c.id)+'</div></div><button class="mes-link-copy" data-link="'+sUrl+'" style="flex-shrink:0;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>Copier</button></div>';}
+  if(isProf){var sUrl='https://courspool.vercel.app/?cours='+escH(c.id);shareLink='<div style="margin-top:10px;background:var(--bg);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px"><div style="min-width:0"><div style="font-size:10px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">'+t('cal_lien_partage')+'</div><div style="font-size:12px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">courspool.vercel.app/?cours='+escH(c.id)+'</div></div><button class="mes-link-copy" data-link="'+sUrl+'" style="flex-shrink:0;background:var(--wh);border:1.5px solid var(--bdr);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>'+t('esp_copier')+'</button></div>';}
   var heartBtn='';
   if(!isProf){
     var isFavMes=favCours.has(c.id);
@@ -12519,7 +12520,7 @@ function buildMesCard(c,isPast,isProf,kind){
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
     +'<div style="width:44px;height:44px;border-radius:14px;background:'+mf.bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><div style="width:10px;height:10px;border-radius:50%;background:'+mf.color+'"></div></div>'
     +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(c.title)+'</div>'
-    +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+escH(c.subj)+' &middot; '+escH(c.dt)+'</div></div>'
+    +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+escH(c.subj)+' &middot; '+escH(_mcDt)+'</div></div>'
     +'<div style="font-size:18px;font-weight:800;color:var(--or);flex-shrink:0">'+pp+'&euro;</div>'
     +heartBtn
     +'</div>'
