@@ -443,9 +443,12 @@ function lockedPlacesCount(cours_id, exclude_user_id) {
 
 // Rate limiting strict pour les routes auth — 5 req/min par IP
 const authRateLimitMap = new Map();
+// Rate limiting par email — 8 tentatives / 15 min (contre brute-force par rotation d'IP)
+const authEmailLimitMap = new Map();
 setInterval(function() {
   const cutoff = Date.now() - 60 * 60 * 1000;
   authRateLimitMap.forEach(function(data, ip) { if (data.start < cutoff) authRateLimitMap.delete(ip); });
+  authEmailLimitMap.forEach(function(data, email) { if (data.start < cutoff) authEmailLimitMap.delete(email); });
 }, 10 * 60 * 1000);
 function authRateLimit(req, res, next) {
   const ip = req.ip || req.connection.remoteAddress;
@@ -458,6 +461,25 @@ function authRateLimit(req, res, next) {
   if (data.count >= maxRequests) return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans une minute.' });
   data.count++;
   next();
+}
+// Middleware spécifique login — ajoute limite par email (résiste aux proxies/VPN)
+function loginRateLimit(req, res, next) {
+  const email = (req.body && req.body.email) ? req.body.email.toLowerCase().trim() : null;
+  if (email) {
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000; // 15 min
+    const maxAttempts = 8;
+    const entry = authEmailLimitMap.get(email);
+    if (!entry || now - entry.start > windowMs) {
+      authEmailLimitMap.set(email, { count: 1, start: now });
+    } else {
+      if (entry.count >= maxAttempts) {
+        return res.status(429).json({ error: 'Trop de tentatives pour cet email. Réessayez dans 15 minutes.' });
+      }
+      entry.count++;
+    }
+  }
+  authRateLimit(req, res, next);
 }
 
 const supabase = createClient(
@@ -1056,7 +1078,7 @@ app.post('/auth/refresh', authRateLimit, async (req, res) => {
 });
 
 // AUTH — connexion
-app.post('/auth/login', authRateLimit, async (req, res) => {
+app.post('/auth/login', loginRateLimit, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
   const ip = req.ip || req.connection.remoteAddress;
@@ -1492,54 +1514,66 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Montant incohérent' });
     }
 
-    // Idempotence par stripe_payment_intent_id
+    // Idempotence par stripe_payment_intent_id — check rapide hors mutex
     const { data: existingByPi } = await supabase.from('reservations')
       .select('id').eq('stripe_payment_intent_id', payment_intent_id).maybeSingle();
     if (existingByPi) return res.json({ success: true, already_existed: true });
 
-    // Doublon par cours+user (pour non-ami)
-    if (!pour_ami) {
-      const { data: existing } = await supabase.from('reservations')
-        .select('id').eq('cours_id', cours_id).eq('user_id', user_id).maybeSingle();
-      if (existing) return res.json({ success: true, already_existed: true });
-    }
+    // Section critique sérialisée par cours — empêche le double-booking concurrent
+    const lockResult = await withCoursLock(cours_id, async () => {
+      // Re-vérifier l'idempotence dans le mutex (une autre req peut avoir commité entre-temps)
+      const { data: existingByPi2 } = await supabase.from('reservations')
+        .select('id').eq('stripe_payment_intent_id', payment_intent_id).maybeSingle();
+      if (existingByPi2) return { already_existed: true };
 
-    // Vérification places disponibles — anti-surbooking automatique
-    if (!pour_ami) {
-      const { data: coursCheck } = await supabase.from('cours').select('places_max,places_prises,titre').eq('id', cours_id).single();
-      if (coursCheck && coursCheck.places_prises >= coursCheck.places_max) {
-        console.warn(`[STRIPE] Cours complet — remboursement auto — cours_id: ${cours_id} | user_id: ${user_id}`);
-        // Remboursement automatique via Stripe
-        try {
-          await stripe.refunds.create({ payment_intent: payment_intent_id });
-        } catch(refundErr) {
-          console.error(`[STRIPE] Échec remboursement auto: ${refundErr.message}`);
-          discordStripeAlert(`🚨 **Échec remboursement auto**\n> **PI :** \`${payment_intent_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant :** ${montant}€\n> Remboursement manuel requis.`);
-        }
-        discordStripeAlert(`ℹ️ **Surbooking évité — remboursement auto**\n> **Cours :** ${coursCheck.titre}\n> **Élève :** \`${user_id}\`\n> **Montant remboursé :** ${montant}€`);
-        return res.status(409).json({ error: 'Ce cours est complet. Vous allez être remboursé sous 5-10 jours ouvrés.' });
+      if (!pour_ami) {
+        const { data: existing } = await supabase.from('reservations')
+          .select('id').eq('cours_id', cours_id).eq('user_id', user_id).maybeSingle();
+        if (existing) return { already_existed: true };
       }
+
+      // Vérification places disponibles — anti-surbooking
+      if (!pour_ami) {
+        const { data: coursCheck } = await supabase.from('cours').select('places_max,places_prises,titre').eq('id', cours_id).single();
+        if (coursCheck && coursCheck.places_prises >= coursCheck.places_max) {
+          return { complet: true, titre: coursCheck.titre };
+        }
+      }
+
+      // Créer la réservation
+      await supabase.from('reservations').insert([{
+        cours_id, user_id,
+        montant_paye: parseFloat(montant) || 0,
+        stripe_payment_intent_id: payment_intent_id,
+        type_paiement: pour_ami ? 'stripe_ami' : 'stripe'
+      }]);
+
+      unlockPlace(cours_id, user_id);
+
+      const { data: coursData } = await supabase.from('cours')
+        .select('titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
+      const { count: resCountPI } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
+      await supabase.from('cours').update({ places_prises: resCountPI || 0 }).eq('id', cours_id);
+      io.emit('reservation_update', { cours_id, places_prises: resCountPI || 0 });
+      return { ok: true, coursData };
+    });
+
+    if (lockResult.already_existed) return res.json({ success: true, already_existed: true });
+
+    if (lockResult.complet) {
+      console.warn(`[STRIPE] Cours complet — remboursement auto — cours_id: ${cours_id} | user_id: ${user_id}`);
+      try { await stripe.refunds.create({ payment_intent: payment_intent_id }); }
+      catch(refundErr) {
+        console.error(`[STRIPE] Échec remboursement auto: ${refundErr.message}`);
+        discordStripeAlert(`🚨 **Échec remboursement auto**\n> **PI :** \`${payment_intent_id}\`\n> **Élève :** \`${user_id}\`\n> **Montant :** ${montant}€\n> Remboursement manuel requis.`);
+      }
+      discordStripeAlert(`ℹ️ **Surbooking évité — remboursement auto**\n> **Cours :** ${lockResult.titre}\n> **Élève :** \`${user_id}\`\n> **Montant remboursé :** ${montant}€`);
+      return res.status(409).json({ error: 'Ce cours est complet. Vous allez être remboursé sous 5-10 jours ouvrés.' });
     }
 
-    // Créer la réservation
-    await supabase.from('reservations').insert([{
-      cours_id, user_id,
-      montant_paye: parseFloat(montant) || 0,
-      stripe_payment_intent_id: payment_intent_id,
-      type_paiement: pour_ami ? 'stripe_ami' : 'stripe'
-    }]);
+    const coursData = lockResult.coursData;
 
-    // Libérer le verrou temporaire — la réservation est maintenant réelle
-    unlockPlace(cours_id, user_id);
-
-    // Recalculer places_prises depuis la source de vérité
-    const { data: coursData } = await supabase.from('cours')
-      .select('titre,date_heure,lieu,professeur_id').eq('id', cours_id).single();
-    const { count: resCountPI } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('cours_id', cours_id);
-    await supabase.from('cours').update({ places_prises: resCountPI || 0 }).eq('id', cours_id);
-    io.emit('reservation_update', { cours_id, places_prises: resCountPI || 0 });
-
-    // Emails
+    // Emails (hors mutex — pas critique)
     try {
       const { data: eleve } = await supabase.from('profiles').select('email,prenom,nom').eq('id', user_id).single();
       const { data: prof } = await supabase.from('profiles').select('email,prenom,nom').eq('id', coursData?.professeur_id).single();
@@ -1547,7 +1581,7 @@ app.post('/stripe/confirm-payment', requireAuth, async (req, res) => {
       if (prof?.email) await sendEmailProfNewEleve(prof.email, (prof.prenom+' '+prof.nom).trim(), (eleve?.prenom+' '+(eleve?.nom||'')).trim(), coursData?.titre, montant);
     } catch(e) {}
 
-    // Push prof
+    // Push prof (hors mutex)
     if (coursData?.professeur_id) {
       const { data: eleve2 } = await supabase.from('profiles').select('prenom,nom').eq('id', user_id).single().catch(()=>({data:null}));
       pushToUser(coursData.professeur_id, {
@@ -2047,11 +2081,20 @@ app.post('/email/casier-verification', requireAdmin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// STRIPE — récupérer les paiements réels
+// STRIPE — récupérer les paiements réels (paginé, max 500)
 app.get('/stripe/payments', requireAdmin, async (req, res) => {
   try {
-    const payments = await stripe.paymentIntents.list({ limit: 100 });
-    const result = payments.data.map(p => ({
+    const all = [];
+    let lastId = undefined;
+    for (let page = 0; page < 5; page++) { // max 5 pages × 100 = 500
+      const params = { limit: 100 };
+      if (lastId) params.starting_after = lastId;
+      const payments = await stripe.paymentIntents.list(params);
+      all.push(...payments.data);
+      if (!payments.has_more || !payments.data.length) break;
+      lastId = payments.data[payments.data.length - 1].id;
+    }
+    const result = all.map(p => ({
       id: p.id,
       amount: p.amount / 100,
       currency: p.currency,

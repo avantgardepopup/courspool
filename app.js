@@ -14053,35 +14053,37 @@ function _startDemoAudio(stream){
 
 function _demoAudioLoop(){
   if(!_isDemoMode||!_demoAnalyser){_demoRAFId=null;return;}
-  _demoAnalyser.getByteFrequencyData(_demoBuf);
-  var sum=0;for(var i=0;i<_demoBuf.length;i++)sum+=_demoBuf[i];
-  var avg=sum/_demoBuf.length; // typiquement 0-90 pour la parole normale
+  try{
+    _demoAnalyser.getByteFrequencyData(_demoBuf);
+    var sum=0;for(var i=0;i<_demoBuf.length;i++)sum+=_demoBuf[i];
+    var avg=sum/_demoBuf.length; // typiquement 0-90 pour la parole normale
 
-  // ── Ring visuel : taille + glow proportionnels au volume ──
-  var ring=g('_vsring-demo-local');
-  if(ring&&!_localMuted){
-    var c=Math.min(avg,90);
-    var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
-    var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
-    var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
-    var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
-    var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
-    ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
-    ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
-    ring.style.opacity=avg>6?'1':'0';
-  }else if(ring){
-    ring.style.opacity='0';ring.style.transform='scale(1)';
-  }
+    // ── Ring visuel : taille + glow proportionnels au volume ──
+    var ring=g('_vsring-demo-local');
+    if(ring&&!_localMuted){
+      var c=Math.min(avg,90);
+      var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
+      var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
+      var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
+      var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
+      var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
+      ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
+      ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
+      ring.style.opacity=avg>6?'1':'0';
+    }else if(ring){
+      ring.style.opacity='0';ring.style.transform='scale(1)';
+    }
 
-  // ── Changement de locuteur PiP (throttlé à 150ms) ──
-  var now=Date.now();
-  if(now-_demoPipThrottle>150){
-    _demoPipThrottle=now;
-    var spk=avg>14;
-    if(spk&&!_demoLocalSpeaking){_demoLocalSpeaking=true;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});}
-    else if(!spk&&_demoLocalSpeaking){_demoSilenceSince=now;_demoLocalSpeaking=false;}
-    else if(!spk&&!_demoLocalSpeaking&&now-_demoSilenceSince>1800){_demoSilenceSince=now+3600000;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});}
-  }
+    // ── Changement de locuteur PiP (throttlé à 150ms) ──
+    var now=Date.now();
+    if(now-_demoPipThrottle>150){
+      _demoPipThrottle=now;
+      var spk=avg>14;
+      if(spk&&!_demoLocalSpeaking){_demoLocalSpeaking=true;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});}
+      else if(!spk&&_demoLocalSpeaking){_demoSilenceSince=now;_demoLocalSpeaking=false;}
+      else if(!spk&&!_demoLocalSpeaking&&now-_demoSilenceSince>1800){_demoSilenceSince=now+3600000;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});}
+    }
+  }catch(e){_demoRAFId=null;return;} // arrêt propre si analyser fermé
   _demoRAFId=requestAnimationFrame(_demoAudioLoop);
 }
 
