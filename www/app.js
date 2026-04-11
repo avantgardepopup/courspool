@@ -17269,28 +17269,28 @@ function _pipCycleSize(){
 }
 
 function closeVisioModal(){
-  _isDemoMode=false;_intentionalLeave=true;
-  if(_boardActive){_vCloseBoard();}
-  _brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;
-  _pipX=null;_pipY=null;
-  // Stopper toutes les sources audio/vidéo
-  _vStopPreJoin();
-  var lv=g('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}
-  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
-  if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
-  if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
-  if(_demoSpeakTimer){clearInterval(_demoSpeakTimer);_demoSpeakTimer=null;}
-  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
-  _demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;
-  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
-  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
-  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
-  var bd=g('bdVisio');if(bd)bd.style.display='none';
+  // Fermer immédiatement l'overlay — rien ne doit bloquer cette étape
+  var bd=g('bdVisio');if(bd)bd.remove();
+  var pip=g('_vPip');if(pip)pip.remove();
+  restoreNav();
+  haptic(4);
+  // Nettoyage asynchrone (erreurs silencieuses)
+  try{_isDemoMode=false;_intentionalLeave=true;}catch(e){}
+  try{if(_boardActive){_vCloseBoard();}}catch(e){}
+  try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
+  try{_pipX=null;_pipY=null;}catch(e){}
+  try{_vStopPreJoin();}catch(e){}
+  try{var lv=g('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}}catch(e){}
+  try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
+  try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
+  try{if(_audioCtx){_audioCtx.close();_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}}catch(e){}
+  try{if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}_demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;}catch(e){}
+  try{if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}}catch(e){}
+  try{if(_demoAudioCtx){_demoAudioCtx.close();_demoAudioCtx=null;}}catch(e){}
+  try{if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){try{co.destroy();}catch(e){}});}}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
   window._vPreJoinCallback=null;
-  restoreNav();
-  haptic(4);
 }
 
 // ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
