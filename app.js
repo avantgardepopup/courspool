@@ -4431,7 +4431,7 @@ function _openPrLegacy(pid){
       var icon=MAT_ICONS[key]||MAT_ICONS['autre'];
       return'<div style="display:inline-flex;align-items:center;gap:7px;background:var(--bg);border-radius:50px;padding:5px 12px 5px 5px;border:1.5px solid '+col+'30">'
         +'<div style="width:24px;height:24px;border-radius:50%;background:'+col+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+col+'">'+icon+'</div>'
-        +'<span style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap">'+esc(m)+'</span>'
+        +'<span style="font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap">'+(mat?mL(mat):esc(m))+'</span>'
         +'</div>';
     }).join('');
   }

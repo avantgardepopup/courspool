@@ -3201,9 +3201,9 @@ html.dk #afVilleWrap { box-shadow:0 3px 16px rgba(0,0,0,.55),0 0 0 .5px rgba(255
   position: relative;
   overflow: visible;
   padding-top: 20px;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-bottom: 10px; /* room for bottom shadow */
+  padding-left: 14px;
+  padding-right: 14px;
+  padding-bottom: 28px; /* room for bottom shadow (0 8px 32px → ~40px extent) */
   cursor: pointer;
   transition: transform .26s cubic-bezier(.22,.61,.36,1);
   break-inside: avoid;

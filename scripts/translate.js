@@ -1663,8 +1663,13 @@ async function translateLang(targetInfo, existingLangs, changedKeys) {
 // ── Overrides manuels (contournent DeepL pour les mots ambigus) ───────────
 // Clé → { langCode: traduction, … }
 const MANUAL_OVERRIDES = {
-  date_at: { fr:'à', en:'at', es:'a las', de:'um', it:'alle', pt:'às', da:'kl.', fi:'klo', sv:'kl.', pl:'o', el:'στις' },
-  date_tbd:{ fr:"Date à définir", en:'Date TBD', es:'Fecha por confirmar', de:'Datum TBD', it:'Data da definire', pt:'Data a confirmar', da:'Dato TBD', fi:'Päivämäärä TBD', sv:'Datum TBD', pl:'Data TBD', el:'Ημερομηνία TBD' },
+  date_at:          { fr:'à', en:'at', es:'a las', de:'um', it:'alle', pt:'às', da:'kl.', fi:'klo', sv:'kl.', pl:'o', el:'στις' },
+  date_tbd:         { fr:"Date à définir", en:'Date TBD', es:'Fecha por confirmar', de:'Datum TBD', it:'Data da definire', pt:'Data a confirmar', da:'Dato TBD', fi:'Päivämäärä TBD', sv:'Datum TBD', pl:'Data TBD', el:'Ημερομηνία TBD' },
+  // DeepL traduit "matière" (scolaire) comme matière physique — correction manuelle
+  nc_matiere:       { en:'Subject' },
+  t_subject_req:    { en:'Missing subject' },
+  t_subject_req_msg:{ en:'Choose a subject' },
+  prof_matieres_ph: { en:'Add a subject...' },
 };
 
 // ── Main ───────────────────────────────────────────────────────────────────
