@@ -2575,7 +2575,7 @@ function _checkResumePayment(){
           if(_stripeInstance){
             var dk=document.documentElement.classList.contains('dk');
             var appearance={theme:dk?'night':'stripe',variables:{colorPrimary:'#FF6B2B',borderRadius:'10px',fontFamily:'Plus Jakarta Sans, system-ui, sans-serif',fontSizeBase:'15px',spacingUnit:'4px'}};
-            _payElements=_stripeInstance.elements({clientSecret:d.cs,appearance:appearance});
+            _payElements=_stripeInstance.elements({clientSecret:d.cs,appearance:appearance,locale:window._i18nLang||'fr'});
             var pe=_payElements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
             var el=g('stripe-payment-element');if(el){el.innerHTML='';pe.mount('#stripe-payment-element');}
             var btn=g('payBtn'),btnTxt=g('payBtnTxt');
@@ -9733,7 +9733,7 @@ async function openPaymentSheet(id,pourAmi){
       theme:dk?'night':'stripe',
       variables:{colorPrimary:'#FF6B2B',borderRadius:'10px',fontFamily:'Plus Jakarta Sans, system-ui, sans-serif',fontSizeBase:'15px',spacingUnit:'4px'}
     };
-    _payElements=_stripeInstance.elements({clientSecret:data.client_secret,appearance:appearance});
+    _payElements=_stripeInstance.elements({clientSecret:data.client_secret,appearance:appearance,locale:window._i18nLang||'fr'});
     var pe=_payElements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
     g('stripe-payment-element').innerHTML='';
     pe.mount('#stripe-payment-element');
