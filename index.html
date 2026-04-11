@@ -784,15 +784,15 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="font-size:17px;font-weight:800">Distance</div>
+            <div style="font-size:17px;font-weight:800" data-i18n="filter_dist_title">Distance</div>
             <button onclick="closeDistFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="distFilterList">
-            <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400">Quartier</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(5,this)">5 km <span style="font-size:11px;color:var(--lite);font-weight:400">Ville proche</span></div>
-            <div class="niv-fchip on" onclick="setDistFilter(10,this)">10 km <span style="font-size:11px;color:var(--lite);font-weight:400">Zone urbaine</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(20,this)">20 km <span style="font-size:11px;color:var(--lite);font-weight:400">Agglomération</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(50,this)">50 km <span style="font-size:11px;color:var(--lite);font-weight:400">Grande région</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_2km">Quartier</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(5,this)">5 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_5km">Ville proche</span></div>
+            <div class="niv-fchip on" onclick="setDistFilter(10,this)">10 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_10km">Zone urbaine</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(20,this)">20 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_20km">Agglomération</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(50,this)">50 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_50km">Grande région</span></div>
           </div>
         </div>
       </div>
@@ -803,7 +803,7 @@
           <div style="padding:20px 20px 12px;flex-shrink:0">
             <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
             <div style="display:flex;align-items:center;justify-content:space-between">
-              <div style="font-size:17px;font-weight:800">Matière</div>
+              <div style="font-size:17px;font-weight:800" data-i18n="filter_mat_title">Matière</div>
               <button onclick="closeMatFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
             </div>
           </div>
@@ -819,8 +819,8 @@
           <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
           <div style="padding:16px 20px 4px;display:flex;align-items:flex-start;justify-content:space-between">
             <div>
-              <div style="font-size:19px;font-weight:800;letter-spacing:-.03em">Ma barre de filtres</div>
-              <div style="font-size:13px;color:var(--lite);margin-top:3px">Tape sur un filtre pour l'ajouter ou le retirer</div>
+              <div style="font-size:19px;font-weight:800;letter-spacing:-.03em" data-i18n="filter_bar_title">Ma barre de filtres</div>
+              <div style="font-size:13px;color:var(--lite);margin-top:3px" data-i18n="filter_bar_sub">Tape sur un filtre pour l'ajouter ou le retirer</div>
             </div>
             <button onclick="closeAddFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;margin-top:2px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -894,8 +894,8 @@
             <div id="filterAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin-top:10px;border:1px solid rgba(255,107,43,.2)">
               <span class="filter-alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
               <div style="display:flex;gap:6px;flex-shrink:0">
-                <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
-                <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+                <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" data-i18n="txt_oui">Oui</button>
+                <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" data-i18n="txt_non">Non</button>
               </div>
             </div>
           </div>
@@ -915,7 +915,7 @@
         </div>
         <div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em" id="nocardTitle" data-i18n="exp_empty_title">Aucun cours trouvé</div>
         <div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px" id="nocardSub" data-i18n="exp_empty_sub">Essayez un autre filtre ou une autre ville</div>
-        <button onclick="resetFilters()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Réinitialiser les filtres</button>
+        <button onclick="resetFilters()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)" data-i18n="filter_reset_filt">Réinitialiser les filtres</button>
       </div>
     </div>
   </div>
@@ -3367,7 +3367,7 @@
     <div style="position:sticky;top:0;background:var(--wh);z-index:2;border-radius:24px 24px 0 0;border-bottom:1px solid var(--bdr)">
       <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px">
-        <div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Filtres</div>
+        <div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em" data-i18n="filter_all_title">Filtres</div>
         <button onclick="closeAllFiltersSheet()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -3377,28 +3377,28 @@
     <div style="padding:0 20px 0">
       <!-- Format -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Format du cours</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_mode_title">Format du cours</div>
         <div style="display:flex;gap:8px" id="afModeRow">
-          <button class="af-pill on" data-val="" onclick="afSetMode('',this)">Tous</button>
+          <button class="af-pill on" data-val="" onclick="afSetMode('',this)" data-i18n="filter_all">Tous</button>
           <button class="af-pill" data-val="presentiel" onclick="afSetMode('presentiel',this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Présentiel
+            <span data-i18n="filter_pres">Présentiel</span>
           </button>
           <button class="af-pill" data-val="visio" onclick="afSetMode('visio',this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-            Visio
+            <span data-i18n="filter_vis">Visio</span>
           </button>
         </div>
       </div>
 
       <!-- Niveau -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Niveau</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_niveau">Niveau</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="afNivRow">
-          <button class="af-pill on" data-val="" onclick="afSetNiv('',this)">Tous</button>
-          <button class="af-pill" data-val="Primaire" onclick="afSetNiv('Primaire',this)">Primaire</button>
-          <button class="af-pill" data-val="Collège" onclick="afSetNiv('Collège',this)">Collège</button>
-          <button class="af-pill" data-val="Lycée" onclick="afSetNiv('Lycée',this)">Lycée</button>
+          <button class="af-pill on" data-val="" onclick="afSetNiv('',this)" data-i18n="filter_all">Tous</button>
+          <button class="af-pill" data-val="Primaire" onclick="afSetNiv('Primaire',this)" data-i18n="filter_niv_prim_s">Primaire</button>
+          <button class="af-pill" data-val="Collège" onclick="afSetNiv('Collège',this)" data-i18n="filter_niv_col_s">Collège</button>
+          <button class="af-pill" data-val="Lycée" onclick="afSetNiv('Lycée',this)" data-i18n="filter_niv_lyc_s">Lycée</button>
           <button class="af-pill" data-val="Bac+1/2" onclick="afSetNiv('Bac+1/2',this)">Bac+1/2</button>
           <button class="af-pill" data-val="Bac+3/4" onclick="afSetNiv('Bac+3/4',this)">Bac+3/4</button>
           <button class="af-pill" data-val="Bac+5" onclick="afSetNiv('Bac+5',this)">Bac+5</button>
@@ -3407,7 +3407,7 @@
 
       <!-- Ville -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Ville</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_ville">Ville</div>
         <div id="afVilleWrap" style="background:var(--wh);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.10),0 0 0 .5px rgba(0,0,0,.06);display:flex;align-items:center;gap:8px;padding:0 12px;overflow:hidden">
           <svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <input id="afVilleInput" type="text" placeholder="Ville, code postal…" autocomplete="off"
@@ -3424,7 +3424,7 @@
 
       <!-- Périmètre (visible si ville saisie ou géoloc active) -->
       <div id="afPerimRow" style="display:none;padding:14px 0 0">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Périmètre</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_perimetre">Périmètre</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="af-pill" data-km="2"  onclick="afSetDist(2,this)">2 km</button>
           <button class="af-pill" data-km="5"  onclick="afSetDist(5,this)">5 km</button>
@@ -3437,21 +3437,21 @@
 
       <!-- Tri -->
       <div style="padding:18px 0 14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Trier par</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_sort_by">Trier par</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="afSortRow">
-          <button class="af-pill on" data-val="0" onclick="afSetSort(0,this)">Date</button>
-          <button class="af-pill" data-val="1" onclick="afSetSort(1,this)">Prix</button>
-          <button class="af-pill" data-val="2" onclick="afSetSort(2,this)">Récents</button>
+          <button class="af-pill on" data-val="0" onclick="afSetSort(0,this)" data-i18n="filter_date">Date</button>
+          <button class="af-pill" data-val="1" onclick="afSetSort(1,this)" data-i18n="filter_prix">Prix</button>
+          <button class="af-pill" data-val="2" onclick="afSetSort(2,this)" data-i18n="filter_recent">Récents</button>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
     <div style="padding:12px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));border-top:1px solid var(--bdr);display:flex;gap:10px;position:sticky;bottom:0;background:var(--wh)">
-      <button onclick="afResetAll()" style="flex:1;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">
+      <button onclick="afResetAll()" style="flex:1;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer" data-i18n="filter_reinit">
         Réinitialiser
       </button>
-      <button onclick="closeAllFiltersSheet()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3)">
+      <button onclick="closeAllFiltersSheet()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3)" data-i18n="filter_voir_cours">
         Voir les cours
       </button>
     </div>
