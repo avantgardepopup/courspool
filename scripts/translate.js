@@ -463,13 +463,6 @@ const SOURCE = {
   t_msg_login:     'Connectez-vous pour accéder aux messages',
   t_acc_login:     'Connectez-vous pour accéder à votre profil',
 
-  // Jours / mois (fmtDt)
-  day_0: 'dim.', day_1: 'lun.', day_2: 'mar.', day_3: 'mer.',
-  day_4: 'jeu.', day_5: 'ven.', day_6: 'sam.',
-  month_0: 'janv.', month_1: 'févr.', month_2: 'mars', month_3: 'avr.',
-  month_4: 'mai',   month_5: 'juin',  month_6: 'juil.', month_7: 'août',
-  month_8: 'sept.', month_9: 'oct.',  month_10: 'nov.', month_11: 'déc.',
-
   // Niveaux courts (chips création cours)
   niv_all:   'Tous',
   niv_prim:  'Primaire',
@@ -924,7 +917,10 @@ const SOURCE = {
   btn_annuler: 'Annuler',
 
   // Dates relatives (messagerie)
-  date_today: "Aujourd'hui",
+  date_today:    "Aujourd'hui",
+  date_tomorrow: 'Demain',
+  date_at:       'à',
+  date_tbd:      'Date à définir',
   date_yesterday: 'Hier',
 
   // ProfCompletion — lieu selon statut
@@ -1492,6 +1488,13 @@ async function translateLang(targetInfo) {
   return obj;
 }
 
+// ── Overrides manuels (contournent DeepL pour les mots ambigus) ───────────
+// Clé → { langCode: traduction, … }
+const MANUAL_OVERRIDES = {
+  date_at: { fr:'à', en:'at', es:'a las', de:'um', it:'alle', pt:'às', da:'kl.', fi:'klo', sv:'kl.', pl:'o', el:'στις' },
+  date_tbd:{ fr:"Date à définir", en:'Date TBD', es:'Fecha por confirmar', de:'Datum TBD', it:'Data da definire', pt:'Data a confirmar', da:'Dato TBD', fi:'Päivämäärä TBD', sv:'Datum TBD', pl:'Data TBD', el:'Ημερομηνία TBD' },
+};
+
 // ── Main ───────────────────────────────────────────────────────────────────
 async function main() {
   console.log('🌍  CoursPool — Génération des traductions via DeepL');
@@ -1511,7 +1514,17 @@ async function main() {
       // On garde le français comme fallback pour cette langue
       allLangs[tgt.app] = SOURCE;
     }
+    // Appliquer les overrides manuels
+    Object.keys(MANUAL_OVERRIDES).forEach(function(key) {
+      if(allLangs[tgt.app] && MANUAL_OVERRIDES[key][tgt.app]) {
+        allLangs[tgt.app][key] = MANUAL_OVERRIDES[key][tgt.app];
+      }
+    });
   }
+  // Overrides pour le français aussi
+  Object.keys(MANUAL_OVERRIDES).forEach(function(key) {
+    if(MANUAL_OVERRIDES[key].fr) allLangs.fr[key] = MANUAL_OVERRIDES[key].fr;
+  });
 
   // ── Générer www/lang.js ────────────────────────────────────────────────
   var outPath = path.join(__dirname, '..', 'www', 'lang.js');
