@@ -1476,6 +1476,69 @@ const SOURCE = {
   mtp_entrer_code: 'Entrer un code',
   mtp_guide:       'Guide',
   mtp_rejoindre:   'Rejoindre un espace',
+
+  // Fiche professeur — stats bar
+  tp_stat_note:     'Note',
+  tp_stat_avis:     'Avis',
+  tp_stat_cours:    'Cours',
+  tp_stat_eleves:   'Élèves',
+
+  // Fiche professeur — onglets
+  tp_tab_presentation: 'Présentation',
+  tp_tab_cours:     'Cours',
+  tp_tab_avis:      'Avis',
+  tp_tab_espace:    'Espace',
+
+  // Fiche professeur — sections
+  tp_cert_title:    'Certification',
+  tp_sec_statut:    'Statut & formation',
+  tp_sec_matieres:  'Matières enseignées',
+
+  // Fiche professeur — badges de confiance
+  tp_identite_verifiee: 'Identité vérifiée',
+  tp_cni_ctrl:          'CNI contrôlée par CoursPool',
+  tp_badge_verifie:     'Vérifié ›',
+  tp_diplome_verifie:   'Diplôme vérifié',
+  tp_profil_confiance:  'Profil de confiance',
+  tp_casier_verifie:    'Casier judiciaire vérifié',
+  tp_badge_certifie:    'Certifié ›',
+
+  // Fiche professeur — lignes statut
+  tp_row_statut:    'Statut',
+  tp_row_diplome:   'Diplôme',
+  tp_row_formations:'Formations',
+  tp_row_experience:'Expérience',
+  tp_row_lieu:      "Lieu d'enseignement",
+
+  // Fiche professeur — textes dynamiques
+  tp_default_role:  'Enseignant',
+  tp_membre_depuis: 'Membre depuis',
+  tp_contacter:     'Contacter',
+  tp_espace_de:     'Espace privé de',
+  tp_no_cours:      'Aucun cours disponible pour le moment.',
+
+  // Fiche professeur — espace élève
+  tp_espace_desc:   'Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.',
+  tp_code_ph:       "Code d'accès",
+  tp_code_btn:      'Rejoindre',
+  tp_esp_pub_title: 'Publications',
+  tp_esp_pub_sub:   'Annonces de votre professeur',
+  tp_esp_biblio_title: 'Bibliothèque',
+  tp_esp_biblio_sub:   'Fiches et ressources du prof',
+  tp_esp_msg_title: 'Écrire au professeur',
+  tp_esp_msg_sub:   'Message direct',
+
+  // Visio — création de cours (choix du type)
+  cr_visio_app_title: 'Via l\'appli (bêta)',
+  cr_visio_app_desc:  'Un lien de visioconférence est généré automatiquement par CoursPool.',
+  cr_visio_ext_title: 'Lien externe',
+  cr_visio_ext_desc:  'Collez votre lien Jitsi, Zoom ou Google Meet.',
+  cr_visio_ext_ph:    'https://meet.jit.si/...',
+
+  // Visio — messages élève
+  visio_not_yet:     'Visio pas encore disponible',
+  visio_not_yet_sub: 'Le cours commence à {heure}. Revenez 15 min avant.',
+  mes_rejoindre_visio: 'Rejoindre en visio',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────
@@ -1528,24 +1591,49 @@ function chunk(arr, size) {
   return res;
 }
 
-// ── Traduction d'une langue complète ──────────────────────────────────────
-async function translateLang(targetInfo) {
-  var keys   = Object.keys(SOURCE);
-  var values = Object.values(SOURCE);
-  var translated = [];
+// ── Lecture du lang.js existant (cache) ───────────────────────────────────
+function loadExistingLangs() {
+  var outPath = path.join(__dirname, '..', 'www', 'lang.js');
+  if (!fs.existsSync(outPath)) return null;
+  try {
+    var src = fs.readFileSync(outPath, 'utf8');
+    // Extraire le JSON de window.LANGS=...
+    var m = src.match(/window\.LANGS\s*=\s*(\{[\s\S]*?\});\s*\n\s*\n/);
+    if (!m) return null;
+    return JSON.parse(m[1]);
+  } catch(e) { return null; }
+}
 
-  var batches = chunk(values, 50);
-  for (var b = 0; b < batches.length; b++) {
-    process.stdout.write('  lot ' + (b+1) + '/' + batches.length + '…');
-    var results = await deeplTranslate(batches[b], targetInfo.deepl);
-    translated = translated.concat(results);
-    process.stdout.write(' ✓\n');
-    // Petite pause pour ne pas dépasser le rate limit
-    if (b < batches.length - 1) await new Promise(function(r){ setTimeout(r, 300); });
+// ── Traduction d'une langue — uniquement les clés nouvelles/modifiées ──────
+async function translateLang(targetInfo, existingLangs, changedKeys) {
+  var keys   = Object.keys(SOURCE);
+  var existing = (existingLangs && existingLangs[targetInfo.app]) || {};
+
+  // Clés à traduire : nouvelles ou dont le source FR a changé
+  var toTranslateKeys   = keys.filter(function(k){ return changedKeys.indexOf(k) !== -1; });
+  var toTranslateValues = toTranslateKeys.map(function(k){ return SOURCE[k]; });
+
+  var translated = {};
+  if (toTranslateKeys.length > 0) {
+    var batches = chunk(toTranslateValues, 50);
+    var results = [];
+    for (var b = 0; b < batches.length; b++) {
+      process.stdout.write('  lot ' + (b+1) + '/' + batches.length + '…');
+      var res = await deeplTranslate(batches[b], targetInfo.deepl);
+      results = results.concat(res);
+      process.stdout.write(' ✓\n');
+      if (b < batches.length - 1) await new Promise(function(r){ setTimeout(r, 300); });
+    }
+    toTranslateKeys.forEach(function(k, i){ translated[k] = results[i]; });
+  } else {
+    process.stdout.write('  aucune clé à traduire (tout est en cache)\n');
   }
 
+  // Fusionner : cache existant + nouvelles traductions
   var obj = {};
-  keys.forEach(function(k, i){ obj[k] = translated[i]; });
+  keys.forEach(function(k){
+    obj[k] = translated[k] !== undefined ? translated[k] : (existing[k] || SOURCE[k]);
+  });
   return obj;
 }
 
@@ -1562,18 +1650,47 @@ async function main() {
   console.log('   Source : ' + Object.keys(SOURCE).length + ' chaînes en français');
   console.log('   Cibles : ' + TARGETS.map(function(t){ return t.app; }).join(', ') + '\n');
 
+  // ── Charger le cache existant ──────────────────────────────────────────
+  var existingLangs = loadExistingLangs();
+  var existingFr = (existingLangs && existingLangs.fr) || {};
+
+  // Clés à (re)traduire : nouvelles ou texte FR modifié
+  var allKeys = Object.keys(SOURCE);
+  var changedKeys = allKeys.filter(function(k){
+    return existingFr[k] === undefined || existingFr[k] !== SOURCE[k];
+  });
+
+  var totalCharsNew = changedKeys.reduce(function(s,k){ return s + SOURCE[k].length; }, 0);
+  if (changedKeys.length === 0) {
+    console.log('✅  Aucune clé nouvelle ou modifiée — 0 caractère envoyé à DeepL.');
+    console.log('   Utilisez --force pour forcer la retraduction complète.\n');
+    if (process.argv.indexOf('--force') === -1) {
+      // Régénérer lang.js avec le cache existant sans appeler DeepL
+      var allLangs = existingLangs || { fr: SOURCE };
+      allLangs.fr = SOURCE;
+      writeOutput(allLangs);
+      return;
+    }
+  } else {
+    console.log('   Clés nouvelles/modifiées : ' + changedKeys.length + ' (' + totalCharsNew + ' car × ' + TARGETS.length + ' langues ≈ ' + (totalCharsNew * TARGETS.length) + ' chars DeepL)\n');
+    if (process.argv.indexOf('--force') !== -1) {
+      changedKeys = allKeys; // --force : tout retraduire
+      console.log('   Mode --force : retraduction complète (' + Object.values(SOURCE).join('').length + ' chars × ' + TARGETS.length + ' langues)\n');
+    }
+  }
+
   var allLangs = { fr: SOURCE };
 
   for (var i = 0; i < TARGETS.length; i++) {
     var tgt = TARGETS[i];
     console.log('→ ' + tgt.app.toUpperCase() + ' (' + tgt.deepl + ')');
     try {
-      allLangs[tgt.app] = await translateLang(tgt);
+      allLangs[tgt.app] = await translateLang(tgt, existingLangs, changedKeys);
       console.log('  ✅ ' + tgt.app + ' terminé\n');
     } catch(e) {
       console.error('  ❌ Erreur pour ' + tgt.app + ':', e.message);
-      // On garde le français comme fallback pour cette langue
-      allLangs[tgt.app] = SOURCE;
+      // Conserver les traductions existantes pour cette langue
+      allLangs[tgt.app] = (existingLangs && existingLangs[tgt.app]) || SOURCE;
     }
     // Appliquer les overrides manuels
     Object.keys(MANUAL_OVERRIDES).forEach(function(key) {
@@ -1587,6 +1704,10 @@ async function main() {
     if(MANUAL_OVERRIDES[key].fr) allLangs.fr[key] = MANUAL_OVERRIDES[key].fr;
   });
 
+  writeOutput(allLangs);
+}
+
+function writeOutput(allLangs) {
   // ── Générer www/lang.js ────────────────────────────────────────────────
   var outPath = path.join(__dirname, '..', 'www', 'lang.js');
 
