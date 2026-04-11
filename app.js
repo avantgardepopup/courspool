@@ -14051,25 +14051,26 @@ function _vOpenDemo(){
   if(_callTimer)clearInterval(_callTimer);
   _updateVisioTimer();
   _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
-  // Populate grid with fake participants
+  // Populate grid — uniquement l'utilisateur local
   var grid=g('_vGrid');if(!grid)return;
-  var fakes=[
-    {sid:'demo-local', name:'Vous',     color:'linear-gradient(148deg,#FF7D42,#FF4500)', net:'good',  local:true},
-    {sid:'demo-p1',    name:'Marie D.', color:'linear-gradient(148deg,#7C3AED,#5B21B6)', net:'good',  local:false},
-    {sid:'demo-p2',    name:'Thomas L.',color:'linear-gradient(148deg,#0ea5e9,#0369a1)', net:'low',   local:false},
-  ];
-  fakes.forEach(function(f){grid.appendChild(_vBuildDemoTile(f));});
+  grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
   _vApplyLayout();
-  _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
-  // Start mic audio analysis for speaking ring animation
-  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
-      _startDemoAudio(stream);
-    }).catch(function(){/* micro refusé ou indisponible, pas bloquant */});
-  }
+  // Démarrer l'analyse audio (réutilise le stream s'il est encore actif)
+  _ensureDemoAudio(_startDemoAudio);
   haptic(1);
 }
 
+function _ensureDemoAudio(callback){
+  // Réutiliser le stream existant si toujours actif (évite de re-demander la permission)
+  if(_demoAudioStream&&_demoAudioStream.active&&
+     _demoAudioStream.getAudioTracks().some(function(t){return t.readyState==='live';})){
+    callback(_demoAudioStream);return;
+  }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
+  navigator.mediaDevices.getUserMedia({audio:true,video:false})
+    .then(function(stream){callback(stream);})
+    .catch(function(){/* micro refusé ou indisponible, pas bloquant */});
+}
 function _startDemoAudio(stream){
   _demoAudioStream=stream;
   if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
@@ -14114,7 +14115,6 @@ function _demoAudioLoop(){
       var spk=avg>14;
       if(spk&&!_demoLocalSpeaking){_demoLocalSpeaking=true;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});}
       else if(!spk&&_demoLocalSpeaking){_demoSilenceSince=now;_demoLocalSpeaking=false;}
-      else if(!spk&&!_demoLocalSpeaking&&now-_demoSilenceSince>1800){_demoSilenceSince=now+3600000;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});}
     }
   }catch(e){_demoRAFId=null;return;} // arrêt propre si analyser fermé
   _demoRAFId=requestAnimationFrame(_demoAudioLoop);
@@ -14154,7 +14154,7 @@ function _vBuildDemoTile(f){
     +'background:rgba(0,0,0,.65);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;'
     +'box-shadow:0 1px 6px rgba(0,0,0,.4);'
     +'-webkit-tap-highlight-color:transparent;transition:background .15s;';
-  micInd.innerHTML=_vMicSvgSm(false);
+  micInd.innerHTML=_vMicSvgSm(f.local?_localMuted:false);
   if(f.local){
     micInd.onclick=function(e){e.stopPropagation();_vToggleMic();};
   }else{
@@ -14259,8 +14259,8 @@ function _buildVisioHTML(){
     +'</div>'
     // Controls bar
     +'<div style="display:flex;align-items:center;justify-content:safe center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;box-shadow:0 -1px 0 rgba(255,255,255,.06);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;">'
-    +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+'" title="Micro">'+_vMicSvg(false)+'</button>'
-    +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+'" title="Caméra">'+_vCamSvg(false)+'</button>'
+    +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+(_localMuted?'background:rgba(229,62,62,.35);':'')+'" title="Micro">'+_vMicSvg(_localMuted)+'</button>'
+    +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+(_localCamOff?'background:rgba(229,62,62,.35);':'')+'" title="Caméra">'+_vCamSvg(_localCamOff)+'</button>'
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg></button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
@@ -14679,23 +14679,17 @@ function _vToggleMic(){
   var bsm=g('_vdmic-demo-local');if(bsm)bsm.innerHTML=_vMicSvgSm(_localMuted);
   if(_isDemoMode){
     if(_localMuted){
-      // Couper le micro : arrêter le stream + ring
+      // Couper le micro : stopper l'analyse sans stopper le stream (évite re-prompt permission)
       if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
       _demoAnalyser=null;
       if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
-      if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
       var ring=g('_vsring-demo-local');if(ring){ring.style.opacity='0';ring.style.transform='scale(1)';}
       _demoLocalSpeaking=false;
-      _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
     }else{
-      // Réactiver : re-demander l'accès au micro
-      navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+      // Réactiver : réutiliser le stream existant ou en demander un nouveau
+      _ensureDemoAudio(function(stream){
         _startDemoAudio(stream);
         var ban=g('_vMutedBanner');if(ban)ban.style.display='none';
-      }).catch(function(){
-        _localMuted=true;
-        var b2=g('_vMic');if(b2)b2.innerHTML=_vMicSvg(true);
-        toast('Micro non disponible','Autorisez l\'accès au micro dans les réglages');
       });
     }
     haptic(1);return;
