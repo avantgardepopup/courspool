@@ -16786,6 +16786,12 @@ function _brdOnParticipantJoined(data){
 // Participant quitte
 function _brdOnParticipantLeft(data){
   _brdParticipants=_brdParticipants.filter(function(x){return x.id!==data.userId;});
+  // Nettoyer le curseur DOM, le trait en cours et les RAFs en attente pour cet utilisateur
+  var _plEl=document.getElementById('_brdCursor-'+data.userId);
+  if(_plEl&&_plEl.parentNode)_plEl.parentNode.removeChild(_plEl);
+  delete _brdRemoteStrokes[data.userId];
+  if(_brdCursorRAF[data.userId]){cancelAnimationFrame(_brdCursorRAF[data.userId]);delete _brdCursorRAF[data.userId];}
+  delete _brdCursorPt[data.userId];
   _brdRenderPermPanel();
 }
 
