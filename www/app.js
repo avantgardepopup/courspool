@@ -14888,9 +14888,46 @@ function _vToggleCam(){
   haptic(1);
 }
 function _vToggleShare(){
-  if(!_callObj){if(_isDemoMode)toast('Non disponible en démo','');return;}
+  if(!_callObj&&!_isDemoMode)return;
   var b=g('_vShare');
   if(!_sharing){
+    if(_isDemoMode){
+      // Partage d'écran en démo via getDisplayMedia
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
+        toast('Partage d\'écran non disponible sur cet appareil','');return;
+      }
+      navigator.mediaDevices.getDisplayMedia({video:true,audio:false})
+        .then(function(s){
+          _sharing=true;
+          if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
+          var lv=g('_vLocalVid');
+          if(lv){
+            if(lv.srcObject){lv.srcObject.getVideoTracks().forEach(function(t){t.stop();});}
+            lv.srcObject=s;lv.style.display='block';lv.play().catch(function(){});
+            // Désactiver le miroir pour le partage d'écran
+            lv.style.transform='none';
+            var lav=g('_vav-demo-local');if(lav)lav.style.display='none';
+          }
+          // Arrêt automatique quand l'utilisateur ferme via le navigateur
+          s.getVideoTracks()[0].onended=function(){
+            _sharing=false;
+            if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+            // Revenir à la caméra si elle n'était pas coupée
+            if(!_localCamOff&&navigator.mediaDevices){
+              navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(function(cs){
+                var lv2=g('_vLocalVid');
+                if(lv2){lv2.srcObject=cs;lv2.style.transform='scaleX(-1)';lv2.style.display='block';lv2.play().catch(function(){});}
+              }).catch(function(){});
+            }else{
+              var lv3=g('_vLocalVid');if(lv3){lv3.srcObject=null;lv3.style.display='none';lv3.style.transform='scaleX(-1)';}
+              var lav2=g('_vav-demo-local');if(lav2)lav2.style.display='flex';
+            }
+          };
+        })
+        .catch(function(){/* annulé par l'utilisateur */});
+      haptic(1);return;
+    }
+    // Vrai visio Daily.co
     try{
       _callObj.startScreenShare()
         .then(function(){
@@ -14906,6 +14943,23 @@ function _vToggleShare(){
       toast('Partage d\'écran non disponible sur cet appareil','');
     }
   }else{
+    if(_isDemoMode){
+      var lv4=g('_vLocalVid');
+      if(lv4&&lv4.srcObject){lv4.srcObject.getVideoTracks().forEach(function(t){t.stop();});lv4.srcObject=null;}
+      _sharing=false;
+      if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
+      if(!_localCamOff&&navigator.mediaDevices){
+        navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(function(cs2){
+          var lv5=g('_vLocalVid');
+          if(lv5){lv5.srcObject=cs2;lv5.style.transform='scaleX(-1)';lv5.style.display='block';lv5.play().catch(function(){});}
+          var lav3=g('_vav-demo-local');if(lav3)lav3.style.display='none';
+        }).catch(function(){});
+      }else{
+        var lv6=g('_vLocalVid');if(lv6){lv6.srcObject=null;lv6.style.display='none';lv6.style.transform='scaleX(-1)';}
+        var lav4=g('_vav-demo-local');if(lav4)lav4.style.display='flex';
+      }
+      haptic(1);return;
+    }
     try{_callObj.stopScreenShare();}catch(e){}
     _sharing=false;
     if(b){b.style.background='rgba(255,255,255,.12)';b.style.boxShadow='';}
