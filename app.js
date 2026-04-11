@@ -15808,7 +15808,7 @@ function _boardDown(e){
     _brdX.strokeStyle='rgba(0,0,0,1)';_brdX.lineWidth=_brdEr;
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
-    if(_brdC)_brdC.style.cursor='none'; // curseur remplacé par le cercle SVG
+    _brdShowEraserCursor(p.x,p.y); // afficher immédiatement dès le pointerdown (sans attendre pointermove)
   }else if(_brdTool==='shape'){
     _brdSnap=_brdMakeSnap();_brdSS=p;
   }else if(_brdTool==='text'){
@@ -16391,6 +16391,7 @@ function _boardInsertText(cx,cy){
     var txt=inp.value.trim();
     if(inp.parentNode)inp.parentNode.removeChild(inp);
     // Restore snapshot then draw final committed text
+    if(!_brdX||!_brdC)return; // tableau fermé pendant la saisie — éviter TypeError sur _brdX.save()
     _brdRestoreSnap(snapshot);
     if(!txt)return;
     _brdX.save();
