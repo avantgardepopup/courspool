@@ -14054,22 +14054,29 @@ function _vOpenDemo(){
     var grid=g('_vGrid');if(!grid)return;
     grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
     _vApplyLayout();
-    // Réutiliser le stream du pré-join (évite de re-demander la permission)
+    // Réutiliser le stream audio du pré-join
     var pjs=_preJoinStream;_preJoinStream=null;
     if(pjs&&pjs.active){
-      // Attacher la vidéo au tile local
       var vt=pjs.getVideoTracks();
       if(vt.length){
         var lv=g('_vLocalVid');
         if(lv){lv.srcObject=new MediaStream(vt);lv.style.display='block';lv.play().catch(function(){});
           var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
       }
-      // Analyser l'audio
       var at=pjs.getAudioTracks();
       if(at.length){_startDemoAudio(new MediaStream(at));}
-      else{_ensureDemoAudio(_startDemoAudio);}
+      else{if(window._pjMicWanted!==false)_ensureDemoAudio(_startDemoAudio);}
     }else{
-      _ensureDemoAudio(_startDemoAudio);
+      if(window._pjMicWanted!==false)_ensureDemoAudio(_startDemoAudio);
+    }
+    // iOS : si l'utilisateur a activé la caméra dans le pré-join, l'ouvrir maintenant
+    if(window._pjCamWanted&&!g('_vLocalVid').srcObject){
+      navigator.mediaDevices&&navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        .then(function(vs){
+          var lv=g('_vLocalVid');
+          if(lv){lv.srcObject=vs;lv.style.display='block';lv.play().catch(function(){});
+            var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
+        }).catch(function(){});
     }
     haptic(1);
   });
@@ -14229,16 +14236,75 @@ function _vStopPreJoin(){
 function _vShowPreJoin(onJoin){
   _vStopPreJoin();
   var existing=g('bdVisio');if(existing)existing.remove();
-  var bd=document.createElement('div');
-  bd.id='bdVisio';
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
   var name=user&&user.prenom?user.prenom:'Vous';
   var ini=name.charAt(0).toUpperCase();
   var col=(user&&user.col)||'linear-gradient(148deg,#FF7D42,#FF4500)';
+  window._vPreJoinCallback=onJoin;
+  window._pjMicWanted=true;
+  window._pjCamWanted=true;
+
+  var isIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
+
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
+
+  if(isIosNative){
+    // ── UI iOS : toggles seulement, sans preview caméra ──
+    bd.innerHTML=''
+      +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
+      +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
+      // Avatar
+      +'<div style="width:80px;height:80px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4);margin-bottom:8px;">'+ini+'</div>'
+      +'<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:32px;">'+name+'</div>'
+      // Toggles
+      +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">'
+      // Micro
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+      +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(34,192,105,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+      +'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
+      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;">En attente…</div>'
+      +'</div>'
+      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="width:48px;height:28px;border-radius:14px;background:#22C069;border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">'
+      +'<div id="_pjMicKnob" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>'
+      +'</button>'
+      +'</div>'
+      // Caméra
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+      +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(34,192,105,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
+      +'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
+      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px;">Activée</div>'
+      +'</div>'
+      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="width:48px;height:28px;border-radius:14px;background:#22C069;border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">'
+      +'<div id="_pjCamKnob" style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>'
+      +'</button>'
+      +'</div>'
+      +'</div>'
+      // Rejoindre
+      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
+    document.body.appendChild(bd);
+    var nav=g('bnav');if(nav)nav.style.display='none';
+    haptic(1);
+    // Demander seulement le micro
+    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+      navigator.mediaDevices.getUserMedia({audio:true,video:false})
+        .then(function(stream){_preJoinStream=stream;_pjUpdateToggle('mic',true,'Autorisé');})
+        .catch(function(){window._pjMicWanted=false;_pjUpdateToggle('mic',false,'Refusé');});
+    }
+    return;
+  }
+
+  // ── UI desktop/web : preview caméra complète ──
   bd.innerHTML=''
     +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
     +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
-    // Preview caméra
     +'<div style="position:relative;width:min(320px,90vw);height:min(200px,56vw);border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#1e1e30,#12121f);margin-bottom:22px;box-shadow:0 8px 32px rgba(0,0,0,.5);">'
     +'<div id="_pjAv" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">'
     +'<div style="width:64px;height:64px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);">'+ini+'</div>'
@@ -14246,7 +14312,6 @@ function _vShowPreJoin(onJoin){
     +'</div>'
     +'<video id="_pjVideo" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>'
     +'</div>'
-    // Statuts mic / cam
     +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'
     +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
@@ -14262,30 +14327,13 @@ function _vShowPreJoin(onJoin){
     +'<div id="_pjCamSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
     +'</div>'
     +'</div>'
-    // Bouton rejoindre
     +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:15px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
   document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
   haptic(1);
-  // Stocker le callback pour _vConfirmPreJoin
-  window._vPreJoinCallback=onJoin;
-  // Sur iOS Capacitor : caméra dans WKWebView peut crasher → audio seulement
-  var _pjIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
-  // Demander mic + cam
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     _pjSetSt('mic',false);_pjSetSt('cam',false);return;
-  }
-  if(_pjIosNative){
-    // iOS natif : audio uniquement pour éviter le crash WKWebView caméra
-    navigator.mediaDevices.getUserMedia({audio:true,video:false})
-      .then(function(stream){
-        _preJoinStream=stream;
-        _pjSetSt('mic',true);_pjSetSt('cam',false);
-        _pjStartMicMeter(stream);
-      })
-      .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
-    return;
   }
   navigator.mediaDevices.getUserMedia({audio:true,video:true})
     .then(function(stream){
@@ -14293,15 +14341,12 @@ function _vShowPreJoin(onJoin){
       var vid=g('_pjVideo');
       if(vid){
         var av=g('_pjAv');if(av)av.style.display='none';
-        vid.srcObject=stream;
-        vid.style.display='block';
-        vid.play().catch(function(){});
+        vid.srcObject=stream;vid.style.display='block';vid.play().catch(function(){});
       }
       _pjSetSt('mic',true);_pjSetSt('cam',true);
       _pjStartMicMeter(stream);
     })
     .catch(function(){
-      // Essayer micro seul
       navigator.mediaDevices.getUserMedia({audio:true,video:false})
         .then(function(stream){
           _preJoinStream=stream;
@@ -14310,6 +14355,37 @@ function _vShowPreJoin(onJoin){
         })
         .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
     });
+}
+// Toggle mic (iOS pré-join)
+function _pjToggleMic(){
+  window._pjMicWanted=!window._pjMicWanted;
+  if(window._pjMicWanted){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){_pjUpdateToggle('mic',false,'Non dispo');window._pjMicWanted=false;return;}
+    navigator.mediaDevices.getUserMedia({audio:true,video:false})
+      .then(function(stream){_preJoinStream=stream;_pjUpdateToggle('mic',true,'Autorisé');})
+      .catch(function(){_pjUpdateToggle('mic',false,'Refusé');window._pjMicWanted=false;});
+  }else{
+    if(_preJoinStream){_preJoinStream.getTracks().forEach(function(t){t.stop();});_preJoinStream=null;}
+    _pjUpdateToggle('mic',false,'Désactivé');
+  }
+  haptic(1);
+}
+// Toggle cam (iOS pré-join — juste une préférence, pas de stream)
+function _pjToggleCam(){
+  window._pjCamWanted=!window._pjCamWanted;
+  _pjUpdateToggle('cam',window._pjCamWanted,window._pjCamWanted?'Activée':'Désactivée');
+  haptic(1);
+}
+// Mettre à jour visuellement un toggle iOS pré-join
+function _pjUpdateToggle(dev,on,label){
+  var st=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
+  var btn=g(dev==='mic'?'_pjMicToggle':'_pjCamToggle');
+  var knob=g(dev==='mic'?'_pjMicKnob':'_pjCamKnob');
+  var wrap=g(dev==='mic'?'_pjMicIconWrap':'_pjCamIconWrap');
+  if(st){st.textContent=label;st.style.color=on?'rgba(255,255,255,.65)':'rgba(255,255,255,.3)';}
+  if(btn){btn.style.background=on?'#22C069':'rgba(255,255,255,.2)';}
+  if(knob){knob.style.right=on?'3px':'auto';knob.style.left=on?'auto':'3px';}
+  if(wrap){wrap.style.background=on?'rgba(34,192,105,.18)':'rgba(255,255,255,.08)';}
 }
 function _pjSetSt(dev,ok){
   var el=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
