@@ -187,27 +187,31 @@ function _refreshToken(){
 
 // Échappement HTML — protège tous les innerHTML contre les injections XSS
 function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function _dateLocale(){
+  var lang=window._i18nLang||'fr';
+  var map={fr:'fr-FR',en:'en-GB',es:'es-ES',de:'de-DE',it:'it-IT',pt:'pt-PT',da:'da-DK',fi:'fi-FI',sv:'sv-SE',pl:'pl-PL',el:'el-GR'};
+  return map[lang]||'fr-FR';
+}
 function fmtDt(dt){
   if(!dt)return'';
   if(dt.indexOf('T')<0)return dt;
   try{
     var d=new Date(dt);
     if(isNaN(d.getTime()))return dt;
-    var _t=typeof t==='function'?t:function(k){return k;};
-    var months=[_t('month_0'),_t('month_1'),_t('month_2'),_t('month_3'),_t('month_4'),_t('month_5'),_t('month_6'),_t('month_7'),_t('month_8'),_t('month_9'),_t('month_10'),_t('month_11')];
-    var days=[_t('day_0'),_t('day_1'),_t('day_2'),_t('day_3'),_t('day_4'),_t('day_5'),_t('day_6')];
+    var locale=_dateLocale();
     var h=('0'+d.getHours()).slice(-2),m=('0'+d.getMinutes()).slice(-2);
     var hm=h+'h'+m;
+    var _at=typeof t==='function'?t('date_at'):'à';
     var now=new Date();
     var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
     var dDay=new Date(d.getFullYear(),d.getMonth(),d.getDate());
     var diff=Math.round((dDay-today)/86400000);
-    if(diff===0)return'Aujourd\'hui à '+hm;
-    if(diff===1)return'Demain à '+hm;
-    if(diff>1&&diff<7)return days[d.getDay()]+' à '+hm;
-    var dateStr=d.getDate()+' '+months[d.getMonth()];
-    if(d.getFullYear()!==now.getFullYear())dateStr+=' '+d.getFullYear();
-    return dateStr+' à '+hm;
+    if(diff===0)return(typeof t==='function'?t('date_today'):"Aujourd'hui")+' '+_at+' '+hm;
+    if(diff===1)return(typeof t==='function'?t('date_tomorrow'):'Demain')+' '+_at+' '+hm;
+    if(diff>1&&diff<7)return d.toLocaleDateString(locale,{weekday:'short'})+' '+_at+' '+hm;
+    var dateStr=d.toLocaleDateString(locale,{day:'numeric',month:'short'});
+    if(d.getFullYear()!==now.getFullYear())dateStr=d.toLocaleDateString(locale,{day:'numeric',month:'short',year:'numeric'});
+    return dateStr+' '+_at+' '+hm;
   }catch(e){return dt;}
 }
 // Retourne true si le cours est terminé (date passée)
@@ -4144,7 +4148,7 @@ async function openEleves(id){
         var nom=((res.prenom||'')+(res.nom?' '+res.nom:'')).trim()||'Élève';
         var email=res.email||'';
         var montant=res.montant_paye||0;
-        var date=res.created_at?new Date(res.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
+        var date=res.created_at?new Date(res.created_at).toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'}):'';
         var ini=nom[0]||'?';
         var isTuteur=!!res.is_tuteur;
         var roleBadge=isTuteur
@@ -4477,7 +4481,7 @@ function _openPrLegacy(pid){
         +'<span style="font-size:13px;color:#F59E0B">'+stars(a.note)+'</span>'
         +'<span style="font-size:10px;font-weight:700;color:'+roleColor+';background:'+roleBg+';border-radius:5px;padding:2px 6px">'+esc(reviewerLabel)+'</span>'
         +'</div>'
-        +'<span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'')+'</span>'
+        +'<span style="font-size:11px;color:var(--lite)">'+(a.created_at?new Date(a.created_at).toLocaleDateString(_dateLocale(),{month:'short',year:'numeric'}):'')+'</span>'
         +'</div>'
         +(a.commentaire?'<div style="font-size:13px;color:var(--mid);line-height:1.5">'+esc(a.commentaire)+'</div>':'')
         +'</div>';
@@ -4597,7 +4601,7 @@ function _loadMpAnnonces(pid){
     el.innerHTML=data.map(function(a){
       return'<div style="background:var(--bg);border-radius:12px;padding:12px 14px">'
         +'<div style="font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap">'+esc(a.content)+'</div>'
-        +'<div style="font-size:11px;color:var(--lite);margin-top:6px">'+new Date(a.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+'</div>'
+        +'<div style="font-size:11px;color:var(--lite);margin-top:6px">'+new Date(a.created_at).toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'})+'</div>'
         +'</div>';
     }).join('');
   }).catch(function(){if(curProf===pid)el.innerHTML='';});
@@ -5277,7 +5281,7 @@ function espLoadStudents(){
     el.innerHTML=withStudents.map(function(r){
       var c=r.cours;
       var nb=r.list.length;
-      var dt=c.dt_iso?new Date(c.dt_iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
+      var dt=c.dt_iso?new Date(c.dt_iso).toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'}):'';
       var rows=r.list.map(function(rsv){
         var pid=rsv.user_id||rsv.userId||rsv.uid;
         var p=P[pid]||{};
@@ -5322,7 +5326,7 @@ function espLoadReceivedDocs(){
     el.innerHTML=data.map(function(s){
       var nm=s.student_name||s.user_name||s.userName||'Élève';
       var ini=(nm[0]||'?').toUpperCase();
-      var dt=s.created_at?new Date(s.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+      var dt=s.created_at?new Date(s.created_at).toLocaleDateString(_dateLocale(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
       return'<div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:12px;margin-bottom:8px">'
         +'<div style="width:38px;height:38px;border-radius:12px;background:rgba(34,192,105,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
@@ -5614,16 +5618,16 @@ function _espUpdateToolbar(){
 function _espAnnDateStr(created_at){
   var d=new Date(created_at);var now=new Date();
   var diff=Math.round((now-d)/86400000);
-  return diff===0?'Aujourd\'hui':diff===1?'Hier':diff<7?diff+' j':d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  return diff===0?t('date_today'):diff===1?t('date_yesterday'):diff<7?diff+' j':d.toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'});
 }
 function _annDayLabel(d){
   var now=new Date();var diff=Math.floor((now-d)/86400000);
-  if(diff===0)return'Aujourd\'hui';
-  if(diff===1)return'Hier';
-  if(diff<7)return d.toLocaleDateString('fr-FR',{weekday:'long'});
-  return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+  if(diff===0)return t('date_today');
+  if(diff===1)return t('date_yesterday');
+  if(diff<7)return d.toLocaleDateString(_dateLocale(),{weekday:'long'});
+  return d.toLocaleDateString(_dateLocale(),{day:'numeric',month:'long'});
 }
-function _annTimeStr(d){return new Date(d).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+function _annTimeStr(d){return new Date(d).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'});}
 function _renderPollHtml(poll,annId,showVote,profId){
   var votes=poll.votes||{};
   var total=Object.keys(votes).length;
@@ -6388,7 +6392,7 @@ function _loadMpfAvis(pid){
     avisContainer.innerHTML=notes.slice(0,10).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
-      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString(_dateLocale(),{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid #F0F0F0">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
@@ -6435,7 +6439,7 @@ function _loadProfAvis(){
     if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
       var col=COLORS[idx%COLORS.length];
-      var date=a.created_at?new Date(a.created_at).toLocaleDateString('fr-FR',{month:'short',year:'numeric'}):'';
+      var date=a.created_at?new Date(a.created_at).toLocaleDateString(_dateLocale(),{month:'short',year:'numeric'}):'';
       return'<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--bdr)">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+initial+'</div>'
         +'<div style="flex:1">'
@@ -6581,7 +6585,7 @@ function espLoadMesCours(){
       var titre=esc(c.titre||c.title||'Cours');
       var date='';
       var d=c.date_heure||c.date;
-      if(d){var dd=new Date(d);date=dd.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+(c.heure?' · '+c.heure:'');}
+      if(d){var dd=new Date(d);date=dd.toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'})+(c.heure?' · '+c.heure:'');}
       html+='<div class="esp-mc-row" onclick="espOpenCourseActions(\''+c.id+'\')">'
         +'<div style="font-size:22px;flex-shrink:0;width:36px;text-align:center">'+emoji+'</div>'
         +'<div style="flex:1;min-width:0">'
@@ -6606,7 +6610,7 @@ function espOpenCourseActions(id){
   if(titleEl)titleEl.textContent=c.titre||c.title||'Cours';
   if(subEl){
     var d=c.date_heure||c.date;
-    subEl.textContent=d?new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long'}):'';
+    subEl.textContent=d?new Date(d).toLocaleDateString(_dateLocale(),{weekday:'short',day:'numeric',month:'long'}):'';
   }
   if(iconEl)iconEl.textContent=c.emoji||'📘';
   // reset sub-forms
@@ -7157,7 +7161,7 @@ async function subCr(){
     toast(t('t_invalid_date'),t('t_future_date'));
     window._publishing=false;if(btn){btn.textContent=t('txt_publish_btn');btn.disabled=false;}return;
   }
-  var dateFormatee=dateObj.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
+  var dateFormatee=dateObj.toLocaleDateString(_dateLocale(),{weekday:'short',day:'numeric',month:'long',timeZone:'Europe/Paris'})+' · '+heure;
   var payload={
     titre,sujet,couleur_sujet:sc,background:bg,
     date_heure:dateFormatee,date_iso:dateObj.toISOString(),lieu,prix_total:prix,places_max:places,
@@ -7506,11 +7510,11 @@ async function loadMessages(){
         lastDate=dk;
         var today=new Date();today.setHours(0,0,0,0);
         var diff=Math.round((today-new Date(dk))/(864e5));
-        var lbl=diff===0?t('date_today'):diff===1?t('date_yesterday'):d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+        var lbl=diff===0?t('date_today'):diff===1?t('date_yesterday'):d.toLocaleDateString(_dateLocale(),{weekday:'long',day:'numeric',month:'long'});
         h+='<div class="msg-date-sep"><span>'+lbl.charAt(0).toUpperCase()+lbl.slice(1)+'</span></div>';
       }
       var isMe=m.sender_id===user.id;
-      var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var time=d.toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'});
       var txt=m.contenu||'';
       // Masquer JSON brut
       if(txt.includes('"mode":"presentiel"')||txt.includes('prof_couleur'))return;
@@ -7664,7 +7668,7 @@ async function sendModalMsg(){
     msgs.forEach(function(m){
       var isMe=m.sender_id===user.id;
       var d=new Date(m.created_at);
-      var time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var time=d.toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'});
       html+='<div style="display:flex;justify-content:'+(isMe?'flex-end':'flex-start')+'"><div style="max-width:75%;background:'+(isMe?'var(--or)':'var(--bg)')+';color:'+(isMe?'#fff':'var(--ink)')+';border-radius:'+(isMe?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:10px 13px;font-size:13.5px;line-height:1.5"><div>'+esc(m.contenu)+'</div><div style="font-size:10px;opacity:.6;margin-top:3px;text-align:right">'+time+'</div></div></div>';
     });
     container.innerHTML=html;
@@ -7761,7 +7765,7 @@ async function loadConversations(){
       if(!nm)nm='·\u200B·\u200B·';
       if(!ini)ini=nm[0]&&nm[0]!=='·'?nm[0].toUpperCase():'?';
       var av=photo?'<img src="'+esc(photo)+'" style="width:100%;height:100%;object-fit:cover">':esc(ini);
-      var time=new Date(m.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var time=new Date(m.created_at).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'});
       var _pc=m.contenu||'';
       var preview;
       if(_pc.includes('chat-cours-card')||_pc.includes('"mode":"'))preview=t('msg_prv_cours');
@@ -7782,7 +7786,7 @@ async function loadConversations(){
           var gIsMe=gm.sender_id===user.id;
           var gNonLu=g.unread>0;
           if(gNonLu)nonLus+=g.unread;
-          var gTime=gm.created_at?new Date(gm.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+          var gTime=gm.created_at?new Date(gm.created_at).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'}):'';
           var gPc=gm.contenu||'';
           var gPreview;
           if(gPc.startsWith('%%ESP%%')){try{var _gep=JSON.parse(gPc.slice(7));gPreview=(_gep.t==='fiche'?'📄 Fiche':_gep.t==='pub'?'📢 Publication':_gep.t==='sondage'?'🗳 Sondage':'📎 Contenu')+(_gep.title?' · '+esc(_gep.title.slice(0,20)):'');}catch(e){gPreview='📎 Contenu';}}
@@ -8288,11 +8292,11 @@ async function _loadGroupeMsgs(){
         lastDate = dateKey;
         var today = new Date(); today.setHours(0,0,0,0);
         var diff = Math.round((today.getTime() - new Date(dateKey).getTime())/(1000*60*60*24));
-        var label = diff===0?t('date_today'):diff===1?t('date_yesterday'):d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+        var label = diff===0?t('date_today'):diff===1?t('date_yesterday'):d.toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'});
         html+='<div style="text-align:center;margin:10px 0 6px"><span style="background:var(--wh);color:var(--lite);font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;box-shadow:0 1px 4px rgba(0,0,0,.07)">'+label+'</span></div>';
       }
       var isMe = m.sender_id === (user&&user.id);
-      var time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var time = d.toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'});
       var nm = m.sender_nom || 'Utilisateur';
       var ini = nm[0]||'?';
       var _sCol=['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#0EA5E9','#EC4899'];
@@ -9464,7 +9468,7 @@ async function loadRemboursements(){
         var titre=esc(rb.cours_titre||'Cours CoursPool');
         var montant=rb.amount||0;
         var montantStr=montant?(montant%1===0?montant+'€':montant.toFixed(2)+'€'):'—';
-        var dateStr=rb.created?new Date(rb.created).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+        var dateStr=rb.created?new Date(rb.created).toLocaleDateString(_dateLocale(),{day:'numeric',month:'short',year:'numeric'}):'';
         var st=rb.status||'succeeded';
         var pill,pillBg,pillColor;
         if(st==='succeeded'){pill='Remboursé';pillBg='#DCFCE7';pillColor='#15803D';}
@@ -9514,7 +9518,7 @@ async function loadRemboursements(){
       var titre=cours?esc(cours.title||cours.subj||'Cours'):(r.cours_titre?esc(r.cours_titre):'Cours annulé');
       var montant=r.montant||r.amount||0;
       var montantStr=montant?montant+'€':'—';
-      var dateStr=r.created_at?new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+      var dateStr=r.created_at?new Date(r.created_at).toLocaleDateString(_dateLocale(),{day:'numeric',month:'short',year:'numeric'}):'';
       var st=r.status||'';
       var pill,pillBg,pillColor;
       if(st==='refunded'||r.rembourse){
@@ -9599,7 +9603,7 @@ async function loadRevenues() {
     var grouped = {};
     paid.forEach(function(p){
       var d=new Date(p.created);
-      var key=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+      var key=d.toLocaleDateString(_dateLocale(),{month:'long',year:'numeric'});
       if(!grouped[key])grouped[key]=[];
       grouped[key].push(p);
     });
@@ -9608,8 +9612,8 @@ async function loadRevenues() {
       html+='<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;padding:16px 16px 8px">'+month+'</div>';
       grouped[month].forEach(function(p){
         var d=new Date(p.created);
-        var dateStr=d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-        var timeStr=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        var dateStr=d.toLocaleDateString(_dateLocale(),{day:'numeric',month:'short'});
+        var timeStr=d.toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'});
         var cours=p.cours_titre||'Cours CoursPool';
         var montant=typeof p.amount==='number'?p.amount:(parseFloat(p.amount)||0);
         var montantNet=(montant*0.85).toFixed(2);
@@ -9657,7 +9661,7 @@ async function loadPayouts() {
     var STATUS_COLOR = {paid: 'var(--green)', pending: 'var(--or)', in_transit: 'var(--or)', failed: '#EF4444', canceled: 'var(--lite)'};
     el.innerHTML = data.map(function(p) {
       var d = new Date(p.arrival_date);
-      var dateStr = d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short', year: 'numeric'});
+      var dateStr = d.toLocaleDateString(_dateLocale(), {day: 'numeric', month: 'short', year: 'numeric'});
       var label = STATUS_LABEL[p.status] || p.status;
       var color = STATUS_COLOR[p.status] || 'var(--lite)';
       return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bdr)">'
@@ -10907,7 +10911,7 @@ function previewCours(){
   var date=g('crDate').value,heure=g('crHeure').value;
   var places=parseInt(g('cPl').value)||5,prix=parseInt(g('cPr').value)||0;
   var pp=prix>0?Math.ceil(prix/places):0;
-  var dt=date&&heure?new Date(date+'T'+heure).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})+' \u00b7 '+heure:'Date \u00e0 d\u00e9finir';
+  var dt=date&&heure?new Date(date+'T'+heure).toLocaleDateString(_dateLocale(),{weekday:'short',day:'numeric',month:'short'})+' \u00b7 '+heure:'Date \u00e0 d\u00e9finir';
   var card=g('previewCard');if(!card)return;
   card.innerHTML='<div style="background:'+mat.bg+';padding:14px 16px 10px">'
     +'<span style="background:rgba(255,255,255,.7);border-radius:50px;padding:3px 10px;font-size:11.5px;font-weight:600;color:'+mat.color+'">'+mL(mat)+'</span></div>'
@@ -12365,7 +12369,7 @@ function _renderCalCourses(){
     if(futureTagged.length){
       var nc=futureTagged[0].c;
       var ncD=new Date(nc.dt_iso);
-      var ncLbl=ncD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+      var ncLbl=ncD.toLocaleDateString(_dateLocale(),{weekday:'long',day:'numeric',month:'long'});
       // Calculer l'offset de semaine pour le prochain cours
       var todayN=new Date();todayN.setHours(0,0,0,0);
       var wd=todayN.getDay();var diff=wd===0?-6:1-wd;
@@ -12450,7 +12454,7 @@ function buildMesCard(c,isPast,isProf,kind){
     var _vStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
     var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
     var _vNotYet=_vStart&&_vNow<_vStart-15*60*1000;
-    var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+    var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'}):'';
     if(isProf){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
       else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
