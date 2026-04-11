@@ -15284,6 +15284,10 @@ function _vCloseBoard(){
   if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
   if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}
   _brdCleanEraserCursor();
+  // Nettoyer l'éditeur de texte si une saisie est en cours (évite les éléments orphelins dans body)
+  var _aInp=document.getElementById('_brdActiveInp');if(_aInp&&_aInp.parentNode)_aInp.parentNode.removeChild(_aInp);
+  var _aTBar=document.getElementById('_brdTxtBar');if(_aTBar&&_aTBar.parentNode)_aTBar.parentNode.removeChild(_aTBar);
+  _brdActiveTxtBarEl=null;_brdTextAnchor=null;
   if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
   _brdRestorePending=false;_brdRestoreEpoch=0;
   var bo=g('_vBoardOuter');if(bo)bo.remove();
@@ -16370,7 +16374,7 @@ function _boardInsertText(cx,cy){
     var txt=inp.value.trim();
     if(inp.parentNode)inp.parentNode.removeChild(inp);
     // Restore snapshot then draw final committed text
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(snapshot,0,0);_brdX.restore();
+    _brdRestoreSnap(snapshot);
     if(!txt)return;
     _brdX.save();
     _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
@@ -16556,6 +16560,8 @@ function _brdOnRemoteStrokeStart(d){
   if(!d||!d.userId)return;
   var col=_brdUserColor(d.userId);
   _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col,pageIdx:d.pageIdx};
+  // Ne pas afficher le curseur si l'utilisateur distant est sur une autre page
+  if(typeof d.pageIdx==='number'&&d.pageIdx!==_brdPageIdx)return;
   var part=_brdParticipants.find(function(x){return x.id===d.userId;});
   var name=part?part.name:'?';
   _brdShowRemoteCursor(d.userId,name,col);
@@ -16661,6 +16667,8 @@ function _brdApplyRemoteOp(op){
   if(!_brdC||!_brdX)return;
   // Snapshot complet — remplace le contenu de la page (ex: après commit sélection)
   if(op.type==='snapshot'&&op.data){
+    // Ignorer si l'op vient d'une autre page (sélection commitée par un pair sur page différente)
+    if(typeof op.pageIdx==='number'&&op.pageIdx!==_brdPageIdx)return;
     _boardRestorePage(op.data);return;
   }
   if(op.type==='stroke'||op.type==='erase'){
@@ -16697,7 +16705,7 @@ function _brdApplyRemoteOp(op){
     op.content.split('\n').forEach(function(ln,i){_brdX.fillText(ln,op.x,op.y+i*lh);});
     _brdX.restore();
   }
-  if(op.type!=='snapshot')_boardSaveHist();
+  // Ne pas pousser dans _brdHist ici — les ops distants ne doivent pas polluer le undo local
 }
 
 // Recevoir l'état complet (nouveau venu ou reconnexion)
@@ -16800,7 +16808,8 @@ function _brdToggleEdit(userId,currentCanEdit){
 function _brdOnRemotePageAdd(data){
   if(!_boardActive)return;
   // Ajouter la page dans notre tableau si elle n'existe pas encore
-  if(typeof data.pageIdx==='number'&&data.pageIdx>=_brdPages.length){
+  if(typeof data.pageIdx==='number'&&data.pageIdx===_brdPages.length){
+    // ===, pas >= : évite un doublon si l'event est rejoué après reconnexion
     _brdPages.push(null);_brdPageNames.push(data.name||'');
     _boardUpdatePageTabs();
     toast('Nouvelle page ajoutée','');
