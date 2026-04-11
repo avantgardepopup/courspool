@@ -14942,7 +14942,7 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>'
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 4px;flex-shrink:0;"></div>'
     // Page tabs : flex:1 pour partager la largeur disponible, se réduisent automatiquement
-    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>'
+    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow:hidden;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
     +'<button id="_bU" onclick="_boardUndo()" style="'+ib+'width:36px;" title="Annuler">'
@@ -15445,7 +15445,7 @@ function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
   // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
-  var tabStyle='flex:1;min-width:32px;max-width:140px;overflow:hidden;';
+  var tabStyle='flex:1;min-width:32px;overflow:hidden;';
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
     var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
@@ -15496,13 +15496,13 @@ function _boardGoPage(idx){
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // JPEG ne supporte pas la transparence — remplir en blanc derrière le contenu
-  _brdX.save();
-  _brdX.globalCompositeOperation='destination-over';
-  _brdX.fillStyle='#ffffff';
-  _brdX.fillRect(0,0,_brdC.width,_brdC.height);
-  _brdX.restore();
-  _brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);
+  // Canvas offscreen : fond blanc + contenu fg — sans toucher le canvas principal
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  var tX=tmp.getContext('2d');
+  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
+  tX.drawImage(_brdC,0,0);
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.7);
 }
 function _boardAddPage(){
   _boardSavePage();_brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
