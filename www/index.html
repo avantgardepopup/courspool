@@ -211,11 +211,11 @@
       </div>
       <p class="lscreen-sub" data-i18n="login_subtitle">Trouvez un cours près de vous</p>
 
-      <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email"></div>
+      <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email" aria-label="Adresse email"></div>
       <div class="lfield"><label data-i18n="login_pw_label">Mot de passe</label>
         <div style="position:relative">
-          <input id="lPw" type="password" placeholder="••••••••" autocomplete="current-password" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 44px 12px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s,box-shadow .18s;background:var(--wh);" onfocus="this.style.borderColor='var(--or)';this.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)'" onblur="this.style.borderColor='var(--bdr)';this.style.boxShadow='none'">
-          <span class="pw-toggle" onclick="togglePw('lPw',this)">
+          <input id="lPw" type="password" placeholder="••••••••" autocomplete="current-password" aria-label="Mot de passe" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 44px 12px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s,box-shadow .18s;background:var(--wh);" onfocus="this.style.borderColor='var(--or)';this.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)'" onblur="this.style.borderColor='var(--bdr)';this.style.boxShadow='none'">
+          <span class="pw-toggle" onclick="togglePw('lPw',this)" role="button" aria-label="Afficher/masquer le mot de passe">
             <svg id="lPwIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </span>
         </div>
@@ -250,14 +250,14 @@
       <div class="lsep" data-i18n="login_or">ou</div>
 
       <div class="rg">
-        <div class="lfield"><label>Prénom</label><input id="rPr" type="text" placeholder="Marc" autocomplete="given-name" oninput="_checkRegBtn()"></div>
-        <div class="lfield"><label>Nom</label><input id="rNm" type="text" placeholder="Rousseau" autocomplete="family-name" oninput="_checkRegBtn()"></div>
+        <div class="lfield"><label>Prénom</label><input id="rPr" type="text" placeholder="Marc" autocomplete="given-name" aria-label="Prénom" oninput="_checkRegBtn()"></div>
+        <div class="lfield"><label>Nom</label><input id="rNm" type="text" placeholder="Rousseau" autocomplete="family-name" aria-label="Nom de famille" oninput="_checkRegBtn()"></div>
       </div>
-      <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com" autocomplete="email" oninput="_checkRegBtn()"></div>
+      <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com" autocomplete="email" aria-label="Adresse email" oninput="_checkRegBtn()"></div>
       <div class="lfield">
         <label>Mot de passe</label>
         <div style="position:relative">
-          <input id="rPw" type="password" placeholder="Min. 6 caractères" autocomplete="new-password"
+          <input id="rPw" type="password" placeholder="Min. 6 caractères" autocomplete="new-password" aria-label="Mot de passe (minimum 6 caractères)"
             oninput="updatePwStrength(this.value);_checkRegBtn()"
             style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 44px 12px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s,box-shadow .18s;background:var(--wh);"
             onfocus="this.style.borderColor='var(--or)';this.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)'"
@@ -547,26 +547,26 @@
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
-    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" data-i18n-ph="exp_search_ph" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="sw"><span class="si" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" role="searchbox" aria-label="Rechercher des cours" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" data-i18n-ph="exp_search_ph" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <!-- Nav desktop -->
     <nav class="topbar-nav" id="topbarNav">
-      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')" role="button" aria-label="Explorer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Explorer
       </div>
-      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')" role="button" aria-label="Messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Messages
-        <div class="tnav-badge" id="tnavBadge"></div>
+        <div class="tnav-badge" id="tnavBadge" aria-live="polite"></div>
       </div>
-      <div class="tnav-item" id="tnavMes" onclick="goMesCoursPage()" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      <div class="tnav-item" id="tnavMes" onclick="goMesCoursPage()" style="display:none" role="button" aria-label="Mes cours">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
         Mes cours
       </div>
     </nav>
     <div class="topbar-right">
-      <button class="btnadd" id="btnProposer" onclick="openCrStep()" style="display:none!important"></button>
-      <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
+      <button class="btnadd" id="btnProposer" onclick="openCrStep()" aria-label="Proposer un cours" style="display:none!important"></button>
+      <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte" role="button" aria-label="Mon compte">?</div>
     </div>
   </header>
 
@@ -714,7 +714,7 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_niv_title">Niveau d'études</div>
-            <button onclick="closeNivFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+            <button onclick="closeNivFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="nivFilterList">
             <div class="niv-fchip on" onclick="setNivFilter('',this)" data-i18n="filter_niv_all">Tous les niveaux</div>
@@ -734,7 +734,7 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_mode_title">Format du cours</div>
-            <button onclick="closeModeFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+            <button onclick="closeModeFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="modeFilterList">
             <div class="niv-fchip on" onclick="setModeFilter('',this)" data-i18n="filter_mode_all">Tous les formats</div>
@@ -756,7 +756,7 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_per_title">Période</div>
-            <button onclick="closeDateFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+            <button onclick="closeDateFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div id="dateFilterList">
             <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin-bottom:12px">
@@ -784,15 +784,15 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="font-size:17px;font-weight:800">Distance</div>
-            <button onclick="closeDistFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+            <div style="font-size:17px;font-weight:800" data-i18n="filter_dist_title">Distance</div>
+            <button onclick="closeDistFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="distFilterList">
-            <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400">Quartier</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(5,this)">5 km <span style="font-size:11px;color:var(--lite);font-weight:400">Ville proche</span></div>
-            <div class="niv-fchip on" onclick="setDistFilter(10,this)">10 km <span style="font-size:11px;color:var(--lite);font-weight:400">Zone urbaine</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(20,this)">20 km <span style="font-size:11px;color:var(--lite);font-weight:400">Agglomération</span></div>
-            <div class="niv-fchip" onclick="setDistFilter(50,this)">50 km <span style="font-size:11px;color:var(--lite);font-weight:400">Grande région</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_2km">Quartier</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(5,this)">5 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_5km">Ville proche</span></div>
+            <div class="niv-fchip on" onclick="setDistFilter(10,this)">10 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_10km">Zone urbaine</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(20,this)">20 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_20km">Agglomération</span></div>
+            <div class="niv-fchip" onclick="setDistFilter(50,this)">50 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_50km">Grande région</span></div>
           </div>
         </div>
       </div>
@@ -803,8 +803,8 @@
           <div style="padding:20px 20px 12px;flex-shrink:0">
             <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
             <div style="display:flex;align-items:center;justify-content:space-between">
-              <div style="font-size:17px;font-weight:800">Matière</div>
-              <button onclick="closeMatFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+              <div style="font-size:17px;font-weight:800" data-i18n="filter_mat_title">Matière</div>
+              <button onclick="closeMatFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
             </div>
           </div>
           <div style="overflow-y:auto;flex:1;min-height:0;padding:0 16px;padding-bottom:max(100px,calc(env(safe-area-inset-bottom,0px) + 90px))">
@@ -819,11 +819,11 @@
           <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
           <div style="padding:16px 20px 4px;display:flex;align-items:flex-start;justify-content:space-between">
             <div>
-              <div style="font-size:19px;font-weight:800;letter-spacing:-.03em">Ma barre de filtres</div>
-              <div style="font-size:13px;color:var(--lite);margin-top:3px">Tape sur un filtre pour l'ajouter ou le retirer</div>
+              <div style="font-size:19px;font-weight:800;letter-spacing:-.03em" data-i18n="filter_bar_title">Ma barre de filtres</div>
+              <div style="font-size:13px;color:var(--lite);margin-top:3px" data-i18n="filter_bar_sub">Tape sur un filtre pour l'ajouter ou le retirer</div>
             </div>
-            <button onclick="closeAddFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;margin-top:2px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button onclick="closeAddFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;margin-top:2px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <!-- Dynamic toggle grid rendered by renderBarConfig() -->
@@ -887,15 +887,15 @@
             <div data-i18n="filter_add_custom" style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
             <div style="display:flex;gap:8px">
               <input id="filterInput" class="fi3" style="flex:1;font-size:15px;border-radius:14px;background:var(--bg);border:none;padding:13px 16px;outline:none;font-family:inherit;-webkit-appearance:none;color:var(--ink)" data-i18n-ph="filter_custom_ph" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
-              <button onclick="requestGeoloc();closeAddFilter();" title="Autour de moi" style="background:var(--bg);color:var(--or);border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 0.5px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2" opacity=".4"/></svg></button>
-              <button onclick="addBarCustomFilter()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28);-webkit-tap-highlight-color:transparent">+</button>
+              <button onclick="requestGeoloc();closeAddFilter();" title="Autour de moi" aria-label="Rechercher autour de moi" style="background:var(--bg);color:var(--or);border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 0.5px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2" opacity=".4"/></svg></button>
+              <button onclick="addBarCustomFilter()" aria-label="Ajouter un filtre personnalisé" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28);-webkit-tap-highlight-color:transparent">+</button>
             </div>
             <!-- Suggestion alias filtre -->
             <div id="filterAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin-top:10px;border:1px solid rgba(255,107,43,.2)">
               <span class="filter-alias-label" style="font-size:13px;color:var(--mid);flex:1"></span>
               <div style="display:flex;gap:6px;flex-shrink:0">
-                <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Oui</button>
-                <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer">Non</button>
+                <button onclick="acceptFilterAlias()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:5px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" data-i18n="txt_oui">Oui</button>
+                <button onclick="denyFilterAlias()" style="background:var(--wh);color:var(--mid);border:1px solid var(--bdr);border-radius:50px;padding:5px 12px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer" data-i18n="txt_non">Non</button>
               </div>
             </div>
           </div>
@@ -915,7 +915,7 @@
         </div>
         <div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:8px;letter-spacing:-.02em" id="nocardTitle" data-i18n="exp_empty_title">Aucun cours trouvé</div>
         <div style="font-size:14px;color:var(--lite);line-height:1.6;margin-bottom:24px" id="nocardSub" data-i18n="exp_empty_sub">Essayez un autre filtre ou une autre ville</div>
-        <button onclick="resetFilters()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)">Réinitialiser les filtres</button>
+        <button onclick="resetFilters()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.3)" data-i18n="filter_reset_filt">Réinitialiser les filtres</button>
       </div>
     </div>
   </div>
@@ -950,9 +950,9 @@
       <div style="width:72px;height:72px;background:var(--orp);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="34" height="34"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>
       </div>
-      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Rejoins l'espace de ton prof</div>
-      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px">Demande à ton professeur son code d'accès et entre-le ici pour accéder à son espace.</div>
-      <button onclick="openEnrollSheet()" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)">Entrer un code →</button>
+      <div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em" data-i18n="mtp_empty_title">Rejoins l'espace de ton prof</div>
+      <div style="font-size:14px;color:var(--lite);line-height:1.7;margin-bottom:28px" data-i18n="mtp_empty_sub">Demande à ton professeur son code d'accès et entre-le ici pour accéder à son espace.</div>
+      <button onclick="openEnrollSheet()" style="background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:50px;padding:14px 28px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="mtp_entrer_code">Entrer un code →</button>
     </div>
     <!-- Liste des profs -->
     <div id="mesProfsCarousel"></div>
@@ -960,11 +960,11 @@
     <div style="position:fixed;bottom:0;left:0;right:0;z-index:50;display:flex;justify-content:center;align-items:center;gap:10px;padding-bottom:max(18px,calc(env(safe-area-inset-bottom,0px) + 84px));pointer-events:none">
       <button onclick="openMesProfsTuto()" style="pointer-events:all;display:flex;align-items:center;gap:6px;background:var(--wh);color:var(--ink);border:1.5px solid var(--bdr);border-radius:50px;padding:11px 18px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.08);-webkit-tap-highlight-color:transparent">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-        Guide
+        <span data-i18n="mtp_guide">Guide</span>
       </button>
       <button onclick="openEnrollSheet()" style="pointer-events:all;display:flex;align-items:center;gap:7px;background:var(--or);color:#fff;border:none;border-radius:50px;padding:11px 22px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.4);-webkit-tap-highlight-color:transparent">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Rejoindre un espace
+        <span data-i18n="mtp_rejoindre">Rejoindre un espace</span>
       </button>
     </div>
   </div>
@@ -1195,8 +1195,8 @@
         <button class="ptab" id="aTabP" onclick="switchATab('P',this)" data-i18n="acc_mon_profil">Profil</button>
         <button class="ptab" id="aTabRev" onclick="switchATab('Rev',this)" style="display:none" data-i18n="acc_revenus">Revenus</button>
         <button class="ptab" id="aTabRmb" onclick="switchATab('Rmb',this)" style="display:none">Remboursements</button>
-        <button class="ptab" id="aTabEsp" onclick="switchATab('Esp',this)" style="display:none">Mon Espace</button>
-        <button class="ptab" id="aTabAvis" onclick="switchATab('Avis',this)" style="display:none">Mes avis</button>
+        <button class="ptab" id="aTabEsp" onclick="switchATab('Esp',this)" style="display:none" data-i18n="acc_mon_espace">Mon Espace</button>
+        <button class="ptab" id="aTabAvis" onclick="switchATab('Avis',this)" style="display:none" data-i18n="acc_mes_avis">Mes avis</button>
       </div>
 
       <div class="acc-body">
@@ -1315,10 +1315,10 @@
 
           <!-- Entête espace + bouton tuto -->
           <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 2px">
-            <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Mon Espace</div>
+            <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em" data-i18n="acc_mon_espace">Mon Espace</div>
             <button onclick="openEspTuto()" style="background:var(--bg);border:1px solid var(--bdr);border-radius:50px;padding:6px 12px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mid);cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Guide
+              <span data-i18n="esp_guide">Guide</span>
             </button>
           </div>
 
@@ -1327,25 +1327,25 @@
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard1','code')">
               <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>
               <div style="flex:1">
-                <div class="esp2-title">Code d'accès élèves</div>
-                <div class="esp2-sub">Partage ce code pour donner accès à ton espace</div>
+                <div class="esp2-title" data-i18n="esp_code_title">Code d'accès élèves</div>
+                <div class="esp2-sub" data-i18n="esp_code_sub">Partage ce code pour donner accès à ton espace</div>
               </div>
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
             <div class="esp2-card-body">
               <div style="text-align:center;padding:10px 0 6px">
                 <div id="espCodeDisplay" style="font-size:clamp(20px,8vw,30px);font-weight:900;letter-spacing:.2em;color:var(--or);font-variant-numeric:tabular-nums;word-break:break-all">——————</div>
-                <div style="font-size:12px;color:var(--lite);margin-top:4px">Partage ce code avec tes élèves</div>
+                <div style="font-size:12px;color:var(--lite);margin-top:4px" data-i18n="esp_code_hint">Partage ce code avec tes élèves</div>
               </div>
               <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
                 <button class="esp-card-btn" onclick="espCopyCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copier
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span data-i18n="esp_copier">Copier</span>
                 </button>
                 <button class="esp-card-btn" onclick="espShareCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span data-i18n="esp_partager">Partager</span>
                 </button>
                 <button class="esp-card-btn esp-card-btn-prim" onclick="espRegenCode()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Nouveau code
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="13" height="13"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg><span data-i18n="esp_nouveau_code">Nouveau code</span>
                 </button>
               </div>
             </div>
@@ -1356,8 +1356,8 @@
             <div class="esp2-card-hd" style="pointer-events:none">
               <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>
               <div style="flex:1">
-                <div class="esp2-title">Mes cours</div>
-                <div class="esp2-sub">Cours créés et réservés</div>
+                <div class="esp2-title" data-i18n="acc_mes_cours">Mes cours</div>
+                <div class="esp2-sub" data-i18n="esp_mes_cours_sub">Cours créés et réservés</div>
               </div>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
@@ -1368,8 +1368,8 @@
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard2','eleves')">
               <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
               <div style="flex:1">
-                <div class="esp2-title">Mes élèves <span id="espStudentBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
-                <div class="esp2-sub">Élèves inscrits à ton espace</div>
+                <div class="esp2-title"><span data-i18n="esp_mes_eleves_title">Mes élèves</span> <span id="espStudentBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
+                <div class="esp2-sub" data-i18n="esp_mes_eleves_sub">Élèves inscrits à ton espace</div>
               </div>
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
@@ -1383,8 +1383,8 @@
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard3','annonces')">
               <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
               <div style="flex:1">
-                <div class="esp2-title">Publications</div>
-                <div class="esp2-sub">Annonces visibles par tes élèves</div>
+                <div class="esp2-title" data-i18n="esp_publications_title">Publications</div>
+                <div class="esp2-sub" data-i18n="esp_publications_sub">Annonces visibles par tes élèves</div>
               </div>
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
@@ -1392,16 +1392,16 @@
               <div style="display:flex;gap:8px;margin-bottom:8px">
                 <button onclick="openEspEditor()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                  Publier
+                  <span data-i18n="esp_publier">Publier</span>
                 </button>
                 <button onclick="openSondageSheet()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-                  Sondage
+                  <span data-i18n="esp_sondage_btn">Sondage</span>
                 </button>
               </div>
               <button onclick="openMesPublications()" class="esp-biblio-btn esp-biblio-btn-prim">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                Voir mes publications
+                <span data-i18n="esp_voir_publications">Voir mes publications</span>
               </button>
             </div>
           </div>
@@ -1411,8 +1411,8 @@
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard5','received')">
               <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
               <div style="flex:1">
-                <div class="esp2-title">Documents reçus <span id="espReceivedBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
-                <div class="esp2-sub">Fichiers envoyés par tes élèves</div>
+                <div class="esp2-title"><span data-i18n="esp_docs_recus_title">Documents reçus</span> <span id="espReceivedBadge" style="display:none;font-size:12px;font-weight:700;color:var(--or)"></span></div>
+                <div class="esp2-sub" data-i18n="esp_docs_recus_sub">Fichiers envoyés par tes élèves</div>
               </div>
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
@@ -1426,8 +1426,8 @@
             <div class="esp2-card-hd" onclick="toggleEsp2Card('espCard4','ressources')">
               <div class="esp2-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
               <div style="flex:1">
-                <div class="esp2-title">Ma bibliothèque</div>
-                <div class="esp2-sub">Fiches de cours et documents partagés</div>
+                <div class="esp2-title" data-i18n="esp_biblio_title">Ma bibliothèque</div>
+                <div class="esp2-sub" data-i18n="esp_biblio_sub">Fiches de cours et documents partagés</div>
               </div>
               <svg class="esp2-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
@@ -1436,17 +1436,17 @@
               <div style="display:flex;gap:8px;margin-bottom:14px">
                 <button onclick="openEspEditor('fiche')" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Créer une fiche
+                  <span data-i18n="esp_creer_fiche">Créer une fiche</span>
                 </button>
                 <button onclick="openAddDoc()" class="esp-biblio-btn esp-biblio-btn-sec" style="flex:1">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Ajouter un doc
+                  <span data-i18n="esp_ajouter_doc">Ajouter un doc</span>
                 </button>
               </div>
               <!-- Bouton Voir ma bibliothèque -->
               <button onclick="openBibliotheque()" class="esp-biblio-btn esp-biblio-btn-prim">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-                Voir ma bibliothèque
+                <span data-i18n="esp_voir_biblio">Voir ma bibliothèque</span>
               </button>
             </div>
           </div>
@@ -1646,7 +1646,7 @@
           <div id="verifSectionLabel" style="display:none">
             <div style="display:flex;align-items:center;gap:10px;padding:20px 4px 0">
               <div style="flex:1;height:1px;background:var(--bdr)"></div>
-              <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">Vérification</div>
+              <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap" data-i18n="verif_section">Vérification</div>
               <div style="flex:1;height:1px;background:var(--bdr)"></div>
             </div>
           </div>
@@ -1917,26 +1917,26 @@
 
     <!-- STATS BAR -->
     <div class="tp-stats-bar">
-      <div class="tp-stat"><div id="tpStRating" class="tp-stat-num tp-stat-rating">—</div><div class="tp-stat-lbl">Note</div></div>
+      <div class="tp-stat"><div id="tpStRating" class="tp-stat-num tp-stat-rating">—</div><div class="tp-stat-lbl" data-i18n="tp_stat_note">Note</div></div>
       <div class="tp-stat-sep"></div>
-      <div class="tp-stat"><div id="tpStAvis" class="tp-stat-num">0</div><div class="tp-stat-lbl">Avis</div></div>
+      <div class="tp-stat"><div id="tpStAvis" class="tp-stat-num">0</div><div class="tp-stat-lbl" data-i18n="tp_stat_avis">Avis</div></div>
       <div class="tp-stat-sep"></div>
-      <div class="tp-stat"><div id="tpStCours" class="tp-stat-num">0</div><div class="tp-stat-lbl">Cours</div></div>
+      <div class="tp-stat"><div id="tpStCours" class="tp-stat-num">0</div><div class="tp-stat-lbl" data-i18n="tp_stat_cours">Cours</div></div>
       <div class="tp-stat-sep"></div>
-      <div class="tp-stat"><div id="tpStEleves" class="tp-stat-num">0</div><div class="tp-stat-lbl">Élèves</div></div>
+      <div class="tp-stat"><div id="tpStEleves" class="tp-stat-num">0</div><div class="tp-stat-lbl" data-i18n="tp_stat_eleves">Élèves</div></div>
     </div>
 
     <!-- TABS -->
     <div class="tp-tab-bar" id="tpTabBar">
-      <button class="tp-tab on" id="tpTabPresentation" onclick="switchTpTab('presentation')">Présentation</button>
-      <button class="tp-tab" id="tpTabCours" onclick="switchTpTab('cours')">Cours</button>
-      <button class="tp-tab" id="tpTabAvis" onclick="switchTpTab('avis')">Avis</button>
-      <button class="tp-tab" id="tpTabEspace" onclick="switchTpTab('espace')">Espace</button>
+      <button class="tp-tab on" id="tpTabPresentation" onclick="switchTpTab('presentation')" data-i18n="tp_tab_presentation">Présentation</button>
+      <button class="tp-tab" id="tpTabCours" onclick="switchTpTab('cours')" data-i18n="tp_tab_cours">Cours</button>
+      <button class="tp-tab" id="tpTabAvis" onclick="switchTpTab('avis')" data-i18n="tp_tab_avis">Avis</button>
+      <button class="tp-tab" id="tpTabEspace" onclick="switchTpTab('espace')" data-i18n="tp_tab_espace">Espace</button>
     </div>
 
     <!-- PANEL: Présentation -->
     <div id="tpPanelPresentation" class="tp-panel">
-      <div class="tp-sec-title" id="tpCertTitle">Certification</div>
+      <div class="tp-sec-title" id="tpCertTitle" data-i18n="tp_cert_title">Certification</div>
       <div id="tpTrustCards" class="tp-trust-wrap"></div>
 
       <div id="tpBioSection" style="display:none;padding:0 16px 16px">
@@ -1944,12 +1944,12 @@
       </div>
 
       <div id="tpStatutSection" style="display:none;padding:0 16px 8px">
-        <div class="tp-sec-label">Statut &amp; formation</div>
+        <div class="tp-sec-label" data-i18n="tp_sec_statut">Statut &amp; formation</div>
         <div class="tp-card-list" id="tpStatutList"></div>
       </div>
 
       <div id="tpMatiereSection" style="display:none;padding:0 16px 16px">
-        <div class="tp-sec-label">Matières enseignées</div>
+        <div class="tp-sec-label" data-i18n="tp_sec_matieres">Matières enseignées</div>
         <div id="tpMatiereChips" class="tp-chips-wrap"></div>
       </div>
 
@@ -1977,11 +1977,11 @@
       <div id="tpEspaceCode" style="padding:24px 16px calc(env(safe-area-inset-bottom,0px) + 100px)">
         <div class="tp-espace-card">
           <div id="tpEspaceTitle" class="tp-espace-title"></div>
-          <div class="tp-espace-desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
+          <div class="tp-espace-desc" data-i18n="tp_espace_desc">Entrez le code partagé par votre professeur pour accéder à ses ressources exclusives.</div>
           <div id="tpEspaceRow" class="tp-espace-row">
-            <input id="tpCodeInput" type="text" placeholder="Code d'accès" class="tp-code-input"
+            <input id="tpCodeInput" type="text" data-i18n-ph="tp_code_ph" placeholder="Code d'accès" class="tp-code-input"
               maxlength="6" oninput="_tpCodeLive(this)" autocomplete="off" spellcheck="false" enterkeyhint="go">
-            <button onclick="tpEnterCode()" class="tp-code-btn">Rejoindre</button>
+            <button onclick="tpEnterCode()" class="tp-code-btn" data-i18n="tp_code_btn">Rejoindre</button>
           </div>
           <div id="tpCodeHint" style="font-size:12px;color:#888;padding:4px 2px;min-height:18px"></div>
           <div id="tpCodeError" style="display:none;font-size:12px;color:#EF4444;margin-top:2px"></div>
@@ -1992,19 +1992,19 @@
         <div class="tp-esp-group">
           <div class="tp-esp-row" onclick="openEspPubs()">
             <div class="tp-esp-ico" style="background:#FFF0E8"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Publications</div><div class="tp-esp-sub">Annonces de votre professeur</div></div>
+            <div class="tp-esp-text"><div class="tp-esp-title" data-i18n="tp_esp_pub_title">Publications</div><div class="tp-esp-sub" data-i18n="tp_esp_pub_sub">Annonces de votre professeur</div></div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="tp-esp-sep"></div>
           <div class="tp-esp-row" onclick="openElveBibliotheque(_curPrFull)">
             <div class="tp-esp-ico" style="background:#EEF2FF"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Bibliothèque</div><div class="tp-esp-sub">Fiches et ressources du prof</div></div>
+            <div class="tp-esp-text"><div class="tp-esp-title" data-i18n="tp_esp_biblio_title">Bibliothèque</div><div class="tp-esp-sub" data-i18n="tp_esp_biblio_sub">Fiches et ressources du prof</div></div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="tp-esp-sep"></div>
           <div class="tp-esp-row" onclick="contPrFull()">
             <div class="tp-esp-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-            <div class="tp-esp-text"><div class="tp-esp-title">Écrire au professeur</div><div class="tp-esp-sub">Message direct</div></div>
+            <div class="tp-esp-text"><div class="tp-esp-title" data-i18n="tp_esp_msg_title">Écrire au professeur</div><div class="tp-esp-sub" data-i18n="tp_esp_msg_sub">Message direct</div></div>
             <svg viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
         </div>
@@ -2616,7 +2616,7 @@
     <!-- Titre -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 16px">
       <span id="pickerTitle" style="font-size:17px;font-weight:700;color:var(--ink)"></span>
-      <button onclick="closePicker()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid);font-size:18px">✕</button>
+      <button onclick="closePicker()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid);font-size:18px">✕</button>
     </div>
     <!-- Options -->
     <div id="pickerOptions" style="max-height:60vh;overflow-y:auto;padding:0 12px 8px"></div>
@@ -2636,7 +2636,7 @@
       <div style="background:linear-gradient(135deg,#FF8C55,#E04E10);border-radius:20px;padding:24px 16px 20px;text-align:center;box-shadow:0 8px 28px rgba(255,107,43,.25);margin:0 0 20px">
         <div style="font-size:9px;font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:14px">✦ CoursPool Certifié ✦</div>
         <div style="display:inline-flex;margin-bottom:14px"><div style="width:72px;height:72px;background:rgba(255,255,255,.18);border-radius:22px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.28);box-shadow:0 0 0 6px rgba(255,255,255,.07)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="36" height="36"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg></div></div>
-        <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em">Identité vérifiée</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em" data-i18n="mp_identite">Identité vérifiée</div>
       </div>
       <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em" data-i18n="cni_title">Vérifiez votre identité</div>
       <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px" data-i18n="cni_desc">Pour garantir la confiance des élèves,<br>nous vérifions l'identité de chaque professeur.</div>
@@ -2692,8 +2692,8 @@
       <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
         <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" id="cniStep3Title">Document envoyé ✓</div>
-      <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px" id="cniStep3Sub">Nous vérifions votre identité.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" id="cniStep3Title" data-i18n="txt_doc_sent">Document envoyé ✓</div>
+      <div style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px" id="cniStep3Sub"></div>
       <button onclick="cniDone()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(255,107,43,.35)" data-i18n="cni_thanks">Compris, merci !</button>
     </div>
 
@@ -2711,7 +2711,7 @@
       <div style="background:linear-gradient(135deg,#818CF8,#4338CA);border-radius:20px;padding:24px 16px 20px;text-align:center;box-shadow:0 8px 28px rgba(99,102,241,.25);margin:0 0 20px">
         <div style="font-size:9px;font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:14px">✦ CoursPool Certifié ✦</div>
         <div style="display:inline-flex;margin-bottom:14px"><div style="width:72px;height:72px;background:rgba(255,255,255,.18);border-radius:22px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.28);box-shadow:0 0 0 6px rgba(255,255,255,.07)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="36" height="36"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div></div>
-        <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em">Diplôme vérifié</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em" data-i18n="mp_diplome">Diplôme vérifié</div>
       </div>
       <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em" data-i18n="dip_title">Obtenez le badge Diplôme vérifié</div>
       <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px" data-i18n="dip_desc">Rassurez les parents en prouvant votre qualification. Le badge apparaît sur votre profil et vos cours.</div>
@@ -2761,7 +2761,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" width="32" height="32"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div id="diplomeStep3Title" style="font-size:22px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em" data-i18n="txt_diploma_sent">Diplôme envoyé ✓</div>
-      <div id="diplomeStep3Sub" style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px">Nous vérifions votre diplôme.<br>Vous recevrez un email de confirmation<br><strong>sous 24 heures</strong>.</div>
+      <div id="diplomeStep3Sub" style="font-size:15px;color:var(--mid);line-height:1.6;margin-bottom:28px"></div>
       <button onclick="diplomeDone()" style="width:100%;background:#3B82F6;color:#fff;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.35)" data-i18n="cni_thanks">Compris, merci !</button>
     </div>
   </div>
@@ -2778,7 +2778,7 @@
       <div style="background:linear-gradient(135deg,#34D399,#059669);border-radius:20px;padding:24px 16px 20px;text-align:center;box-shadow:0 8px 28px rgba(16,185,129,.22);margin:0 0 20px">
         <div style="font-size:9px;font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:14px">✦ CoursPool Certifié ✦</div>
         <div style="display:inline-flex;margin-bottom:14px"><div style="width:72px;height:72px;background:rgba(255,255,255,.18);border-radius:22px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.28);box-shadow:0 0 0 6px rgba(255,255,255,.07)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="36" height="36"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div></div>
-        <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em">Profil de confiance</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em" data-i18n="mp_confiance">Profil de confiance</div>
       </div>
       <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-.02em" data-i18n="cas_title">Obtenez le badge Profil de confiance</div>
       <div style="font-size:15px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:28px" data-i18n="cas_desc">Montrez aux familles que votre profil a été contrôlé. Ce badge renforce la confiance et vous démarque.</div>
@@ -2838,8 +2838,8 @@
   <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 max(28px,env(safe-area-inset-bottom,28px));animation:mi .32s ease">
     <div style="padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
       <div>
-        <div style="font-size:11px;font-weight:600;color:var(--lite);letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px">Votre profil</div>
-        <div style="font-size:19px;font-weight:800;color:var(--ink)">Allez encore plus loin</div>
+        <div style="font-size:11px;font-weight:600;color:var(--lite);letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px" data-i18n="nudge_votre_profil">Votre profil</div>
+        <div style="font-size:19px;font-weight:800;color:var(--ink)" data-i18n="nudge_aller_plus">Allez encore plus loin</div>
       </div>
       <button onclick="closeBadgeNudge()" style="width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;color:var(--mid);cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
@@ -2850,10 +2850,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="1.75" stroke-linecap="round" width="22" height="22"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:var(--ink)">Diplôme vérifié</div>
-        <div style="font-size:12px;color:var(--lite);margin-top:1px">Montrez vos qualifications aux élèves</div>
+        <div style="font-size:14px;font-weight:700;color:var(--ink)" data-i18n="mp_diplome">Diplôme vérifié</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:1px" data-i18n="nudge_dip_desc">Montrez vos qualifications aux élèves</div>
       </div>
-      <button id="nudgeDiplomeBtn" onclick="closeBadgeNudge();openDiplomeSheet()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0">Ajouter</button>
+      <button id="nudgeDiplomeBtn" onclick="closeBadgeNudge();openDiplomeSheet()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0" data-i18n="nudge_ajouter">Ajouter</button>
     </div>
     <!-- Badge confiance -->
     <div style="margin:0 16px 20px;background:var(--bg);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px">
@@ -2861,13 +2861,13 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="1.75" stroke-linecap="round" width="22" height="22"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:var(--ink)">Profil de confiance</div>
-        <div style="font-size:12px;color:var(--lite);margin-top:1px">Attestation de moralité vérifiée</div>
+        <div style="font-size:14px;font-weight:700;color:var(--ink)" data-i18n="mp_confiance">Profil de confiance</div>
+        <div style="font-size:12px;color:var(--lite);margin-top:1px" data-i18n="nudge_cas_desc">Attestation de moralité vérifiée</div>
       </div>
-      <button onclick="closeBadgeNudge();openCasierSheet()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0">Ajouter</button>
+      <button onclick="closeBadgeNudge();openCasierSheet()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0" data-i18n="nudge_ajouter">Ajouter</button>
     </div>
     <div style="padding:0 16px">
-      <button onclick="closeBadgeNudge()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Plus tard</button>
+      <button onclick="closeBadgeNudge()" style="width:100%;background:var(--bg);color:var(--mid);border:none;border-radius:12px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer" data-i18n="cni_later">Plus tard</button>
     </div>
   </div>
 </div>
@@ -3005,51 +3005,51 @@
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
 
-  <div class="bni on" id="bniExp" onclick="navTo('exp')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <div class="bni on" id="bniExp" onclick="navTo('exp')" role="button" aria-label="Explorer" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span class="bni-lbl" data-i18n="bnav_explorer">Explorer</span>
   </div>
 
-  <div class="bni" id="bniFav" onclick="navTo('fav')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+  <div class="bni" id="bniFav" onclick="navTo('fav')" role="button" aria-label="Favoris" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
     <div class="bni-badge" id="bnavFavBadge" style="background:var(--or)"></div>
     <span class="bni-lbl" data-i18n="bnav_favoris">Favoris</span>
   </div>
 
-  <div class="bni bni-fab" id="bniAdd" onclick="openCrStep()" style="display:none;">
-    <div class="bni-add-circle">
+  <div class="bni bni-fab" id="bniAdd" onclick="openCrStep()" style="display:none;" role="button" aria-label="Créer un cours" tabindex="0">
+    <div class="bni-add-circle" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" width="22" height="22" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
     <span class="bni-fab-lbl" data-i18n="bnav_creer">Créer</span>
   </div>
 
-  <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
-    <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
-    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    <div class="bni-badge" id="bnavBadge"></div>
+  <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}" role="button" aria-label="Messages" tabindex="0">
+    <div class="bni-back" style="display:none" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <div class="bni-badge" id="bnavBadge" aria-live="polite"></div>
     <span class="bni-lbl bni-msg-lbl" data-i18n="bnav_messages">Messages</span>
   </div>
 
-  <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+  <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')" role="button" aria-label="Mes cours" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
     <span class="bni-lbl" data-i18n="bnav_mes_cours">Mes cours</span>
   </div>
 
-  <div class="bni" id="bniProfs" onclick="navTo('profs')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+  <div class="bni" id="bniProfs" onclick="navTo('profs')" role="button" aria-label="Mes profs" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
     <span class="bni-lbl" data-i18n="bnav_mes_profs">Mes Profs</span>
   </div>
 
-  <div class="bni" id="bniEsp" onclick="goEspProf()" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-    <span class="bni-lbl">Mon Espace</span>
+  <div class="bni" id="bniEsp" onclick="goEspProf()" style="display:none" role="button" aria-label="Mon espace prof" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span class="bni-lbl" data-i18n="acc_mon_espace">Mon Espace</span>
   </div>
 
 </nav>
 
 <!-- Bouton retour messagerie iPad (conversation ouverte, ≥768px uniquement) -->
-<button id="bnavIpadBack" onclick="_bnavIpadBackAction()">
-  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+<button id="bnavIpadBack" onclick="_bnavIpadBackAction()" aria-label="Retour à la liste des conversations">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
 </button>
 
 <!-- PAYMENT SHEET -->
@@ -3064,11 +3064,11 @@
       <div style="padding:16px 22px 18px;border-bottom:1px solid var(--bdr)">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Réservation</div>
+            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px" data-i18n="pay_label_resa">Réservation</div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="payCoursTitle">…</div>
             <div style="display:inline-flex;align-items:baseline;gap:4px;background:var(--orp);border-radius:10px;padding:5px 11px">
               <span style="font-size:21px;font-weight:800;color:var(--or);letter-spacing:-.03em" id="payAmount"></span>
-              <span style="font-size:11.5px;font-weight:600;color:var(--or);opacity:.75">/ place</span>
+              <span style="font-size:11.5px;font-weight:600;color:var(--or);opacity:.75" data-i18n="pay_par_place">/ place</span>
             </div>
           </div>
           <button onclick="closePaymentSheet()" style="width:34px;height:34px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;color:var(--mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
@@ -3089,7 +3089,7 @@
         <span class="cp-loader" style="display:none" id="payLoader"></span>
         <span id="payBtnTxt">Chargement…</span>
       </button>
-      <p style="text-align:center;font-size:11.5px;color:var(--lite);margin:0;font-weight:500">Paiement sécurisé par <strong style="color:var(--mid);font-weight:700">Stripe</strong> · Chiffrement SSL 256-bit</p>
+      <p style="text-align:center;font-size:11.5px;color:var(--lite);margin:0;font-weight:500" data-i18n="pay_secure_msg">Paiement sécurisé par Stripe · Chiffrement SSL 256-bit</p>
     </div>
 
   </div>
@@ -3162,14 +3162,14 @@
     <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement confirmé !</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px" data-i18n="pay_confirmed_title">Paiement confirmé !</div>
     <div id="popupPaidMsg" style="font-size:14px;color:#555;margin-bottom:16px;line-height:1.5">Votre place est réservée. Un email de confirmation vous a été envoyé.</div>
     <div id="popupPaidAdresse" style="display:none;background:#FFF7F0;border-radius:12px;padding:12px 14px;margin-bottom:16px;text-align:left">
-      <div style="font-size:11px;font-weight:700;color:#FF6B2B;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">Adresse du cours</div>
+      <div style="font-size:11px;font-weight:700;color:#FF6B2B;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px" data-i18n="pay_adresse_label">Adresse du cours</div>
       <div id="popupPaidAdresseText" style="font-size:13px;color:#333;line-height:1.5"></div>
     </div>
-    <button id="popupPaidCalBtn" onclick="if(window._paidCoursId)addToCalendar(window._paidCoursId)" style="width:100%;background:none;color:#FF6B2B;border:1.5px solid #FF6B2B;border-radius:14px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Ajouter au calendrier</button>
-    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Super ! 🎉</button>
+    <button id="popupPaidCalBtn" onclick="if(window._paidCoursId)addToCalendar(window._paidCoursId)" style="width:100%;background:none;color:#FF6B2B;border:1.5px solid #FF6B2B;border-radius:14px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg><span data-i18n="pay_add_cal">Ajouter au calendrier</span></button>
+    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer" data-i18n="pay_super">Super !</button>
   </div>
 </div>
 
@@ -3179,9 +3179,9 @@
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement annulé</div>
-    <div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5">Votre paiement n'a pas abouti. Aucun montant n'a été débité.</div>
-    <button onclick="document.getElementById('popupFailed').style.display='none'" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Réessayer</button>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px" data-i18n="pay_failed_title">Paiement annulé</div>
+    <div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5" data-i18n="pay_failed_sub">Votre paiement n'a pas abouti. Aucun montant n'a été débité.</div>
+    <button onclick="document.getElementById('popupFailed').style.display='none'" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer" data-i18n="txt_retry">Réessayer</button>
   </div>
 </div>
 
@@ -3367,7 +3367,7 @@
     <div style="position:sticky;top:0;background:var(--wh);z-index:2;border-radius:24px 24px 0 0;border-bottom:1px solid var(--bdr)">
       <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px">
-        <div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Filtres</div>
+        <div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em" data-i18n="filter_all_title">Filtres</div>
         <button onclick="closeAllFiltersSheet()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -3377,28 +3377,28 @@
     <div style="padding:0 20px 0">
       <!-- Format -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Format du cours</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_mode_title">Format du cours</div>
         <div style="display:flex;gap:8px" id="afModeRow">
-          <button class="af-pill on" data-val="" onclick="afSetMode('',this)">Tous</button>
+          <button class="af-pill on" data-val="" onclick="afSetMode('',this)" data-i18n="filter_all">Tous</button>
           <button class="af-pill" data-val="presentiel" onclick="afSetMode('presentiel',this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Présentiel
+            <span data-i18n="filter_pres">Présentiel</span>
           </button>
           <button class="af-pill" data-val="visio" onclick="afSetMode('visio',this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-            Visio
+            <span data-i18n="filter_vis">Visio</span>
           </button>
         </div>
       </div>
 
       <!-- Niveau -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Niveau</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_niveau">Niveau</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="afNivRow">
-          <button class="af-pill on" data-val="" onclick="afSetNiv('',this)">Tous</button>
-          <button class="af-pill" data-val="Primaire" onclick="afSetNiv('Primaire',this)">Primaire</button>
-          <button class="af-pill" data-val="Collège" onclick="afSetNiv('Collège',this)">Collège</button>
-          <button class="af-pill" data-val="Lycée" onclick="afSetNiv('Lycée',this)">Lycée</button>
+          <button class="af-pill on" data-val="" onclick="afSetNiv('',this)" data-i18n="filter_all">Tous</button>
+          <button class="af-pill" data-val="Primaire" onclick="afSetNiv('Primaire',this)" data-i18n="filter_niv_prim_s">Primaire</button>
+          <button class="af-pill" data-val="Collège" onclick="afSetNiv('Collège',this)" data-i18n="filter_niv_col_s">Collège</button>
+          <button class="af-pill" data-val="Lycée" onclick="afSetNiv('Lycée',this)" data-i18n="filter_niv_lyc_s">Lycée</button>
           <button class="af-pill" data-val="Bac+1/2" onclick="afSetNiv('Bac+1/2',this)">Bac+1/2</button>
           <button class="af-pill" data-val="Bac+3/4" onclick="afSetNiv('Bac+3/4',this)">Bac+3/4</button>
           <button class="af-pill" data-val="Bac+5" onclick="afSetNiv('Bac+5',this)">Bac+5</button>
@@ -3407,7 +3407,7 @@
 
       <!-- Ville -->
       <div style="padding:18px 0 14px;border-bottom:1px solid var(--bdr)">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Ville</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_ville">Ville</div>
         <div id="afVilleWrap" style="background:var(--wh);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,.10),0 0 0 .5px rgba(0,0,0,.06);display:flex;align-items:center;gap:8px;padding:0 12px;overflow:hidden">
           <svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" width="16" height="16" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <input id="afVilleInput" type="text" placeholder="Ville, code postal…" autocomplete="off"
@@ -3424,7 +3424,7 @@
 
       <!-- Périmètre (visible si ville saisie ou géoloc active) -->
       <div id="afPerimRow" style="display:none;padding:14px 0 0">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Périmètre</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_perimetre">Périmètre</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="af-pill" data-km="2"  onclick="afSetDist(2,this)">2 km</button>
           <button class="af-pill" data-km="5"  onclick="afSetDist(5,this)">5 km</button>
@@ -3437,21 +3437,21 @@
 
       <!-- Tri -->
       <div style="padding:18px 0 14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px">Trier par</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--lite);margin-bottom:10px" data-i18n="filter_sort_by">Trier par</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="afSortRow">
-          <button class="af-pill on" data-val="0" onclick="afSetSort(0,this)">Date</button>
-          <button class="af-pill" data-val="1" onclick="afSetSort(1,this)">Prix</button>
-          <button class="af-pill" data-val="2" onclick="afSetSort(2,this)">Récents</button>
+          <button class="af-pill on" data-val="0" onclick="afSetSort(0,this)" data-i18n="filter_date">Date</button>
+          <button class="af-pill" data-val="1" onclick="afSetSort(1,this)" data-i18n="filter_prix">Prix</button>
+          <button class="af-pill" data-val="2" onclick="afSetSort(2,this)" data-i18n="filter_recent">Récents</button>
         </div>
       </div>
     </div>
 
     <!-- Footer -->
     <div style="padding:12px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));border-top:1px solid var(--bdr);display:flex;gap:10px;position:sticky;bottom:0;background:var(--wh)">
-      <button onclick="afResetAll()" style="flex:1;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">
+      <button onclick="afResetAll()" style="flex:1;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer" data-i18n="filter_reinit">
         Réinitialiser
       </button>
-      <button onclick="closeAllFiltersSheet()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3)">
+      <button onclick="closeAllFiltersSheet()" style="flex:2;background:var(--or);color:#fff;border:none;border-radius:50px;padding:13px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,43,.3)" data-i18n="filter_voir_cours">
         Voir les cours
       </button>
     </div>

@@ -211,11 +211,11 @@
       </div>
       <p class="lscreen-sub" data-i18n="login_subtitle">Trouvez un cours près de vous</p>
 
-      <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email"></div>
+      <div class="lfield"><label>Email</label><input id="lEm" type="email" placeholder="votre@email.com" autocomplete="email" aria-label="Adresse email"></div>
       <div class="lfield"><label data-i18n="login_pw_label">Mot de passe</label>
         <div style="position:relative">
-          <input id="lPw" type="password" placeholder="••••••••" autocomplete="current-password" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 44px 12px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s,box-shadow .18s;background:var(--wh);" onfocus="this.style.borderColor='var(--or)';this.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)'" onblur="this.style.borderColor='var(--bdr)';this.style.boxShadow='none'">
-          <span class="pw-toggle" onclick="togglePw('lPw',this)">
+          <input id="lPw" type="password" placeholder="••••••••" autocomplete="current-password" aria-label="Mot de passe" style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 44px 12px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s,box-shadow .18s;background:var(--wh);" onfocus="this.style.borderColor='var(--or)';this.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)'" onblur="this.style.borderColor='var(--bdr)';this.style.boxShadow='none'">
+          <span class="pw-toggle" onclick="togglePw('lPw',this)" role="button" aria-label="Afficher/masquer le mot de passe">
             <svg id="lPwIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </span>
         </div>
@@ -250,14 +250,14 @@
       <div class="lsep" data-i18n="login_or">ou</div>
 
       <div class="rg">
-        <div class="lfield"><label>Prénom</label><input id="rPr" type="text" placeholder="Marc" autocomplete="given-name" oninput="_checkRegBtn()"></div>
-        <div class="lfield"><label>Nom</label><input id="rNm" type="text" placeholder="Rousseau" autocomplete="family-name" oninput="_checkRegBtn()"></div>
+        <div class="lfield"><label>Prénom</label><input id="rPr" type="text" placeholder="Marc" autocomplete="given-name" aria-label="Prénom" oninput="_checkRegBtn()"></div>
+        <div class="lfield"><label>Nom</label><input id="rNm" type="text" placeholder="Rousseau" autocomplete="family-name" aria-label="Nom de famille" oninput="_checkRegBtn()"></div>
       </div>
-      <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com" autocomplete="email" oninput="_checkRegBtn()"></div>
+      <div class="lfield"><label>Email</label><input id="rEm" type="email" placeholder="votre@email.com" autocomplete="email" aria-label="Adresse email" oninput="_checkRegBtn()"></div>
       <div class="lfield">
         <label>Mot de passe</label>
         <div style="position:relative">
-          <input id="rPw" type="password" placeholder="Min. 6 caractères" autocomplete="new-password"
+          <input id="rPw" type="password" placeholder="Min. 6 caractères" autocomplete="new-password" aria-label="Mot de passe (minimum 6 caractères)"
             oninput="updatePwStrength(this.value);_checkRegBtn()"
             style="width:100%;border:1.5px solid var(--bdr);border-radius:12px;padding:12px 44px 12px 14px;font-family:inherit;font-size:16px;outline:none;transition:border .18s,box-shadow .18s;background:var(--wh);"
             onfocus="this.style.borderColor='var(--or)';this.style.boxShadow='0 0 0 3px rgba(255,107,43,.1)'"
@@ -547,26 +547,26 @@
   <header class="topbar">
     <div class="tlogo" onclick="goExplore()" style="cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
     <span class="ttitle" style="cursor:pointer" onclick="goExplore()">CoursPool</span>
-    <div class="sw"><span class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" data-i18n-ph="exp_search_ph" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
+    <div class="sw"><span class="si" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input id="srch" type="text" role="searchbox" aria-label="Rechercher des cours" onfocus="expandSearch()" onblur="setTimeout(collapseSearch,200)" data-i18n-ph="exp_search_ph" placeholder="Maths, Python, anglais…" oninput="doFilter()"></div>
     <!-- Nav desktop -->
     <nav class="topbar-nav" id="topbarNav">
-      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div class="tnav-item active" id="tnavExp" onclick="navTo('exp')" role="button" aria-label="Explorer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Explorer
       </div>
-      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <div class="tnav-item" id="tnavMsg" onclick="navTo('msg')" role="button" aria-label="Messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         Messages
-        <div class="tnav-badge" id="tnavBadge"></div>
+        <div class="tnav-badge" id="tnavBadge" aria-live="polite"></div>
       </div>
-      <div class="tnav-item" id="tnavMes" onclick="goMesCoursPage()" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      <div class="tnav-item" id="tnavMes" onclick="goMesCoursPage()" style="display:none" role="button" aria-label="Mes cours">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
         Mes cours
       </div>
     </nav>
     <div class="topbar-right">
-      <button class="btnadd" id="btnProposer" onclick="openCrStep()" style="display:none!important"></button>
-      <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte">?</div>
+      <button class="btnadd" id="btnProposer" onclick="openCrStep()" aria-label="Proposer un cours" style="display:none!important"></button>
+      <div class="tav-btn" id="tav" onclick="goAccount()" title="Mon compte" role="button" aria-label="Mon compte">?</div>
     </div>
   </header>
 
@@ -714,7 +714,7 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_niv_title">Niveau d'études</div>
-            <button onclick="closeNivFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
+            <button onclick="closeNivFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="nivFilterList">
             <div class="niv-fchip on" onclick="setNivFilter('',this)" data-i18n="filter_niv_all">Tous les niveaux</div>
@@ -734,7 +734,7 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_mode_title">Format du cours</div>
-            <button onclick="closeModeFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+            <button onclick="closeModeFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="modeFilterList">
             <div class="niv-fchip on" onclick="setModeFilter('',this)" data-i18n="filter_mode_all">Tous les formats</div>
@@ -756,7 +756,7 @@
         <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));animation:mi .25s ease">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_per_title">Période</div>
-            <button onclick="closeDateFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+            <button onclick="closeDateFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div id="dateFilterList">
             <div style="background:var(--wh);border-radius:16px;overflow:hidden;margin-bottom:12px">
@@ -785,7 +785,7 @@
           <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
             <div style="font-size:17px;font-weight:800" data-i18n="filter_dist_title">Distance</div>
-            <button onclick="closeDistFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+            <button onclick="closeDistFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
           </div>
           <div style="background:var(--wh);border-radius:16px;overflow:hidden" id="distFilterList">
             <div class="niv-fchip" onclick="setDistFilter(2,this)">2 km <span style="font-size:11px;color:var(--lite);font-weight:400" data-i18n="filter_dist_2km">Quartier</span></div>
@@ -804,7 +804,7 @@
             <div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 16px"></div>
             <div style="display:flex;align-items:center;justify-content:space-between">
               <div style="font-size:17px;font-weight:800" data-i18n="filter_mat_title">Matière</div>
-              <button onclick="closeMatFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
+              <button onclick="closeMatFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--mid)">✕</button>
             </div>
           </div>
           <div style="overflow-y:auto;flex:1;min-height:0;padding:0 16px;padding-bottom:max(100px,calc(env(safe-area-inset-bottom,0px) + 90px))">
@@ -822,8 +822,8 @@
               <div style="font-size:19px;font-weight:800;letter-spacing:-.03em" data-i18n="filter_bar_title">Ma barre de filtres</div>
               <div style="font-size:13px;color:var(--lite);margin-top:3px" data-i18n="filter_bar_sub">Tape sur un filtre pour l'ajouter ou le retirer</div>
             </div>
-            <button onclick="closeAddFilter()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;margin-top:2px">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button onclick="closeAddFilter()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--lite);flex-shrink:0;margin-top:2px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
           <!-- Dynamic toggle grid rendered by renderBarConfig() -->
@@ -887,8 +887,8 @@
             <div data-i18n="filter_add_custom" style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Ajouter une matière personnalisée</div>
             <div style="display:flex;gap:8px">
               <input id="filterInput" class="fi3" style="flex:1;font-size:15px;border-radius:14px;background:var(--bg);border:none;padding:13px 16px;outline:none;font-family:inherit;-webkit-appearance:none;color:var(--ink)" data-i18n-ph="filter_custom_ph" placeholder="Ex: architecture, latin…" oninput="previewCustomFilter(this.value)" onkeydown="if(event.key==='Enter'){addBarCustomFilter();}">
-              <button onclick="requestGeoloc();closeAddFilter();" title="Autour de moi" style="background:var(--bg);color:var(--or);border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 0.5px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2" opacity=".4"/></svg></button>
-              <button onclick="addBarCustomFilter()" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28);-webkit-tap-highlight-color:transparent">+</button>
+              <button onclick="requestGeoloc();closeAddFilter();" title="Autour de moi" aria-label="Rechercher autour de moi" style="background:var(--bg);color:var(--or);border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;box-shadow:0 0 0 0.5px rgba(0,0,0,.08)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 2" opacity=".4"/></svg></button>
+              <button onclick="addBarCustomFilter()" aria-label="Ajouter un filtre personnalisé" style="background:var(--or);color:#fff;border:none;border-radius:14px;padding:0 18px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0;height:46px;box-shadow:0 4px 12px rgba(255,107,43,.28);-webkit-tap-highlight-color:transparent">+</button>
             </div>
             <!-- Suggestion alias filtre -->
             <div id="filterAliasSuggestion" style="display:none;align-items:center;gap:8px;background:var(--orp);border-radius:10px;padding:8px 12px;margin-top:10px;border:1px solid rgba(255,107,43,.2)">
@@ -2616,7 +2616,7 @@
     <!-- Titre -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 16px">
       <span id="pickerTitle" style="font-size:17px;font-weight:700;color:var(--ink)"></span>
-      <button onclick="closePicker()" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid);font-size:18px">✕</button>
+      <button onclick="closePicker()" aria-label="Fermer" style="background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid);font-size:18px">✕</button>
     </div>
     <!-- Options -->
     <div id="pickerOptions" style="max-height:60vh;overflow-y:auto;padding:0 12px 8px"></div>
@@ -3005,51 +3005,51 @@
 <!-- BARRE DE NAVIGATION BAS -->
 <nav class="bnav" id="bnav">
 
-  <div class="bni on" id="bniExp" onclick="navTo('exp')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <div class="bni on" id="bniExp" onclick="navTo('exp')" role="button" aria-label="Explorer" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span class="bni-lbl" data-i18n="bnav_explorer">Explorer</span>
   </div>
 
-  <div class="bni" id="bniFav" onclick="navTo('fav')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+  <div class="bni" id="bniFav" onclick="navTo('fav')" role="button" aria-label="Favoris" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
     <div class="bni-badge" id="bnavFavBadge" style="background:var(--or)"></div>
     <span class="bni-lbl" data-i18n="bnav_favoris">Favoris</span>
   </div>
 
-  <div class="bni bni-fab" id="bniAdd" onclick="openCrStep()" style="display:none;">
-    <div class="bni-add-circle">
+  <div class="bni bni-fab" id="bniAdd" onclick="openCrStep()" style="display:none;" role="button" aria-label="Créer un cours" tabindex="0">
+    <div class="bni-add-circle" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" width="22" height="22" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
     <span class="bni-fab-lbl" data-i18n="bnav_creer">Créer</span>
   </div>
 
-  <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}">
-    <div class="bni-back" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
-    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    <div class="bni-badge" id="bnavBadge"></div>
+  <div class="bni" id="bniMsg" onclick="if(g('bnav').classList.contains('conv-mode')){if(typeof closeMsgConv==='function')closeMsgConv();}else{navTo('msg');}" role="button" aria-label="Messages" tabindex="0">
+    <div class="bni-back" style="display:none" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="23" height="23"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <svg class="bni-msg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <div class="bni-badge" id="bnavBadge" aria-live="polite"></div>
     <span class="bni-lbl bni-msg-lbl" data-i18n="bnav_messages">Messages</span>
   </div>
 
-  <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+  <div class="bni bni-mes" id="bniMes" onclick="navTo('mes')" role="button" aria-label="Mes cours" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
     <span class="bni-lbl" data-i18n="bnav_mes_cours">Mes cours</span>
   </div>
 
-  <div class="bni" id="bniProfs" onclick="navTo('profs')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+  <div class="bni" id="bniProfs" onclick="navTo('profs')" role="button" aria-label="Mes profs" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
     <span class="bni-lbl" data-i18n="bnav_mes_profs">Mes Profs</span>
   </div>
 
-  <div class="bni" id="bniEsp" onclick="goEspProf()" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+  <div class="bni" id="bniEsp" onclick="goEspProf()" style="display:none" role="button" aria-label="Mon espace prof" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="23" height="23" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
     <span class="bni-lbl" data-i18n="acc_mon_espace">Mon Espace</span>
   </div>
 
 </nav>
 
 <!-- Bouton retour messagerie iPad (conversation ouverte, ≥768px uniquement) -->
-<button id="bnavIpadBack" onclick="_bnavIpadBackAction()">
-  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+<button id="bnavIpadBack" onclick="_bnavIpadBackAction()" aria-label="Retour à la liste des conversations">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
 </button>
 
 <!-- PAYMENT SHEET -->
