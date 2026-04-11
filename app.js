@@ -14237,6 +14237,10 @@ function _buildVisioHTML(){
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
     +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
+    // Languette de rappel : visible quand le panneau est fermé, cliquable pour rouvrir
+    +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:rgba(255,107,43,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="11" height="11"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+    +'</div>'
     +'</div>'
     // Reactions panel (above controls)
     +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:rgba(10,10,20,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
@@ -14798,6 +14802,9 @@ function _vToggleComment(){
   if(panel){panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_vCommentOpen?'translateX(0)':'translateX(100%)';}
   var btn=g('_vCommentBtn');
   if(btn){btn.style.background=_vCommentOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_vCommentOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+  // Languette de rappel : visible uniquement quand le panneau est fermé
+  var tab=g('_vCommentTab');
+  if(tab){tab.style.opacity=_vCommentOpen?'0':'1';tab.style.pointerEvents=_vCommentOpen?'none':'auto';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
 }
 function _vInitCommentSwipe(){
@@ -14823,6 +14830,7 @@ function _vInitCommentSwipe(){
       panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(100%)';
       var btn=g('_vCommentBtn');if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
+      var tab=g('_vCommentTab');if(tab){tab.style.opacity='1';tab.style.pointerEvents='auto';}
     }else{
       panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(0)';
