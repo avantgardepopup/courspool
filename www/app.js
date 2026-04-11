@@ -3880,6 +3880,7 @@ function doFilter(){
     var _mob=g('mobSearchInput');if(_mob)_mob.value='';
     if(typeof collapseSearch==='function')collapseSearch();
     if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
+    else if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()){toast('Démo visio disponible uniquement dans le navigateur','');}
     else{_vOpenDemo();}
     return;
   }
