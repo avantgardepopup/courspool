@@ -213,6 +213,22 @@ const SOURCE = {
   txt_oui:           'Oui',
   txt_non:           'Non',
 
+  // Paiement — formulaire + popups
+  pay_label_resa:    'Réservation',
+  pay_par_place:     '/ place',
+  pay_secure_msg:    'Paiement sécurisé par Stripe · Chiffrement SSL 256-bit',
+  pay_form_loading:  'Chargement du formulaire…',
+  pay_locking:       'Réservation en cours',
+  pay_locking_sub:   'Une place est en cours de réservation, réessayez dans quelques instants.',
+  pay_payer:         'Payer',
+  pay_confirmed_title: 'Paiement confirmé !',
+  pay_adresse_label: 'Adresse du cours',
+  pay_add_cal:       'Ajouter au calendrier',
+  pay_super:         'Super !',
+  pay_failed_title:  'Paiement annulé',
+  pay_failed_sub:    'Votre paiement n\'a pas abouti. Aucun montant n\'a été débité.',
+  pay_stripe_refresh_sub: 'Finalisez votre configuration bancaire pour recevoir les paiements.',
+
   // Favoris
   fav_saved:         'Cours sauvegardés',
   fav_profs:         'Professeurs suivis',

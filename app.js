@@ -2497,7 +2497,7 @@ async function checkStripeReturn(){
     }
     if(params.get('stripe_refresh')){
       window.history.replaceState({},'',window.location.pathname);
-      toast(t('t_setup_required'),'Finalisez votre configuration bancaire pour recevoir les paiements');
+      toast(t('t_setup_required'),t('pay_stripe_refresh_sub'));
       return;
     }
     // Deep link ?cours=ID — ouvrir directement la fiche du cours
@@ -2579,7 +2579,7 @@ function _checkResumePayment(){
             var pe=_payElements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
             var el=g('stripe-payment-element');if(el){el.innerHTML='';pe.mount('#stripe-payment-element');}
             var btn=g('payBtn'),btnTxt=g('payBtnTxt');
-            if(cours){var pp=cours.sp>0?Math.ceil(cours.tot/cours.sp):0;g('payCoursTitle').textContent=cours.titre;g('payAmount').textContent=pp+'€';if(btnTxt)btnTxt.textContent='Payer '+pp+'€';}
+            if(cours){var pp=cours.sp>0?Math.ceil(cours.tot/cours.sp):0;g('payCoursTitle').textContent=cours.titre||cours.title||'';g('payAmount').textContent=pp+'€';if(btnTxt)btnTxt.textContent=t('pay_payer')+' '+pp+'€';}
             pe.on('ready',function(){if(btn){btn.disabled=false;btn.style.opacity='1';}});
           }
         }
@@ -9710,14 +9710,14 @@ async function openPaymentSheet(id,pourAmi){
   if(loader)loader.style.display='none';
   g('payCoursTitle').textContent=c.title;
   g('payAmount').textContent=pp+'€';
-  g('stripe-payment-element').innerHTML='<div style="text-align:center;padding:28px;color:var(--lite);font-size:13px">Chargement du formulaire…</div>';
+  g('stripe-payment-element').innerHTML='<div style="text-align:center;padding:28px;color:var(--lite);font-size:13px">'+t('pay_form_loading')+'</div>';
   sheet.style.display='flex';
   document.body.style.overflow='hidden';
   try{
     var r=await fetch(API+'/stripe/payment-intent',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:id,user_id:user.id,pour_ami:pourAmi})});
     var data=await r.json();
     if(data.error){
-      if(data.locking){toast('Réservation en cours','Une place est en cours de réservation, réessayez dans quelques minutes.',true);}
+      if(data.locking){toast(t('pay_locking'),t('pay_locking_sub'),true);}
       else{toast(t('t_error'),data.error,true);}
       closePaymentSheet();return;
     }
@@ -9739,7 +9739,7 @@ async function openPaymentSheet(id,pourAmi){
     pe.mount('#stripe-payment-element');
     pe.on('ready',function(){
       if(btn){btn.disabled=false;btn.style.opacity='1';}
-      if(btnTxt)btnTxt.textContent=t('nc_prix')+' '+pp+'€';
+      if(btnTxt)btnTxt.textContent=t('pay_payer')+' '+pp+'€';
     });
   }catch(e){
     if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'open_payment_sheet'});
@@ -9804,6 +9804,11 @@ async function submitPayment(){
         if(loader)loader.style.display='none';
         if(btnTxt)btnTxt.textContent=t('txt_retry');
       }
+    } else {
+      // pi absent ou statut inattendu (requires_action, processing…) — débloquer le bouton
+      btn.disabled=false;btn.style.opacity='1';
+      if(loader)loader.style.display='none';
+      if(btnTxt)btnTxt.textContent=t('txt_retry');
     }
   }catch(e){
     if(typeof sentryCaptureException==='function')sentryCaptureException(e,{action:'submit_payment'});

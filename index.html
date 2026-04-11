@@ -3064,11 +3064,11 @@
       <div style="padding:16px 22px 18px;border-bottom:1px solid var(--bdr)">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Réservation</div>
+            <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px" data-i18n="pay_label_resa">Réservation</div>
             <div style="font-size:15px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="payCoursTitle">…</div>
             <div style="display:inline-flex;align-items:baseline;gap:4px;background:var(--orp);border-radius:10px;padding:5px 11px">
               <span style="font-size:21px;font-weight:800;color:var(--or);letter-spacing:-.03em" id="payAmount"></span>
-              <span style="font-size:11.5px;font-weight:600;color:var(--or);opacity:.75">/ place</span>
+              <span style="font-size:11.5px;font-weight:600;color:var(--or);opacity:.75" data-i18n="pay_par_place">/ place</span>
             </div>
           </div>
           <button onclick="closePaymentSheet()" style="width:34px;height:34px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;color:var(--mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
@@ -3089,7 +3089,7 @@
         <span class="cp-loader" style="display:none" id="payLoader"></span>
         <span id="payBtnTxt">Chargement…</span>
       </button>
-      <p style="text-align:center;font-size:11.5px;color:var(--lite);margin:0;font-weight:500">Paiement sécurisé par <strong style="color:var(--mid);font-weight:700">Stripe</strong> · Chiffrement SSL 256-bit</p>
+      <p style="text-align:center;font-size:11.5px;color:var(--lite);margin:0;font-weight:500" data-i18n="pay_secure_msg">Paiement sécurisé par Stripe · Chiffrement SSL 256-bit</p>
     </div>
 
   </div>
@@ -3162,14 +3162,14 @@
     <div style="width:72px;height:72px;background:#F0FDF4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement confirmé !</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px" data-i18n="pay_confirmed_title">Paiement confirmé !</div>
     <div id="popupPaidMsg" style="font-size:14px;color:#555;margin-bottom:16px;line-height:1.5">Votre place est réservée. Un email de confirmation vous a été envoyé.</div>
     <div id="popupPaidAdresse" style="display:none;background:#FFF7F0;border-radius:12px;padding:12px 14px;margin-bottom:16px;text-align:left">
-      <div style="font-size:11px;font-weight:700;color:#FF6B2B;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px">Adresse du cours</div>
+      <div style="font-size:11px;font-weight:700;color:#FF6B2B;letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px" data-i18n="pay_adresse_label">Adresse du cours</div>
       <div id="popupPaidAdresseText" style="font-size:13px;color:#333;line-height:1.5"></div>
     </div>
-    <button id="popupPaidCalBtn" onclick="if(window._paidCoursId)addToCalendar(window._paidCoursId)" style="width:100%;background:none;color:#FF6B2B;border:1.5px solid #FF6B2B;border-radius:14px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>Ajouter au calendrier</button>
-    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Super ! 🎉</button>
+    <button id="popupPaidCalBtn" onclick="if(window._paidCoursId)addToCalendar(window._paidCoursId)" style="width:100%;background:none;color:#FF6B2B;border:1.5px solid #FF6B2B;border-radius:14px;padding:13px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg><span data-i18n="pay_add_cal">Ajouter au calendrier</span></button>
+    <button onclick="document.getElementById('popupPaid').style.display='none'" style="width:100%;background:#FF6B2B;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer" data-i18n="pay_super">Super !</button>
   </div>
 </div>
 
@@ -3179,9 +3179,9 @@
     <div style="width:72px;height:72px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
       <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" width="36" height="36"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:8px">Paiement annulé</div>
-    <div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5">Votre paiement n'a pas abouti. Aucun montant n'a été débité.</div>
-    <button onclick="document.getElementById('popupFailed').style.display='none'" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer">Réessayer</button>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px" data-i18n="pay_failed_title">Paiement annulé</div>
+    <div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5" data-i18n="pay_failed_sub">Votre paiement n'a pas abouti. Aucun montant n'a été débité.</div>
+    <button onclick="document.getElementById('popupFailed').style.display='none'" style="width:100%;background:#EF4444;color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer" data-i18n="txt_retry">Réessayer</button>
   </div>
 </div>
 
