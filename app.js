@@ -14082,12 +14082,12 @@ function _demoAudioLoop(){
     var ring=g('_vsring-demo-local');
     if(ring&&!_localMuted){
       var c=Math.min(avg,90);
-      var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
-      var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
-      var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
-      var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
-      var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
-      ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
+      var scale=1+c/90*0.18;         // 1.0 → 1.18 : reste collé à l'avatar
+      var sp1=(c/90*6).toFixed(1);   // ring spread 0→6px (fin, proche)
+      var gl=(c/90*18).toFixed(0);   // glow 0→18px
+      var a1=(0.55+c/90*0.35).toFixed(2); // opacité ring 0.55→0.90
+      var a2=(0.10+c/90*0.22).toFixed(2); // opacité glow 0.10→0.32
+      ring.style.transform='scale('+scale.toFixed(3)+')';
       ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
       ring.style.opacity=avg>6?'1':'0';
     }else if(ring){
