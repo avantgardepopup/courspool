@@ -14914,18 +14914,16 @@ var _BC=['#1F2937','#6B7280','#EF4444','#F97316','#3B82F6','#22C55E','#8B5CF6','
 function _buildBoardInner(){
   var NAV='#2c4f8a';
   var ib='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
+  var glassBtn='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:rgba(255,255,255,.9);width:36px;height:36px;border-radius:50%;flex-shrink:0;transition:background .15s;';
+  var glassSep='width:1px;height:20px;background:rgba(255,255,255,.18);flex-shrink:0;';
   return ''
     // Top nav bar (dark blue, GoodNotes style)
     // Outer wrapper: full dark blue background including status bar area
     +'<div style="background:'+NAV+';flex-shrink:0;">'
     // Safe-area spacer: always at least 20px so status bar is never hidden
     +'<div style="height:max(env(safe-area-inset-top,20px),20px);"></div>'
-    // Actual nav content row (fixed 46px)
-    +'<div style="display:flex;align-items:stretch;height:46px;padding:0 2px;">'
-    +'<button onclick="_vCloseBoard()" style="'+ib+'padding:0 10px;gap:3px;">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>'
-    +'<span style="font-size:11.5px;font-weight:600;">Cours</span></button>'
-    +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
+    // Actual nav content row (fixed 46px) — sans bouton retour pour plus d'espace aux onglets
+    +'<div style="display:flex;align-items:stretch;height:46px;padding:0 6px;">'
     // Chrome-style page tabs strip (scrollable quand beaucoup de pages)
     +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
@@ -14934,13 +14932,22 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button>'
     +'<button id="_bRd" onclick="_boardRedo()" style="'+ib+'width:36px;" title="Refaire">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>'
-    +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
-    +(_isOwner?'<button onclick="_vTimerOpen()" style="'+ib+'width:36px;" title="Minuteur">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 16"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="12" y1="2" x2="12" y2="5"/></svg></button>':'')
-    +'<button onclick="_boardExport()" style="'+ib+'width:36px;" title="Exporter PNG">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
+    // ── Floating glass pill : ← retour | minuteur | exporter ──
+    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;z-index:150;display:flex;align-items:center;gap:2px;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;padding:4px 6px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
+    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'" title="Retour">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
+    +(_isOwner
+      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
+      +'<button onclick="_vTimerOpen()" style="'+glassBtn+'" title="Minuteur">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 16"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="12" y1="2" x2="12" y2="5"/></svg></button>'
+      :''
+    )
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'</div>'  // close floating bar
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
