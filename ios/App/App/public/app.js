@@ -14059,15 +14059,7 @@ function _vOpenDemo(){
   ];
   fakes.forEach(function(f){grid.appendChild(_vBuildDemoTile(f));});
   _vApplyLayout();
-  // Détection audio : bulle + ring réactif au volume
   _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
-  try{
-    if(navigator.mediaDevices&&typeof navigator.mediaDevices.getUserMedia==='function'){
-      navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
-        _startDemoAudio(stream);
-      }).catch(function(){/* pas de micro → bulle fixe */});
-    }
-  }catch(e){/* environnement sans mediaDevices (WKWebView non configuré) */}
   haptic(1);
 }
 
