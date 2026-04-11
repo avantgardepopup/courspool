@@ -482,7 +482,7 @@ function _buildFavCard2Col(c,idx){
     +'<div class="fav2-sep"></div>'
     +'<div class="fav2-foot">'
     +(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
-    +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--lite)">Voir<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>'
+    +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--lite)">'+t('fav_voir')+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>'
     +'</div>'
     +'</div>';
   wrap.appendChild(div);
@@ -2951,7 +2951,7 @@ function buildAccLists(){
       // Toujours vérifier les données fraîches — _fetchProf retourne immédiatement si déjà _fresh
       _fetchProf(id);
       var cours=C.filter(function(c){return c.pr===id;});
-      var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).join(', '):'';
+      var matieres=cours.length?[...new Set(cours.map(function(c){return c.subj;}))].slice(0,2).map(subjL).join(', '):'';
       var _now2=Date.now();
       var prochainCours=cours.filter(function(c){var _t=c.dt_iso?new Date(c.dt_iso).getTime():(c.dt?new Date(c.dt).getTime():0);return c.fl<c.sp&&(!_t||_t>_now2);}).length;
       var av=p.photo?'<img src="'+esc(p.photo)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s" onload="this.style.opacity=1">':
@@ -3873,6 +3873,16 @@ function doFilter(){
   }
   val=val.trim();
 
+  // ── DEBUG VISIO : taper "##visio" (démo UI) ou "##visio URL" (vraie salle) ──
+  if(val.startsWith('##visio')){
+    var _vRaw=val.slice(7).trim();
+    var _srch=g('srch');if(_srch)_srch.value='';
+    var _mob=g('mobSearchInput');if(_mob)_mob.value='';
+    if(typeof collapseSearch==='function')collapseSearch();
+    if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
+    else{_vOpenDemo();}
+    return;
+  }
   checkCodeInSearch(val);
   if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);
@@ -4752,7 +4762,7 @@ function _buildBadges(p,pid){
   if(_isVrf)h+='<span onclick="showBadgeInfo(\'identite\')" class="prof-badge prof-badge-vrf">'+icoId+t('mp_identite')+'</span>';
   if(_isDip)h+='<span onclick="showBadgeInfo(\'diplome\')" class="prof-badge prof-badge-dip">'+icoDip+t('mp_diplome')+'</span>';
   if(_isCas)h+='<span onclick="showBadgeInfo(\'confiance\')" class="prof-badge prof-badge-cas">'+icoShld+t('mp_confiance')+'</span>';
-  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">'+icoFol+'Suivi</span>';
+  if(fol.has(pid))h+='<span class="prof-badge prof-badge-fol">'+icoFol+t('mp_suivi')+'</span>';
   return h;
 }
 
@@ -4971,7 +4981,7 @@ function _tpRenderMatieres(list,primary){
   chips.innerHTML=list.map(function(m){
     var mat=findMatiere(m);
     var col=mat?mat.color:'#9CA3AF';
-    return'<span style="background:'+col+';color:#fff;border-radius:50px;padding:5px 13px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,.15)">'+esc(m)+'</span>';
+    return'<span style="background:'+col+';color:#fff;border-radius:50px;padding:5px 13px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:inline-block;box-shadow:0 2px 6px rgba(0,0,0,.15)">'+esc(mat?mL(mat):m)+'</span>';
   }).join('');
   sect.style.display='block';
 }
@@ -5229,19 +5239,19 @@ function espRegenCode(){
   var btn=document.querySelector('[onclick="espRegenCode()"]');
   if(_espCurrentCode&&btn&&btn.dataset.confirm!=='1'){
     btn.dataset.confirm='1';
-    btn.textContent='Confirmer ?';
+    btn.textContent=t('esp_code_confirm');
     btn.style.background='rgba(239,68,68,.15)';
     btn.style.color='#EF4444';
     setTimeout(function(){
       if(btn.dataset.confirm==='1'){
         btn.dataset.confirm='';
-        btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';
+        btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> '+t('esp_code_nouveau');
         btn.style.background='';btn.style.color='';
       }
     },3000);
     return;
   }
-  if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Nouveau';btn.style.background='';btn.style.color='';}
+  if(btn){btn.dataset.confirm='';btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> '+t('esp_code_nouveau');btn.style.background='';btn.style.color='';}
   if(el)el.textContent='⋯';
   fetch(API+'/teacher/generate-code',{method:'POST',headers:apiH()}).then(function(r){return r.json();}).then(function(d){
     if(d.error){if(el)el.textContent='—';toast(t('t_error'),d.error.slice(0,60));return;}
@@ -5259,8 +5269,8 @@ function espCopyCode(){
 
 function espShareCode(){
   if(!_espCurrentCode){toast(t('t_generate_first'),'');return;}
-  var txt='Rejoins mon espace sur CoursPool avec le code : '+_espCurrentCode+'\nhttps://courspool.vercel.app';
-  if(navigator.share){navigator.share({title:'Mon code CoursPool',text:txt}).catch(function(){});}
+  var txt=t('esp_share_text').replace('{code}',_espCurrentCode);
+  if(navigator.share){navigator.share({title:t('esp_share_title'),text:txt}).catch(function(){});}
   else{try{navigator.clipboard.writeText(txt);toast(t('t_link_copied'),'');}catch(e){toast(_espCurrentCode,'Copie ce code');}}
 }
 
@@ -5448,17 +5458,17 @@ function openEspEditor(mode){
   if(ed){ed.innerHTML='';}
   var _ctr=g('espAnnCounter');if(_ctr){_ctr.textContent='0 / 1500';_ctr.style.color='var(--lite)';}
   if(ti){ti.value='';ti.style.display=_espEdMode==='fiche'?'block':'none';}
-  if(lbl)lbl.textContent=_espEdMode==='fiche'?'Nouvelle fiche de cours':'Nouvelle publication';
+  if(lbl)lbl.textContent=_espEdMode==='fiche'?t('esp_ed_fiche_title'):t('esp_ed_pub_title');
   var badge=g('espEdTypeBadge');
   if(badge){
-    badge.textContent=_espEdMode==='fiche'?'Fiche de cours':'Publication';
+    badge.textContent=_espEdMode==='fiche'?t('esp_badge_fiche'):t('esp_badge_pub');
     badge.style.background=_espEdMode==='fiche'?'rgba(16,185,129,.12)':'rgba(59,130,246,.1)';
     badge.style.color=_espEdMode==='fiche'?'#059669':'#3182CE';
   }
   var btn=g('espEdPublishBtn');
-  if(btn)btn.textContent=_espEdMode==='fiche'?'Enregistrer':'Publier';
+  if(btn)btn.textContent=_espEdMode==='fiche'?t('esp_enregistrer'):t('esp_publier');
   var ed2=g('espAnnEditor');
-  if(ed2)ed2.setAttribute('data-placeholder',_espEdMode==='fiche'?'Contenu de la fiche…':'Écris quelque chose pour tes élèves…');
+  if(ed2)ed2.setAttribute('data-placeholder',_espEdMode==='fiche'?t('esp_fiche_content_ph'):t('esp_pub_placeholder'));
   el.style.display='flex';
   // Toolbar en dehors du bdEspEditor — la rendre visible
   _espKbH=0;
@@ -5848,25 +5858,25 @@ function openPubSettings(id,currentAcc){
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding-bottom:max(24px,env(safe-area-inset-bottom,0px));overflow:hidden';
   var isPublic=currentAcc==='enrolled';
   sheet.innerHTML='<div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>'
-    +'<div style="font-size:13px;font-weight:700;color:var(--lite);text-align:center;padding:16px 24px 8px;text-transform:uppercase;letter-spacing:.06em">Réglages de la publication</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--lite);text-align:center;padding:16px 24px 8px;text-transform:uppercase;letter-spacing:.06em">'+t('pub_settings_title')+'</div>'
     +'<div style="padding:0 12px 8px">'
     +'<button onclick="pubSetVisibility(\''+escH(id)+'\',\'enrolled\');this.closest(\'[style*=fixed]\').remove();" style="width:100%;padding:16px;display:flex;align-items:center;gap:14px;background:'+(isPublic?'rgba(255,107,43,.07)':'transparent')+';border:none;border-radius:16px;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:40px;height:40px;border-radius:12px;background:'+(isPublic?'rgba(255,107,43,.12)':'var(--bg)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="'+(isPublic?'var(--or)':'var(--mid)')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>'
-    +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">Visible par tous</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Tous tes élèves inscrits peuvent lire</div></div>'
+    +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('pub_visible_all')+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+t('pub_visible_all_sub')+'</div></div>'
     +(isPublic?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>':'')
     +'</button>'
     +'<button onclick="pubSetVisibility(\''+escH(id)+'\',\'private\');this.closest(\'[style*=fixed]\').remove();" style="width:100%;padding:16px;display:flex;align-items:center;gap:14px;background:'+(!isPublic?'rgba(255,107,43,.07)':'transparent')+';border:none;border-radius:16px;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:40px;height:40px;border-radius:12px;background:'+(!isPublic?'rgba(255,107,43,.12)':'var(--bg)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="'+(!isPublic?'var(--or)':'var(--mid)')+'" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>'
-    +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">Privé (moi seul)</div><div style="font-size:12px;color:var(--lite);margin-top:2px">Seul toi peux voir cette publication</div></div>'
+    +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('pub_private_label')+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+t('pub_private_sub')+'</div></div>'
     +(!isPublic?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>':'')
     +'</button>'
     +'<div style="height:1px;background:var(--bdr);margin:4px 0 8px"></div>'
     +'<button onclick="espDeleteAnn(\''+escH(id)+'\');this.closest(\'[style*=fixed]\').remove();" style="width:100%;padding:14px 16px;display:flex;align-items:center;gap:14px;background:transparent;border:none;border-radius:16px;cursor:pointer;font-family:inherit;text-align:left;-webkit-tap-highlight-color:transparent">'
     +'<div style="width:40px;height:40px;border-radius:12px;background:rgba(239,68,68,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" width="18" height="18"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></div>'
-    +'<div style="font-size:15px;font-weight:700;color:#EF4444">Supprimer</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#EF4444">'+t('pub_delete')+'</div>'
     +'</button>'
     +'</div>'
-    +'<div style="padding:0 12px"><button onclick="this.closest(\'[style*=fixed]\').remove();" style="width:100%;padding:15px;background:var(--bg);border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:600;color:var(--mid);cursor:pointer">Annuler</button></div>';
+    +'<div style="padding:0 12px"><button onclick="this.closest(\'[style*=fixed]\').remove();" style="width:100%;padding:15px;background:var(--bg);border:none;border-radius:16px;font-family:inherit;font-size:15px;font-weight:600;color:var(--mid);cursor:pointer">'+t('btn_annuler')+'</button></div>';
   bd.appendChild(sheet);document.body.appendChild(bd);
 }
 
@@ -5881,7 +5891,7 @@ function openSondageSheet(){
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'
     +'<div style="width:44px;height:44px;border-radius:13px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>'
     +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+t('sondage_title')+'</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:2px">Pose une question à tes élèves</div></div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:2px">'+t('sondage_question_desc')+'</div></div>'
     +'</div>'
     +'<input id="_sdgQ" type="text" placeholder="'+escH(t('sondage_question_ph'))+'" class="esp-input" style="margin-bottom:14px">'
     +'<div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Options</div>'
@@ -5889,8 +5899,8 @@ function openSondageSheet(){
     +'<input class="esp-input _sdgOpt" placeholder="'+escH(t('sondage_opt1_ph'))+'" style="margin-bottom:8px">'
     +'<input class="esp-input _sdgOpt" placeholder="'+escH(t('sondage_opt2_ph'))+'" style="margin-bottom:8px">'
     +'</div>'
-    +'<button onclick="addSondageOption()" style="background:none;border:1.5px dashed var(--bdr);border-radius:12px;width:100%;padding:10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;margin-bottom:16px;-webkit-tap-highlight-color:transparent">+ Ajouter une option</button>'
-    +'<button onclick="submitSondage(this)" class="esp2-btn-submit" style="width:100%">Publier le sondage</button>'
+    +'<button onclick="addSondageOption()" style="background:none;border:1.5px dashed var(--bdr);border-radius:12px;width:100%;padding:10px;font-family:inherit;font-size:13px;font-weight:600;color:var(--mid);cursor:pointer;margin-bottom:16px;-webkit-tap-highlight-color:transparent">'+t('sondage_add_option')+'</button>'
+    +'<button onclick="submitSondage(this)" class="esp2-btn-submit" style="width:100%">'+t('sondage_publish_btn')+'</button>'
     +'<button onclick="this.closest(\'[style*=rgba]\').remove()" style="width:100%;margin-top:10px;padding:14px;background:transparent;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
   bd.onclick=function(e){if(e.target===bd)bd.remove();};
   bd.appendChild(sheet);document.body.appendChild(bd);
@@ -5984,8 +5994,8 @@ function loadElveBibliotheque(pid){
         +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
         +'</div>'
-        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Bibliothèque vide</div>'
-        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Ton prof n\'a pas encore partagé de contenu.</div></div>';
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">'+t('biblio_empty_title')+'</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t('biblio_empty_sub_eleve')+'</div></div>';
       return;
     }
     var html='';
@@ -5998,11 +6008,11 @@ function loadElveBibliotheque(pid){
         +'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.55);backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px)">'
         +'<div style="width:36px;height:36px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(255,107,43,.35)">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="16" height="16"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>'
-        +'<div style="font-size:12px;font-weight:700;color:var(--ink)">Mot de passe requis</div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--ink)">'+t('biblio_pw_required')+'</div>'
         +'</div></div>';
     }
     if(fiches.length){
-      html+='<div class="mes-section-title" style="padding:4px 4px 8px">Fiches de cours</div>';
+      html+='<div class="mes-section-title" style="padding:4px 4px 8px">'+t('biblio_section_fiches')+'</div>';
       html+=fiches.map(function(f){
         var icoHtml='<div style="width:40px;height:40px;border-radius:12px;background:rgba(34,192,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>';
         if(f.access_type==='password'){
@@ -6011,21 +6021,21 @@ function loadElveBibliotheque(pid){
         return'<div onclick="espOpenFicheEleve(\''+pid+'\',\''+escH(f.id)+'\')" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:none;box-shadow:0 3px 12px rgba(0,0,0,.1),0 0 0 0.5px rgba(0,0,0,.06);border-radius:16px;padding:14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
           +icoHtml
           +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(f.title||'Fiche sans titre')+'</div>'
-          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">Fiche de cours</div></div>'
+          +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+t('biblio_fiche_subtitle')+'</div></div>'
           +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2.5" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>'
           +'</div>';
       }).join('');
     }
     if(resources.length||content.length){
-      html+='<div class="mes-section-title" style="padding:'+(fiches.length?'16px':'4px')+' 4px 8px">Ressources</div>';
+      html+='<div class="mes-section-title" style="padding:'+(fiches.length?'16px':'4px')+' 4px 8px">'+t('biblio_section_ressources')+'</div>';
       resources.forEach(function(r){
         var icoHtml='<div style="width:40px;height:40px;border-radius:12px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>';
         if(r.access_type==='password'){
-          html+=_elveLockedCard(esc(r.title||'Document'),icoHtml,'elveUnlockSheet(\''+pid+'\',\'resource\',\''+escH(r.id)+'\',\''+escH(r.url||'')+'\')');
+          html+=_elveLockedCard(esc(r.title||t('biblio_doc_default')),icoHtml,'elveUnlockSheet(\''+pid+'\',\'resource\',\''+escH(r.id)+'\',\''+escH(r.url||'')+'\')');
         }else{
           html+='<a href="'+esc(r.url)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:var(--wh);border:none;box-shadow:0 3px 12px rgba(0,0,0,.1),0 0 0 0.5px rgba(0,0,0,.06);border-radius:16px;padding:14px;margin-bottom:8px;text-decoration:none;-webkit-tap-highlight-color:transparent">'
             +icoHtml
-            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title||'Document')+'</div>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.title||t('biblio_doc_default'))+'</div>'
             +'<div style="font-size:12px;color:var(--lite);margin-top:2px">'+esc(r.type||'document')+'</div></div>'
             +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="2" stroke-linecap="round" width="14" height="14" style="flex-shrink:0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
             +'</a>';
@@ -6037,21 +6047,21 @@ function loadElveBibliotheque(pid){
         var icoPath=icoSvgs[c.content_type]||icoSvgs.text;
         var icoHtml='<div style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">'+icoPath+'</svg></div>';
         if(c.access_type==='password'&&!isUnlocked){
-          html+=_elveLockedCard(esc(c.title||'Contenu'),icoHtml,'elveUnlockSheet(\''+pid+'\',\'content\',\''+escH(c.id)+'\')');
+          html+=_elveLockedCard(esc(c.title||t('biblio_content_default')),icoHtml,'elveUnlockSheet(\''+pid+'\',\'content\',\''+escH(c.id)+'\')');
         }else{
           html+='<div style="background:var(--wh);border:none;box-shadow:0 3px 12px rgba(0,0,0,.1),0 0 0 0.5px rgba(0,0,0,.06);border-radius:16px;padding:14px;margin-bottom:8px">'
             +'<div style="display:flex;align-items:center;gap:12px">'+icoHtml
-            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title||'Contenu')+'</div>'
-            +'<div style="font-size:11px;font-weight:600;color:#10B981;margin-top:2px">Accès libre</div></div></div>';
+            +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.title||t('biblio_content_default'))+'</div>'
+            +'<div style="font-size:11px;font-weight:600;color:#10B981;margin-top:2px">'+t('biblio_access_free')+'</div></div></div>';
           if(isUnlocked&&c.content_url){
-            html+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;padding:9px;background:rgba(99,102,241,.08);border-radius:10px;text-align:center;font-size:13px;font-weight:700;color:#6366F1;text-decoration:none">Voir le contenu</a>';
+            html+='<a href="'+esc(c.content_url)+'" target="_blank" rel="noopener" style="display:block;margin-top:10px;padding:9px;background:rgba(99,102,241,.08);border-radius:10px;text-align:center;font-size:13px;font-weight:700;color:#6366F1;text-decoration:none">'+t('biblio_see_content')+'</a>';
           }
           html+='</div>';
         }
       });
     }
     grid.innerHTML=html;
-  }).catch(function(){grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite)">Erreur de chargement</div>';});
+  }).catch(function(){grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--lite)">'+t('biblio_err_load')+'</div>';});
 }
 
 function elveBiblioUnlock(pid,cid){
@@ -6074,11 +6084,11 @@ function elveUnlockSheet(pid,kind,id,extra){
     +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
     +'<div style="width:48px;height:48px;border-radius:14px;background:rgba(255,107,43,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="22" height="22"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Contenu protégé</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">Entre le mot de passe pour accéder</div></div></div>'
+    +'<div><div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+t('biblio_content_protected')+'</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-top:3px">'+t('biblio_pw_enter')+'</div></div></div>'
     +'<input id="_elveUnlockInp" type="text" placeholder="Mot de passe" style="width:100%;border:none;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.06em;outline:none;box-sizing:border-box;margin-bottom:14px">'
     +'<button id="_elveUnlockBtn" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28);margin-bottom:10px">'+t('btn_deverrouiller')+'</button>'
-    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">'+t('btn_annuler')+'</button>';
   var btn=sheet.querySelector('#_elveUnlockBtn');
   btn.onclick=function(){
     var pw=(document.getElementById('_elveUnlockInp').value||'').trim();
@@ -6116,7 +6126,7 @@ function loadBibliotheque(){
   var uid=user&&user.id;if(!uid)return;
   var grid=g('biblioGrid');if(!grid)return;
   grid.innerHTML='<div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:10px"></div><div class="skeleton" style="height:110px;border-radius:18px;margin-bottom:10px"></div>';
-  var ACCESS_LABEL={enrolled:'Inscrits',followers:'Inscrits',public:'Public',private:'Privé',password:'Mot de passe',share:'Via lien'};
+  var ACCESS_LABEL={enrolled:t('biblio_access_enrolled'),followers:t('biblio_access_enrolled'),public:t('biblio_access_free'),private:t('biblio_access_private'),password:t('biblio_access_password'),share:t('biblio_access_share')};
   var TYPE_ICON={pdf:'PDF',video:'Vidéo',article:'Article',exercice:'Exercice',fiche:'Fiche',text:'Texte',link:'Lien'};
   function _biblioIco(kind,type){
     var bg,stroke,path;
@@ -6145,16 +6155,16 @@ function loadBibliotheque(){
     fiches=fiches.map(function(f){var c=_fData[String(f.id)]||{};return Object.assign({},f,{title:f.title||c.title||'',content:f.content||c.content||''});});
     var resources=results[1]||[];
     var items=[];
-    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||'Fiche sans titre',type:'fiche',access:f.access_type||'enrolled',created_at:f.created_at});});
-    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||'Document',type:r.type||'',access:r.access_level||'followers',created_at:r.created_at});});
+    fiches.forEach(function(f){items.push({id:f.id,kind:'fiche',title:f.title||t('biblio_fiche_default'),type:'fiche',access:f.access_type||'enrolled',created_at:f.created_at});});
+    resources.forEach(function(r){items.push({id:r.id,kind:'resource',title:r.title||t('biblio_doc_default'),type:r.type||'',access:r.access_level||'followers',created_at:r.created_at});});
     items.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
     if(!items.length){
       grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 24px">'
         +'<div style="width:80px;height:80px;background:linear-gradient(135deg,#FFF0E6,#FFD0A8);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:emptyFloat 3s ease-in-out infinite;box-shadow:0 8px 28px rgba(255,107,43,.22)">'
         +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" width="36" height="36"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
         +'</div>'
-        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">Bibliothèque vide</div>'
-        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">Crée ta première fiche ou ajoute un document.</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--ink);margin-bottom:10px;letter-spacing:-.03em">'+t('biblio_empty_title')+'</div>'
+        +'<div style="font-size:14px;color:var(--lite);line-height:1.7">'+t('biblio_empty_sub_prof')+'</div>'
         +'</div>';
       return;
     }
@@ -6191,14 +6201,14 @@ function biblioOpenAccessSheet(kind,id,curAcc){
   // Options différentes selon le type : fiches utilisent enrolled/private/public, ressources utilisent followers/public/private
   var opts=kind==='fiche'
     ?[
-      {val:'enrolled',label:'Inscrits',sub:'Visible par tous les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
-      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
-      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+      {val:'enrolled',label:t('biblio_access_enrolled'),sub:t('biblio_access_enrolled_sub'),svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:t('biblio_access_free'),sub:t('biblio_access_public_sub'),svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:t('biblio_access_private'),sub:t('biblio_access_private_sub'),svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
     ]
     :[
-      {val:'followers',label:'Inscrits',sub:'Visible par les élèves inscrits',svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
-      {val:'public',label:'Public',sub:'Accessible à tous, sans connexion',svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
-      {val:'private',label:'Privé',sub:'Visible uniquement par vous',svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
+      {val:'followers',label:t('biblio_access_enrolled'),sub:t('biblio_access_enrolled_sub_res'),svgPath:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',stroke:'#16A34A',bg:'rgba(34,197,94,.08)'},
+      {val:'public',label:t('biblio_access_free'),sub:t('biblio_access_public_sub'),svgPath:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>',stroke:'#6366F1',bg:'rgba(99,102,241,.08)'},
+      {val:'private',label:t('biblio_access_private'),sub:t('biblio_access_private_sub'),svgPath:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',stroke:'var(--mid)',bg:'var(--bg)'}
     ];
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 18px"></div>';
   html+='<div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.03em;margin-bottom:4px">'+t('vis_label')+'</div>';
@@ -6214,7 +6224,7 @@ function biblioOpenAccessSheet(kind,id,curAcc){
       +(isCur?'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>':'')
       +'</div>';
   });
-  html+='<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;margin-top:4px;padding:14px;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--lite);cursor:pointer;-webkit-tap-highlight-color:transparent">Annuler</button>';
+  html+='<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;margin-top:4px;padding:14px;background:none;border:none;font-family:inherit;font-size:15px;font-weight:600;color:var(--lite);cursor:pointer;-webkit-tap-highlight-color:transparent">'+t('btn_annuler')+'</button>';
   sheet.innerHTML=html;
   bd.appendChild(sheet);
   document.body.appendChild(bd);
@@ -6231,11 +6241,11 @@ function _biblioAskPassword(onDone){
   var sheet=document.createElement('div');
   sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px;padding-bottom:max(32px,env(safe-area-inset-bottom,32px))';
   sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
-    +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em">Définir un mot de passe</div>'
-    +'<div style="font-size:13px;color:var(--lite);margin-bottom:18px">Les élèves devront saisir ce code pour accéder au contenu.</div>'
+    +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em">'+t('biblio_set_pw_title')+'</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:18px">'+t('biblio_set_pw_sub')+'</div>'
     +'<input id="_biblioPwInp" type="text" placeholder="Ex\u00a0: mathsL3" style="width:100%;border:none;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(0,0,0,.07);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.08em;outline:none;box-sizing:border-box;margin-bottom:16px">'
-    +'<button onclick="_biblioPwConfirm()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28)">Confirmer</button>'
-    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;margin-top:10px;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">Annuler</button>';
+    +'<button onclick="_biblioPwConfirm()" style="width:100%;background:var(--or);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(255,107,43,.28)">'+t('biblio_confirm')+'</button>'
+    +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;margin-top:10px;padding:12px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--lite);cursor:pointer">'+t('btn_annuler')+'</button>';
   window._biblioPwConfirm=function(){
     var v=(document.getElementById('_biblioPwInp').value||'').trim();
     if(!v){document.getElementById('_biblioPwInp').style.boxShadow='0 0 0 2px #EF4444';return;}
@@ -6390,7 +6400,7 @@ function _loadMpfAvis(pid){
   fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
     if(_curPrFull!==pid)return;
     if(!notes||!notes.length){
-      avisContainer.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Pas encore d\'avis pour le moment.</div>';
+      avisContainer.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">'+t('no_reviews_yet')+'</div>';
       return;
     }
     var _avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
@@ -6435,7 +6445,7 @@ function _loadProfAvis(){
   if(listEl)listEl.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px;margin:14px 16px"></div>';
   fetch(API+'/notations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(notes){
     if(!notes||!notes.length){
-      if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
+      if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">'+t('no_reviews_yet')+'</div>';
       if(avgEl)avgEl.textContent='—';
       if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
       if(countEl)countEl.textContent=t('no_reviews_yet');
@@ -6444,7 +6454,7 @@ function _loadProfAvis(){
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(avgEl){avgEl.textContent=avg;}
     if(starsEl)starsEl.innerHTML=_avisSvgStars(avg,17);
-    if(countEl)countEl.textContent=notes.length+' avis';
+    if(countEl)countEl.textContent=notes.length+' '+t('avis_suffix');
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
@@ -6463,7 +6473,7 @@ function _loadProfAvis(){
         +'</div>';
     }).join('');
   }).catch(function(){
-    if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Impossible de charger les avis.</div>';
+    if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">'+t('reviews_err')+'</div>';
   });
 }
 
@@ -7048,7 +7058,7 @@ var CR_MAT_ICONS={
   tennis:'<circle cx="12" cy="12" r="10"/><path d="M2.5 12h19M12 2.5c-4 6-4 13 0 19M12 2.5c4 6 4 13 0 19"/>',
   football:'<circle cx="12" cy="12" r="10"/><path d="M12 7l3 2-1 4H10l-1-4 3-2z"/><path d="M12 7V2M15 9l5-3M9 9l-5-3M14 13l3 5M10 13l-3 5"/>',
   basket:'<circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.9 4.9c4 4 4 10.2 0 14.2M19.1 4.9c-4 4-4 10.2 0 14.2"/>',
-  running:'<circle cx="13" cy="4" r="2"/><path d="M5 20l3.5-3.5 2.5 2.5 3-7 4 4"/><path d="M7 9l2-3 4 1 3-3"/>',
+  running:'<circle cx="14" cy="3" r="2"/><path d="M13 5l-3 7"/><path d="M12 8l4 3"/><path d="M12 8l-3-1"/><path d="M10 12l-4 8"/><path d="M10 12l5 6"/>',
   boxe:'<path d="M8 6a4 4 0 018 0v5H8V6z"/><rect x="6" y="11" width="12" height="5" rx="2"/><path d="M9 16v2a3 3 0 006 0v-2"/>',
   golf:'<circle cx="12" cy="18" r="3"/><path d="M12 15V3"/><path d="M12 3l7 4-7 4"/>',
   nutrition:'<path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/>',
@@ -7557,7 +7567,7 @@ async function loadMessages(){
           var _st=getCourseState(_cid);
           if(_st==='past'||_st==='deleted'){
             var _isPastCard=_st==='past';
-            var _replaceLbl=_isPastCard?'Cours terminé':'Cours supprimé';
+            var _replaceLbl=_isPastCard?t('fav_cours_termine'):t('fav_cours_supprime');
             var _replaceIcon=_isPastCard
               ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
               :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
@@ -8382,13 +8392,13 @@ function openMsgAttachment(isGroupe){
   var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
   var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
   var opts=[
-    {icon:_svgCours,label:'Un cours',sub:'Partage une de tes s\u00e9ances',type:'cours'},
-    {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
-    {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
+    {icon:_svgCours,label:t('share_opt_cours_lbl'),sub:t('share_opt_cours_sub'),type:'cours'},
+    {icon:_svgFiche,label:t('share_opt_fiche_lbl'),sub:t('share_opt_fiche_sub'),type:'fiche'},
+    {icon:_svgPub,label:t('share_opt_pub_lbl'),sub:t('share_opt_pub_sub'),type:'pub'}
   ];
-  if(isGroupe)opts.push({icon:_svgPoll,label:'Sondage',sub:'Pose une question au groupe',type:'sondage'});
+  if(isGroupe)opts.push({icon:_svgPoll,label:t('share_opt_sondage_lbl'),sub:t('share_opt_sondage_sub'),type:'sondage'});
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
-    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Partager dans la conversation</div></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+t('share_in_conv')+'</div></div>'
     +'<div style="padding:0 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function(o){
     var fn=o.type==='sondage'?'openSondageCreator()':o.type==='cours'?'openShareCoursSheet()':'_espMsgPickContent(\''+o.type+'\')';
@@ -8397,37 +8407,37 @@ function openMsgAttachment(isGroupe){
       +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+o.label+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
       +'</button>';
   });
-  html+='<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Annuler</button></div>';
+  html+='<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">'+t('rr_annuler_btn')+'</button></div>';
   showQuickSheet(html);
 }
 
 function _espMsgPickContent(type){
   _espPickType=type;
-  showQuickSheet('<div style="padding:48px;text-align:center;color:var(--lite)">Chargement…</div>');
+  showQuickSheet('<div style="padding:48px;text-align:center;color:var(--lite)">'+t('share_loading')+'</div>');
   fetch(API+'/teacher/'+user.id+'/announcements',{headers:apiH()})
     .then(function(r){return r.json();})
     .then(function(list){
       var filter=type==='fiche'?function(a){return a.type==='fiche';}:function(a){return a.type!=='fiche';};
       _espPickItems=(list||[]).filter(filter);
       if(!_espPickItems.length){
-        showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">Aucun contenu disponible dans ton espace</div>'
-          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Fermer</button></div>');
+        showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">'+t('share_no_content')+'</div>'
+          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">'+t('btn_fermer')+'</button></div>');
         return;
       }
       var _icSmall='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18">'+(type==='fiche'?'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>':'<path d="M3 11l18-5v12L3 14v-3z"/>')+'</svg>';
       var icon=_icSmall;
-      var title=type==='fiche'?'Fiches de cours':'Publications';
+      var title=type==='fiche'?t('share_fiches_title'):t('share_pubs_title');
       var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
         +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+title+'</div></div>'
         +'<div style="max-height:55vh;overflow-y:auto;padding:0 12px;display:flex;flex-direction:column;gap:6px">';
       _espPickItems.forEach(function(item,idx){
         html+='<button onclick="closeQuickSheet();_espMsgSendCardByIdx('+idx+')" style="width:100%;background:var(--bg);border:none;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
           +'<span style="font-size:20px;flex-shrink:0">'+icon+'</span>'
-          +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||'Sans titre')+'</span>'
+          +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||t('share_untitled'))+'</span>'
           +'</button>';
       });
       html+='</div><div style="padding:4px 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))">'
-        +'<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Annuler</button></div>';
+        +'<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">'+t('rr_annuler_btn')+'</button></div>';
       showQuickSheet(html);
     })
     .catch(function(){showQuickSheet('<div style="padding:40px;text-align:center;color:var(--lite)">Erreur de chargement</div>');});
@@ -8497,14 +8507,14 @@ function _openEspContent(type,pid,id){
 }
 
 function _renderEspCardInner(d,isMe,time){
-  var labels={fiche:'Fiche de cours',pub:'Publication',sondage:'Sondage'};
+  var labels={fiche:t('esp_lbl_fiche'),pub:t('esp_lbl_pub'),sondage:t('esp_lbl_sondage')};
   var _ic12={
     fiche:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
     pub:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M3 11l18-5v12L3 14v-3z"/></svg>',
     sondage:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
   };
   var icon=_ic12[d.t]||'';
-  var lbl=labels[d.t]||'Contenu';
+  var lbl=labels[d.t]||t('esp_lbl_contenu');
   var tapAttr=(d.t!=='sondage')?' onclick="_openEspContent(\''+d.t+'\',\''+escH(d.pid||'')+'\',\''+escH(d.id||'')+'\')"':'';
   if(d.t==='sondage'){
     var optsHtml=(d.opts||[]).map(function(o,i){
@@ -8522,7 +8532,7 @@ function _renderEspCardInner(d,isMe,time){
   return '<div class="esp-msg-card'+(tapAttr?' clickable':'')+'"'+tapAttr+' style="align-self:'+(isMe?'flex-end':'flex-start')+'">'
     +'<div style="font-size:10px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">'+icon+' '+lbl+'</div>'
     +'<div style="font-size:15px;font-weight:700;color:var(--ink);line-height:1.3">'+esc(d.title||'')+'</div>'
-    +(tapAttr?'<div style="font-size:12px;color:var(--or);font-weight:600;margin-top:8px">Voir dans l\'espace →</div>':'')
+    +(tapAttr?'<div style="font-size:12px;color:var(--or);font-weight:600;margin-top:8px">'+t('esp_voir_espace')+'</div>':'')
     +'<div style="font-size:10px;color:var(--lite);margin-top:6px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
     +'</div>';
 }
@@ -9039,28 +9049,28 @@ function showBadgeInfo(type){
       grad:'linear-gradient(135deg,#FF8C55,#E04E10)',
       glow:'rgba(255,107,43,.32)',
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="13" y1="9" x2="19" y2="9"/><line x1="13" y1="13" x2="17" y2="13"/></svg>',
-      name:'Identité vérifiée',
-      badge:'Rare · ~14% des profs',
-      desc:'Ce professeur a fourni une pièce d\'identité officielle contrôlée par l\'équipe CoursPool. Vous interagissez avec une vraie personne.',
-      how:'Soumettez votre pièce d\'identité en cours de vérification dans Paramètres → Vérification.'
+      name:t('badge_identite_name'),
+      badge:t('badge_identite_rarity'),
+      desc:t('badge_identite_desc'),
+      how:t('badge_identite_how')
     },
     diplome:{
       grad:'linear-gradient(135deg,#818CF8,#4338CA)',
       glow:'rgba(99,102,241,.32)',
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-      name:'Diplôme vérifié',
-      badge:'Prestige · ~8% des profs',
-      desc:'Ce professeur a soumis un diplôme officiel (Licence, Master, CAPES, agrégation…) validé par notre équipe. Expertise confirmée.',
-      how:'Téléchargez votre diplôme dans Paramètres → Vérification pour obtenir ce badge.'
+      name:t('badge_diplome_name'),
+      badge:t('badge_diplome_rarity'),
+      desc:t('badge_diplome_desc'),
+      how:t('badge_diplome_how')
     },
     confiance:{
       grad:'linear-gradient(135deg,#34D399,#059669)',
       glow:'rgba(16,185,129,.28)',
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="44" height="44"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-      name:'Profil de confiance',
-      badge:'Exclusif · ~5% des profs',
-      desc:'Ce professeur a fourni une attestation officielle d\'absence d\'antécédents judiciaires, vérifiée par l\'équipe CoursPool.',
-      how:'Soumettez votre attestation officielle dans Paramètres → Vérification.'
+      name:t('badge_confiance_name'),
+      badge:t('badge_confiance_rarity'),
+      desc:t('badge_confiance_desc'),
+      how:t('badge_confiance_how')
     }
   };
   var d=info[type];if(!d)return;
@@ -9068,7 +9078,7 @@ function showBadgeInfo(type){
   content.innerHTML=
     // Hero gradient card — no deco circles
     '<div style="background:'+d.grad+';border-radius:24px;padding:32px 20px 26px;text-align:center;margin-bottom:16px;box-shadow:0 10px 40px '+d.glow+'">'
-    +'<div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:16px">✦ CoursPool Certifié ✦</div>'
+    +'<div style="font-size:10px;font-weight:800;letter-spacing:.14em;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:16px">✦ '+t('badge_certified_label')+' ✦</div>'
     +'<div style="display:inline-flex;margin-bottom:16px">'
     +'<div style="width:88px;height:88px;background:rgba(255,255,255,.18);border-radius:28px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 0 8px rgba(255,255,255,.08)">'+d.icon+'</div>'
     +'</div>'
@@ -9076,15 +9086,15 @@ function showBadgeInfo(type){
     +'</div>'
     // Description
     +'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
-    +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Ce que ça garantit</div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">'+t('badge_what_label')+'</div>'
     +'<div style="font-size:14px;color:var(--ink);line-height:1.65">'+d.desc+'</div>'
     +'</div>'
     // How to get it — prof only
     +(isProf?'<div style="background:var(--bg);border-radius:16px;padding:14px 16px;margin-bottom:8px">'
-    +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">Comment l\'obtenir</div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--lite);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px">'+t('badge_how_label')+'</div>'
     +'<div style="font-size:13.5px;color:var(--mid);line-height:1.65">'+d.how+'</div>'
     +'</div>':'')
-    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:10px">Fermer</button>';
+    +'<button onclick="closeBadgeInfo()" style="width:100%;background:var(--bg);color:var(--ink);border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:10px">'+t('btn_fermer')+'</button>';
   bd.style.display='flex';
   document.body.style.overflow='hidden';
 }
@@ -9565,7 +9575,7 @@ async function loadRevenues() {
   var list = g('revList');
   if (!list) return;
 
-  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_chargement')+'</div>';
 
   // Récupérer les paiements depuis le serveur
   try {
@@ -9591,13 +9601,13 @@ async function loadRevenues() {
     var pendingAmt = pending.reduce(function(a, p) { return a + p.amount; }, 0);
 
     g('revMois').textContent = moisTotal.toFixed(2) + '€';
-    g('revMoisNb').textContent = thisMonth.length + ' paiement' + (thisMonth.length > 1 ? 's' : '');
+    g('revMoisNb').textContent = thisMonth.length + ' ' + (thisMonth.length > 1 ? t('rev_payment_p') : t('rev_payment_s'));
     g('revTotal').textContent = total.toFixed(2) + '€';
-    g('revTotalNb').textContent = paid.length + ' paiement' + (paid.length > 1 ? 's' : '');
+    g('revTotalNb').textContent = paid.length + ' ' + (paid.length > 1 ? t('rev_payment_p') : t('rev_payment_s'));
 
     var pendingBar = g('revPendingBar');
     if (pendingAmt > 0 && pendingBar) {
-      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ en attente de virement';
+      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ ' + t('rev_pending_suffix');
       pendingBar.style.display = 'flex';
     } else if (pendingBar) {
       pendingBar.style.display = 'none';
@@ -9605,7 +9615,7 @@ async function loadRevenues() {
 
     // Liste des paiements
     if (!paid.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu\'un élève réserve un cours.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('rev_no_payment')+'</div><div style="font-size:13px;color:var(--lite);line-height:1.6">'+t('rev_no_payment_sub')+'</div></div>';
       return;
     }
 
@@ -9642,12 +9652,12 @@ async function loadRevenues() {
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-size:16px;font-weight:800;color:var(--green)">+'+montantNet+'€</div>'
-          +'<div style="font-size:10px;color:var(--lite);margin-top:1px">net · '+montant.toFixed(2)+'€ brut</div>'
+          +'<div style="font-size:10px;color:var(--lite);margin-top:1px">'+t('rev_net_label')+' · '+montant.toFixed(2)+'€ '+t('rev_gross_label')+'</div>'
           +'</div>'
           +'</div>';
       });
     });
-    if(paid.length>30)html+='<div style="text-align:center;padding:14px;font-size:13px;color:var(--lite)">+ '+(paid.length-30)+' paiements plus anciens</div>';
+    if(paid.length>30)html+='<div style="text-align:center;padding:14px;font-size:13px;color:var(--lite)">+ '+(paid.length-30)+' '+t('pay_older')+'</div>';
     list.innerHTML=html;
 
   } catch(e) {
@@ -9659,15 +9669,15 @@ async function loadPayouts() {
   if (!user || user.role !== 'professeur') return;
   var el = g('revPayouts');
   if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_chargement')+'</div>';
   try {
     var r = await fetch(API + '/stripe/connect/payouts/' + user.id, {headers: apiH()});
     var data = await r.json();
     if (!Array.isArray(data) || !data.length) {
-      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">Aucun virement pour le moment.</div>';
+      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">'+t('rev_no_payout')+'</div>';
       return;
     }
-    var STATUS_LABEL = {paid: 'Reçu', pending: 'En cours', in_transit: 'En transit', failed: 'Échoué', canceled: 'Annulé'};
+    var STATUS_LABEL = {paid: t('rev_payout_received'), pending: t('rev_payout_pending'), in_transit: t('rev_payout_in_transit'), failed: t('rev_payout_failed'), canceled: t('rev_payout_canceled')};
     var STATUS_COLOR = {paid: 'var(--green)', pending: 'var(--or)', in_transit: 'var(--or)', failed: '#EF4444', canceled: 'var(--lite)'};
     el.innerHTML = data.map(function(p) {
       var d = new Date(p.arrival_date);
@@ -9679,7 +9689,7 @@ async function loadPayouts() {
         + '<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'
         + '</div>'
         + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">Virement bancaire</div>'
+        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('rev_bank_transfer')+'</div>'
         + '<div style="display:flex;align-items:center;gap:6px;margin-top:3px">'
         + '<span style="font-size:11px;color:var(--lite)">'+dateStr+'</span>'
         + '<span style="font-size:10px;font-weight:700;color:'+color+';background:'+color+'1a;border-radius:4px;padding:1px 6px">'+label+'</span>'
@@ -9689,7 +9699,7 @@ async function loadPayouts() {
         + '</div>';
     }).join('');
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Erreur de chargement.<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('rev_err_load')+'<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
   }
 }
 
@@ -9967,7 +9977,7 @@ async function saveIban() {
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
-    toast(t('t_iban_saved'), 'Vérification en cours — vous serez notifié par email ✓');
+    toast(t('t_iban_saved'), t('iban_saved_sub'));
 
     // Mettre à jour l'UI — passer en état "en attente de validation Stripe"
     var notConn = g('stripeNotConnected');
@@ -12111,8 +12121,8 @@ function filterConversations(q){
 }
 
 // ---- Mes cours — Calendrier ----
-var _CAL_DAYS=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-var _CAL_MONTHS=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+function _calDay(d){return d.toLocaleDateString(_dateLocale(),{weekday:'short'}).replace(/[.,]/g,'').replace(/^\w/,function(c){return c.toUpperCase();});}
+function _calMonth(d){return d.toLocaleDateString(_dateLocale(),{month:'short'}).replace(/[.,]/g,'');}
 
 function _calYmd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
@@ -12148,8 +12158,8 @@ function _calBuildHeader(myCours){
 
   var selD=new Date(_calSelDay+'T00:00:00');
   var titleStr=_mesSeg==='past'
-    ? 'Cours passés'
-    : _CAL_DAYS[selD.getDay()]+' '+selD.getDate()+' '+_CAL_MONTHS[selD.getMonth()];
+    ? t('cal_past_title')
+    : _calDay(selD)+' '+selD.getDate()+' '+_calMonth(selD);
 
   // Compute set of days that have courses (only for upcoming mode)
   var daysWithCours={};
@@ -12176,7 +12186,7 @@ function _calBuildHeader(myCours){
       var ymd=_calYmd(d);
       var cls='cal-chip'+(ymd===todayYmd?' cal-today':'')+(ymd===_calSelDay?' cal-sel':'');
       chipsHtml+='<button class="'+cls+'" data-ymd="'+ymd+'" onclick="calSelectDay(\''+ymd+'\')">'
-        +'<span class="cal-chip-lbl">'+_CAL_DAYS[d.getDay()]+'</span>'
+        +'<span class="cal-chip-lbl">'+_calDay(d)+'</span>'
         +'<span class="cal-chip-num">'+d.getDate()+(daysWithCours[ymd]?'<span class="cal-dot"></span>':'')+'</span>'
         +'</button>';
     }
@@ -14018,7 +14028,14 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
+  if(_isDemoMode)return; // anti double-appel
   _isDemoMode=true;_isOwner=true;_intentionalLeave=false;
+  // Fermer proprement une vraie salle si ouverte
+  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
+  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
   var existing=g('bdVisio');if(existing)existing.remove();
   var bd=document.createElement('div');
   bd.id='bdVisio';
@@ -14044,9 +14061,13 @@ function _vOpenDemo(){
   _vApplyLayout();
   // Détection audio : bulle + ring réactif au volume
   _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
-  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
-    _startDemoAudio(stream);
-  }).catch(function(){/* pas de micro → bulle fixe */});
+  try{
+    if(navigator.mediaDevices&&typeof navigator.mediaDevices.getUserMedia==='function'){
+      navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+        _startDemoAudio(stream);
+      }).catch(function(){/* pas de micro → bulle fixe */});
+    }
+  }catch(e){/* environnement sans mediaDevices (WKWebView non configuré) */}
   haptic(1);
 }
 

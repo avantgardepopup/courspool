@@ -70,17 +70,18 @@
     <div style="width:80px;height:80px;background:linear-gradient(135deg,#FF8C55,#FF6B2B);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 32px;box-shadow:0 12px 32px rgba(255,107,43,.35)">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="38" height="38"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
     </div>
-    <div style="font-size:26px;font-weight:800;color:#1A1A1A;letter-spacing:-.03em;margin-bottom:12px">CoursPool est mobile</div>
-    <div style="font-size:16px;color:#888;line-height:1.6;margin-bottom:36px">L'application n'est pas encore disponible sur ordinateur. Ouvre-la depuis ton téléphone pour profiter de l'expérience complète.</div>
-    <div style="background:#FFF4EF;border:1.5px solid rgba(255,107,43,.2);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;text-align:left">
+    <div data-i18n="desktop_title" style="font-size:26px;font-weight:800;color:#1A1A1A;letter-spacing:-.03em;margin-bottom:12px">CoursPool est mobile</div>
+    <div data-i18n="desktop_sub" style="font-size:16px;color:#888;line-height:1.6;margin-bottom:28px">L'application est optimisée pour mobile. La version ordinateur est encore en bêta.</div>
+    <div style="background:#FFF4EF;border:1.5px solid rgba(255,107,43,.2);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;text-align:left;margin-bottom:16px">
       <div style="width:40px;height:40px;background:linear-gradient(135deg,#FF8C55,#FF6B2B);border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
       </div>
       <div>
         <div style="font-size:13px;font-weight:700;color:#1A1A1A;margin-bottom:2px">courspool.vercel.app</div>
-        <div style="font-size:12px;color:#888">Ouvre ce lien sur ton téléphone</div>
+        <div data-i18n="desktop_link_sub" style="font-size:12px;color:#888">Ouvre ce lien sur ton téléphone</div>
       </div>
     </div>
+    <button onclick="document.getElementById('desktopBlock').style.display='none'" data-i18n="desktop_continue" style="background:transparent;border:1.5px solid rgba(0,0,0,.12);border-radius:12px;padding:12px 24px;font-family:inherit;font-size:14px;font-weight:600;color:#888;cursor:pointer;width:100%">Continuer quand même</button>
   </div>
 </div>
 <script>
@@ -2025,11 +2026,11 @@
       <div id="espEdModeTitle" style="font-size:16px;font-weight:700;color:var(--ink)">Nouvelle publication</div>
       <span id="espEdTypeBadge" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:50px;background:rgba(59,130,246,.1);color:#3182CE;letter-spacing:.02em;align-self:flex-start">Publication</span>
     </div>
-    <button onclick="espSubmitAnn()" id="espEdPublishBtn" class="esp-ed-publish">Publier</button>
+    <button onclick="espSubmitAnn()" id="espEdPublishBtn" class="esp-ed-publish" data-i18n="esp_publier">Publier</button>
   </div>
   <!-- Zone édition -->
   <div class="esp-ed-scroll">
-    <input id="espEdTitleInp" type="text" placeholder="Titre de la fiche…" class="esp-ed-title-inp" style="display:none">
+    <input id="espEdTitleInp" type="text" placeholder="Titre de la fiche…" class="esp-ed-title-inp" style="display:none" data-i18n-ph="esp_fiche_title_ph">
     <div id="espAnnEditor" class="esp-ed-content" contenteditable="true" data-placeholder="Écris quelque chose pour tes élèves…" oninput="espUpdateCounter()"></div>
     <div id="espAnnCounter" style="font-size:11px;color:var(--lite);text-align:right;padding:4px 18px 0;transition:color .15s">0 / 1500</div>
   </div>
@@ -2184,8 +2185,8 @@
     <button onclick="closeMesPublications()" class="esp-ed-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Mes publications</div>
-    <button onclick="openEspEditor();closeMesPublications()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ Nouvelle</button>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)" data-i18n="esp_mes_publications">Mes publications</div>
+    <button onclick="openEspEditor();closeMesPublications()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer" data-i18n="esp_nouvelle_btn">+ Nouvelle</button>
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 48px;background:var(--wh)">
     <div id="mesPubsList"></div>
@@ -2198,8 +2199,8 @@
     <button onclick="closeBibliotheque()" class="esp-ed-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Ma bibliothèque</div>
-    <button onclick="openAddDoc()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ Ajouter</button>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)" data-i18n="biblio_my_title">Ma bibliothèque</div>
+    <button onclick="openAddDoc()" style="background:var(--or);color:#fff;border:none;border-radius:50px;padding:8px 14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer" data-i18n="biblio_add_btn">+ Ajouter</button>
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 48px;background:var(--wh)">
     <div id="biblioGrid" class="biblio-grid"></div>
@@ -2211,7 +2212,7 @@
     <button onclick="closeElveBibliotheque()" class="esp-ed-back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)">Bibliothèque</div>
+    <div style="flex:1;font-size:16px;font-weight:700;color:var(--ink)" data-i18n="biblio_title">Bibliothèque</div>
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 48px;background:var(--wh)">
     <div id="elveBiblioList"></div>
@@ -2223,34 +2224,34 @@
   <div style="background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;animation:mi .25s ease">
     <div style="text-align:center;padding:12px 0 0"><div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;display:inline-block"></div></div>
     <div style="padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em">Ajouter un document</div>
+      <div style="font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.03em" data-i18n="biblio_add_doc_title">Ajouter un document</div>
       <button onclick="closeAddDoc()" style="background:var(--bg);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mid)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div style="padding:0 20px;display:flex;flex-direction:column;gap:12px">
-      <input id="addDocTitle" type="text" placeholder="Titre du document" class="esp-input">
-      <input id="addDocUrl" type="url" placeholder="Lien (https://…)" class="esp-input">
+      <input id="addDocTitle" type="text" placeholder="Titre du document" class="esp-input" data-i18n-ph="biblio_doc_title_ph">
+      <input id="addDocUrl" type="url" placeholder="Lien (https://…)" class="esp-input" data-i18n-ph="biblio_doc_url_ph">
       <!-- Type de document -->
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Type</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="addDocTypeGrid">
           <button onclick="_addDocPickType('pdf',this)" class="add-doc-type-btn add-doc-type-sel" data-val="pdf">PDF</button>
-          <button onclick="_addDocPickType('video',this)" class="add-doc-type-btn" data-val="video">Vidéo</button>
-          <button onclick="_addDocPickType('article',this)" class="add-doc-type-btn" data-val="article">Article</button>
-          <button onclick="_addDocPickType('exercice',this)" class="add-doc-type-btn" data-val="exercice">Exercice</button>
+          <button onclick="_addDocPickType('video',this)" class="add-doc-type-btn" data-val="video" data-i18n="biblio_type_video">Vidéo</button>
+          <button onclick="_addDocPickType('article',this)" class="add-doc-type-btn" data-val="article" data-i18n="biblio_type_article">Article</button>
+          <button onclick="_addDocPickType('exercice',this)" class="add-doc-type-btn" data-val="exercice" data-i18n="biblio_type_exercice">Exercice</button>
         </div>
       </div>
       <!-- Visibilité -->
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Visibilité</div>
+        <div style="font-size:11px;font-weight:700;color:var(--lite);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px" data-i18n="vis_label">Visibilité</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="addDocAccessGrid">
-          <button onclick="_addDocPickAccess('followers',this)" class="add-doc-type-btn add-doc-type-sel" data-val="followers">Inscrits</button>
+          <button onclick="_addDocPickAccess('followers',this)" class="add-doc-type-btn add-doc-type-sel" data-val="followers" data-i18n="biblio_access_enrolled">Inscrits</button>
           <button onclick="_addDocPickAccess('public',this)" class="add-doc-type-btn" data-val="public">Public</button>
-          <button onclick="_addDocPickAccess('private',this)" class="add-doc-type-btn" data-val="private">Privé</button>
+          <button onclick="_addDocPickAccess('private',this)" class="add-doc-type-btn" data-val="private" data-i18n="biblio_access_private">Privé</button>
         </div>
       </div>
     </div>
     <div style="padding:16px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px))">
-      <button onclick="addDocSubmit()" id="addDocBtn" class="esp2-btn-submit" style="width:100%">Ajouter</button>
+      <button onclick="addDocSubmit()" id="addDocBtn" class="esp2-btn-submit" style="width:100%" data-i18n="biblio_add_submit">Ajouter</button>
     </div>
   </div>
 </div>
