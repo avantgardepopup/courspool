@@ -3872,16 +3872,7 @@ function doFilter(){
     if(mobInp)mobInp.value=val;
   }
   val=val.trim();
-  // ── DEBUG VISIO : taper "##visio" (démo UI) ou "##visio URL" (vraie salle) ──
-  if(val.startsWith('##visio')){
-    var _vRaw=val.slice(7).trim();
-    var _srch=g('srch');if(_srch)_srch.value='';
-    var _mob=g('mobSearchInput');if(_mob)_mob.value='';
-    if(typeof collapseSearch==='function')collapseSearch();
-    if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
-    else{_vOpenDemo();}
-    return;
-  }
+
   checkCodeInSearch(val);
   if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);

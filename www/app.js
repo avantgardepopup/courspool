@@ -2240,6 +2240,8 @@ function navTo(tab,_skipHistory){
   ['bniExp','bniFav','bniMsg','bniProfs','bniMes','bniEsp'].forEach(function(id){var b=g(id);if(b)b.classList.remove('on');});
   var appEl=g('app');if(appEl)appEl.scrollTop=0;
   var pgExp=g('pgExp'),pgAcc=g('pgAcc'),pgMsg=g('pgMsg'),pgFav=g('pgFav'),pgMes=g('pgMes'),pgMesProfs=g('pgMesProfs');
+  // Couper l'animation en cours avant display:none pour éviter le flash noir iOS
+  [pgExp,pgAcc,pgMsg,pgFav,pgMes,pgMesProfs].forEach(function(p){if(p&&p.classList.contains('on')){p.style.animation='none';}});
   if(pgExp)pgExp.classList.remove('on');
   if(pgAcc)pgAcc.classList.remove('on');
   if(pgMsg)pgMsg.classList.remove('on');
@@ -3870,16 +3872,7 @@ function doFilter(){
     if(mobInp)mobInp.value=val;
   }
   val=val.trim();
-  // ── DEBUG VISIO : taper "##visio" (démo UI) ou "##visio URL" (vraie salle) ──
-  if(val.startsWith('##visio')){
-    var _vRaw=val.slice(7).trim();
-    var _srch=g('srch');if(_srch)_srch.value='';
-    var _mob=g('mobSearchInput');if(_mob)_mob.value='';
-    if(typeof collapseSearch==='function')collapseSearch();
-    if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
-    else{_vOpenDemo();}
-    return;
-  }
+
   checkCodeInSearch(val);
   if(typeof resolveAlias==='function')showAliasSuggestion(val);
   clearTimeout(_searchTimer);
@@ -14082,12 +14075,12 @@ function _demoAudioLoop(){
     var ring=g('_vsring-demo-local');
     if(ring&&!_localMuted){
       var c=Math.min(avg,90);
-      var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
-      var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
-      var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
-      var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
-      var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
-      ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
+      var scale=1+c/90*0.18;         // 1.0 → 1.18 : reste collé à l'avatar
+      var sp1=(c/90*6).toFixed(1);   // ring spread 0→6px (fin, proche)
+      var gl=(c/90*18).toFixed(0);   // glow 0→18px
+      var a1=(0.55+c/90*0.35).toFixed(2); // opacité ring 0.55→0.90
+      var a2=(0.10+c/90*0.22).toFixed(2); // opacité glow 0.10→0.32
+      ring.style.transform='scale('+scale.toFixed(3)+')';
       ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
       ring.style.opacity=avg>6?'1':'0';
     }else if(ring){
@@ -14114,7 +14107,7 @@ function _vBuildDemoTile(f){
   wrap.onclick=function(){_vPin(f.sid);};
   var av=document.createElement('div');
   av.id='_vav-'+f.sid;
-  av.style.cssText='width:64px;height:64px;border-radius:50%;background:'+f.color+';display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;z-index:1;flex-shrink:0;box-shadow:0 4px 18px rgba(0,0,0,.3);';
+  av.style.cssText='width:64px;height:64px;border-radius:50%;background:'+f.color+';display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;box-shadow:0 4px 18px rgba(0,0,0,.3);';
   av.textContent=f.name.charAt(0).toUpperCase();
   var lbl=document.createElement('div');
   lbl.id='_vtl-'+f.sid;
@@ -14235,6 +14228,10 @@ function _buildVisioHTML(){
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
     +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
+    // Languette de rappel : visible quand le panneau est fermé, cliquable pour rouvrir
+    +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:rgba(255,107,43,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="11" height="11"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+    +'</div>'
     +'</div>'
     // Reactions panel (above controls)
     +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:rgba(10,10,20,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
@@ -14489,7 +14486,7 @@ function _vApplyLayout(){
         setTimeout(function(){
           tiles.forEach(function(t){t.style.display='none';t.style.opacity='';t.style.transition='';});
           if(newEl){
-            newEl.style.display='';newEl.style.opacity='0';newEl.style.transition='opacity .22s';
+            newEl.style.display='flex';newEl.style.opacity='0';newEl.style.transition='opacity .22s';
             newEl.style.borderRadius='inherit';newEl.style.minHeight='0';newEl.style.height='';
             requestAnimationFrame(function(){newEl.style.opacity='1';});
           }
@@ -14499,7 +14496,7 @@ function _vApplyLayout(){
     }
     tiles.forEach(function(t){
       var isFeat=t.id.replace('_vt-','')=== newFeat;
-      t.style.display=isFeat?'':'none';
+      t.style.display=isFeat?'flex':'none';
       if(isFeat){t.style.borderRadius='inherit';t.style.minHeight='0';t.style.height='';t.style.gridColumn='';t.style.gridRow='';}
     });
     return;
@@ -14510,7 +14507,7 @@ function _vApplyLayout(){
   grid.style.padding='8px';grid.style.gap='8px';
   // Restore teacher controls visibility
   tiles.forEach(function(t){var sid2=t.id.replace('_vt-','');var pc=g('_vpc-'+sid2);if(pc)pc.style.display='flex';});
-  tiles.forEach(function(t){t.style.display='';t.style.opacity='';t.style.transition='';t.style.borderRadius='16px';});
+  tiles.forEach(function(t){t.style.display='flex';t.style.opacity='';t.style.transition='';t.style.borderRadius='16px';});
   if(!_pinnedSid){
     grid.style.gridTemplateColumns=n<=1?'1fr':n<=4?'repeat(2,1fr)':'repeat(3,1fr)';
     grid.style.gridTemplateRows='';
@@ -14796,6 +14793,9 @@ function _vToggleComment(){
   if(panel){panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_vCommentOpen?'translateX(0)':'translateX(100%)';}
   var btn=g('_vCommentBtn');
   if(btn){btn.style.background=_vCommentOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_vCommentOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+  // Languette de rappel : visible uniquement quand le panneau est fermé
+  var tab=g('_vCommentTab');
+  if(tab){tab.style.opacity=_vCommentOpen?'0':'1';tab.style.pointerEvents=_vCommentOpen?'none':'auto';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
 }
 function _vInitCommentSwipe(){
@@ -14821,6 +14821,7 @@ function _vInitCommentSwipe(){
       panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(100%)';
       var btn=g('_vCommentBtn');if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
+      var tab=g('_vCommentTab');if(tab){tab.style.opacity='1';tab.style.pointerEvents='auto';}
     }else{
       panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(0)';
@@ -14887,6 +14888,7 @@ function _vToggleRecord(){
 var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
+var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
 var _brdPageNames=[];
 var _brdTextSize=16,_brdTextBold=false,_brdTextItalic=false,_brdTextAlign='left';
 var _brdHist=[],_brdHistIdx=-1;
@@ -14912,18 +14914,16 @@ var _BC=['#1F2937','#6B7280','#EF4444','#F97316','#3B82F6','#22C55E','#8B5CF6','
 function _buildBoardInner(){
   var NAV='#2c4f8a';
   var ib='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
+  var glassBtn='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:rgba(255,255,255,.9);width:36px;height:36px;border-radius:50%;flex-shrink:0;transition:background .15s;';
+  var glassSep='width:1px;height:20px;background:rgba(255,255,255,.18);flex-shrink:0;';
   return ''
     // Top nav bar (dark blue, GoodNotes style)
     // Outer wrapper: full dark blue background including status bar area
     +'<div style="background:'+NAV+';flex-shrink:0;">'
     // Safe-area spacer: always at least 20px so status bar is never hidden
     +'<div style="height:max(env(safe-area-inset-top,20px),20px);"></div>'
-    // Actual nav content row (fixed 46px)
-    +'<div style="display:flex;align-items:stretch;height:46px;padding:0 2px;">'
-    +'<button onclick="_vCloseBoard()" style="'+ib+'padding:0 10px;gap:3px;">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>'
-    +'<span style="font-size:11.5px;font-weight:600;">Cours</span></button>'
-    +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
+    // Actual nav content row (fixed 46px) — sans bouton retour pour plus d'espace aux onglets
+    +'<div style="display:flex;align-items:stretch;height:46px;padding:0 6px;">'
     // Chrome-style page tabs strip (scrollable quand beaucoup de pages)
     +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
@@ -14932,13 +14932,22 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button>'
     +'<button id="_bRd" onclick="_boardRedo()" style="'+ib+'width:36px;" title="Refaire">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>'
-    +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
-    +(_isOwner?'<button onclick="_vTimerOpen()" style="'+ib+'width:36px;" title="Minuteur">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 16"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="12" y1="2" x2="12" y2="5"/></svg></button>':'')
-    +'<button onclick="_boardExport()" style="'+ib+'width:36px;" title="Exporter PNG">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
+    // ── Floating glass pill : ← retour | minuteur | exporter ──
+    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;z-index:150;display:flex;align-items:center;gap:2px;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;padding:4px 6px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
+    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'" title="Retour">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
+    +(_isOwner
+      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
+      +'<button onclick="_vTimerOpen()" style="'+glassBtn+'" title="Minuteur">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 16"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="12" y1="2" x2="12" y2="5"/></svg></button>'
+      :''
+    )
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'</div>'  // close floating bar
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
@@ -14976,29 +14985,37 @@ function _boardRenderSubbar(){
   var h='';
   // Dark pill → light icon colors
   var ic='rgba(255,255,255,.80)';  // inactive icon stroke
-  var tb=function(id,onclick,active,svg,title){
+  var tb=function(id,onclick,active,svg,title,toolName){
+    var pinned=toolName&&_brdPinnedTool===toolName;
     var bg=active?'background:rgba(255,255,255,.18);':'background:transparent;';
-    return '<button id="'+id+'" onclick="'+onclick+'" title="'+(title||'')+'" style="'+bg+'border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;">'
+    var pinSt=pinned?'box-shadow:inset 0 -2.5px 0 #FF6B2B;':'';
+    var pdHandlers=toolName
+      ?'onpointerdown="_brdToolPD(\''+toolName+'\')" onpointerup="_brdToolPU()" onpointerleave="_brdToolPU()" onpointercancel="_brdToolPU()"'
+      :'';
+    return '<button id="'+id+'" onclick="'+onclick+'" '+pdHandlers+' title="'+(title||'')+'" style="'+bg+pinSt+'border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;">'
       +svg+'</button>';
   };
   var sep='<div style="width:1px;height:24px;background:rgba(255,255,255,.15);margin:0 4px;flex-shrink:0;"></div>';
   // ── Tool icons ──
+  h+=tb('_bTHd',"_boardToolTap('hand')",_brdTool==='hand',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='hand'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 11V8a2 2 0 00-4 0v3"/><path d="M14 8V6a2 2 0 00-4 0v5"/><path d="M10 6.5V5a2 2 0 00-4 0v8"/><path d="M6 13s0 5 4 7h4c3 0 4-2 4-4v-5a2 2 0 00-4 0"/></svg>'
+    ,'Déplacer / zoomer','hand');
   h+=tb('_bTSl',"_boardToolTap('select')",_brdTool==='select',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='select'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M5 3l14 9-7 1-4 7z"/></svg>'
-    ,'Sélection');
+    ,'Sélection','select');
   h+=sep;
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
-    ,'Stylo');
+    ,'Stylo','pen');
   h+=tb('_bTEr',"_boardToolTap('eraser')",_brdTool==='eraser',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='eraser'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M3 21h18"/><path d="M6.5 21L3 16l9.5-9.5 6 6L12 19.5"/><path d="M12.5 6.5l6 6"/></svg>'
-    ,'Gomme');
+    ,'Gomme','eraser');
   h+=tb('_bTTx',"_boardToolTap('text')",_brdTool==='text',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='text'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>'
-    ,'Texte');
+    ,'Texte','text');
   h+=tb('_bTSh',"_boardToolTap('shape')",_brdTool==='shape',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='shape'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="7" r="4"/><path d="M12 22l4.5-8h-9z"/></svg>'
-    ,'Formes');
+    ,'Formes','shape');
   h+=sep;
   // ── Context-sensitive: sizes or shape picker ──
   if(_brdTool==='shape'){
@@ -15462,10 +15479,23 @@ function _boardNextPage(){
 
 // ── New toolbar & popup system ──
 function _boardUpdateToolbar(){_boardRenderSubbar();}
+function _brdToolPD(tool){
+  _brdLPFired=false;
+  _brdLPTimer=setTimeout(function(){
+    _brdLPFired=true;
+    clearTimeout(_brdLPTimer);_brdLPTimer=null;
+    if(_brdPinnedTool===tool){_brdPinnedTool=null;}
+    else{_brdPinnedTool=tool;_brdTool=tool;if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';}
+    haptic(2);_boardRenderSubbar();
+  },480);
+}
+function _brdToolPU(){if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}}
 function _boardToolTap(tool){
+  if(_brdLPFired){_brdLPFired=false;return;} // long-press géré, ignorer le click
+  if(_brdPinnedTool&&_brdPinnedTool!==tool)return; // outil épinglé : blocage
   if(_brdSel.active)_brdCommitSel();
   _brdTool=tool;
-  if(_brdC)_brdC.style.cursor=tool==='text'?'text':'crosshair';
+  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';
   _boardRenderSubbar();haptic(1);
 }
 function _boardSetTool(tool){_boardToolTap(tool);}
@@ -15554,6 +15584,12 @@ function _boardDown(e){
   if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
     _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz});
   }
+  if(_brdTool==='hand'){
+    // 1-finger pan: store raw screen coords (not canvas coords)
+    _brdDraw=true;_brdPts=[{x:e.clientX,y:e.clientY}];
+    if(_brdC)_brdC.style.cursor='grabbing';
+    return;
+  }
   if(_brdTool==='pen'){
     _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
@@ -15608,6 +15644,16 @@ function _boardMove(e){
   }
   if(!_brdDraw)return;
   e.preventDefault();
+  // ── Main (hand) : pan 1 doigt ──
+  if(_brdTool==='hand'){
+    if(_brdPts.length){
+      var lp=_brdPts[0];
+      _brdPanX+=e.clientX-lp.x;_brdPanY+=e.clientY-lp.y;
+      _brdPts=[{x:e.clientX,y:e.clientY}];
+      _boardApplyTransform();
+    }
+    return;
+  }
   var p=_boardGetPos(e);
   // Émettre le point en temps réel (~50ms throttle)
   if(_brdRoomId&&_brdCanEdit&&(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser')){
@@ -15662,6 +15708,7 @@ function _boardUp(e){
   delete _brdActivePointers[e.pointerId];
   if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
   if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
+  if(_brdTool==='hand'){if(_brdC)_brdC.style.cursor='grab';_brdPts=[];_brdDraw=false;return;}
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
