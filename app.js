@@ -14029,47 +14029,41 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
-  if(_isDemoMode)return; // anti double-appel
-  _isDemoMode=true;_isOwner=true;_intentionalLeave=false;
-  // Fermer proprement une vraie salle si ouverte
-  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
-  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
-  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
-  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
-  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
-  var existing=g('bdVisio');if(existing)existing.remove();
-  var bd=document.createElement('div');
-  bd.id='bdVisio';
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
-  bd.innerHTML=_buildVisioHTML();
-  document.body.appendChild(bd);
-  _vInitCommentSwipe();
-  var nav=g('bnav');if(nav)nav.style.display='none';
-  _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
-  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
-  _isRecording=false;
-  if(_callTimer)clearInterval(_callTimer);
-  _updateVisioTimer();
-  _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
-  // Populate grid — uniquement l'utilisateur local
-  var grid=g('_vGrid');if(!grid)return;
-  grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
-  _vApplyLayout();
-  // Démarrer l'analyse audio (réutilise le stream s'il est encore actif)
-  _ensureDemoAudio(_startDemoAudio);
-  haptic(1);
+  if(_isDemoMode)return;
+  _vShowPreJoin(function(){
+    _isDemoMode=true;_isOwner=true;_intentionalLeave=false;
+    if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
+    if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+    if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+    if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+    if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
+    var existing=g('bdVisio');if(existing)existing.remove();
+    var bd=document.createElement('div');
+    bd.id='bdVisio';
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
+    bd.innerHTML=_buildVisioHTML();
+    document.body.appendChild(bd);
+    _vInitCommentSwipe();
+    var nav=g('bnav');if(nav)nav.style.display='none';
+    _callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
+    _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
+    _isRecording=false;
+    if(_callTimer)clearInterval(_callTimer);
+    _updateVisioTimer();
+    _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
+    var grid=g('_vGrid');if(!grid)return;
+    grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
+    _vApplyLayout();
+    _ensureDemoAudio(_startDemoAudio);
+    haptic(1);
+  });
 }
 
 function _ensureDemoAudio(callback){
-  // Réutiliser le stream existant si toujours actif (évite de re-demander la permission)
-  if(_demoAudioStream&&_demoAudioStream.active&&
-     _demoAudioStream.getAudioTracks().some(function(t){return t.readyState==='live';})){
-    callback(_demoAudioStream);return;
-  }
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
   navigator.mediaDevices.getUserMedia({audio:true,video:false})
     .then(function(stream){callback(stream);})
-    .catch(function(){/* micro refusé ou indisponible, pas bloquant */});
+    .catch(function(){/* micro refusé ou indisponible */});
 }
 function _startDemoAudio(stream){
   _demoAudioStream=stream;
@@ -14175,36 +14169,152 @@ function _vBuildDemoTile(f){
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
-var _vPipFeaturedSid=null; // currently displayed SID in PiP mode
+var _vPipFeaturedSid=null;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
 var _demoAnalyser=null,_demoBuf=null,_demoRAFId=null;
 var _demoLocalSpeaking=false,_demoSilenceSince=0,_demoPipThrottle=0;
 var _vComments=[],_vCommentOpen=false,_vCommentAllowed=true;
+// ── Pré-join ──
+var _preJoinStream=null,_preJoinAudioCtx=null,_preJoinAnalyser=null,_preJoinRAF=null;
+
+// ── Stop pre-join stream + audio analysis ──
+function _vStopPreJoin(){
+  if(_preJoinRAF){cancelAnimationFrame(_preJoinRAF);_preJoinRAF=null;}
+  if(_preJoinAudioCtx){try{_preJoinAudioCtx.close();}catch(e){}_preJoinAudioCtx=null;}
+  _preJoinAnalyser=null;
+  if(_preJoinStream){_preJoinStream.getTracks().forEach(function(t){t.stop();});_preJoinStream=null;}
+}
+
+// ── Écran pré-visio ──
+function _vShowPreJoin(onJoin){
+  _vStopPreJoin();
+  var existing=g('bdVisio');if(existing)existing.remove();
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
+  var name=user&&user.prenom?user.prenom:'Vous';
+  var ini=name.charAt(0).toUpperCase();
+  var col=(user&&user.col)||'linear-gradient(148deg,#FF7D42,#FF4500)';
+  bd.innerHTML=''
+    +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
+    +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
+    // Preview caméra
+    +'<div style="position:relative;width:min(320px,90vw);height:min(200px,56vw);border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#1e1e30,#12121f);margin-bottom:22px;box-shadow:0 8px 32px rgba(0,0,0,.5);">'
+    +'<div id="_pjAv" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">'
+    +'<div style="width:64px;height:64px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);">'+ini+'</div>'
+    +'<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6)">Caméra désactivée</div>'
+    +'</div>'
+    +'<video id="_pjVideo" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>'
+    +'</div>'
+    // Statuts mic / cam
+    +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'
+    +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">Microphone</div>'
+    +'<div id="_pjMicBar" style="height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;"><div id="_pjMicLevel" style="height:100%;width:0%;background:#22C069;border-radius:4px;transition:width .08s linear;"></div></div>'
+    +'</div>'
+    +'<div id="_pjMicSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
+    +'<div style="flex:1;font-size:13px;font-weight:700;color:#fff;">Caméra</div>'
+    +'<div id="_pjCamSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
+    +'</div>'
+    +'</div>'
+    // Bouton rejoindre
+    +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:15px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
+  document.body.appendChild(bd);
+  var nav=g('bnav');if(nav)nav.style.display='none';
+  haptic(1);
+  // Stocker le callback pour _vConfirmPreJoin
+  window._vPreJoinCallback=onJoin;
+  // Demander mic + cam
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    _pjSetSt('mic',false);_pjSetSt('cam',false);return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true,video:true})
+    .then(function(stream){
+      _preJoinStream=stream;
+      var vid=g('_pjVideo');
+      if(vid){vid.srcObject=stream;vid.style.display='block';var av=g('_pjAv');if(av)av.style.display='none';}
+      _pjSetSt('mic',true);_pjSetSt('cam',true);
+      _pjStartMicMeter(stream);
+    })
+    .catch(function(){
+      // Essayer micro seul
+      navigator.mediaDevices.getUserMedia({audio:true,video:false})
+        .then(function(stream){
+          _preJoinStream=stream;
+          _pjSetSt('mic',true);_pjSetSt('cam',false);
+          _pjStartMicMeter(stream);
+        })
+        .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
+    });
+}
+function _pjSetSt(dev,ok){
+  var el=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
+  if(!el)return;
+  el.textContent=ok?'✓ Autorisé':'✗ Refusé';
+  el.style.color=ok?'#22C069':'#fc8181';
+}
+function _pjStartMicMeter(stream){
+  try{
+    _preJoinAudioCtx=new AudioContext();
+    var src=_preJoinAudioCtx.createMediaStreamSource(stream);
+    _preJoinAnalyser=_preJoinAudioCtx.createAnalyser();
+    _preJoinAnalyser.fftSize=256;
+    src.connect(_preJoinAnalyser);
+    var buf=new Uint8Array(_preJoinAnalyser.frequencyBinCount);
+    function loop(){
+      if(!_preJoinAnalyser){_preJoinRAF=null;return;}
+      _preJoinAnalyser.getByteFrequencyData(buf);
+      var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i];
+      var pct=Math.min(100,Math.round(sum/buf.length/90*100));
+      var bar=g('_pjMicLevel');if(bar)bar.style.width=pct+'%';
+      _preJoinRAF=requestAnimationFrame(loop);
+    }
+    _preJoinRAF=requestAnimationFrame(loop);
+  }catch(e){}
+}
+function _vConfirmPreJoin(){
+  var cb=window._vPreJoinCallback;
+  _vStopPreJoin();
+  if(typeof cb==='function')cb();
+}
+function _vCancelPreJoin(){
+  _vStopPreJoin();
+  var bd=g('bdVisio');if(bd)bd.remove();
+  restoreNav();
+}
 
 function openVisioModal(url){
   if(!url)return;
   var roomName=url.split('/').pop();
-  _isDemoMode=false;
-  _isOwner=!!(user&&user.role==='professeur');
-  _intentionalLeave=false;
-  var existing=g('bdVisio');if(existing)existing.remove();
-  var bd=document.createElement('div');
-  bd.id='bdVisio';
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
-  bd.innerHTML=_buildVisioHTML();
-  document.body.appendChild(bd);
-  _vInitCommentSwipe();
-  var nav=g('bnav');if(nav)nav.style.display='none';
-  _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
-  _sharing=false;_boardActive=false;_openFloor=false;_raisedHands={};
-  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
-  _isRecording=false;
-  if(_callTimer)clearInterval(_callTimer);
-  _updateVisioTimer();
-  _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
-  _joinDailyRoom(url,roomName);
-  haptic(1);
+  _vShowPreJoin(function(){
+    _isDemoMode=false;
+    _isOwner=!!(user&&user.role==='professeur');
+    _intentionalLeave=false;
+    var existing=g('bdVisio');if(existing)existing.remove();
+    var bd=document.createElement('div');
+    bd.id='bdVisio';
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column';
+    bd.innerHTML=_buildVisioHTML();
+    document.body.appendChild(bd);
+    _vInitCommentSwipe();
+    var nav=g('bnav');if(nav)nav.style.display='none';
+    _visioCurrentUrl=url;_callSec=0;_localMuted=false;_localCamOff=false;_handRaised=false;
+    _sharing=false;_boardActive=false;_openFloor=false;_raisedHands={};
+    _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;
+    _isRecording=false;
+    if(_callTimer)clearInterval(_callTimer);
+    _updateVisioTimer();
+    _callTimer=setInterval(function(){_callSec++;_updateVisioTimer();},1000);
+    _joinDailyRoom(url,roomName);
+    haptic(1);
+  });
 }
 
 function _buildVisioHTML(){
@@ -17037,6 +17147,8 @@ function closeVisioModal(){
   if(_boardActive){_vCloseBoard();}
   _brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;
   _pipX=null;_pipY=null;
+  // Stopper toutes les sources audio/vidéo
+  _vStopPreJoin();
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
   if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
@@ -17049,6 +17161,7 @@ function closeVisioModal(){
   var bd=g('bdVisio');if(bd)bd.style.display='none';
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
+  window._vPreJoinCallback=null;
   restoreNav();
   haptic(4);
 }
