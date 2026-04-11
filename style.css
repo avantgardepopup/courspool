@@ -3356,6 +3356,8 @@ html.dk .card-badge-mode-new { background: #22223A; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .card-sched {
   display: inline-flex;
