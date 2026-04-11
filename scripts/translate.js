@@ -1457,6 +1457,25 @@ const SOURCE = {
   // Tutoriel professeur — navigation
   mpt_done:           'Terminé',
   mpt_skip:           'Passer',
+
+  // Tuto Mes Profs — 5 étapes
+  mpt_title_1: 'Rejoins ton professeur',
+  mpt_sub_1:   'Accède à l\'espace privé de ton professeur et suis tous ses cours depuis un seul endroit.',
+  mpt_title_2: 'Rejoins les cours',
+  mpt_sub_2:   'Inscris-toi aux sessions proposées par ton prof et réserve ta place en un clic.',
+  mpt_title_3: 'Code d\'accès',
+  mpt_sub_3:   'Ton professeur te donne un code. Entre-le pour rejoindre son espace et accéder à ses cours.',
+  mpt_title_4: 'Planning des cours',
+  mpt_sub_4:   'Consulte le calendrier des prochaines sessions et ne rate aucun cours.',
+  mpt_title_5: 'Ressources & contenus',
+  mpt_sub_5:   'Accède aux fiches, ressources et annonces partagées par ton professeur.',
+
+  // Page Mes Profs — empty state + boutons
+  mtp_empty_title: 'Rejoins l\'espace de ton prof',
+  mtp_empty_sub:   'Demande à ton professeur son code d\'accès et entre-le ici pour accéder à son espace.',
+  mtp_entrer_code: 'Entrer un code',
+  mtp_guide:       'Guide',
+  mtp_rejoindre:   'Rejoindre un espace',
 };
 
 // ── Utilitaire HTTP pour DeepL ─────────────────────────────────────────────
