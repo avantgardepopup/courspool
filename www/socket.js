@@ -275,4 +275,45 @@ function initSocket() {
       if (pgAcc && pgAcc.classList.contains('on') && typeof buildAccLists === 'function') buildAccLists();
     }
   });
+
+  // ── Tableau blanc collaboratif ───────────────────────────────────────────
+  _socket.on('board_sync', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_op', function(data) {
+    if (typeof _brdApplyRemoteOp === 'function' && data.op) _brdApplyRemoteOp(data.op);
+  });
+  _socket.on('board_stroke_start', function(d) {
+    if (typeof _brdOnRemoteStrokeStart === 'function') _brdOnRemoteStrokeStart(d);
+  });
+  _socket.on('board_pt', function(d) {
+    if (typeof _brdOnRemotePt === 'function') _brdOnRemotePt(d);
+  });
+  _socket.on('board_stroke_end', function(d) {
+    if (typeof _brdOnRemoteStrokeEnd === 'function') _brdOnRemoteStrokeEnd(d);
+  });
+  _socket.on('board_perm', function(data) {
+    if (typeof _brdOnPerm === 'function') _brdOnPerm(data);
+  });
+  _socket.on('board_participant_joined', function(data) {
+    if (typeof _brdOnParticipantJoined === 'function') _brdOnParticipantJoined(data);
+  });
+  _socket.on('board_participant_left', function(data) {
+    if (typeof _brdOnParticipantLeft === 'function') _brdOnParticipantLeft(data);
+  });
+  _socket.on('board_sync_request', function(data) {
+    if (typeof _brdOnSyncRequest === 'function') _brdOnSyncRequest(data);
+  });
+  _socket.on('board_snapshot', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_page_add', function(data) {
+    if (typeof _brdOnRemotePageAdd === 'function') _brdOnRemotePageAdd(data);
+  });
+  _socket.on('board_page_delete', function(data) {
+    if (typeof _brdOnRemotePageDelete === 'function') _brdOnRemotePageDelete(data);
+  });
+  _socket.on('board_page_rename', function(data) {
+    if (typeof _brdOnRemotePageRename === 'function') _brdOnRemotePageRename(data);
+  });
 }

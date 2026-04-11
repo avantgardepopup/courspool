@@ -187,26 +187,12 @@ function initSocket() {
         var avHtml = '';
         if (!isMe) {
           var op = (typeof P !== 'undefined' && P[msgDestId]) || {};
-          var oPhotoRaw = op.photo || null;
-          // Valider l'URL photo — bloque javascript: et data: URI
-          var oPhoto = null;
-          if (oPhotoRaw) { try { var _pu=new URL(oPhotoRaw); if(_pu.protocol==='https:'||_pu.protocol==='http:') oPhoto=oPhotoRaw; } catch(e){} }
-          var oIni = op.i || ((typeof msgDestinataire !== 'undefined' && msgDestinataire) ? String(msgDestinataire)[0] : '?') || '?';
+          var oPhoto = op.photo || null;
+          var oIni = op.i || (typeof msgDestinataire !== 'undefined' && msgDestinataire && msgDestinataire[0]) || '?';
           var oCol = op.col || 'linear-gradient(135deg,#FF8C55,var(--ord))';
-          if (oPhoto) {
-            // DOM API pour éviter toute injection string
-            var _avD = document.createElement('div');
-            _avD.className = 'msg-bubble-av';
-            _avD.style.background = oCol;
-            var _avI = document.createElement('img');
-            _avI.setAttribute('src', oPhoto);
-            _avI.style.cssText = 'width:100%;height:100%;object-fit:cover';
-            _avD.appendChild(_avI);
-            avHtml = _avD.outerHTML;
-          } else {
-            var safeIni = oIni.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-            avHtml = '<div class="msg-bubble-av" style="background:' + oCol + '">' + safeIni + '</div>';
-          }
+          avHtml = '<div class="msg-bubble-av" style="background:' + oCol + '">'
+            + (oPhoto ? '<img src="' + oPhoto + '" style="width:100%;height:100%;object-fit:cover">' : oIni)
+            + '</div>';
         }
         var bubble = '<div class="msg-bubble-row ' + (isMe ? 'me' : 'them') + '">'
           + (isMe ? '' : avHtml)
@@ -267,36 +253,6 @@ function initSocket() {
     }
   });
 
-  // ── Tableau blanc collaboratif ───────────────────────────────────────────
-  // Temps réel : trait en cours d'un autre utilisateur
-  _socket.on('board_stroke_start', function(d) {
-    if (typeof _brdOnRemoteStrokeStart === 'function') _brdOnRemoteStrokeStart(d);
-  });
-  _socket.on('board_pt', function(d) {
-    if (typeof _brdOnRemotePt === 'function') _brdOnRemotePt(d);
-  });
-  _socket.on('board_stroke_end', function(d) {
-    if (typeof _brdOnRemoteStrokeEnd === 'function') _brdOnRemoteStrokeEnd(d);
-  });
-  _socket.on('board_op', function(op) {
-    if (typeof _brdApplyRemoteOp === 'function') _brdApplyRemoteOp(op);
-  });
-  _socket.on('board_sync', function(data) {
-    if (typeof _brdOnSync === 'function') _brdOnSync(data);
-  });
-  _socket.on('board_sync_request', function(data) {
-    if (typeof _brdOnSyncRequest === 'function') _brdOnSyncRequest(data);
-  });
-  _socket.on('board_perm', function(data) {
-    if (typeof _brdOnPerm === 'function') _brdOnPerm(data);
-  });
-  _socket.on('board_participant_joined', function(data) {
-    if (typeof _brdOnParticipantJoined === 'function') _brdOnParticipantJoined(data);
-  });
-  _socket.on('board_participant_left', function(data) {
-    if (typeof _brdOnParticipantLeft === 'function') _brdOnParticipantLeft(data);
-  });
-
   // ── note_update : note moyenne en temps réel ────────────────────────────
   _socket.on('note_update', function(data) {
     console.log('[Socket] note_update reçu:', data.professeur_id, '→', data.note_moyenne);
@@ -318,5 +274,46 @@ function initSocket() {
       var pgAcc = document.getElementById('pgAcc');
       if (pgAcc && pgAcc.classList.contains('on') && typeof buildAccLists === 'function') buildAccLists();
     }
+  });
+
+  // ── Tableau blanc collaboratif ───────────────────────────────────────────
+  _socket.on('board_sync', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_op', function(data) {
+    if (typeof _brdApplyRemoteOp === 'function' && data.op) _brdApplyRemoteOp(data.op);
+  });
+  _socket.on('board_stroke_start', function(d) {
+    if (typeof _brdOnRemoteStrokeStart === 'function') _brdOnRemoteStrokeStart(d);
+  });
+  _socket.on('board_pt', function(d) {
+    if (typeof _brdOnRemotePt === 'function') _brdOnRemotePt(d);
+  });
+  _socket.on('board_stroke_end', function(d) {
+    if (typeof _brdOnRemoteStrokeEnd === 'function') _brdOnRemoteStrokeEnd(d);
+  });
+  _socket.on('board_perm', function(data) {
+    if (typeof _brdOnPerm === 'function') _brdOnPerm(data);
+  });
+  _socket.on('board_participant_joined', function(data) {
+    if (typeof _brdOnParticipantJoined === 'function') _brdOnParticipantJoined(data);
+  });
+  _socket.on('board_participant_left', function(data) {
+    if (typeof _brdOnParticipantLeft === 'function') _brdOnParticipantLeft(data);
+  });
+  _socket.on('board_sync_request', function(data) {
+    if (typeof _brdOnSyncRequest === 'function') _brdOnSyncRequest(data);
+  });
+  _socket.on('board_snapshot', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_page_add', function(data) {
+    if (typeof _brdOnRemotePageAdd === 'function') _brdOnRemotePageAdd(data);
+  });
+  _socket.on('board_page_delete', function(data) {
+    if (typeof _brdOnRemotePageDelete === 'function') _brdOnRemotePageDelete(data);
+  });
+  _socket.on('board_page_rename', function(data) {
+    if (typeof _brdOnRemotePageRename === 'function') _brdOnRemotePageRename(data);
   });
 }

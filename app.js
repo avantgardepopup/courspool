@@ -15010,6 +15010,9 @@ function _buildBoardInner(){
 function _boardRenderSubbar(){
   var sub=g('_brdSub');if(!sub)return;
   var h='';
+  // Lecture seule : dimmer les outils de dessin
+  var readOnly=(_brdRoomId&&!_brdCanEdit);
+  if(readOnly)sub.style.opacity='0.45';else sub.style.opacity='';
   // Dark pill → light icon colors
   var ic='rgba(255,255,255,.80)';  // inactive icon stroke
   var tb=function(id,onclick,active,svg,title,toolName){
@@ -15518,6 +15521,7 @@ function _boardDeletePage(idx){
     _boardClearFg();_boardUpdatePageTabs();
   }
   haptic(1);
+  _brdEmitPageDelete(idx);
 }
 function _boardRenamePage(idx){
   var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||'';
@@ -15525,6 +15529,7 @@ function _boardRenamePage(idx){
   if(name===null)return;
   _brdPageNames[idx]=name.trim();
   _boardUpdatePageTabs();haptic(1);
+  _brdEmitPageRename(idx,_brdPageNames[idx]);
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
@@ -15534,9 +15539,15 @@ function _boardGoPage(idx){
   if(!_brdRestorePending)_boardSavePage();
   _brdPageIdx=idx;
   if(_brdPages[_brdPageIdx]){
-    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
+    _boardRestorePage(_brdPages[_brdPageIdx],function(){
+      // Réinitialiser l'historique pour cette page (undo/redo par page)
+      _brdHist=[];_brdHistIdx=-1;_boardSaveHist();
+      _boardUpdatePageTabs();
+    });
   }else{
-    _brdRestorePending=false;_boardClearFg();_boardUpdatePageTabs();
+    _brdRestorePending=false;_boardClearFg();
+    _brdHist=[];_brdHistIdx=-1;_boardSaveHist();
+    _boardUpdatePageTabs();
   }
   haptic(1);
 }
@@ -15554,6 +15565,7 @@ function _boardAddPage(){
   if(!_brdRestorePending)_boardSavePage();
   _brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
   _brdRestorePending=false;_boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
+  _brdEmitPageAdd();
 }
 function _boardPrevPage(){
   if(_brdPageIdx<=0||!_brdX)return;
@@ -15678,7 +15690,11 @@ function _boardAttachEvents(canv){
 function _boardDown(e){
   e.preventDefault();
   // Bloquer le dessin si pas autorisé (mode collaboratif, élève en lecture seule)
-  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='select'){return;}
+  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='select'){
+    if(typeof toast==='function')toast('Lecture seule','Demande la permission au prof pour dessiner');
+    if(typeof haptic==='function')haptic(1);
+    return;
+  }
   _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
   var ptCount=Object.keys(_brdActivePointers).length;
   if(ptCount>1){
@@ -15708,14 +15724,16 @@ function _boardDown(e){
   }
   if(_brdTool==='pen'){
     _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    var pressure=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:1;
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
-    _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz;
+    _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*Math.max(0.3,pressure);
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   }else if(_brdTool==='marker'){
     _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    var pressure=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:1;
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
-    _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*2.5;
+    _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*2.5*Math.max(0.3,pressure);
     _brdX.lineCap='square';_brdX.lineJoin='round';
     _brdX.globalAlpha=0.38;_brdX.globalCompositeOperation='source-over';
   }else if(_brdTool==='eraser'){
@@ -15783,7 +15801,22 @@ function _boardMove(e){
     // Hold finger still for 700ms → snap to straight line
     if(_brdSnapTimer)clearTimeout(_brdSnapTimer);
     var snapP=p;
+    // Indicateur visuel snap : petit cercle qui grossit pendant l'attente
+    var _snapIndicator=document.getElementById('_brdSnapRing');
+    if(!_snapIndicator){
+      _snapIndicator=document.createElement('div');_snapIndicator.id='_brdSnapRing';
+      _snapIndicator.style.cssText='position:absolute;pointer-events:none;z-index:60;border-radius:50%;border:2px solid #FF6B2B;transform:translate(-50%,-50%) scale(0);transition:transform .65s ease,opacity .65s ease;opacity:0;width:28px;height:28px;';
+      var pg=g('_brdPage');if(pg)pg.appendChild(_snapIndicator);
+    }
+    if(_snapIndicator){
+      _snapIndicator.style.left=(p.x*_brdZoom)+'px';_snapIndicator.style.top=(p.y*_brdZoom)+'px';
+      _snapIndicator.style.transform='translate(-50%,-50%) scale(0)';_snapIndicator.style.opacity='0';
+      requestAnimationFrame(function(){
+        _snapIndicator.style.transform='translate(-50%,-50%) scale(1)';_snapIndicator.style.opacity='0.7';
+      });
+    }
     _brdSnapTimer=setTimeout(function(){
+      if(_snapIndicator){_snapIndicator.style.opacity='0';_snapIndicator.style.transform='translate(-50%,-50%) scale(0)';}
       if(!_brdDraw||!_brdSnap||_brdPts.length<2)return;
       _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
       var fp=_brdPts[0];
@@ -15796,6 +15829,11 @@ function _boardMove(e){
       _brdX.stroke();
       _brdX.globalAlpha=1;_brdDraw=false;_boardSaveHist();haptic(2);
     },700);
+    // Pression stylet : moduler l'épaisseur du trait en temps réel
+    if(e.pointerType==='pen'&&e.pressure>0){
+      var pr=Math.max(0.3,e.pressure);
+      _brdX.lineWidth=(_brdTool==='marker'?_brdSz*2.5:_brdSz)*pr;
+    }
     _brdPts.push(p);var n=_brdPts.length;
     if(n>=3){
       var p1=_brdPts[n-2],p2=_brdPts[n-1];
@@ -15823,6 +15861,9 @@ function _boardMove(e){
 function _boardUp(e){
   delete _brdActivePointers[e.pointerId];
   if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+  // Masquer l'indicateur snap si le doigt se lève avant le déclenchement
+  var _sr=document.getElementById('_brdSnapRing');
+  if(_sr){_sr.style.opacity='0';_sr.style.transform='translate(-50%,-50%) scale(0)';}
   if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
   if(_brdTool==='hand'){if(_brdC)_brdC.style.cursor='grab';_brdPts=[];_brdDraw=false;return;}
   if(!_brdDraw)return;
@@ -16128,6 +16169,8 @@ function _boardExport(){
   var tmp=document.createElement('canvas');
   tmp.width=_brdBgC.width;tmp.height=_brdBgC.height;
   var ctx=tmp.getContext('2d');
+  // Fond blanc explicite pour éviter fond transparent/noir dans le PNG exporté
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,tmp.width,tmp.height);
   ctx.drawImage(_brdBgC,0,0);ctx.drawImage(_brdC,0,0);
   var url=tmp.toDataURL('image/png');
   var a=document.createElement('a');a.href=url;
@@ -16412,14 +16455,17 @@ function _brdOnSyncRequest(data){
 
 // ── Réception temps réel des traits des autres utilisateurs ──────────────────
 
+function _brdUserColor(uid){
+  // Couleur déterministe basée sur un hash du userId — stable quelle que soit l'ordre d'arrivée
+  var h=0;for(var i=0;i<uid.length;i++)h=(h*31+uid.charCodeAt(i))>>>0;
+  return _brdCursorColors[h%_brdCursorColors.length];
+}
 function _brdOnRemoteStrokeStart(d){
-  // Assigner une couleur de curseur unique par userId
-  var idx=Object.keys(_brdRemoteStrokes).length%_brdCursorColors.length;
-  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:_brdCursorColors[idx]};
-  // Trouver le nom du participant
+  var col=_brdUserColor(d.userId);
+  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col};
   var part=_brdParticipants.find(function(x){return x.id===d.userId;});
   var name=part?part.name:'?';
-  _brdShowRemoteCursor(d.userId,name,_brdCursorColors[idx]);
+  _brdShowRemoteCursor(d.userId,name,col);
 }
 
 function _brdOnRemotePt(d){
@@ -16434,9 +16480,13 @@ function _brdOnRemotePt(d){
 function _brdOnRemoteStrokeEnd(d){
   var stroke=_brdRemoteStrokes[d.userId];
   if(stroke)delete _brdRemoteStrokes[d.userId];
-  // Garder le curseur visible 2s puis le masquer
+  // Garder le curseur visible 2s puis le retirer du DOM (évite la fuite mémoire)
   var el=document.getElementById('_brdCursor-'+d.userId);
-  if(el)setTimeout(function(){if(el.parentNode&&!_brdRemoteStrokes[d.userId])el.style.opacity='0';},2000);
+  if(el)setTimeout(function(){
+    if(_brdRemoteStrokes[d.userId])return; // nouveau trait entre-temps
+    el.style.opacity='0';
+    setTimeout(function(){if(el.parentNode&&!_brdRemoteStrokes[d.userId])el.parentNode.removeChild(el);},350);
+  },2000);
 }
 
 // Dessiner un segment de trait reçu en temps réel
@@ -16477,11 +16527,15 @@ function _brdShowRemoteCursor(userId,name,color){
 }
 
 // Déplacer le curseur d'un utilisateur distant (coords canvas → coords page DOM)
+// RAF throttling : une seule mise à jour par frame même si plusieurs pts arrivent
+var _brdCursorRAF={};
 function _brdMoveRemoteCursor(userId,pt){
-  var el=document.getElementById('_brdCursor-'+userId);
-  if(!el)return;
-  el.style.left=(pt.x*_brdZoom)+'px';
-  el.style.top=(pt.y*_brdZoom)+'px';
+  if(_brdCursorRAF[userId])return; // déjà planifié pour cette frame
+  _brdCursorRAF[userId]=requestAnimationFrame(function(){
+    delete _brdCursorRAF[userId];
+    var el=document.getElementById('_brdCursor-'+userId);
+    if(el){el.style.left=(pt.x*_brdZoom)+'px';el.style.top=(pt.y*_brdZoom)+'px';}
+  });
 }
 
 // Nettoyer tous les curseurs distants (ex: fermeture du tableau)
@@ -16598,10 +16652,11 @@ function _brdOnParticipantLeft(data){
   _brdRenderPermPanel();
 }
 
-// Mettre à jour l'UI du toolbar (cadenas visible si lecture seule)
+// Mettre à jour l'UI du toolbar (cadenas visible si lecture seule, toolbar dimmed)
 function _brdUpdatePermUI(){
   var lock=g('_brdLockBadge');
   if(lock)lock.style.display=(_brdRoomId&&!_brdCanEdit)?'flex':'none';
+  _boardRenderSubbar(); // re-render pour appliquer/retirer le dimming lecture seule
 }
 
 // Rendre le panneau de gestion des permissions (prof seulement)
@@ -16628,4 +16683,49 @@ function _brdToggleEdit(userId,currentCanEdit){
   var ev=currentCanEdit?'board_revoke':'board_grant';
   _socket.emit(ev,{roomId:_brdRoomId,userId:userId});
   haptic(1);
+}
+
+// ── Sync pages distantes (ajout / suppression / renommage) ───────────────────
+function _brdOnRemotePageAdd(data){
+  if(!_boardActive)return;
+  // Ajouter la page dans notre tableau si elle n'existe pas encore
+  if(typeof data.pageIdx==='number'&&data.pageIdx>=_brdPages.length){
+    _brdPages.push(null);_brdPageNames.push(data.name||'');
+    _boardUpdatePageTabs();
+    toast('Nouvelle page ajoutée','');
+  }
+}
+function _brdOnRemotePageDelete(data){
+  if(!_boardActive)return;
+  if(typeof data.pageIdx==='number'&&data.pageIdx<_brdPages.length&&_brdPages.length>1){
+    _brdPages.splice(data.pageIdx,1);_brdPageNames.splice(data.pageIdx,1);
+    if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
+    if(_brdPages[_brdPageIdx]){
+      _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
+    }else{_boardClearFg();_boardUpdatePageTabs();}
+  }
+}
+function _brdOnRemotePageRename(data){
+  if(!_boardActive)return;
+  if(typeof data.pageIdx==='number'&&data.pageIdx<_brdPages.length){
+    _brdPageNames[data.pageIdx]=data.name||'';
+    _boardUpdatePageTabs();
+  }
+}
+
+// Émettre l'ajout / suppression / renommage de page pour les autres participants
+function _brdEmitPageAdd(){
+  if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_page_add',{roomId:_brdRoomId,pageIdx:_brdPages.length-1,name:_brdPageNames[_brdPages.length-1]||''});
+  }
+}
+function _brdEmitPageDelete(idx){
+  if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_page_delete',{roomId:_brdRoomId,pageIdx:idx});
+  }
+}
+function _brdEmitPageRename(idx,name){
+  if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_page_rename',{roomId:_brdRoomId,pageIdx:idx,name:name});
+  }
 }
