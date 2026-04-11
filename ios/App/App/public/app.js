@@ -14135,7 +14135,7 @@ function _vBuildDemoTile(f){
   lbl.id='_vtl-'+f.sid;
   lbl.style.cssText='position:absolute;bottom:8px;left:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:3;';
   var nameSpan=document.createElement('span');
-  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);max-width:calc(100% - 26px);';
+  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.7);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:calc(100% - 26px);';
   nameSpan.textContent=f.name;
   var netInd=document.createElement('div');
   netInd.id='_vnet-'+f.sid;netInd.style.cssText='flex-shrink:0;opacity:.8;';
@@ -14146,15 +14146,15 @@ function _vBuildDemoTile(f){
   reactArea.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden;';
   var pinInd=document.createElement('div');
   pinInd.id='_vpin-'+f.sid;
-  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:#FF6B2B;color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.3);';
   pinInd.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg> Épinglé';
   pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
   // Indicateur micro petit coin bas-droit (non-local = read-only, local = toggle)
   var micInd=document.createElement('button');
   micInd.id='_vdmic-'+f.sid;
   micInd.style.cssText='position:absolute;bottom:8px;right:8px;z-index:5;width:28px;height:28px;border-radius:50%;'
-    +'background:rgba(0,0,0,.55);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;'
-    +'backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 1px 6px rgba(0,0,0,.4);'
+    +'background:rgba(0,0,0,.65);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+    +'box-shadow:0 1px 6px rgba(0,0,0,.4);'
     +'-webkit-tap-highlight-color:transparent;transition:background .15s;';
   micInd.innerHTML=_vMicSvgSm(false);
   if(f.local){
@@ -14227,7 +14227,7 @@ function _buildVisioHTML(){
     // Raised hands panel
     +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.1);border-bottom:1px solid rgba(255,107,43,.2);z-index:2;flex-shrink:0"></div>'
     // Muted-while-speaking banner
-    +'<div id="_vMutedBanner" style="display:none;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(229,62,62,.85);backdrop-filter:blur(8px);z-index:5;flex-shrink:0">'
+    +'<div id="_vMutedBanner" style="display:none;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(200,40,40,.95);z-index:5;flex-shrink:0">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'
     +'<span style="font-size:13px;font-weight:700;color:#fff">Vous êtes muté — cliquez sur le micro pour parler</span>'
     +'</div>'
@@ -14235,12 +14235,12 @@ function _buildVisioHTML(){
     +'<div id="_vMain" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
     +'<div id="_vGrid" style="flex:1;display:grid;gap:8px;overflow:hidden;background:#0d0d18;padding:8px;min-height:0"></div>'
     // People panel (slide-in from right)
-    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:260px;background:rgba(10,10,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
+    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:260px;background:#0e0e1e;display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
     +'<div style="padding:14px 16px 10px;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">Participants</div>'
     +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
     +'</div>'
     // Comment panel (slide-in from right)
-    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:rgba(10,10,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
+    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:#0e0e1e;display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
     +'<div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
     +'<span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em">Commentaires</span>'
     +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
@@ -14251,12 +14251,12 @@ function _buildVisioHTML(){
     +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
     // Languette de rappel : visible quand le panneau est fermé, cliquable pour rouvrir
-    +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:rgba(255,107,43,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
+    +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:#FF6B2B;border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="11" height="11"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
     +'</div>'
     +'</div>'
     // Reactions panel (above controls)
-    +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:rgba(10,10,20,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
+    +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:#111120;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
     +['👍','❓','👏','🎉','🤔','👋'].map(function(e){return'<button onclick="_vSendReaction(\''+e+'\')" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1)">'+e+'</button>';}).join('')
     +'</div>'
     // Controls bar
@@ -14564,7 +14564,7 @@ function _vBuildTile(p,sid){
   lbl.id='_vtl-'+sid;
   lbl.style.cssText='position:absolute;bottom:8px;left:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:3;';
   var nameSpan=document.createElement('span');
-  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;backdrop-filter:blur(4px);max-width:calc(100% - 26px);';
+  nameSpan.style.cssText='font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.7);padding:3px 9px;border-radius:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:calc(100% - 26px);';
   nameSpan.textContent=(isLocal?'Vous':name);
   var netInd=document.createElement('div');
   netInd.id='_vnet-'+sid;netInd.style.cssText='flex-shrink:0;opacity:.8;';
@@ -14581,7 +14581,7 @@ function _vBuildTile(p,sid){
   // Pin indicator
   var pinInd=document.createElement('div');
   pinInd.id='_vpin-'+sid;
-  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
+  pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:#FF6B2B;color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.3);';
   pinInd.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg> Épinglé';
   pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
   if(_isOwner&&!isLocal){
