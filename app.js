@@ -7058,7 +7058,7 @@ var CR_MAT_ICONS={
   tennis:'<circle cx="12" cy="12" r="10"/><path d="M2.5 12h19M12 2.5c-4 6-4 13 0 19M12 2.5c4 6 4 13 0 19"/>',
   football:'<circle cx="12" cy="12" r="10"/><path d="M12 7l3 2-1 4H10l-1-4 3-2z"/><path d="M12 7V2M15 9l5-3M9 9l-5-3M14 13l3 5M10 13l-3 5"/>',
   basket:'<circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20M4.9 4.9c4 4 4 10.2 0 14.2M19.1 4.9c-4 4-4 10.2 0 14.2"/>',
-  running:'<circle cx="13" cy="4" r="2"/><path d="M5 20l3.5-3.5 2.5 2.5 3-7 4 4"/><path d="M7 9l2-3 4 1 3-3"/>',
+  running:'<circle cx="14" cy="3" r="2"/><path d="M13 5l-3 7"/><path d="M12 8l4 3"/><path d="M12 8l-3-1"/><path d="M10 12l-4 8"/><path d="M10 12l5 6"/>',
   boxe:'<path d="M8 6a4 4 0 018 0v5H8V6z"/><rect x="6" y="11" width="12" height="5" rx="2"/><path d="M9 16v2a3 3 0 006 0v-2"/>',
   golf:'<circle cx="12" cy="18" r="3"/><path d="M12 15V3"/><path d="M12 3l7 4-7 4"/>',
   nutrition:'<path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/>',
