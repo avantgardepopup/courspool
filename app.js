@@ -15397,6 +15397,8 @@ function _boardInitCanvas(){
     pw=Math.max(pw,180);ph=Math.round(pw*(3/4));pw=Math.round(pw);
   }
   if(page){page.style.width=pw+'px';page.style.height=ph+'px';}
+  // Save current page strokes BEFORE clearing the canvas (prevents content loss on resize/orientation change)
+  if(_brdC&&!_brdRestorePending)_boardSavePage();
   // Foreground canvas (strokes) — reset epoch so any pending restore from previous init is discarded
   _brdRestoreEpoch++;_brdRestorePending=false;
   canv.width=Math.round(pw*dpr);canv.height=Math.round(ph*dpr);
@@ -15625,12 +15627,12 @@ function _boardGoPage(idx){
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // PNG lossless pour le stockage local — élimine la dégradation JPEG cumulée sur chaque navigate
+  // Sauvegarder uniquement les traits (fond transparent) — le fond blanc+grille vit dans _brdBgC
+  // et est redessiné par _boardDrawBg() à chaque init. Baking white here was causing the canvas
+  // to appear pure white after restore (opaque white covered the _brdBgC grid layer).
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
-  var tX=tmp.getContext('2d');
-  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
-  tX.drawImage(_brdC,0,0);
+  tmp.getContext('2d').drawImage(_brdC,0,0);
   _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
 }
 function _boardAddPage(){
@@ -16432,7 +16434,8 @@ function _pipInitDrag(handle,pip){
   }
 
   pip.addEventListener('pointerdown',function(e){
-    if(e.target.tagName==='BUTTON')return;
+    // Check if touch landed on a button OR any child of a button (e.g. SVG icon inside button)
+    var _t=e.target;while(_t&&_t!==pip){if(_t.tagName==='BUTTON')return;_t=_t.parentNode;}
     var curX=parseInt(pip.style.left)||0,curY=parseInt(pip.style.top)||0;
     _ptrs[e.pointerId]={sx:e.clientX,sy:e.clientY,ox:curX,oy:curY,cx:e.clientX,cy:e.clientY,active:false};
     try{pip.setPointerCapture(e.pointerId);}catch(err){}
