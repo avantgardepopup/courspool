@@ -4444,7 +4444,7 @@ function _openPrLegacy(pid){
           +'<div style="font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.title)+'</div>'
           +'<div style="font-size:11.5px;color:var(--mid);margin-top:2px">'+esc(fmtDt(c.dt))+'</div>'
           +'</div>'
-          +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?'Visio':'Présentiel')+'</span>'
+          +'<span style="font-size:11px;font-weight:700;background:'+(isV?'rgba(0,113,227,.1)':'rgba(0,177,79,.1)')+';color:'+(isV?'#0055B3':'#007A38')+';border-radius:50px;padding:3px 9px;flex-shrink:0">'+(isV?t('mode_visio'):t('mode_pres'))+'</span>'
           +'</div>';
       }).join('')
       :'<div style="text-align:center;padding:28px 16px 16px"><div style="width:48px;height:48px;background:var(--bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--lite)" stroke-width="1.8" stroke-linecap="round" width="24" height="24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun cours à venir</div><div style="font-size:12.5px;color:var(--lite);line-height:1.5">Ce professeur n\'a pas de cours disponibles pour le moment.</div></div>';
@@ -4775,7 +4775,7 @@ function openPrFull(pid){
     p.photo=cours[0].prof_photo||null;
   }
   var displayNm=p.nm||t('reg_prof'),displayIni=p.i||'?',displayCol=p.col||'linear-gradient(135deg,#FF8C55,#E04E10)',displayPhoto=p.photo||null;
-  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
 
   // Avatar
   var avEl=g('tpAvWrap');if(avEl){setAvatar(avEl,displayPhoto,displayIni,displayCol);avEl._photo=displayPhoto;}
@@ -4784,13 +4784,13 @@ function openPrFull(pid){
   // Since / role
   var sinceEl=g('tpSince');
   if(sinceEl){
-    var roleStr=p.statut?(STATUT[p.statut]||p.statut):'Enseignant';
-    sinceEl.textContent=roleStr+(p.created_at||p.since?' · Membre depuis '+(new Date(p.created_at||p.since)).getFullYear():'');
+    var roleStr=p.statut?(STATUT[p.statut]||p.statut):t('tp_default_role');
+    sinceEl.textContent=roleStr+(p.created_at||p.since?' · '+t('tp_membre_depuis')+' '+(new Date(p.created_at||p.since)).getFullYear():'');
   }
   // Contact button label
-  var cl=g('tpContactLabel');if(cl){var _pr=displayNm.split(' ')[0];cl.textContent='Contacter '+(_pr||displayNm);}
+  var cl=g('tpContactLabel');if(cl){var _pr=displayNm.split(' ')[0];cl.textContent=t('tp_contacter')+' '+(_pr||displayNm);}
   // Espace title
-  var et=g('tpEspaceTitle');if(et){var _pr2=displayNm.split(' ')[0];et.textContent='Espace privé de '+(_pr2||displayNm);}
+  var et=g('tpEspaceTitle');if(et){var _pr2=displayNm.split(' ')[0];et.textContent=t('tp_espace_de')+' '+(_pr2||displayNm);}
   // Follow badge (show for all profiles except own)
   var isOwnProfile=!!(user&&pid===user.id);
   var vb=g('tpVerifBadge');if(vb)vb.style.display=isOwnProfile?'none':'flex';
@@ -4856,13 +4856,13 @@ function openPrFull(pid){
       var mats=prof.matieres.split(',').map(function(m){return m.trim();}).filter(Boolean);
       _tpRenderMatieres(mats,mats.slice(0,2));
     }
-    if(prof.statut&&g('tpSince')){g('tpSince').textContent=(STATUT[prof.statut]||prof.statut)+(prof.created_at?' · Membre depuis '+new Date(prof.created_at).getFullYear():'');}
+    if(prof.statut&&g('tpSince')){g('tpSince').textContent=(STATUT[prof.statut]||prof.statut)+(prof.created_at?' · '+t('tp_membre_depuis')+' '+new Date(prof.created_at).getFullYear():'');}
     _tpRenderStatut(P[pid]);
     _tpBuildTrustCards(P[pid],pid);
     var _nbE=prof.nb_eleves!==undefined?prof.nb_eleves:(prof.followers_count!==undefined?prof.followers_count:undefined);
     if(_nbE!==undefined&&_nbE>0){P[pid].e=Math.max(_nbE,P[pid].e||0);if(g('tpStEleves'))g('tpStEleves').textContent=P[pid].e;}
-    var _cl=g('tpContactLabel');if(_cl){var _pr3=(prof.prenom||_apiNm||displayNm).split(' ')[0];_cl.textContent='Contacter '+_pr3;}
-    var _et=g('tpEspaceTitle');if(_et){var _pr4=(prof.prenom||_apiNm||displayNm).split(' ')[0];_et.textContent='Espace privé de '+_pr4;}
+    var _cl=g('tpContactLabel');if(_cl){var _pr3=(prof.prenom||_apiNm||displayNm).split(' ')[0];_cl.textContent=t('tp_contacter')+' '+_pr3;}
+    var _et=g('tpEspaceTitle');if(_et){var _pr4=(prof.prenom||_apiNm||displayNm).split(' ')[0];_et.textContent=t('tp_espace_de')+' '+_pr4;}
   }).catch(function(){});
   var el=g('bdPrFull');if(el){el.style.display='flex';el.classList.remove('closing');}
   if(g('tpScroll'))g('tpScroll').scrollTop=0;
@@ -4900,23 +4900,23 @@ function _tpBuildTrustCards(p,pid){
   if(_isVrf){
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'identite\')">'
       +'<div style="'+_ior+'">'+_icoIdW+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Identité vérifiée</div><div class="tp-trust-sub">CNI contrôlée par CoursPool</div></div>'
-      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">Vérifié ›</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('tp_identite_verifiee')+'</div><div class="tp-trust-sub">'+t('tp_cni_ctrl')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#FFF0E8;color:#FF6B2B">'+t('tp_badge_verifie')+'</div>'
       +'</div>';
   }
   if(_isDip){
-    var dipLabel=p.diplome||p.niveau||'Diplôme vérifié';
+    var dipLabel=p.diplome||p.niveau||t('tp_diplome_verifie');
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'diplome\')">'
       +'<div style="'+_iob+'">'+_icoDipW+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Diplôme vérifié</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
-      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">Vérifié ›</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('tp_diplome_verifie')+'</div><div class="tp-trust-sub">'+esc(dipLabel)+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#EEF2FF;color:#4F46E5">'+t('tp_badge_verifie')+'</div>'
       +'</div>';
   }
   if(_isCas){
     h+='<div class="tp-trust-card" style="'+_tcs+'" onclick="showBadgeInfo(\'confiance\')">'
       +'<div style="'+_iog+'">'+_icoShldW+'</div>'
-      +'<div class="tp-trust-text"><div class="tp-trust-lbl">Profil de confiance</div><div class="tp-trust-sub">Casier judiciaire vérifié</div></div>'
-      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">Certifié ›</div>'
+      +'<div class="tp-trust-text"><div class="tp-trust-lbl">'+t('tp_profil_confiance')+'</div><div class="tp-trust-sub">'+t('tp_casier_verifie')+'</div></div>'
+      +'<div class="tp-trust-badge" style="background:#ECFDF5;color:#10B981">'+t('tp_badge_certifie')+'</div>'
       +'</div>';
   }
   box.innerHTML=h;
@@ -4925,7 +4925,7 @@ function _tpBuildTrustCards(p,pid){
 
 function _tpRenderStatut(p){
   var sect=g('tpStatutSection'),list=g('tpStatutList');if(!sect||!list)return;
-  var STATUT={'etudiant':'Étudiant(e)','prof_ecole':'Professeur des écoles','prof_college':'Professeur collège/lycée','prof_universite':'Enseignant-chercheur','auto':'Auto-entrepreneur','autre':'Autre'};
+  var STATUT={'etudiant':t('statut_etudiant'),'prof_ecole':t('statut_prof_ecoles'),'prof_college':t('statut_prof_clg'),'prof_universite':t('statut_chercheur'),'auto':t('statut_auto'),'autre':t('statut_autre')};
   function _row(svgPath,bg,col,lbl,val){
     return'<div class="tp-card-row">'
       +'<div style="width:32px;height:32px;border-radius:9px;background:'+bg+';display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:12px">'
@@ -4942,15 +4942,15 @@ function _tpRenderStatut(p){
     lieu:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'
   };
   var rows='';
-  rows+=_row(_ico.statut,'#F5F3FF','#8B5CF6','Statut',p.statut?(STATUT[p.statut]||p.statut):'—');
+  rows+=_row(_ico.statut,'#F5F3FF','#8B5CF6',t('tp_row_statut'),p.statut?(STATUT[p.statut]||p.statut):'—');
   var dip=p.diplome||p.niveau||null;
-  rows+=_row(_ico.diplome,'#EEF2FF','#4F46E5','Diplôme',dip||'—');
+  rows+=_row(_ico.diplome,'#EEF2FF','#4F46E5',t('tp_row_diplome'),dip||'—');
   var fm=p.formations?String(p.formations).split('\n').filter(Boolean)[0]:null;
-  if(fm)rows+=_row(_ico.formation,'#EEF2FF','#4F46E5','Formations',fm+(p.formations.split('\n').filter(Boolean).length>1?' …':''));
+  if(fm)rows+=_row(_ico.formation,'#EEF2FF','#4F46E5',t('tp_row_formations'),fm+(p.formations.split('\n').filter(Boolean).length>1?' …':''));
   var exp=p.experiences||p.experience||null;
-  if(exp)rows+=_row(_ico.experience,'#F5F3FF','#8B5CF6','Expérience',String(exp).split('\n')[0]);
+  if(exp)rows+=_row(_ico.experience,'#F5F3FF','#8B5CF6',t('tp_row_experience'),String(exp).split('\n')[0]);
   var lieu=p.lieu_enseignement||p.lieu||null;
-  if(lieu)rows+=_row(_ico.lieu,'#FFF0E8','#FF6B2B','Lieu d\'enseignement',lieu);
+  if(lieu)rows+=_row(_ico.lieu,'#FFF0E8','#FF6B2B',t('tp_row_lieu'),lieu);
   if(!rows){sect.style.display='none';return;}
   list.innerHTML=rows;sect.style.display='block';
 }
@@ -4970,7 +4970,7 @@ function _tpBuildCourses(pid){
   var container=g('tpCoursList');if(!container)return;
   var cours=C.filter(function(c){return c.pr===pid&&!_isCoursPass(c)&&c.fl<c.sp;});
   if(!cours.length){
-    container.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Aucun cours disponible pour le moment.</div>';
+    container.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">'+t('tp_no_cours')+'</div>';
     return;
   }
   container.innerHTML='';
@@ -11251,7 +11251,7 @@ function _initStepDefs(){STEP_DEFS=[
 ];}
 _initStepDefs();
 
-var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
+var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4,visio_type:'appli',visio_url_custom:''};
 var _sc=0;
 
 function _fmtRecDate(d){
@@ -11325,7 +11325,7 @@ function openCrStep(){
     else{toast(t('t_verif_pending'),t('t_verif_pending_sub'));}
     return;
   }
-  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
+  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4,visio_type:'appli',visio_url_custom:''};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
   // Réinitialiser les boutons nav (peuvent avoir été mutés par _showCoursePublishedStep)
@@ -11483,12 +11483,27 @@ function stepRender(idx){
 
   }else if(step.id==='lieu'){
     if(_sd.mode==='visio'){
-      html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
-        +'<div style="background:var(--orp);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">'
-        +'<div style="width:52px;height:52px;background:rgba(0,113,227,.12);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
-        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('cr_step_visio_title')+'</div>'
-        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">'+t('cr_step_visio_desc')+'</div></div>'
-        +'</div></div>';
+      var _vta=_sd.visio_type==='appli';
+      var _vte=_sd.visio_type==='lien';
+      var _optStyle='border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s;-webkit-tap-highlight-color:transparent;border:2px solid ';
+      html+='<div style="width:100%;display:flex;flex-direction:column;gap:12px">'
+        // Option A — Via l'appli
+        +'<div onclick="pickVisioType(\'appli\')" style="'+_optStyle+(_vta?'#0071E3;background:rgba(0,113,227,.06)':'var(--bdr);background:var(--wh)')+'">'
+        +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(0,113,227,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
+        +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('cr_visio_app_title')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--lite);margin-top:2px;line-height:1.4">'+t('cr_visio_app_desc')+'</div></div>'
+        +(_vta?'<div style="width:20px;height:20px;border-radius:50%;background:#0071E3;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div>':'')
+        +'</div>'
+        // Option B — Lien externe
+        +'<div onclick="pickVisioType(\'lien\')" style="'+_optStyle+(_vte?'#0071E3;background:rgba(0,113,227,.06)':'var(--bdr);background:var(--wh)')+'">'
+        +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(0,113,227,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>'
+        +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('cr_visio_ext_title')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--lite);margin-top:2px;line-height:1.4">'+t('cr_visio_ext_desc')+'</div></div>'
+        +(_vte?'<div style="width:20px;height:20px;border-radius:50%;background:#0071E3;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div>':'')
+        +'</div>'
+        // Input URL si lien externe
+        +(_vte?'<input id="stepVisioCustomUrl" class="search-input-premium" style="width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;box-sizing:border-box" placeholder="'+t('cr_visio_ext_ph')+'" value="'+escH(_sd.visio_url_custom||'')+'" oninput="_sd.visio_url_custom=this.value.trim()">':'')
+        +'</div>';
     }else{
       var _fi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)';
       var _lt=_sd.lieu_type||'';
@@ -11825,6 +11840,12 @@ function stepLieuSearch(q){
   },350);
 }
 
+function pickVisioType(type){
+  _sd.visio_type=type;
+  stepRender(_sc);
+  haptic(8);
+}
+
 function stepNext(){
   var step=STEP_DEFS[_sc];
   if(step.id==='titre'){if(g('stepTitre'))_sd.titre=g('stepTitre').value.trim();if(!_sd.titre){toast(t('t_title_req'),t('t_title_req_msg'));return;}}
@@ -11839,7 +11860,12 @@ function stepNext(){
     if(_dt<=new Date()){toast(t('t_date_incoherent'),t('t_date_future_msg'));return;}
   }
   if(step.id==='lieu'){
-    if(_sd.mode!=='visio'){
+    if(_sd.mode==='visio'){
+      if(_sd.visio_type==='lien'){
+        if(g('stepVisioCustomUrl'))_sd.visio_url_custom=g('stepVisioCustomUrl').value.trim();
+        if(!_sd.visio_url_custom||!/^https?:\/\//i.test(_sd.visio_url_custom)){toast('Lien requis','Entrez un lien valide commençant par https://');return;}
+      }
+    }else{
       if(!_sd.lieu_type){toast(t('t_location_req'),t('t_location_type_req'));return;}
       if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
       if(g('stepLieuPrive'))_sd.lieu_prive=g('stepLieuPrive').value.trim();
@@ -11855,7 +11881,6 @@ function stepNext(){
   var total=STEP_DEFS.length;
   if(_sc<total-1){
     _sc++;
-    if(STEP_DEFS[_sc]&&STEP_DEFS[_sc].id==='lieu'&&_sd.mode==='visio')_sc++;
     stepRender(_sc);haptic(8);
   }else subCrStep();
 }
@@ -11863,7 +11888,6 @@ function stepNext(){
 function stepBack(){
   if(_sc===0){closeCrStep();return;}
   _sc--;
-  if(STEP_DEFS[_sc]&&STEP_DEFS[_sc].id==='lieu'&&_sd.mode==='visio')_sc--;
   stepRender(_sc);haptic(6);
 }
 
@@ -11882,7 +11906,8 @@ async function subCrStep(){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
-      var _visioUrl=''; // room Daily.co créée côté serveur
+      // Si lien externe, on envoie l'URL custom. Si appli, le backend créera la room Daily.co.
+      var _visioUrl=(_isVisioMode&&_sd.visio_type==='lien')?(_sd.visio_url_custom||''):'';
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
         lieu:_isVisioMode?'Visio':_sd.lieu,
@@ -11903,7 +11928,9 @@ async function subCrStep(){
       var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
       var data=await r.json();
       if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
-      if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
+      // Si le backend a créé une room Daily.co, récupérer l'URL renvoyée
+      var _resolvedVisioUrl=_visioUrl||(data.visio_url||data.cours&&data.cours.visio_url)||'';
+      if(!_firstVisioUrl&&_resolvedVisioUrl)_firstVisioUrl=_resolvedVisioUrl;
       _published++;
     }
     haptic([10,50,100,50,10]);
@@ -12036,15 +12063,7 @@ function _fallbackCopyVisio(url){
       var rmb=g('rModeBadge');
       if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?t('mode_visio'):t('mode_pres'))+'</span>';}
       var rvj=g('rVisioJoin');
-      if(rvj){
-        var _isProf=user&&c.pr===user.id;
-        var _isEnrolled=!!res[c.id];
-        var _rStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
-        var _rInWin=!_rStart||(Date.now()>=_rStart-15*60*1000&&Date.now()<=_rStart+2*60*60*1000);
-        var show=c.mode==='visio'&&c.visio_url&&(_isProf||(_isEnrolled&&_rInWin));
-        rvj.style.display=show?'flex':'none';
-        if(show)rvj.href=(/^https?:\/\//i.test(c.visio_url)?c.visio_url:'#');
-      }
+      if(rvj){rvj.style.display='none';}
     },50);
   };
 
@@ -12459,8 +12478,11 @@ function buildMesCard(c,isPast,isProf,kind){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
       else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
     } else if(!!res[c.id]){
-      if(c.visio_url&&_vInWin){visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre en visio</button>';}
-      else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
+      // Toujours afficher le bouton Rejoindre pour les élèves inscrits en visio
+      var _vOnclick=_vInWin&&c.visio_url
+        ?'event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')'
+        :'event.stopPropagation();toast(t(\'visio_not_yet\'),t(\'visio_not_yet_sub\').replace(\'{heure}\',\''+escH(_vHeure)+'\'))';
+      visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="'+_vOnclick+'">'+t('mes_rejoindre_visio')+'</button>';
     }
   }
   var code='';
@@ -14006,14 +14028,60 @@ function _vOpenDemo(){
   ];
   fakes.forEach(function(f){grid.appendChild(_vBuildDemoTile(f));});
   _vApplyLayout();
-  // Simulate active speaker cycling for demo
-  setTimeout(function(){_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});},1000);
-  setInterval(function(){
-    if(!_boardActive)return;
-    var candidates=['demo-p1','demo-p2'];
-    _vOnActiveSpeaker({activeSpeaker:{peerId:candidates[Math.floor(Math.random()*candidates.length)]}});
-  },5000);
+  // Détection audio : bulle + ring réactif au volume
+  _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
+  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+    _startDemoAudio(stream);
+  }).catch(function(){/* pas de micro → bulle fixe */});
   haptic(1);
+}
+
+function _startDemoAudio(stream){
+  _demoAudioStream=stream;
+  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}}
+  _demoAudioCtx=new AudioContext();
+  var src=_demoAudioCtx.createMediaStreamSource(stream);
+  _demoAnalyser=_demoAudioCtx.createAnalyser();
+  _demoAnalyser.fftSize=256;
+  src.connect(_demoAnalyser);
+  _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
+  _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
+  _demoAudioLoop();
+}
+
+function _demoAudioLoop(){
+  if(!_isDemoMode||!_demoAnalyser){_demoRAFId=null;return;}
+  _demoAnalyser.getByteFrequencyData(_demoBuf);
+  var sum=0;for(var i=0;i<_demoBuf.length;i++)sum+=_demoBuf[i];
+  var avg=sum/_demoBuf.length; // typiquement 0-90 pour la parole normale
+
+  // ── Ring visuel : taille + glow proportionnels au volume ──
+  var ring=g('_vsring-demo-local');
+  if(ring&&!_localMuted){
+    var c=Math.min(avg,90);
+    var scale=1+c/90*1.5;       // 1.0 (silence) → 2.5 (très fort)
+    var sp1=(c/90*20).toFixed(1);  // ring spread intérieur 0→20px
+    var gl=(c/90*40).toFixed(0);   // glow extérieur 0→40px
+    var a1=(0.12+c/90*0.48).toFixed(2); // opacité ring 0.12→0.60
+    var a2=(0.06+c/90*0.24).toFixed(2); // opacité glow 0.06→0.30
+    ring.style.transform='scale('+scale.toFixed(3)+')'; // centré via margin:-32px
+    ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
+    ring.style.opacity=avg>6?'1':'0';
+  }else if(ring){
+    ring.style.opacity='0';ring.style.transform='scale(1)';
+  }
+
+  // ── Changement de locuteur PiP (throttlé à 150ms) ──
+  var now=Date.now();
+  if(now-_demoPipThrottle>150){
+    _demoPipThrottle=now;
+    var spk=avg>14;
+    if(spk&&!_demoLocalSpeaking){_demoLocalSpeaking=true;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-local'}});}
+    else if(!spk&&_demoLocalSpeaking){_demoSilenceSince=now;_demoLocalSpeaking=false;}
+    else if(!spk&&!_demoLocalSpeaking&&now-_demoSilenceSince>1800){_demoSilenceSince=now+3600000;_vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});}
+  }
+  _demoRAFId=requestAnimationFrame(_demoAudioLoop);
 }
 
 function _vBuildDemoTile(f){
@@ -14043,13 +14111,27 @@ function _vBuildDemoTile(f){
   pinInd.style.cssText='position:absolute;top:8px;left:50%;transform:translateX(-50%);display:none;background:rgba(255,107,43,.85);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;z-index:3;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.3);';
   pinInd.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17z"/></svg> Épinglé';
   pinInd.style.display='none';pinInd.style.alignItems='center';pinInd.style.gap='4px';
-  if(!f.local){
-    var pc=document.createElement('div');
-    pc.style.cssText='position:absolute;top:8px;left:8px;display:flex;gap:5px;z-index:3;';
-    var bs2='border:none;color:#fff;border-radius:20px;padding:5px 11px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 10px rgba(0,0,0,.35);';
-    pc.innerHTML='<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="'+bs2+'background:#FF6B2B;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Parole</button>'
-      +'<button onclick="event.stopPropagation();toast(\'Mode démo\',\'\')" style="'+bs2+'background:rgba(255,255,255,.15);backdrop-filter:blur(4px);"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Mute</button>';
-    wrap.appendChild(pc);
+  // Indicateur micro petit coin bas-droit (non-local = read-only, local = toggle)
+  var micInd=document.createElement('button');
+  micInd.id='_vdmic-'+f.sid;
+  micInd.style.cssText='position:absolute;bottom:8px;right:8px;z-index:5;width:28px;height:28px;border-radius:50%;'
+    +'background:rgba(0,0,0,.55);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;'
+    +'backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 1px 6px rgba(0,0,0,.4);'
+    +'-webkit-tap-highlight-color:transparent;transition:background .15s;';
+  micInd.innerHTML=_vMicSvgSm(false);
+  if(f.local){
+    micInd.onclick=function(e){e.stopPropagation();_vToggleMic();};
+  }else{
+    micInd.style.cursor='default';
+    micInd.onclick=function(e){e.stopPropagation();};
+  }
+  wrap.appendChild(micInd);
+  // Ring audio-réactif centré (local seulement)
+  if(f.local){
+    var ring=document.createElement('div');
+    ring.id='_vsring-'+f.sid;
+    ring.style.cssText='position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;z-index:0;opacity:0;transition:transform .06s linear,box-shadow .06s linear,opacity .15s ease;pointer-events:none;will-change:transform,box-shadow;';
+    wrap.appendChild(ring);
   }
   wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
   return wrap;
@@ -14059,6 +14141,9 @@ var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_n
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
 var _vPipFeaturedSid=null; // currently displayed SID in PiP mode
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
+var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
+var _demoAnalyser=null,_demoBuf=null,_demoRAFId=null;
+var _demoLocalSpeaking=false,_demoSilenceSince=0,_demoPipThrottle=0;
 var _vComments=[],_vCommentOpen=false,_vCommentAllowed=true;
 
 function openVisioModal(url){
@@ -14146,6 +14231,7 @@ function _buildVisioHTML(){
 }
 
 function _vMicSvg(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(muted?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(muted?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';}
+function _vMicSvgSm(muted){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(muted?'#fc8181':'rgba(255,255,255,.9)')+'" stroke-width="2.2" stroke-linecap="round" width="14" height="14">'+(muted?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';}
 function _vCamSvg(off){return'<svg viewBox="0 0 24 24" fill="none" stroke="'+(off?'#fc8181':'#fff')+'" stroke-width="2" stroke-linecap="round" width="22" height="22">'+(off?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';}
 
 function _updateVisioTimer(){var el=g('_vTimer');if(!el)return;var m=Math.floor(_callSec/60),s=_callSec%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
@@ -14244,6 +14330,11 @@ function _vCheckMutedSpeaking(){
       micBtn.style.boxShadow='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
       micBtn.style.background='rgba(255,255,255,.12)';
     }
+  }
+  // PiP : si l'utilisateur local parle (et n'est pas muté), le mettre en locuteur actif
+  if(!_localMuted&&isSpeaking&&_activeSpeakerSid!=='local'){
+    _activeSpeakerSid='local';
+    if(_boardActive)_vApplyLayout();
   }
 }
 
@@ -14539,12 +14630,36 @@ function _vUpdatePeople(){
 function _vToggleMic(){
   if(!_callObj&&!_isDemoMode)return;
   // Students can unmute only if prof gave floor or open floor is active
-  if(_localMuted&&!_isOwner&&!_openFloor&&!_floorGranted){
+  if(_localMuted&&!_isOwner&&!_openFloor&&!_floorGranted&&!_isDemoMode){
     toast('✋ Lève la main pour demander la parole','');haptic(1);return;
   }
   _localMuted=!_localMuted;
-  if(_callObj)_callObj.setLocalAudio(!_localMuted);
   var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);
+  var bsm=g('_vdmic-demo-local');if(bsm)bsm.innerHTML=_vMicSvgSm(_localMuted);
+  if(_isDemoMode){
+    if(_localMuted){
+      // Couper le micro : arrêter le stream + ring
+      if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+      _demoAnalyser=null;
+      if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+      if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
+      var ring=g('_vsring-demo-local');if(ring){ring.style.opacity='0';ring.style.transform='scale(1)';}
+      _demoLocalSpeaking=false;
+      _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
+    }else{
+      // Réactiver : re-demander l'accès au micro
+      navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+        _startDemoAudio(stream);
+        var ban=g('_vMutedBanner');if(ban)ban.style.display='none';
+      }).catch(function(){
+        _localMuted=true;
+        var b2=g('_vMic');if(b2)b2.innerHTML=_vMicSvg(true);
+        toast('Micro non disponible','Autorisez l\'accès au micro dans les réglages');
+      });
+    }
+    haptic(1);return;
+  }
+  if(_callObj)_callObj.setLocalAudio(!_localMuted);
   if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
   haptic(1);
 }
@@ -14782,8 +14897,8 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>'
     +'<span style="font-size:11.5px;font-weight:600;">Cours</span></button>'
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
-    // Chrome-style page tabs strip
-    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow:hidden;"></div>'
+    // Chrome-style page tabs strip (scrollable quand beaucoup de pages)
+    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
     +'<button id="_bU" onclick="_boardUndo()" style="'+ib+'width:36px;" title="Annuler">'
@@ -15181,8 +15296,8 @@ function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
 function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
-  // Chrome-style: tabs fill full width, shrink equally as more are added
-  var tabStyle='flex:1;min-width:0;overflow:hidden;';
+  // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
+  var tabStyle='flex-shrink:0;min-width:72px;max-width:140px;overflow:hidden;';
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
     var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
@@ -15512,18 +15627,26 @@ function _brdShowSelOverlay(){
     +'background:#FF6B2B;border-radius:50%;cursor:grab;display:flex;align-items:center;justify-content:center;'
     +'box-shadow:0 2px 8px rgba(0,0,0,.3);touch-action:none;';
   rh.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 11-2.8-7.2L23 10"/></svg>';
-  el.appendChild(sc);el.appendChild(bd);el.appendChild(rh);
+  // Resize handle (bottom-right corner)
+  var rzh=document.createElement('div');
+  rzh.style.cssText='position:absolute;bottom:-10px;right:-10px;width:20px;height:20px;'
+    +'background:#FF6B2B;border-radius:50%;cursor:nwse-resize;touch-action:none;z-index:2;'
+    +'box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;';
+  rzh.innerHTML='<svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="8" height="8"><line x1="1" y1="11" x2="11" y2="1"/><line x1="6" y1="11" x2="11" y2="6"/></svg>';
+  el.appendChild(sc);el.appendChild(bd);el.appendChild(rh);el.appendChild(rzh);
   page.appendChild(el);
   sel.el=el;
-  _brdInitSelDrag(el,rh);
+  _brdInitSelDrag(el,rh,rzh);
   _brdShowSelBar();
 }
-function _brdInitSelDrag(el,rotHandle){
+function _brdInitSelDrag(el,rotHandle,resizeHandle){
   var sel=_brdSel;
-  var dragging=false,rotating=false,startX,startY,startLeft,startTop,startRotCX,startRotCY,startAngle;
+  var dragging=false,rotating=false,resizing=false;
+  var startX,startY,startLeft,startTop,startRotCX,startRotCY,startAngle,startW,startH;
   // Drag the overlay
   el.addEventListener('pointerdown',function(e){
     if(e.target===rotHandle||rotHandle.contains(e.target))return;
+    if(resizeHandle&&(e.target===resizeHandle||resizeHandle.contains(e.target)))return;
     e.stopPropagation();e.preventDefault();
     dragging=true;el.setPointerCapture(e.pointerId);
     startX=e.clientX;startY=e.clientY;startLeft=sel.x;startTop=sel.y;
@@ -15552,6 +15675,27 @@ function _brdInitSelDrag(el,rotHandle){
     _brdUpdateSelBar();
   });
   rotHandle.addEventListener('pointerup',function(){rotating=false;});
+  // Resize handle (bottom-right)
+  if(resizeHandle){
+    resizeHandle.addEventListener('pointerdown',function(e){
+      e.stopPropagation();e.preventDefault();
+      resizing=true;resizeHandle.setPointerCapture(e.pointerId);
+      startX=e.clientX;startY=e.clientY;startW=sel.w;startH=sel.h;
+    });
+    resizeHandle.addEventListener('pointermove',function(e){
+      if(!resizing)return;e.preventDefault();
+      var dw=(e.clientX-startX)/_brdZoom;
+      var dh=(e.clientY-startY)/_brdZoom;
+      sel.w=Math.max(20,startW+dw);
+      sel.h=Math.max(20,startH+dh);
+      el.style.width=sel.w+'px';el.style.height=sel.h+'px';
+      // Scale preview canvas to match new size
+      var sc=el.querySelector('canvas');
+      if(sc){sc.style.width=sel.w+'px';sc.style.height=sel.h+'px';}
+      _brdUpdateSelBar();
+    });
+    resizeHandle.addEventListener('pointerup',function(){resizing=false;});
+  }
 }
 function _brdShowSelBar(){
   var sel=_brdSel;
@@ -15935,6 +16079,11 @@ function closeVisioModal(){
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
   if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
+  if(_demoSpeakTimer){clearInterval(_demoSpeakTimer);_demoSpeakTimer=null;}
+  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+  _demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;
+  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
   if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
   var bd=g('bdVisio');if(bd)bd.style.display='none';
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
