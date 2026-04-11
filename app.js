@@ -14937,7 +14937,11 @@ function _buildBoardInner(){
     +'<div style="height:max(env(safe-area-inset-top,20px),20px);"></div>'
     // Actual nav content row (fixed 46px) — sans bouton retour pour plus d'espace aux onglets
     +'<div style="display:flex;align-items:stretch;height:46px;padding:0 6px;">'
-    // Chrome-style page tabs strip (scrollable quand beaucoup de pages)
+    // Bouton maison : retour au visio
+    +'<button onclick="_vCloseBoard()" style="'+ib+'width:36px;flex-shrink:0;" title="Retour au visio">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>'
+    +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 4px;flex-shrink:0;"></div>'
+    // Page tabs : flex:1 pour partager la largeur disponible, se réduisent automatiquement
     +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
@@ -14948,7 +14952,7 @@ function _buildBoardInner(){
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
     // ── Floating glass pill : ← retour | minuteur | exporter ──
-    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;z-index:150;display:flex;align-items:center;gap:2px;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;padding:4px 6px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
+    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;z-index:150;display:flex;align-items:center;gap:2px;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;overflow:hidden;padding:4px 6px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
     +'<button onclick="_vCloseBoard()" style="'+glassBtn+'" title="Retour">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
     +(_isOwner
@@ -15428,7 +15432,7 @@ function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
   // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
-  var tabStyle='flex-shrink:0;min-width:72px;max-width:140px;overflow:hidden;';
+  var tabStyle='flex:1;min-width:32px;max-width:140px;overflow:hidden;';
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
     var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
@@ -15477,7 +15481,16 @@ function _boardGoPage(idx){
   }
   haptic(1);
 }
-function _boardSavePage(){if(_brdC)_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}
+function _boardSavePage(){
+  if(!_brdC||!_brdX)return;
+  // JPEG ne supporte pas la transparence — remplir en blanc derrière le contenu
+  _brdX.save();
+  _brdX.globalCompositeOperation='destination-over';
+  _brdX.fillStyle='#ffffff';
+  _brdX.fillRect(0,0,_brdC.width,_brdC.height);
+  _brdX.restore();
+  _brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);
+}
 function _boardAddPage(){
   _boardSavePage();_brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
   _boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
