@@ -14861,11 +14861,27 @@ function _vToggleCam(){
   var b=g('_vCam');if(b){b.innerHTML=_vCamSvg(_localCamOff);b.style.background=_localCamOff?'rgba(229,62,62,.35)':'rgba(255,255,255,.12)';}
   var bsm=g('_vdcam-demo-local');if(bsm)bsm.innerHTML=_vCamSvgSm(_localCamOff);
   if(_isDemoMode){
-    // Afficher/cacher la vidéo locale + avatar
-    var lv=g('_vLocalVid');
-    var lav=g('_vav-demo-local');
-    if(lv){lv.style.display=_localCamOff?'none':'block';}
-    if(lav){lav.style.display=_localCamOff?'flex':'none';}
+    if(_localCamOff){
+      // Éteindre : stopper le track vidéo proprement
+      var lv=g('_vLocalVid');
+      if(lv){if(lv.srcObject){lv.srcObject.getVideoTracks().forEach(function(t){t.stop();});lv.srcObject=null;}lv.style.display='none';}
+      var lav=g('_vav-demo-local');if(lav)lav.style.display='flex';
+    }else{
+      // Rallumer : demander un nouveau stream caméra
+      if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+        navigator.mediaDevices.getUserMedia({video:true,audio:false})
+          .then(function(s){
+            var lv2=g('_vLocalVid');
+            if(lv2){lv2.srcObject=s;lv2.style.display='block';lv2.play().catch(function(){});}
+            var lav2=g('_vav-demo-local');if(lav2)lav2.style.display='none';
+          })
+          .catch(function(){
+            _localCamOff=true;
+            var b2=g('_vCam');if(b2){b2.innerHTML=_vCamSvg(true);b2.style.background='rgba(229,62,62,.35)';}
+            var bsm2=g('_vdcam-demo-local');if(bsm2)bsm2.innerHTML=_vCamSvgSm(true);
+          });
+      }
+    }
     haptic(1);return;
   }
   if(_callObj)_callObj.setLocalVideo(!_localCamOff);
