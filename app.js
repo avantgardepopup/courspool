@@ -15221,6 +15221,7 @@ function _vOpenBoard(){
   var _pipDblTapT=0;
   pip.addEventListener('click',function(e){
     if(e.target===hb||hb.contains(e.target))return; // ignore hide button
+    if(e.target===rsz||rsz.contains(e.target))return; // ignore resize button
     var now=Date.now();
     if(now-_pipDblTapT<320){
       _pipDblTapT=0;
@@ -15271,7 +15272,8 @@ function _vCloseBoard(){
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);_brdKeyHandler=null;}
-  if(_brdC&&_brdPages.length>0){try{_brdPages[_brdPageIdx]=_brdC.toDataURL('image/jpeg',0.7);}catch(e){}}
+  if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
+  _brdRestorePending=false;_brdRestoreEpoch=0;
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   // Remettre _vComment et _vCommentTab dans _vMain
   var _vmEl=g('_vMain');
@@ -15294,6 +15296,9 @@ function _vCloseBoard(){
 // Stored resize listener so we can remove it when closing
 var _brdOrientHandler=null;
 var _brdKeyHandler=null;
+// Epoch counter: prevents superseded async restores from drawing to the canvas
+var _brdRestoreEpoch=0;
+var _brdRestorePending=false; // true while an async _boardRestorePage is in flight
 
 function _brdIsPhonePortrait(){
   // Phone class: smallest screen dimension < 500px AND currently portrait
@@ -15331,15 +15336,23 @@ function _brdCheckOrientation(){
 // Dessine une page (data URL JPEG) sur le canvas principal — async
 function _boardRestorePage(dataUrl,cb){
   if(!_brdC||!_brdX){if(cb)cb();return;}
+  var myEpoch=++_brdRestoreEpoch;
+  _brdRestorePending=true;
   var img=new Image();
   img.onload=function(){
+    if(_brdRestoreEpoch!==myEpoch){return;} // superseded by a newer navigation
+    _brdRestorePending=false;
     _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
     _brdX.clearRect(0,0,_brdC.width,_brdC.height);
     _brdX.drawImage(img,0,0);
     _brdX.restore();
     if(cb)cb();
   };
-  img.onerror=function(){if(cb)cb();};
+  img.onerror=function(){
+    if(_brdRestoreEpoch!==myEpoch){return;}
+    _brdRestorePending=false;
+    if(cb)cb();
+  };
   img.src=dataUrl;
 }
 
@@ -15368,7 +15381,8 @@ function _boardInitCanvas(){
     pw=Math.max(pw,180);ph=Math.round(pw*(3/4));pw=Math.round(pw);
   }
   if(page){page.style.width=pw+'px';page.style.height=ph+'px';}
-  // Foreground canvas (strokes)
+  // Foreground canvas (strokes) — reset epoch so any pending restore from previous init is discarded
+  _brdRestoreEpoch++;_brdRestorePending=false;
   canv.width=Math.round(pw*dpr);canv.height=Math.round(ph*dpr);
   canv.style.width=pw+'px';canv.style.height=ph+'px';
   _brdC=canv;_brdX=canv.getContext('2d');
@@ -15514,11 +15528,15 @@ function _boardRenamePage(idx){
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
-  _boardSavePage();_brdPageIdx=idx;
+  // Only save current page if no restore is in flight — if a restore is pending,
+  // the canvas still shows the PREVIOUS page's content, not the current page's.
+  // _brdPages[_brdPageIdx] already holds the correct data in that case.
+  if(!_brdRestorePending)_boardSavePage();
+  _brdPageIdx=idx;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
   }else{
-    _boardClearFg();_boardUpdatePageTabs();
+    _brdRestorePending=false;_boardClearFg();_boardUpdatePageTabs();
   }
   haptic(1);
 }
@@ -15533,26 +15551,29 @@ function _boardSavePage(){
   _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.7);
 }
 function _boardAddPage(){
-  _boardSavePage();_brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
-  _boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
+  if(!_brdRestorePending)_boardSavePage();
+  _brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
+  _brdRestorePending=false;_boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
 }
 function _boardPrevPage(){
   if(_brdPageIdx<=0||!_brdX)return;
-  _boardSavePage();_brdPageIdx--;
+  if(!_brdRestorePending)_boardSavePage();
+  _brdPageIdx--;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
   }else{
-    _boardClearFg();_boardUpdatePageLabel();
+    _brdRestorePending=false;_boardClearFg();_boardUpdatePageLabel();
   }
   haptic(1);
 }
 function _boardNextPage(){
   if(_brdPageIdx>=_brdPages.length-1||!_brdX)return;
-  _boardSavePage();_brdPageIdx++;
+  if(!_brdRestorePending)_boardSavePage();
+  _brdPageIdx++;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
   }else{
-    _boardClearFg();_boardUpdatePageLabel();
+    _brdRestorePending=false;_boardClearFg();_boardUpdatePageLabel();
   }
   haptic(1);
 }
