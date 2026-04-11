@@ -14983,8 +14983,6 @@ function _buildBoardInner(){
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'" title="Fond vierge / quadrillé">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
-    +'<button onclick="_boardInsertImage()" style="'+glassBtn+'" title="Insérer une image">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>'
     +(_isOwner
       ?'<div style="'+glassSep+'margin:0 2px;"></div>'
       +'<button onclick="_brdEmitGotoPage(_brdPageIdx)" style="'+glassBtn+'" title="Synchroniser la page vers les élèves">'
@@ -15475,41 +15473,6 @@ function _boardToggleBg(){
   haptic(1);
 }
 
-function _boardInsertImage(){
-  var inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';
-  inp.onchange=function(){
-    var f=inp.files&&inp.files[0];if(!f)return;
-    var url=URL.createObjectURL(f);
-    var img=new Image();
-    img.onload=function(){
-      if(!_brdX||!_brdC)return;
-      // Centre l'image sur la page, max 80% de la largeur logique
-      var pw=_brdC.width/(window.devicePixelRatio||1);
-      var ph=_brdC.height/(window.devicePixelRatio||1);
-      var maxW=pw*0.8,maxH=ph*0.8;
-      var scale=Math.min(1,maxW/img.width,maxH/img.height);
-      var dw=img.width*scale,dh=img.height*scale;
-      var dx=(pw-dw)/2,dy=(ph-dh)/2;
-      _boardSaveHist();
-      _brdX.save();_brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
-      _brdX.drawImage(img,dx,dy,dw,dh);
-      _brdX.restore();
-      _boardSavePage();_boardSaveHist();
-      URL.revokeObjectURL(url);
-      // Broadcaster un snapshot complet aux autres
-      if(_brdRoomId&&_brdCanEdit){
-        var tmp=document.createElement('canvas');
-        tmp.width=_brdC.width;tmp.height=_brdC.height;
-        tmp.getContext('2d').drawImage(_brdC,0,0);
-        _brdEmitOp({type:'snapshot',data:tmp.toDataURL('image/png'),pageIdx:_brdPageIdx});
-      }
-      haptic(1);
-    };
-    img.src=url;
-  };
-  inp.click();
-}
 
 function _brdEmitGotoPage(idx){
   if(!_brdRoomId||!_brdCanEdit)return;
