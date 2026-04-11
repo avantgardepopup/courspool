@@ -14896,7 +14896,8 @@ function _vToggleShare(){
       if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
         toast('Partage d\'écran non disponible sur cet appareil','');return;
       }
-      navigator.mediaDevices.getDisplayMedia({video:true,audio:false})
+      toast('Sélectionne une fenêtre ou une autre application — pas cet onglet','');
+      navigator.mediaDevices.getDisplayMedia({video:{selfBrowserSurface:'exclude',displaySurface:'window'},audio:false})
         .then(function(s){
           _sharing=true;
           if(b){b.style.background='rgba(255,107,43,.5)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
