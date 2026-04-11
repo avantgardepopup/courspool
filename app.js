@@ -15721,13 +15721,16 @@ function _boardGetPos(e){
   // Divide by zoom so canvas coords are correct regardless of zoom level
   return{x:(src.clientX-r.left)/_brdZoom,y:(src.clientY-r.top)/_brdZoom};
 }
+// Handlers nommés pour pointercancel/pointerleave — évite les doublons sur réinit (rotation écran)
+function _boardPointerCancel(e){delete _brdActivePointers[e.pointerId];_boardUp(e);}
+function _boardPointerLeave(e){delete _brdActivePointers[e.pointerId];_boardUp(e);}
 function _boardAttachEvents(canv){
   _brdActivePointers={};
   canv.addEventListener('pointerdown',_boardDown,{passive:false});
   canv.addEventListener('pointermove',_boardMove,{passive:false});
   canv.addEventListener('pointerup',_boardUp,{passive:false});
-  canv.addEventListener('pointercancel',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
-  canv.addEventListener('pointerleave',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
+  canv.addEventListener('pointercancel',_boardPointerCancel,{passive:false});
+  canv.addEventListener('pointerleave',_boardPointerLeave,{passive:false});
   // Keyboard zoom: Ctrl+= zoom in, Ctrl+- zoom out, Ctrl+0 reset
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);}
   _brdKeyHandler=function(e){
@@ -15825,6 +15828,7 @@ function _boardMove(e){
     }
     _brdDraw=false;
     if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+    if(_brdTool==='eraser')_brdHideEraserCursor();
     e.preventDefault();
     // Pinch-to-zoom + 2-finger pan (priority over all tools)
     if(_brdPinchInitDist>0){
@@ -15998,11 +16002,12 @@ function _boardDrawShape(x1,y1,x2,y2){
 function _brdActivateSel(x,y,w,h){
   if(_brdSel.active)_brdCommitSel();
   var dpr=window.devicePixelRatio||1;
-  var imgData=_brdX.getImageData(Math.round(x*dpr),Math.round(y*dpr),Math.round(w*dpr),Math.round(h*dpr));
-  _brdX.clearRect(x,y,w,h);
+  // GPU copy (drawImage avec rect source) — évite la copie CPU de getImageData/putImageData
+  var sdw=Math.round(w*dpr),sdh=Math.round(h*dpr);
   var oc=document.createElement('canvas');
-  oc.width=Math.round(w*dpr);oc.height=Math.round(h*dpr);
-  oc.getContext('2d').putImageData(imgData,0,0);
+  oc.width=sdw;oc.height=sdh;
+  oc.getContext('2d').drawImage(_brdC,Math.round(x*dpr),Math.round(y*dpr),sdw,sdh,0,0,sdw,sdh);
+  _brdX.clearRect(x,y,w,h);
   _brdSel={active:true,x:x,y:y,w:w,h:h,angle:0,offC:oc,el:null,bar:null};
   _brdShowSelOverlay();
 }
@@ -16148,7 +16153,16 @@ function _brdCommitSel(){
     if(snap)_brdEmitOp({type:'snapshot',data:snap});
   }
 }
-function _brdCancelSel(){_boardSaveHist();_brdCleanSel();}
+function _brdCancelSel(){
+  _boardSaveHist();
+  // Émettre snapshot pour que les pairs voient la suppression de la sélection
+  if(_brdRoomId&&_brdCanEdit&&_brdC){
+    _boardSavePage();
+    var _csnap=_brdPages[_brdPageIdx];
+    if(_csnap)_brdEmitOp({type:'snapshot',data:_csnap});
+  }
+  _brdCleanSel();
+}
 function _brdCleanSel(){
   var sel=_brdSel;
   if(sel.el&&sel.el.parentNode)sel.el.parentNode.removeChild(sel.el);
