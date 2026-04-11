@@ -330,4 +330,7 @@ function initSocket() {
   _socket.on('board_laser_end', function(d) {
     if (typeof _brdOnRemoteLaserEnd === 'function') _brdOnRemoteLaserEnd(d);
   });
+  _socket.on('board_goto_page', function(d) {
+    if (typeof _brdOnRemoteGotoPage === 'function') _brdOnRemoteGotoPage(d);
+  });
 }

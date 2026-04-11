@@ -14909,20 +14909,26 @@ var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
 var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
+var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0;
+var _brdSpacePanning=false,_brdSpacePrevTool=null,_brdKeyUpHandler=null;
+var _brdClearConfirmT=0;
+var _brdBgType='grid'; // 'grid' | 'blank'
 var _brdPageNames=[];
 var _brdTextSize=16,_brdTextBold=false,_brdTextItalic=false,_brdTextAlign='left';
 var _brdHist=[],_brdHistIdx=-1;
+var _brdPageHists=[]; // historique sauvegardé par page pour undo/redo persistant
 var _brdDraw=false,_brdPts=[],_brdSnap=null,_brdSS=null;
 var _brdActivePointers={}; // {pointerId:{x,y}} — track all active pointers
 var _brdBgC=null,_brdBgX=null; // background canvas (grid)
 var _brdZoom=1,_brdPanX=0,_brdPanY=0; // zoom & pan state
 var _brdPinchInitDist=0,_brdPinchInitZoom=1,_brdPinchInitPanX=0,_brdPinchInitPanY=0,_brdPinchInitCX=0,_brdPinchInitCY=0;
 var _brdSnapTimer=null; // hold-to-snap line straightening
+var _brdEraserCursorEl=null; // cercle curseur gomme
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
-var _brdRemoteStrokes={},_brdLastPtEmit=0;
+var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
 var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
@@ -14974,6 +14980,20 @@ function _buildBoardInner(){
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'" title="Fond vierge / quadrillé">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
+    +'<button onclick="_boardInsertImage()" style="'+glassBtn+'" title="Insérer une image">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>'
+    +(_isOwner
+      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
+      +'<button onclick="_brdEmitGotoPage(_brdPageIdx)" style="'+glassBtn+'" title="Synchroniser la page vers les élèves">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/></svg></button>'
+      :''
+    )
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'" title="Effacer la page (double-tap)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" width="17" height="17"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>'
     +'</div>'  // close floating bar
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
@@ -15029,10 +15049,13 @@ function _boardRenderSubbar(){
   // ── Tool icons ──
   h+=tb('_bTHd',"_boardToolTap('hand')",_brdTool==='hand',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='hand'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 11V8a2 2 0 00-4 0v3"/><path d="M14 8V6a2 2 0 00-4 0v5"/><path d="M10 6.5V5a2 2 0 00-4 0v8"/><path d="M6 13s0 5 4 7h4c3 0 4-2 4-4v-5a2 2 0 00-4 0"/></svg>'
-    ,'Déplacer / zoomer','hand');
+    ,'Déplacer (H / espace)','hand');
   h+=tb('_bTSl',"_boardToolTap('select')",_brdTool==='select',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='select'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M5 3l14 9-7 1-4 7z"/></svg>'
-    ,'Sélection','select');
+    ,'Sélection (S)','select');
+  h+=tb('_bTLs',"_boardToolTap('laser')",_brdTool==='laser',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='laser'?'#ef4444':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><circle cx="12" cy="12" r="2.5" fill="'+(_brdTool==='laser'?'#ef4444':'none')+'"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="5.6" y1="5.6" x2="7" y2="7"/><line x1="17" y1="17" x2="18.4" y2="18.4"/><line x1="5.6" y1="18.4" x2="7" y2="17"/><line x1="17" y1="7" x2="18.4" y2="5.6"/></svg>'
+    ,'Pointeur laser (L)','laser');
   h+=sep;
   h+=tb('_bTPen',"_boardToolTap('pen')",_brdTool==='pen',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='pen'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>'
@@ -15104,7 +15127,10 @@ function _boardRenderSubbar(){
   if(_brdTool==='select'){
     h+='<span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.45);white-space:nowrap;padding:0 10px;letter-spacing:.01em;">Glissez pour sélectionner</span>';
   }
-  if(_brdTool!=='eraser'&&_brdTool!=='select'){
+  if(_brdTool==='laser'){
+    h+='<span style="font-size:11px;font-weight:600;color:rgba(239,68,68,.7);white-space:nowrap;padding:0 10px;letter-spacing:.01em;">Pointez sans dessiner</span>';
+  }
+  if(_brdTool!=='eraser'&&_brdTool!=='select'&&_brdTool!=='laser'){
     h+=sep;
     _BC.forEach(function(c){
       var a=c===_brdColor;
@@ -15113,7 +15139,7 @@ function _boardRenderSubbar(){
         +'"></button>';
     });
     h+='<label style="width:26px;height:26px;border-radius:50%;background:conic-gradient(red,#ff0,lime,cyan,blue,magenta,red);cursor:pointer;flex-shrink:0;position:relative;display:block;box-shadow:0 0 0 1.5px rgba(255,255,255,.25);margin:0 2px;overflow:hidden;">'
-      +'<input type="color" value="'+_brdColor+'" onchange="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
+      +'<input type="color" value="'+_brdColor+'" oninput="_boardSetColor(this.value)" style="opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;"></label>';
   }
   sub.innerHTML=h;
 }
@@ -15201,11 +15227,12 @@ function _vOpenBoard(){
   },{passive:false});
   rb.addEventListener('pointermove',function(e){
     var dx=e.clientX-_rbSX,dy=e.clientY-_rbSY;
-    if(!_rbMoved&&Math.hypot(dx,dy)<6)return;
+    if(!_rbMoved&&Math.hypot(dx,dy)<12)return; // 12px threshold — 6px was too small for touch taps
     _rbMoved=true;
+    e.preventDefault();
     rb.style.left=Math.max(0,Math.min(window.innerWidth-44,_rbOX+dx))+'px';
     rb.style.top=Math.max(0,Math.min(window.innerHeight-44,_rbOY+dy))+'px';
-  },{passive:true});
+  },{passive:false});
   rb.addEventListener('pointerup',function(){
     if(_rbMoved)return; // drag → don't show pip
     rb.style.display='none';
@@ -15270,11 +15297,28 @@ function _vCloseBoard(){
     _socket.emit('board_leave',{roomId:_brdRoomId});
   }
   if(typeof _brdCleanRemoteCursors==='function')_brdCleanRemoteCursors();
+  // Annuler les RAFs curseur en attente pour éviter des accès DOM post-fermeture
+  Object.keys(_brdCursorRAF).forEach(function(id){cancelAnimationFrame(_brdCursorRAF[id]);});
+  _brdCursorRAF={};_brdCursorPt={};
   _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
+  _brdBgType='grid';
+  _brdPinnedTool=null;_brdTool='pen';_brdActivePointers={};
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
   if(_brdOrientHandler){window.removeEventListener('resize',_brdOrientHandler);_brdOrientHandler=null;}
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);_brdKeyHandler=null;}
+  if(_brdKeyUpHandler){document.removeEventListener('keyup',_brdKeyUpHandler);_brdKeyUpHandler=null;}
+  _brdSpacePanning=false;_brdSpacePrevTool=null;
+  _brdCleanLaserDot();
+  Object.keys(_brdLaserHideT).forEach(function(id){clearTimeout(_brdLaserHideT[id]);});
+  _brdLaserHideT={};
+  if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+  if(_brdLPTimer){clearTimeout(_brdLPTimer);_brdLPTimer=null;}
+  _brdCleanEraserCursor();
+  // Nettoyer l'éditeur de texte si une saisie est en cours (évite les éléments orphelins dans body)
+  var _aInp=document.getElementById('_brdActiveInp');if(_aInp&&_aInp.parentNode)_aInp.parentNode.removeChild(_aInp);
+  var _aTBar=document.getElementById('_brdTxtBar');if(_aTBar&&_aTBar.parentNode)_aTBar.parentNode.removeChild(_aTBar);
+  _brdActiveTxtBarEl=null;_brdTextAnchor=null;
   if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
   _brdRestorePending=false;_brdRestoreEpoch=0;
   var bo=g('_vBoardOuter');if(bo)bo.remove();
@@ -15384,6 +15428,8 @@ function _boardInitCanvas(){
     pw=Math.max(pw,180);ph=Math.round(pw*(3/4));pw=Math.round(pw);
   }
   if(page){page.style.width=pw+'px';page.style.height=ph+'px';}
+  // Save current page strokes BEFORE clearing the canvas (prevents content loss on resize/orientation change)
+  if(_brdC&&!_brdRestorePending)_boardSavePage();
   // Foreground canvas (strokes) — reset epoch so any pending restore from previous init is discarded
   _brdRestoreEpoch++;_brdRestorePending=false;
   canv.width=Math.round(pw*dpr);canv.height=Math.round(ph*dpr);
@@ -15410,14 +15456,114 @@ function _boardInitCanvas(){
 }
 
 function _boardDrawBg(){
-  // Draw white + grid on the BACKGROUND canvas (so eraser never touches it)
+  // Draw white (+ optional grid) on the BACKGROUND canvas (so eraser never touches it)
   if(!_brdBgX||!_brdBgC)return;
   var w=parseInt(_brdBgC.style.width)||(_brdBgC.width/(window.devicePixelRatio||1));
   var h=parseInt(_brdBgC.style.height)||(_brdBgC.height/(window.devicePixelRatio||1));
   _brdBgX.fillStyle='#ffffff';_brdBgX.fillRect(0,0,w,h);
-  var step=24;_brdBgX.strokeStyle='rgba(0,0,0,0.055)';_brdBgX.lineWidth=0.6;
-  for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
-  for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
+  if(_brdBgType!=='blank'){
+    var step=24;_brdBgX.strokeStyle='rgba(0,0,0,0.055)';_brdBgX.lineWidth=0.6;
+    for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
+    for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
+  }
+}
+function _boardToggleBg(){
+  _brdBgType=_brdBgType==='grid'?'blank':'grid';
+  _boardDrawBg();
+  var btn=g('_brdBgBtn');if(btn)btn.style.opacity=_brdBgType==='grid'?'1':'0.45';
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'bg',bgType:_brdBgType,pageIdx:_brdPageIdx});
+  haptic(1);
+}
+
+function _boardInsertImage(){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    var f=inp.files&&inp.files[0];if(!f)return;
+    var url=URL.createObjectURL(f);
+    var img=new Image();
+    img.onload=function(){
+      if(!_brdX||!_brdC)return;
+      // Centre l'image sur la page, max 80% de la largeur logique
+      var pw=_brdC.width/(window.devicePixelRatio||1);
+      var ph=_brdC.height/(window.devicePixelRatio||1);
+      var maxW=pw*0.8,maxH=ph*0.8;
+      var scale=Math.min(1,maxW/img.width,maxH/img.height);
+      var dw=img.width*scale,dh=img.height*scale;
+      var dx=(pw-dw)/2,dy=(ph-dh)/2;
+      _boardSaveHist();
+      _brdX.save();_brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
+      _brdX.drawImage(img,dx,dy,dw,dh);
+      _brdX.restore();
+      _boardSavePage();_boardSaveHist();
+      URL.revokeObjectURL(url);
+      // Broadcaster un snapshot complet aux autres
+      if(_brdRoomId&&_brdCanEdit){
+        var tmp=document.createElement('canvas');
+        tmp.width=_brdC.width;tmp.height=_brdC.height;
+        tmp.getContext('2d').drawImage(_brdC,0,0);
+        _brdEmitOp({type:'snapshot',data:tmp.toDataURL('image/png'),pageIdx:_brdPageIdx});
+      }
+      haptic(1);
+    };
+    img.src=url;
+  };
+  inp.click();
+}
+
+function _brdEmitGotoPage(idx){
+  if(!_brdRoomId||!_brdCanEdit)return;
+  if(typeof _socket==='undefined'||!_socket||!_socket.connected)return;
+  _socket.emit('board_goto_page',{roomId:_brdRoomId,pageIdx:idx});
+  haptic(1);
+  toast('Page synchronisée','Les élèves voient maintenant cette page',1600);
+}
+
+function _brdOnRemoteGotoPage(data){
+  if(!data||typeof data.pageIdx!=='number')return;
+  if(!_boardActive||_isOwner)return; // le prof ne se déplace pas lui-même
+  if(data.pageIdx===_brdPageIdx)return;
+  _boardGoPage(data.pageIdx);
+}
+// ── Snapshot helpers (canvas offscreen — GPU, pas de copie CPU getImageData) ──
+function _brdMakeSnap(){
+  if(!_brdC)return null;
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  tmp.getContext('2d').drawImage(_brdC,0,0);
+  return tmp;
+}
+function _brdRestoreSnap(snap){
+  if(!snap||!_brdX||!_brdC)return;
+  _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
+  _brdX.clearRect(0,0,_brdC.width,_brdC.height);
+  _brdX.drawImage(snap,0,0);
+  _brdX.restore();
+}
+// ── Curseur gomme ──────────────────────────────────────────────────────────
+function _brdShowEraserCursor(x,y){
+  var page=g('_brdPage');if(!page)return;
+  // Guard: after a page switch _brdPage is recreated — orphaned element must be replaced
+  if(_brdEraserCursorEl&&_brdEraserCursorEl.parentNode!==page)_brdCleanEraserCursor();
+  if(!_brdEraserCursorEl){
+    _brdEraserCursorEl=document.createElement('div');
+    _brdEraserCursorEl.style.cssText='position:absolute;border-radius:50%;border:1.5px solid rgba(80,80,80,.75);pointer-events:none;z-index:55;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.4);transition:width .05s,height .05s;';
+    page.appendChild(_brdEraserCursorEl);
+  }
+  // Masquer le curseur CSS pour éviter le double curseur (cercle + crosshair)
+  if(_brdC)_brdC.style.cursor='none';
+  // Pas de * _brdZoom : l'élément est dans _brdPage déjà CSS-transformé scale(zoom)
+  _brdEraserCursorEl.style.width=_brdEr+'px';_brdEraserCursorEl.style.height=_brdEr+'px';
+  _brdEraserCursorEl.style.left=x+'px';_brdEraserCursorEl.style.top=y+'px';
+  _brdEraserCursorEl.style.display='block';
+}
+function _brdHideEraserCursor(){
+  if(_brdEraserCursorEl)_brdEraserCursorEl.style.display='none';
+  if(_brdC&&!_brdDraw)_brdC.style.cursor='crosshair';
+}
+function _brdCleanEraserCursor(){
+  if(_brdEraserCursorEl&&_brdEraserCursorEl.parentNode)_brdEraserCursorEl.parentNode.removeChild(_brdEraserCursorEl);
+  _brdEraserCursorEl=null;
 }
 function _boardClearFg(){
   if(!_brdX||!_brdC)return;
@@ -15428,6 +15574,15 @@ function _boardClearFg(){
 var _brdPanHideTimer=null;
 function _boardApplyTransform(){
   var page=g('_brdPage');if(!page)return;
+  // Pan limits: keep at least 60px of the canvas visible on each side
+  var scroll=g('_brdScroll');
+  if(scroll){
+    var sw=scroll.clientWidth,sh=scroll.clientHeight;
+    var pw=parseFloat(page.style.width)||800,ph=parseFloat(page.style.height)||600;
+    var mx=sw/2+pw*_brdZoom/2-60,my=sh/2+ph*_brdZoom/2-60;
+    _brdPanX=Math.max(-mx,Math.min(mx,_brdPanX));
+    _brdPanY=Math.max(-my,Math.min(my,_brdPanY));
+  }
   page.style.transformOrigin='center center';
   page.style.transform='translate('+_brdPanX+'px,'+_brdPanY+'px) scale('+_brdZoom+')';
   // Hide sub-toolbar + text editor while panning/zooming; restore after gesture ends
@@ -15460,13 +15615,11 @@ function _boardApplyTransform(){
 function _boardSaveHist(){
   if(!_brdC)return;
   if(_brdHistIdx<_brdHist.length-1)_brdHist.splice(_brdHistIdx+1);
-  // Offscreen canvas avec fond blanc pour éviter les artefacts noirs (JPEG + transparence)
+  // PNG transparent — pas de fond blanc (la grille vit dans _brdBgC, comme _boardSavePage)
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
-  var tX=tmp.getContext('2d');
-  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
-  tX.drawImage(_brdC,0,0);
-  var d=tmp.toDataURL('image/jpeg',0.6);
+  tmp.getContext('2d').drawImage(_brdC,0,0);
+  var d=tmp.toDataURL('image/png');
   _brdHist.push({idx:_brdPageIdx,data:d});
   if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
 }
@@ -15491,7 +15644,7 @@ function _boardUpdatePageTabs(){
   // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
-    var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
+    var label=escH((_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1));
     // Tab actif : fond blanc + boutons ; tab inactif : semi-transparent + pas de boutons
     var tabStyle='flex:1;min-width:'+(a?'72':'40')+'px;overflow:hidden;';
     h+='<button onclick="_boardGoPage('+i+')" style="'
@@ -15503,8 +15656,8 @@ function _boardUpdatePageTabs(){
       +'display:flex;align-items:center;gap:4px;'
       +'-webkit-tap-highlight-color:transparent;">'
       +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'
-      +(_isOwner&&a?'<span onclick="event.stopPropagation();_boardRenamePage('+i+')" style="opacity:.5;font-size:11px;flex-shrink:0;padding:0 1px;">✏️</span>':'')
-      +(_isOwner&&a&&_brdPages.length>1?'<span onclick="event.stopPropagation();_boardDeletePage('+i+')" style="opacity:.55;font-size:16px;line-height:1;font-weight:300;flex-shrink:0;padding:0 2px;">×</span>':'')
+      +(_isOwner&&a?'<button onclick="event.stopPropagation();_boardRenamePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.55;font-size:11px;flex-shrink:0;padding:3px 3px;min-width:22px;min-height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;">✏️</button>':'')
+      +(_isOwner&&a&&_brdPages.length>1?'<button onclick="event.stopPropagation();_boardDeletePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.6;font-size:17px;line-height:1;font-weight:300;flex-shrink:0;padding:3px 3px;min-width:22px;min-height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;">×</button>':'')
       +'</button>';
   }
   tabs.innerHTML=h;
@@ -15513,7 +15666,7 @@ function _boardUpdatePageTabs(){
 }
 function _boardDeletePage(idx){
   if(_brdPages.length<=1)return;
-  _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);
+  _brdPages.splice(idx,1);_brdPageNames.splice(idx,1);_brdPageHists.splice(idx,1);
   if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
@@ -15524,71 +15677,78 @@ function _boardDeletePage(idx){
   _brdEmitPageDelete(idx);
 }
 function _boardRenamePage(idx){
-  var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||'';
-  var name=prompt('Nom de la page :',cur||('Page '+(idx+1)));
-  if(name===null)return;
-  _brdPageNames[idx]=name.trim();
-  _boardUpdatePageTabs();haptic(1);
-  _brdEmitPageRename(idx,_brdPageNames[idx]);
+  // Inline rename : remplace le label de l'onglet par un <input> sans bloquer le thread
+  var tabs=g('_brdTabs');if(!tabs)return;
+  var tab=tabs.children[idx];if(!tab)return;
+  var span=tab.querySelector('span');if(!span)return;
+  var cur=(_brdPageNames[idx]&&_brdPageNames[idx].trim())||('Page '+(idx+1));
+  var inp=document.createElement('input');
+  inp.type='text';inp.value=cur;inp.maxLength=24;
+  inp.style.cssText='width:100%;background:transparent;border:none;border-bottom:1.5px solid #FF6B2B;outline:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;padding:0;min-width:0;';
+  span.innerHTML='';span.appendChild(inp);
+  inp.focus();inp.select();
+  function _commit(){
+    var name=(inp.value||'').trim()||cur;
+    _brdPageNames[idx]=name;
+    _boardUpdatePageTabs();haptic(1);
+    _brdEmitPageRename(idx,name);
+  }
+  inp.addEventListener('blur',_commit,{once:true});
+  inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();inp.blur();}
+    else if(e.key==='Escape'){inp.value=cur;inp.blur();}
+  });
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX)return;
-  // Only save current page if no restore is in flight — if a restore is pending,
-  // the canvas still shows the PREVIOUS page's content, not the current page's.
-  // _brdPages[_brdPageIdx] already holds the correct data in that case.
+  // Commit any active selection before leaving the page
+  if(_brdSel.active)_brdCommitSel();
+  // Hide orphan snap ring from previous interactions
+  var _sr=document.getElementById('_brdSnapRing');
+  if(_sr){_sr.style.opacity='0';_sr.style.transform='translate(-50%,-50%) scale(0)';}
+  // Only save current page if no restore is in flight
   if(!_brdRestorePending)_boardSavePage();
+  // Sauvegarder l'historique de la page courante avant de partir
+  _brdPageHists[_brdPageIdx]={hist:_brdHist.slice(),idx:_brdHistIdx};
   _brdPageIdx=idx;
   if(_brdPages[_brdPageIdx]){
     _boardRestorePage(_brdPages[_brdPageIdx],function(){
-      // Réinitialiser l'historique pour cette page (undo/redo par page)
-      _brdHist=[];_brdHistIdx=-1;_boardSaveHist();
+      // Restaurer l'historique de la page destination (ou en créer un nouveau)
+      var saved=_brdPageHists[_brdPageIdx];
+      if(saved){_brdHist=saved.hist.slice();_brdHistIdx=saved.idx;}
+      else{_brdHist=[];_brdHistIdx=-1;_boardSaveHist();}
       _boardUpdatePageTabs();
     });
   }else{
     _brdRestorePending=false;_boardClearFg();
-    _brdHist=[];_brdHistIdx=-1;_boardSaveHist();
+    var saved=_brdPageHists[_brdPageIdx];
+    if(saved){_brdHist=saved.hist.slice();_brdHistIdx=saved.idx;}
+    else{_brdHist=[];_brdHistIdx=-1;_boardSaveHist();}
     _boardUpdatePageTabs();
   }
   haptic(1);
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // Canvas offscreen : fond blanc + contenu fg — sans toucher le canvas principal
+  // Sauvegarder uniquement les traits (fond transparent) — le fond blanc+grille vit dans _brdBgC
+  // et est redessiné par _boardDrawBg() à chaque init. Baking white here was causing the canvas
+  // to appear pure white after restore (opaque white covered the _brdBgC grid layer).
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
-  var tX=tmp.getContext('2d');
-  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
-  tX.drawImage(_brdC,0,0);
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.7);
+  tmp.getContext('2d').drawImage(_brdC,0,0);
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
 }
 function _boardAddPage(){
+  if(_brdSel.active)_brdCommitSel();
   if(!_brdRestorePending)_boardSavePage();
+  // Sauvegarder l'historique de la page courante avant de naviguer
+  _brdPageHists[_brdPageIdx]={hist:_brdHist.slice(),idx:_brdHistIdx};
   _brdPages.push(null);_brdPageNames.push('');_brdPageIdx=_brdPages.length-1;
   _brdRestorePending=false;_boardClearFg();_brdHist=[];_brdHistIdx=-1;_boardSaveHist();_boardUpdatePageTabs();haptic(1);
   _brdEmitPageAdd();
 }
-function _boardPrevPage(){
-  if(_brdPageIdx<=0||!_brdX)return;
-  if(!_brdRestorePending)_boardSavePage();
-  _brdPageIdx--;
-  if(_brdPages[_brdPageIdx]){
-    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
-  }else{
-    _brdRestorePending=false;_boardClearFg();_boardUpdatePageLabel();
-  }
-  haptic(1);
-}
-function _boardNextPage(){
-  if(_brdPageIdx>=_brdPages.length-1||!_brdX)return;
-  if(!_brdRestorePending)_boardSavePage();
-  _brdPageIdx++;
-  if(_brdPages[_brdPageIdx]){
-    _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageLabel();});
-  }else{
-    _brdRestorePending=false;_boardClearFg();_boardUpdatePageLabel();
-  }
-  haptic(1);
-}
+function _boardPrevPage(){if(_brdPageIdx>0)_boardGoPage(_brdPageIdx-1);}
+function _boardNextPage(){if(_brdPageIdx<_brdPages.length-1)_boardGoPage(_brdPageIdx+1);}
 
 // ── New toolbar & popup system ──
 function _boardUpdateToolbar(){_boardRenderSubbar();}
@@ -15607,14 +15767,21 @@ function _boardToolTap(tool){
   if(_brdLPFired){_brdLPFired=false;return;} // long-press géré, ignorer le click
   if(_brdPinnedTool&&_brdPinnedTool!==tool)return; // outil épinglé : blocage
   if(_brdSel.active)_brdCommitSel();
+  if(_brdTool==='laser'&&tool!=='laser')_brdHideLaserDot();
   _brdTool=tool;
-  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':'crosshair';
+  if(_brdC)_brdC.style.cursor=tool==='text'?'text':tool==='hand'?'grab':tool==='laser'?'none':'crosshair';
   _boardRenderSubbar();haptic(1);
 }
 function _boardSetTool(tool){_boardToolTap(tool);}
 function _boardSetColor(c){_brdColor=c;_boardRenderSubbar();}
 function _boardSetSize(sz){_brdSz=sz;_boardRenderSubbar();}
-function _boardSetEraserSz(sz){_brdEr=sz;_boardRenderSubbar();}
+function _boardSetEraserSz(sz){
+  _brdEr=sz;
+  if(_brdEraserCursorEl&&_brdEraserCursorEl.style.display!=='none'){
+    _brdEraserCursorEl.style.width=sz+'px';_brdEraserCursorEl.style.height=sz+'px';
+  }
+  _boardRenderSubbar();
+}
 function _boardSetShape(t){_brdShType=t;_boardRenderSubbar();}
 function _boardToggleShFill(){_brdShFill=!_brdShFill;_boardRenderSubbar();}
 
@@ -15664,17 +15831,23 @@ function _boardGetPos(e){
   // Divide by zoom so canvas coords are correct regardless of zoom level
   return{x:(src.clientX-r.left)/_brdZoom,y:(src.clientY-r.top)/_brdZoom};
 }
+// Handlers nommés pour pointercancel/pointerleave — évite les doublons sur réinit (rotation écran)
+function _boardPointerCancel(e){delete _brdActivePointers[e.pointerId];_boardUp(e);}
+function _boardPointerLeave(e){delete _brdActivePointers[e.pointerId];_boardUp(e);}
 function _boardAttachEvents(canv){
   _brdActivePointers={};
   canv.addEventListener('pointerdown',_boardDown,{passive:false});
   canv.addEventListener('pointermove',_boardMove,{passive:false});
   canv.addEventListener('pointerup',_boardUp,{passive:false});
-  canv.addEventListener('pointercancel',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
-  canv.addEventListener('pointerleave',function(e){delete _brdActivePointers[e.pointerId];_boardUp(e);},{passive:false});
-  // Keyboard zoom: Ctrl+= zoom in, Ctrl+- zoom out, Ctrl+0 reset
+  canv.addEventListener('pointercancel',_boardPointerCancel,{passive:false});
+  canv.addEventListener('pointerleave',_boardPointerLeave,{passive:false});
+  // Keyboard shortcuts
   if(_brdKeyHandler){document.removeEventListener('keydown',_brdKeyHandler);}
+  if(_brdKeyUpHandler){document.removeEventListener('keyup',_brdKeyUpHandler);}
   _brdKeyHandler=function(e){
     if(!_boardActive)return;
+    var tag=(e.target&&e.target.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA')return; // don't steal focus from text fields
     if(e.ctrlKey||e.metaKey){
       if(e.key==='='||e.key==='+'||e.key==='ArrowUp'){
         e.preventDefault();_brdZoom=Math.min(5,_brdZoom*1.2);_boardApplyTransform();
@@ -15683,16 +15856,47 @@ function _boardAttachEvents(canv){
       }else if(e.key==='0'){
         e.preventDefault();_brdZoom=1;_brdPanX=0;_brdPanY=0;_boardApplyTransform();
       }
+    }else{
+      var k=e.key;
+      if(k==='p'||k==='P'){e.preventDefault();_boardToolTap('pen');}
+      else if(k==='e'||k==='E'){e.preventDefault();_boardToolTap('eraser');}
+      else if(k==='h'||k==='H'){e.preventDefault();_boardToolTap('hand');}
+      else if(k==='s'||k==='S'){e.preventDefault();_boardToolTap('select');}
+      else if(k==='t'||k==='T'){e.preventDefault();_boardToolTap('text');}
+      else if(k==='l'||k==='L'){e.preventDefault();_boardToolTap('laser');}
+      else if(k==='Escape'){
+        if(_brdSel.active)_brdCommitSel();
+        if(_brdTool!=='pen'){_brdPinnedTool=null;_boardToolTap('pen');}
+      }else if(k===' '&&!_brdSpacePanning){
+        e.preventDefault();
+        _brdSpacePanning=true;_brdSpacePrevTool=_brdTool;
+        _brdTool='hand';if(_brdC)_brdC.style.cursor='grab';
+        _boardRenderSubbar();
+      }
+    }
+  };
+  _brdKeyUpHandler=function(e){
+    if(!_boardActive)return;
+    if(e.key===' '&&_brdSpacePanning){
+      _brdSpacePanning=false;
+      _brdTool=_brdSpacePrevTool||'pen';
+      if(_brdC)_brdC.style.cursor=_brdTool==='text'?'text':_brdTool==='laser'?'none':'crosshair';
+      _boardRenderSubbar();
     }
   };
   document.addEventListener('keydown',_brdKeyHandler);
+  document.addEventListener('keyup',_brdKeyUpHandler);
 }
 function _boardDown(e){
   e.preventDefault();
-  // Bloquer le dessin si pas autorisé (mode collaboratif, élève en lecture seule)
-  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='select'){
-    if(typeof toast==='function')toast('Lecture seule','Demande la permission au prof pour dessiner');
-    if(typeof haptic==='function')haptic(1);
+  // Bloquer tout dessin/modification si lecture seule (sauf le laser : pointer-only, pas de dessin)
+  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='laser'){
+    var _now=Date.now();
+    if(_now-_brdROToastT>2500){
+      _brdROToastT=_now;
+      if(typeof toast==='function')toast('Lecture seule','Demande la permission au prof pour dessiner');
+      if(typeof haptic==='function')haptic(1);
+    }
     return;
   }
   _brdActivePointers[e.pointerId]={x:e.clientX,y:e.clientY};
@@ -15712,9 +15916,9 @@ function _boardDown(e){
   }
   var p=_boardGetPos(e);
   _brdDraw=true;_brdPts=[p];
-  // Émettre début de trait en temps réel
+  // Émettre début de trait en temps réel (pageIdx inclus pour filtrage côté récepteur)
   if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
-    _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz});
+    _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz,pageIdx:_brdPageIdx});
   }
   if(_brdTool==='hand'){
     // 1-finger pan: store raw screen coords (not canvas coords)
@@ -15723,14 +15927,14 @@ function _boardDown(e){
     return;
   }
   if(_brdTool==='pen'){
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    _brdSnap=_brdMakeSnap();
     var pressure=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:1;
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
     _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*Math.max(0.3,pressure);
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   }else if(_brdTool==='marker'){
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    _brdSnap=_brdMakeSnap();
     var pressure=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:1;
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
     _brdX.strokeStyle=_brdColor;_brdX.lineWidth=_brdSz*2.5*Math.max(0.3,pressure);
@@ -15741,15 +15945,19 @@ function _boardDown(e){
     _brdX.strokeStyle='rgba(0,0,0,1)';_brdX.lineWidth=_brdEr;
     _brdX.lineCap='round';_brdX.lineJoin='round';
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
+    _brdShowEraserCursor(p.x,p.y); // afficher immédiatement dès le pointerdown (sans attendre pointermove)
   }else if(_brdTool==='shape'){
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);_brdSS=p;
+    _brdSnap=_brdMakeSnap();_brdSS=p;
   }else if(_brdTool==='text'){
     _boardInsertText(p.x,p.y);_brdDraw=false;
   }else if(_brdTool==='select'){
     // Commit any active selection first
     if(_brdSel.active)_brdCommitSel();
-    _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+    _brdSnap=_brdMakeSnap();
     _brdSS=p;
+  }else if(_brdTool==='laser'){
+    _brdDraw=false; // laser doesn't draw — just shows the dot
+    _brdMoveLaserDot(p.x,p.y);
   }
 }
 function _boardMove(e){
@@ -15758,11 +15966,12 @@ function _boardMove(e){
   if(ptCount>=2){
     // 2-finger detected: cancel any in-progress stroke and restore canvas to pre-stroke state
     if(_brdDraw&&_brdSnap&&_brdX){
-      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+      _brdRestoreSnap(_brdSnap);
       _brdSnap=null;_brdSS=null;
     }
     _brdDraw=false;
     if(_brdSnapTimer){clearTimeout(_brdSnapTimer);_brdSnapTimer=null;}
+    if(_brdTool==='eraser')_brdHideEraserCursor();
     e.preventDefault();
     // Pinch-to-zoom + 2-finger pan (priority over all tools)
     if(_brdPinchInitDist>0){
@@ -15775,6 +15984,16 @@ function _boardMove(e){
       _boardApplyTransform();
     }
     return;
+  }
+  // Eraser hover cursor — show ring even when not pressing (Apple Pencil, mouse)
+  if(_brdTool==='eraser'&&!_brdDraw){var _eh=_boardGetPos(e);_brdShowEraserCursor(_eh.x,_eh.y);}
+  // Laser dot — follows pointer at all times (hover + press), no drawing
+  if(_brdTool==='laser'){
+    var _lp=_boardGetPos(e);_brdMoveLaserDot(_lp.x,_lp.y);
+    if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      var _lnow=Date.now();
+      if(_lnow-_brdLastLaserEmit>=50){_brdLastLaserEmit=_lnow;_socket.emit('board_laser',{roomId:_brdRoomId,pt:{x:_lp.x,y:_lp.y},pageIdx:_brdPageIdx});}
+    }
   }
   if(!_brdDraw)return;
   e.preventDefault();
@@ -15794,7 +16013,7 @@ function _boardMove(e){
     var _now=Date.now();
     if(_now-_brdLastPtEmit>=50&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
       _brdLastPtEmit=_now;
-      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y}});
+      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y},pageIdx:_brdPageIdx});
     }
   }
   if(_brdTool==='pen'||_brdTool==='marker'){
@@ -15802,14 +16021,16 @@ function _boardMove(e){
     if(_brdSnapTimer)clearTimeout(_brdSnapTimer);
     var snapP=p;
     // Indicateur visuel snap : petit cercle qui grossit pendant l'attente
-    var _snapIndicator=document.getElementById('_brdSnapRing');
-    if(!_snapIndicator){
+    // SnapRing : toujours attaché à la page courante pour survivre aux changements de page
+    var _snapPg=g('_brdPage');
+    var _snapIndicator=_snapPg&&_snapPg.querySelector('#_brdSnapRing');
+    if(!_snapIndicator&&_snapPg){
       _snapIndicator=document.createElement('div');_snapIndicator.id='_brdSnapRing';
       _snapIndicator.style.cssText='position:absolute;pointer-events:none;z-index:60;border-radius:50%;border:2px solid #FF6B2B;transform:translate(-50%,-50%) scale(0);transition:transform .65s ease,opacity .65s ease;opacity:0;width:28px;height:28px;';
-      var pg=g('_brdPage');if(pg)pg.appendChild(_snapIndicator);
+      _snapPg.appendChild(_snapIndicator);
     }
     if(_snapIndicator){
-      _snapIndicator.style.left=(p.x*_brdZoom)+'px';_snapIndicator.style.top=(p.y*_brdZoom)+'px';
+      _snapIndicator.style.left=p.x+'px';_snapIndicator.style.top=p.y+'px'; // pas de * zoom : dans _brdPage déjà scale(zoom)
       _snapIndicator.style.transform='translate(-50%,-50%) scale(0)';_snapIndicator.style.opacity='0';
       requestAnimationFrame(function(){
         _snapIndicator.style.transform='translate(-50%,-50%) scale(1)';_snapIndicator.style.opacity='0.7';
@@ -15818,7 +16039,7 @@ function _boardMove(e){
     _brdSnapTimer=setTimeout(function(){
       if(_snapIndicator){_snapIndicator.style.opacity='0';_snapIndicator.style.transform='translate(-50%,-50%) scale(0)';}
       if(!_brdDraw||!_brdSnap||_brdPts.length<2)return;
-      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+      _brdRestoreSnap(_brdSnap);
       var fp=_brdPts[0];
       _brdX.beginPath();_brdX.moveTo(fp.x,fp.y);_brdX.lineTo(snapP.x,snapP.y);
       _brdX.strokeStyle=_brdColor;
@@ -15842,15 +16063,16 @@ function _boardMove(e){
       _brdX.beginPath();_brdX.moveTo(mx,my);
     }else if(n===2){_brdX.lineTo(p.x,p.y);_brdX.stroke();}
   }else if(_brdTool==='eraser'){
+    _brdShowEraserCursor(p.x,p.y);
     _brdX.lineTo(p.x,p.y);_brdX.stroke();
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
   }else if(_brdTool==='shape'&&_brdSnap&&_brdSS){
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
     _boardDrawShape(_brdSS.x,_brdSS.y,p.x,p.y);
   }else if(_brdTool==='select'&&_brdDraw&&_brdSS&&_brdSnap){
     // Draw dashed selection preview
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     _brdX.save();
     _brdX.strokeStyle='#FF6B2B';_brdX.lineWidth=2/_brdZoom;
     _brdX.setLineDash([6/_brdZoom,3/_brdZoom]);
@@ -15866,6 +16088,13 @@ function _boardUp(e){
   if(_sr){_sr.style.opacity='0';_sr.style.transform='translate(-50%,-50%) scale(0)';}
   if(Object.keys(_brdActivePointers).length<2)_brdPinchInitDist=0;
   if(_brdTool==='hand'){if(_brdC)_brdC.style.cursor='grab';_brdPts=[];_brdDraw=false;return;}
+  if(_brdTool==='eraser'){_brdHideEraserCursor();if(_brdC)_brdC.style.cursor='crosshair';}
+  if(_brdTool==='laser'){
+    _brdHideLaserDot();
+    if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected)
+      _socket.emit('board_laser_end',{roomId:_brdRoomId});
+    return;
+  }
   if(!_brdDraw)return;
   e.preventDefault();_brdDraw=false;
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
@@ -15886,7 +16115,7 @@ function _boardUp(e){
     var p=_boardGetPos(e);
     var _ssx=_brdSS.x,_ssy=_brdSS.y; // capture avant nulling
     // Restore clean canvas (remove the live preview drawn in _boardMove)
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     _boardDrawShape(_ssx,_ssy,p.x,p.y);
     _brdSnap=null;_brdSS=null;_boardSaveHist();
     // Émettre l'op de forme
@@ -15896,7 +16125,7 @@ function _boardUp(e){
   }else if(_brdTool==='select'&&_brdSS&&_brdSnap){
     var p=_boardGetPos(e);
     // Restore clean canvas (remove the dashed rect)
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(_brdSnap,0,0);_brdX.restore();
+    _brdRestoreSnap(_brdSnap);
     var sx=Math.min(_brdSS.x,p.x),sy=Math.min(_brdSS.y,p.y);
     var sw=Math.abs(p.x-_brdSS.x),sh=Math.abs(p.y-_brdSS.y);
     _brdSS=null;_brdSnap=null;
@@ -15930,11 +16159,12 @@ function _boardDrawShape(x1,y1,x2,y2){
 function _brdActivateSel(x,y,w,h){
   if(_brdSel.active)_brdCommitSel();
   var dpr=window.devicePixelRatio||1;
-  var imgData=_brdX.getImageData(Math.round(x*dpr),Math.round(y*dpr),Math.round(w*dpr),Math.round(h*dpr));
-  _brdX.clearRect(x,y,w,h);
+  // GPU copy (drawImage avec rect source) — évite la copie CPU de getImageData/putImageData
+  var sdw=Math.round(w*dpr),sdh=Math.round(h*dpr);
   var oc=document.createElement('canvas');
-  oc.width=Math.round(w*dpr);oc.height=Math.round(h*dpr);
-  oc.getContext('2d').putImageData(imgData,0,0);
+  oc.width=sdw;oc.height=sdh;
+  oc.getContext('2d').drawImage(_brdC,Math.round(x*dpr),Math.round(y*dpr),sdw,sdh,0,0,sdw,sdh);
+  _brdX.clearRect(x,y,w,h);
   _brdSel={active:true,x:x,y:y,w:w,h:h,angle:0,offC:oc,el:null,bar:null};
   _brdShowSelOverlay();
 }
@@ -16073,8 +16303,23 @@ function _brdCommitSel(){
   _brdX.restore();
   _boardSaveHist();
   _brdCleanSel();
+  // Émettre un snapshot de la page pour que les distants voient le résultat du déplacement/rotation
+  if(_brdRoomId&&_brdCanEdit&&_brdC){
+    _boardSavePage();
+    var snap=_brdPages[_brdPageIdx];
+    if(snap)_brdEmitOp({type:'snapshot',data:snap});
+  }
 }
-function _brdCancelSel(){_boardSaveHist();_brdCleanSel();}
+function _brdCancelSel(){
+  _boardSaveHist();
+  // Émettre snapshot pour que les pairs voient la suppression de la sélection
+  if(_brdRoomId&&_brdCanEdit&&_brdC){
+    _boardSavePage();
+    var _csnap=_brdPages[_brdPageIdx];
+    if(_csnap)_brdEmitOp({type:'snapshot',data:_csnap});
+  }
+  _brdCleanSel();
+}
 function _brdCleanSel(){
   var sel=_brdSel;
   if(sel.el&&sel.el.parentNode)sel.el.parentNode.removeChild(sel.el);
@@ -16097,6 +16342,12 @@ function _brdSelDuplicate(){
   sel.x+=20;sel.y+=20;
   if(sel.el){sel.el.style.left=sel.x+'px';sel.el.style.top=sel.y+'px';}
   _brdUpdateSelBar();haptic(1);
+  // Émettre snapshot en collab pour que les pairs voient le duplicata
+  if(_brdRoomId&&_brdCanEdit&&_brdC){
+    _boardSavePage();
+    var _dsnap=_brdPages[_brdPageIdx];
+    if(_dsnap)_brdEmitOp({type:'snapshot',data:_dsnap});
+  }
 }
 
 // ── Timer ────────────────────────────────────────────────────────────────────
@@ -16186,8 +16437,8 @@ function _boardInsertText(cx,cy){
   var oldBar=document.getElementById('_brdTxtBar');if(oldBar&&oldBar.parentNode)oldBar.parentNode.removeChild(oldBar);
   _brdActiveTxtBarEl=null;
   _brdTextAnchor={cx:cx,cy:cy}; // for repositioning after pan/zoom
-  // Snapshot canvas so we can do live preview as user types
-  var snapshot=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
+  // Snapshot canvas so we can do live preview as user types (canvas GPU copy)
+  var snapshot=_brdMakeSnap();
   var r=_brdC.getBoundingClientRect();
   var sx=r.left+cx*_brdZoom, sy=r.top+cy*_brdZoom;
   function getFontStr(){
@@ -16196,7 +16447,7 @@ function _boardInsertText(cx,cy){
   function getTextX(){return _brdTextAlign==='center'?cx+70:_brdTextAlign==='right'?cx+140:cx;}
   // Live-draw text on canvas as user types
   function drawPreview(txt){
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(snapshot,0,0);_brdX.restore();
+    _brdRestoreSnap(snapshot);
     if(!txt)return;
     _brdX.save();
     _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
@@ -16294,7 +16545,8 @@ function _boardInsertText(cx,cy){
     var txt=inp.value.trim();
     if(inp.parentNode)inp.parentNode.removeChild(inp);
     // Restore snapshot then draw final committed text
-    _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.putImageData(snapshot,0,0);_brdX.restore();
+    if(!_brdX||!_brdC)return; // tableau fermé pendant la saisie — éviter TypeError sur _brdX.save()
+    _brdRestoreSnap(snapshot);
     if(!txt)return;
     _brdX.save();
     _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
@@ -16334,7 +16586,8 @@ function _pipInitDrag(handle,pip){
   }
 
   pip.addEventListener('pointerdown',function(e){
-    if(e.target.tagName==='BUTTON')return;
+    // Check if touch landed on a button OR any child of a button (e.g. SVG icon inside button)
+    var _t=e.target;while(_t&&_t!==pip){if(_t.tagName==='BUTTON')return;_t=_t.parentNode;}
     var curX=parseInt(pip.style.left)||0,curY=parseInt(pip.style.top)||0;
     _ptrs[e.pointerId]={sx:e.clientX,sy:e.clientY,ox:curX,oy:curY,cx:e.clientX,cy:e.clientY,active:false};
     try{pip.setPointerCapture(e.pointerId);}catch(err){}
@@ -16417,7 +16670,7 @@ function _pipCycleSize(){
 function closeVisioModal(){
   _isDemoMode=false;_intentionalLeave=true;
   if(_boardActive){_vCloseBoard();}
-  _brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdC=null;_brdX=null;
+  _brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;
   _pipX=null;_pipY=null;
   if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
   if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
@@ -16447,9 +16700,26 @@ function _brdEmitOp(op){
 // Répondre à une demande de snapshot ciblée (seul le propriétaire reçoit cet event)
 function _brdOnSyncRequest(data){
   if(!_brdC||!_brdRoomId||!data.targetSocketId)return;
-  var snap=_brdC.toDataURL('image/jpeg',0.55);
+  // Sauvegarder la page courante avant d'en extraire le snapshot
+  _boardSavePage();
+  // Composer le snapshot en incluant le fond blanc (pas de JPEG noir si canvas transparent)
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  var tX=tmp.getContext('2d');
+  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
+  if(_brdBgC)tX.drawImage(_brdBgC,0,0);
+  tX.drawImage(_brdC,0,0);
+  var snap=tmp.toDataURL('image/jpeg',0.6);
   if(typeof _socket!=='undefined'&&_socket&&_socket.connected){
-    _socket.emit('board_snapshot_for',{roomId:_brdRoomId,targetSocketId:data.targetSocketId,snapshot:snap});
+    _socket.emit('board_snapshot_for',{
+      roomId:_brdRoomId,
+      targetSocketId:data.targetSocketId,
+      snapshot:snap,
+      pageIdx:_brdPageIdx,
+      pageNames:_brdPageNames.slice(),
+      pageCount:_brdPages.length,
+      bgType:_brdBgType
+    });
   }
 }
 
@@ -16461,16 +16731,22 @@ function _brdUserColor(uid){
   return _brdCursorColors[h%_brdCursorColors.length];
 }
 function _brdOnRemoteStrokeStart(d){
+  if(!d||!d.userId)return;
   var col=_brdUserColor(d.userId);
-  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col};
+  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:col,pageIdx:d.pageIdx};
+  // Ne pas afficher le curseur si l'utilisateur distant est sur une autre page
+  if(typeof d.pageIdx==='number'&&d.pageIdx!==_brdPageIdx)return;
   var part=_brdParticipants.find(function(x){return x.id===d.userId;});
   var name=part?part.name:'?';
   _brdShowRemoteCursor(d.userId,name,col);
 }
 
 function _brdOnRemotePt(d){
+  if(!d||!d.userId)return;
   var stroke=_brdRemoteStrokes[d.userId];
   if(!stroke||!_brdC||!_brdX)return;
+  // Ne dessiner que si l'utilisateur distant est sur la même page
+  if(typeof d.pageIdx==='number'&&d.pageIdx!==_brdPageIdx)return;
   var pt=d.pt;
   if(stroke.lastPt)_brdDrawRemoteSegment(stroke,pt);
   stroke.lastPt=pt;
@@ -16478,6 +16754,7 @@ function _brdOnRemotePt(d){
 }
 
 function _brdOnRemoteStrokeEnd(d){
+  if(!d||!d.userId)return;
   var stroke=_brdRemoteStrokes[d.userId];
   if(stroke)delete _brdRemoteStrokes[d.userId];
   // Garder le curseur visible 2s puis le retirer du DOM (évite la fuite mémoire)
@@ -16490,10 +16767,10 @@ function _brdOnRemoteStrokeEnd(d){
 }
 
 // Dessiner un segment de trait reçu en temps réel
+// Note : PAS de scale(dpr,dpr) ici — le contexte est déjà scale(dpr,dpr) depuis _boardInitCanvas
 function _brdDrawRemoteSegment(stroke,pt){
   if(!_brdC||!_brdX||!stroke.lastPt)return;
-  var dpr=window.devicePixelRatio||1;
-  _brdX.save();_brdX.scale(dpr,dpr);
+  _brdX.save();
   _brdX.beginPath();_brdX.moveTo(stroke.lastPt.x,stroke.lastPt.y);_brdX.lineTo(pt.x,pt.y);
   if(stroke.tool==='eraser'){
     _brdX.globalCompositeOperation='destination-out';
@@ -16527,15 +16804,90 @@ function _brdShowRemoteCursor(userId,name,color){
 }
 
 // Déplacer le curseur d'un utilisateur distant (coords canvas → coords page DOM)
-// RAF throttling : une seule mise à jour par frame même si plusieurs pts arrivent
-var _brdCursorRAF={};
+// RAF throttling : une seule mise à jour par frame, utilise TOUJOURS le dernier pt connu
+var _brdCursorRAF={},_brdCursorPt={};
 function _brdMoveRemoteCursor(userId,pt){
-  if(_brdCursorRAF[userId])return; // déjà planifié pour cette frame
+  _brdCursorPt[userId]=pt; // toujours stocker le dernier point reçu
+  if(_brdCursorRAF[userId])return; // RAF déjà planifié pour cette frame
   _brdCursorRAF[userId]=requestAnimationFrame(function(){
     delete _brdCursorRAF[userId];
     var el=document.getElementById('_brdCursor-'+userId);
-    if(el){el.style.left=(pt.x*_brdZoom)+'px';el.style.top=(pt.y*_brdZoom)+'px';}
+    var lp=_brdCursorPt[userId];
+    if(el&&lp){el.style.left=lp.x+'px';el.style.top=lp.y+'px';} // pas de * zoom : _brdPage est déjà scale(zoom)
   });
+}
+
+// ── Pointeur laser local ─────────────────────────────────────────────────────
+function _brdShowLaserDot(x,y){
+  var page=g('_brdPage');if(!page)return;
+  if(!_brdLaserEl){
+    _brdLaserEl=document.createElement('div');
+    _brdLaserEl.style.cssText='position:absolute;pointer-events:none;z-index:100;'
+      +'width:18px;height:18px;border-radius:50%;background:rgba(239,68,68,.95);'
+      +'transform:translate(-50%,-50%);'
+      +'box-shadow:0 0 0 4px rgba(239,68,68,.25),0 0 14px rgba(239,68,68,.7);'
+      +'transition:opacity .1s;will-change:left,top;';
+    page.appendChild(_brdLaserEl);
+  }
+  _brdLaserEl.style.left=x+'px';_brdLaserEl.style.top=y+'px';
+  _brdLaserEl.style.opacity='1';_brdLaserEl.style.display='block';
+}
+function _brdMoveLaserDot(x,y){_brdShowLaserDot(x,y);}
+function _brdHideLaserDot(){
+  if(_brdLaserEl)_brdLaserEl.style.opacity='0';
+}
+function _brdCleanLaserDot(){
+  if(_brdLaserEl&&_brdLaserEl.parentNode)_brdLaserEl.parentNode.removeChild(_brdLaserEl);
+  _brdLaserEl=null;
+}
+// Laser distant (reçu via socket)
+function _brdOnRemoteLaser(d){
+  if(!d||!d.userId||!_boardActive)return;
+  if(typeof d.pageIdx==='number'&&d.pageIdx!==_brdPageIdx)return;
+  var page=g('_brdPage');if(!page)return;
+  var id='_brdLaser-'+d.userId;
+  var el=document.getElementById(id);
+  if(!el){
+    var col=_brdUserColor(d.userId);
+    el=document.createElement('div');el.id=id;
+    el.style.cssText='position:absolute;pointer-events:none;z-index:100;'
+      +'width:18px;height:18px;border-radius:50%;background:'+col+';'
+      +'transform:translate(-50%,-50%);'
+      +'box-shadow:0 0 0 4px rgba(0,0,0,.12),0 0 14px '+col+';'
+      +'transition:left .05s linear,top .05s linear,opacity .15s;will-change:left,top;';
+    page.appendChild(el);
+  }
+  el.style.left=d.pt.x+'px';el.style.top=d.pt.y+'px';el.style.opacity='1';
+  if(_brdLaserHideT[d.userId])clearTimeout(_brdLaserHideT[d.userId]);
+  _brdLaserHideT[d.userId]=setTimeout(function(){
+    if(el)el.style.opacity='0';delete _brdLaserHideT[d.userId];
+  },2500);
+}
+function _brdOnRemoteLaserEnd(d){
+  if(!d||!d.userId)return;
+  if(_brdLaserHideT[d.userId]){clearTimeout(_brdLaserHideT[d.userId]);delete _brdLaserHideT[d.userId];}
+  var el=document.getElementById('_brdLaser-'+d.userId);
+  if(el)el.style.opacity='0';
+}
+
+// ── Effacer la page (double-tap pour confirmer) ──────────────────────────────
+function _boardClearCurrentPage(){
+  if(_brdRoomId&&!_brdCanEdit)return; // lecture seule
+  var now=Date.now();
+  if(!_brdClearConfirmT||now-_brdClearConfirmT>2000){
+    _brdClearConfirmT=now;
+    if(typeof toast==='function')toast('Effacer la page','Tapez à nouveau pour confirmer',2000);
+    return;
+  }
+  _brdClearConfirmT=0;
+  if(_brdSel.active)_brdCleanSel();
+  _boardSaveHist();
+  _boardClearFg();
+  _boardSavePage();
+  _boardSaveHist();
+  _boardUpdatePageTabs();
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'clear',pageIdx:_brdPageIdx});
+  haptic(2);
 }
 
 // Nettoyer tous les curseurs distants (ex: fermeture du tableau)
@@ -16543,6 +16895,8 @@ function _brdCleanRemoteCursors(){
   Object.keys(_brdRemoteStrokes).forEach(function(uid){
     var el=document.getElementById('_brdCursor-'+uid);
     if(el&&el.parentNode)el.parentNode.removeChild(el);
+    var le=document.getElementById('_brdLaser-'+uid);
+    if(le&&le.parentNode)le.parentNode.removeChild(le);
   });
   _brdRemoteStrokes={};
 }
@@ -16557,12 +16911,18 @@ function _brdDecimate(pts,step){
 }
 
 // Appliquer un op reçu d'un autre utilisateur
+// Note : PAS de scale(dpr,dpr) — le contexte a déjà ce scale depuis _boardInitCanvas
 function _brdApplyRemoteOp(op){
   if(!_brdC||!_brdX)return;
-  var dpr=window.devicePixelRatio||1;
+  // Snapshot complet — remplace le contenu de la page (ex: après commit sélection)
+  if(op.type==='snapshot'&&op.data){
+    // Ignorer si l'op vient d'une autre page (sélection commitée par un pair sur page différente)
+    if(typeof op.pageIdx==='number'&&op.pageIdx!==_brdPageIdx)return;
+    _boardRestorePage(op.data);return;
+  }
   if(op.type==='stroke'||op.type==='erase'){
     var pts=op.pts;if(!pts||pts.length<2)return;
-    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.save();
     _brdX.beginPath();_brdX.moveTo(pts[0].x,pts[0].y);
     for(var i=1;i<pts.length;i++)_brdX.lineTo(pts[i].x,pts[i].y);
     if(op.type==='erase'){
@@ -16580,12 +16940,12 @@ function _brdApplyRemoteOp(op){
   }else if(op.type==='shape'){
     var oc=_brdColor,os=_brdSz,ot=_brdShType,of=_brdShFill;
     _brdColor=op.color;_brdSz=op.size;_brdShType=op.shType;_brdShFill=op.fill;
-    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.save();
     _boardDrawShape(op.x1,op.y1,op.x2,op.y2);
     _brdX.restore();
     _brdColor=oc;_brdSz=os;_brdShType=ot;_brdShFill=of;
   }else if(op.type==='text'){
-    _brdX.save();_brdX.scale(dpr,dpr);
+    _brdX.save();
     _brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
     var fw=(op.bold?'700':'400'),fi=(op.italic?'italic':'normal');
     _brdX.font=fi+' '+fw+' '+op.textSize+'px "Plus Jakarta Sans",sans-serif';
@@ -16593,19 +16953,35 @@ function _brdApplyRemoteOp(op){
     var lh=op.textSize*1.45;
     op.content.split('\n').forEach(function(ln,i){_brdX.fillText(ln,op.x,op.y+i*lh);});
     _brdX.restore();
+  }else if(op.type==='clear'){
+    _boardSaveHist();_boardClearFg();_boardSavePage();_boardSaveHist();_boardUpdatePageTabs();
+  }else if(op.type==='bg'){
+    if(typeof op.bgType==='string'){
+      _brdBgType=op.bgType;
+      _boardDrawBg();
+      var _bgb=g('_brdBgBtn');if(_bgb)_bgb.style.opacity=_brdBgType==='grid'?'1':'0.45';
+    }
   }
-  _boardSaveHist();
+  // Ne pas pousser dans _brdHist ici — les ops distants ne doivent pas polluer le undo local
 }
 
 // Recevoir l'état complet (nouveau venu ou reconnexion)
 function _brdOnSync(data){
   if(!_brdC||!_brdX)return;
-  // Appliquer le snapshot si présent
+  // Sync pages distantes (noms + nb pages)
+  if(data.pageNames&&Array.isArray(data.pageNames)){
+    _brdPageNames=data.pageNames.slice();
+    while(_brdPages.length<_brdPageNames.length)_brdPages.push(null);
+    _boardUpdatePageTabs();
+  }
+  // Appliquer le snapshot si présent — utiliser identity transform comme _boardRestorePage
   if(data.snapshot){
     var img=new Image();
     img.onload=function(){
+      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
       _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-      _brdX.drawImage(img,0,0,_brdC.width,_brdC.height);
+      _brdX.drawImage(img,0,0);
+      _brdX.restore();
       // Puis rejouer les ops reçus depuis le dernier snapshot
       if(data.ops)data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
     };
@@ -16617,6 +16993,12 @@ function _brdOnSync(data){
   if(data.editors&&user){
     _brdCanEdit=data.editors.indexOf(user.id)!==-1||_isOwner;
     _brdUpdatePermUI();
+  }
+  // Fond de page
+  if(typeof data.bgType==='string'&&data.bgType!==_brdBgType){
+    _brdBgType=data.bgType;
+    _boardDrawBg();
+    var _sgb=g('_brdBgBtn');if(_sgb)_sgb.style.opacity=_brdBgType==='grid'?'1':'0.45';
   }
   // Participants
   if(data.participants)_brdParticipants=data.participants;
@@ -16649,6 +17031,15 @@ function _brdOnParticipantJoined(data){
 // Participant quitte
 function _brdOnParticipantLeft(data){
   _brdParticipants=_brdParticipants.filter(function(x){return x.id!==data.userId;});
+  // Nettoyer le curseur DOM, le trait en cours et les RAFs en attente pour cet utilisateur
+  var _plEl=document.getElementById('_brdCursor-'+data.userId);
+  if(_plEl&&_plEl.parentNode)_plEl.parentNode.removeChild(_plEl);
+  var _plLaser=document.getElementById('_brdLaser-'+data.userId);
+  if(_plLaser&&_plLaser.parentNode)_plLaser.parentNode.removeChild(_plLaser);
+  if(_brdLaserHideT[data.userId]){clearTimeout(_brdLaserHideT[data.userId]);delete _brdLaserHideT[data.userId];}
+  delete _brdRemoteStrokes[data.userId];
+  if(_brdCursorRAF[data.userId]){cancelAnimationFrame(_brdCursorRAF[data.userId]);delete _brdCursorRAF[data.userId];}
+  delete _brdCursorPt[data.userId];
   _brdRenderPermPanel();
 }
 
@@ -16689,7 +17080,8 @@ function _brdToggleEdit(userId,currentCanEdit){
 function _brdOnRemotePageAdd(data){
   if(!_boardActive)return;
   // Ajouter la page dans notre tableau si elle n'existe pas encore
-  if(typeof data.pageIdx==='number'&&data.pageIdx>=_brdPages.length){
+  if(typeof data.pageIdx==='number'&&data.pageIdx===_brdPages.length){
+    // ===, pas >= : évite un doublon si l'event est rejoué après reconnexion
     _brdPages.push(null);_brdPageNames.push(data.name||'');
     _boardUpdatePageTabs();
     toast('Nouvelle page ajoutée','');
@@ -16698,8 +17090,10 @@ function _brdOnRemotePageAdd(data){
 function _brdOnRemotePageDelete(data){
   if(!_boardActive)return;
   if(typeof data.pageIdx==='number'&&data.pageIdx<_brdPages.length&&_brdPages.length>1){
-    _brdPages.splice(data.pageIdx,1);_brdPageNames.splice(data.pageIdx,1);
-    if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
+    _brdPages.splice(data.pageIdx,1);_brdPageNames.splice(data.pageIdx,1);_brdPageHists.splice(data.pageIdx,1);
+    // Ajuster _brdPageIdx : si la page supprimée précède la page courante, décrémenter
+    if(data.pageIdx<_brdPageIdx)_brdPageIdx--;
+    else if(_brdPageIdx>=_brdPages.length)_brdPageIdx=_brdPages.length-1;
     if(_brdPages[_brdPageIdx]){
       _boardRestorePage(_brdPages[_brdPageIdx],function(){_boardUpdatePageTabs();});
     }else{_boardClearFg();_boardUpdatePageTabs();}

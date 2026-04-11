@@ -14912,6 +14912,7 @@ var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
 var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0;
 var _brdSpacePanning=false,_brdSpacePrevTool=null,_brdKeyUpHandler=null;
 var _brdClearConfirmT=0;
+var _brdBgType='grid'; // 'grid' | 'blank'
 var _brdPageNames=[];
 var _brdTextSize=16,_brdTextBold=false,_brdTextItalic=false,_brdTextAlign='left';
 var _brdHist=[],_brdHistIdx=-1;
@@ -14979,6 +14980,17 @@ function _buildBoardInner(){
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'" title="Fond vierge / quadrillé">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
+    +'<button onclick="_boardInsertImage()" style="'+glassBtn+'" title="Insérer une image">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>'
+    +(_isOwner
+      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
+      +'<button onclick="_brdEmitGotoPage(_brdPageIdx)" style="'+glassBtn+'" title="Synchroniser la page vers les élèves">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/></svg></button>'
+      :''
+    )
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'" title="Effacer la page (double-tap)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" width="17" height="17"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>'
@@ -15289,6 +15301,7 @@ function _vCloseBoard(){
   Object.keys(_brdCursorRAF).forEach(function(id){cancelAnimationFrame(_brdCursorRAF[id]);});
   _brdCursorRAF={};_brdCursorPt={};
   _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
+  _brdBgType='grid';
   _brdPinnedTool=null;_brdTool='pen';_brdActivePointers={};
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
@@ -15443,14 +15456,74 @@ function _boardInitCanvas(){
 }
 
 function _boardDrawBg(){
-  // Draw white + grid on the BACKGROUND canvas (so eraser never touches it)
+  // Draw white (+ optional grid) on the BACKGROUND canvas (so eraser never touches it)
   if(!_brdBgX||!_brdBgC)return;
   var w=parseInt(_brdBgC.style.width)||(_brdBgC.width/(window.devicePixelRatio||1));
   var h=parseInt(_brdBgC.style.height)||(_brdBgC.height/(window.devicePixelRatio||1));
   _brdBgX.fillStyle='#ffffff';_brdBgX.fillRect(0,0,w,h);
-  var step=24;_brdBgX.strokeStyle='rgba(0,0,0,0.055)';_brdBgX.lineWidth=0.6;
-  for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
-  for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
+  if(_brdBgType!=='blank'){
+    var step=24;_brdBgX.strokeStyle='rgba(0,0,0,0.055)';_brdBgX.lineWidth=0.6;
+    for(var x=step;x<w;x+=step){_brdBgX.beginPath();_brdBgX.moveTo(x,0);_brdBgX.lineTo(x,h);_brdBgX.stroke();}
+    for(var y=step;y<h;y+=step){_brdBgX.beginPath();_brdBgX.moveTo(0,y);_brdBgX.lineTo(w,y);_brdBgX.stroke();}
+  }
+}
+function _boardToggleBg(){
+  _brdBgType=_brdBgType==='grid'?'blank':'grid';
+  _boardDrawBg();
+  var btn=g('_brdBgBtn');if(btn)btn.style.opacity=_brdBgType==='grid'?'1':'0.45';
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'bg',bgType:_brdBgType,pageIdx:_brdPageIdx});
+  haptic(1);
+}
+
+function _boardInsertImage(){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    var f=inp.files&&inp.files[0];if(!f)return;
+    var url=URL.createObjectURL(f);
+    var img=new Image();
+    img.onload=function(){
+      if(!_brdX||!_brdC)return;
+      // Centre l'image sur la page, max 80% de la largeur logique
+      var pw=_brdC.width/(window.devicePixelRatio||1);
+      var ph=_brdC.height/(window.devicePixelRatio||1);
+      var maxW=pw*0.8,maxH=ph*0.8;
+      var scale=Math.min(1,maxW/img.width,maxH/img.height);
+      var dw=img.width*scale,dh=img.height*scale;
+      var dx=(pw-dw)/2,dy=(ph-dh)/2;
+      _boardSaveHist();
+      _brdX.save();_brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;
+      _brdX.drawImage(img,dx,dy,dw,dh);
+      _brdX.restore();
+      _boardSavePage();_boardSaveHist();
+      URL.revokeObjectURL(url);
+      // Broadcaster un snapshot complet aux autres
+      if(_brdRoomId&&_brdCanEdit){
+        var tmp=document.createElement('canvas');
+        tmp.width=_brdC.width;tmp.height=_brdC.height;
+        tmp.getContext('2d').drawImage(_brdC,0,0);
+        _brdEmitOp({type:'snapshot',data:tmp.toDataURL('image/png'),pageIdx:_brdPageIdx});
+      }
+      haptic(1);
+    };
+    img.src=url;
+  };
+  inp.click();
+}
+
+function _brdEmitGotoPage(idx){
+  if(!_brdRoomId||!_brdCanEdit)return;
+  if(typeof _socket==='undefined'||!_socket||!_socket.connected)return;
+  _socket.emit('board_goto_page',{roomId:_brdRoomId,pageIdx:idx});
+  haptic(1);
+  toast('Page synchronisée','Les élèves voient maintenant cette page',1600);
+}
+
+function _brdOnRemoteGotoPage(data){
+  if(!data||typeof data.pageIdx!=='number')return;
+  if(!_boardActive||_isOwner)return; // le prof ne se déplace pas lui-même
+  if(data.pageIdx===_brdPageIdx)return;
+  _boardGoPage(data.pageIdx);
 }
 // ── Snapshot helpers (canvas offscreen — GPU, pas de copie CPU getImageData) ──
 function _brdMakeSnap(){
@@ -16644,7 +16717,8 @@ function _brdOnSyncRequest(data){
       snapshot:snap,
       pageIdx:_brdPageIdx,
       pageNames:_brdPageNames.slice(),
-      pageCount:_brdPages.length
+      pageCount:_brdPages.length,
+      bgType:_brdBgType
     });
   }
 }
@@ -16881,6 +16955,12 @@ function _brdApplyRemoteOp(op){
     _brdX.restore();
   }else if(op.type==='clear'){
     _boardSaveHist();_boardClearFg();_boardSavePage();_boardSaveHist();_boardUpdatePageTabs();
+  }else if(op.type==='bg'){
+    if(typeof op.bgType==='string'){
+      _brdBgType=op.bgType;
+      _boardDrawBg();
+      var _bgb=g('_brdBgBtn');if(_bgb)_bgb.style.opacity=_brdBgType==='grid'?'1':'0.45';
+    }
   }
   // Ne pas pousser dans _brdHist ici — les ops distants ne doivent pas polluer le undo local
 }
@@ -16913,6 +16993,12 @@ function _brdOnSync(data){
   if(data.editors&&user){
     _brdCanEdit=data.editors.indexOf(user.id)!==-1||_isOwner;
     _brdUpdatePermUI();
+  }
+  // Fond de page
+  if(typeof data.bgType==='string'&&data.bgType!==_brdBgType){
+    _brdBgType=data.bgType;
+    _boardDrawBg();
+    var _sgb=g('_brdBgBtn');if(_sgb)_sgb.style.opacity=_brdBgType==='grid'?'1':'0.45';
   }
   // Participants
   if(data.participants)_brdParticipants=data.participants;
