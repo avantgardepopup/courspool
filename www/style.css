@@ -2407,21 +2407,17 @@ html.dk .settings-chevron { color:var(--bdr); }
   }
   #msgBackBtn { display:none !important; }
 
-  /* Nav desktop — floating draggable pill */
+  /* Nav desktop — pill (pas draggable JS, position gérée par le bloc ≥1200px) */
   .bnav {
-    bottom: auto !important;
     right: auto !important;
     width: auto !important;
     padding: 8px 12px !important;
     padding-bottom: 8px !important;
     gap: 4px !important;
-    cursor: grab !important;
     border-radius: 60px !important;
     box-shadow: 0 6px 28px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.10) !important;
-    will-change: left, top;
     user-select: none;
   }
-  .bnav:active { cursor: grabbing !important; }
   .bnav::after { display: none !important; }
   html.dk .bnav { box-shadow: 0 6px 28px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3) !important; }
 

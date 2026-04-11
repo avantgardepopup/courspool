@@ -1087,7 +1087,7 @@ function mptDone(){
   try{localStorage.setItem('cp_profs_tuto','1');}catch(e){}
   var bd=g('bdMesProfsTuto');
   if(bd){bd.style.opacity='0';bd.style.transition='opacity .2s';setTimeout(function(){bd.style.display='none';bd.style.opacity='';bd.style.transition='';},200);}
-  var nav=g('bnav');if(nav)nav.style.display='';
+  restoreNav();
 }
 
 function unfollowProf(pid){
@@ -17055,7 +17055,7 @@ function closeVisioModal(){
   var bd=g('bdVisio');if(bd)bd.style.display='none';
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
-  var nav=g('bnav');if(nav)nav.style.display='';
+  restoreNav();
   haptic(4);
 }
 
