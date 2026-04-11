@@ -113,7 +113,30 @@ io.on('connection', (socket) => {
     });
   });
 
-  // ── Board: op de dessin ──────────────────────────────────────
+  // ── Board: début de trait (temps réel) ───────────────────────
+  socket.on('board_stroke_start', ({roomId, tool, color, size}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.editors.has(socket.userId)) return;
+    socket.to('board_' + roomId).emit('board_stroke_start', {
+      userId: socket.userId, tool, color, size
+    });
+  });
+
+  // ── Board: point en cours (temps réel, ~50ms) ─────────────────
+  socket.on('board_pt', ({roomId, pt}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.editors.has(socket.userId)) return;
+    socket.to('board_' + roomId).emit('board_pt', {userId: socket.userId, pt});
+  });
+
+  // ── Board: fin de trait ───────────────────────────────────────
+  socket.on('board_stroke_end', ({roomId}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.editors.has(socket.userId)) return;
+    socket.to('board_' + roomId).emit('board_stroke_end', {userId: socket.userId});
+  });
+
+  // ── Board: op committé (forme, texte, gomme complète) ────────
   socket.on('board_op', ({roomId, op}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;

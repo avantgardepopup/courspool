@@ -254,6 +254,16 @@ function initSocket() {
   });
 
   // ── Tableau blanc collaboratif ───────────────────────────────────────────
+  // Temps réel : trait en cours d'un autre utilisateur
+  _socket.on('board_stroke_start', function(d) {
+    if (typeof _brdOnRemoteStrokeStart === 'function') _brdOnRemoteStrokeStart(d);
+  });
+  _socket.on('board_pt', function(d) {
+    if (typeof _brdOnRemotePt === 'function') _brdOnRemotePt(d);
+  });
+  _socket.on('board_stroke_end', function(d) {
+    if (typeof _brdOnRemoteStrokeEnd === 'function') _brdOnRemoteStrokeEnd(d);
+  });
   _socket.on('board_op', function(op) {
     if (typeof _brdApplyRemoteOp === 'function') _brdApplyRemoteOp(op);
   });

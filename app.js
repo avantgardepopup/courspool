@@ -14876,6 +14876,8 @@ var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // selection tool state
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[],_brdSnapshotThrottle=0;
+var _brdRemoteStrokes={},_brdLastPtEmit=0;
+var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
 var _pipDragging=false,_pipDSX=0,_pipDSY=0,_pipDOX=0,_pipDOY=0;
@@ -15170,6 +15172,7 @@ function _vCloseBoard(){
   if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
     _socket.emit('board_leave',{roomId:_brdRoomId});
   }
+  if(typeof _brdCleanRemoteCursors==='function')_brdCleanRemoteCursors();
   _brdRoomId=null;_brdCanEdit=false;_brdParticipants=[];
   clearInterval(_vTimerIv);_vTimerRunning=false;
   _vPipFeaturedSid=null;
@@ -15496,6 +15499,10 @@ function _boardDown(e){
   }
   var p=_boardGetPos(e);
   _brdDraw=true;_brdPts=[p];
+  // Émettre début de trait en temps réel
+  if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+    _socket.emit('board_stroke_start',{roomId:_brdRoomId,tool:_brdTool,color:_brdColor,size:_brdTool==='eraser'?_brdEr:_brdSz});
+  }
   if(_brdTool==='pen'){
     _brdSnap=_brdX.getImageData(0,0,_brdC.width,_brdC.height);
     _brdX.beginPath();_brdX.moveTo(p.x,p.y);
@@ -15551,6 +15558,14 @@ function _boardMove(e){
   if(!_brdDraw)return;
   e.preventDefault();
   var p=_boardGetPos(e);
+  // Émettre le point en temps réel (~50ms throttle)
+  if(_brdRoomId&&_brdCanEdit&&(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser')){
+    var _now=Date.now();
+    if(_now-_brdLastPtEmit>=50&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      _brdLastPtEmit=_now;
+      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y}});
+    }
+  }
   if(_brdTool==='pen'||_brdTool==='marker'){
     // Hold finger still for 700ms → snap to straight line
     if(_brdSnapTimer)clearTimeout(_brdSnapTimer);
@@ -15601,7 +15616,11 @@ function _boardUp(e){
   _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
   if(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser'){
     _boardSaveHist();
-    // Émettre l'op de trait
+    // Fin de trait temps réel
+    if(_brdRoomId&&_brdCanEdit&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      _socket.emit('board_stroke_end',{roomId:_brdRoomId});
+    }
+    // Émettre l'op de trait complet (pour sync snapshot/retardataires)
     if(_brdRoomId&&_brdCanEdit&&_brdPts.length>=2){
       var _dPts=_brdDecimate(_brdPts,3);
       _brdEmitOp(_brdTool==='eraser'
@@ -16174,6 +16193,89 @@ function _brdEmitOp(op){
       _socket.emit('board_snapshot',{roomId:_brdRoomId,snapshot:snap});
     }
   }
+}
+
+// ── Réception temps réel des traits des autres utilisateurs ──────────────────
+
+function _brdOnRemoteStrokeStart(d){
+  // Assigner une couleur de curseur unique par userId
+  var idx=Object.keys(_brdRemoteStrokes).length%_brdCursorColors.length;
+  _brdRemoteStrokes[d.userId]={tool:d.tool,color:d.color,size:d.size,lastPt:null,cursorColor:_brdCursorColors[idx]};
+  // Trouver le nom du participant
+  var part=_brdParticipants.find(function(x){return x.id===d.userId;});
+  var name=part?part.name:'?';
+  _brdShowRemoteCursor(d.userId,name,_brdCursorColors[idx]);
+}
+
+function _brdOnRemotePt(d){
+  var stroke=_brdRemoteStrokes[d.userId];
+  if(!stroke||!_brdC||!_brdX)return;
+  var pt=d.pt;
+  if(stroke.lastPt)_brdDrawRemoteSegment(stroke,pt);
+  stroke.lastPt=pt;
+  _brdMoveRemoteCursor(d.userId,pt);
+}
+
+function _brdOnRemoteStrokeEnd(d){
+  var stroke=_brdRemoteStrokes[d.userId];
+  if(stroke)delete _brdRemoteStrokes[d.userId];
+  // Garder le curseur visible 2s puis le masquer
+  var el=document.getElementById('_brdCursor-'+d.userId);
+  if(el)setTimeout(function(){if(el.parentNode&&!_brdRemoteStrokes[d.userId])el.style.opacity='0';},2000);
+}
+
+// Dessiner un segment de trait reçu en temps réel
+function _brdDrawRemoteSegment(stroke,pt){
+  if(!_brdC||!_brdX||!stroke.lastPt)return;
+  var dpr=window.devicePixelRatio||1;
+  _brdX.save();_brdX.scale(dpr,dpr);
+  _brdX.beginPath();_brdX.moveTo(stroke.lastPt.x,stroke.lastPt.y);_brdX.lineTo(pt.x,pt.y);
+  if(stroke.tool==='eraser'){
+    _brdX.globalCompositeOperation='destination-out';
+    _brdX.strokeStyle='rgba(0,0,0,1)';_brdX.lineWidth=stroke.size;
+  }else{
+    _brdX.globalCompositeOperation='source-over';
+    _brdX.strokeStyle=stroke.color;
+    _brdX.globalAlpha=stroke.tool==='marker'?0.38:1;
+    _brdX.lineWidth=stroke.tool==='marker'?stroke.size*2.5:stroke.size;
+  }
+  _brdX.lineCap='round';_brdX.lineJoin='round';_brdX.stroke();
+  _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
+  _brdX.restore();
+}
+
+// Créer/afficher un curseur flottant pour un utilisateur distant
+function _brdShowRemoteCursor(userId,name,color){
+  var id='_brdCursor-'+userId;
+  var el=document.getElementById(id);
+  if(!el){
+    var page=g('_brdPage');if(!page)return;
+    el=document.createElement('div');
+    el.id=id;
+    el.style.cssText='position:absolute;pointer-events:none;z-index:50;transform:translate(-6px,-6px);transition:left .05s linear,top .05s linear,opacity .3s;will-change:left,top;';
+    el.innerHTML='<div style="width:12px;height:12px;border-radius:50%;background:'+color+';border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>'
+      +'<div style="background:'+color+';color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;margin-top:2px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 4px rgba(0,0,0,.2);">'+escH((name||'?').slice(0,10))+'</div>';
+    page.appendChild(el);
+  }
+  el.style.opacity='1';
+  return el;
+}
+
+// Déplacer le curseur d'un utilisateur distant (coords canvas → coords page DOM)
+function _brdMoveRemoteCursor(userId,pt){
+  var el=document.getElementById('_brdCursor-'+userId);
+  if(!el)return;
+  el.style.left=(pt.x*_brdZoom)+'px';
+  el.style.top=(pt.y*_brdZoom)+'px';
+}
+
+// Nettoyer tous les curseurs distants (ex: fermeture du tableau)
+function _brdCleanRemoteCursors(){
+  Object.keys(_brdRemoteStrokes).forEach(function(uid){
+    var el=document.getElementById('_brdCursor-'+uid);
+    if(el&&el.parentNode)el.parentNode.removeChild(el);
+  });
+  _brdRemoteStrokes={};
 }
 
 // Décimer les points d'un trait (garde 1 point sur N)
