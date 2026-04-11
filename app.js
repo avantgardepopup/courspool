@@ -14804,8 +14804,8 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>'
     +'<span style="font-size:11.5px;font-weight:600;">Cours</span></button>'
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
-    // Chrome-style page tabs strip
-    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow:hidden;"></div>'
+    // Chrome-style page tabs strip (scrollable quand beaucoup de pages)
+    +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
     +'<button id="_bU" onclick="_boardUndo()" style="'+ib+'width:36px;" title="Annuler">'
@@ -15203,8 +15203,8 @@ function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
 function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
-  // Chrome-style: tabs fill full width, shrink equally as more are added
-  var tabStyle='flex:1;min-width:0;overflow:hidden;';
+  // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
+  var tabStyle='flex-shrink:0;min-width:72px;max-width:140px;overflow:hidden;';
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
     var label=(_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1);
