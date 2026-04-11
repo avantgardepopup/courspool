@@ -14028,7 +14028,14 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
+  if(_isDemoMode)return; // anti double-appel
   _isDemoMode=true;_isOwner=true;_intentionalLeave=false;
+  // Fermer proprement une vraie salle si ouverte
+  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
+  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
   var existing=g('bdVisio');if(existing)existing.remove();
   var bd=document.createElement('div');
   bd.id='bdVisio';
@@ -14054,9 +14061,13 @@ function _vOpenDemo(){
   _vApplyLayout();
   // Détection audio : bulle + ring réactif au volume
   _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
-  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
-    _startDemoAudio(stream);
-  }).catch(function(){/* pas de micro → bulle fixe */});
+  try{
+    if(navigator.mediaDevices&&typeof navigator.mediaDevices.getUserMedia==='function'){
+      navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+        _startDemoAudio(stream);
+      }).catch(function(){/* pas de micro → bulle fixe */});
+    }
+  }catch(e){/* environnement sans mediaDevices (WKWebView non configuré) */}
   haptic(1);
 }
 
