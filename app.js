@@ -11251,7 +11251,7 @@ function _initStepDefs(){STEP_DEFS=[
 ];}
 _initStepDefs();
 
-var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
+var _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4,visio_type:'appli',visio_url_custom:''};
 var _sc=0;
 
 function _fmtRecDate(d){
@@ -11325,7 +11325,7 @@ function openCrStep(){
     else{toast(t('t_verif_pending'),t('t_verif_pending_sub'));}
     return;
   }
-  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4};
+  _sd={mode:'presentiel',prive:false,code_acces:'',titre:'',matiere:'',matiere_key:'',niveau:'',date:'',heure:'',duree:60,places:5,prix:0,lieu:'',lieu_prive:'',lieu_type:'',desc:'',recurrence:'once',recurrence_count:4,visio_type:'appli',visio_url_custom:''};
   _sc=0;
   if(!g('bdCrStep'))buildStepDOM();
   // Réinitialiser les boutons nav (peuvent avoir été mutés par _showCoursePublishedStep)
@@ -11483,12 +11483,27 @@ function stepRender(idx){
 
   }else if(step.id==='lieu'){
     if(_sd.mode==='visio'){
-      html+='<div style="width:100%;display:flex;flex-direction:column;gap:14px">'
-        +'<div style="background:var(--orp);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">'
-        +'<div style="width:52px;height:52px;background:rgba(0,113,227,.12);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="26" height="26"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
-        +'<div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('cr_step_visio_title')+'</div>'
-        +'<div style="font-size:13.5px;color:var(--lite);line-height:1.5">'+t('cr_step_visio_desc')+'</div></div>'
-        +'</div></div>';
+      var _vta=_sd.visio_type==='appli';
+      var _vte=_sd.visio_type==='lien';
+      var _optStyle='border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s;-webkit-tap-highlight-color:transparent;border:2px solid ';
+      html+='<div style="width:100%;display:flex;flex-direction:column;gap:12px">'
+        // Option A — Via l'appli
+        +'<div onclick="pickVisioType(\'appli\')" style="'+_optStyle+(_vta?'#0071E3;background:rgba(0,113,227,.06)':'var(--bdr);background:var(--wh)')+'">'
+        +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(0,113,227,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>'
+        +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('cr_visio_app_title')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--lite);margin-top:2px;line-height:1.4">'+t('cr_visio_app_desc')+'</div></div>'
+        +(_vta?'<div style="width:20px;height:20px;border-radius:50%;background:#0071E3;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div>':'')
+        +'</div>'
+        // Option B — Lien externe
+        +'<div onclick="pickVisioType(\'lien\')" style="'+_optStyle+(_vte?'#0071E3;background:rgba(0,113,227,.06)':'var(--bdr);background:var(--wh)')+'">'
+        +'<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(0,113,227,.1)"><svg viewBox="0 0 24 24" fill="none" stroke="#0071E3" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>'
+        +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--ink)">'+t('cr_visio_ext_title')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--lite);margin-top:2px;line-height:1.4">'+t('cr_visio_ext_desc')+'</div></div>'
+        +(_vte?'<div style="width:20px;height:20px;border-radius:50%;background:#0071E3;flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div>':'')
+        +'</div>'
+        // Input URL si lien externe
+        +(_vte?'<input id="stepVisioCustomUrl" class="search-input-premium" style="width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;box-sizing:border-box" placeholder="'+t('cr_visio_ext_ph')+'" value="'+escH(_sd.visio_url_custom||'')+'" oninput="_sd.visio_url_custom=this.value.trim()">':'')
+        +'</div>';
     }else{
       var _fi='width:100%;border:1.5px solid var(--bdr);border-radius:14px;padding:13px 16px;font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,.04)';
       var _lt=_sd.lieu_type||'';
@@ -11825,6 +11840,12 @@ function stepLieuSearch(q){
   },350);
 }
 
+function pickVisioType(type){
+  _sd.visio_type=type;
+  stepRender(_sc);
+  haptic(8);
+}
+
 function stepNext(){
   var step=STEP_DEFS[_sc];
   if(step.id==='titre'){if(g('stepTitre'))_sd.titre=g('stepTitre').value.trim();if(!_sd.titre){toast(t('t_title_req'),t('t_title_req_msg'));return;}}
@@ -11839,7 +11860,12 @@ function stepNext(){
     if(_dt<=new Date()){toast(t('t_date_incoherent'),t('t_date_future_msg'));return;}
   }
   if(step.id==='lieu'){
-    if(_sd.mode!=='visio'){
+    if(_sd.mode==='visio'){
+      if(_sd.visio_type==='lien'){
+        if(g('stepVisioCustomUrl'))_sd.visio_url_custom=g('stepVisioCustomUrl').value.trim();
+        if(!_sd.visio_url_custom||!/^https?:\/\//i.test(_sd.visio_url_custom)){toast('Lien requis','Entrez un lien valide commençant par https://');return;}
+      }
+    }else{
       if(!_sd.lieu_type){toast(t('t_location_req'),t('t_location_type_req'));return;}
       if(g('stepLieu'))_sd.lieu=g('stepLieu').value.trim();
       if(g('stepLieuPrive'))_sd.lieu_prive=g('stepLieuPrive').value.trim();
@@ -11855,7 +11881,6 @@ function stepNext(){
   var total=STEP_DEFS.length;
   if(_sc<total-1){
     _sc++;
-    if(STEP_DEFS[_sc]&&STEP_DEFS[_sc].id==='lieu'&&_sd.mode==='visio')_sc++;
     stepRender(_sc);haptic(8);
   }else subCrStep();
 }
@@ -11863,7 +11888,6 @@ function stepNext(){
 function stepBack(){
   if(_sc===0){closeCrStep();return;}
   _sc--;
-  if(STEP_DEFS[_sc]&&STEP_DEFS[_sc].id==='lieu'&&_sd.mode==='visio')_sc--;
   stepRender(_sc);haptic(6);
 }
 
@@ -11882,7 +11906,8 @@ async function subCrStep(){
       var dt=_dates[_di];
       var y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0');
       var H=String(dt.getHours()).padStart(2,'0'),mi=String(dt.getMinutes()).padStart(2,'0');
-      var _visioUrl=''; // room Daily.co créée côté serveur
+      // Si lien externe, on envoie l'URL custom. Si appli, le backend créera la room Daily.co.
+      var _visioUrl=(_isVisioMode&&_sd.visio_type==='lien')?(_sd.visio_url_custom||''):'';
       var p={titre:_sd.titre,sujet:_sd.matiere_key||_sd.matiere,niveau:_sd.niveau||'',
         date_heure:y+'-'+mo+'-'+d+'T'+H+':'+mi+':00',
         lieu:_isVisioMode?'Visio':_sd.lieu,
@@ -11903,7 +11928,9 @@ async function subCrStep(){
       var r=await fetch(API+'/cours',{method:'POST',headers:apiH(),body:JSON.stringify(p)});
       var data=await r.json();
       if(!r.ok||data.error)throw new Error(data.error||'Erreur serveur');
-      if(!_firstVisioUrl&&_visioUrl)_firstVisioUrl=_visioUrl;
+      // Si le backend a créé une room Daily.co, récupérer l'URL renvoyée
+      var _resolvedVisioUrl=_visioUrl||(data.visio_url||data.cours&&data.cours.visio_url)||'';
+      if(!_firstVisioUrl&&_resolvedVisioUrl)_firstVisioUrl=_resolvedVisioUrl;
       _published++;
     }
     haptic([10,50,100,50,10]);
@@ -12036,15 +12063,7 @@ function _fallbackCopyVisio(url){
       var rmb=g('rModeBadge');
       if(rmb){var _rVis=c.mode==='visio'||c.lc==='Visio'||!!c.visio_url;rmb.innerHTML='<span class="mode-badge '+(_rVis?'visio':'presentiel')+'">'+(_rVis?t('mode_visio'):t('mode_pres'))+'</span>';}
       var rvj=g('rVisioJoin');
-      if(rvj){
-        var _isProf=user&&c.pr===user.id;
-        var _isEnrolled=!!res[c.id];
-        var _rStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
-        var _rInWin=!_rStart||(Date.now()>=_rStart-15*60*1000&&Date.now()<=_rStart+2*60*60*1000);
-        var show=c.mode==='visio'&&c.visio_url&&(_isProf||(_isEnrolled&&_rInWin));
-        rvj.style.display=show?'flex':'none';
-        if(show)rvj.href=(/^https?:\/\//i.test(c.visio_url)?c.visio_url:'#');
-      }
+      if(rvj){rvj.style.display='none';}
     },50);
   };
 
@@ -12459,8 +12478,11 @@ function buildMesCard(c,isPast,isProf,kind){
       if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ Ajouter le lien visio</button>';}
       else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">Modifier</button></div>';}
     } else if(!!res[c.id]){
-      if(c.visio_url&&_vInWin){visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">Rejoindre en visio</button>';}
-      else if(_vNotYet){visio='<div style="margin-top:10px;width:100%;padding:10px;background:var(--bg);color:var(--lite);border:1.5px solid var(--bdr);border-radius:12px;font-size:13px;font-weight:600;text-align:center">🕐 Accès à partir de '+_vHeure+'</div>';}
+      // Toujours afficher le bouton Rejoindre pour les élèves inscrits en visio
+      var _vOnclick=_vInWin&&c.visio_url
+        ?'event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')'
+        :'event.stopPropagation();toast(t(\'visio_not_yet\'),t(\'visio_not_yet_sub\').replace(\'{heure}\',\''+escH(_vHeure)+'\'))';
+      visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="'+_vOnclick+'">'+t('mes_rejoindre_visio')+'</button>';
     }
   }
   var code='';
