@@ -133,6 +133,15 @@ window.addEventListener('popstate',function(e){
 
 var API='https://devoted-achievement-production-fdfa.up.railway.app';
 
+// Helper : fetch avec timeout — évite que les fetches parallèles pendent indéfiniment
+function _ft(url,opts,ms){
+  ms=ms||10000;
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},ms);
+  var merged=Object.assign({},opts||{},{signal:ctrl.signal});
+  return fetch(url,merged).finally(function(){clearTimeout(tid);});
+}
+
 // Prefetch cours dès le chargement du script — endpoint public, pas besoin d'auth
 // Le fetch démarre pendant que le JS vérifie la session, économise ~300-500ms
 var _prefetchP=fetch(API+'/cours?page=1&limit=12').then(function(r){return r.json();}).catch(function(){return null;});
@@ -1953,8 +1962,8 @@ async function doLogin(){
       var _folDone2=false;
       var _dataP2=loadData();
       var _rfP2=Promise.all([
-        fetch(API+'/reservations/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-        fetch(API+'/follows/'+uid,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
+        _ft(API+'/reservations/'+uid,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return [];}),
+        _ft(API+'/follows/'+uid,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → ne pas écraser fol
       ]);
       // Afficher les cours dès qu'ils arrivent
       _dataP2.then(function(){
@@ -2413,8 +2422,8 @@ function goExplore(){
         var _uid=user.id;
         var _dataP=loadData(1,_hadCache);
         var _rfP=Promise.all([
-          fetch(API+'/reservations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return [];}),
-          fetch(API+'/follows/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → on garde fol du localStorage
+          _ft(API+'/reservations/'+user.id,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return [];}),
+          _ft(API+'/follows/'+user.id,{headers:apiH()},10000).then(function(r){return r.json();}).catch(function(){return null;}) // null = échec réseau → on garde fol du localStorage
         ]);
         // Afficher les cours dès qu'ils arrivent (sans attendre res+follows)
         // loadData(1) avec silent=true si cache déjà affiché pour éviter les skeletons
@@ -3587,6 +3596,10 @@ function loadMore(){
     _loadingMore=false;
     currentPage=1;
     renderPage();
+  }).catch(function(e){
+    _loadingMore=false; // débloquer l'infinite scroll même en cas d'erreur réseau
+    _currentPage=Math.max(1,_currentPage-1); // rollback page
+    console.error('[loadMore] erreur chargement page',_currentPage+1,e);
   });
 }
 
@@ -10286,7 +10299,7 @@ function closeVilleFilter(){
   if(_locKbShowFn){window.removeEventListener('keyboardWillShow',_locKbShowFn);_locKbShowFn=null;}
   if(_locKbHideFn){window.removeEventListener('keyboardWillHide',_locKbHideFn);_locKbHideFn=null;}
 }
-function applyVilleFilter(){}
+function applyVilleFilter(){closeVilleFilter();applyFilter();}
 function clearVilleFilter(){
   locInputClear();
   closeVilleFilter();
@@ -13415,7 +13428,7 @@ function _ssSelectMatiere(){}
 function _ssUpdateMatLabel(){}
 function _ssSearch(){}
 function _ssClearAll(){}
-function _ssRequestGeoloc(){}
+function _ssRequestGeoloc(){if(typeof requestGeoloc==='function')requestGeoloc();}
 function _ssOnMatiereInput(){}
 function _ssPickMatiere(){}
 function _ssSubmitCode(){}
@@ -13424,7 +13437,7 @@ function _ssOnInput(val){var m=g('mobSearchInput');if(m)m.value=val;var s=g('src
 function _ssOnClear(){var m=g('mobSearchInput');if(m)m.value='';var s=g('srch');if(s)s.value='';currentPage=1;applyFilter();}
 function _ssUpdateResultCount(){}
 function _ssBuildSuggestions(){}
-function _ssUseGeoloc(){}
+function _ssUseGeoloc(){if(typeof requestGeoloc==='function')requestGeoloc();}
 function _ssOnFocus(){}
 
 function _updateSearchPill(val,sub){
