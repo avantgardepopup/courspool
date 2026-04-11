@@ -482,7 +482,7 @@ function _buildFavCard2Col(c,idx){
     +'<div class="fav2-sep"></div>'
     +'<div class="fav2-foot">'
     +(pp?'<div class="fav2-price">'+pp+'€</div>':'<div class="fav2-price">—</div>')
-    +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--lite)">Voir<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>'
+    +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--lite)">'+t('fav_voir')+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><polyline points="9 18 15 12 9 6"/></svg></div>'
     +'</div>'
     +'</div>';
   wrap.appendChild(div);
@@ -6400,7 +6400,7 @@ function _loadMpfAvis(pid){
   fetch(API+'/notations/'+pid).then(function(r){return r.json();}).then(function(notes){
     if(_curPrFull!==pid)return;
     if(!notes||!notes.length){
-      avisContainer.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">Pas encore d\'avis pour le moment.</div>';
+      avisContainer.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:#717171">'+t('no_reviews_yet')+'</div>';
       return;
     }
     var _avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
@@ -6445,7 +6445,7 @@ function _loadProfAvis(){
   if(listEl)listEl.innerHTML='<div class="skeleton" style="height:62px;border-radius:12px;margin:14px 16px"></div>';
   fetch(API+'/notations/'+user.id,{headers:apiH()}).then(function(r){return r.json();}).then(function(notes){
     if(!notes||!notes.length){
-      if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Pas encore d\'avis pour le moment.</div>';
+      if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">'+t('no_reviews_yet')+'</div>';
       if(avgEl)avgEl.textContent='—';
       if(starsEl)starsEl.innerHTML=_avisSvgStars(0,17);
       if(countEl)countEl.textContent=t('no_reviews_yet');
@@ -6454,7 +6454,7 @@ function _loadProfAvis(){
     var avg=(notes.reduce(function(s,a){return s+(a.note||0);},0)/notes.length).toFixed(1);
     if(avgEl){avgEl.textContent=avg;}
     if(starsEl)starsEl.innerHTML=_avisSvgStars(avg,17);
-    if(countEl)countEl.textContent=notes.length+' avis';
+    if(countEl)countEl.textContent=notes.length+' '+t('avis_suffix');
     var COLORS=['#3B82F6','#8B5CF6','#F59E0B','#10B981','#EF4444','#0EA5E9','#EC4899'];
     if(listEl)listEl.innerHTML=notes.slice(0,20).map(function(a,idx){
       var initial=a.prenom?a.prenom[0].toUpperCase():'?';
@@ -6473,7 +6473,7 @@ function _loadProfAvis(){
         +'</div>';
     }).join('');
   }).catch(function(){
-    if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">Impossible de charger les avis.</div>';
+    if(listEl)listEl.innerHTML='<div style="text-align:center;padding:40px 20px;font-size:14px;color:var(--lite)">'+t('reviews_err')+'</div>';
   });
 }
 
@@ -8392,13 +8392,13 @@ function openMsgAttachment(isGroupe){
   var _svgPub='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="20" height="20"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>';
   var _svgPoll='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
   var opts=[
-    {icon:_svgCours,label:'Un cours',sub:'Partage une de tes s\u00e9ances',type:'cours'},
-    {icon:_svgFiche,label:'Fiche de cours',sub:'Partage une fiche depuis ton espace',type:'fiche'},
-    {icon:_svgPub,label:'Publication',sub:'Partage une annonce ou publication',type:'pub'}
+    {icon:_svgCours,label:t('share_opt_cours_lbl'),sub:t('share_opt_cours_sub'),type:'cours'},
+    {icon:_svgFiche,label:t('share_opt_fiche_lbl'),sub:t('share_opt_fiche_sub'),type:'fiche'},
+    {icon:_svgPub,label:t('share_opt_pub_lbl'),sub:t('share_opt_pub_sub'),type:'pub'}
   ];
-  if(isGroupe)opts.push({icon:_svgPoll,label:'Sondage',sub:'Pose une question au groupe',type:'sondage'});
+  if(isGroupe)opts.push({icon:_svgPoll,label:t('share_opt_sondage_lbl'),sub:t('share_opt_sondage_sub'),type:'sondage'});
   var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
-    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">Partager dans la conversation</div></div>'
+    +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.02em">'+t('share_in_conv')+'</div></div>'
     +'<div style="padding:0 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px));display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function(o){
     var fn=o.type==='sondage'?'openSondageCreator()':o.type==='cours'?'openShareCoursSheet()':'_espMsgPickContent(\''+o.type+'\')';
@@ -8407,37 +8407,37 @@ function openMsgAttachment(isGroupe){
       +'<div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+o.label+'</div><div style="font-size:12px;color:var(--lite);margin-top:2px">'+o.sub+'</div></div>'
       +'</button>';
   });
-  html+='<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Annuler</button></div>';
+  html+='<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">'+t('rr_annuler_btn')+'</button></div>';
   showQuickSheet(html);
 }
 
 function _espMsgPickContent(type){
   _espPickType=type;
-  showQuickSheet('<div style="padding:48px;text-align:center;color:var(--lite)">Chargement…</div>');
+  showQuickSheet('<div style="padding:48px;text-align:center;color:var(--lite)">'+t('share_loading')+'</div>');
   fetch(API+'/teacher/'+user.id+'/announcements',{headers:apiH()})
     .then(function(r){return r.json();})
     .then(function(list){
       var filter=type==='fiche'?function(a){return a.type==='fiche';}:function(a){return a.type!=='fiche';};
       _espPickItems=(list||[]).filter(filter);
       if(!_espPickItems.length){
-        showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">Aucun contenu disponible dans ton espace</div>'
-          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Fermer</button></div>');
+        showQuickSheet('<div style="padding:40px 20px;text-align:center;color:var(--lite);font-size:14px">'+t('share_no_content')+'</div>'
+          +'<div style="padding:0 20px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))"><button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">'+t('btn_fermer')+'</button></div>');
         return;
       }
       var _icSmall='<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="18" height="18">'+(type==='fiche'?'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>':'<path d="M3 11l18-5v12L3 14v-3z"/>')+'</svg>';
       var icon=_icSmall;
-      var title=type==='fiche'?'Fiches de cours':'Publications';
+      var title=type==='fiche'?t('share_fiches_title'):t('share_pubs_title');
       var html='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:14px auto 0"></div>'
         +'<div style="padding:14px 20px 8px"><div style="font-size:17px;font-weight:800;color:var(--ink)">'+title+'</div></div>'
         +'<div style="max-height:55vh;overflow-y:auto;padding:0 12px;display:flex;flex-direction:column;gap:6px">';
       _espPickItems.forEach(function(item,idx){
         html+='<button onclick="closeQuickSheet();_espMsgSendCardByIdx('+idx+')" style="width:100%;background:var(--bg);border:none;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
           +'<span style="font-size:20px;flex-shrink:0">'+icon+'</span>'
-          +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||'Sans titre')+'</span>'
+          +'<span style="font-size:14px;font-weight:600;color:var(--ink);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(item.title||t('share_untitled'))+'</span>'
           +'</button>';
       });
       html+='</div><div style="padding:4px 12px max(20px,calc(env(safe-area-inset-bottom,0px)+16px))">'
-        +'<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">Annuler</button></div>';
+        +'<button onclick="closeQuickSheet()" style="width:100%;background:none;color:var(--lite);border:none;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:16px 14px;-webkit-tap-highlight-color:transparent">'+t('rr_annuler_btn')+'</button></div>';
       showQuickSheet(html);
     })
     .catch(function(){showQuickSheet('<div style="padding:40px;text-align:center;color:var(--lite)">Erreur de chargement</div>');});
@@ -8507,14 +8507,14 @@ function _openEspContent(type,pid,id){
 }
 
 function _renderEspCardInner(d,isMe,time){
-  var labels={fiche:'Fiche de cours',pub:'Publication',sondage:'Sondage'};
+  var labels={fiche:t('esp_lbl_fiche'),pub:t('esp_lbl_pub'),sondage:t('esp_lbl_sondage')};
   var _ic12={
     fiche:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
     pub:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><path d="M3 11l18-5v12L3 14v-3z"/></svg>',
     sondage:'<svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2" stroke-linecap="round" width="11" height="11"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
   };
   var icon=_ic12[d.t]||'';
-  var lbl=labels[d.t]||'Contenu';
+  var lbl=labels[d.t]||t('esp_lbl_contenu');
   var tapAttr=(d.t!=='sondage')?' onclick="_openEspContent(\''+d.t+'\',\''+escH(d.pid||'')+'\',\''+escH(d.id||'')+'\')"':'';
   if(d.t==='sondage'){
     var optsHtml=(d.opts||[]).map(function(o,i){
@@ -8532,7 +8532,7 @@ function _renderEspCardInner(d,isMe,time){
   return '<div class="esp-msg-card'+(tapAttr?' clickable':'')+'"'+tapAttr+' style="align-self:'+(isMe?'flex-end':'flex-start')+'">'
     +'<div style="font-size:10px;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">'+icon+' '+lbl+'</div>'
     +'<div style="font-size:15px;font-weight:700;color:var(--ink);line-height:1.3">'+esc(d.title||'')+'</div>'
-    +(tapAttr?'<div style="font-size:12px;color:var(--or);font-weight:600;margin-top:8px">Voir dans l\'espace →</div>':'')
+    +(tapAttr?'<div style="font-size:12px;color:var(--or);font-weight:600;margin-top:8px">'+t('esp_voir_espace')+'</div>':'')
     +'<div style="font-size:10px;color:var(--lite);margin-top:6px;text-align:'+(isMe?'right':'left')+'">'+time+'</div>'
     +'</div>';
 }
@@ -9575,7 +9575,7 @@ async function loadRevenues() {
   var list = g('revList');
   if (!list) return;
 
-  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_chargement')+'</div>';
 
   // Récupérer les paiements depuis le serveur
   try {
@@ -9601,13 +9601,13 @@ async function loadRevenues() {
     var pendingAmt = pending.reduce(function(a, p) { return a + p.amount; }, 0);
 
     g('revMois').textContent = moisTotal.toFixed(2) + '€';
-    g('revMoisNb').textContent = thisMonth.length + ' paiement' + (thisMonth.length > 1 ? 's' : '');
+    g('revMoisNb').textContent = thisMonth.length + ' ' + (thisMonth.length > 1 ? t('rev_payment_p') : t('rev_payment_s'));
     g('revTotal').textContent = total.toFixed(2) + '€';
-    g('revTotalNb').textContent = paid.length + ' paiement' + (paid.length > 1 ? 's' : '');
+    g('revTotalNb').textContent = paid.length + ' ' + (paid.length > 1 ? t('rev_payment_p') : t('rev_payment_s'));
 
     var pendingBar = g('revPendingBar');
     if (pendingAmt > 0 && pendingBar) {
-      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ en attente de virement';
+      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ ' + t('rev_pending_suffix');
       pendingBar.style.display = 'flex';
     } else if (pendingBar) {
       pendingBar.style.display = 'none';
@@ -9615,7 +9615,7 @@ async function loadRevenues() {
 
     // Liste des paiements
     if (!paid.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu\'un élève réserve un cours.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('rev_no_payment')+'</div><div style="font-size:13px;color:var(--lite);line-height:1.6">'+t('rev_no_payment_sub')+'</div></div>';
       return;
     }
 
@@ -9652,12 +9652,12 @@ async function loadRevenues() {
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-size:16px;font-weight:800;color:var(--green)">+'+montantNet+'€</div>'
-          +'<div style="font-size:10px;color:var(--lite);margin-top:1px">net · '+montant.toFixed(2)+'€ brut</div>'
+          +'<div style="font-size:10px;color:var(--lite);margin-top:1px">'+t('rev_net_label')+' · '+montant.toFixed(2)+'€ '+t('rev_gross_label')+'</div>'
           +'</div>'
           +'</div>';
       });
     });
-    if(paid.length>30)html+='<div style="text-align:center;padding:14px;font-size:13px;color:var(--lite)">+ '+(paid.length-30)+' paiements plus anciens</div>';
+    if(paid.length>30)html+='<div style="text-align:center;padding:14px;font-size:13px;color:var(--lite)">+ '+(paid.length-30)+' '+t('pay_older')+'</div>';
     list.innerHTML=html;
 
   } catch(e) {
@@ -9669,15 +9669,15 @@ async function loadPayouts() {
   if (!user || user.role !== 'professeur') return;
   var el = g('revPayouts');
   if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_chargement')+'</div>';
   try {
     var r = await fetch(API + '/stripe/connect/payouts/' + user.id, {headers: apiH()});
     var data = await r.json();
     if (!Array.isArray(data) || !data.length) {
-      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">Aucun virement pour le moment.</div>';
+      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">'+t('rev_no_payout')+'</div>';
       return;
     }
-    var STATUS_LABEL = {paid: 'Reçu', pending: 'En cours', in_transit: 'En transit', failed: 'Échoué', canceled: 'Annulé'};
+    var STATUS_LABEL = {paid: t('rev_payout_received'), pending: t('rev_payout_pending'), in_transit: t('rev_payout_in_transit'), failed: t('rev_payout_failed'), canceled: t('rev_payout_canceled')};
     var STATUS_COLOR = {paid: 'var(--green)', pending: 'var(--or)', in_transit: 'var(--or)', failed: '#EF4444', canceled: 'var(--lite)'};
     el.innerHTML = data.map(function(p) {
       var d = new Date(p.arrival_date);
@@ -9689,7 +9689,7 @@ async function loadPayouts() {
         + '<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'
         + '</div>'
         + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">Virement bancaire</div>'
+        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('rev_bank_transfer')+'</div>'
         + '<div style="display:flex;align-items:center;gap:6px;margin-top:3px">'
         + '<span style="font-size:11px;color:var(--lite)">'+dateStr+'</span>'
         + '<span style="font-size:10px;font-weight:700;color:'+color+';background:'+color+'1a;border-radius:4px;padding:1px 6px">'+label+'</span>'
@@ -9699,7 +9699,7 @@ async function loadPayouts() {
         + '</div>';
     }).join('');
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Erreur de chargement.<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('rev_err_load')+'<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
   }
 }
 
@@ -9977,7 +9977,7 @@ async function saveIban() {
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
-    toast(t('t_iban_saved'), 'Vérification en cours — vous serez notifié par email ✓');
+    toast(t('t_iban_saved'), t('iban_saved_sub'));
 
     // Mettre à jour l'UI — passer en état "en attente de validation Stripe"
     var notConn = g('stripeNotConnected');
@@ -14028,7 +14028,14 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
+  if(_isDemoMode)return; // anti double-appel
   _isDemoMode=true;_isOwner=true;_intentionalLeave=false;
+  // Fermer proprement une vraie salle si ouverte
+  if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){co.destroy();});}
+  if(_callTimer){clearInterval(_callTimer);_callTimer=null;}
+  if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+  if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}
   var existing=g('bdVisio');if(existing)existing.remove();
   var bd=document.createElement('div');
   bd.id='bdVisio';
@@ -14054,9 +14061,13 @@ function _vOpenDemo(){
   _vApplyLayout();
   // Détection audio : bulle + ring réactif au volume
   _vOnActiveSpeaker({activeSpeaker:{peerId:'demo-p1'}});
-  navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
-    _startDemoAudio(stream);
-  }).catch(function(){/* pas de micro → bulle fixe */});
+  try{
+    if(navigator.mediaDevices&&typeof navigator.mediaDevices.getUserMedia==='function'){
+      navigator.mediaDevices.getUserMedia({audio:true,video:false}).then(function(stream){
+        _startDemoAudio(stream);
+      }).catch(function(){/* pas de micro → bulle fixe */});
+    }
+  }catch(e){/* environnement sans mediaDevices (WKWebView non configuré) */}
   haptic(1);
 }
 

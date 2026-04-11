@@ -9575,7 +9575,7 @@ async function loadRevenues() {
   var list = g('revList');
   if (!list) return;
 
-  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_chargement')+'</div>';
 
   // Récupérer les paiements depuis le serveur
   try {
@@ -9601,13 +9601,13 @@ async function loadRevenues() {
     var pendingAmt = pending.reduce(function(a, p) { return a + p.amount; }, 0);
 
     g('revMois').textContent = moisTotal.toFixed(2) + '€';
-    g('revMoisNb').textContent = thisMonth.length + ' paiement' + (thisMonth.length > 1 ? 's' : '');
+    g('revMoisNb').textContent = thisMonth.length + ' ' + (thisMonth.length > 1 ? t('rev_payment_p') : t('rev_payment_s'));
     g('revTotal').textContent = total.toFixed(2) + '€';
-    g('revTotalNb').textContent = paid.length + ' paiement' + (paid.length > 1 ? 's' : '');
+    g('revTotalNb').textContent = paid.length + ' ' + (paid.length > 1 ? t('rev_payment_p') : t('rev_payment_s'));
 
     var pendingBar = g('revPendingBar');
     if (pendingAmt > 0 && pendingBar) {
-      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ en attente de virement';
+      g('revPendingAmt').textContent = pendingAmt.toFixed(2) + '€ ' + t('rev_pending_suffix');
       pendingBar.style.display = 'flex';
     } else if (pendingBar) {
       pendingBar.style.display = 'none';
@@ -9615,7 +9615,7 @@ async function loadRevenues() {
 
     // Liste des paiements
     if (!paid.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">Aucun paiement</div><div style="font-size:13px;color:var(--lite);line-height:1.6">Vos revenus apparaîtront ici<br>dès qu\'un élève réserve un cours.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="width:52px;height:52px;background:var(--orp);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="1.8" stroke-linecap="round" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px">'+t('rev_no_payment')+'</div><div style="font-size:13px;color:var(--lite);line-height:1.6">'+t('rev_no_payment_sub')+'</div></div>';
       return;
     }
 
@@ -9652,7 +9652,7 @@ async function loadRevenues() {
           +'</div>'
           +'<div style="text-align:right;flex-shrink:0">'
           +'<div style="font-size:16px;font-weight:800;color:var(--green)">+'+montantNet+'€</div>'
-          +'<div style="font-size:10px;color:var(--lite);margin-top:1px">net · '+montant.toFixed(2)+'€ brut</div>'
+          +'<div style="font-size:10px;color:var(--lite);margin-top:1px">'+t('rev_net_label')+' · '+montant.toFixed(2)+'€ '+t('rev_gross_label')+'</div>'
           +'</div>'
           +'</div>';
       });
@@ -9669,15 +9669,15 @@ async function loadPayouts() {
   if (!user || user.role !== 'professeur') return;
   var el = g('revPayouts');
   if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>Chargement</div>';
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px"><span class="cp-loader"></span>'+t('txt_chargement')+'</div>';
   try {
     var r = await fetch(API + '/stripe/connect/payouts/' + user.id, {headers: apiH()});
     var data = await r.json();
     if (!Array.isArray(data) || !data.length) {
-      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">Aucun virement pour le moment.</div>';
+      el.innerHTML = '<div style="text-align:center;padding:32px 20px;color:var(--lite);font-size:13px">'+t('rev_no_payout')+'</div>';
       return;
     }
-    var STATUS_LABEL = {paid: 'Reçu', pending: 'En cours', in_transit: 'En transit', failed: 'Échoué', canceled: 'Annulé'};
+    var STATUS_LABEL = {paid: t('rev_payout_received'), pending: t('rev_payout_pending'), in_transit: t('rev_payout_in_transit'), failed: t('rev_payout_failed'), canceled: t('rev_payout_canceled')};
     var STATUS_COLOR = {paid: 'var(--green)', pending: 'var(--or)', in_transit: 'var(--or)', failed: '#EF4444', canceled: 'var(--lite)'};
     el.innerHTML = data.map(function(p) {
       var d = new Date(p.arrival_date);
@@ -9689,7 +9689,7 @@ async function loadPayouts() {
         + '<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'
         + '</div>'
         + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">Virement bancaire</div>'
+        + '<div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('rev_bank_transfer')+'</div>'
         + '<div style="display:flex;align-items:center;gap:6px;margin-top:3px">'
         + '<span style="font-size:11px;color:var(--lite)">'+dateStr+'</span>'
         + '<span style="font-size:10px;font-weight:700;color:'+color+';background:'+color+'1a;border-radius:4px;padding:1px 6px">'+label+'</span>'
@@ -9699,7 +9699,7 @@ async function loadPayouts() {
         + '</div>';
     }).join('');
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">Erreur de chargement.<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">Réessayer</a></div>';
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--lite);font-size:13px">'+t('rev_err_load')+'<br><a onclick="loadPayouts()" style="color:var(--or);cursor:pointer">'+t('txt_retry')+'</a></div>';
   }
 }
 
@@ -9977,7 +9977,7 @@ async function saveIban() {
       body: JSON.stringify({ prof_id: user.id, stripe_account_id: accountId })
     });
 
-    toast(t('t_iban_saved'), 'Vérification en cours — vous serez notifié par email ✓');
+    toast(t('t_iban_saved'), t('iban_saved_sub'));
 
     // Mettre à jour l'UI — passer en état "en attente de validation Stripe"
     var notConn = g('stripeNotConnected');
