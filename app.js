@@ -15752,8 +15752,8 @@ function _boardAttachEvents(canv){
 }
 function _boardDown(e){
   e.preventDefault();
-  // Bloquer le dessin si pas autorisé (mode collaboratif, élève en lecture seule)
-  if(_brdRoomId&&!_brdCanEdit&&_brdTool!=='select'){
+  // Bloquer tout dessin/modification si lecture seule (select inclus — il clearRect le canvas)
+  if(_brdRoomId&&!_brdCanEdit){
     var _now=Date.now();
     if(_now-_brdROToastT>2500){
       _brdROToastT=_now;
