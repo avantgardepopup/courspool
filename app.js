@@ -14844,11 +14844,16 @@ function _vOnActiveSpeaker(evt){
   _activeSpeakerSid=sid||null;
   document.querySelectorAll('[id^="_vt-"]').forEach(function(el){el.style.boxShadow='';});
   if(sid){var t=g('_vt-'+sid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
-  // Indique visuellement si C'EST MOI qui parle (mic + bulle flottante)
+  // Indique visuellement si C'EST MOI qui parle (mic tile PiP + bouton mic barre + bulle flottante)
   var localSid=_callObj&&_callObj.participants&&_callObj.participants().local?_callObj.participants().local.session_id:null;
   var iAmSpeaking=sid&&(sid===localSid||sid==='demo-local');
+  // Icône micro dans la tuile vidéo (bas-droite de la tuile locale)
+  var tileMic=g(sid==='demo-local'?'_vdmic-demo-local':'_vdmic-local');
+  if(tileMic){if(iAmSpeaking&&!_localMuted){tileMic.classList.add('mic-speaking');}else{tileMic.classList.remove('mic-speaking');}}
+  // Bouton micro dans la barre de contrôles du visio plein écran
   var micBtn=g('_vMic');
   if(micBtn){if(iAmSpeaking&&!_localMuted){micBtn.classList.add('mic-speaking');}else{micBtn.classList.remove('mic-speaking');}}
+  // Bulle flottante (quand le PiP est masqué)
   var rb=g('_vPipRestoreBtn');
   if(rb){if(iAmSpeaking&&!_localMuted){rb.classList.add('mic-speaking');}else{rb.classList.remove('mic-speaking');}}
   if(_boardActive)_vApplyLayout(); // switch PiP to new speaker
@@ -14960,6 +14965,7 @@ function _vOnMsg(evt){
       _callObj.setLocalAudio(false);_localMuted=true;_floorGranted=false;
       var b=g('_vMic');if(b){b.innerHTML=_vMicSvg(true);b.classList.remove('mic-speaking');}
       var _rb3=g('_vPipRestoreBtn');if(_rb3)_rb3.classList.remove('mic-speaking');
+      var _tm3=g('_vdmic-local')||g('_vdmic-demo-local');if(_tm3)_tm3.classList.remove('mic-speaking');
       toast('Votre micro a été coupé','');
     }
   }else if(m.type==='open_floor'){
@@ -15370,7 +15376,11 @@ function _vToggleMic(){
   if(_callObj)_callObj.setLocalAudio(!_localMuted);
   if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
   // Couper le micro = stopper l'animation "qui parle"
-  if(_localMuted){var _mb2=g('_vMic');if(_mb2)_mb2.classList.remove('mic-speaking');var _rb2=g('_vPipRestoreBtn');if(_rb2)_rb2.classList.remove('mic-speaking');}
+  if(_localMuted){
+    var _mb2=g('_vMic');if(_mb2)_mb2.classList.remove('mic-speaking');
+    var _rb2=g('_vPipRestoreBtn');if(_rb2)_rb2.classList.remove('mic-speaking');
+    var _tm2=g('_vdmic-local')||g('_vdmic-demo-local');if(_tm2)_tm2.classList.remove('mic-speaking');
+  }
   haptic(1);
 }
 function _vToggleCam(){
@@ -17785,6 +17795,9 @@ function _brdObjSelScale(factor){
     }else if(o.type==='text'){
       o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
       o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*factor)));
+    }else if(o.type==='image'){
+      o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
+      o.w=Math.max(20,o.w*factor);o.h=Math.max(20,o.h*factor);
     }
     _brdObjects[idx]=o;
   });
@@ -17806,6 +17819,9 @@ function _brdScaleObjAround(o,factor,cx,cy){
   }else if(o.type==='text'){
     o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
     o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*factor)));
+  }else if(o.type==='image'){
+    o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
+    o.w=Math.max(20,o.w*factor);o.h=Math.max(20,o.h*factor);
   }
   return o;
 }
