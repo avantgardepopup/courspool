@@ -15953,6 +15953,9 @@ function _buildBoardInner(){
     // Page tabs : flex:1 pour partager la largeur disponible, se réduisent automatiquement
     +'<div id="_brdTabs" style="flex:1;display:flex;align-items:flex-end;gap:2px;padding:6px 4px 0;min-width:0;overflow:hidden;"></div>'
     +(_isOwner?'<button onclick="_boardAddPage()" style="'+ib+'width:34px;font-size:20px;" title="Nouvelle page">+</button>':'')
+    +'<button onclick="_boardShowPageOverview()" style="'+ib+'width:34px;" title="Vue d\'ensemble des pages">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>'
+    +'</button>'
     +'<div style="width:1px;background:rgba(255,255,255,.16);margin:8px 3px;flex-shrink:0;"></div>'
     +'<button id="_bU" onclick="_boardUndo()" style="'+ib+'width:36px;" title="Annuler">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button>'
@@ -16834,6 +16837,59 @@ function _boardRedo(){
   var st=_brdHist[_brdHistIdx];_brdPageIdx=st.idx;
   if(st.objects)_brdObjects=JSON.parse(JSON.stringify(st.objects));
   _boardRestorePage(st.data,function(){_boardUpdatePageLabel();});
+  haptic(1);
+}
+function _boardShowPageOverview(){
+  // Sauvegarder la page courante avant d'afficher les miniatures
+  _boardSavePage();
+  var old=g('_brdOvrl');if(old)old.remove();
+  var n=_brdPages.length;
+  var ratio=_brdPageFormat==='portrait'?(210/297):_brdPageFormat==='landscape'?(297/210):(4/3);
+  var thumbW=160,thumbH=Math.round(thumbW/ratio);
+  var overlay=document.createElement('div');
+  overlay.id='_brdOvrl';
+  overlay.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(6,8,22,.93);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);display:flex;flex-direction:column;overflow:hidden;';
+  // Header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top,20px),20px) 20px 14px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,.1);';
+  hdr.innerHTML='<span style="color:#fff;font-size:16px;font-weight:600;letter-spacing:-.2px;">'+n+' page'+(n>1?'s':'')+'</span>'
+    +'<button onclick="var o=g(\'_brdOvrl\');if(o)o.remove();haptic(1);" style="background:rgba(255,255,255,.12);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;line-height:1;flex-shrink:0;-webkit-tap-highlight-color:transparent;">×</button>';
+  overlay.appendChild(hdr);
+  // Grid
+  var grid=document.createElement('div');
+  grid.style.cssText='flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px max(calc(env(safe-area-inset-bottom,16px)+16px),32px);display:grid;grid-template-columns:repeat(auto-fill,minmax('+thumbW+'px,1fr));gap:14px;align-content:start;';
+  for(var i=0;i<n;i++){
+    (function(idx){
+      var isCur=idx===_brdPageIdx;
+      var card=document.createElement('div');
+      card.style.cssText='cursor:pointer;border-radius:12px;overflow:hidden;border:2.5px solid '+(isCur?'#FF6B2B':'rgba(255,255,255,.14)')+';display:flex;flex-direction:column;background:#fff;transition:transform .12s;-webkit-tap-highlight-color:transparent;';
+      // Miniature
+      var thumb=document.createElement('div');
+      thumb.style.cssText='width:100%;height:'+thumbH+'px;background:#fafafa;position:relative;overflow:hidden;flex-shrink:0;';
+      if(_brdPages[idx]){
+        var img=document.createElement('img');
+        img.src=_brdPages[idx];
+        img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+        img.draggable=false;
+        thumb.appendChild(img);
+      }else{
+        thumb.innerHTML='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.15;"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5" width="44" height="44"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>';
+      }
+      // Footer
+      var footer=document.createElement('div');
+      footer.style.cssText='padding:6px 9px;background:'+(isCur?'#FF6B2B':'rgba(14,18,42,.95)')+';display:flex;align-items:center;justify-content:space-between;gap:4px;flex-shrink:0;';
+      var label=escH((_brdPageNames[idx]&&_brdPageNames[idx].trim())||'Page '+(idx+1));
+      footer.innerHTML='<span style="color:#fff;font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'
+        +'<span style="color:rgba(255,255,255,.45);font-size:10px;flex-shrink:0;">'+(idx+1)+'/'+n+'</span>';
+      card.appendChild(thumb);card.appendChild(footer);
+      card.addEventListener('click',function(){var o=g('_brdOvrl');if(o)o.remove();_boardGoPage(idx);haptic(1);});
+      card.addEventListener('touchstart',function(){card.style.transform='scale(.95)';},{passive:true});
+      card.addEventListener('touchend',function(){card.style.transform='';},{passive:true});
+      grid.appendChild(card);
+    })(i);
+  }
+  overlay.appendChild(grid);
+  document.body.appendChild(overlay);
   haptic(1);
 }
 function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
