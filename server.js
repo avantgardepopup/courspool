@@ -488,32 +488,6 @@ const supabase = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } }
 );
 
-// ── DAILY.CO HELPER ──────────────────────────────────────────
-async function createDailyRoom() {
-  const key = process.env.DAILY_API_KEY;
-  if (!key) return null;
-  const name = 'courspool-' + Math.random().toString(36).slice(2, 10);
-  try {
-    const resp = await fetch('https://api.daily.co/v1/rooms', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        privacy: 'public',
-        properties: {
-          enable_chat: true,
-          enable_screenshare: true,
-          max_participants: 20,
-          start_video_off: false,
-          start_audio_off: false
-        }
-      })
-    });
-    if (!resp.ok) { console.error('[Daily] room creation failed', await resp.text()); return null; }
-    const data = await resp.json();
-    return data.url || null;
-  } catch (e) { console.error('[Daily] fetch error', e); return null; }
-}
 
 // ── MIDDLEWARES AUTH ──────────────────────────────────────────
 // Cache "bloqué" en mémoire — évite 1 requête Supabase par appel authentifié
@@ -635,6 +609,16 @@ function safeLimit(val, max = 50) { const n = parseInt(val) || 20; return Math.m
 // EMAILS — domaine vérifié Resend
 // ============================================================
 function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Supprime les patterns dangereux du HTML riche (annonces, fiches) sans DOMPurify
+function stripDangerousHtml(s) {
+  if (!s) return s;
+  return String(s)
+    .replace(/<script[\s\S]*?<\/script>/gi, '')   // balises script
+    .replace(/<iframe[\s\S]*?>/gi, '')              // iframes
+    .replace(/\bon\w+\s*=/gi, 'data-removed=')     // on* handlers
+    .replace(/javascript\s*:/gi, 'removed:')        // javascript: URLs
+    .replace(/vbscript\s*:/gi, 'removed:');         // vbscript: URLs
+}
 const FROM_EMAIL = 'CoursPool <hello@courspool.com>'; // ← ton domaine vérifié Resend
 
 // Template de base partagé
@@ -1461,15 +1445,21 @@ app.post('/visio/token', requireAuth, async (req, res) => {
   try {
     const { data: prof } = await supabase.from('profiles').select('prenom,nom').eq('id', req.user.id).single();
     const userName = prof ? ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() : (req.user.email || 'Participant');
-    // Pour un join via lien manuel (room cours-*) : is_owner ssi c'est le prof de ce cours
-    // Pour une quick room (cp-*) : is_owner = true (le participant qui rejoint via lien partagé est co-host)
+    // Pour un join via lien manuel (room cours-*) : vérifier inscription + is_owner ssi prof du cours
+    // Pour une quick room (cp-*) : pas de restriction, co-host pour tous
     let isOwner = false;
     if (room_name.startsWith('cours-')) {
       const coursId = room_name.replace('cours-', '');
       const { data: c } = await supabase.from('cours').select('professeur_id').eq('id', coursId).maybeSingle();
-      isOwner = !!(c && c.professeur_id === req.user.id);
+      if (!c) return res.status(404).json({ error: 'Cours introuvable' });
+      const isProfOfCours = c.professeur_id === req.user.id;
+      if (!isProfOfCours) {
+        const { data: resa } = await supabase.from('reservations').select('id').eq('cours_id', coursId).eq('user_id', req.user.id).maybeSingle();
+        if (!resa) return res.status(403).json({ error: 'Non inscrit à ce cours' });
+      }
+      isOwner = isProfOfCours;
     } else {
-      isOwner = true; // quick room partagée : tout le monde est co-host
+      isOwner = true; // quick room partagée : co-host pour tous
     }
     const tokenExp = Math.floor(Date.now()/1000) + 7200;
     const resp = await fetch('https://api.daily.co/v1/meeting-tokens', {
@@ -1906,20 +1896,20 @@ app.post('/contact', authRateLimit, async (req, res) => {
       from: FROM_EMAIL,
       to: 'avantgardepopup@gmail.com', // email admin
       replyTo: email,
-      subject: `[Contact] ${sujet || 'Question'} — ${nom || email}`,
+      subject: `[Contact] ${escHtml(sujet || 'Question')} — ${escHtml(nom || email)}`,
       html: emailBase(
         'linear-gradient(135deg,#6366F1,#4F46E5)',
         `<h1 style="margin:0;font-size:22px;font-weight:800;color:#fff">Nouveau message</h1>
-         <p style="margin:8px 0 0;color:rgba(255,255,255,.8);font-size:14px">${sujet || 'Question générale'}</p>`,
+         <p style="margin:8px 0 0;color:rgba(255,255,255,.8);font-size:14px">${escHtml(sujet || 'Question générale')}</p>`,
         `<table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:20px">
-          <tr><td style="padding:6px 0;font-size:13px;color:#888;width:80px">De</td><td style="font-size:13px;font-weight:600;color:#111">${nom || 'Anonyme'} &lt;${email}&gt;</td></tr>
-          <tr><td style="padding:6px 0;font-size:13px;color:#888">Rôle</td><td style="font-size:13px;color:#555">${role || '—'}</td></tr>
-          <tr><td style="padding:6px 0;font-size:13px;color:#888">Sujet</td><td style="font-size:13px;font-weight:600;color:#111">${sujet || '—'}</td></tr>
+          <tr><td style="padding:6px 0;font-size:13px;color:#888;width:80px">De</td><td style="font-size:13px;font-weight:600;color:#111">${escHtml(nom || 'Anonyme')} &lt;${escHtml(email)}&gt;</td></tr>
+          <tr><td style="padding:6px 0;font-size:13px;color:#888">Rôle</td><td style="font-size:13px;color:#555">${escHtml(role || '—')}</td></tr>
+          <tr><td style="padding:6px 0;font-size:13px;color:#888">Sujet</td><td style="font-size:13px;font-weight:600;color:#111">${escHtml(sujet || '—')}</td></tr>
         </table>
         <div style="background:#F8F7F5;border-radius:14px;padding:18px;margin-bottom:24px;border-left:3px solid #6366F1">
           <p style="margin:0;font-size:14px;color:#333;line-height:1.7;white-space:pre-wrap">${escHtml(message)}</p>
         </div>
-        <a href="mailto:${email}" style="display:block;background:linear-gradient(135deg,#6366F1,#4F46E5);color:#fff;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;text-align:center">Répondre à ${nom || email} →</a>`
+        <a href="mailto:${escHtml(email)}" style="display:block;background:linear-gradient(135deg,#6366F1,#4F46E5);color:#fff;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;text-align:center">Répondre à ${escHtml(nom || email)} →</a>`
       )
     }).catch(e => console.log('Contact email admin error:', e.message));
 
@@ -3295,7 +3285,7 @@ app.post('/teacher/:id/announcements', requireAuth, async (req, res) => {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { content, type, title, access_type } = req.body;
     if (!content || !content.trim()) return res.status(400).json({ error: 'Contenu manquant' });
-    const row = { teacher_id: req.params.id, content: content.trim() };
+    const row = { teacher_id: req.params.id, content: stripDangerousHtml(content.trim()) };
     if (type) row.type = type;
     if (title) row.title = title.trim();
     if (access_type) row.access_type = access_type;
@@ -3315,8 +3305,8 @@ app.patch('/teacher/:id/announcements/:ann_id', requireAuth, async (req, res) =>
       if (!['enrolled','private','public'].includes(access_type)) return res.status(400).json({ error: 'Valeur invalide' });
       updates.access_type = access_type;
     }
-    if (title !== undefined) updates.title = title;
-    if (content !== undefined) updates.content = content;
+    if (title !== undefined) updates.title = escHtml(title);
+    if (content !== undefined) updates.content = stripDangerousHtml(content);
     if (!Object.keys(updates).length) return res.status(400).json({ error: 'Rien à mettre à jour' });
     const { data, error } = await supabase.from('teacher_announcements')
       .update(updates).eq('id', req.params.ann_id).eq('teacher_id', req.params.id).select().single();
@@ -3381,6 +3371,7 @@ app.post('/teacher/:id/resources', requireAuth, async (req, res) => {
     if (!req.user || req.user.id !== req.params.id) return res.status(403).json({ error: 'Non autorisé' });
     const { title, url, type, access_level } = req.body;
     if (!title || !url) return res.status(400).json({ error: 'Titre et URL requis' });
+    if (!/^https?:\/\//i.test(url.trim())) return res.status(400).json({ error: 'URL invalide (doit commencer par http:// ou https://)' });
     const { data, error } = await supabase.from('teacher_resources')
       .insert({ teacher_id: req.params.id, title: title.trim(), url: url.trim(), type: type || 'article', access_level: access_level || 'followers' })
       .select().single();
