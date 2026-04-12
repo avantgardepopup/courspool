@@ -671,28 +671,28 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 /* Desktop ≥ 1200px : pill flottante (iPad garde la barre pleine largeur) */
 @media (min-width: 1200px) {
   .bnav {
-    bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    bottom: max(28px, env(safe-area-inset-bottom, 28px));
     left: 50%; right: auto;
     width: auto;
     min-height: auto;
     transform: translateX(-50%);
     border-radius: 50px;
     border-top: none;
-    padding: 6px 8px;
+    padding: 8px 12px;
     background: rgba(255,255,255,0.93);
     -webkit-backdrop-filter: blur(40px) saturate(2);
     backdrop-filter: blur(40px) saturate(2);
     box-shadow: 0 8px 40px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.07);
     align-items: center;
     justify-content: flex-start;
-    gap: 2px;
+    gap: 4px;
   }
   .bni {
     flex: none;
     min-height: auto;
-    padding: 9px 16px;
+    padding: 10px 20px;
     border-radius: 40px;
-    min-width: 56px;
+    min-width: 60px;
     gap: 3px;
     transition: background .2s, box-shadow .2s, color .15s;
   }
@@ -1501,6 +1501,20 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 
 /* ── NAV — CONVERSATION MODE (hidden, back button is in header) ── */
 .bnav.conv-mode { display: none !important; }
+
+/* ── NAV — MSG MODE desktop (≥769px) : pill réduite, bouton retour à gauche ── */
+@media(min-width:769px){
+  .bnav.msg-mode {
+    left: 24px !important;
+    transform: none !important;
+    padding: 6px 6px !important;
+    gap: 0 !important;
+    transition: left .35s cubic-bezier(.34,1.2,.64,1), transform .35s cubic-bezier(.34,1.2,.64,1) !important;
+  }
+  .bnav.msg-mode .bni,
+  .bnav.msg-mode #bnavDragHandle { display: none !important; }
+  .bnav.msg-mode #bnavMsgBack { display: flex !important; }
+}
 
 /* Base font */
 body, input, textarea, button, select {

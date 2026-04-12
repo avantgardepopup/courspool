@@ -2278,6 +2278,7 @@ function navTo(tab,_skipHistory){
   } else if(tab==='msg'){
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
+    if(window.innerWidth>=769){var _bnMsg=g('bnav');if(_bnMsg)_bnMsg.classList.add('msg-mode');}
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
@@ -2320,7 +2321,7 @@ function restoreNav(){
     nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
   }
   // Nettoyer les classes iPad messaging
-  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');}
+  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');nav.classList.remove('msg-mode');}
   var _bbR=g('bnavIpadBack');if(_bbR){_bbR.classList.remove('visible');delete _bbR.dataset.action;}
 
   // Restaurer le bouton Explorer
@@ -13635,51 +13636,44 @@ function _stepOptClick(el){
 (function(){
   var nav=null,handle=null,dragging=false,ox=0,oy=0;
 
-  function _navSavePos(){
-    try{localStorage.setItem('cp_nav_pos',JSON.stringify({left:nav.style.left,top:nav.style.top}));}catch(e){}
-  }
   function _navResetPos(){
-    nav.style.left='50%';nav.style.top='';nav.style.bottom='';nav.style.transform='translateX(-50%)';
-    try{localStorage.removeItem('cp_nav_pos');}catch(e){}
-  }
-  function _navRestorePos(){
-    try{
-      var s=localStorage.getItem('cp_nav_pos');
-      if(!s)return false;
-      var p=JSON.parse(s);
-      var lv=parseInt(p.left,10),tv=parseInt(p.top,10);
-      // Valider que la position est dans la fenêtre
-      if(isNaN(lv)||isNaN(tv))return false;
-      if(lv<0||lv>window.innerWidth-80||tv<0||tv>window.innerHeight-40)return false;
-      nav.style.left=p.left;nav.style.top=p.top;
-      nav.style.bottom='auto';nav.style.transform='none';
-      return true;
-    }catch(e){return false;}
+    nav.style.left='50%';nav.style.top='';nav.style.right='auto';
+    nav.style.bottom=nav.style.bottom||''; // laisser CSS gérer bottom
+    nav.style.transform='translateX(-50%)';
   }
 
   function initNavDrag(){
     nav=document.getElementById('bnav');
     if(!nav||window.innerWidth<769)return;
 
-    // ── Languette de drag (insérée avant le premier item) ──
+    // ── Languette de drag ──
     handle=document.createElement('div');
     handle.id='bnavDragHandle';
     handle.title='Déplacer · Double-clic pour recentrer';
     handle.style.cssText='display:flex;align-items:center;justify-content:center;'
-      +'width:20px;padding:0 6px;cursor:grab;flex-shrink:0;opacity:.35;'
+      +'width:20px;padding:0 4px;cursor:grab;flex-shrink:0;opacity:.3;'
       +'transition:opacity .2s;-webkit-user-select:none;user-select:none;';
     handle.innerHTML='<svg viewBox="0 0 8 14" fill="currentColor" width="8" height="14">'
       +'<circle cx="2" cy="2" r="1.4"/><circle cx="6" cy="2" r="1.4"/>'
       +'<circle cx="2" cy="7" r="1.4"/><circle cx="6" cy="7" r="1.4"/>'
       +'<circle cx="2" cy="12" r="1.4"/><circle cx="6" cy="12" r="1.4"/>'
       +'</svg>';
-    handle.addEventListener('mouseover',function(){handle.style.opacity='.7';});
-    handle.addEventListener('mouseout',function(){if(!dragging)handle.style.opacity='.35';});
-    // Double-clic → recentrer
+    handle.addEventListener('mouseover',function(){handle.style.opacity='.65';});
+    handle.addEventListener('mouseout',function(){if(!dragging)handle.style.opacity='.3';});
     handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
     nav.insertBefore(handle,nav.firstChild);
 
-    // ── Drag depuis la languette uniquement ──
+    // ── Bouton retour messagerie (caché par défaut) ──
+    var msgBack=document.createElement('button');
+    msgBack.id='bnavMsgBack';
+    msgBack.style.cssText='display:none;align-items:center;gap:8px;padding:8px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;color:var(--or);-webkit-tap-highlight-color:transparent;white-space:nowrap;border-radius:40px;transition:background .18s;';
+    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>Messagerie';
+    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.08)';};
+    msgBack.onmouseout=function(){msgBack.style.background='';};
+    msgBack.onclick=function(){navTo('exp');};
+    nav.appendChild(msgBack);
+
+    // ── Drag ──
     handle.addEventListener('mousedown',function(e){
       if(window.innerWidth<769)return;
       dragging=true;
@@ -13689,7 +13683,6 @@ function _stepOptClick(el){
       handle.style.cursor='grabbing';handle.style.opacity='1';
       e.preventDefault();
     });
-
     document.addEventListener('mousemove',function(e){
       if(!dragging||!nav)return;
       var x=e.clientX-ox,y=e.clientY-oy;
@@ -13699,17 +13692,15 @@ function _stepOptClick(el){
       nav.style.left=x+'px';nav.style.top=y+'px';
       nav.style.bottom='auto';nav.style.transform='none';
     });
-
     document.addEventListener('mouseup',function(){
       if(!dragging||!nav)return;
       dragging=false;
-      handle.style.cursor='grab';handle.style.opacity='.35';
+      handle.style.cursor='grab';handle.style.opacity='.3';
       nav.style.transition='';
-      _navSavePos();
     });
 
-    // Restaurer position ou centrer
-    if(!_navRestorePos()){_navResetPos();}
+    // Toujours centré au chargement
+    _navResetPos();
 
     window.addEventListener('resize',function(){
       if(window.innerWidth<769){
@@ -13717,7 +13708,7 @@ function _stepOptClick(el){
         if(handle)handle.style.display='none';
       }else{
         if(handle)handle.style.display='flex';
-        if(!_navRestorePos()){_navResetPos();}
+        _navResetPos();
       }
     });
   }

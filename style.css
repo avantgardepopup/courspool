@@ -1502,6 +1502,20 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 /* ── NAV — CONVERSATION MODE (hidden, back button is in header) ── */
 .bnav.conv-mode { display: none !important; }
 
+/* ── NAV — MSG MODE desktop (≥769px) : pill réduite, bouton retour à gauche ── */
+@media(min-width:769px){
+  .bnav.msg-mode {
+    left: 24px !important;
+    transform: none !important;
+    padding: 6px 6px !important;
+    gap: 0 !important;
+    transition: left .35s cubic-bezier(.34,1.2,.64,1), transform .35s cubic-bezier(.34,1.2,.64,1) !important;
+  }
+  .bnav.msg-mode .bni,
+  .bnav.msg-mode #bnavDragHandle { display: none !important; }
+  .bnav.msg-mode #bnavMsgBack { display: flex !important; }
+}
+
 /* Base font */
 body, input, textarea, button, select {
   font-family: 'DM Sans', 'Plus Jakarta Sans', system-ui, sans-serif;

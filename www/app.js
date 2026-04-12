@@ -2278,8 +2278,7 @@ function navTo(tab,_skipHistory){
   } else if(tab==='msg'){
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
-    // iPad : cacher la nav + montrer bouton retour
-    if(window.innerWidth>=768){var _bnavMsg=g('bnav');if(_bnavMsg)_bnavMsg.classList.add('ipad-msg');var _bbb=g('bnavIpadBack');if(_bbb){_bbb.dataset.action='msg';_bbb.classList.add('visible');}}
+    if(window.innerWidth>=769){var _bnMsg=g('bnav');if(_bnMsg)_bnMsg.classList.add('msg-mode');}
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
@@ -2322,7 +2321,7 @@ function restoreNav(){
     nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
   }
   // Nettoyer les classes iPad messaging
-  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');}
+  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');nav.classList.remove('msg-mode');}
   var _bbR=g('bnavIpadBack');if(_bbR){_bbR.classList.remove('visible');delete _bbR.dataset.action;}
 
   // Restaurer le bouton Explorer
@@ -3878,6 +3877,8 @@ function doFilter(){
     var _vRaw=val.slice(7).trim();
     var _srch=g('srch');if(_srch)_srch.value='';
     var _mob=g('mobSearchInput');if(_mob)_mob.value='';
+    var _pill=g('pillSearchInput');if(_pill)_pill.value='';
+    if(typeof closeInlineSearch==='function')closeInlineSearch();
     if(typeof collapseSearch==='function')collapseSearch();
     if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
     else{_vOpenDemo();}
@@ -7449,11 +7450,8 @@ function openMsg(profNm,destId,avatar){
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
-  var _isIpad=window.innerWidth>=768&&document.documentElement.classList.contains('cap-ios');
-  if(_isIpad){
-    if(bnav)bnav.classList.add('ipad-back');
-    var _bb=g('bnavIpadBack');if(_bb)_bb.classList.add('visible');
-  }else{
+  // Mobile uniquement : cacher la nav quand une conv est ouverte
+  if(window.innerWidth<768){
     if(bnav)bnav.classList.add('conv-mode');
   }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
@@ -7495,10 +7493,8 @@ function closeMsgConv(){
   if(convPane){convPane.style.display='none';convPane.style.bottom='';}
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
-  // Restaurer la nav (iPad: retirer ipad-back + cacher bouton rond ; mobile: retirer conv-mode)
   var bnav=g('bnav');
-  if(bnav){bnav.classList.remove('conv-mode');bnav.classList.remove('ipad-back');}
-  var _bb=g('bnavIpadBack');if(_bb)_bb.classList.remove('visible');
+  if(bnav){bnav.classList.remove('conv-mode');}
   // Restore normal nav state for messages page (bniMsg highlighted)
   restoreNav();
   var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
@@ -12215,7 +12211,7 @@ function calSelectDay(ymd){
   _calSelDay=ymd;
   // Update header title
   var titleEl=document.querySelector('.mes-cal-title');
-  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_CAL_DAYS[d.getDay()]+' '+d.getDate()+' '+_CAL_MONTHS[d.getMonth()];}
+  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_calDay(d)+' '+d.getDate()+' '+_calMonth(d);}
   // Update chips
   document.querySelectorAll('.cal-chip').forEach(function(c){
     var on=c.dataset.ymd===ymd;
@@ -13636,92 +13632,89 @@ function _stepOptClick(el){
   haptic(8);
 }
 
-// ── Drag & drop bnav sur desktop ──
+// ── Drag & drop bnav sur desktop — via languette uniquement ──
 (function(){
-  var nav = null;
-  var dragging = false;
-  var ox = 0, oy = 0; // offset souris par rapport au coin du nav
+  var nav=null,handle=null,dragging=false,ox=0,oy=0;
+
+  function _navResetPos(){
+    nav.style.left='50%';nav.style.top='';nav.style.right='auto';
+    nav.style.bottom=nav.style.bottom||''; // laisser CSS gérer bottom
+    nav.style.transform='translateX(-50%)';
+  }
 
   function initNavDrag(){
-    nav = document.getElementById('bnav');
-    if(!nav) return;
+    nav=document.getElementById('bnav');
+    if(!nav||window.innerWidth<769)return;
 
-    nav.addEventListener('mousedown', function(e){
-      // Ignorer si clic sur un bouton
-      if(e.target.closest('button,a,[onclick]') && e.target !== nav) return;
-      if(window.innerWidth < 769) return; // mobile : pas de drag
-      dragging = true;
-      var rect = nav.getBoundingClientRect();
-      ox = e.clientX - rect.left;
-      oy = e.clientY - rect.top;
-      nav.style.transition = 'none';
-      nav.style.cursor = 'grabbing';
+    // ── Languette de drag ──
+    handle=document.createElement('div');
+    handle.id='bnavDragHandle';
+    handle.title='Déplacer · Double-clic pour recentrer';
+    handle.style.cssText='display:flex;align-items:center;justify-content:center;'
+      +'width:20px;padding:0 4px;cursor:grab;flex-shrink:0;opacity:.3;'
+      +'transition:opacity .2s;-webkit-user-select:none;user-select:none;';
+    handle.innerHTML='<svg viewBox="0 0 8 14" fill="currentColor" width="8" height="14">'
+      +'<circle cx="2" cy="2" r="1.4"/><circle cx="6" cy="2" r="1.4"/>'
+      +'<circle cx="2" cy="7" r="1.4"/><circle cx="6" cy="7" r="1.4"/>'
+      +'<circle cx="2" cy="12" r="1.4"/><circle cx="6" cy="12" r="1.4"/>'
+      +'</svg>';
+    handle.addEventListener('mouseover',function(){handle.style.opacity='.65';});
+    handle.addEventListener('mouseout',function(){if(!dragging)handle.style.opacity='.3';});
+    handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
+    nav.insertBefore(handle,nav.firstChild);
+
+    // ── Bouton retour messagerie (caché par défaut) ──
+    var msgBack=document.createElement('button');
+    msgBack.id='bnavMsgBack';
+    msgBack.style.cssText='display:none;align-items:center;gap:8px;padding:8px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;color:var(--or);-webkit-tap-highlight-color:transparent;white-space:nowrap;border-radius:40px;transition:background .18s;';
+    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>Messagerie';
+    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.08)';};
+    msgBack.onmouseout=function(){msgBack.style.background='';};
+    msgBack.onclick=function(){navTo('exp');};
+    nav.appendChild(msgBack);
+
+    // ── Drag ──
+    handle.addEventListener('mousedown',function(e){
+      if(window.innerWidth<769)return;
+      dragging=true;
+      var rect=nav.getBoundingClientRect();
+      ox=e.clientX-rect.left;oy=e.clientY-rect.top;
+      nav.style.transition='none';
+      handle.style.cursor='grabbing';handle.style.opacity='1';
       e.preventDefault();
     });
-
-    document.addEventListener('mousemove', function(e){
-      if(!dragging || !nav) return;
-      var x = e.clientX - ox;
-      var y = e.clientY - oy;
-      // Garder dans la fenêtre
-      var rect = nav.getBoundingClientRect();
-      x = Math.max(0, Math.min(window.innerWidth - rect.width, x));
-      y = Math.max(0, Math.min(window.innerHeight - rect.height, y));
-      nav.style.left = x + 'px';
-      nav.style.top = y + 'px';
-      nav.style.bottom = 'auto';
-      nav.style.transform = 'none';
+    document.addEventListener('mousemove',function(e){
+      if(!dragging||!nav)return;
+      var x=e.clientX-ox,y=e.clientY-oy;
+      var rect=nav.getBoundingClientRect();
+      x=Math.max(8,Math.min(window.innerWidth-rect.width-8,x));
+      y=Math.max(8,Math.min(window.innerHeight-rect.height-8,y));
+      nav.style.left=x+'px';nav.style.top=y+'px';
+      nav.style.bottom='auto';nav.style.transform='none';
+    });
+    document.addEventListener('mouseup',function(){
+      if(!dragging||!nav)return;
+      dragging=false;
+      handle.style.cursor='grab';handle.style.opacity='.3';
+      nav.style.transition='';
     });
 
-    document.addEventListener('mouseup', function(){
-      if(!dragging || !nav) return;
-      dragging = false;
-      nav.style.cursor = '';
-      nav.style.transition = '';
-      // Sauvegarder position
-      try{
-        localStorage.setItem('cp_nav_pos', JSON.stringify({
-          left: nav.style.left,
-          top: nav.style.top,
-          bottom: nav.style.bottom,
-          transform: nav.style.transform
-        }));
-      }catch(e){}
-    });
+    // Toujours centré au chargement
+    _navResetPos();
 
-    // Restaurer position sauvegardée
-    try{
-      var saved = localStorage.getItem('cp_nav_pos');
-      if(saved && window.innerWidth >= 769){
-        var pos = JSON.parse(saved);
-        if(pos.left) nav.style.left = pos.left;
-        if(pos.top) nav.style.top = pos.top;
-        if(pos.bottom !== undefined) nav.style.bottom = pos.bottom;
-        if(pos.transform !== undefined) nav.style.transform = pos.transform;
-      }
-    }catch(e){}
-
-    // Curseur grab sur desktop
-    if(window.innerWidth >= 769){
-      nav.style.cursor = 'grab';
-    }
-    // Réinitialiser la position si on passe en mode mobile (rotation)
     window.addEventListener('resize',function(){
       if(window.innerWidth<769){
-        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
-        nav.style.cursor='';
+        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';
+        if(handle)handle.style.display='none';
       }else{
-        nav.style.cursor='grab';
+        if(handle)handle.style.display='flex';
+        _navResetPos();
       }
     });
   }
 
-  // Attendre que le DOM soit prêt
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initNavDrag);
-  } else {
-    setTimeout(initNavDrag, 500);
-  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initNavDrag);}
+  else{setTimeout(initNavDrag,500);}
 })();
 
 // ── Swipe gauche/droite pour navigation entre onglets ──────────────────────
@@ -14054,22 +14047,29 @@ function _vOpenDemo(){
     var grid=g('_vGrid');if(!grid)return;
     grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
     _vApplyLayout();
-    // Réutiliser le stream du pré-join (évite de re-demander la permission)
+    // Réutiliser le stream audio du pré-join
     var pjs=_preJoinStream;_preJoinStream=null;
     if(pjs&&pjs.active){
-      // Attacher la vidéo au tile local
       var vt=pjs.getVideoTracks();
       if(vt.length){
         var lv=g('_vLocalVid');
         if(lv){lv.srcObject=new MediaStream(vt);lv.style.display='block';lv.play().catch(function(){});
           var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
       }
-      // Analyser l'audio
       var at=pjs.getAudioTracks();
       if(at.length){_startDemoAudio(new MediaStream(at));}
-      else{_ensureDemoAudio(_startDemoAudio);}
+      else{if(window._pjMicWanted!==false)_ensureDemoAudio(_startDemoAudio);}
     }else{
-      _ensureDemoAudio(_startDemoAudio);
+      if(window._pjMicWanted!==false)_ensureDemoAudio(_startDemoAudio);
+    }
+    // iOS : si l'utilisateur a activé la caméra dans le pré-join, l'ouvrir maintenant
+    if(window._pjCamWanted&&!g('_vLocalVid').srcObject){
+      navigator.mediaDevices&&navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        .then(function(vs){
+          var lv=g('_vLocalVid');
+          if(lv){lv.srcObject=vs;lv.style.display='block';lv.play().catch(function(){});
+            var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
+        }).catch(function(){});
     }
     haptic(1);
   });
@@ -14084,15 +14084,19 @@ function _ensureDemoAudio(callback){
 function _startDemoAudio(stream){
   _demoAudioStream=stream;
   if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
-  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}}
-  _demoAudioCtx=new AudioContext();
-  var src=_demoAudioCtx.createMediaStreamSource(stream);
-  _demoAnalyser=_demoAudioCtx.createAnalyser();
-  _demoAnalyser.fftSize=256;
-  src.connect(_demoAnalyser);
-  _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
-  _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
-  _demoAudioLoop();
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    _demoAudioCtx=new AC();
+    if(_demoAudioCtx.state==='suspended'){_demoAudioCtx.resume().catch(function(){});}
+    var src=_demoAudioCtx.createMediaStreamSource(stream);
+    _demoAnalyser=_demoAudioCtx.createAnalyser();
+    _demoAnalyser.fftSize=256;
+    src.connect(_demoAnalyser);
+    _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
+    _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
+    _demoAudioLoop();
+  }catch(e){_demoAudioCtx=null;_demoAnalyser=null;}
 }
 
 function _demoAudioLoop(){
@@ -14225,16 +14229,76 @@ function _vStopPreJoin(){
 function _vShowPreJoin(onJoin){
   _vStopPreJoin();
   var existing=g('bdVisio');if(existing)existing.remove();
-  var bd=document.createElement('div');
-  bd.id='bdVisio';
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
   var name=user&&user.prenom?user.prenom:'Vous';
   var ini=name.charAt(0).toUpperCase();
   var col=(user&&user.col)||'linear-gradient(148deg,#FF7D42,#FF4500)';
+  window._vPreJoinCallback=onJoin;
+  window._pjMicWanted=false;
+  window._pjCamWanted=false;
+
+  var isIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
+
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+
+  if(isIosNative){
+    // ── UI iOS : toggles seulement, sans preview caméra ──
+    // Mise en page flex colonne avec header safe-area correct
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
+    var svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    var svgCam='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+    var togOff='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+    var knobL='position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s,right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);';
+    bd.innerHTML=''
+      // Header : bouton Annuler aligné à droite
+      +'<div style="display:flex;justify-content:flex-end;padding:14px 16px 0;">'
+      +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">✕ Annuler</button>'
+      +'</div>'
+      // Contenu centré
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;">'
+      +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
+      // Avatar
+      +'<div style="width:80px;height:80px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4);margin-bottom:8px;">'+ini+'</div>'
+      +'<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:32px;">'+name+'</div>'
+      // Toggles
+      +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">'
+      // Micro — OFF par défaut
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+      +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic+'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
+      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivé</div>'
+      +'</div>'
+      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff+'">'
+      +'<div id="_pjMicKnob" style="'+knobL+'"></div>'
+      +'</button>'
+      +'</div>'
+      // Caméra — OFF par défaut
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+      +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam+'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
+      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivée</div>'
+      +'</div>'
+      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff+'">'
+      +'<div id="_pjCamKnob" style="'+knobL+'"></div>'
+      +'</button>'
+      +'</div>'
+      +'</div>'
+      // Rejoindre
+      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>'
+      +'</div>'; // fin contenu centré
+    document.body.appendChild(bd);
+    var nav=g('bnav');if(nav)nav.style.display='none';
+    haptic(1);
+    return;
+  }
+
+  // ── UI desktop/web : preview caméra complète ──
   bd.innerHTML=''
     +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
     +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
-    // Preview caméra
     +'<div style="position:relative;width:min(320px,90vw);height:min(200px,56vw);border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#1e1e30,#12121f);margin-bottom:22px;box-shadow:0 8px 32px rgba(0,0,0,.5);">'
     +'<div id="_pjAv" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">'
     +'<div style="width:64px;height:64px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);">'+ini+'</div>'
@@ -14242,7 +14306,6 @@ function _vShowPreJoin(onJoin){
     +'</div>'
     +'<video id="_pjVideo" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>'
     +'</div>'
-    // Statuts mic / cam
     +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'
     +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
@@ -14258,15 +14321,11 @@ function _vShowPreJoin(onJoin){
     +'<div id="_pjCamSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
     +'</div>'
     +'</div>'
-    // Bouton rejoindre
     +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:15px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
   document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
   haptic(1);
-  // Stocker le callback pour _vConfirmPreJoin
-  window._vPreJoinCallback=onJoin;
-  // Demander mic + cam
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     _pjSetSt('mic',false);_pjSetSt('cam',false);return;
   }
@@ -14276,15 +14335,12 @@ function _vShowPreJoin(onJoin){
       var vid=g('_pjVideo');
       if(vid){
         var av=g('_pjAv');if(av)av.style.display='none';
-        vid.srcObject=stream;
-        vid.style.display='block';
-        vid.play().catch(function(){});
+        vid.srcObject=stream;vid.style.display='block';vid.play().catch(function(){});
       }
       _pjSetSt('mic',true);_pjSetSt('cam',true);
       _pjStartMicMeter(stream);
     })
     .catch(function(){
-      // Essayer micro seul
       navigator.mediaDevices.getUserMedia({audio:true,video:false})
         .then(function(stream){
           _preJoinStream=stream;
@@ -14294,6 +14350,43 @@ function _vShowPreJoin(onJoin){
         .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
     });
 }
+// Toggle mic (iOS pré-join)
+function _pjToggleMic(){
+  window._pjMicWanted=!window._pjMicWanted;
+  if(window._pjMicWanted){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){_pjUpdateToggle('mic',false,'Non dispo');window._pjMicWanted=false;return;}
+    navigator.mediaDevices.getUserMedia({audio:true,video:false})
+      .then(function(stream){_preJoinStream=stream;_pjUpdateToggle('mic',true,'Autorisé');})
+      .catch(function(){_pjUpdateToggle('mic',false,'Refusé');window._pjMicWanted=false;});
+  }else{
+    if(_preJoinStream){_preJoinStream.getTracks().forEach(function(t){t.stop();});_preJoinStream=null;}
+    _pjUpdateToggle('mic',false,'Désactivé');
+  }
+  haptic(1);
+}
+// Toggle cam (iOS pré-join — juste une préférence, pas de stream)
+function _pjToggleCam(){
+  window._pjCamWanted=!window._pjCamWanted;
+  _pjUpdateToggle('cam',window._pjCamWanted,window._pjCamWanted?'Activée':'Désactivée');
+  haptic(1);
+}
+// Mettre à jour visuellement un toggle iOS pré-join
+function _pjUpdateToggle(dev,on,label){
+  var st=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
+  var btn=g(dev==='mic'?'_pjMicToggle':'_pjCamToggle');
+  var knob=g(dev==='mic'?'_pjMicKnob':'_pjCamKnob');
+  var wrap=g(dev==='mic'?'_pjMicIconWrap':'_pjCamIconWrap');
+  if(st){st.textContent=label;st.style.color=on?'rgba(255,255,255,.65)':'rgba(255,255,255,.35)';}
+  if(btn){btn.style.background=on?'#22C069':'rgba(255,255,255,.2)';}
+  if(knob){
+    if(on){knob.style.left='auto';knob.style.right='3px';}
+    else{knob.style.right='auto';knob.style.left='3px';}
+  }
+  if(wrap){
+    wrap.style.background=on?'rgba(34,192,105,.18)':'rgba(255,255,255,.08)';
+    wrap.style.color=on?'#22C069':'rgba(255,255,255,.4)';
+  }
+}
 function _pjSetSt(dev,ok){
   var el=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
   if(!el)return;
@@ -14302,7 +14395,9 @@ function _pjSetSt(dev,ok){
 }
 function _pjStartMicMeter(stream){
   try{
-    _preJoinAudioCtx=new AudioContext();
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    _preJoinAudioCtx=new AC();
+    if(_preJoinAudioCtx.state==='suspended'){_preJoinAudioCtx.resume().catch(function(){});}
     var src=_preJoinAudioCtx.createMediaStreamSource(stream);
     _preJoinAnalyser=_preJoinAudioCtx.createAnalyser();
     _preJoinAnalyser.fftSize=256;
@@ -14399,7 +14494,7 @@ function _buildVisioHTML(){
     +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
     +'</div>'
     +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;"></div>'
-    +'<div style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
+    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
     +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
@@ -14419,7 +14514,7 @@ function _buildVisioHTML(){
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg></button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></button>'
+    +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
     +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
@@ -15036,8 +15131,48 @@ function _vToggleComment(){
   if(tab){tab.style.opacity=_vCommentOpen?'0':'1';tab.style.pointerEvents=_vCommentOpen?'none':'auto';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
 }
+// ── Keyboard awareness pour la barre de saisie commentaires ──
+function _vSetupCommentKeyboard(){
+  var panel=g('_vComment');if(!panel)return;
+  var _ckbH=0;
+  function _ckbApply(animate){
+    // Remonter le panneau entier au-dessus du clavier
+    panel.style.transition=animate?'bottom .25s ease':'none';
+    panel.style.bottom=(_ckbH>0?_ckbH+'px':'0');
+  }
+  // Capacitor Keyboard plugin — hauteur exacte, s'anime avec le clavier
+  var _ckbShow=function(e){_ckbH=(e&&e.keyboardHeight)||0;_ckbApply(true);};
+  var _ckbHide=function(){_ckbH=0;_ckbApply(true);};
+  // Fallback visualViewport (web / Safari)
+  var _ckbVP=function(){
+    if(!window.visualViewport)return;
+    var kh=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    if(Math.abs(kh-_ckbH)>10){_ckbH=kh;_ckbApply(false);}
+  };
+  var inp=g('_vCommentInput');
+  if(inp){
+    inp.addEventListener('focus',function(){
+      window.addEventListener('keyboardWillShow',_ckbShow);
+      window.addEventListener('keyboardWillHide',_ckbHide);
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize',_ckbVP,{passive:true});
+        window.visualViewport.addEventListener('scroll',_ckbVP,{passive:true});
+      }
+    },{passive:true});
+    inp.addEventListener('blur',function(){
+      window.removeEventListener('keyboardWillShow',_ckbShow);
+      window.removeEventListener('keyboardWillHide',_ckbHide);
+      if(window.visualViewport){
+        window.visualViewport.removeEventListener('resize',_ckbVP);
+        window.visualViewport.removeEventListener('scroll',_ckbVP);
+      }
+      _ckbH=0;_ckbApply(true);
+    },{passive:true});
+  }
+}
 function _vInitCommentSwipe(){
   var panel=g('_vComment');if(!panel)return;
+  _vSetupCommentKeyboard();
   var _csx=0,_csy=0,_ctracking=false,_cvert=false;
   panel.addEventListener('touchstart',function(e){
     _csx=e.touches[0].clientX;_csy=e.touches[0].clientY;_ctracking=true;_cvert=false;
@@ -15369,15 +15504,20 @@ function _boardRenderSubbar(){
 function _vOpenBoard(){
   if(window.innerWidth<768){
     var _bPop=document.createElement('div');
+    _bPop.id='_vBoardPop';
     _bPop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
     _bPop.innerHTML='<div style="background:#1a1a2e;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6);">'
-      +'<div style="font-size:36px;margin-bottom:14px">🖥️</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:rgba(255,107,43,.15);margin:0 auto 16px;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+      +'</div>'
       +'<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:10px">Tableau collaboratif</div>'
       +'<div style="font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:22px">Le tableau collaboratif est disponible sur iPad et ordinateur uniquement. Sur téléphone, profite du cours en visio !</div>'
-      +'<button onclick="this.closest(\'div[style*=\"inset:0\"]\').remove()" style="width:100%;padding:12px;background:#FF6B2B;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">OK, compris</button>'
+      +'<button id="_vBoardPopOk" style="width:100%;padding:12px;background:#FF6B2B;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;">OK, compris</button>'
       +'</div>';
     _bPop.onclick=function(e){if(e.target===_bPop)_bPop.remove();};
     document.body.appendChild(_bPop);
+    var _bOk=g('_vBoardPopOk');
+    if(_bOk)_bOk.onclick=function(){var p=g('_vBoardPop');if(p)p.remove();};
     return;
   }
   if(_boardActive)return;
