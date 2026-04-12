@@ -39,7 +39,9 @@ const server = http.createServer(app);
 const ALLOWED_ORIGINS = ['https://courspool.vercel.app', 'capacitor://localhost'];
 const io = new Server(server, {
   cors: { origin: ALLOWED_ORIGINS },
-  perMessageDeflate: true   // compression WebSocket ~60% bande passante en moins
+  transports: ['websocket'],          // force WebSocket — élimine le overhead du polling HTTP
+  maxHttpBufferSize: 2e6,             // 2MB max par message (snapshots 1.2MB + marge)
+  perMessageDeflate: { threshold: 512 }, // ne compresse que les messages > 512 octets
 });
 app.set('io', io);
 
@@ -80,6 +82,8 @@ const boardRooms = new Map();
 const kickedParticipants = new Map(); // roomId → Set<userId> — expulsions définitives
 // socketId → Set<roomId> — pour nettoyage sur disconnect
 const socketBoardRooms = new Map();
+// userId → socketId — lookup O(1) pour trouver le socket d'un propriétaire
+const userSocketMap = new Map();
 // Purge des rooms inactives (check toutes les 2 min) :
 // - room vide depuis > 3 min  → purge (socket.io détecte disconnect en ~60s, 3 min = très safe)
 // - room avec gens, 0 interaction depuis > 45 min → oubli de fermeture, purge
@@ -140,6 +144,7 @@ const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{0,50}\)|[a-z]{1,20})$/;
 io.on('connection', (socket) => {
   socket.join(socket.userId);
   socketBoardRooms.set(socket.id, new Set());
+  userSocketMap.set(socket.userId, socket.id); // lookup O(1) pour trouver le prof
   let ptLastMs = 0;     // per-connection throttle for board_pt (~33 pts/s max)
   let opLastMs = 0;     // per-connection throttle for board_op (~20 ops/s max)
   let laserLastMs = 0;  // per-connection throttle for board_laser (~12/s max)
@@ -222,15 +227,26 @@ io.on('connection', (socket) => {
     room.hadParticipants = true; // flag persistant — même si tout le monde repart
     _touchRoom(room);
     // Demander un snapshot frais au propriétaire plutôt qu'envoyer le snapshot stocké
-    const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
+    const ownerSocketId = userSocketMap.get(room.ownerId);
     if (ownerSocketId) {
       // Le propriétaire est connecté — lui demander un snapshot ciblé
-      io.to(ownerSocketId).emit('board_sync_request', {
-        roomId, targetSocketId: socket.id,
-        ops: room.ops,
-        editors: [...room.editors],
-        participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
-      });
+      // Debounce : si une demande de sync a déjà été faite il y a < 3s, envoyer les ops directement
+      const sinceLastSync = Date.now() - (room._lastSyncRequestAt || 0);
+      if (sinceLastSync < 3000) {
+        socket.emit('board_sync', {
+          snapshot: room.snapshot, ops: room.ops,
+          editors: [...room.editors],
+          participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
+        });
+      } else {
+        room._lastSyncRequestAt = Date.now();
+        io.to(ownerSocketId).emit('board_sync_request', {
+          roomId, targetSocketId: socket.id,
+          ops: room.ops,
+          editors: [...room.editors],
+          participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
+        });
+      }
     } else {
       // Propriétaire déconnecté — envoyer ce qu'on a (ops + snapshot stocké)
       socket.emit('board_sync', {
@@ -300,7 +316,7 @@ io.on('connection', (socket) => {
     socket.to('board_' + roomId).emit('board_op', op);
     // Si trop d'ops accumulés, demander un snapshot au propriétaire pour purger le log
     if (room.ops.length >= 200) {
-      const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
+      const ownerSocketId = userSocketMap.get(room.ownerId);
       if (ownerSocketId) io.to(ownerSocketId).emit('board_force_snapshot', {roomId});
     }
   });
@@ -437,6 +453,7 @@ io.on('connection', (socket) => {
 
   // ── Nettoyage sur déconnexion (crash / réseau coupé) ─────────
   socket.on('disconnect', () => {
+    if (userSocketMap.get(socket.userId) === socket.id) userSocketMap.delete(socket.userId);
     const sRooms = socketBoardRooms.get(socket.id);
     if (sRooms) {
       for (const roomId of sRooms) {
@@ -460,7 +477,7 @@ io.on('connection', (socket) => {
           }, grace);
         } else if (room.participants.size === 0 && room.ownerId !== socket.userId) {
           // Plus personne ET le propriétaire n'est pas connecté → libérer immédiatement
-          const ownerConnected = [...(io.sockets.sockets.values())].some(s => s.userId === room.ownerId);
+          const ownerConnected = userSocketMap.has(room.ownerId);
           if (!ownerConnected) {
             boardRooms.delete(roomId);
             kickedParticipants.delete(roomId);
@@ -524,8 +541,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 204
 }));
-app.use(express.json({limit: '10mb', verify: (req, res, buf) => { if (req.path === '/stripe/webhook') req.rawBody = buf; }}));
-app.use(express.urlencoded({limit: '10mb', extended: true}));
+app.use(express.json({limit: '2mb', verify: (req, res, buf) => { if (req.path === '/stripe/webhook') req.rawBody = buf; }}));
+app.use(express.urlencoded({limit: '2mb', extended: true}));
 
 // Rate limiting simple — max 100 requêtes par minute par IP
 const rateLimitMap = new Map();
