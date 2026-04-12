@@ -1372,12 +1372,13 @@ app.post('/visio/room', requireAuth, async (req, res) => {
   const userId = req.user.id;
   const isProf = req.user.role === 'professeur';
   try {
-    let roomName, roomUrl;
+    let roomName, roomUrl, isOwnerOfRoom = false;
     if (cours_id) {
       // Vérifier accès : prof du cours ou élève inscrit
       const { data: cours } = await supabase.from('cours').select('id,professeur_id,titre').eq('id', cours_id).single();
       if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
       const isProfOfCours = cours.professeur_id === userId;
+      isOwnerOfRoom = isProfOfCours; // seul le prof de CE cours a les droits owner
       if (!isProfOfCours) {
         const { data: resa } = await supabase.from('reservations').select('id').eq('cours_id', cours_id).eq('user_id', userId).maybeSingle();
         if (!resa) return res.status(403).json({ error: 'Non inscrit à ce cours' });
@@ -1389,26 +1390,32 @@ app.post('/visio/room', requireAuth, async (req, res) => {
       });
       if (getResp.ok) {
         roomUrl = (await getResp.json()).url;
-      } else {
+      } else if (getResp.status === 404) {
         const createResp = await fetch('https://api.daily.co/v1/rooms', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: roomName, properties: { idle_timeout: 1800, enable_chat: true, enable_screenshare: true, max_participants: 20 } })
         });
         const created = await createResp.json();
-        // Race condition : si quelqu'un d'autre a créé entre le GET et le POST
-        if (!createResp.ok && created.error === 'room already exists') {
-          const retry = await fetch(`https://api.daily.co/v1/rooms/${roomName}`, { headers: { 'Authorization': `Bearer ${key}` } });
-          roomUrl = (await retry.json()).url;
-        } else if (!createResp.ok) {
-          console.error('[Daily] create room failed', created);
-          return res.status(500).json({ error: 'Erreur création room' });
+        if (!createResp.ok) {
+          // Race condition : quelqu'un d'autre a créé la room entre notre GET et POST
+          if (created.error === 'room already exists') {
+            const retry = await fetch(`https://api.daily.co/v1/rooms/${roomName}`, { headers: { 'Authorization': `Bearer ${key}` } });
+            if (!retry.ok) { console.error('[Daily] retry GET failed', retry.status); return res.status(500).json({ error: 'Erreur room' }); }
+            roomUrl = (await retry.json()).url;
+          } else {
+            console.error('[Daily] create room failed', created);
+            return res.status(500).json({ error: 'Erreur création room' });
+          }
         } else {
           roomUrl = created.url;
         }
+      } else {
+        console.error('[Daily] GET room unexpected status', getResp.status);
+        return res.status(500).json({ error: 'Erreur room Daily' });
       }
     } else {
-      // Quick room : pas de restriction, nom aléatoire
+      // Quick room : pas de restriction, le créateur est toujours owner (même un élève)
       roomName = 'cp-' + Math.random().toString(36).slice(2, 9);
       const createResp = await fetch('https://api.daily.co/v1/rooms', {
         method: 'POST',
@@ -1418,19 +1425,20 @@ app.post('/visio/room', requireAuth, async (req, res) => {
       const created = await createResp.json();
       if (!createResp.ok) { console.error('[Daily] quick room failed', created); return res.status(500).json({ error: 'Erreur création room' }); }
       roomUrl = created.url;
+      isOwnerOfRoom = true; // quick room : le créateur est toujours host
     }
     // Générer le token meeting
     const { data: prof } = await supabase.from('profiles').select('prenom,nom').eq('id', userId).single();
     const userName = prof ? ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() : (req.user.email || 'Participant');
-    const isProfOfRoom = isProf;
+    const tokenExp = Math.floor(Date.now()/1000) + 7200; // token valide 2h
     const tokenResp = await fetch('https://api.daily.co/v1/meeting-tokens', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ properties: { room_name: roomName, user_name: userName, is_owner: isProfOfRoom, start_audio_off: !isProfOfRoom, start_video_off: false } })
+      body: JSON.stringify({ properties: { room_name: roomName, user_name: userName, is_owner: isOwnerOfRoom, exp: tokenExp, start_audio_off: !isOwnerOfRoom, start_video_off: false } })
     });
     if (!tokenResp.ok) { console.error('[Daily token]', await tokenResp.text()); return res.status(500).json({ error: 'Erreur token' }); }
     const tokenData = await tokenResp.json();
-    res.json({ url: roomUrl, room_name: roomName, token: tokenData.token, user_name: userName, is_owner: isProfOfRoom });
+    res.json({ url: roomUrl, room_name: roomName, token: tokenData.token, user_name: userName, is_owner: isOwnerOfRoom });
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
