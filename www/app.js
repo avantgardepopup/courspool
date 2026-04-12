@@ -15711,6 +15711,20 @@ function _vTogglePeople(){
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   if(_peopleOpen)_vUpdatePeople();
 }
+// Bouton participants dans la barre flottante du tableau (mirror de _vTogglePeople + sync icône)
+function _brdTogglePeople(){
+  _vTogglePeople();
+  var btn=g('_brdPeopleBtn');
+  if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+}
+// Réduire/agrandir la barre flottante du tableau
+function _brdToggleFloatBar(){
+  _brdFBCollapsed=!_brdFBCollapsed;
+  var content=g('_brdFBContent');
+  var arrow=g('_brdFBArrow');
+  if(content){content.style.display=_brdFBCollapsed?'none':'flex';}
+  if(arrow){arrow.style.transform=_brdFBCollapsed?'rotate(180deg)':'';}
+}
 function _vToggleComment(){
   _vCommentOpen=!_vCommentOpen;
   if(_vCommentOpen&&_peopleOpen){_peopleOpen=false;var pp=g('_vPeople');if(pp)pp.style.display='none';var pb=g('_vPeopleBtn');if(pb){pb.style.background='rgba(255,255,255,.12)';pb.style.boxShadow='';}}
@@ -15852,6 +15866,7 @@ function _vToggleRecord(){
 // ── TABLEAU BLANC NATIF (GoodNotes-inspired) ────────────────────────────────
 var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
+var _brdFBCollapsed=false;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
 var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
 var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0,_brdLastLaserPt={x:-9999,y:-9999};
@@ -15924,9 +15939,10 @@ function _buildBoardInner(){
     +'</div>'  // close outer blue wrapper
     // ── Floating glass pill : scrollable pour accommoder tous les boutons ──
     +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;max-width:calc(100vw - 24px);z-index:150;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);overflow:hidden;">'
-    +'<div style="display:flex;align-items:center;gap:2px;padding:4px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-ms-overflow-style:none;">'
-    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'flex-shrink:0;" title="Retour">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
+    +'<div style="display:flex;align-items:center;gap:0;padding:4px 2px;">'
+    +'<button id="_brdFBToggle" onclick="_brdToggleFloatBar()" style="'+glassBtn+'flex-shrink:0;" title="Réduire/agrandir">'
+    +'<svg id="_brdFBArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
+    +'<div id="_brdFBContent" style="display:flex;align-items:center;gap:2px;padding:0 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-ms-overflow-style:none;">'
     +(_isOwner
       ?'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
       +'<button onclick="_vTimerOpen()" style="'+glassBtn+'flex-shrink:0;" title="Minuteur">'
@@ -15934,6 +15950,8 @@ function _buildBoardInner(){
       :''
     )
     +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button id="_brdPeopleBtn" onclick="_brdTogglePeople()" style="'+glassBtn+'flex-shrink:0;" title="Participants">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></button>'
     +'<button onclick="_vToggleComment()" style="'+glassBtn+'flex-shrink:0;" title="Commentaires">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
     +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
@@ -15958,7 +15976,8 @@ function _buildBoardInner(){
     +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
     +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'flex-shrink:0;" title="Effacer la page (double-tap)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" width="17" height="17"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>'
-    +'</div>'  // close scrollable inner row
+    +'</div>'  // close _brdFBContent
+    +'</div>'  // close outer flex row (toggle + content)
     +'</div>'  // close floating bar wrapper
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
