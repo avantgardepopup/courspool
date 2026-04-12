@@ -16507,12 +16507,6 @@ function _boardDown(e){
         // Lancer le drag sur les objets sélectionnés
         _brdObjSel.dragging=true;_brdObjSel.dragSX=p.x;_brdObjSel.dragSY=p.y;
         _brdObjSel.dragDx=0;_brdObjSel.dragDy=0;
-        // Snapshot fond sans les objets sélectionnés
-        var _selIds=_brdObjSel.ids.slice();
-        _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.clearRect(0,0,_brdC.width,_brdC.height);_brdX.restore();
-        _brdObjects.forEach(function(o){if(_selIds.indexOf(o.id)===-1)_brdRenderObj(o,_brdX);});
-        _brdObjSel.bgSnap=_brdMakeSnap();
-        _selIds.forEach(function(id){var o=_brdObjects.find(function(x){return x.id===id;});if(o)_brdRenderObj(o,_brdX);});
         _brdDraw=true;return;
       }else{
         _brdCleanObjSel(); // tap hors sélection → désélectionner
@@ -16523,11 +16517,6 @@ function _boardDown(e){
       _brdActivateObjSel([_hitId]);
       _brdObjSel.dragging=true;_brdObjSel.dragSX=p.x;_brdObjSel.dragSY=p.y;
       _brdObjSel.dragDx=0;_brdObjSel.dragDy=0;
-      var _selIds2=[_hitId];
-      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.clearRect(0,0,_brdC.width,_brdC.height);_brdX.restore();
-      _brdObjects.forEach(function(o){if(_selIds2.indexOf(o.id)===-1)_brdRenderObj(o,_brdX);});
-      _brdObjSel.bgSnap=_brdMakeSnap();
-      _selIds2.forEach(function(id){var o=_brdObjects.find(function(x){return x.id===id;});if(o)_brdRenderObj(o,_brdX);});
       _brdDraw=true;return;
     }
     // Aucun objet → sélection rectangle
@@ -16648,15 +16637,19 @@ function _boardMove(e){
     _brdX.globalAlpha=1;_brdX.globalCompositeOperation='source-over';
     _boardDrawShape(_brdSS.x,_brdSS.y,p.x,p.y);
   }else if(_brdTool==='select'&&_brdDraw){
-    if(_brdObjSel.dragging&&_brdObjSel.bgSnap){
+    if(_brdObjSel.dragging){
       // Déplacer les objets sélectionnés visuellement
+      // Re-render all objects in Z-order with selected ones translated.
+      // This correctly handles destination-out (eraser) objects that interact with selected shapes,
+      // fixing: (a) erased content appearing during drag, (b) other objects disappearing.
       var dx=p.x-_brdObjSel.dragSX,dy=p.y-_brdObjSel.dragSY;
       _brdObjSel.dragDx=dx;_brdObjSel.dragDy=dy;
-      _brdRestoreSnap(_brdObjSel.bgSnap);
-      _brdObjSel.ids.forEach(function(id){
-        var obj=_brdObjects.find(function(o){return o.id===id;});
-        if(obj)_brdRenderObj(_brdObjTranslated(obj,dx,dy),_brdX);
-      });
+      var _dragIds=_brdObjSel.ids;
+      _brdX.save();_brdX.setTransform(1,0,0,1,0,0);_brdX.clearRect(0,0,_brdC.width,_brdC.height);_brdX.restore();
+      for(var _di=0;_di<_brdObjects.length;_di++){
+        var _do=_brdObjects[_di];
+        _brdRenderObj(_dragIds.indexOf(_do.id)!==-1?_brdObjTranslated(_do,dx,dy):_do,_brdX);
+      }
       // Déplacer l'overlay CSS
       if(_brdObjSel.el){
         var bb=_brdUnionBbox(_brdObjSel.ids);var PAD=10;
@@ -16901,6 +16894,16 @@ function _brdRenderObj(obj,ctx){
     }else if(obj.shType==='circle'){
       var rx=(x2-x1)/2,ry=(y2-y1)/2,cx=(x1+x2)/2,cy=(y1+y2)/2;
       ctx.beginPath();ctx.ellipse(cx,cy,Math.abs(rx),Math.abs(ry),0,0,2*Math.PI);
+      if(obj.fill){ctx.fillStyle=obj.color;ctx.globalAlpha=0.18;ctx.fill();ctx.globalAlpha=1;}
+      ctx.stroke();
+    }else if(obj.shType==='tri'){
+      var mx2=(x1+x2)/2;
+      ctx.beginPath();ctx.moveTo(mx2,y1);ctx.lineTo(x2,y2);ctx.lineTo(x1,y2);ctx.closePath();
+      if(obj.fill){ctx.fillStyle=obj.color;ctx.globalAlpha=0.18;ctx.fill();ctx.globalAlpha=1;}
+      ctx.stroke();
+    }else if(obj.shType==='diamond'){
+      var mx3=(x1+x2)/2,my3=(y1+y2)/2;
+      ctx.beginPath();ctx.moveTo(mx3,y1);ctx.lineTo(x2,my3);ctx.lineTo(mx3,y2);ctx.lineTo(x1,my3);ctx.closePath();
       if(obj.fill){ctx.fillStyle=obj.color;ctx.globalAlpha=0.18;ctx.fill();ctx.globalAlpha=1;}
       ctx.stroke();
     }else if(obj.shType==='line'){
