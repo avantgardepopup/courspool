@@ -16208,6 +16208,8 @@ function _boardGoPage(idx){
   }else{
     _brdRestorePending=false;_boardClearFg();
     _brdObjects=_brdObjPages[idx]?JSON.parse(JSON.stringify(_brdObjPages[idx])):[];
+    // Si des objets ont été accumulés depuis d'autres utilisateurs (sans snapshot), les rendre
+    if(_brdObjects.length>0){_brdRenderAll();_boardSavePage();}
     var saved=_brdPageHists[_brdPageIdx];
     if(saved){_brdHist=saved.hist.slice();_brdHistIdx=saved.idx;}
     else{_brdHist=[];_brdHistIdx=-1;_boardSaveHist();}
@@ -17597,9 +17599,9 @@ function _brdEmitOp(op){
 // Répondre à une demande de snapshot ciblée (seul le propriétaire reçoit cet event)
 function _brdOnSyncRequest(data){
   if(!_brdC||!_brdRoomId||!data.targetSocketId)return;
-  // Sauvegarder la page courante avant d'en extraire le snapshot
+  // Sauvegarder la page courante avant d'en extraire les snapshots
   _boardSavePage();
-  // Composer le snapshot en incluant le fond blanc (pas de JPEG noir si canvas transparent)
+  // Snapshot de la page courante (avec fond blanc)
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   var tX=tmp.getContext('2d');
@@ -17607,11 +17609,17 @@ function _brdOnSyncRequest(data){
   if(_brdBgC)tX.drawImage(_brdBgC,0,0);
   tX.drawImage(_brdC,0,0);
   var snap=tmp.toDataURL('image/jpeg',0.6);
+  // Envoyer TOUTES les pages pour que l'élève puisse librement naviguer
+  // _brdPages contient des data URLs pour les pages déjà visitées par le prof, null pour les autres
+  var allPages=_brdPages.map(function(p,i){
+    return i===_brdPageIdx?snap:(p||null);
+  });
   if(typeof _socket!=='undefined'&&_socket&&_socket.connected){
     _socket.emit('board_snapshot_for',{
       roomId:_brdRoomId,
       targetSocketId:data.targetSocketId,
       snapshot:snap,
+      allPages:allPages,
       pageIdx:_brdPageIdx,
       pageNames:_brdPageNames.slice(),
       pageCount:_brdPages.length,
@@ -17811,6 +17819,27 @@ function _brdDecimate(pts,step){
 // Note : PAS de scale(dpr,dpr) — le contexte a déjà ce scale depuis _boardInitCanvas
 function _brdApplyRemoteOp(op){
   if(!_brdC||!_brdX)return;
+  // Si l'op vient d'une autre page : ne pas polluer le canvas courant
+  // Stocker l'op dans _brdObjPages[op.pageIdx] pour qu'il soit visible quand l'élève s'y rend
+  if(typeof op.pageIdx==='number'&&op.pageIdx!==_brdPageIdx){
+    var _tgt=op.pageIdx;
+    if(_tgt>=0&&_tgt<_brdPages.length){
+      if(!_brdObjPages[_tgt])_brdObjPages[_tgt]=[];
+      // Stocker l'objet (stroke, shape, text) pour rendu ultérieur
+      if((op.type==='stroke'||op.type==='erase')&&op.id&&!_brdObjPages[_tgt].find(function(o){return o.id===op.id;})){
+        _brdObjPages[_tgt].push(op.type==='erase'
+          ?{id:op.id,type:'erase',pts:op.pts,size:op.size}
+          :{id:op.id,type:'stroke',tool:op.tool,pts:op.pts,color:op.color,size:op.size});
+      }else if(op.type==='shape'&&op.id&&!_brdObjPages[_tgt].find(function(o){return o.id===op.id;})){
+        _brdObjPages[_tgt].push({id:op.id,type:'shape',shType:op.shType,x1:op.x1,y1:op.y1,x2:op.x2,y2:op.y2,color:op.color,size:op.size,fill:op.fill});
+      }else if(op.type==='text'&&op.id&&!_brdObjPages[_tgt].find(function(o){return o.id===op.id;})){
+        _brdObjPages[_tgt].push({id:op.id,type:'text',content:op.content,x:op.x,y:op.y,textSize:op.textSize,bold:op.bold,italic:op.italic,align:op.align,color:op.color});
+      }
+      // Invalider le snapshot stocké pour forcer un re-rendu à la prochaine visite
+      _brdPages[_tgt]=null;
+    }
+    return;
+  }
   // Snapshot complet — remplace le contenu de la page (ex: après commit sélection)
   if(op.type==='snapshot'&&op.data){
     // Ignorer si l'op vient d'une autre page (sélection commitée par un pair sur page différente)
@@ -17893,20 +17922,30 @@ function _brdOnSync(data){
   if(data.pageNames&&Array.isArray(data.pageNames)){
     _brdPageNames=data.pageNames.slice();
     while(_brdPages.length<_brdPageNames.length)_brdPages.push(null);
-    _boardUpdatePageTabs();
   }
-  // Appliquer le snapshot si présent — utiliser identity transform comme _boardRestorePage
-  if(data.snapshot){
+  // Restaurer toutes les pages si le prof les a envoyées (allPages)
+  // Cela permet à l'élève de naviguer librement entre toutes les pages
+  if(data.allPages&&Array.isArray(data.allPages)){
+    for(var _pi=0;_pi<data.allPages.length;_pi++){
+      if(data.allPages[_pi])_brdPages[_pi]=data.allPages[_pi];
+    }
+  }
+  // Index de la page courante du prof (la page à afficher à l'arrivée)
+  var _targetPageIdx=(typeof data.pageIdx==='number'&&data.pageIdx>=0)?data.pageIdx:_brdPageIdx;
+  _brdPageIdx=_targetPageIdx;
+  _boardUpdatePageTabs();
+  // Appliquer le snapshot de la page courante
+  var _snapToApply=data.snapshot||(data.allPages&&data.allPages[_targetPageIdx])||null;
+  if(_snapToApply){
     var img=new Image();
     img.onload=function(){
       _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
       _brdX.clearRect(0,0,_brdC.width,_brdC.height);
       _brdX.drawImage(img,0,0);
       _brdX.restore();
-      // Puis rejouer les ops reçus depuis le dernier snapshot
       if(data.ops)data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
     };
-    img.src=data.snapshot;
+    img.src=_snapToApply;
   }else if(data.ops){
     data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
   }

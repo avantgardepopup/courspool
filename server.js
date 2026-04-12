@@ -212,14 +212,25 @@ io.on('connection', (socket) => {
   });
 
   // ── Board: snapshot ciblé vers un retardataire précis ────────
-  socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot}) => {
+  socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
     if (snapshot && snapshot.length > 2_000_000) return;
-    room.snapshot = snapshot; // mettre à jour le snapshot stocké aussi
+    // Valider chaque page dans allPages
+    if (allPages && Array.isArray(allPages)) {
+      for (const p of allPages) {
+        if (p && p.length > 2_000_000) return;
+      }
+    }
+    room.snapshot = snapshot;
     room.ops = [];
     io.to(targetSocketId).emit('board_sync', {
       snapshot,
+      allPages: allPages || null,
+      pageIdx: pageIdx ?? 0,
+      pageNames: pageNames || [],
+      pageCount: pageCount || 1,
+      bgType: bgType || 'plain',
       ops: [],
       editors: [...room.editors],
       participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
