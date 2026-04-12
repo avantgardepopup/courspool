@@ -14227,20 +14227,16 @@ function _demoAudioLoop(){
     var sum=0;for(var i=0;i<_demoBuf.length;i++)sum+=_demoBuf[i];
     var avg=sum/_demoBuf.length; // typiquement 0-90 pour la parole normale
 
-    // ── Ring visuel : taille + glow proportionnels au volume ──
-    var ring=g('_vsring-demo-local');
-    if(ring&&!_localMuted){
-      var c=Math.min(avg,90);
-      var scale=1+c/90*0.18;         // 1.0 → 1.18 : reste collé à l'avatar
-      var sp1=(c/90*6).toFixed(1);   // ring spread 0→6px (fin, proche)
-      var gl=(c/90*18).toFixed(0);   // glow 0→18px
-      var a1=(0.55+c/90*0.35).toFixed(2); // opacité ring 0.55→0.90
-      var a2=(0.10+c/90*0.22).toFixed(2); // opacité glow 0.10→0.32
-      ring.style.transform='scale('+scale.toFixed(3)+')';
-      ring.style.boxShadow='0 0 0 '+sp1+'px rgba(255,107,43,'+a1+'),0 0 '+gl+'px rgba(255,107,43,'+a2+')';
-      ring.style.opacity=avg>6?'1':'0';
-    }else if(ring){
-      ring.style.opacity='0';ring.style.transform='scale(1)';
+    // ── Indicateur micro : pulse vert sur le bouton mic ──
+    var _dmb=g('_vMic');
+    if(_dmb){
+      if(!_localMuted&&avg>12){
+        _dmb.style.boxShadow='0 0 0 3px rgba(34,192,105,.75),0 0 20px rgba(34,192,105,.4),0 2px 8px rgba(0,0,0,.3)';
+        _dmb.style.background='rgba(34,192,105,.25)';
+      }else{
+        _dmb.style.boxShadow='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
+        _dmb.style.background=_localMuted?'rgba(229,62,62,.35)':'rgba(255,255,255,.12)';
+      }
     }
 
     // ── Changement de locuteur PiP (throttlé à 150ms) ──
@@ -14315,13 +14311,6 @@ function _vBuildDemoTile(f){
     localVid.autoplay=true;localVid.muted=true;localVid.setAttribute('playsinline','');
     localVid.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none;z-index:0;border-radius:16px;';
     wrap.appendChild(localVid);
-  }
-  // Ring audio-réactif centré (local seulement)
-  if(f.local){
-    var ring=document.createElement('div');
-    ring.id='_vsring-'+f.sid;
-    ring.style.cssText='position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;z-index:0;opacity:0;transition:transform .06s linear,box-shadow .06s linear,opacity .15s ease;pointer-events:none;will-change:transform,box-shadow;';
-    wrap.appendChild(ring);
   }
   wrap.appendChild(av);wrap.appendChild(lbl);wrap.appendChild(reactArea);wrap.appendChild(pinInd);
   return wrap;
@@ -14597,8 +14586,8 @@ function _buildVisioHTML(){
     +''
     +'<button onclick="closeVisioModal()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:50px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s">✕ Quitter</button>'
     +'</div></div>'
-    // Raised hands panel
-    +'<div id="_vHands" style="display:none;flex-direction:column;gap:6px;padding:10px 14px;background:rgba(255,107,43,.1);border-bottom:1px solid rgba(255,107,43,.2);z-index:2;flex-shrink:0"></div>'
+    // Raised hands panel (kept hidden — info shown via badge + participants panel)
+    +'<div id="_vHands" style="display:none"></div>'
     // Muted-while-speaking banner
     +'<div id="_vMutedBanner" style="display:none;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:rgba(200,40,40,.95);z-index:5;flex-shrink:0">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="16" height="16"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'
@@ -14636,11 +14625,18 @@ function _buildVisioHTML(){
     +'<div style="display:flex;align-items:center;justify-content:safe center;gap:10px;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 14px);background:rgba(10,10,20,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;box-shadow:0 -1px 0 rgba(255,255,255,.06);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;">'
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+(_localMuted?'background:rgba(229,62,62,.35);':'')+'" title="Micro">'+_vMicSvg(_localMuted)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+(_localCamOff?'background:rgba(229,62,62,.35);':'')+'" title="Caméra">'+_vCamSvg(_localCamOff)+'</button>'
-    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg></button>'
+    +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>'
+    +'</button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
     +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
-    +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
+    +'<div style="position:relative;display:inline-flex;flex-shrink:0">'
+    +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>'
+    +'</button>'
+    +'<span id="_vPeopleBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#e53e3e;color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:10px;font-weight:800;font-family:inherit;line-height:18px;text-align:center;pointer-events:none;box-shadow:0 1px 5px rgba(229,62,62,.55);z-index:4;padding:0 4px;box-sizing:border-box"></span>'
+    +'</div>'
     +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
 }
@@ -14816,7 +14812,14 @@ function _vOnMsg(evt){
   var m=evt.data||{};var from=evt.fromId;
   if(m.type==='raise_hand'){
     _raisedHands[from]={name:m.name||'Élève',sid:from,ts:Date.now()};
-    _vUpdateHands();_vUpdatePeople();if(_isOwner)haptic(2);
+    _vUpdateHands();_vUpdatePeople();
+    if(_isOwner){
+      haptic([10,40,80]);
+      // Ouvrir le panneau participants si pas déjà ouvert + pulse sur le bouton
+      var _pb=g('_vPeopleBtn');
+      if(_pb){_pb.style.transform='scale(1.18)';setTimeout(function(){var b=g('_vPeopleBtn');if(b)b.style.transform='';},280);}
+      toast((m.name||'Élève')+' a levé la main','',2000);
+    }
     var t=g('_vthand-'+from);if(t)t.style.display='flex';
   }else if(m.type==='lower_hand'){
     delete _raisedHands[from];_vUpdateHands();_vUpdatePeople();
@@ -14827,7 +14830,7 @@ function _vOnMsg(evt){
       _floorGranted=true;
       var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(false);
       var banner=g('_vMutedBanner');if(banner)banner.style.display='none';
-      toast('🎤 Le prof vous donne la parole','');haptic(3);
+      toast('Le prof vous donne la parole','');haptic(3);
     }
   }else if(m.type==='mute_req'){
     if(_callObj&&m.to===_callObj.participants().local.session_id){
@@ -14841,7 +14844,7 @@ function _vOnMsg(evt){
       var hb=g('_vHand');
       if(_openFloor){
         // Open floor: student can toggle mic freely
-        toast('🎤 Parole libre — vous pouvez parler','');haptic(2);
+        toast('Parole libre — vous pouvez parler','');haptic(2);
         if(hb){hb.style.background='rgba(34,192,105,.3)';hb.style.boxShadow='0 0 0 2px rgba(34,192,105,.7)';}
       }else{
         toast('Parole libre désactivée','');
@@ -14970,8 +14973,8 @@ function _vBuildTile(p,sid){
   lbl.appendChild(nameSpan);lbl.appendChild(netInd);
   var hand=document.createElement('div');
   hand.id='_vthand-'+sid;
-  hand.style.cssText='position:absolute;top:8px;right:8px;font-size:20px;display:none;z-index:3;background:rgba(0,0,0,.5);border-radius:50%;width:34px;height:34px;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-  hand.textContent='✋';
+  hand.style.cssText='position:absolute;top:8px;right:8px;display:none;z-index:3;background:rgba(255,107,43,.9);border-radius:50%;width:30px;height:30px;align-items:center;justify-content:center;backdrop-filter:blur(6px);box-shadow:0 2px 10px rgba(255,107,43,.5),0 0 0 1px rgba(255,255,255,.15);';
+  hand.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>';
   // Floating reaction area
   var reactArea=document.createElement('div');
   reactArea.id='_vreact-'+sid;
@@ -15014,65 +15017,89 @@ function _vPin(sid){
 }
 
 function _vUpdateHands(){
-  var panel=g('_vHands');if(!panel)return;
+  // Badge rouge sur le bouton participants
   var keys=Object.keys(_raisedHands);
-  if(!_isOwner){panel.style.display='none';return;}
-  // Always show panel for prof (even empty) to show open-floor toggle
-  panel.style.display='flex';
-  var _micSvgS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>';
-  var _xSvgS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  // Sort chronologically by timestamp
-  keys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
-  panel.innerHTML=''
-    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-bottom:'+(keys.length?'6':'0')+'px">'
-    +'<span style="font-size:11px;font-weight:800;color:#FF6B2B;letter-spacing:.06em;text-transform:uppercase">'+(keys.length?'Mains levées ('+keys.length+')':'Parole')+'</span>'
-    +'<button onclick="_vToggleOpenFloor()" style="'
-      +(_openFloor?'background:rgba(34,192,105,.85);box-shadow:0 0 0 1.5px rgba(34,192,105,.6),0 2px 8px rgba(34,192,105,.3);':'background:rgba(255,255,255,.12);')
-      +'border:none;color:#fff;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s">'
-    +_micSvgS+(_openFloor?'Parole libre ✓':'Parole libre')
-    +'</button>'
-    +'</div>'
-    +keys.map(function(sid){var h=_raisedHands[sid];return''
-      +'<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;gap:8px;box-shadow:0 3px 12px rgba(0,0,0,.12),0 0 0 0.5px rgba(255,255,255,.07)">'
-      +'<span style="font-size:13px;font-weight:600;color:#fff;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✋ '+escH(h.name)+'</span>'
-      +'<div style="display:flex;gap:6px;flex-shrink:0">'
-      +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:linear-gradient(148deg,#22C069,#16a34a);border:none;color:#fff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(34,192,105,.3);display:flex;align-items:center;gap:5px">'+_micSvgS+'Parole</button>'
-      +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:16px;padding:5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center">'+_xSvgS+'</button>'
-      +'</div></div>';
-    }).join('');
+  var badge=g('_vPeopleBadge');
+  if(badge){
+    if(_isOwner&&keys.length>0){badge.style.display='block';badge.textContent=keys.length;}
+    else{badge.style.display='none';}
+  }
+  // Mettre à jour la liste participants si elle est ouverte
+  if(_peopleOpen)_vUpdatePeople();
 }
 
 function _vUpdatePeople(){
   var list=g('_vPeopleList');if(!list||!_callObj||!_peopleOpen)return;
   var parts=_callObj.participants();
-  list.innerHTML=Object.keys(parts).map(function(k){
+  var raisedKeys=Object.keys(_raisedHands);
+  raisedKeys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
+  var _svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>';
+  var _svgX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var _svgHand='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>';
+  var html='';
+  // ── Section mains levées (prof seulement) ────────────────────
+  if(_isOwner&&raisedKeys.length>0){
+    html+='<div style="padding:10px 14px 8px;border-bottom:1px solid rgba(255,107,43,.18);background:rgba(255,107,43,.06)">'
+      +'<div style="font-size:10px;font-weight:800;color:rgba(255,107,43,.9);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px">'
+      +_svgHand+'Mains levées &nbsp;·&nbsp; '+raisedKeys.length
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px">'
+      +raisedKeys.map(function(sid){var h=_raisedHands[sid];return''
+        +'<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:10px;padding:7px 10px">'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#e04510);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">'+escH(h.name).charAt(0).toUpperCase()+'</div>'
+        +'<span style="flex:1;font-size:12.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(h.name)+'</span>'
+        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.9);border:none;color:#fff;border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0">'+_svgMic+'Parole</button>'
+        +'<button onclick="_vIgnoreHand(\''+sid+'\')" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+_svgX+'</button>'
+        +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }
+  // ── Liste participants ───────────────────────────────────────
+  html+=Object.keys(parts).map(function(k){
     var p=parts[k];var sid=p.local?'local':p.session_id;
     var name=p.user_name||(p.local?'Vous':'Participant');
     var micOn=p.tracks&&p.tracks.audio&&p.tracks.audio.state==='playable';
     var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
     var hasHand=!!_raisedHands[sid];
-    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)">'
-      +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.25)">'+name.charAt(0).toUpperCase()+'</div>'
+    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">'
+      +'<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.22)">'+escH(name).charAt(0).toUpperCase()+'</div>'
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (Vous)':'')+'</div>'
-      +'<div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;align-items:center">'
-      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Micro</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="10" height="10"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Muet</span>')
-      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cam</span>':'')
-      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600">Main levée</span>':'')
+      +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center">'
+      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Micro</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Muet</span>')
+      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cam</span>':'')
+      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600;display:flex;align-items:center;gap:2px">'+_svgHand.replace('currentColor','#FF6B2B')+'Main levée</span>':'')
       +'</div></div>'
-      +(_isOwner&&!p.local?'<div style="display:flex;gap:5px;flex-shrink:0">'
-        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.2);border:1px solid rgba(34,192,105,.4);color:#22C069;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
-        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.2);border:1px solid rgba(229,62,62,.4);color:#fc8181;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+      +(_isOwner&&!p.local?'<div style="display:flex;gap:4px;flex-shrink:0">'
+        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.18);border:1px solid rgba(34,192,105,.35);color:#22C069;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
         +'</div>':'')
       +'</div>';
   }).join('');
+  // ── Open floor toggle (prof, en bas) ─────────────────────────
+  if(_isOwner){
+    html+='<div style="padding:12px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;gap:10px">'
+      +'<div>'
+      +'<div style="font-size:12.5px;font-weight:700;color:#fff">Parole libre</div>'
+      +'<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">Tous peuvent parler librement</div>'
+      +'</div>'
+      +'<button onclick="_vToggleOpenFloor()" style="'
+      +(_openFloor?'background:rgba(34,192,105,.85);box-shadow:0 0 0 1.5px rgba(34,192,105,.5);':'background:rgba(255,255,255,.1);')
+      +'border:none;color:#fff;border-radius:20px;padding:6px 14px;font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'
+      +(_openFloor?'Activée':'Activer')
+      +'</button>'
+      +'</div>';
+  }
+  list.innerHTML=html;
 }
 
 function _vToggleMic(){
   if(!_callObj&&!_isDemoMode)return;
   // Students can unmute only if prof gave floor or open floor is active
   if(_localMuted&&!_isOwner&&!_openFloor&&!_floorGranted&&!_isDemoMode){
-    toast('✋ Lève la main pour demander la parole','');haptic(1);return;
+    toast('Lève la main pour demander la parole','');haptic(1);return;
   }
   _localMuted=!_localMuted;
   var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(_localMuted);
@@ -15083,7 +15110,6 @@ function _vToggleMic(){
       if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
       _demoAnalyser=null;
       if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
-      var ring=g('_vsring-demo-local');if(ring){ring.style.opacity='0';ring.style.transform='scale(1)';}
       _demoLocalSpeaking=false;
     }else{
       // Réactiver : réutiliser le stream existant ou en demander un nouveau
@@ -15238,7 +15264,7 @@ function _vToggleOpenFloor(){
   _openFloor=!_openFloor;
   if(_callObj)_callObj.sendAppMessage({type:'open_floor',enabled:_openFloor},'*');
   _vUpdateHands();
-  toast(_openFloor?'🎤 Parole libre activée pour tous':'Parole libre désactivée','');
+  toast(_openFloor?'Parole libre activée pour tous':'Parole libre désactivée','');
   haptic(2);
 }
 
