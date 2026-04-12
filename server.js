@@ -80,14 +80,13 @@ const boardRooms = new Map();
 const kickedParticipants = new Map(); // roomId → Set<userId> — expulsions définitives
 // socketId → Set<roomId> — pour nettoyage sur disconnect
 const socketBoardRooms = new Map();
-// Purge des rooms inactives (toutes les 15 min) :
-// - room vide depuis > 30 min → supprimée
-// - room avec participants mais inactive depuis > 6h → supprimée (prof oublié d'éteindre)
-// "inactivité" = personne dans la room ne fait rien (board_op, laser, join, etc.)
+// Purge des rooms inactives (check toutes les 2 min) :
+// - room vide depuis > 3 min  → purge (socket.io détecte disconnect en ~60s, 3 min = très safe)
+// - room avec gens, 0 interaction depuis > 45 min → oubli de fermeture, purge
 setInterval(() => {
   const now = Date.now();
-  const EMPTY_TTL  = 10 * 60 * 1000;    //  10 min si vide
-  const ACTIVE_TTL =  2 * 60 * 60 * 1000; //   2 h sans interaction = room fantôme
+  const EMPTY_TTL  =  3 * 60 * 1000;  //  3 min  — tout le monde parti
+  const ACTIVE_TTL = 45 * 60 * 1000;  // 45 min  — oubli de fermeture
   for (const [roomId, room] of boardRooms) {
     const idle = now - (room.lastActivity || 0);
     const isEmpty = room.participants.size === 0;
@@ -95,13 +94,12 @@ setInterval(() => {
       boardRooms.delete(roomId);
       kickedParticipants.delete(roomId);
     } else if (!isEmpty && idle > ACTIVE_TTL) {
-      // Notifier les connectés avant de fermer
       io.to('board_' + roomId).emit('board_session_expired');
       boardRooms.delete(roomId);
       kickedParticipants.delete(roomId);
     }
   }
-}, 15 * 60 * 1000);
+}, 2 * 60 * 1000);
 
 // Touche lastActivity sur une room (évite les purges prématurées sur cours longs)
 function _touchRoom(room) { if (room) room.lastActivity = Date.now(); }
@@ -417,7 +415,7 @@ io.on('connection', (socket) => {
           // - Room jamais active (prof seul, rien dessiné) : 5 min
           // - Room avec de l'activité (cours en cours) : 30 min pour permettre reconnexion
           const hadActivity = room.ops.length > 0 || room.snapshot;
-          const grace = hadActivity ? 15 * 60 * 1000 : 5 * 60 * 1000;
+          const grace = hadActivity ? 10 * 60 * 1000 : 2 * 60 * 1000;
           room._ownerReconnectTimeout = setTimeout(() => {
             if (boardRooms.get(roomId) !== room) return; // déjà supprimée
             if (room.participants.size > 0) return;      // des élèves encore présents → on garde
