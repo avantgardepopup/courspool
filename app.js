@@ -15934,17 +15934,17 @@ var _BC=['#1F2937','#6B7280','#EF4444','#F97316','#3B82F6','#22C55E','#8B5CF6','
 
 // ── GoodNotes-style whiteboard ──
 function _buildBoardInner(){
-  var NAV='#2c4f8a';
+  var NAV='#1C1A18';
   var ib='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
   var glassBtn='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:rgba(255,255,255,.9);width:36px;height:36px;border-radius:50%;flex-shrink:0;transition:background .15s;';
-  var glassSep='width:1px;height:20px;background:rgba(255,255,255,.18);flex-shrink:0;';
+  var glassSep='width:1px;height:20px;background:rgba(255,255,255,.12);flex-shrink:0;';
   return ''
-    // Top nav bar (dark blue, GoodNotes style)
-    // Outer wrapper: full dark blue background including status bar area
-    +'<div style="background:'+NAV+';flex-shrink:0;">'
+    // Top nav bar — charcoal chaud, même esprit que la dark bottom nav
+    // Outer wrapper: fond plein couvrant la status bar
+    +'<div style="background:'+NAV+';flex-shrink:0;border-bottom:1px solid rgba(255,107,43,.22);">'
     // Safe-area spacer: always at least 20px so status bar is never hidden
     +'<div style="height:max(env(safe-area-inset-top,20px),20px);"></div>'
-    // Actual nav content row (fixed 46px) — sans bouton retour pour plus d'espace aux onglets
+    // Actual nav content row (fixed 46px)
     +'<div style="display:flex;align-items:stretch;height:46px;padding:0 6px;">'
     // Bouton maison : retour au visio
     +'<button onclick="_vCloseBoard()" style="'+ib+'width:36px;flex-shrink:0;" title="Retour au visio">'
@@ -16896,24 +16896,23 @@ function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
 function _boardUpdatePageTabs(){
   var tabs=g('_brdTabs');if(!tabs)return;
   var h='';
-  // Chrome-style: tabs ont une largeur min fixe, la barre scroll si besoin
   for(var i=0;i<_brdPages.length;i++){
     var a=i===_brdPageIdx;
     var label=escH((_brdPageNames[i]&&_brdPageNames[i].trim())||'Page '+(i+1));
-    // Tab actif : fond blanc + boutons ; tab inactif : semi-transparent + pas de boutons
-    var tabStyle='flex:1;min-width:'+(a?'72':'40')+'px;overflow:hidden;';
-    h+='<button onclick="_boardGoPage('+i+')" style="'
-      +tabStyle
-      +'background:'+(a?'rgba(255,255,255,.92)':'rgba(255,255,255,.14)')+';'
-      +'color:'+(a?'#222':'rgba(255,255,255,.72)')+';'
-      +'border:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:'+(a?'600':'400')+';'
-      +'padding:4px 6px 5px 8px;height:28px;border-radius:6px 6px 0 0;'
-      +'display:flex;align-items:center;gap:4px;'
+    // <div> au lieu de <button> pour permettre de vrais <button> imbriqués (HTML valide)
+    h+='<div onclick="_boardGoPage('+i+')" style="'
+      +'flex:1;min-width:'+(a?'72':'36')+'px;overflow:hidden;'
+      +'background:'+(a?'rgba(255,107,43,.15)':'rgba(255,255,255,.07)')+';'
+      +'color:'+(a?'#FF6B2B':'rgba(255,255,255,.48)')+';'
+      +'cursor:pointer;font-family:inherit;font-size:11px;font-weight:'+(a?'600':'400')+';'
+      +'padding:0 4px 0 8px;height:28px;border-radius:6px 6px 0 0;'
+      +'display:flex;align-items:center;gap:2px;'
+      +'border-bottom:2px solid '+(a?'#FF6B2B':'transparent')+';'
       +'-webkit-tap-highlight-color:transparent;">'
-      +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+label+'</span>'
-      +(_isOwner&&a?'<button onclick="event.stopPropagation();_boardRenamePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.55;font-size:11px;flex-shrink:0;padding:3px 3px;min-width:22px;min-height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;">✏️</button>':'')
-      +(_isOwner&&a&&_brdPages.length>1?'<button onclick="event.stopPropagation();_boardDeletePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.6;font-size:17px;line-height:1;font-weight:300;flex-shrink:0;padding:3px 3px;min-width:22px;min-height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;">×</button>':'')
-      +'</button>';
+      +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:28px;">'+label+'</span>'
+      +(_isOwner&&a?'<button onclick="event.stopPropagation();_boardRenamePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.65;font-size:10px;flex-shrink:0;padding:0;min-width:20px;min-height:20px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;color:inherit;">✏️</button>':'')
+      +(_isOwner&&a&&_brdPages.length>1?'<button onclick="event.stopPropagation();_boardDeletePage('+i+')" style="background:none;border:none;cursor:pointer;opacity:.6;font-size:17px;line-height:1;font-weight:300;flex-shrink:0;padding:0;min-width:20px;min-height:20px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;border-radius:4px;color:rgba(255,255,255,.75);">×</button>':'')
+      +'</div>';
   }
   tabs.innerHTML=h;
   var at=tabs.children[_brdPageIdx];
