@@ -86,8 +86,8 @@ const socketBoardRooms = new Map();
 // "inactivité" = personne dans la room ne fait rien (board_op, laser, join, etc.)
 setInterval(() => {
   const now = Date.now();
-  const EMPTY_TTL  = 30 * 60 * 1000;    //  30 min si vide
-  const ACTIVE_TTL =  4 * 60 * 60 * 1000; //   4 h sans interaction = room fantôme
+  const EMPTY_TTL  = 10 * 60 * 1000;    //  10 min si vide
+  const ACTIVE_TTL =  2 * 60 * 60 * 1000; //   2 h sans interaction = room fantôme
   for (const [roomId, room] of boardRooms) {
     const idle = now - (room.lastActivity || 0);
     const isEmpty = room.participants.size === 0;
@@ -417,7 +417,7 @@ io.on('connection', (socket) => {
           // - Room jamais active (prof seul, rien dessiné) : 5 min
           // - Room avec de l'activité (cours en cours) : 30 min pour permettre reconnexion
           const hadActivity = room.ops.length > 0 || room.snapshot;
-          const grace = hadActivity ? 30 * 60 * 1000 : 5 * 60 * 1000;
+          const grace = hadActivity ? 15 * 60 * 1000 : 5 * 60 * 1000;
           room._ownerReconnectTimeout = setTimeout(() => {
             if (boardRooms.get(roomId) !== room) return; // déjà supprimée
             if (room.participants.size > 0) return;      // des élèves encore présents → on garde
