@@ -2434,6 +2434,9 @@ html.dk .settings-chevron { color:var(--bdr); }
     user-select: none;
     transition: left .38s cubic-bezier(.34,1.2,.64,1), transform .38s cubic-bezier(.34,1.2,.64,1), padding .28s ease !important;
   }
+  .bnav.bnav-dragging {
+    transition: none !important;
+  }
   .bnav::after { display: none !important; }
   html.dk .bnav { box-shadow: 0 6px 28px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3) !important; }
 

@@ -13657,8 +13657,7 @@ function _stepOptClick(el){
 
   function _navResetPos(){
     nav.style.left='50%';nav.style.top='';nav.style.right='auto';
-    nav.style.bottom=nav.style.bottom||''; // laisser CSS gérer bottom
-    nav.style.transform='translateX(-50%)';
+    nav.style.bottom='';nav.style.transform='translateX(-50%)';
   }
 
   function initNavDrag(){
@@ -13699,7 +13698,7 @@ function _stepOptClick(el){
       dragging=true;
       var rect=nav.getBoundingClientRect();
       ox=e.clientX-rect.left;oy=e.clientY-rect.top;
-      nav.style.transition='none';
+      nav.classList.add('bnav-dragging');
       handle.style.cursor='grabbing';handle.style.opacity='1';
       e.preventDefault();
     });
@@ -13716,7 +13715,7 @@ function _stepOptClick(el){
       if(!dragging||!nav)return;
       dragging=false;
       handle.style.cursor='grab';handle.style.opacity='.3';
-      nav.style.transition='';
+      nav.classList.remove('bnav-dragging');
     });
 
     // Toujours centré au chargement
