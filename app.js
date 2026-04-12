@@ -14868,8 +14868,17 @@ function _vOnTrack(evt){
   }
 }
 
+// Vérifier que l'expéditeur Daily a le flag owner (=prof)
+function _vIsOwnerSender(fromId){
+  if(!_callObj||!fromId)return false;
+  var parts=_callObj.participants();
+  return !!(parts[fromId]&&parts[fromId].owner===true);
+}
 function _vOnMsg(evt){
   var m=evt.data||{};var from=evt.fromId;
+  // Rejeter les messages sensibles qui ne viennent pas du prof
+  var _PROF_ONLY={kick:1,give_floor:1,mute_req:1,open_floor:1,whisper_start:1,whisper_end:1,comment_policy:1};
+  if(_PROF_ONLY[m.type]&&!_isOwner&&!_vIsOwnerSender(from))return;
   if(m.type==='raise_hand'){
     _raisedHands[from]={name:m.name||'Élève',sid:from,ts:Date.now()};
     _vUpdateHands();_vUpdatePeople();
@@ -16718,6 +16727,7 @@ function _boardSavePage(){
   _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72); // JPEG au lieu de PNG
 }
 function _boardAddPage(){
+  if(_brdPages.length>=20){toast('Maximum 20 pages','',2000);return;}
   if(_brdSel.active)_brdCommitSel();
   _brdCleanObjSel();
   if(!_brdRestorePending)_boardSavePage();

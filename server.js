@@ -334,6 +334,10 @@ io.on('connection', (socket) => {
         if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y)) return;
       }
     }
+    // pageIdx : entier non négatif, max 19 (plafond 20 pages)
+    if (op.pageIdx !== undefined && (typeof op.pageIdx !== 'number' || !Number.isInteger(op.pageIdx) || op.pageIdx < 0 || op.pageIdx > 19)) return;
+    // op.id : chaîne alphanumeric courte (max 64 chars)
+    if (op.id !== undefined && (typeof op.id !== 'string' || op.id.length > 64 || !/^[a-zA-Z0-9_\-]+$/.test(op.id))) return;
     op.userId = socket.userId;
     room.ops.push(op);
     _touchRoom(room);
@@ -410,6 +414,8 @@ io.on('connection', (socket) => {
   socket.on('board_page_add', ({roomId, pageIdx, name}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
+    if (typeof pageIdx !== 'number' || pageIdx > 19) return; // max 20 pages
+    if (name !== undefined && (typeof name !== 'string' || name.length > 64)) return;
     socket.to('board_' + roomId).emit('board_page_add', {pageIdx, name});
   });
 
@@ -1618,6 +1624,11 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+// ── Suivi coût Daily.co (estimation participant-minutes) ─────────────────────
+const _dailyCostTracker = { joins: 0, estPartMin: 0, alerted: {} };
+// Reset mensuel — les seuils reprennent à zéro chaque mois
+setInterval(() => { Object.assign(_dailyCostTracker, { joins: 0, estPartMin: 0, alerted: {} }); }, 30 * 24 * 60 * 60 * 1000);
+
 // VISIO — créer ou récupérer une room Daily.co + retourner le token en une seule requête
 // - cours_id fourni : room cours-{id}, vérifie que l'user est inscrit ou prof
 // - cours_id absent  : quick room cp-{random}, pas de restriction
@@ -1658,7 +1669,7 @@ app.post('/visio/room', requireAuth, async (req, res) => {
         const createResp = await fetch('https://api.daily.co/v1/rooms', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: roomName, properties: { idle_timeout: 1800, enable_chat: true, enable_screenshare: true, max_participants: (cours.places_max || 19) + 1 } })
+          body: JSON.stringify({ name: roomName, properties: { idle_timeout: 1800, enable_chat: true, enable_screenshare: true, max_participants: (cours.places_max || 19) + 1, exp: cours.date_iso ? Math.floor(new Date(cours.date_iso).getTime()/1000) + (cours.duree||60)*60 + 86400 : undefined } })
         });
         const created = await createResp.json();
         if (!createResp.ok) {
@@ -1705,6 +1716,18 @@ app.post('/visio/room', requireAuth, async (req, res) => {
     });
     if (!tokenResp.ok) { console.error('[Daily token]', await tokenResp.text()); return res.status(500).json({ error: 'Erreur token' }); }
     const tokenData = await tokenResp.json();
+    // ── Compteur coût Daily — alerte Discord par seuils ──────────
+    _dailyCostTracker.joins++;
+    const estimatedDurMin = cours_id && cours?.duree ? cours.duree : 60;
+    _dailyCostTracker.estPartMin += estimatedDurMin;
+    const estCost = (_dailyCostTracker.estPartMin * 0.004).toFixed(2);
+    const THRESHOLDS = [10, 50, 100, 500]; // seuils en dollars
+    for (const thr of THRESHOLDS) {
+      if (!_dailyCostTracker.alerted[thr] && parseFloat(estCost) >= thr) {
+        _dailyCostTracker.alerted[thr] = true;
+        discordAlert(`💸 **Alerte coût Daily.co**\n> Coût vidéo estimé : **~$${estCost}** (${_dailyCostTracker.estPartMin} participant-minutes)\n> Seuil $${thr} atteint — vérifier le dashboard Daily.co`);
+      }
+    }
     res.json({ url: roomUrl, room_name: roomName, token: tokenData.token, user_name: userName, is_owner: isOwnerOfRoom });
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
@@ -1723,9 +1746,11 @@ app.post('/visio/token', requireAuth, async (req, res) => {
     // Pour un join via lien manuel (room cours-*) : vérifier inscription + is_owner ssi prof du cours
     // Pour une quick room (cp-*) : pas de restriction, co-host pour tous
     let isOwner = false;
+    let tokenExp = Math.floor(Date.now()/1000) + 14400; // défaut : 4h
     if (room_name.startsWith('cours-')) {
       const coursId = room_name.replace('cours-', '');
-      const { data: c } = await supabase.from('cours').select('professeur_id').eq('id', coursId).maybeSingle();
+      // Une seule requête pour tout récupérer (prof + date + durée)
+      const { data: c } = await supabase.from('cours').select('professeur_id,date_iso,duree').eq('id', coursId).maybeSingle();
       if (!c) return res.status(404).json({ error: 'Cours introuvable' });
       const isProfOfCours = c.professeur_id === req.user.id;
       if (!isProfOfCours) {
@@ -1733,19 +1758,9 @@ app.post('/visio/token', requireAuth, async (req, res) => {
         if (!resa) return res.status(403).json({ error: 'Non inscrit à ce cours' });
       }
       isOwner = isProfOfCours;
+      if (c.date_iso) tokenExp = Math.floor(new Date(c.date_iso).getTime()/1000) + (c.duree||60)*60 + 3600;
     } else {
       isOwner = true; // quick room partagée : co-host pour tous
-    }
-    // Pour un cours, récupérer date_iso + duree pour calculer fin réelle
-    let tokenExp;
-    if (room_name.startsWith('cours-')) {
-      const coursId = room_name.replace('cours-', '');
-      const { data: coursInfo } = await supabase.from('cours').select('date_iso,duree').eq('id', coursId).maybeSingle();
-      tokenExp = coursInfo?.date_iso
-        ? Math.floor(new Date(coursInfo.date_iso).getTime()/1000) + (coursInfo.duree||60)*60 + 3600
-        : Math.floor(Date.now()/1000) + 14400;
-    } else {
-      tokenExp = Math.floor(Date.now()/1000) + 14400; // quick room : 4h
     }
     const resp = await fetch('https://api.daily.co/v1/meeting-tokens', {
       method: 'POST',
