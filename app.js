@@ -3876,6 +3876,8 @@ function doFilter(){
     var _vRaw=val.slice(7).trim();
     var _srch=g('srch');if(_srch)_srch.value='';
     var _mob=g('mobSearchInput');if(_mob)_mob.value='';
+    var _pill=g('pillSearchInput');if(_pill)_pill.value='';
+    if(typeof closeInlineSearch==='function')closeInlineSearch();
     if(typeof collapseSearch==='function')collapseSearch();
     if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
     else{_vOpenDemo();}
