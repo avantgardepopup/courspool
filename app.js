@@ -14047,6 +14047,48 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 var _vSidToUid={}; // Daily.co session_id → CoursPool userId (populated via app-message)
 var _pendingVisioToken=null; // token pré-fetché par /visio/room, consommé par _joinDailyRoom
 
+// ── Déconnexion automatique si inactivité ────────────────────
+var _vInactTimer=null;
+var _vInactHidden=null; // listener visibilitychange
+var _vInactMove=null;   // listener mousemove/touchstart
+var INACT_ACTIVE_MS=10*60*1000;  // 10 min sans mouvement
+var INACT_HIDDEN_MS=5*60*1000;   // 5 min en arrière-plan
+
+function _vResetInactivity(){
+  clearTimeout(_vInactTimer);
+  _vInactTimer=setTimeout(function(){
+    if(!_callObj)return;
+    _callObj.leave().catch(function(){});
+    toast('Vidéo coupée — inactivité détectée','',3500);
+  },INACT_ACTIVE_MS);
+}
+function _vStartInactivityWatch(){
+  _vStopInactivityWatch();
+  _vInactMove=function(){_vResetInactivity();};
+  document.addEventListener('mousemove',_vInactMove,{passive:true});
+  document.addEventListener('touchstart',_vInactMove,{passive:true});
+  _vInactHidden=function(){
+    if(!_callObj)return;
+    if(document.hidden){
+      clearTimeout(_vInactTimer);
+      _vInactTimer=setTimeout(function(){
+        if(!_callObj||!document.hidden)return;
+        _callObj.leave().catch(function(){});
+        toast('Vidéo coupée — onglet inactif','',3500);
+      },INACT_HIDDEN_MS);
+    }else{
+      _vResetInactivity();
+    }
+  };
+  document.addEventListener('visibilitychange',_vInactHidden);
+  _vResetInactivity(); // démarrer le timer dès le join
+}
+function _vStopInactivityWatch(){
+  clearTimeout(_vInactTimer);_vInactTimer=null;
+  if(_vInactMove){document.removeEventListener('mousemove',_vInactMove);document.removeEventListener('touchstart',_vInactMove);_vInactMove=null;}
+  if(_vInactHidden){document.removeEventListener('visibilitychange',_vInactHidden);_vInactHidden=null;}
+}
+
 // ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
 async function openCourseVisio(courseId){
   try{
@@ -14719,6 +14761,7 @@ async function _joinDailyRoom(url,roomName){
       })
       .on('left-meeting',function(){
         if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        _vStopInactivityWatch();
         if(!_intentionalLeave&&_visioCurrentUrl&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       });
     _isOwner=td.is_owner||_isOwner;
@@ -14748,6 +14791,7 @@ function _vOnJoined(){
   _joinRetries=0;
   _vRenderGrid();
   if(_isOwner)_vUpdateHands();
+  _vStartInactivityWatch();
   // Announce our CoursPool userId to host so they can identify us for kick
   try{if(_callObj&&user&&user.id)_callObj.sendAppMessage({type:'uid',userId:user.id},'*');}catch(e){}
   try{
@@ -14868,17 +14912,8 @@ function _vOnTrack(evt){
   }
 }
 
-// Vérifier que l'expéditeur Daily a le flag owner (=prof)
-function _vIsOwnerSender(fromId){
-  if(!_callObj||!fromId)return false;
-  var parts=_callObj.participants();
-  return !!(parts[fromId]&&parts[fromId].owner===true);
-}
 function _vOnMsg(evt){
   var m=evt.data||{};var from=evt.fromId;
-  // Rejeter les messages sensibles qui ne viennent pas du prof
-  var _PROF_ONLY={kick:1,give_floor:1,mute_req:1,open_floor:1,whisper_start:1,whisper_end:1,comment_policy:1};
-  if(_PROF_ONLY[m.type]&&!_isOwner&&!_vIsOwnerSender(from))return;
   if(m.type==='raise_hand'){
     _raisedHands[from]={name:m.name||'Élève',sid:from,ts:Date.now()};
     _vUpdateHands();_vUpdatePeople();
@@ -16155,28 +16190,32 @@ function _vOpenBoard(){
     requestAnimationFrame(function(){rb.style.transform='scale(1)';});
   };
   // Restore badge: tap = show pip, drag = move badge
-  var _rbSX=0,_rbSY=0,_rbOX=0,_rbOY=0,_rbMoved=false;
+  var _rbSX=0,_rbSY=0,_rbOX=0,_rbOY=0,_rbMoved=false,_rbDown=false;
   rb.addEventListener('pointerdown',function(e){
     e.preventDefault();
+    _rbDown=true;_rbMoved=false;
     _rbSX=e.clientX;_rbSY=e.clientY;
     _rbOX=parseInt(rb.style.left)||0;_rbOY=parseInt(rb.style.top)||0;
-    _rbMoved=false;rb.setPointerCapture(e.pointerId);
+    rb.setPointerCapture(e.pointerId);
     rb.style.transition='none';
   },{passive:false});
   rb.addEventListener('pointermove',function(e){
+    if(!_rbDown)return; // survol sans clic → ne pas déplacer
     var dx=e.clientX-_rbSX,dy=e.clientY-_rbSY;
-    if(!_rbMoved&&Math.hypot(dx,dy)<12)return; // 12px threshold — 6px was too small for touch taps
+    if(!_rbMoved&&Math.hypot(dx,dy)<12)return;
     _rbMoved=true;
     e.preventDefault();
     rb.style.left=Math.max(0,Math.min(window.innerWidth-44,_rbOX+dx))+'px';
     rb.style.top=Math.max(0,Math.min(window.innerHeight-44,_rbOY+dy))+'px';
   },{passive:false});
   rb.addEventListener('pointerup',function(){
-    if(_rbMoved)return; // drag → don't show pip
+    _rbDown=false;
+    if(_rbMoved){_rbMoved=false;return;} // drag → ne pas afficher le pip
     rb.style.display='none';
     pip.style.transition='transform 300ms cubic-bezier(.34,1.56,.64,1),opacity .18s ease';
     pip.style.transform='scale(1)';pip.style.opacity='1';pip.style.pointerEvents='';
   },{passive:true});
+  rb.addEventListener('pointercancel',function(){_rbDown=false;_rbMoved=false;},{passive:true});
   document.body.appendChild(rb);
   ph.appendChild(rsz);ph.appendChild(hb);
   pip.appendChild(ph);
@@ -16330,7 +16369,21 @@ function _boardRestorePage(dataUrl,cb){
     _brdRestorePending=false;
     _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
     _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-    _brdX.drawImage(img,0,0);
+    // Vieux snapshots JPEG (fond noir car JPEG ne gère pas la transparence) :
+    // extraction des traits via seuil near-black sur un canvas offscreen.
+    // Les nouveaux snapshots sont en PNG (transparent) → branche else directe.
+    if(dataUrl&&dataUrl.indexOf('data:image/jpeg')===0){
+      var _oc=document.createElement('canvas');_oc.width=img.width;_oc.height=img.height;
+      var _octx=_oc.getContext('2d');_octx.drawImage(img,0,0);
+      var _id=_octx.getImageData(0,0,_oc.width,_oc.height),_d=_id.data;
+      for(var _ii=0;_ii<_d.length;_ii+=4){
+        if(_d[_ii]<20&&_d[_ii+1]<20&&_d[_ii+2]<20)_d[_ii+3]=0; // near-black = fond → transparent
+      }
+      _octx.putImageData(_id,0,0);
+      _brdX.drawImage(_oc,0,0,_brdC.width,_brdC.height);
+    }else{
+      _brdX.drawImage(img,0,0,_brdC.width,_brdC.height);
+    }
     _brdX.restore();
     if(cb)cb();
   };
@@ -16718,16 +16771,16 @@ function _boardGoPage(idx){
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // Sauvegarder uniquement les traits (fond transparent) — le fond blanc+grille vit dans _brdBgC
-  // et est redessiné par _boardDrawBg() à chaque init. Baking white here was causing the canvas
-  // to appear pure white after restore (opaque white covered the _brdBgC grid layer).
+  // PNG (pas JPEG) pour préserver la transparence du fond.
+  // JPEG convertit la transparence en noir → pages noires en cascade si un vieux snapshot
+  // noir est restauré puis re-sauvegardé. PNG garde les zones sans traits transparentes,
+  // ce qui laisse transparaître le canvas de fond (blanc+grille) placé en dessous dans le DOM.
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   tmp.getContext('2d').drawImage(_brdC,0,0);
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72); // JPEG au lieu de PNG
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
 }
 function _boardAddPage(){
-  if(_brdPages.length>=20){toast('Maximum 20 pages','',2000);return;}
   if(_brdSel.active)_brdCommitSel();
   _brdCleanObjSel();
   if(!_brdRestorePending)_boardSavePage();
@@ -18547,6 +18600,7 @@ function closeVisioModal(){
   try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
   try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
   try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
+  try{_vStopInactivityWatch();}catch(e){}
   try{_pipX=null;_pipY=null;}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;_lastBitrateQuality=null;
@@ -18952,10 +19006,17 @@ function _brdOnSync(data){
   var _snapToApply=data.snapshot||(data.allPages&&data.allPages[_targetPageIdx])||null;
   if(_snapToApply){
     var img=new Image();
+    var _snapSrc=_snapToApply;
     img.onload=function(){
       _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
       _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-      _brdX.drawImage(img,0,0);
+      if(_snapSrc&&_snapSrc.indexOf('data:image/jpeg')===0){
+        var _soc=document.createElement('canvas');_soc.width=img.width;_soc.height=img.height;
+        var _soct=_soc.getContext('2d');_soct.drawImage(img,0,0);
+        var _sid=_soct.getImageData(0,0,_soc.width,_soc.height),_sd=_sid.data;
+        for(var _si=0;_si<_sd.length;_si+=4){if(_sd[_si]<20&&_sd[_si+1]<20&&_sd[_si+2]<20)_sd[_si+3]=0;}
+        _soct.putImageData(_sid,0,0);_brdX.drawImage(_soc,0,0,_brdC.width,_brdC.height);
+      }else{_brdX.drawImage(img,0,0,_brdC.width,_brdC.height);}
       _brdX.restore();
       if(data.ops)data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
     };
