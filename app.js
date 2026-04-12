@@ -16545,12 +16545,12 @@ function _boardShowSetupPopup(onConfirm){
       +'<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:22px">Choisis le fond et le format</div>'
       // Fond
       +'<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Fond</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px">'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px">'
       +bgOpts.map(function(o){
         var active=sel.bg===o.v;
-        return '<div onclick="void(0)" data-bg="'+o.v+'" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;">'
-          +'<div style="width:52px;height:38px;border-radius:6px;overflow:hidden;border:2px solid '+(active?'#FF6B2B':'rgba(255,255,255,.12)')+';transition:border-color .15s;box-shadow:'+(active?'0 0 0 2px rgba(255,107,43,.3)':'none')+';">'
-          +'<svg viewBox="0 0 52 38" width="52" height="38">'+bgSvg(o.v)+'</svg></div>'
+        return '<div onclick="void(0)" data-bg="'+o.v+'" style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;">'
+          +'<div style="width:88px;height:64px;border-radius:9px;overflow:hidden;border:2px solid '+(active?'#FF6B2B':'rgba(255,255,255,.12)')+';transition:border-color .15s;box-shadow:'+(active?'0 0 0 3px rgba(255,107,43,.28)':'none')+';">'
+          +'<svg viewBox="0 0 52 38" width="88" height="64">'+bgSvg(o.v)+'</svg></div>'
           +'<span style="font-size:10px;color:'+(active?'#FF6B2B':'rgba(255,255,255,.5)')+';font-weight:'+(active?'700':'500')+';transition:color .15s">'+o.l+'</span></div>';
       }).join('')
       +'</div>'
@@ -16581,7 +16581,7 @@ function _boardShowSetupPopup(onConfirm){
     });
   }
   var card=document.createElement('div');
-  card.style.cssText='background:rgba(10,12,28,.98);border:0.5px solid rgba(255,255,255,.13);border-radius:22px;padding:28px 24px 24px;max-width:500px;width:calc(100% - 32px);box-shadow:0 32px 64px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06);';
+  card.style.cssText='background:rgba(10,12,28,.98);border:0.5px solid rgba(255,255,255,.13);border-radius:22px;padding:28px 24px 24px;max-width:740px;width:calc(100% - 32px);box-shadow:0 32px 64px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,255,255,.06);overflow-y:auto;max-height:calc(100vh - 40px);';
   ov.appendChild(card);
   render();
   var bo=g('_vBoardOuter');
