@@ -14051,10 +14051,9 @@ async function openCourseVisio(courseId,dtIso,duree){
       var gd=await gr.json();roomUrl=gd.url||null;
     } else if(gr.status===404){
       // Créer la room : expire à la fin du cours + 15 min de marge, idle_timeout 5 min pour la reconnexion crash
-      // Pas d'idle_timeout : une room vide ne coûte rien, et on veut qu'elle reste disponible
-      // pendant tout le cours même si tout le monde crashe
+      // Pas d'idle_timeout ni d'exp : room vide = 0 coût, et le prof peut rester autant qu'il veut.
+      // L'UI gère déjà la fenêtre d'accès côté élève via _vInWin.
       var props={enable_chat:true};
-      if(dtIso){var endTs=Math.floor(new Date(dtIso).getTime()/1000)+(duree||60)*60+30*60;if(!isNaN(endTs))props.exp=endTs;}
       var cr=await fetch('https://api.daily.co/v1/rooms',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_DAILY_KEY},body:JSON.stringify({name:roomName,properties:props})});
       var cd=await cr.json();roomUrl=cd.url||null;
     } else {
