@@ -14404,53 +14404,48 @@ function _vShowPreJoin(onJoin){
   bd.id='bdVisio';
 
   if(isIosNative){
-    // ── UI iOS : toggles seulement, sans preview caméra ──
-    // Mise en page flex colonne avec header safe-area correct
-    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
+    // ── UI iOS : card premium centré avec coins arrondis ──
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
     var svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
     var svgCam='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
-    var togOff='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+    var togOff='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;outline:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
     var knobL='position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s,right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);';
     bd.innerHTML=''
-      // Header : bouton Annuler aligné à droite
-      +'<div style="display:flex;justify-content:flex-end;padding:14px 16px 0;">'
-      +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">✕ Annuler</button>'
+      // Card bottom-sheet premium avec coins arrondis en haut
+      +'<div style="width:100%;background:rgba(16,16,28,.97);border-radius:28px 28px 0 0;padding:12px 24px calc(env(safe-area-inset-bottom,16px) + 16px);box-shadow:0 -8px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);">'
+      // Drag handle
+      +'<div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 20px;"></div>'
+      // Titre + bouton fermer
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">'
+      +'<div>'
+      +'<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.4);margin-top:2px;">'+name+'</div>'
       +'</div>'
-      // Contenu centré
-      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;">'
-      +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
-      // Avatar
-      +'<div style="width:80px;height:80px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4);margin-bottom:8px;">'+ini+'</div>'
-      +'<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:32px;">'+name+'</div>'
+      +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:none;outline:none;color:rgba(255,255,255,.6);border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;-webkit-tap-highlight-color:transparent;">×</button>'
+      +'</div>'
       // Toggles
-      +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">'
-      // Micro — OFF par défaut
-      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
-      +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">'
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border-radius:16px;padding:14px 16px;border:0.5px solid rgba(255,255,255,.08);">'
+      +'<div id="_pjMicIconWrap" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
-      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivé</div>'
+      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:1px;">Désactivé</div>'
       +'</div>'
-      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff+'">'
-      +'<div id="_pjMicKnob" style="'+knobL+'"></div>'
-      +'</button>'
+      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff+'"><div id="_pjMicKnob" style="'+knobL+'"></div></button>'
       +'</div>'
-      // Caméra — OFF par défaut
-      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
-      +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam+'</div>'
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border-radius:16px;padding:14px 16px;border:0.5px solid rgba(255,255,255,.08);">'
+      +'<div id="_pjCamIconWrap" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam+'</div>'
       +'<div style="flex:1;">'
       +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
-      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivée</div>'
+      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:1px;">Désactivée</div>'
       +'</div>'
-      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff+'">'
-      +'<div id="_pjCamKnob" style="'+knobL+'"></div>'
-      +'</button>'
+      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff+'"><div id="_pjCamKnob" style="'+knobL+'"></div></button>'
       +'</div>'
       +'</div>'
       // Rejoindre
-      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
+      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:100%;padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;outline:none;border-radius:18px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 24px rgba(255,107,43,.4);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>'
-      +'</div>'; // fin contenu centré
+      +'</div>';
     document.body.appendChild(bd);
     var nav=g('bnav');if(nav)nav.style.display='none';
     haptic(1);
@@ -14638,7 +14633,7 @@ function openVisioModal(url){
 }
 
 function _buildVisioHTML(){
-  var cs='width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08);transition:all .22s cubic-bezier(.34,1.56,.64,1);';
+  var cs='width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:none;outline:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08);transition:all .22s cubic-bezier(.34,1.56,.64,1);-webkit-tap-highlight-color:transparent;';
   return ''
     +'<style>@keyframes _vBlink{0%,100%{opacity:1}50%{opacity:.2}}@keyframes _vFloatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.4)}}</style>'
     // Header
@@ -14696,7 +14691,7 @@ function _buildVisioHTML(){
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+(_localMuted?'background:rgba(229,62,62,.35);':'')+'" title="Micro">'+_vMicSvg(_localMuted)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+(_localCamOff?'background:rgba(229,62,62,.35);':'')+'" title="Caméra">'+_vCamSvg(_localCamOff)+'</button>'
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M8 14V7a1.5 1.5 0 013 0v4"/><path d="M11 9V5a1.5 1.5 0 013 0v5"/><path d="M14 9.5V7a1.5 1.5 0 013 0v5a6 6 0 01-6 6H9a5 5 0 01-5-5v-2a1.5 1.5 0 013 0v2"/></svg>'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M18 11V8.5a2.5 2.5 0 00-5 0v1.5M13 10V6a2.5 2.5 0 00-5 0v4M8 10V8a2.5 2.5 0 00-5 0v5a9 9 0 0018 0v-4.5a2.5 2.5 0 00-5 0V10"/></svg>'
     +'</button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="2" y="2" width="20" height="14" rx="2"/><path d="M9 16l-3 5M15 16l3 5M9 21h6"/><path d="M7 7h4M7 11h7"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
@@ -14792,13 +14787,13 @@ async function _joinDailyRoom(url,roomName){
     },15000);
     var _wantMic=window._pjMicWanted||false;
     var _wantCam=window._pjCamWanted||false;
-    await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:_wantCam,startAudioOn:_wantMic});
+    // Poser les états AVANT le join pour que _vRenderGrid() (dans joined-meeting) les lise correctement
     _localMuted=!_wantMic;
     _localCamOff=!_wantCam;
-    var bMic=g('_vMic');if(bMic)bMic.innerHTML=_vMicSvg(_localMuted);
-    var bCam=g('_vCam');if(bCam)bCam.innerHTML=_vCamSvg(_localCamOff);
-    if(_localMuted){var bm=g('_vMic');if(bm)bm.style.background='rgba(229,62,62,.35)';}
-    if(_localCamOff){var bc=g('_vCam');if(bc)bc.style.background='rgba(229,62,62,.35)';}
+    await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:_wantCam,startAudioOn:_wantMic});
+    // Synchroniser les boutons après join (au cas où joined-meeting s'est déclenché avant)
+    var bMic=g('_vMic');if(bMic){bMic.innerHTML=_vMicSvg(_localMuted);bMic.style.background=_localMuted?'rgba(229,62,62,.35)':'rgba(255,255,255,.12)';}
+    var bCam=g('_vCam');if(bCam){bCam.innerHTML=_vCamSvg(_localCamOff);bCam.style.background=_localCamOff?'rgba(229,62,62,.35)':'rgba(255,255,255,.12)';}
   }catch(e){
     if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
     console.error('[Visio join]',e);toast('Impossible de rejoindre','');
@@ -15395,12 +15390,12 @@ function _vToggleMic(){
   }
   if(_callObj)_callObj.setLocalAudio(!_localMuted);
   if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
-  // Couper le micro = stopper l'animation "qui parle"
+  // Couper le micro : reset immédiat du ring (le RAF loop gérera les frames suivantes)
   if(_localMuted){
-    clearTimeout(_vSpeakDebounce);_vSpeakDebounce=null;
-    var _mb2=g('_vMic');if(_mb2)_mb2.classList.remove('mic-speaking');
-    var _rb2=g('_vPipRestoreBtn');if(_rb2)_rb2.classList.remove('mic-speaking');
-    var _tm2=g('_vdmic-local')||g('_vdmic-demo-local');if(_tm2)_tm2.classList.remove('mic-speaking');
+    var _dfRing='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
+    var _mb2=g('_vMic');if(_mb2){_mb2.style.boxShadow=_dfRing;_mb2.style.background='rgba(229,62,62,.35)';}
+    var _rb2=g('_vPipRestoreBtn');if(_rb2){_rb2.style.boxShadow='';_rb2.style.background='';}
+    var _tm2=g('_vdmic-local');if(_tm2){_tm2.style.boxShadow='';_tm2.classList.remove('mic-speaking');}
   }
   haptic(1);
 }
@@ -15952,14 +15947,13 @@ var _BC=['#1F2937','#6B7280','#EF4444','#F97316','#3B82F6','#22C55E','#8B5CF6','
 
 // ── GoodNotes-style whiteboard ──
 function _buildBoardInner(){
-  var NAV='#1C1A18';
-  var ib='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
-  var glassBtn='background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:rgba(255,255,255,.9);width:36px;height:36px;border-radius:50%;flex-shrink:0;transition:background .15s;';
+  var NAV='rgba(10,10,20,1)';
+  var ib='background:none;border:none;outline:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
+  var glassBtn='background:none;border:none;outline:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:rgba(255,255,255,.9);width:36px;height:36px;border-radius:50%;flex-shrink:0;transition:background .15s;';
   var glassSep='width:1px;height:20px;background:rgba(255,255,255,.12);flex-shrink:0;';
   return ''
-    // Top nav bar — charcoal chaud, même esprit que la dark bottom nav
-    // Outer wrapper: fond plein couvrant la status bar
-    +'<div style="background:'+NAV+';flex-shrink:0;border-bottom:1px solid rgba(255,107,43,.22);">'
+    // Top nav bar — même couleur que la barre de contrôles visio
+    +'<div style="background:'+NAV+';flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">'
     // Safe-area spacer: always at least 20px so status bar is never hidden
     +'<div style="height:max(env(safe-area-inset-top,20px),20px);"></div>'
     // Actual nav content row (fixed 46px)
@@ -16866,7 +16860,7 @@ function _boardShowPageOverview(){
   var thumbW=160,thumbH=Math.round(thumbW/ratio);
   var overlay=document.createElement('div');
   overlay.id='_brdOvrl';
-  overlay.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(6,8,22,.93);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);display:flex;flex-direction:column;overflow:hidden;';
+  overlay.style.cssText='position:absolute;inset:0;z-index:500;background:rgba(6,8,22,.93);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);display:flex;flex-direction:column;overflow:hidden;';
   // Header
   var hdr=document.createElement('div');
   hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top,20px),20px) 20px 14px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,.1);';
@@ -16907,7 +16901,9 @@ function _boardShowPageOverview(){
     })(i);
   }
   overlay.appendChild(grid);
-  document.body.appendChild(overlay);
+  // Appender dans _vBoardOuter (position:absolute) pour rester dans le bon stacking context
+  var bo=g('_vBoardOuter');
+  if(bo)bo.appendChild(overlay);else document.body.appendChild(overlay);
   haptic(1);
 }
 function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
