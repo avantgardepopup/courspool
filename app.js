@@ -14093,7 +14093,7 @@ function _vOpenQuickSheet(){
       var dr=await fetch('https://api.daily.co/v1/rooms',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+_DAILY_KEY},
-        body:JSON.stringify({name:slug,properties:{exp:Math.floor(Date.now()/1000)+7200,enable_chat:true}})
+        body:JSON.stringify({name:slug,properties:{exp:Math.floor(Date.now()/1000)+7200,idle_timeout:300,enable_chat:true}})
       });
       var dd=await dr.json();
       if(!dd.url)throw new Error('daily room error: '+(dd.error||JSON.stringify(dd)));
@@ -17587,6 +17587,13 @@ function closeVisioModal(){
   window._vPreJoinCallback=null;
   try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
 }
+
+// Quitter proprement si la page se ferme pendant une visio (évite de laisser des participant-minutes tourner)
+window.addEventListener('beforeunload',function(){
+  if(_callObj&&!_intentionalLeave){
+    try{_intentionalLeave=true;_visioCurrentUrl='';_callObj.leave();}catch(e){}
+  }
+});
 
 // ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
 
