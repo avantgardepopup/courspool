@@ -401,10 +401,13 @@ io.on('connection', (socket) => {
               kickedParticipants.delete(roomId);
             }
           }, 3 * 60 * 1000);
-        } else if (room.participants.size === 0) {
-          // Plus personne dans la room → libérer immédiatement
-          boardRooms.delete(roomId);
-          kickedParticipants.delete(roomId);
+        } else if (room.participants.size === 0 && room.ownerId !== socket.userId) {
+          // Plus personne ET le propriétaire n'est pas connecté → libérer immédiatement
+          const ownerConnected = [...(io.sockets.sockets.values())].some(s => s.userId === room.ownerId);
+          if (!ownerConnected) {
+            boardRooms.delete(roomId);
+            kickedParticipants.delete(roomId);
+          }
         }
       }
       socketBoardRooms.delete(socket.id);
