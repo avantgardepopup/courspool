@@ -190,6 +190,7 @@ io.on('connection', (socket) => {
     const room = boardRooms.get(roomId);
     if (!room) return;
     room.participants.set(socket.userId, userName || '?');
+    room.hadParticipants = true; // flag persistant — même si tout le monde repart
     _touchRoom(room);
     // Demander un snapshot frais au propriétaire plutôt qu'envoyer le snapshot stocké
     const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
@@ -414,8 +415,9 @@ io.on('connection', (socket) => {
           // Propriétaire crashé → délai de grâce selon l'activité de la room
           // - Room jamais active (prof seul, rien dessiné) : 5 min
           // - Room avec de l'activité (cours en cours) : 30 min pour permettre reconnexion
-          const hadActivity = room.ops.length > 0 || room.snapshot;
-          const grace = hadActivity ? 10 * 60 * 1000 : 2 * 60 * 1000;
+          // Cours actif = contenu dessiné OU des élèves avaient rejoint
+          const wasActiveCourse = room.ops.length > 0 || room.snapshot || room.hadParticipants;
+          const grace = wasActiveCourse ? 10 * 60 * 1000 : 2 * 60 * 1000;
           room._ownerReconnectTimeout = setTimeout(() => {
             if (boardRooms.get(roomId) !== room) return; // déjà supprimée
             if (room.participants.size > 0) return;      // des élèves encore présents → on garde
