@@ -669,8 +669,8 @@ html.dk .bni.on { color: #FF6B2B; }
 html.dk #bniFav.on { color: #FF375F; }
 html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
 
-/* Desktop ≥ 1200px : pill flottante (iPad garde la barre pleine largeur) */
-@media (min-width: 1200px) {
+/* ── Pill flottante : iPad + Desktop ≥ 769px ── */
+@media (min-width: 769px) {
   .bnav {
     bottom: max(28px, env(safe-area-inset-bottom, 28px));
     left: 50%; right: auto;
@@ -697,7 +697,7 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
     gap: 3px;
     transition: background .2s, box-shadow .2s, color .15s;
   }
-  /* Bouton + : toujours un cercle parfait, jamais étiré */
+  /* Bouton + : cercle parfait dans la pill */
   #bniAdd {
     padding: 8px;
     border-radius: 50%;
@@ -713,7 +713,6 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
     flex-grow: 0;
   }
   .bni:active { opacity: 1; }
-  .bni:hover:not(.on) { background: rgba(0,0,0,0.05); color: #555; }
   .bni svg { width: 22px; height: 22px; }
   .bni-lbl { font-size: 11px; }
   .bni.on {
@@ -734,10 +733,15 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
     background: rgba(14,12,10,0.95);
     box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07);
   }
-  html.dk .bni:hover:not(.on) { background: rgba(255,255,255,0.07); }
   html.dk .bni.on { background: linear-gradient(145deg, #FF7D42, #FF4500); }
-  /* Pill flottante : pas besoin d'extension vers le bas */
+  /* Pill flottante : fond étendu inutile */
   .bnav::after { display: none; }
+}
+
+/* ── Hover desktop uniquement (souris, pas tactile iPad) ── */
+@media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+  .bni:hover:not(.on) { background: rgba(0,0,0,0.05); color: #555; }
+  html.dk .bni:hover:not(.on) { background: rgba(255,255,255,0.07); }
 }
 
 
@@ -1495,9 +1499,15 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 /* Active nav item — mobile uses tint, desktop uses pill (handled in main block) */
 
 /* ── NAV — MOBILE padding only ── */
-@media (max-width: 640px) {
+/* Mobile : padding pour la barre de nav pleine largeur */
+@media (max-width: 768px) {
   #app .cnt         { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
   .acc-body         { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+}
+/* iPad + Desktop : padding minimal (pill flottante ne coupe pas le contenu) */
+@media (min-width: 769px) {
+  #app .cnt         { padding-bottom: 100px; }
+  .acc-body         { padding-bottom: 100px; }
 }
 
 /* ── NAV — CONVERSATION MODE (hidden, back button is in header) ── */

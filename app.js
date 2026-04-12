@@ -2315,11 +2315,13 @@ function _springIcon(el){
 
 function restoreNav(){
   var nav=g('bnav');
-  if(nav&&user)nav.style.display='flex';
-  // Sur mobile (< 769px), réinitialiser les styles inline de position
-  // qui peuvent rester après un drag en mode desktop/paysage
-  if(nav&&window.innerWidth<769){
-    nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
+  if(nav&&user){
+    // Effacer tout inline style de display pour laisser CSS + classe .on contrôler
+    nav.style.display='';
+    nav.classList.add('on');
+    // Réinitialiser les styles de position inline (drag desktop)
+    nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.right='';
+    nav.style.transform='';
   }
   // Nettoyer les classes iPad messaging
   if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');nav.classList.remove('msg-mode');}
@@ -13668,7 +13670,7 @@ function _stepOptClick(el){
 
   function initNavDrag(){
     nav=document.getElementById('bnav');
-    if(!nav||window.innerWidth<769)return;
+    if(!nav||window.innerWidth<769||!window.matchMedia('(pointer:fine)').matches)return;
 
     // ── Languette de drag ──
     handle=document.createElement('div');
@@ -13962,10 +13964,10 @@ function initSwipeNav(){
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',renderFilterBar);}
 else{renderFilterBar();}
 
-// ── NAV DRAGGABLE (iPad / desktop ≥769px) ──────────────────────────────────
+// ── NAV DRAGGABLE (desktop pointer:fine uniquement) ──────────────────────────────────
 function initNavDrag(){
   var nav=g('bnav');
-  if(!nav||window.innerWidth<769)return;
+  if(!nav||window.innerWidth<769||!window.matchMedia('(pointer:fine)').matches)return;
   // Position initiale
   var saved={};try{saved=JSON.parse(localStorage.getItem('cp_nav_pos')||'{}');}catch(e){}
   setTimeout(function(){
@@ -14032,7 +14034,7 @@ function snapNavPill(nav){
 }
 // Lancer le drag dès que la bnav devient visible (class 'on')
 (function(){
-  if(window.innerWidth<769)return;
+  if(window.innerWidth<769||!window.matchMedia('(pointer:fine)').matches)return;
   var _done=false;
   var _obs=new MutationObserver(function(){
     var nav=g('bnav');
