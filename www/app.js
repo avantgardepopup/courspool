@@ -14826,6 +14826,7 @@ function _vOnPartLeft(evt){
     if(_leftSid){
       delete _raisedHands[_leftSid];
       if(_vWhisperTarget&&_vWhisperTarget.sid===_leftSid)_vEndWhisper();
+      if(_vFloorHolder===_leftSid)_vFloorHolder=null;
     }
   }
   _vRenderGrid();_vUpdateHands();_vUpdatePeople();
@@ -14883,7 +14884,17 @@ function _vOnMsg(evt){
       _floorGranted=true;
       var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(false);
       var banner=g('_vMutedBanner');if(banner)banner.style.display='none';
-      toast('Le prof vous donne la parole','');haptic(3);
+      haptic(3);
+      // Bannière "Vous avez la parole" — visible 4s
+      var fb=document.createElement('div');
+      fb.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:12000;'
+        +'background:rgba(34,192,105,.95);color:#fff;border-radius:24px;padding:12px 22px;'
+        +'font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;'
+        +'box-shadow:0 4px 20px rgba(0,0,0,.35);pointer-events:none;'
+        +'animation:_brdFadeIn .25s ease;';
+      fb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Vous avez la parole';
+      document.body.appendChild(fb);
+      setTimeout(function(){if(fb.parentNode)fb.parentNode.removeChild(fb);},4000);
     }
   }else if(m.type==='mute_req'){
     if(_callObj&&m.to===_callObj.participants().local.session_id){
@@ -15211,15 +15222,17 @@ function _vUpdatePeople(){
     var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
     var hasHand=!!_raisedHands[sid]||(p.local&&_handRaised);
     var _wActive=_vWhisperTarget&&_vWhisperTarget.sid===sid;
+    var hasFloor=_vFloorHolder===sid;
     var avatarBg=p.local?'linear-gradient(148deg,#4f8ef7,#2563eb)':'linear-gradient(148deg,#FF7D42,#e04510)';
+    var avatarRing=hasFloor?'box-shadow:0 0 0 2.5px #22C069;':hasHand?'box-shadow:0 0 0 2px #FF6B2B;':'';
     return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;transition:background .15s;"'
       +' onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'\'">'
       // Avatar
-      +'<div style="width:36px;height:36px;border-radius:11px;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;'+(hasHand?'box-shadow:0 0 0 2px #FF6B2B;':'')+'">'+escH(name).charAt(0).toUpperCase()+'</div>'
+      +'<div style="width:36px;height:36px;border-radius:11px;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;'+avatarRing+'">'+escH(name).charAt(0).toUpperCase()+'</div>'
       // Info
       +'<div style="flex:1;min-width:0">'
-      +'<div style="font-size:13px;font-weight:700;color:'+(p.local?'rgba(255,255,255,.55)':'#fff')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' · Vous':'')+'</div>'
-      +'<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'
+      +'<div style="font-size:13px;font-weight:700;color:'+(p.local?'rgba(255,255,255,.55)':'#fff')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (vous)':'')+'</div>'
+      +'<div style="display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap">'
       // Micro icon
       +'<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:'+(micOn?'rgba(34,192,105,.15)':'rgba(252,129,129,.15)')+'">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(micOn?'#22C069':'#fc8181')+'" stroke-width="2.5" stroke-linecap="round" width="10" height="10">'
@@ -15227,20 +15240,20 @@ function _vUpdatePeople(){
       +'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span>'
       // Cam icon (si actif)
       +(camOn?'<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:rgba(34,192,105,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>':'')
-      // Main levée badge
+      // Badge "A la parole" — visible uniquement du côté prof
+      +(hasFloor&&_isOwner?'<span style="font-size:9.5px;font-weight:700;color:#22C069;background:rgba(34,192,105,.12);border-radius:5px;padding:1px 6px;letter-spacing:.01em">🎤 A la parole</span>':'')
+      // Badge main levée
       +(hasHand?'<span style="font-size:9.5px;font-weight:700;color:#FF6B2B;background:rgba(255,107,43,.12);border-radius:5px;padding:1px 6px;letter-spacing:.01em">✋ Main levée</span>':'')
       +'</div></div>'
-      // Boutons actions
+      // Boutons actions (prof uniquement sur les autres)
       +(!p.local?'<div style="display:flex;gap:3px;flex-shrink:0;align-items:center">'
-        // Donner la parole — vert, libellé si main levée
-        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:'+(hasHand?'rgba(34,192,105,.85)':'rgba(34,192,105,.1)')+';border:none;color:'+(hasHand?'#fff':'#22C069')+';border-radius:20px;padding:4px '+(hasHand?'10px':'6px')+';font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'+(hasHand?'Parole':'')+'</button>':'')
-        // Couper micro — rouge, icône crayon rayé
-        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(252,129,129,.1);border:none;color:#fc8181;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Couper le micro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
-        // Chuchoter — oreille icon, violet, libellé si actif
-        +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="background:'+(_wActive?'rgba(124,58,237,.5)':'rgba(124,58,237,.1)')+';border:none;color:#a78bfa;border-radius:20px;padding:4px '+(  _wActive?'10px':'6px')+';font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="'+(_wActive?'Arrêter le chuchotement':'Chuchoter — parler uniquement à cet élève')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'+(_wActive?'Fin':'Chuchoter')+'</button>':'')
-        // Message privé — bulle orange
+        // Donner / retirer la parole
+        +(_isOwner?'<button onclick="'+(hasFloor?'_vMuteP(\''+sid+'\')':'_vGiveFloor(\''+sid+'\'')+'" style="background:'+(hasFloor?'rgba(34,192,105,.85)':hasHand?'rgba(34,192,105,.85)':'rgba(34,192,105,.1)')+';border:none;color:'+(hasFloor||hasHand?'#fff':'#22C069')+';border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="'+(hasFloor?'Retirer la parole':'Donner la parole')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'+(hasFloor?'Couper':'Parole')+'</button>':'')
+        // Chuchoter — parler en privé
+        +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="background:'+(_wActive?'rgba(124,58,237,.5)':'rgba(124,58,237,.1)')+';border:none;color:#a78bfa;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="'+(_wActive?'Arrêter le chuchotement':'Parler en privé à cet élève uniquement')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'+(_wActive?'Fin':'Privé')+'</button>':'')
+        // Message privé
         +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(255,107,43,.1);border:none;color:#FF6B2B;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
-        // Expulser — icône sortie rouge, prof seulement
+        // Expulser
         +(_isOwner?'<button onclick="_vKickParticipant(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(239,68,68,.1);border:none;color:#f87171;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Expulser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>':'')
         +'</div>':'')
       +'</div>';
@@ -15417,9 +15430,10 @@ function _vGiveFloor(sid){
   if(!_callObj||!_isOwner)return;
   var parts=_callObj.participants();var p=parts[sid];var targetSid=p?p.session_id:sid;
   _callObj.sendAppMessage({type:'give_floor',to:targetSid},'*');
+  _vFloorHolder=sid; // mémoriser qui a la parole
   delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();
   var t=g('_vthand-'+sid);if(t)t.style.display='none';
-  haptic(2);toast('Parole donnée','');
+  haptic(2);
 }
 function _vMuteP(sid){
   if(!_callObj||!_isOwner)return;
@@ -15427,7 +15441,8 @@ function _vMuteP(sid){
   if(p){try{_callObj.updateParticipant(sid,{setAudio:false});}catch(e){}}
   var targetSid=p?p.session_id:sid;
   _callObj.sendAppMessage({type:'mute_req',to:targetSid},'*');
-  delete _raisedHands[sid];_vUpdateHands();haptic(1);
+  if(_vFloorHolder===sid)_vFloorHolder=null;
+  delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();haptic(1);
 }
 function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
 
@@ -15472,6 +15487,7 @@ function _vDoKick(sid,name,permanent){
 // ── DM privé ──────────────────────────────────────────────────────────────���───
 var _vDmTarget=null;
 var _vWhisperTarget=null; // {sid,name} côté prof
+var _vFloorHolder=null;   // session_id de l'élève qui a la parole (côté prof)
 var _vWhisperMuted=null;  // {teacherSid,targetSid} côté autres élèves
 function _vOpenDM(sid,name){
   var old=document.getElementById('_vDMPanel');if(old&&old.parentNode)old.parentNode.removeChild(old);
@@ -16529,6 +16545,8 @@ function _boardApplyTransform(){
         bar.style.left=bl+'px';bar.style.top=bt+'px';
       }
     }else if(inp){inp.style.opacity='';}
+    // Resync handles rotation/resize après zoom ou pan
+    if(typeof _brdUpdateObjSelHandlePos==='function') _brdUpdateObjSelHandlePos();
   },320);
 }
 
