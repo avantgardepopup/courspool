@@ -14631,6 +14631,7 @@ function _buildVisioHTML(){
     +'</button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
+    +(_isOwner?'<button id="_vRecBtn" onclick="_vToggleRecord()" style="'+cs+'background:rgba(229,62,62,.18);border-color:rgba(229,62,62,.35);" title="Enregistrer"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="8" fill="none" stroke="#fc8181" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#fc8181"/></svg></button>':'')
     +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
     +'<div style="position:relative;display:inline-flex;flex-shrink:0">'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants">'
@@ -14791,6 +14792,21 @@ function _vOnNetQuality(evt){
   var sid=p.local?'local':p.session_id;if(!sid)return;
   _netQuality[sid]=evt.threshold||'good';
   var ind=g('_vnet-'+sid);if(ind)ind.innerHTML=_vNetSvg(evt.threshold||'good');
+  if(p.local)_vAdaptBitrate(evt.threshold||'good');
+}
+var _lastBitrateQuality=null;
+function _vAdaptBitrate(quality){
+  if(!_callObj||quality===_lastBitrateQuality)return;
+  _lastBitrateQuality=quality;
+  var enc;
+  if(quality==='very-low'){
+    enc={low:{maxBitrate:80000,scaleResolutionDownBy:4,maxFramerate:8},medium:{maxBitrate:180000,scaleResolutionDownBy:2,maxFramerate:12},high:{maxBitrate:280000,scaleResolutionDownBy:1.5}};
+  }else if(quality==='low'){
+    enc={low:{maxBitrate:180000,scaleResolutionDownBy:2,maxFramerate:15},medium:{maxBitrate:450000,scaleResolutionDownBy:1.5},high:{maxBitrate:650000}};
+  }else{
+    enc={low:{maxBitrate:200000},medium:{maxBitrate:700000},high:{maxBitrate:1500000,maxFramerate:30}};
+  }
+  try{_callObj.updateSendSettings({video:{encodings:enc}});}catch(e){console.warn('[Daily bitrate]',e);}
 }
 
 function _vOnPartChange(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
@@ -14799,15 +14815,30 @@ function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
 function _vOnTrack(evt){
   var p=evt.participant;if(!p)return;
   var sid=p.local?'local':p.session_id;
+  // Camera video
   var vid=g('_vtv-'+sid);
   if(vid){
     var vt=p.tracks&&p.tracks.video;
     if(vt&&vt.state==='playable'&&vt.track){vid.srcObject=new MediaStream([vt.track]);vid.style.display='';var av2=g('_vav-'+sid);if(av2)av2.style.display='none';}
     else{vid.style.display='none';var av2=g('_vav-'+sid);if(av2)av2.style.display='flex';}
   }
+  // Audio
   if(!p.local){
     var aud=g('_vta-'+sid);var at=p.tracks&&p.tracks.audio;
     if(aud&&at&&at.state==='playable'&&at.track&&!aud.srcObject){aud.srcObject=new MediaStream([at.track]);}
+  }
+  // Screen share video — create or remove the dedicated screen tile
+  var svt=p.tracks&&p.tracks.screenvideo;
+  var stile=g('_vt-screen-'+sid);
+  if(svt&&svt.state==='playable'&&svt.track){
+    if(!stile){_vRenderGrid();}
+    else{var sv=g('_vtsv-'+sid);if(sv&&!sv.srcObject){sv.srcObject=new MediaStream([svt.track]);sv.style.display='';}}
+    // Auto-stop local share button visual when share is active
+    if(p.local){var sb=g('_vShare');if(sb&&!_sharing){_sharing=true;sb.style.background='rgba(255,107,43,.5)';sb.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}}
+  }else if(stile){
+    // Screen share ended (user stopped in browser native UI)
+    _vRenderGrid();
+    if(p.local){_sharing=false;var sb=g('_vShare');if(sb){sb.style.background='rgba(255,255,255,.12)';sb.style.boxShadow='';}}
   }
 }
 
@@ -14874,10 +14905,45 @@ function _vRenderGrid(){
     var p=parts[k];var sid=p.local?'local':p.session_id;seen[sid]=1;
     if(!g('_vt-'+sid)){grid.appendChild(_vBuildTile(p,sid));}
     else{_vUpdateTileMeta(p,sid);}
+    // Screen share tile: added as a pinned featured tile when screenvideo is active
+    var svt=p.tracks&&p.tracks.screenvideo;
+    if(svt&&(svt.state==='playable'||svt.state==='loading')){
+      var ssid='screen-'+sid;seen[ssid]=1;
+      if(!g('_vt-'+ssid)){
+        grid.appendChild(_vBuildScreenTile(p,sid,svt));
+        if(!_pinnedSid){_pinnedSid=ssid;}
+      }else if(svt.state==='playable'&&svt.track){
+        var sv=g('_vtsv-'+sid);
+        if(sv&&!sv.srcObject){sv.srcObject=new MediaStream([svt.track]);sv.style.display='';}
+      }
+    }
   });
-  grid.querySelectorAll('[id^="_vt-"]').forEach(function(el){if(!seen[el.id.replace('_vt-','')])el.remove();});
+  grid.querySelectorAll('[id^="_vt-"]').forEach(function(el){
+    var esid=el.id.replace('_vt-','');
+    if(!seen[esid]){if(_pinnedSid===esid)_pinnedSid=null;el.remove();}
+  });
   _vApplyLayout();
   if(_activeSpeakerSid){var t=g('_vt-'+_activeSpeakerSid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
+}
+function _vBuildScreenTile(p,sid,svt){
+  var name=p.user_name||(p.local?'Vous':'Participant');
+  var ssid='screen-'+sid;
+  var wrap=document.createElement('div');
+  wrap.id='_vt-'+ssid;
+  wrap.style.cssText='position:relative;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:120px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.5),0 0 0 1.5px rgba(255,107,43,.6);cursor:pointer;';
+  wrap.onclick=function(e){if(e.target.tagName==='BUTTON')return;_vPin(ssid);};
+  var vid=document.createElement('video');
+  vid.id='_vtsv-'+sid;vid.autoplay=true;vid.playsInline=true;vid.muted=true;
+  vid.style.cssText='width:100%;height:100%;object-fit:contain;position:absolute;inset:0;display:none;';
+  if(svt&&svt.state==='playable'&&svt.track){vid.srcObject=new MediaStream([svt.track]);vid.style.display='';}
+  var lbl=document.createElement('div');
+  lbl.style.cssText='position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:5px;z-index:3;pointer-events:none;';
+  var badge=document.createElement('span');
+  badge.style.cssText='font-size:11px;font-weight:700;color:#fff;background:rgba(255,107,43,.9);padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;';
+  badge.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>'+(p.local?'Votre partage':'Partage · '+escH(name));
+  lbl.appendChild(badge);
+  wrap.appendChild(vid);wrap.appendChild(lbl);
+  return wrap;
 }
 
 function _vGetPipFeaturedSid(sids){
@@ -17618,7 +17684,7 @@ function closeVisioModal(){
     });}catch(e){}
   });}}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
-  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;
+  _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;_lastBitrateQuality=null;
   window._vPreJoinCallback=null;
   try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
 }
