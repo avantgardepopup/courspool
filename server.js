@@ -87,7 +87,7 @@ const socketBoardRooms = new Map();
 setInterval(() => {
   const now = Date.now();
   const EMPTY_TTL  = 30 * 60 * 1000;    //  30 min si vide
-  const ACTIVE_TTL =  6 * 60 * 60 * 1000; //   6 h  si des gens dedans
+  const ACTIVE_TTL =  4 * 60 * 60 * 1000; //   4 h sans interaction = room fantôme
   for (const [roomId, room] of boardRooms) {
     const idle = now - (room.lastActivity || 0);
     const isEmpty = room.participants.size === 0;
