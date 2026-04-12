@@ -280,7 +280,7 @@ io.on('connection', (socket) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;
     // Limiter la taille (≈ 1.5 MB base64)
-    if (snapshot && snapshot.length > 2_000_000) return;
+    if (snapshot && snapshot.length > 1_200_000) return;
     room.snapshot = snapshot;
     room.ops = []; // snapshot remplace le log d'ops
   });
@@ -289,11 +289,11 @@ io.on('connection', (socket) => {
   socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
-    if (snapshot && snapshot.length > 2_000_000) return;
+    if (snapshot && snapshot.length > 1_200_000) return;
     // Valider chaque page dans allPages
     if (allPages && Array.isArray(allPages)) {
       for (const p of allPages) {
-        if (p && p.length > 2_000_000) return;
+        if (p && p.length > 1_200_000) return;
       }
     }
     room.snapshot = snapshot;
@@ -371,9 +371,9 @@ io.on('connection', (socket) => {
   socket.on('board_force_sync', ({roomId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
-    if (snapshot && snapshot.length > 2_000_000) return;
+    if (snapshot && snapshot.length > 1_200_000) return;
     if (allPages && Array.isArray(allPages)) {
-      for (const p of allPages) { if (p && p.length > 2_000_000) return; }
+      for (const p of allPages) { if (p && p.length > 1_200_000) return; }
     }
     room.snapshot = snapshot;
     room.ops = [];

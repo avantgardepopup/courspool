@@ -16425,7 +16425,7 @@ function _boardForceSyncAll(){
   tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
   if(_brdBgC)tX.drawImage(_brdBgC,0,0);
   tX.drawImage(_brdC,0,0);
-  var snap=tmp.toDataURL('image/jpeg',0.82);
+  var snap=tmp.toDataURL('image/jpeg',0.72);
   var allPages=_brdPages.map(function(p,i){return i===_brdPageIdx?snap:(p||null);});
   _socket.emit('board_force_sync',{
     roomId:_brdRoomId,snapshot:snap,allPages:allPages,
@@ -16573,9 +16573,13 @@ function _boardSaveHist(){
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   tmp.getContext('2d').drawImage(_brdC,0,0);
-  var d=tmp.toDataURL('image/png');
-  _brdHist.push({idx:_brdPageIdx,data:d,objects:JSON.parse(JSON.stringify(_brdObjects))});
-  if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
+  // JPEG 0.65 au lieu de PNG → 8x moins lourd en RAM (500KB → 60KB par entrée)
+  var d=tmp.toDataURL('image/jpeg',0.65);
+  // Épurer les objets image (base64 dans _brdImgStore, pas dans l'historique)
+  var objSnap=JSON.parse(JSON.stringify(_brdObjects));
+  objSnap.forEach(function(o){if(o.type==='image')delete o.data;});
+  _brdHist.push({idx:_brdPageIdx,data:d,objects:objSnap});
+  if(_brdHist.length>10)_brdHist.shift();else _brdHistIdx++; // 10 niveaux suffisent
 }
 function _boardUndo(){
   if(_brdHistIdx<=0||!_brdX)return;
@@ -16711,7 +16715,7 @@ function _boardSavePage(){
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   tmp.getContext('2d').drawImage(_brdC,0,0);
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72); // JPEG au lieu de PNG
 }
 function _boardAddPage(){
   if(_brdSel.active)_brdCommitSel();
@@ -18559,7 +18563,7 @@ function _brdOnSyncRequest(data){
   tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
   if(_brdBgC)tX.drawImage(_brdBgC,0,0);
   tX.drawImage(_brdC,0,0);
-  var snap=tmp.toDataURL('image/jpeg',0.82);
+  var snap=tmp.toDataURL('image/jpeg',0.72);
   // Envoyer TOUTES les pages pour que l'élève puisse librement naviguer
   // _brdPages contient des data URLs pour les pages déjà visitées par le prof, null pour les autres
   var allPages=_brdPages.map(function(p,i){
