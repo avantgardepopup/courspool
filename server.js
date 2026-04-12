@@ -86,7 +86,7 @@ const socketBoardRooms = new Map();
 setInterval(() => {
   const now = Date.now();
   const EMPTY_TTL  =  3 * 60 * 1000;  //  3 min  — tout le monde parti
-  const ACTIVE_TTL = 45 * 60 * 1000;  // 45 min  — oubli de fermeture
+  const ACTIVE_TTL = 20 * 60 * 1000;  // 20 min  — oubli de fermeture (téléphone laissé ouvert)
   for (const [roomId, room] of boardRooms) {
     const idle = now - (room.lastActivity || 0);
     const isEmpty = room.participants.size === 0;
