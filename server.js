@@ -82,11 +82,12 @@ const kickedParticipants = new Map(); // roomId → Set<userId> — expulsions d
 const socketBoardRooms = new Map();
 // Purge des rooms inactives (toutes les 15 min) :
 // - room vide depuis > 30 min → supprimée
-// - room avec participants mais inactive depuis > 3h → supprimée (prof oublié d'éteindre)
+// - room avec participants mais inactive depuis > 6h → supprimée (prof oublié d'éteindre)
+// "inactivité" = personne dans la room ne fait rien (board_op, laser, join, etc.)
 setInterval(() => {
   const now = Date.now();
-  const EMPTY_TTL  = 30 * 60 * 1000;   //  30 min si vide
-  const ACTIVE_TTL =  3 * 60 * 60 * 1000; //   3 h  si des gens dedans
+  const EMPTY_TTL  = 30 * 60 * 1000;    //  30 min si vide
+  const ACTIVE_TTL =  6 * 60 * 60 * 1000; //   6 h  si des gens dedans
   for (const [roomId, room] of boardRooms) {
     const idle = now - (room.lastActivity || 0);
     const isEmpty = room.participants.size === 0;
@@ -101,6 +102,9 @@ setInterval(() => {
     }
   }
 }, 15 * 60 * 1000);
+
+// Touche lastActivity sur une room (évite les purges prématurées sur cours longs)
+function _touchRoom(room) { if (room) room.lastActivity = Date.now(); }
 
 // Allowed op types for board_op payload validation
 const BOARD_OP_TYPES = new Set(['stroke','erase','shape','text','clear','objmove','objdelete','objinsert','objscale','objrotate','snapshot','bg']);
@@ -188,6 +192,7 @@ io.on('connection', (socket) => {
     const room = boardRooms.get(roomId);
     if (!room) return;
     room.participants.set(socket.userId, userName || '?');
+    _touchRoom(room);
     // Demander un snapshot frais au propriétaire plutôt qu'envoyer le snapshot stocké
     const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
     if (ownerSocketId) {
@@ -229,6 +234,7 @@ io.on('connection', (socket) => {
     const now = Date.now();
     if (now - ptLastMs < 30) return; // rate-limit ~33 pts/s per connection
     ptLastMs = now;
+    _touchRoom(room);
     socket.to('board_' + roomId).emit('board_pt', {userId: socket.userId, pt});
   });
 
@@ -261,7 +267,7 @@ io.on('connection', (socket) => {
     }
     op.userId = socket.userId;
     room.ops.push(op);
-    room.lastActivity = Date.now();
+    _touchRoom(room);
     socket.to('board_' + roomId).emit('board_op', op);
     // Si trop d'ops accumulés, demander un snapshot au propriétaire pour purger le log
     if (room.ops.length >= 500) {
@@ -310,6 +316,7 @@ io.on('connection', (socket) => {
   socket.on('board_laser', ({roomId, pt, pageIdx}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.participants.has(socket.userId)) return;
+    _touchRoom(room);
     socket.to('board_' + roomId).emit('board_laser', {userId: socket.userId, pt, pageIdx});
   });
 
