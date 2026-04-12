@@ -15729,13 +15729,14 @@ function _vTogglePeople(){
   if(panel){panel.style.transition='transform .3s cubic-bezier(.32,1,.6,1)';panel.style.transform=_peopleOpen?'translateX(0)':'translateX(calc(100% + 20px))';}
   var btn=g('_vPeopleBtn');
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
+  // Sync aussi le bouton dans la barre flottante du tableau
+  var brdBtn=g('_brdPeopleBtn');
+  if(brdBtn){brdBtn.style.background=_peopleOpen?'rgba(255,107,43,.45)':'';brdBtn.style.boxShadow='';}
   if(_peopleOpen)_vUpdatePeople();
 }
-// Bouton participants dans la barre flottante du tableau (mirror de _vTogglePeople + sync icône)
+// Bouton participants dans la barre flottante du tableau (appelle _vTogglePeople qui synce tout)
 function _brdTogglePeople(){
   _vTogglePeople();
-  var btn=g('_brdPeopleBtn');
-  if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
 }
 // Réduire/agrandir la barre flottante du tableau
 function _brdToggleFloatBar(){
@@ -15958,7 +15959,7 @@ function _buildBoardInner(){
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
     // ── Floating glass pill : scrollable pour accommoder tous les boutons ──
-    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;max-width:calc(100vw - 24px);z-index:150;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);overflow:hidden;">'
+    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;max-width:calc(100vw - 24px);z-index:150;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
     +'<div style="display:flex;align-items:center;gap:0;padding:4px 2px;">'
     +'<button id="_brdFBToggle" onclick="_brdToggleFloatBar()" style="'+glassBtn+'flex-shrink:0;" title="Réduire/agrandir">'
     +'<svg id="_brdFBArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
