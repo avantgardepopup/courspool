@@ -348,6 +348,11 @@ function initSocket() {
       _socket.emit('board_snapshot', {roomId: _brdRoomId, snapshot: snap});
     }
   });
+  // Session expirée pour inactivité (3h sans dessin)
+  _socket.on('board_session_expired', function() {
+    if (typeof toast === 'function') toast('Session expirée', 'La session a été fermée après 3h d\'inactivité.', 4000);
+    if (typeof closeVisioModal === 'function') setTimeout(closeVisioModal, 2000);
+  });
   // Expulsion définitive — l'élève est bloqué et ne peut plus rejoindre
   _socket.on('board_kicked_permanent', function() {
     if (typeof closeVisioModal === 'function') closeVisioModal();

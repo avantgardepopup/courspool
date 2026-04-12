@@ -80,15 +80,27 @@ const boardRooms = new Map();
 const kickedParticipants = new Map(); // roomId → Set<userId> — expulsions définitives
 // socketId → Set<roomId> — pour nettoyage sur disconnect
 const socketBoardRooms = new Map();
-// Purge des rooms inactives depuis plus de 2h (abandon sans disconnect propre)
+// Purge des rooms inactives (toutes les 15 min) :
+// - room vide depuis > 30 min → supprimée
+// - room avec participants mais inactive depuis > 3h → supprimée (prof oublié d'éteindre)
 setInterval(() => {
-  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+  const now = Date.now();
+  const EMPTY_TTL  = 30 * 60 * 1000;   //  30 min si vide
+  const ACTIVE_TTL =  3 * 60 * 60 * 1000; //   3 h  si des gens dedans
   for (const [roomId, room] of boardRooms) {
-    if ((room.lastActivity || 0) < cutoff && room.participants.size === 0) {
+    const idle = now - (room.lastActivity || 0);
+    const isEmpty = room.participants.size === 0;
+    if (isEmpty && idle > EMPTY_TTL) {
       boardRooms.delete(roomId);
+      kickedParticipants.delete(roomId);
+    } else if (!isEmpty && idle > ACTIVE_TTL) {
+      // Notifier les connectés avant de fermer
+      io.to('board_' + roomId).emit('board_session_expired');
+      boardRooms.delete(roomId);
+      kickedParticipants.delete(roomId);
     }
   }
-}, 30 * 60 * 1000);
+}, 15 * 60 * 1000);
 
 // Allowed op types for board_op payload validation
 const BOARD_OP_TYPES = new Set(['stroke','erase','shape','text','clear','objmove','objdelete','objinsert','objscale','objrotate','snapshot','bg']);
