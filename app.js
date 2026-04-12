@@ -14647,26 +14647,26 @@ function _buildVisioHTML(){
     +'<div id="_vMain" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
     +'<div id="_vGrid" style="flex:1;display:grid;gap:8px;overflow:hidden;background:#0d0d18;padding:8px;min-height:0"></div>'
     // People panel (slide-in from right)
-    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(10,11,22,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:10;box-shadow:-12px 0 40px rgba(0,0,0,.55);transform:translateX(100%);transition:transform .28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
-    +'<div style="padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
-    +'<div><div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.01em">Participants</div>'
-    +'<div id="_vPeopleCount" style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:2px"></div></div>'
-    +'<button onclick="_vTogglePeople()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;" title="Fermer">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'<div id="_vPeople" style="position:absolute;top:10px;right:10px;bottom:10px;width:290px;background:rgba(6,8,22,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-radius:18px;border:0.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;z-index:10;box-shadow:0 28px 56px rgba(0,0,0,.75),0 0 0 0.5px rgba(255,107,43,.1),inset 0 1px 0 rgba(255,255,255,.07);transform:translateX(calc(100% + 20px));transition:transform .3s cubic-bezier(.32,1,.6,1);will-change:transform;overflow:hidden;">'
+    +'<div style="padding:15px 14px 12px;background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<div><div style="font-size:13.5px;font-weight:800;color:#fff;letter-spacing:.02em;text-transform:uppercase;font-size:11px;color:rgba(255,255,255,.5)">Participants</div>'
+    +'<div id="_vPeopleCount" style="font-size:14px;font-weight:700;color:#fff;margin-top:2px"></div></div>'
+    +'<button onclick="_vTogglePeople()" style="background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background .15s;" title="Fermer">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
     +'</div>'
-    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:4px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
+    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:6px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
     +'</div>'
     // Comment panel (slide-in from right)
-    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(10,11,22,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:10;box-shadow:-12px 0 40px rgba(0,0,0,.55);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
-    +'<div style="padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
-    +'<div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.01em">Commentaires</div>'
+    +'<div id="_vComment" style="position:absolute;top:10px;right:10px;bottom:10px;width:290px;background:rgba(6,8,22,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-radius:18px;border:0.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;z-index:10;box-shadow:0 28px 56px rgba(0,0,0,.75),0 0 0 0.5px rgba(255,107,43,.1),inset 0 1px 0 rgba(255,255,255,.07);transform:translateX(calc(100% + 20px));transition:transform 0.3s cubic-bezier(.32,1,.6,1);will-change:transform;overflow:hidden;">'
+    +'<div style="padding:15px 14px 12px;background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);letter-spacing:.02em;text-transform:uppercase">Commentaires</div>'
     +'<div style="display:flex;align-items:center;gap:8px;">'
-    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:10.5px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
-    +'<button onclick="_vToggleComment()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;" title="Fermer">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:10px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:3px 9px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s;letter-spacing:.01em">Autorisés</button>':'')
+    +'<button onclick="_vToggleComment()" style="background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;transition:background .15s;" title="Fermer">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
     +'</div></div>'
     +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
-    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center;flex-shrink:0;background:rgba(0,0,0,.25);">'
+    +'<div id="_vCommentBar" style="padding:10px 12px 12px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;align-items:center;flex-shrink:0;background:linear-gradient(0deg,rgba(0,0,0,.35) 0%,transparent 100%);">'
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:9px 16px;color:#fff;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;" onkeydown="if(event.key===\'Enter\')_vSendComment()" onfocus="this.style.borderColor=\'rgba(255,107,43,.5)\'" onblur="this.style.borderColor=\'rgba(255,255,255,.1)\'">'
     +'<button onclick="_vSendComment()" style="width:38px;height:38px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(255,107,43,.35);-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
@@ -15724,9 +15724,9 @@ function _vShowFloatReact(sid,emoji){
 }
 function _vTogglePeople(){
   _peopleOpen=!_peopleOpen;
-  if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp){cp.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';cp.style.transform='translateX(100%)';}var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
+  if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp){cp.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';cp.style.transform='translateX(calc(100% + 20px))';}var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
   var panel=g('_vPeople');
-  if(panel){panel.style.transition='transform .28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_peopleOpen?'translateX(0)':'translateX(100%)';}
+  if(panel){panel.style.transition='transform .3s cubic-bezier(.32,1,.6,1)';panel.style.transform=_peopleOpen?'translateX(0)':'translateX(calc(100% + 20px))';}
   var btn=g('_vPeopleBtn');
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   if(_peopleOpen)_vUpdatePeople();
@@ -15747,9 +15747,9 @@ function _brdToggleFloatBar(){
 }
 function _vToggleComment(){
   _vCommentOpen=!_vCommentOpen;
-  if(_vCommentOpen&&_peopleOpen){_peopleOpen=false;var pp=g('_vPeople');if(pp)pp.style.display='none';var pb=g('_vPeopleBtn');if(pb){pb.style.background='rgba(255,255,255,.12)';pb.style.boxShadow='';}}
+  if(_vCommentOpen&&_peopleOpen){_peopleOpen=false;var pp=g('_vPeople');if(pp){pp.style.transition='transform .3s cubic-bezier(.32,1,.6,1)';pp.style.transform='translateX(calc(100% + 20px))';}var pb=g('_vPeopleBtn');if(pb){pb.style.background='rgba(255,255,255,.12)';pb.style.boxShadow='';}}
   var panel=g('_vComment');
-  if(panel){panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_vCommentOpen?'translateX(0)':'translateX(100%)';}
+  if(panel){panel.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';panel.style.transform=_vCommentOpen?'translateX(0)':'translateX(calc(100% + 20px))';}
   var btn=g('_vCommentBtn');
   if(btn){btn.style.background=_vCommentOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_vCommentOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   // Languette de rappel : visible uniquement quand le panneau est fermé
@@ -15817,12 +15817,12 @@ function _vInitCommentSwipe(){
     var dx=e.changedTouches[0].clientX-_csx;
     if(dx>70){
       _vCommentOpen=false;
-      panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
-      panel.style.transform='translateX(100%)';
+      panel.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';
+      panel.style.transform='translateX(calc(100% + 20px))';
       var btn=g('_vCommentBtn');if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
       var tab=g('_vCommentTab');if(tab){tab.style.opacity='1';tab.style.pointerEvents='auto';}
     }else{
-      panel.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';
+      panel.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(0)';
     }
   },{passive:true});
