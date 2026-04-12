@@ -16869,7 +16869,7 @@ function _boardInsertImage(dataUrl){
     _brdImgStore[imgId]=compressed;
     var op={type:'image',x:cx-iw/2,y:cy-ih/2,w:iw,h:ih,id:imgId};
     _brdObjects.push(op);
-    _boardSaveHist();_brdRedraw();
+    _boardSaveHist();_brdRenderAll(); // _brdRedraw n'existe pas → ReferenceError silencieux
     // Pour le partage temps réel : inclure data UNIQUEMENT dans l'émission socket
     if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objinsert',obj:Object.assign({},op,{data:compressed})});
     toast('Image insérée','');haptic(2);
@@ -17590,7 +17590,7 @@ function _brdRenderObj(obj,ctx){
     }else if(!cached){
       var im=new Image();
       _brdImgCache[obj.id]=im;
-      im.onload=function(){if(_brdX)_brdRenderAll();};
+      im.onload=function(){if(_brdX){_brdRenderAll();_boardSavePage();}};
       im.src=imgData;
     }
   }
