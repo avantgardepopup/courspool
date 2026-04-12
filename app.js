@@ -15810,7 +15810,7 @@ var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
 var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
-var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0;
+var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0,_brdLastLaserPt={x:-9999,y:-9999};
 var _brdSpacePanning=false,_brdSpacePrevTool=null,_brdKeyUpHandler=null;
 var _brdClearConfirmT=0;
 var _brdBgType='grid'; // 'grid' | 'blank'
@@ -15842,7 +15842,7 @@ var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
 var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,rotEl:null,rzEl:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null,rotating:false,rotateStartAngle:0,rotateCX:0,rotateCY:0,rotateCurAngle:0,rotateInitObjs:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
-var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
+var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdLastPtPos={x:-9999,y:-9999},_brdROToastT=0;
 var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
@@ -16793,7 +16793,8 @@ function _boardInsertImage(dataUrl){
     var oc=document.createElement('canvas');oc.width=w;oc.height=h;
     oc.getContext('2d').drawImage(img,0,0,w,h);
     var compressed=oc.toDataURL('image/jpeg',0.72);
-    if(compressed.length>1.5*1024*1024){toast('Image trop grande après compression','Essayez une image plus petite.',3000);return;}
+    if(compressed.length>350_000)compressed=oc.toDataURL('image/jpeg',0.50);
+    if(compressed.length>1_100_000){toast('Image trop grande après compression','Essayez une image plus petite.',3000);return;}
     // Centrer sur la page visible
     var page=g('_brdPage');var pr=page?page.getBoundingClientRect():{left:0,top:0,width:800,height:600};
     var cx=(window.innerWidth/2-pr.left)/_brdZoom;
@@ -17127,7 +17128,12 @@ function _boardMove(e){
     var _lp=_boardGetPos(e);_brdMoveLaserDot(_lp.x,_lp.y);
     if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
       var _lnow=Date.now();
-      if(_lnow-_brdLastLaserEmit>=50){_brdLastLaserEmit=_lnow;_socket.emit('board_laser',{roomId:_brdRoomId,pt:{x:_lp.x,y:_lp.y},pageIdx:_brdPageIdx});}
+      var _lrx=Math.round(_lp.x),_lry=Math.round(_lp.y);
+      var _ldx=_lrx-_brdLastLaserPt.x,_ldy=_lry-_brdLastLaserPt.y;
+      if(_lnow-_brdLastLaserEmit>=80&&(_ldx*_ldx+_ldy*_ldy)>=16){
+        _brdLastLaserEmit=_lnow;_brdLastLaserPt.x=_lrx;_brdLastLaserPt.y=_lry;
+        _socket.emit('board_laser',{roomId:_brdRoomId,pt:{x:_lrx,y:_lry},pageIdx:_brdPageIdx});
+      }
     }
   }
   if(!_brdDraw)return;
@@ -17143,12 +17149,14 @@ function _boardMove(e){
     return;
   }
   var p=_boardGetPos(e);
-  // Émettre le point en temps réel (~50ms throttle)
+  // Émettre le point en temps réel (80ms throttle + dead zone 4px)
   if(_brdRoomId&&_brdCanEdit&&(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser')){
     var _now=Date.now();
-    if(_now-_brdLastPtEmit>=50&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
-      _brdLastPtEmit=_now;
-      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y},pageIdx:_brdPageIdx});
+    var _prx=Math.round(p.x),_pry=Math.round(p.y);
+    var _pdx=_prx-_brdLastPtPos.x,_pdy=_pry-_brdLastPtPos.y;
+    if(_now-_brdLastPtEmit>=80&&(_pdx*_pdx+_pdy*_pdy)>=16&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      _brdLastPtEmit=_now;_brdLastPtPos.x=_prx;_brdLastPtPos.y=_pry;
+      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:_prx,y:_pry},pageIdx:_brdPageIdx});
     }
   }
   if(_brdTool==='pen'||_brdTool==='marker'){
@@ -18764,9 +18772,9 @@ function _brdCleanRemoteCursors(){
 // Décimer les points d'un trait (garde 1 point sur N)
 function _brdDecimate(pts,step){
   if(pts.length<=4)return pts;
-  var r=[pts[0]];
-  for(var i=step;i<pts.length-1;i+=step)r.push(pts[i]);
-  r.push(pts[pts.length-1]);
+  var r=[{x:Math.round(pts[0].x),y:Math.round(pts[0].y)}];
+  for(var i=step;i<pts.length-1;i+=step)r.push({x:Math.round(pts[i].x),y:Math.round(pts[i].y)});
+  r.push({x:Math.round(pts[pts.length-1].x),y:Math.round(pts[pts.length-1].y)});
   return r;
 }
 
