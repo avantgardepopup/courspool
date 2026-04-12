@@ -14598,20 +14598,28 @@ function _buildVisioHTML(){
     +'<div id="_vMain" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
     +'<div id="_vGrid" style="flex:1;display:grid;gap:8px;overflow:hidden;background:#0d0d18;padding:8px;min-height:0"></div>'
     // People panel (slide-in from right)
-    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:260px;background:#0e0e1e;display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
-    +'<div style="padding:14px 16px 10px;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">Participants</div>'
-    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
+    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(10,11,22,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:10;box-shadow:-12px 0 40px rgba(0,0,0,.55);transform:translateX(100%);transition:transform .28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
+    +'<div style="padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<div><div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.01em">Participants</div>'
+    +'<div id="_vPeopleCount" style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:2px"></div></div>'
+    +'<button onclick="_vTogglePeople()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;" title="Fermer">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div>'
+    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:4px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
     +'</div>'
     // Comment panel (slide-in from right)
-    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:#0e0e1e;display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
-    +'<div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
-    +'<span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em">Commentaires</span>'
-    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
-    +'</div>'
-    +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;"></div>'
-    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
-    +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
-    +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(10,11,22,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:10;box-shadow:-12px 0 40px rgba(0,0,0,.55);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
+    +'<div style="padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.01em">Commentaires</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;">'
+    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:10.5px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
+    +'<button onclick="_vToggleComment()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;" title="Fermer">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div></div>'
+    +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
+    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center;flex-shrink:0;background:rgba(0,0,0,.25);">'
+    +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:9px 16px;color:#fff;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;" onkeydown="if(event.key===\'Enter\')_vSendComment()" onfocus="this.style.borderColor=\'rgba(255,107,43,.5)\'" onblur="this.style.borderColor=\'rgba(255,255,255,.1)\'">'
+    +'<button onclick="_vSendComment()" style="width:38px;height:38px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(255,107,43,.35);-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
     // Languette de rappel : visible quand le panneau est fermé, cliquable pour rouvrir
     +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:#FF6B2B;border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
@@ -14810,7 +14818,16 @@ function _vAdaptBitrate(quality){
 }
 
 function _vOnPartChange(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
-function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
+function _vOnPartLeft(evt){
+  if(evt&&evt.participant){
+    var _leftSid=evt.participant.session_id;
+    if(_leftSid){
+      delete _raisedHands[_leftSid];
+      if(_vWhisperTarget&&_vWhisperTarget.sid===_leftSid)_vEndWhisper();
+    }
+  }
+  _vRenderGrid();_vUpdateHands();_vUpdatePeople();
+}
 
 function _vOnTrack(evt){
   var p=evt.participant;if(!p)return;
@@ -15125,6 +15142,9 @@ function _vUpdatePeople(){
   if(_callObj){parts=_callObj.participants();}
   else if(_isDemoMode){parts={local:{local:true,user_name:'Vous',session_id:'local',tracks:{audio:{state:_localMuted?'off':'playable'},video:{state:_localCamOff?'off':'playable'}}}};}
   else return;
+  // Mettre à jour le compteur
+  var countEl=g('_vPeopleCount');
+  if(countEl){var n=Object.keys(parts).length;countEl.textContent=n+' participant'+(n>1?'s':'');}
   var raisedKeys=Object.keys(_raisedHands);
   raisedKeys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
   var _svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>';
@@ -15150,31 +15170,39 @@ function _vUpdatePeople(){
       +'</div>';
   }
   // ── Liste participants ───────────────────────────────────────
+  var _icBtn='border:none;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s;';
   html+=Object.keys(parts).map(function(k){
     var p=parts[k];var sid=p.local?(p.session_id||'local'):p.session_id;
     var name=p.user_name||(p.local?'Vous':'Participant');
     var micOn=p.tracks&&p.tracks.audio&&p.tracks.audio.state==='playable';
     var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
     var hasHand=!!_raisedHands[sid]||(p.local&&_handRaised);
-    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">'
-      +'<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.22)">'+escH(name).charAt(0).toUpperCase()+'</div>'
+    var _wActive=_vWhisperTarget&&_vWhisperTarget.sid===sid;
+    var avatarBg=p.local?'linear-gradient(148deg,#4f8ef7,#2563eb)':'linear-gradient(148deg,#FF7D42,#e04510)';
+    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;transition:background .15s;"'
+      +' onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'\'">'
+      // Avatar
+      +'<div style="width:36px;height:36px;border-radius:11px;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;'+(hasHand?'box-shadow:0 0 0 2px #FF6B2B;':'')+'">'+escH(name).charAt(0).toUpperCase()+'</div>'
+      // Info
       +'<div style="flex:1;min-width:0">'
-      +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (Vous)':'')+'</div>'
-      +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center">'
-      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Micro</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Muet</span>')
-      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cam</span>':'')
-      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600;display:flex;align-items:center;gap:2px">'+_svgHand.replace('currentColor','#FF6B2B')+'Main levée</span>':'')
+      +'<div style="font-size:13px;font-weight:700;color:'+(p.local?'rgba(255,255,255,.55)':'#fff')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' · Vous':'')+'</div>'
+      +'<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'
+      // Micro icon
+      +'<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:'+(micOn?'rgba(34,192,105,.15)':'rgba(252,129,129,.15)')+'">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(micOn?'#22C069':'#fc8181')+'" stroke-width="2.5" stroke-linecap="round" width="10" height="10">'
+      +(micOn?'':'<line x1="1" y1="1" x2="23" y2="23"/>')
+      +'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span>'
+      // Cam icon (si actif)
+      +(camOn?'<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:rgba(34,192,105,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>':'')
+      // Main levée badge
+      +(hasHand?'<span style="font-size:9.5px;font-weight:700;color:#FF6B2B;background:rgba(255,107,43,.12);border-radius:5px;padding:1px 6px;letter-spacing:.01em">✋ Main levée</span>':'')
       +'</div></div>'
-      +(!p.local?'<div style="display:flex;gap:4px;flex-shrink:0">'
-        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.18);border:1px solid rgba(34,192,105,.35);color:#22C069;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
-        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
-        +(_isOwner?(function(){var _wActive=_vWhisperTarget&&_vWhisperTarget.sid===sid;return'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\')')
-          +'" style="background:'+(_wActive?'rgba(124,58,237,.55);border:1px solid rgba(139,92,246,.8)':'rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35)')
-          +';color:#a78bfa;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="'+(_wActive?'Fin du whisper':'Parler en privé (whisper)')+'">'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/>'
-          +(_wActive?'<line x1="1" y1="1" x2="23" y2="23"/>':'')
-          +'</svg></button>';}()):'')
-        +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(255,107,43,.18);border:1px solid rgba(255,107,43,.35);color:#FF6B2B;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
+      // Boutons actions
+      +(!p.local?'<div style="display:flex;gap:3px;flex-shrink:0">'
+        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="'+_icBtn+'background:rgba(34,192,105,.12);" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="'+_icBtn+'background:rgba(252,129,129,.1);" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="'+_icBtn+'background:'+(_wActive?'rgba(124,58,237,.4)':'rgba(124,58,237,.12)')+';'+(hasHand?'box-shadow:0 0 0 1.5px rgba(124,58,237,.6);':'')+'" title="'+(_wActive?'Fin du whisper':'Whisper privé')+'"><svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/>'+(_wActive?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'</svg></button>':'')
+        +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="'+_icBtn+'background:rgba(255,107,43,.1);" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
         +'</div>':'')
       +'</div>';
   }).join('');
@@ -15526,7 +15554,8 @@ function _vShowFloatReact(sid,emoji){
 function _vTogglePeople(){
   _peopleOpen=!_peopleOpen;
   if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp){cp.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';cp.style.transform='translateX(100%)';}var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
-  var panel=g('_vPeople');if(panel)panel.style.display=_peopleOpen?'flex':'none';
+  var panel=g('_vPeople');
+  if(panel){panel.style.transition='transform .28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_peopleOpen?'translateX(0)':'translateX(100%)';}
   var btn=g('_vPeopleBtn');
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   if(_peopleOpen)_vUpdatePeople();
@@ -16513,6 +16542,7 @@ function _boardRenamePage(idx){
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX||_brdRestorePending)return;
+  _brdClearConfirmT=0;
   if(_brdSel.active)_brdCommitSel();
   _brdCleanObjSel();
   var _sr=document.getElementById('_brdSnapRing');

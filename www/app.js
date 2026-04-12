@@ -14598,20 +14598,28 @@ function _buildVisioHTML(){
     +'<div id="_vMain" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
     +'<div id="_vGrid" style="flex:1;display:grid;gap:8px;overflow:hidden;background:#0d0d18;padding:8px;min-height:0"></div>'
     // People panel (slide-in from right)
-    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:260px;background:#0e0e1e;display:none;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08)">'
-    +'<div style="padding:14px 16px 10px;font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">Participants</div>'
-    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:8px 0"></div>'
+    +'<div id="_vPeople" style="position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(10,11,22,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:10;box-shadow:-12px 0 40px rgba(0,0,0,.55);transform:translateX(100%);transition:transform .28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
+    +'<div style="padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<div><div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.01em">Participants</div>'
+    +'<div id="_vPeopleCount" style="font-size:10.5px;color:rgba(255,255,255,.3);margin-top:2px"></div></div>'
+    +'<button onclick="_vTogglePeople()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;" title="Fermer">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div>'
+    +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:4px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
     +'</div>'
     // Comment panel (slide-in from right)
-    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:#0e0e1e;display:flex;flex-direction:column;z-index:10;box-shadow:-4px 0 24px rgba(0,0,0,.4);border-left:1px solid rgba(255,255,255,.08);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
-    +'<div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
-    +'<span style="font-size:13px;font-weight:800;color:rgba(255,255,255,.7);letter-spacing:.04em">Commentaires</span>'
-    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
-    +'</div>'
-    +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;"></div>'
-    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
-    +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
-    +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+    +'<div id="_vComment" style="position:absolute;top:0;right:0;bottom:0;width:300px;background:rgba(10,11,22,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:10;box-shadow:-12px 0 40px rgba(0,0,0,.55);transform:translateX(100%);transition:transform 0.28s cubic-bezier(.32,1,.6,1);will-change:transform;">'
+    +'<div style="padding:16px 14px 13px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
+    +'<div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:.01em">Commentaires</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;">'
+    +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:10.5px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
+    +'<button onclick="_vToggleComment()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;" title="Fermer">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div></div>'
+    +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
+    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px;align-items:center;flex-shrink:0;background:rgba(0,0,0,.25);">'
+    +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:9px 16px;color:#fff;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;" onkeydown="if(event.key===\'Enter\')_vSendComment()" onfocus="this.style.borderColor=\'rgba(255,107,43,.5)\'" onblur="this.style.borderColor=\'rgba(255,255,255,.1)\'">'
+    +'<button onclick="_vSendComment()" style="width:38px;height:38px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(255,107,43,.35);-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
     // Languette de rappel : visible quand le panneau est fermé, cliquable pour rouvrir
     +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:#FF6B2B;border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
@@ -14810,7 +14818,16 @@ function _vAdaptBitrate(quality){
 }
 
 function _vOnPartChange(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
-function _vOnPartLeft(){_vRenderGrid();_vUpdateHands();_vUpdatePeople();}
+function _vOnPartLeft(evt){
+  if(evt&&evt.participant){
+    var _leftSid=evt.participant.session_id;
+    if(_leftSid){
+      delete _raisedHands[_leftSid];
+      if(_vWhisperTarget&&_vWhisperTarget.sid===_leftSid)_vEndWhisper();
+    }
+  }
+  _vRenderGrid();_vUpdateHands();_vUpdatePeople();
+}
 
 function _vOnTrack(evt){
   var p=evt.participant;if(!p)return;
@@ -14893,6 +14910,28 @@ function _vOnMsg(evt){
   }else if(m.type==='comment_policy'){
     _vCommentAllowed=!!m.allowed;
     if(!_isOwner)toast(_vCommentAllowed?'Commentaires autorisés':'Commentaires bloqués par le prof','');
+  }else if(m.type==='dm'){
+    _vShowDMNotif(m.fromName||'Prof',m.text||'',from);
+  }else if(m.type==='whisper_start'){
+    if(_isOwner)return;
+    var _mySid=_callObj?(_callObj.participants().local||{}).session_id:'local';
+    if(_mySid===m.targetSid){
+      _vShowWhisperNotif(m.teacherName||'Prof');
+    }else{
+      _vWhisperMuted={teacherSid:m.teacherSid,targetSid:m.targetSid};
+      if(_callObj){
+        try{_callObj.updateParticipant(m.teacherSid,{setSubscribedTracks:{audio:false}});}catch(e){}
+        try{_callObj.updateParticipant(m.targetSid,{setSubscribedTracks:{audio:false}});}catch(e){}
+      }
+    }
+  }else if(m.type==='whisper_end'){
+    if(_isOwner)return;
+    if(_vWhisperMuted&&_callObj){
+      try{_callObj.updateParticipant(_vWhisperMuted.teacherSid,{setSubscribedTracks:{audio:true}});}catch(e){}
+      try{_callObj.updateParticipant(_vWhisperMuted.targetSid,{setSubscribedTracks:{audio:true}});}catch(e){}
+      _vWhisperMuted=null;
+    }
+    var _wn=document.getElementById('_vWhisperNotif');if(_wn&&_wn.parentNode)_wn.parentNode.removeChild(_wn);
   }
 }
 
@@ -15103,6 +15142,9 @@ function _vUpdatePeople(){
   if(_callObj){parts=_callObj.participants();}
   else if(_isDemoMode){parts={local:{local:true,user_name:'Vous',session_id:'local',tracks:{audio:{state:_localMuted?'off':'playable'},video:{state:_localCamOff?'off':'playable'}}}};}
   else return;
+  // Mettre à jour le compteur
+  var countEl=g('_vPeopleCount');
+  if(countEl){var n=Object.keys(parts).length;countEl.textContent=n+' participant'+(n>1?'s':'');}
   var raisedKeys=Object.keys(_raisedHands);
   raisedKeys.sort(function(a,b){return(_raisedHands[a].ts||0)-(_raisedHands[b].ts||0);});
   var _svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>';
@@ -15128,24 +15170,39 @@ function _vUpdatePeople(){
       +'</div>';
   }
   // ── Liste participants ───────────────────────────────────────
+  var _icBtn='border:none;cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .15s;';
   html+=Object.keys(parts).map(function(k){
     var p=parts[k];var sid=p.local?(p.session_id||'local'):p.session_id;
     var name=p.user_name||(p.local?'Vous':'Participant');
     var micOn=p.tracks&&p.tracks.audio&&p.tracks.audio.state==='playable';
     var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
     var hasHand=!!_raisedHands[sid]||(p.local&&_handRaised);
-    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">'
-      +'<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.22)">'+escH(name).charAt(0).toUpperCase()+'</div>'
+    var _wActive=_vWhisperTarget&&_vWhisperTarget.sid===sid;
+    var avatarBg=p.local?'linear-gradient(148deg,#4f8ef7,#2563eb)':'linear-gradient(148deg,#FF7D42,#e04510)';
+    return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;transition:background .15s;"'
+      +' onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'\'">'
+      // Avatar
+      +'<div style="width:36px;height:36px;border-radius:11px;background:'+avatarBg+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;'+(hasHand?'box-shadow:0 0 0 2px #FF6B2B;':'')+'">'+escH(name).charAt(0).toUpperCase()+'</div>'
+      // Info
       +'<div style="flex:1;min-width:0">'
-      +'<div style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' (Vous)':'')+'</div>'
-      +'<div style="display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center">'
-      +(micOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Micro</span>':'<span style="font-size:10px;color:#fc8181;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="9" height="9"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>Muet</span>')
-      +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cam</span>':'')
-      +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600;display:flex;align-items:center;gap:2px">'+_svgHand.replace('currentColor','#FF6B2B')+'Main levée</span>':'')
+      +'<div style="font-size:13px;font-weight:700;color:'+(p.local?'rgba(255,255,255,.55)':'#fff')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(name)+(p.local?' · Vous':'')+'</div>'
+      +'<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'
+      // Micro icon
+      +'<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:'+(micOn?'rgba(34,192,105,.15)':'rgba(252,129,129,.15)')+'">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(micOn?'#22C069':'#fc8181')+'" stroke-width="2.5" stroke-linecap="round" width="10" height="10">'
+      +(micOn?'':'<line x1="1" y1="1" x2="23" y2="23"/>')
+      +'<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span>'
+      // Cam icon (si actif)
+      +(camOn?'<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:rgba(34,192,105,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="10" height="10"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>':'')
+      // Main levée badge
+      +(hasHand?'<span style="font-size:9.5px;font-weight:700;color:#FF6B2B;background:rgba(255,107,43,.12);border-radius:5px;padding:1px 6px;letter-spacing:.01em">✋ Main levée</span>':'')
       +'</div></div>'
-      +(_isOwner&&!p.local?'<div style="display:flex;gap:4px;flex-shrink:0">'
-        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.18);border:1px solid rgba(34,192,105,.35);color:#22C069;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
-        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+      // Boutons actions
+      +(!p.local?'<div style="display:flex;gap:3px;flex-shrink:0">'
+        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="'+_icBtn+'background:rgba(34,192,105,.12);" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="'+_icBtn+'background:rgba(252,129,129,.1);" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="'+_icBtn+'background:'+(_wActive?'rgba(124,58,237,.4)':'rgba(124,58,237,.12)')+';'+(hasHand?'box-shadow:0 0 0 1.5px rgba(124,58,237,.6);':'')+'" title="'+(_wActive?'Fin du whisper':'Whisper privé')+'"><svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/>'+(_wActive?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'</svg></button>':'')
+        +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="'+_icBtn+'background:rgba(255,107,43,.1);" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
         +'</div>':'')
       +'</div>';
   }).join('');
@@ -15334,6 +15391,139 @@ function _vMuteP(sid){
   delete _raisedHands[sid];_vUpdateHands();haptic(1);
 }
 function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+
+// ── DM privé ──────────────────────────────────────────────────────────────���───
+var _vDmTarget=null;
+var _vWhisperTarget=null; // {sid,name} côté prof
+var _vWhisperMuted=null;  // {teacherSid,targetSid} côté autres élèves
+function _vOpenDM(sid,name){
+  var old=document.getElementById('_vDMPanel');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  _vDmTarget={sid:sid,name:name};
+  var el=document.createElement('div');el.id='_vDMPanel';
+  el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:11000;background:#1a1d2e;border-top:1px solid rgba(255,255,255,.1);border-radius:20px 20px 0 0;padding:16px 16px calc(max(env(safe-area-inset-bottom,16px),16px) + 8px);box-shadow:0 -8px 32px rgba(0,0,0,.5);transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);';
+  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:#FF6B2B;box-shadow:0 0 6px #FF6B2B;"></div>'
+    +'<span style="font-size:13px;font-weight:700;color:#fff">Message privé · '+escH(name)+'</span>'
+    +'</div>'
+    +'<button id="_vDMClose" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:flex-end">'
+    +'<textarea id="_vDMInput" placeholder="Écrivez un message privé…" rows="1" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;color:#fff;font-family:inherit;font-size:14px;line-height:1.4;resize:none;outline:none;min-height:42px;max-height:120px;overflow-y:auto;-webkit-text-size-adjust:none;"></textarea>'
+    +'<button id="_vDMSend" style="background:#FF6B2B;border:none;color:#fff;width:42px;height:42px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+    +'</div>';
+  document.body.appendChild(el);
+  requestAnimationFrame(function(){el.style.transform='translateY(0)';});
+  var close=document.getElementById('_vDMClose');if(close)close.onclick=_vCloseDM;
+  var send=document.getElementById('_vDMSend');if(send)send.onclick=_vSendDM;
+  var inp=document.getElementById('_vDMInput');
+  if(inp){
+    inp.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();_vSendDM();}});
+    setTimeout(function(){inp.focus();},280);
+  }
+}
+function _vCloseDM(){
+  var el=document.getElementById('_vDMPanel');if(!el)return;
+  el.style.transform='translateY(100%)';
+  setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},300);
+  _vDmTarget=null;
+}
+function _vSendDM(){
+  if(!_vDmTarget)return;
+  var inp=document.getElementById('_vDMInput');if(!inp)return;
+  var text=inp.value.trim();if(!text)return;
+  var myName='Prof';
+  if(_callObj){var _lc=_callObj.participants().local||{};myName=_lc.user_name||'Prof';}
+  if(_callObj&&!_isDemoMode){
+    try{_callObj.sendAppMessage({type:'dm',text:text,fromName:myName},_vDmTarget.sid);}catch(e){
+      _callObj.sendAppMessage({type:'dm',text:text,fromName:myName},'*');
+    }
+  }
+  var tname=_vDmTarget.name;
+  _vCloseDM();
+  toast('Message envoyé à '+tname,'',1500);haptic(1);
+}
+function _vShowDMNotif(fromName,text,fromSid){
+  // Inject keyframe once
+  if(!document.getElementById('_dmNotifKf')){
+    var s=document.createElement('style');s.id='_dmNotifKf';
+    s.textContent='@keyframes _dmSlideIn{from{transform:translateX(-50%) translateY(-130%)}to{transform:translateX(-50%) translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:20000;background:#1a1d2e;border:1px solid rgba(255,107,43,.4);border-left:3px solid #FF6B2B;border-radius:14px;padding:12px 14px;box-shadow:0 8px 32px rgba(0,0,0,.55);max-width:calc(100vw - 32px);width:310px;animation:_dmSlideIn .3s cubic-bezier(.34,1.56,.64,1) both;cursor:pointer;';
+  el.innerHTML='<div style="display:flex;align-items:flex-start;gap:10px">'
+    +'<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#e04510);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">'+escH(fromName).charAt(0).toUpperCase()+'</div>'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:11px;font-weight:700;color:#FF6B2B;margin-bottom:3px;letter-spacing:.02em;text-transform:uppercase">Message privé · '+escH(fromName)+'</div>'
+    +'<div style="font-size:13.5px;color:#fff;line-height:1.4;word-break:break-word">'+escH(text)+'</div>'
+    +'</div>'
+    +'</div>';
+  el.onclick=function(){
+    el.style.transition='opacity .2s ease';el.style.opacity='0';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},220);
+  };
+  document.body.appendChild(el);
+  haptic([10,40,80]);
+  setTimeout(function(){
+    if(!el.parentNode)return;
+    el.style.transition='transform .3s ease,opacity .3s ease';
+    el.style.transform='translateX(-50%) translateY(-130%)';el.style.opacity='0';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},320);
+  },8000);
+}
+
+// ── Whisper (audio privé bidirectionnel prof ↔ élève) ────────────────────────
+function _vStartWhisper(sid,name){
+  if(!_callObj||!_isOwner)return;
+  if(_vWhisperTarget)_vEndWhisper(); // terminer le whisper précédent
+  var local=_callObj.participants().local||{};
+  var mySid=local.session_id||'local';var myName=local.user_name||'Prof';
+  _vWhisperTarget={sid:sid,name:name};
+  _callObj.sendAppMessage({type:'whisper_start',teacherSid:mySid,teacherName:myName,targetSid:sid,targetName:name},'*');
+  _vShowWhisperBadge(name);
+  _vUpdatePeople(); // rafraîchir le bouton whisper dans le panel
+  haptic(2);
+}
+function _vEndWhisper(){
+  if(!_callObj||!_isOwner)return;
+  _callObj.sendAppMessage({type:'whisper_end'},'*');
+  _vWhisperTarget=null;
+  var b=document.getElementById('_vWhisperBadge');if(b&&b.parentNode)b.parentNode.removeChild(b);
+  _vUpdatePeople();haptic(1);
+}
+function _vShowWhisperBadge(name){
+  var old=document.getElementById('_vWhisperBadge');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  if(!document.getElementById('_whisperBadgeKf')){
+    var s=document.createElement('style');s.id='_whisperBadgeKf';
+    s.textContent='@keyframes _whisperPulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.5)}60%{box-shadow:0 0 0 7px rgba(124,58,237,0)}}';
+    document.head.appendChild(s);
+  }
+  var el=document.createElement('div');el.id='_vWhisperBadge';
+  el.style.cssText='position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:15000;background:rgba(109,40,217,.92);border-radius:20px;padding:6px 10px 6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(124,58,237,.45);animation:_whisperPulse 2s ease infinite;backdrop-filter:blur(8px);';
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#e9d5ff" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+    +'<span style="font-size:12px;font-weight:700;color:#e9d5ff">Privé · '+escH(name)+'</span>'
+    +'<button onclick="_vEndWhisper()" style="background:rgba(255,255,255,.18);border:none;color:#e9d5ff;border-radius:10px;padding:3px 9px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;">Fin</button>';
+  document.body.appendChild(el);
+}
+function _vShowWhisperNotif(fromName){
+  var old=document.getElementById('_vWhisperNotif');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  if(!document.getElementById('_whisperNotifKf')){
+    var s=document.createElement('style');s.id='_whisperNotifKf';
+    s.textContent='@keyframes _wNotifIn{from{transform:translateX(-50%) translateY(-130%)}to{transform:translateX(-50%) translateY(0)}}@keyframes _wPulse{0%,100%{box-shadow:0 4px 18px rgba(124,58,237,.4)}60%{box-shadow:0 4px 18px rgba(124,58,237,.0),0 0 0 8px rgba(124,58,237,0)}}';
+    document.head.appendChild(s);
+  }
+  var el=document.createElement('div');el.id='_vWhisperNotif';
+  el.style.cssText='position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:15000;background:rgba(109,40,217,.92);border-radius:20px;padding:6px 14px 6px 10px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(8px);animation:_wNotifIn .3s cubic-bezier(.34,1.56,.64,1) both,_wPulse 2s .3s ease infinite;';
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#e9d5ff" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+    +'<span style="font-size:12px;font-weight:700;color:#e9d5ff">'+escH(fromName)+' vous parle en privé</span>';
+  document.body.appendChild(el);
+  haptic([10,50,100]);
+}
+
 function _vToggleOpenFloor(){
   if(!_isOwner)return;
   _openFloor=!_openFloor;
@@ -15364,7 +15554,8 @@ function _vShowFloatReact(sid,emoji){
 function _vTogglePeople(){
   _peopleOpen=!_peopleOpen;
   if(_peopleOpen&&_vCommentOpen){_vCommentOpen=false;var cp=g('_vComment');if(cp){cp.style.transition='transform 0.28s cubic-bezier(.32,1,.6,1)';cp.style.transform='translateX(100%)';}var cb=g('_vCommentBtn');if(cb){cb.style.background='rgba(255,255,255,.12)';cb.style.boxShadow='';}}
-  var panel=g('_vPeople');if(panel)panel.style.display=_peopleOpen?'flex':'none';
+  var panel=g('_vPeople');
+  if(panel){panel.style.transition='transform .28s cubic-bezier(.32,1,.6,1)';panel.style.transform=_peopleOpen?'translateX(0)':'translateX(100%)';}
   var btn=g('_vPeopleBtn');
   if(btn){btn.style.background=_peopleOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_peopleOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
   if(_peopleOpen)_vUpdatePeople();
@@ -15594,8 +15785,8 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
     +(_isOwner
       ?'<div style="'+glassSep+'margin:0 2px;"></div>'
-      +'<button onclick="_brdEmitGotoPage(_brdPageIdx)" style="'+glassBtn+'" title="Synchroniser la page vers les élèves">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/></svg></button>'
+      +'<button id="_brdSyncBtn" onclick="_boardForceSyncAll()" style="'+glassBtn+'" title="Synchroniser le tableau pour tous les élèves">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>'
       :''
     )
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
@@ -16097,6 +16288,61 @@ function _brdEmitGotoPage(idx){
   toast('Page synchronisée','Les élèves voient maintenant cette page',1600);
 }
 
+// ── Sync forcé (contenu + page) vers tous les élèves ────────────────────────
+function _boardForceSyncAll(){
+  if(!_brdRoomId||!_isOwner)return;
+  if(typeof _socket==='undefined'||!_socket||!_socket.connected){toast('Non connecté','',1400);return;}
+  _boardSavePage();
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  var tX=tmp.getContext('2d');
+  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
+  if(_brdBgC)tX.drawImage(_brdBgC,0,0);
+  tX.drawImage(_brdC,0,0);
+  var snap=tmp.toDataURL('image/jpeg',0.82);
+  var allPages=_brdPages.map(function(p,i){return i===_brdPageIdx?snap:(p||null);});
+  _socket.emit('board_force_sync',{
+    roomId:_brdRoomId,snapshot:snap,allPages:allPages,
+    pageIdx:_brdPageIdx,pageNames:_brdPageNames.slice(),
+    pageCount:_brdPages.length,bgType:_brdBgType
+  });
+  // Animate sync button
+  var btn=document.getElementById('_brdSyncBtn');
+  if(btn){
+    btn.style.transition='transform .55s cubic-bezier(.34,1.56,.64,1)';
+    btn.style.transform='rotate(360deg)';
+    setTimeout(function(){var b=document.getElementById('_brdSyncBtn');if(b){b.style.transition='none';b.style.transform='';}},600);
+  }
+  haptic(2);toast('Tableau synchronisé','Tous les élèves voient maintenant cette page',1800);
+}
+
+// ── Réception d'un sync forcé (côté élève) ───────────────────────────��──────
+function _brdOnForceSyncReceived(data){
+  if(_isOwner)return;
+  _brdOnSync(data);
+  setTimeout(_brdShowSyncRipple,180);
+  toast('Tableau synchronisé par le prof','',1500);
+}
+
+// ── Ripple animation au centre du tableau ────────────────────────────────────
+function _brdShowSyncRipple(){
+  var page=g('_brdPage');if(!page)return;
+  if(!document.getElementById('_syncRippleKf')){
+    var s=document.createElement('style');s.id='_syncRippleKf';
+    s.textContent='@keyframes _syncRipple{0%{transform:scale(0);opacity:.65}100%{transform:scale(3.8);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  var ov=document.createElement('div');
+  ov.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:20;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+  [0,220,440].forEach(function(delay){
+    var ring=document.createElement('div');
+    ring.style.cssText='position:absolute;width:28%;padding-bottom:28%;border-radius:50%;border:3px solid #FF6B2B;animation:_syncRipple 900ms '+delay+'ms ease-out both;opacity:0;';
+    ov.appendChild(ring);
+  });
+  page.appendChild(ov);
+  setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},1700);
+}
+
 function _brdOnRemoteGotoPage(data){
   if(!data||typeof data.pageIdx!=='number')return;
   if(!_boardActive||_isOwner)return; // le prof ne se déplace pas lui-même
@@ -16296,6 +16542,7 @@ function _boardRenamePage(idx){
 }
 function _boardGoPage(idx){
   if(idx===_brdPageIdx||!_brdX||_brdRestorePending)return;
+  _brdClearConfirmT=0;
   if(_brdSel.active)_brdCommitSel();
   _brdCleanObjSel();
   var _sr=document.getElementById('_brdSnapRing');
