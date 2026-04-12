@@ -104,6 +104,34 @@ setInterval(() => {
 // Touche lastActivity sur une room (évite les purges prématurées sur cours longs)
 function _touchRoom(room) { if (room) room.lastActivity = Date.now(); }
 
+// ── Watchdog mémoire : éviction des snapshots sous pression ──────────────
+// Si le heap dépasse 350 MB, vider les snapshots des rooms les moins actives
+setInterval(() => {
+  const used = process.memoryUsage().heapUsed;
+  const PRESSURE = 350 * 1024 * 1024; // 350 MB
+  if (used < PRESSURE) return;
+  const sorted = [...boardRooms.entries()]
+    .filter(([, r]) => r.snapshot)
+    .sort(([, a], [, b]) => (a.lastActivity || 0) - (b.lastActivity || 0));
+  let freed = 0;
+  for (const [, room] of sorted) {
+    if (freed >= 10) break;
+    room.snapshot = null;
+    freed++;
+  }
+  if (freed > 0) console.warn(`[mem] éviction de ${freed} snapshot(s) — heap: ${Math.round(used/1024/1024)} MB`);
+}, 30_000);
+
+// ── Filet de sécurité : évite crash total sur exception non catchée ───────
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+  try { Sentry.captureException(err); } catch(_) {}
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
+  try { Sentry.captureException(reason); } catch(_) {}
+});
+
 // Allowed op types for board_op payload validation
 const BOARD_OP_TYPES = new Set(['stroke','erase','shape','text','clear','objmove','objdelete','objinsert','objscale','objrotate','snapshot','bg','image']);
 const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{0,50}\)|[a-z]{1,20})$/;
@@ -112,8 +140,9 @@ const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{0,50}\)|[a-z]{1,20})$/;
 io.on('connection', (socket) => {
   socket.join(socket.userId);
   socketBoardRooms.set(socket.id, new Set());
-  let ptLastMs = 0;  // per-connection throttle for board_pt (~33 pts/s max)
-  let opLastMs = 0;  // per-connection throttle for board_op (~20 ops/s max)
+  let ptLastMs = 0;     // per-connection throttle for board_pt (~33 pts/s max)
+  let opLastMs = 0;     // per-connection throttle for board_op (~20 ops/s max)
+  let laserLastMs = 0;  // per-connection throttle for board_laser (~12/s max)
 
   // ── Board: prof initialise la room ──────────────────────────
   socket.on('board_init', ({roomId, userName}) => {
@@ -232,6 +261,7 @@ io.on('connection', (socket) => {
     if (!room || !room.editors.has(socket.userId)) return;
     const now = Date.now();
     if (now - ptLastMs < 30) return; // rate-limit ~33 pts/s per connection
+    if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y)) return;
     ptLastMs = now;
     _touchRoom(room);
     socket.to('board_' + roomId).emit('board_pt', {userId: socket.userId, pt});
@@ -257,11 +287,11 @@ io.on('connection', (socket) => {
     if (op.color !== undefined && (typeof op.color !== 'string' || op.color.length > 50 || !COLOR_RE.test(op.color))) return;
     if (op.size !== undefined && (typeof op.size !== 'number' || op.size < 0.5 || op.size > 200)) return;
     if (op.content !== undefined && (typeof op.content !== 'string' || op.content.length > 10000)) return;
-    if (op.data !== undefined && (typeof op.data !== 'string' || op.data.length > 2_000_000)) return;
+    if (op.data !== undefined && (typeof op.data !== 'string' || op.data.length > 1_200_000)) return;
     if (op.pts !== undefined) {
-      if (!Array.isArray(op.pts) || op.pts.length > 5000) return;
+      if (!Array.isArray(op.pts) || op.pts.length > 1500) return;
       for (const pt of op.pts) {
-        if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') return;
+        if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y)) return;
       }
     }
     op.userId = socket.userId;
@@ -269,7 +299,7 @@ io.on('connection', (socket) => {
     _touchRoom(room);
     socket.to('board_' + roomId).emit('board_op', op);
     // Si trop d'ops accumulés, demander un snapshot au propriétaire pour purger le log
-    if (room.ops.length >= 500) {
+    if (room.ops.length >= 200) {
       const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
       if (ownerSocketId) io.to(ownerSocketId).emit('board_force_snapshot', {roomId});
     }
@@ -278,8 +308,7 @@ io.on('connection', (socket) => {
   // ── Board: snapshot canvas (stockage serveur) ────────────────
   socket.on('board_snapshot', ({roomId, snapshot}) => {
     const room = boardRooms.get(roomId);
-    if (!room || !room.editors.has(socket.userId)) return;
-    // Limiter la taille (≈ 1.5 MB base64)
+    if (!room || room.ownerId !== socket.userId) return; // seul le prof peut écraser le snapshot
     if (snapshot && snapshot.length > 1_200_000) return;
     room.snapshot = snapshot;
     room.ops = []; // snapshot remplace le log d'ops
@@ -292,6 +321,7 @@ io.on('connection', (socket) => {
     if (snapshot && snapshot.length > 1_200_000) return;
     // Valider chaque page dans allPages
     if (allPages && Array.isArray(allPages)) {
+      if (allPages.length > 20) return; // max 20 pages
       for (const p of allPages) {
         if (p && p.length > 1_200_000) return;
       }
@@ -315,6 +345,10 @@ io.on('connection', (socket) => {
   socket.on('board_laser', ({roomId, pt, pageIdx}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.participants.has(socket.userId)) return;
+    const lnow = Date.now();
+    if (lnow - laserLastMs < 80) return; // rate-limit ~12/s per connection
+    if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y)) return;
+    laserLastMs = lnow;
     _touchRoom(room);
     socket.to('board_' + roomId).emit('board_laser', {userId: socket.userId, pt, pageIdx});
   });
