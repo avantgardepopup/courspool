@@ -16190,28 +16190,32 @@ function _vOpenBoard(){
     requestAnimationFrame(function(){rb.style.transform='scale(1)';});
   };
   // Restore badge: tap = show pip, drag = move badge
-  var _rbSX=0,_rbSY=0,_rbOX=0,_rbOY=0,_rbMoved=false;
+  var _rbSX=0,_rbSY=0,_rbOX=0,_rbOY=0,_rbMoved=false,_rbDown=false;
   rb.addEventListener('pointerdown',function(e){
     e.preventDefault();
+    _rbDown=true;_rbMoved=false;
     _rbSX=e.clientX;_rbSY=e.clientY;
     _rbOX=parseInt(rb.style.left)||0;_rbOY=parseInt(rb.style.top)||0;
-    _rbMoved=false;rb.setPointerCapture(e.pointerId);
+    rb.setPointerCapture(e.pointerId);
     rb.style.transition='none';
   },{passive:false});
   rb.addEventListener('pointermove',function(e){
+    if(!_rbDown)return; // survol sans clic → ne pas déplacer
     var dx=e.clientX-_rbSX,dy=e.clientY-_rbSY;
-    if(!_rbMoved&&Math.hypot(dx,dy)<12)return; // 12px threshold — 6px was too small for touch taps
+    if(!_rbMoved&&Math.hypot(dx,dy)<12)return;
     _rbMoved=true;
     e.preventDefault();
     rb.style.left=Math.max(0,Math.min(window.innerWidth-44,_rbOX+dx))+'px';
     rb.style.top=Math.max(0,Math.min(window.innerHeight-44,_rbOY+dy))+'px';
   },{passive:false});
   rb.addEventListener('pointerup',function(){
-    if(_rbMoved)return; // drag → don't show pip
+    _rbDown=false;
+    if(_rbMoved){_rbMoved=false;return;} // drag → ne pas afficher le pip
     rb.style.display='none';
     pip.style.transition='transform 300ms cubic-bezier(.34,1.56,.64,1),opacity .18s ease';
     pip.style.transform='scale(1)';pip.style.opacity='1';pip.style.pointerEvents='';
   },{passive:true});
+  rb.addEventListener('pointercancel',function(){_rbDown=false;_rbMoved=false;},{passive:true});
   document.body.appendChild(rb);
   ph.appendChild(rsz);ph.appendChild(hb);
   pip.appendChild(ph);
