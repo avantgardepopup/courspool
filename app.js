@@ -14893,6 +14893,8 @@ function _vOnMsg(evt){
   }else if(m.type==='comment_policy'){
     _vCommentAllowed=!!m.allowed;
     if(!_isOwner)toast(_vCommentAllowed?'Commentaires autorisés':'Commentaires bloqués par le prof','');
+  }else if(m.type==='dm'){
+    _vShowDMNotif(m.fromName||'Prof',m.text||'',from);
   }
 }
 
@@ -15146,6 +15148,7 @@ function _vUpdatePeople(){
       +(_isOwner&&!p.local?'<div style="display:flex;gap:4px;flex-shrink:0">'
         +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.18);border:1px solid rgba(34,192,105,.35);color:#22C069;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
         +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+        +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(255,107,43,.18);border:1px solid rgba(255,107,43,.35);color:#FF6B2B;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
         +'</div>':'')
       +'</div>';
   }).join('');
@@ -15334,6 +15337,89 @@ function _vMuteP(sid){
   delete _raisedHands[sid];_vUpdateHands();haptic(1);
 }
 function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+
+// ── DM privé ──────────────────────────────────────────────────────────────���───
+var _vDmTarget=null;
+function _vOpenDM(sid,name){
+  var old=document.getElementById('_vDMPanel');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  _vDmTarget={sid:sid,name:name};
+  var el=document.createElement('div');el.id='_vDMPanel';
+  el.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:11000;background:#1a1d2e;border-top:1px solid rgba(255,255,255,.1);border-radius:20px 20px 0 0;padding:16px 16px calc(max(env(safe-area-inset-bottom,16px),16px) + 8px);box-shadow:0 -8px 32px rgba(0,0,0,.5);transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);';
+  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:#FF6B2B;box-shadow:0 0 6px #FF6B2B;"></div>'
+    +'<span style="font-size:13px;font-weight:700;color:#fff">Message privé · '+escH(name)+'</span>'
+    +'</div>'
+    +'<button id="_vDMClose" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:flex-end">'
+    +'<textarea id="_vDMInput" placeholder="Écrivez un message privé…" rows="1" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;color:#fff;font-family:inherit;font-size:14px;line-height:1.4;resize:none;outline:none;min-height:42px;max-height:120px;overflow-y:auto;-webkit-text-size-adjust:none;"></textarea>'
+    +'<button id="_vDMSend" style="background:#FF6B2B;border:none;color:#fff;width:42px;height:42px;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
+    +'</div>';
+  document.body.appendChild(el);
+  requestAnimationFrame(function(){el.style.transform='translateY(0)';});
+  var close=document.getElementById('_vDMClose');if(close)close.onclick=_vCloseDM;
+  var send=document.getElementById('_vDMSend');if(send)send.onclick=_vSendDM;
+  var inp=document.getElementById('_vDMInput');
+  if(inp){
+    inp.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();_vSendDM();}});
+    setTimeout(function(){inp.focus();},280);
+  }
+}
+function _vCloseDM(){
+  var el=document.getElementById('_vDMPanel');if(!el)return;
+  el.style.transform='translateY(100%)';
+  setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},300);
+  _vDmTarget=null;
+}
+function _vSendDM(){
+  if(!_vDmTarget)return;
+  var inp=document.getElementById('_vDMInput');if(!inp)return;
+  var text=inp.value.trim();if(!text)return;
+  var myName='Prof';
+  if(_callObj){var _lc=_callObj.participants().local||{};myName=_lc.user_name||'Prof';}
+  if(_callObj&&!_isDemoMode){
+    try{_callObj.sendAppMessage({type:'dm',text:text,fromName:myName},_vDmTarget.sid);}catch(e){
+      _callObj.sendAppMessage({type:'dm',text:text,fromName:myName},'*');
+    }
+  }
+  var tname=_vDmTarget.name;
+  _vCloseDM();
+  toast('Message envoyé à '+tname,'',1500);haptic(1);
+}
+function _vShowDMNotif(fromName,text,fromSid){
+  // Inject keyframe once
+  if(!document.getElementById('_dmNotifKf')){
+    var s=document.createElement('style');s.id='_dmNotifKf';
+    s.textContent='@keyframes _dmSlideIn{from{transform:translateX(-50%) translateY(-130%)}to{transform:translateX(-50%) translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:20000;background:#1a1d2e;border:1px solid rgba(255,107,43,.4);border-left:3px solid #FF6B2B;border-radius:14px;padding:12px 14px;box-shadow:0 8px 32px rgba(0,0,0,.55);max-width:calc(100vw - 32px);width:310px;animation:_dmSlideIn .3s cubic-bezier(.34,1.56,.64,1) both;cursor:pointer;';
+  el.innerHTML='<div style="display:flex;align-items:flex-start;gap:10px">'
+    +'<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#e04510);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">'+escH(fromName).charAt(0).toUpperCase()+'</div>'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:11px;font-weight:700;color:#FF6B2B;margin-bottom:3px;letter-spacing:.02em;text-transform:uppercase">Message privé · '+escH(fromName)+'</div>'
+    +'<div style="font-size:13.5px;color:#fff;line-height:1.4;word-break:break-word">'+escH(text)+'</div>'
+    +'</div>'
+    +'</div>';
+  el.onclick=function(){
+    el.style.transition='opacity .2s ease';el.style.opacity='0';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},220);
+  };
+  document.body.appendChild(el);
+  haptic([10,40,80]);
+  setTimeout(function(){
+    if(!el.parentNode)return;
+    el.style.transition='transform .3s ease,opacity .3s ease';
+    el.style.transform='translateX(-50%) translateY(-130%)';el.style.opacity='0';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},320);
+  },8000);
+}
+
 function _vToggleOpenFloor(){
   if(!_isOwner)return;
   _openFloor=!_openFloor;
@@ -15594,8 +15680,8 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
     +(_isOwner
       ?'<div style="'+glassSep+'margin:0 2px;"></div>'
-      +'<button onclick="_brdEmitGotoPage(_brdPageIdx)" style="'+glassBtn+'" title="Synchroniser la page vers les élèves">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/></svg></button>'
+      +'<button id="_brdSyncBtn" onclick="_boardForceSyncAll()" style="'+glassBtn+'" title="Synchroniser le tableau pour tous les élèves">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>'
       :''
     )
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
@@ -16095,6 +16181,61 @@ function _brdEmitGotoPage(idx){
   _socket.emit('board_goto_page',{roomId:_brdRoomId,pageIdx:idx});
   haptic(1);
   toast('Page synchronisée','Les élèves voient maintenant cette page',1600);
+}
+
+// ── Sync forcé (contenu + page) vers tous les élèves ────────────────────────
+function _boardForceSyncAll(){
+  if(!_brdRoomId||!_isOwner)return;
+  if(typeof _socket==='undefined'||!_socket||!_socket.connected){toast('Non connecté','',1400);return;}
+  _boardSavePage();
+  var tmp=document.createElement('canvas');
+  tmp.width=_brdC.width;tmp.height=_brdC.height;
+  var tX=tmp.getContext('2d');
+  tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
+  if(_brdBgC)tX.drawImage(_brdBgC,0,0);
+  tX.drawImage(_brdC,0,0);
+  var snap=tmp.toDataURL('image/jpeg',0.82);
+  var allPages=_brdPages.map(function(p,i){return i===_brdPageIdx?snap:(p||null);});
+  _socket.emit('board_force_sync',{
+    roomId:_brdRoomId,snapshot:snap,allPages:allPages,
+    pageIdx:_brdPageIdx,pageNames:_brdPageNames.slice(),
+    pageCount:_brdPages.length,bgType:_brdBgType
+  });
+  // Animate sync button
+  var btn=document.getElementById('_brdSyncBtn');
+  if(btn){
+    btn.style.transition='transform .55s cubic-bezier(.34,1.56,.64,1)';
+    btn.style.transform='rotate(360deg)';
+    setTimeout(function(){var b=document.getElementById('_brdSyncBtn');if(b){b.style.transition='none';b.style.transform='';}},600);
+  }
+  haptic(2);toast('Tableau synchronisé','Tous les élèves voient maintenant cette page',1800);
+}
+
+// ── Réception d'un sync forcé (côté élève) ───────────────────────────��──────
+function _brdOnForceSyncReceived(data){
+  if(_isOwner)return;
+  _brdOnSync(data);
+  setTimeout(_brdShowSyncRipple,180);
+  toast('Tableau synchronisé par le prof','',1500);
+}
+
+// ── Ripple animation au centre du tableau ────────────────────────────────────
+function _brdShowSyncRipple(){
+  var page=g('_brdPage');if(!page)return;
+  if(!document.getElementById('_syncRippleKf')){
+    var s=document.createElement('style');s.id='_syncRippleKf';
+    s.textContent='@keyframes _syncRipple{0%{transform:scale(0);opacity:.65}100%{transform:scale(3.8);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  var ov=document.createElement('div');
+  ov.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:20;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+  [0,220,440].forEach(function(delay){
+    var ring=document.createElement('div');
+    ring.style.cssText='position:absolute;width:28%;padding-bottom:28%;border-radius:50%;border:3px solid #FF6B2B;animation:_syncRipple 900ms '+delay+'ms ease-out both;opacity:0;';
+    ov.appendChild(ring);
+  });
+  page.appendChild(ov);
+  setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},1700);
 }
 
 function _brdOnRemoteGotoPage(data){

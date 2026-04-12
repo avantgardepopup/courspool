@@ -306,6 +306,23 @@ io.on('connection', (socket) => {
     io.to('board_' + roomId).emit('board_perm', {userId, canEdit: false});
   });
 
+  // ── Board: synchronisation forcée vers tous les élèves ──────
+  socket.on('board_force_sync', ({roomId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    if (snapshot && snapshot.length > 2_000_000) return;
+    if (allPages && Array.isArray(allPages)) {
+      for (const p of allPages) { if (p && p.length > 2_000_000) return; }
+    }
+    room.snapshot = snapshot;
+    room.ops = [];
+    socket.to('board_' + roomId).emit('board_force_sync', {
+      snapshot, allPages: allPages || null,
+      pageIdx: pageIdx ?? 0, pageNames: pageNames || [],
+      pageCount: pageCount || 1, bgType: bgType || 'plain', ops: []
+    });
+  });
+
   // ── Board: quitter (volontaire) ──────────────────────────────
   socket.on('board_leave', ({roomId}) => {
     socket.leave('board_' + roomId);
