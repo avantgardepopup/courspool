@@ -14047,6 +14047,48 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 var _vSidToUid={}; // Daily.co session_id → CoursPool userId (populated via app-message)
 var _pendingVisioToken=null; // token pré-fetché par /visio/room, consommé par _joinDailyRoom
 
+// ── Déconnexion automatique si inactivité ────────────────────
+var _vInactTimer=null;
+var _vInactHidden=null; // listener visibilitychange
+var _vInactMove=null;   // listener mousemove/touchstart
+var INACT_ACTIVE_MS=10*60*1000;  // 10 min sans mouvement
+var INACT_HIDDEN_MS=5*60*1000;   // 5 min en arrière-plan
+
+function _vResetInactivity(){
+  clearTimeout(_vInactTimer);
+  _vInactTimer=setTimeout(function(){
+    if(!_callObj)return;
+    _callObj.leave().catch(function(){});
+    toast('Vidéo coupée — inactivité détectée','',3500);
+  },INACT_ACTIVE_MS);
+}
+function _vStartInactivityWatch(){
+  _vStopInactivityWatch();
+  _vInactMove=function(){_vResetInactivity();};
+  document.addEventListener('mousemove',_vInactMove,{passive:true});
+  document.addEventListener('touchstart',_vInactMove,{passive:true});
+  _vInactHidden=function(){
+    if(!_callObj)return;
+    if(document.hidden){
+      clearTimeout(_vInactTimer);
+      _vInactTimer=setTimeout(function(){
+        if(!_callObj||!document.hidden)return;
+        _callObj.leave().catch(function(){});
+        toast('Vidéo coupée — onglet inactif','',3500);
+      },INACT_HIDDEN_MS);
+    }else{
+      _vResetInactivity();
+    }
+  };
+  document.addEventListener('visibilitychange',_vInactHidden);
+  _vResetInactivity(); // démarrer le timer dès le join
+}
+function _vStopInactivityWatch(){
+  clearTimeout(_vInactTimer);_vInactTimer=null;
+  if(_vInactMove){document.removeEventListener('mousemove',_vInactMove);document.removeEventListener('touchstart',_vInactMove);_vInactMove=null;}
+  if(_vInactHidden){document.removeEventListener('visibilitychange',_vInactHidden);_vInactHidden=null;}
+}
+
 // ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
 async function openCourseVisio(courseId){
   try{
@@ -14719,6 +14761,7 @@ async function _joinDailyRoom(url,roomName){
       })
       .on('left-meeting',function(){
         if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        _vStopInactivityWatch();
         if(!_intentionalLeave&&_visioCurrentUrl&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       });
     _isOwner=td.is_owner||_isOwner;
@@ -14748,6 +14791,7 @@ function _vOnJoined(){
   _joinRetries=0;
   _vRenderGrid();
   if(_isOwner)_vUpdateHands();
+  _vStartInactivityWatch();
   // Announce our CoursPool userId to host so they can identify us for kick
   try{if(_callObj&&user&&user.id)_callObj.sendAppMessage({type:'uid',userId:user.id},'*');}catch(e){}
   try{
@@ -16321,7 +16365,7 @@ function _boardRestorePage(dataUrl,cb){
     _brdRestorePending=false;
     _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
     _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-    _brdX.drawImage(img,0,0);
+    _brdX.drawImage(img,0,0,_brdC.width,_brdC.height); // scale to new dims après resize
     _brdX.restore();
     if(cb)cb();
   };
@@ -16709,13 +16753,16 @@ function _boardGoPage(idx){
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // Sauvegarder uniquement les traits (fond transparent) — le fond blanc+grille vit dans _brdBgC
-  // et est redessiné par _boardDrawBg() à chaque init. Baking white here was causing the canvas
-  // to appear pure white after restore (opaque white covered the _brdBgC grid layer).
+  // Composite fond blanc + grille + traits avant de sauvegarder en JPEG.
+  // JPEG ne supporte pas la transparence (transparent → noir) — sans cette composition
+  // le canvas devient tout noir à chaque redimensionnement ou navigation de page.
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
-  tmp.getContext('2d').drawImage(_brdC,0,0);
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72); // JPEG au lieu de PNG
+  var tctx=tmp.getContext('2d');
+  tctx.fillStyle='#ffffff';tctx.fillRect(0,0,tmp.width,tmp.height);
+  if(_brdBgC)tctx.drawImage(_brdBgC,0,0); // grille
+  tctx.drawImage(_brdC,0,0); // traits
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72);
 }
 function _boardAddPage(){
   if(_brdSel.active)_brdCommitSel();
@@ -18537,6 +18584,7 @@ function closeVisioModal(){
   try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
   try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
   try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
+  try{_vStopInactivityWatch();}catch(e){}
   try{_pipX=null;_pipY=null;}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;_lastBitrateQuality=null;

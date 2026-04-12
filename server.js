@@ -1669,7 +1669,10 @@ function _dcCheck() {
   }
 }
 
-// Résumé quotidien — 9h Paris (UTC+2 en été, UTC+1 en hiver — on envoie à 7h UTC)
+// Résumé quotidien 9h Paris + bilan mensuel intégré dans le même tick.
+// IMPORTANT : setInterval(30 jours) dépasse la limite 32-bit de Node.js (max ~24.8 j)
+// → Node le convertit en 1 ms → boucle infinie. On gère tout avec setTimeout 24h.
+const MONTHLY_MS = 30 * 24 * 60 * 60 * 1000; // 30 jours en ms (comparaison, pas timer)
 function _scheduleDailyDigest() {
   const now  = new Date();
   const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 7, 0, 0));
@@ -1677,35 +1680,34 @@ function _scheduleDailyDigest() {
     const billable = Math.max(0, _dc.partMin - DAILY_FREE_MIN);
     const cost     = (billable * DAILY_RATE).toFixed(2);
     const freePct  = Math.min(100, Math.round(_dc.partMin / DAILY_FREE_MIN * 100));
-    const bar      = '█'.repeat(Math.round(freePct/10)) + '░'.repeat(10 - Math.round(freePct/10));
-    const freeLeft = Math.max(0, DAILY_FREE_MIN - _dc.partMin).toLocaleString();
-    _dailyAlert(
-      `📹 **Résumé quotidien vidéo — ${new Date().toLocaleDateString('fr-FR', {day:'numeric',month:'long'})}**\n` +
-      `> ${bar} **${freePct}%** du quota gratuit\n` +
-      `> **Participant-minutes :** ${_dc.partMin.toLocaleString()} / ${DAILY_FREE_MIN.toLocaleString()}\n` +
-      `> **Minutes gratuites restantes :** ${freeLeft}\n` +
-      `> **Coût facturable ce mois :** $${cost}\n` +
-      `> **Sessions :** ${_dc.sessions} · **Participants :** ${_dc.joins}`
-    );
-    setTimeout(tick, 24 * 60 * 60 * 1000);
+
+    // Bilan mensuel si 30 jours écoulés depuis le dernier reset
+    if (Date.now() - _dc.since >= MONTHLY_MS) {
+      _dailyAlert(
+        `📊 **Bilan mensuel Daily.co**\n` +
+        `> **Quota utilisé :** ${freePct}% (${_dc.partMin.toLocaleString()} participant-minutes)\n` +
+        `> **Coût total estimé :** $${cost}\n` +
+        `> **Sessions :** ${_dc.sessions} · **Joins :** ${_dc.joins}\n` +
+        `> Compteurs remis à zéro pour le mois prochain ✅`
+      );
+      Object.assign(_dc, { joins: 0, partMin: 0, sessions: 0, alerted: {}, since: Date.now() });
+    } else if (_dc.sessions > 0) {
+      // Résumé quotidien uniquement s'il y a eu des sessions (évite le spam $0)
+      const bar      = '█'.repeat(Math.round(freePct/10)) + '░'.repeat(10 - Math.round(freePct/10));
+      const freeLeft = Math.max(0, DAILY_FREE_MIN - _dc.partMin).toLocaleString();
+      _dailyAlert(
+        `📹 **Résumé quotidien vidéo — ${new Date().toLocaleDateString('fr-FR', {day:'numeric',month:'long'})}**\n` +
+        `> ${bar} **${freePct}%** du quota gratuit\n` +
+        `> **Participant-minutes :** ${_dc.partMin.toLocaleString()} / ${DAILY_FREE_MIN.toLocaleString()}\n` +
+        `> **Minutes gratuites restantes :** ${freeLeft}\n` +
+        `> **Coût facturable ce mois :** $${cost}\n` +
+        `> **Sessions :** ${_dc.sessions} · **Participants :** ${_dc.joins}`
+      );
+    }
+    setTimeout(tick, 24 * 60 * 60 * 1000); // 24h — dans la limite 32-bit Node.js
   }, next.getTime() - Date.now());
 }
 _scheduleDailyDigest();
-
-// Reset + bilan mensuel
-setInterval(() => {
-  const billable = Math.max(0, _dc.partMin - DAILY_FREE_MIN);
-  const cost     = (billable * DAILY_RATE).toFixed(2);
-  const freePct  = Math.min(100, Math.round(_dc.partMin / DAILY_FREE_MIN * 100));
-  _dailyAlert(
-    `📊 **Bilan mensuel Daily.co**\n` +
-    `> **Quota utilisé :** ${freePct}% (${_dc.partMin.toLocaleString()} participant-minutes)\n` +
-    `> **Coût total estimé :** $${cost}\n` +
-    `> **Sessions :** ${_dc.sessions} · **Joins :** ${_dc.joins}\n` +
-    `> Compteurs remis à zéro pour le mois prochain ✅`
-  );
-  Object.assign(_dc, { joins: 0, partMin: 0, sessions: 0, alerted: {}, since: Date.now() });
-}, 30 * 24 * 60 * 60 * 1000);
 
 // VISIO — créer ou récupérer une room Daily.co + retourner le token en une seule requête
 // - cours_id fourni : room cours-{id}, vérifie que l'user est inscrit ou prof
