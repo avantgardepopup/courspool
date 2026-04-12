@@ -13670,7 +13670,23 @@ function _stepOptClick(el){
 
   function initNavDrag(){
     nav=document.getElementById('bnav');
-    if(!nav||window.innerWidth<769||!window.matchMedia('(pointer:fine)').matches)return;
+    if(!nav||window.innerWidth<769)return;
+
+    // ── Bouton retour natif (toujours présent sur pill ≥769px, tous pointeurs) ──
+    if(!document.getElementById('bnavMsgBack')){
+      var msgBack=document.createElement('button');
+      msgBack.id='bnavMsgBack';
+      msgBack.title='Retour';
+      msgBack.style.cssText='display:none;align-items:center;justify-content:center;width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,107,43,.12);color:var(--or);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .18s,transform .12s;';
+      msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>';
+      msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.2)';msgBack.style.transform='scale(1.08)';};
+      msgBack.onmouseout=function(){msgBack.style.background='rgba(255,107,43,.12)';msgBack.style.transform='';};
+      msgBack.onclick=function(){navTo('exp');};
+      nav.appendChild(msgBack);
+    }
+
+    // ── Drag + languette : desktop pointer:fine uniquement ──
+    if(!window.matchMedia('(pointer:fine)').matches)return;
 
     // ── Languette de drag ──
     handle=document.createElement('div');
@@ -13688,17 +13704,6 @@ function _stepOptClick(el){
     handle.addEventListener('mouseout',function(){if(!dragging)handle.style.opacity='.3';});
     handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
     nav.insertBefore(handle,nav.firstChild);
-
-    // ── Bouton retour natif (caché par défaut, cercle flèche) ──
-    var msgBack=document.createElement('button');
-    msgBack.id='bnavMsgBack';
-    msgBack.title='Retour';
-    msgBack.style.cssText='display:none;align-items:center;justify-content:center;width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,107,43,.12);color:var(--or);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .18s,transform .12s;';
-    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>';
-    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.2)';msgBack.style.transform='scale(1.08)';};
-    msgBack.onmouseout=function(){msgBack.style.background='rgba(255,107,43,.12)';msgBack.style.transform='';};
-    msgBack.onclick=function(){navTo('exp');};
-    nav.appendChild(msgBack);
 
     // ── Drag ──
     handle.addEventListener('mousedown',function(e){
@@ -14400,59 +14405,8 @@ function _vShowPreJoin(onJoin){
   window._pjMicWanted=false;
   window._pjCamWanted=false;
 
-  var isIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
-
   var bd=document.createElement('div');
   bd.id='bdVisio';
-
-  if(isIosNative){
-    // ── UI iOS : card premium centré avec coins arrondis ──
-    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
-    var svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
-    var svgCam='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
-    var togOff='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;outline:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
-    var knobL='position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s,right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);';
-    bd.innerHTML=''
-      // Card bottom-sheet premium avec coins arrondis en haut
-      +'<div style="width:100%;background:rgba(16,16,28,.97);border-radius:28px 28px 0 0;padding:12px 24px calc(env(safe-area-inset-bottom,16px) + 16px);box-shadow:0 -8px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);">'
-      // Drag handle
-      +'<div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 20px;"></div>'
-      // Titre + bouton fermer
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">'
-      +'<div>'
-      +'<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
-      +'<div style="font-size:13px;color:rgba(255,255,255,.4);margin-top:2px;">'+name+'</div>'
-      +'</div>'
-      +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:none;outline:none;color:rgba(255,255,255,.6);border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;-webkit-tap-highlight-color:transparent;">×</button>'
-      +'</div>'
-      // Toggles
-      +'<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">'
-      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border-radius:16px;padding:14px 16px;border:0.5px solid rgba(255,255,255,.08);">'
-      +'<div id="_pjMicIconWrap" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic+'</div>'
-      +'<div style="flex:1;">'
-      +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
-      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:1px;">Désactivé</div>'
-      +'</div>'
-      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff+'"><div id="_pjMicKnob" style="'+knobL+'"></div></button>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.06);border-radius:16px;padding:14px 16px;border:0.5px solid rgba(255,255,255,.08);">'
-      +'<div id="_pjCamIconWrap" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam+'</div>'
-      +'<div style="flex:1;">'
-      +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
-      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:1px;">Désactivée</div>'
-      +'</div>'
-      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff+'"><div id="_pjCamKnob" style="'+knobL+'"></div></button>'
-      +'</div>'
-      +'</div>'
-      // Rejoindre
-      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:100%;padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;outline:none;border-radius:18px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 24px rgba(255,107,43,.4);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
-      +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>'
-      +'</div>';
-    document.body.appendChild(bd);
-    var nav=g('bnav');if(nav)nav.style.display='none';
-    haptic(1);
-    return;
-  }
 
   // ── UI desktop/web : même toggles que iOS + preview caméra optionnelle ──
   var svgMic2='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
@@ -15949,7 +15903,7 @@ var _BC=['#1F2937','#6B7280','#EF4444','#F97316','#3B82F6','#22C55E','#8B5CF6','
 
 // ── GoodNotes-style whiteboard ──
 function _buildBoardInner(){
-  var NAV='rgba(10,10,20,1)';
+  var NAV='rgba(10,10,20,.85)';
   var ib='background:none;border:none;outline:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;font-family:inherit;color:rgba(255,255,255,.85);flex-shrink:0;';
   var glassBtn='background:none;border:none;outline:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;color:rgba(255,255,255,.9);width:36px;height:36px;border-radius:50%;flex-shrink:0;transition:background .15s;';
   var glassSep='width:1px;height:20px;background:rgba(255,255,255,.12);flex-shrink:0;';
@@ -16363,6 +16317,7 @@ function _vCloseBoard(){
   _brdActiveTxtBarEl=null;_brdTextAnchor=null;
   if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
   _brdRestorePending=false;_brdRestoreEpoch=0;
+  var _ovrl=g('_brdOvrl');if(_ovrl)_ovrl.remove();
   var bo=g('_vBoardOuter');if(bo)bo.remove();
   // Remettre _vComment dans _vMain
   var _vmEl=g('_vMain');
@@ -16862,7 +16817,7 @@ function _boardShowPageOverview(){
   var thumbW=160,thumbH=Math.round(thumbW/ratio);
   var overlay=document.createElement('div');
   overlay.id='_brdOvrl';
-  overlay.style.cssText='position:absolute;inset:0;z-index:500;background:rgba(6,8,22,.93);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);display:flex;flex-direction:column;overflow:hidden;';
+  overlay.style.cssText='position:absolute;inset:0;z-index:20;background:rgba(6,8,22,.93);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);display:flex;flex-direction:column;overflow:hidden;';
   // Header
   var hdr=document.createElement('div');
   hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top,20px),20px) 20px 14px;flex-shrink:0;border-bottom:0.5px solid rgba(255,255,255,.1);';
@@ -16903,9 +16858,9 @@ function _boardShowPageOverview(){
     })(i);
   }
   overlay.appendChild(grid);
-  // Appender dans _vBoardOuter (position:absolute) pour rester dans le bon stacking context
-  var bo=g('_vBoardOuter');
-  if(bo)bo.appendChild(overlay);else document.body.appendChild(overlay);
+  // Appender dans bdVisio (conteneur fixe z:9999) — plus fiable que _vBoardOuter
+  var bdV=g('bdVisio')||g('_vBoardOuter');
+  if(bdV)bdV.appendChild(overlay);else document.body.appendChild(overlay);
   haptic(1);
 }
 function _boardUpdatePageLabel(){_boardUpdatePageTabs();}
