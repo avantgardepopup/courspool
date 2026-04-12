@@ -1201,7 +1201,8 @@ async function loadData(page,silent){
         description:c.description||'',
         prive:c.prive||false,
         code:c.code_acces||'',
-        niveau:c.niveau||''
+        niveau:c.niveau||'',
+        duree:c.duree||60
       };
     });
     if(page===1){C=mapped;}else{C=C.concat(mapped);}
@@ -7552,14 +7553,19 @@ async function loadMessages(){
             txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');
           }
           // Bouton visio si applicable (inscrit dans la fenêtre ou prof)
-          if(_mc&&_mc.mode==='visio'&&_mc.visio_url){
+          if(_mc&&_mc.mode==='visio'){
             var _vNow=Date.now();
             var _vStart=_mc.dt_iso?new Date(_mc.dt_iso).getTime():0;
-            var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+            var _vDureeMs2=(_mc.duree||120)*60*1000;
+            var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+_vDureeMs2);
             var _isProf2=user&&_mc.pr===user.id;
             var _isEnrolled2=!!res[_mc.id];
             if(_isProf2||(_isEnrolled2&&_vInWin)){
-              var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();openVisioModal(\''+escH(_mc.visio_url)+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
+              var _vIsAppli2=!_mc.visio_url||_mc.visio_url.indexOf('.daily.co/')>=0;
+              var _vFn2=_vIsAppli2
+                ?'openCourseVisio(\''+escH(_mc.id)+'\',\''+escH(_mc.dt_iso||'')+'\','+(_mc.duree||60)+')'
+                :'openVisioModal(\''+escH(_mc.visio_url)+'\')';
+              var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();'+_vFn2+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
               txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
             }
           }
@@ -12492,16 +12498,25 @@ function buildMesCard(c,isPast,isProf,kind){
   if(c.mode==='visio'){
     var _vNow=Date.now();
     var _vStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
-    var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+    var _vDureeMs=(c.duree||120)*60*1000;
+    var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+_vDureeMs);
     var _vNotYet=_vStart&&_vNow<_vStart-15*60*1000;
     var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'}):'';
+    var _vIsAppli=!c.visio_url||c.visio_url.indexOf('.daily.co/')>=0;
+    var _vJoinFn=_vIsAppli
+      ?'openCourseVisio(\''+escH(c.id)+'\',\''+escH(c.dt_iso||'')+'\','+(c.duree||60)+')'
+      :'openVisioModal(\''+escH(c.visio_url)+'\')';
     if(isProf){
-      if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ '+t('visio_add_title')+'</button>';}
-      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">'+t('exp_join')+'</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">'+t('btn_modifier')+'</button></div>';}
+      if(_vIsAppli){
+        // Visio intégrée : le prof rejoint directement, la room est créée à la volée
+        visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation();'+_vJoinFn+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'+t('exp_join')+'</button>';
+      } else {
+        // Lien externe : Rejoindre + Modifier
+        visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();'+_vJoinFn+'">'+t('exp_join')+'</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">'+t('btn_modifier')+'</button></div>';
+      }
     } else if(!!res[c.id]){
-      // Toujours afficher le bouton Rejoindre pour les élèves inscrits en visio
-      var _vOnclick=_vInWin&&c.visio_url
-        ?'event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')'
+      var _vOnclick=_vInWin
+        ?'event.stopPropagation();'+_vJoinFn
         :'event.stopPropagation();toast(t(\'visio_not_yet\'),t(\'visio_not_yet_sub\').replace(\'{heure}\',\''+escH(_vHeure)+'\'))';
       visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="'+_vOnclick+'">'+t('mes_rejoindre_visio')+'</button>';
     }
@@ -14027,6 +14042,28 @@ var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 var _DAILY_KEY='b5d53bb4b025ebe61e648772aa3f95a3b7c8314cd4ad70a7420566e5fc5586c7';
 
 // ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
+async function openCourseVisio(courseId,dtIso,duree){
+  var roomName='cours-'+courseId;
+  var roomUrl=null;
+  try{
+    // Tenter de récupérer la room existante
+    var gr=await fetch('https://api.daily.co/v1/rooms/'+roomName,{headers:{'Authorization':'Bearer '+_DAILY_KEY}});
+    if(gr.ok){
+      var gd=await gr.json();roomUrl=gd.url||null;
+    } else if(gr.status===404){
+      // Créer la room : expire à la fin du cours + 15 min de marge, idle_timeout 5 min pour la reconnexion crash
+      var props={idle_timeout:300,enable_chat:true};
+      if(dtIso){var endTs=Math.floor(new Date(dtIso).getTime()/1000)+(duree||60)*60+15*60;if(!isNaN(endTs))props.exp=endTs;}
+      var cr=await fetch('https://api.daily.co/v1/rooms',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_DAILY_KEY},body:JSON.stringify({name:roomName,properties:props})});
+      var cd=await cr.json();roomUrl=cd.url||null;
+    } else {
+      throw new Error('Daily.co '+gr.status);
+    }
+  }catch(e){console.error('[openCourseVisio]',e);}
+  if(!roomUrl){toast('Connexion visio impossible','Vérifiez votre connexion');return;}
+  openVisioModal(roomUrl);
+}
+
 function _vOpenQuickSheet(){
   var existing=g('_vqSheet');if(existing)existing.remove();
   var ovl=document.createElement('div');
