@@ -406,12 +406,13 @@ io.on('connection', (socket) => {
         room.editors.delete(socket.userId);
         socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
         if (room.ownerId === socket.userId) {
-          // Propriétaire crashé → attendre 3 min (reconnexion possible)
+          // Propriétaire crashé → supprimer uniquement si plus aucun élève présent
+          // Si des élèves sont encore là, le TTL 3h d'inactivité prend le relais
           room._ownerReconnectTimeout = setTimeout(() => {
-            if (boardRooms.get(roomId) === room) {
-              boardRooms.delete(roomId);
-              kickedParticipants.delete(roomId);
-            }
+            if (boardRooms.get(roomId) !== room) return; // déjà supprimée
+            if (room.participants.size > 0) return;      // des élèves encore présents → on garde
+            boardRooms.delete(roomId);
+            kickedParticipants.delete(roomId);
           }, 3 * 60 * 1000);
         } else if (room.participants.size === 0 && room.ownerId !== socket.userId) {
           // Plus personne ET le propriétaire n'est pas connecté → libérer immédiatement
