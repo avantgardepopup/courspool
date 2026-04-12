@@ -14371,7 +14371,7 @@ var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=fals
 var _joinTimeout=null,_joinRetries=0;
 var _handAutoLowerTimer=null;
 var _vPipFeaturedSid=null;
-var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
+var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null,_audioRAF=null;
 var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
 var _demoAnalyser=null,_demoBuf=null,_demoRAFId=null;
 var _demoLocalSpeaking=false,_demoSilenceSince=0,_demoPipThrottle=0;
@@ -14457,61 +14457,52 @@ function _vShowPreJoin(onJoin){
     return;
   }
 
-  // ── UI desktop/web : preview caméra complète ──
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  // ── UI desktop/web : même toggles que iOS + preview caméra optionnelle ──
+  var svgMic2='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+  var svgCam2='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+  var togOff2='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+  var knobL2='position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s,right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);';
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
   bd.innerHTML=''
-    +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
-    +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
-    +'<div style="position:relative;width:min(320px,90vw);height:min(200px,56vw);border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#1e1e30,#12121f);margin-bottom:22px;box-shadow:0 8px 32px rgba(0,0,0,.5);">'
+    +'<div style="display:flex;justify-content:flex-end;padding:14px 16px 0;">'
+    +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">✕ Annuler</button>'
+    +'</div>'
+    +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;">'
+    +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:20px;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
+    // Preview caméra (cachée jusqu\'à activation)
+    +'<div style="position:relative;width:min(280px,80vw);height:min(168px,48vw);border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#1e1e30,#12121f);margin-bottom:22px;box-shadow:0 8px 32px rgba(0,0,0,.5);">'
     +'<div id="_pjAv" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">'
-    +'<div style="width:64px;height:64px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);">'+ini+'</div>'
-    +'<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.6)">Caméra désactivée</div>'
+    +'<div style="width:68px;height:68px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);">'+ini+'</div>'
+    +'<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);">'+name+'</div>'
     +'</div>'
     +'<video id="_pjVideo" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>'
     +'</div>'
-    +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'
-    +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
-    +'<div style="flex:1">'
-    +'<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">Microphone</div>'
-    +'<div id="_pjMicBar" style="height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;"><div id="_pjMicLevel" style="height:100%;width:0%;background:#22C069;border-radius:4px;transition:width .08s linear;"></div></div>'
+    // Toggles (mêmes IDs que iOS pour réutiliser _pjToggleMic/_pjToggleCam)
+    +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">'
+    +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+    +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic2+'</div>'
+    +'<div style="flex:1;">'
+    +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
+    +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivé</div>'
     +'</div>'
-    +'<div id="_pjMicSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
+    +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff2+'"><div id="_pjMicKnob" style="'+knobL2+'"></div></button>'
     +'</div>'
-    +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'
-    +'<div style="flex:1;font-size:13px;font-weight:700;color:#fff;">Caméra</div>'
-    +'<div id="_pjCamSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
+    +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+    +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam2+'</div>'
+    +'<div style="flex:1;">'
+    +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
+    +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivée</div>'
+    +'</div>'
+    +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff2+'"><div id="_pjCamKnob" style="'+knobL2+'"></div></button>'
     +'</div>'
     +'</div>'
-    +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:15px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s;">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
+    +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>'
+    +'</div>';
   document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
   haptic(1);
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    _pjSetSt('mic',false);_pjSetSt('cam',false);return;
-  }
-  navigator.mediaDevices.getUserMedia({audio:true,video:true})
-    .then(function(stream){
-      _preJoinStream=stream;
-      var vid=g('_pjVideo');
-      if(vid){
-        var av=g('_pjAv');if(av)av.style.display='none';
-        vid.srcObject=stream;vid.style.display='block';vid.play().catch(function(){});
-      }
-      _pjSetSt('mic',true);_pjSetSt('cam',true);
-      _pjStartMicMeter(stream);
-    })
-    .catch(function(){
-      navigator.mediaDevices.getUserMedia({audio:true,video:false})
-        .then(function(stream){
-          _preJoinStream=stream;
-          _pjSetSt('mic',true);_pjSetSt('cam',false);
-          _pjStartMicMeter(stream);
-        })
-        .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
-    });
+  // Rien de plus : l'utilisateur active mic/cam via les toggles
 }
 // Toggle mic (iOS pré-join)
 function _pjToggleMic(){
@@ -14519,18 +14510,42 @@ function _pjToggleMic(){
   if(window._pjMicWanted){
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){_pjUpdateToggle('mic',false,'Non dispo');window._pjMicWanted=false;return;}
     navigator.mediaDevices.getUserMedia({audio:true,video:false})
-      .then(function(stream){_preJoinStream=stream;_pjUpdateToggle('mic',true,'Autorisé');})
+      .then(function(stream){
+        _preJoinStream=stream;
+        _pjUpdateToggle('mic',true,'Autorisé');
+        _pjStartMicMeter(stream); // niveau micro en temps réel
+      })
       .catch(function(){_pjUpdateToggle('mic',false,'Refusé');window._pjMicWanted=false;});
   }else{
-    if(_preJoinStream){_preJoinStream.getTracks().forEach(function(t){t.stop();});_preJoinStream=null;}
+    if(_preJoinRAF){cancelAnimationFrame(_preJoinRAF);_preJoinRAF=null;}
+    if(_preJoinAudioCtx){try{_preJoinAudioCtx.close();}catch(e){}_preJoinAudioCtx=null;}
+    if(_preJoinStream){_preJoinStream.getAudioTracks().forEach(function(t){t.stop();});}
     _pjUpdateToggle('mic',false,'Désactivé');
   }
   haptic(1);
 }
-// Toggle cam (iOS pré-join — juste une préférence, pas de stream)
+// Toggle cam — gère aussi la preview caméra sur web
 function _pjToggleCam(){
   window._pjCamWanted=!window._pjCamWanted;
-  _pjUpdateToggle('cam',window._pjCamWanted,window._pjCamWanted?'Activée':'Désactivée');
+  if(window._pjCamWanted){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){_pjUpdateToggle('cam',false,'Non dispo');window._pjCamWanted=false;return;}
+    navigator.mediaDevices.getUserMedia({video:true,audio:false})
+      .then(function(stream){
+        // Ajouter la piste vidéo au stream existant ou créer un nouveau
+        if(!_preJoinStream){_preJoinStream=stream;}
+        else{stream.getVideoTracks().forEach(function(t){_preJoinStream.addTrack(t);});}
+        var vid=g('_pjVideo');
+        if(vid){var av=g('_pjAv');if(av)av.style.display='none';vid.srcObject=stream;vid.style.display='block';vid.play().catch(function(){});}
+        _pjUpdateToggle('cam',true,'Activée');
+      })
+      .catch(function(){_pjUpdateToggle('cam',false,'Refusé');window._pjCamWanted=false;});
+  }else{
+    var vid=g('_pjVideo');
+    if(vid){vid.pause();vid.srcObject=null;vid.style.display='none';}
+    var av=g('_pjAv');if(av)av.style.display='flex';
+    if(_preJoinStream){_preJoinStream.getVideoTracks().forEach(function(t){t.stop();});}
+    _pjUpdateToggle('cam',false,'Désactivée');
+  }
   haptic(1);
 }
 // Mettre à jour visuellement un toggle iOS pré-join
@@ -14681,9 +14696,9 @@ function _buildVisioHTML(){
     +'<button id="_vMic" onclick="_vToggleMic()" style="'+cs+(_localMuted?'background:rgba(229,62,62,.35);':'')+'" title="Micro">'+_vMicSvg(_localMuted)+'</button>'
     +'<button id="_vCam" onclick="_vToggleCam()" style="'+cs+(_localCamOff?'background:rgba(229,62,62,.35);':'')+'" title="Caméra">'+_vCamSvg(_localCamOff)+'</button>'
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M8 14V7a1.5 1.5 0 013 0v4"/><path d="M11 9V5a1.5 1.5 0 013 0v5"/><path d="M14 9.5V7a1.5 1.5 0 013 0v5a6 6 0 01-6 6H9a5 5 0 01-5-5v-2a1.5 1.5 0 013 0v2"/></svg>'
     +'</button>'
-    +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
+    +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><rect x="2" y="2" width="20" height="14" rx="2"/><path d="M9 16l-3 5M15 16l3 5M9 21h6"/><path d="M7 7h4M7 11h7"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
     +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
     +'<div style="position:relative;display:inline-flex;flex-shrink:0">'
@@ -14775,8 +14790,15 @@ async function _joinDailyRoom(url,roomName){
         +'<button onclick="closeVisioModal()" style="background:#FF6B2B;border:none;color:#fff;padding:8px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;">Fermer</button>'
         +'</div>';
     },15000);
-    await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
-    if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
+    var _wantMic=window._pjMicWanted||false;
+    var _wantCam=window._pjCamWanted||false;
+    await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:_wantCam,startAudioOn:_wantMic});
+    _localMuted=!_wantMic;
+    _localCamOff=!_wantCam;
+    var bMic=g('_vMic');if(bMic)bMic.innerHTML=_vMicSvg(_localMuted);
+    var bCam=g('_vCam');if(bCam)bCam.innerHTML=_vCamSvg(_localCamOff);
+    if(_localMuted){var bm=g('_vMic');if(bm)bm.style.background='rgba(229,62,62,.35)';}
+    if(_localCamOff){var bc=g('_vCam');if(bc)bc.style.background='rgba(229,62,62,.35)';}
   }catch(e){
     if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
     console.error('[Visio join]',e);toast('Impossible de rejoindre','');
@@ -14803,61 +14825,57 @@ function _vOnJoined(){
       _audioAnalyser.fftSize=256;
       _audioSrc.connect(_audioAnalyser);
       if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
-      _mutedSpeakTimer=setInterval(_vCheckMutedSpeaking,300);
+      if(_audioRAF){cancelAnimationFrame(_audioRAF);_audioRAF=null;}
+      _audioRAF=requestAnimationFrame(_vAudioLoop);
     }
   }catch(e){console.warn('[Visio audioCtx]',e);}
 }
 
-function _vCheckMutedSpeaking(){
-  if(!_audioAnalyser)return;
+function _vCheckMutedSpeaking(){} // kept for compatibility, replaced by _vAudioLoop
+function _vAudioLoop(){
+  if(!_audioAnalyser){_audioRAF=null;return;}
   var buf=new Uint8Array(_audioAnalyser.frequencyBinCount);
   _audioAnalyser.getByteFrequencyData(buf);
   var sum=0;for(var i=0;i<buf.length;i++)sum+=buf[i];
   var avg=sum/buf.length;
-  var isSpeaking=avg>12;
-  // Muted-while-speaking banner
+  var THRESHOLD=15;
+  var isSpeaking=avg>THRESHOLD;
+  // ── Bannière "tu parles mais tu es muté" ──
   var banner=g('_vMutedBanner');
-  if(banner)banner.style.display=(_localMuted&&isSpeaking)?'flex':'none';
-  // Speaking indicator: green pulse on mic button when unmuted and speaking
+  if(banner)banner.style.display=(_localMuted&&avg>THRESHOLD)?'flex':'none';
+  // ── Anneau orange proportionnel à l'intensité ──
+  var ring='';
+  if(!_localMuted&&isSpeaking){
+    var intensity=Math.min(1,(avg-THRESHOLD)/70);
+    var sz=Math.round(2+intensity*9);        // 2px → 11px
+    var op=(0.45+intensity*0.35).toFixed(2); // 0.45 → 0.80
+    ring='0 0 0 '+sz+'px rgba(255,107,43,'+op+'),0 2px 8px rgba(0,0,0,.3)';
+  }else{
+    ring='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
+  }
   var micBtn=g('_vMic');
   if(micBtn){
-    if(!_localMuted&&isSpeaking){
-      micBtn.style.boxShadow='0 0 0 3px rgba(34,192,105,.75),0 0 20px rgba(34,192,105,.4),0 2px 8px rgba(0,0,0,.3)';
-      micBtn.style.background='rgba(34,192,105,.25)';
-    }else{
-      micBtn.style.boxShadow='0 2px 8px rgba(0,0,0,.3),0 0 0 0.5px rgba(255,255,255,.08)';
-      micBtn.style.background='rgba(255,255,255,.12)';
-    }
+    micBtn.style.boxShadow=ring;
+    micBtn.style.background=(!_localMuted&&isSpeaking)?'rgba(255,107,43,.18)':(_localMuted?'rgba(229,62,62,.35)':'rgba(255,255,255,.12)');
   }
-  // PiP : si l'utilisateur local parle (et n'est pas muté), le mettre en locuteur actif
+  var tileMic=g('_vdmic-local');
+  if(tileMic&&!_localMuted)tileMic.style.boxShadow=isSpeaking?ring:'';
+  var pip=g('_vPipRestoreBtn');
+  if(pip&&!_localMuted)pip.style.boxShadow=isSpeaking?ring:'';
+  // ── PiP layout : locuteur actif local ──
   if(!_localMuted&&isSpeaking&&_activeSpeakerSid!=='local'){
     _activeSpeakerSid='local';
     if(_boardActive)_vApplyLayout();
   }
+  _audioRAF=requestAnimationFrame(_vAudioLoop);
 }
 
 function _vOnActiveSpeaker(evt){
   var sid=evt&&evt.activeSpeaker&&evt.activeSpeaker.peerId;
   _activeSpeakerSid=sid||null;
   document.querySelectorAll('[id^="_vt-"]').forEach(function(el){el.style.boxShadow='';});
+  // Bordure orange sur la tuile du locuteur actif
   if(sid){var t=g('_vt-'+sid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
-  // Indique visuellement si C'EST MOI qui parle — debounce 600ms (filtre le bruit ambiant)
-  var localSid=_callObj&&_callObj.participants&&_callObj.participants().local?_callObj.participants().local.session_id:null;
-  var iAmSpeaking=sid&&(sid===localSid||sid==='demo-local')&&!_localMuted;
-  function _applyMicSpeaking(on){
-    var tileMic=g('_vdmic-local')||g('_vdmic-demo-local');
-    if(tileMic){on?tileMic.classList.add('mic-speaking'):tileMic.classList.remove('mic-speaking');}
-    var micBtn=g('_vMic');
-    if(micBtn){on?micBtn.classList.add('mic-speaking'):micBtn.classList.remove('mic-speaking');}
-    var rb=g('_vPipRestoreBtn');
-    if(rb){on?rb.classList.add('mic-speaking'):rb.classList.remove('mic-speaking');}
-  }
-  if(iAmSpeaking){
-    if(!_vSpeakDebounce)_vSpeakDebounce=setTimeout(function(){_applyMicSpeaking(true);},600);
-  }else{
-    clearTimeout(_vSpeakDebounce);_vSpeakDebounce=null;
-    _applyMicSpeaking(false);
-  }
   if(_boardActive)_vApplyLayout(); // switch PiP to new speaker
 }
 
@@ -18804,6 +18822,8 @@ function closeVisioModal(){
   try{var lv=document.getElementById('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}}catch(e){}
   // Balayer tous les <video>/<audio> du modal avant de le supprimer
   try{var bd0=document.getElementById('bdVisio');if(bd0){bd0.querySelectorAll('video,audio').forEach(function(el){if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}});}}catch(e){}
+  if(_audioRAF){cancelAnimationFrame(_audioRAF);_audioRAF=null;}
+  if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}
   try{if(_audioCtx){_audioCtx.close();_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}}catch(e){}
 
   // ── 2. Quitter Daily et détruire le call object ──────────────────
