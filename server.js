@@ -105,7 +105,7 @@ setInterval(() => {
 function _touchRoom(room) { if (room) room.lastActivity = Date.now(); }
 
 // Allowed op types for board_op payload validation
-const BOARD_OP_TYPES = new Set(['stroke','erase','shape','text','clear','objmove','objdelete','objinsert','objscale','objrotate','snapshot','bg']);
+const BOARD_OP_TYPES = new Set(['stroke','erase','shape','text','clear','objmove','objdelete','objinsert','objscale','objrotate','snapshot','bg','image']);
 const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{0,50}\)|[a-z]{1,20})$/;
 
 // ── Chaque client rejoint sa propre room ─────────────────────
