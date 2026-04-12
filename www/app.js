@@ -15778,8 +15778,13 @@ function _buildBoardInner(){
     +'<button onclick="_vToggleComment()" style="'+glassBtn+'" title="Commentaires">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Exporter PNG">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Screenshot PNG">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button>'
+    +'<div style="'+glassSep+'margin:0 2px;"></div>'
+    +'<button onclick="_boardExportCP()" style="'+glassBtn+'" title="Exporter le tableau (.cpboard)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
+    +'<button onclick="_boardImportCP()" style="'+glassBtn+'" title="Importer un tableau (.cpboard)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>'
     +'<div style="'+glassSep+'margin:0 2px;"></div>'
     +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'" title="Fond vierge / quadrillé">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
@@ -17665,6 +17670,54 @@ function _boardExport(){
   var name=(_brdPageNames[_brdPageIdx]&&_brdPageNames[_brdPageIdx].trim())||('Page-'+(+_brdPageIdx+1));
   a.download='tableau-'+name.replace(/\s+/g,'-').toLowerCase()+'.png';
   a.click();haptic(1);
+}
+
+// ── Export .cpboard (état complet du tableau) ─────────────────────────────────
+function _boardExportCP(){
+  // Sauvegarder la page courante avant d'exporter
+  _boardSavePage();
+  _brdObjPages[_brdPageIdx]=JSON.parse(JSON.stringify(_brdObjects));
+  var pageCount=Math.max(_brdPages.length,_brdObjPages.length,1);
+  var pages=[];
+  for(var i=0;i<pageCount;i++){pages.push(_brdObjPages[i]?JSON.parse(JSON.stringify(_brdObjPages[i])):[]);}
+  var data={version:1,pageIdx:_brdPageIdx,pageCount:pageCount,pageNames:_brdPageNames.slice(),bgType:_brdBgType,pages:pages};
+  var json=JSON.stringify(data);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  var d=new Date();var stamp=d.getFullYear()+''+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+''+d.getDate();
+  a.download='tableau-'+stamp+'.cpboard';a.click();
+  URL.revokeObjectURL(url);haptic(1);toast('Tableau exporté','');
+}
+
+// ── Import .cpboard ───────────────────────────────────────────────────────────
+function _boardImportCP(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='.cpboard';
+  inp.onchange=function(){
+    var file=inp.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var data=JSON.parse(e.target.result);
+        if(!data||data.version!==1||!Array.isArray(data.pages)){toast('Fichier invalide','');return;}
+        _brdPageNames=Array.isArray(data.pageNames)?data.pageNames:[];
+        _brdBgType=data.bgType||'plain';
+        _brdObjPages=data.pages.map(function(p){return Array.isArray(p)?p:[];});
+        _brdPageIdx=Math.max(0,Math.min(data.pageIdx||0,data.pages.length-1));
+        _brdObjects=JSON.parse(JSON.stringify(_brdObjPages[_brdPageIdx]||[]));
+        _brdHist=[];_brdHistIdx=-1;
+        // Réinitialiser les snapshots de pages (seront recréés à la demande)
+        _brdPages=new Array(data.pages.length).fill(null);
+        _brdRenderAll();_boardSavePage();_boardSaveHist();
+        _boardUpdatePageTabs();
+        var bgBtn=g('_brdBgBtn');
+        if(bgBtn)bgBtn.style.opacity=(_brdBgType==='grid')?'1':'0.5';
+        haptic(2);toast('Tableau importé — '+(data.pages.length)+' page'+(data.pages.length>1?'s':''),'');
+      }catch(err){toast('Erreur import','');}
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
 }
 
 function _boardInsertText(cx,cy){
