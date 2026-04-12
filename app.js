@@ -14639,7 +14639,6 @@ function _buildVisioHTML(){
     +'</button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +(_isOwner?'<button id="_vRecBtn" onclick="_vToggleRecord()" style="'+cs+'background:rgba(229,62,62,.18);border-color:rgba(229,62,62,.35);" title="Enregistrer"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="8" fill="none" stroke="#fc8181" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#fc8181"/></svg></button>':'')
     +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
     +'<div style="position:relative;display:inline-flex;flex-shrink:0">'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants">'
@@ -15764,40 +15763,39 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>'
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
-    // ── Floating glass pill : ← retour | minuteur | exporter ──
-    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;z-index:150;display:flex;align-items:center;gap:2px;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;overflow:hidden;padding:4px 6px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
-    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'" title="Retour">'
+    // ── Floating glass pill : scrollable pour accommoder tous les boutons ──
+    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;right:12px;z-index:150;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);overflow:hidden;">'
+    +'<div style="display:flex;align-items:center;gap:2px;padding:4px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;">'
+    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'flex-shrink:0;" title="Retour">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
     +(_isOwner
-      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
-      +'<button onclick="_vTimerOpen()" style="'+glassBtn+'" title="Minuteur">'
+      ?'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+      +'<button onclick="_vTimerOpen()" style="'+glassBtn+'flex-shrink:0;" title="Minuteur">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 16"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="12" y1="2" x2="12" y2="5"/></svg></button>'
       :''
     )
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_vToggleComment()" style="'+glassBtn+'" title="Commentaires">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button onclick="_vToggleComment()" style="'+glassBtn+'flex-shrink:0;" title="Commentaires">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Screenshot PNG">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button>'
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardExportCP()" style="'+glassBtn+'" title="Exporter le tableau (.cpboard)">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button onclick="_boardExportCP()" style="'+glassBtn+'flex-shrink:0;" title="Exporter le tableau (.cpboard)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
-    +'<button onclick="_boardImportCP()" style="'+glassBtn+'" title="Importer un tableau (.cpboard)">'
+    +'<button onclick="_boardImportCP()" style="'+glassBtn+'flex-shrink:0;" title="Importer un tableau (.cpboard)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>'
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'" title="Fond vierge / quadrillé">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'flex-shrink:0;" title="Fond vierge / quadrillé">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
     +(_isOwner
-      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
-      +'<button id="_brdSyncBtn" onclick="_boardForceSyncAll()" style="'+glassBtn+'" title="Synchroniser le tableau pour tous les élèves">'
+      ?'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+      +'<button id="_brdSyncBtn" onclick="_boardForceSyncAll()" style="'+glassBtn+'flex-shrink:0;" title="Synchroniser le tableau pour tous les élèves">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>'
       :''
     )
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'" title="Effacer la page (double-tap)">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'flex-shrink:0;" title="Effacer la page (double-tap)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" width="17" height="17"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>'
-    +'</div>'  // close floating bar
+    +'</div>'  // close scrollable inner row
+    +'</div>'  // close floating bar wrapper
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
@@ -17979,12 +17977,15 @@ function closeVisioModal(){
   // ── 2. Quitter Daily et détruire le call object ──────────────────
   try{_isDemoMode=false;_intentionalLeave=true;_visioCurrentUrl='';}catch(e){}
   try{if(_callObj){var co=_callObj;_callObj=null;
+    // destroy() synchrone en PREMIER : libère les tracks getUserMedia gérés par Daily
+    try{co.destroy();}catch(e){}
+    // leave() asynchrone ensuite pour signaler le départ au serveur Daily
     co.leave().catch(function(){}).finally(function(){
-      try{co.destroy();}catch(e){}
-      // Filet de sécurité : tuer tout track WebRTC résiduel de Daily (hors-DOM à ce stade)
-      try{document.querySelectorAll('video,audio').forEach(function(el){
-        if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
-      });}catch(e){}
+      // Filet de sécurité : tuer tout track WebRTC résiduel restant
+      try{navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&
+        document.querySelectorAll('video,audio').forEach(function(el){
+          if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
+        });}catch(e){}
     });
   }}catch(e){}
 
