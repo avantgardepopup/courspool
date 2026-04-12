@@ -14366,6 +14366,7 @@ function _vBuildDemoTile(f){
 }
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
+var _vSpeakDebounce=null; // debounce 600ms pour éviter animation sur bruit ambiant
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
 var _joinTimeout=null,_joinRetries=0;
 var _handAutoLowerTimer=null;
@@ -14647,7 +14648,7 @@ function _buildVisioHTML(){
     +'<div id="_vMain" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative">'
     +'<div id="_vGrid" style="flex:1;display:grid;gap:8px;overflow:hidden;background:#0d0d18;padding:8px;min-height:0"></div>'
     // People panel (slide-in from right)
-    +'<div id="_vPeople" style="position:absolute;top:10px;right:10px;bottom:10px;width:290px;background:rgba(6,8,22,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-radius:18px;border:0.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;z-index:10;box-shadow:0 28px 56px rgba(0,0,0,.75),0 0 0 0.5px rgba(255,107,43,.1),inset 0 1px 0 rgba(255,255,255,.07);transform:translateX(calc(100% + 20px));transition:transform .3s cubic-bezier(.32,1,.6,1);will-change:transform;overflow:hidden;">'
+    +'<div id="_vPeople" style="position:absolute;top:10px;right:10px;bottom:10px;width:290px;background:rgba(6,8,22,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-radius:18px;border:0.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;z-index:10;box-shadow:0 4px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);transform:translateX(calc(100% + 20px));transition:transform .3s cubic-bezier(.32,1,.6,1);will-change:transform;overflow:hidden;">'
     +'<div style="padding:15px 14px 12px;background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
     +'<div><div style="font-size:13.5px;font-weight:800;color:#fff;letter-spacing:.02em;text-transform:uppercase;font-size:11px;color:rgba(255,255,255,.5)">Participants</div>'
     +'<div id="_vPeopleCount" style="font-size:14px;font-weight:700;color:#fff;margin-top:2px"></div></div>'
@@ -14657,7 +14658,7 @@ function _buildVisioHTML(){
     +'<div id="_vPeopleList" style="flex:1;overflow-y:auto;padding:6px 0;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;"></div>'
     +'</div>'
     // Comment panel (slide-in from right)
-    +'<div id="_vComment" style="position:absolute;top:10px;right:10px;bottom:10px;width:290px;background:rgba(6,8,22,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-radius:18px;border:0.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;z-index:10;box-shadow:0 28px 56px rgba(0,0,0,.75),0 0 0 0.5px rgba(255,107,43,.1),inset 0 1px 0 rgba(255,255,255,.07);transform:translateX(calc(100% + 20px));transition:transform 0.3s cubic-bezier(.32,1,.6,1);will-change:transform;overflow:hidden;">'
+    +'<div id="_vComment" style="position:absolute;top:10px;right:10px;bottom:10px;width:290px;background:rgba(6,8,22,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-radius:18px;border:0.5px solid rgba(255,255,255,.14);display:flex;flex-direction:column;z-index:10;box-shadow:0 4px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);transform:translateX(calc(100% + 20px));transition:transform 0.3s cubic-bezier(.32,1,.6,1);will-change:transform;overflow:hidden;">'
     +'<div style="padding:15px 14px 12px;background:linear-gradient(180deg,rgba(255,255,255,.04) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;">'
     +'<div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);letter-spacing:.02em;text-transform:uppercase">Commentaires</div>'
     +'<div style="display:flex;align-items:center;gap:8px;">'
@@ -14670,10 +14671,6 @@ function _buildVisioHTML(){
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:9px 16px;color:#fff;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;" onkeydown="if(event.key===\'Enter\')_vSendComment()" onfocus="this.style.borderColor=\'rgba(255,107,43,.5)\'" onblur="this.style.borderColor=\'rgba(255,255,255,.1)\'">'
     +'<button onclick="_vSendComment()" style="width:38px;height:38px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 12px rgba(255,107,43,.35);-webkit-tap-highlight-color:transparent;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
-    // Languette de rappel : visible quand le panneau est fermé, cliquable pour rouvrir
-    +'<div id="_vCommentTab" onclick="_vToggleComment()" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:18px;height:56px;background:#FF6B2B;border-radius:8px 0 0 8px;z-index:12;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 14px rgba(0,0,0,.35);transition:opacity .22s,transform .22s;opacity:0;pointer-events:none;">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" width="11" height="11"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-    +'</div>'
     +'</div>'
     // Reactions panel (above controls)
     +'<div id="_vReactPanel" style="display:none;align-items:center;justify-content:center;gap:10px;padding:10px 16px;background:#111120;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0">'
@@ -14844,18 +14841,23 @@ function _vOnActiveSpeaker(evt){
   _activeSpeakerSid=sid||null;
   document.querySelectorAll('[id^="_vt-"]').forEach(function(el){el.style.boxShadow='';});
   if(sid){var t=g('_vt-'+sid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
-  // Indique visuellement si C'EST MOI qui parle (mic tile PiP + bouton mic barre + bulle flottante)
+  // Indique visuellement si C'EST MOI qui parle — debounce 600ms (filtre le bruit ambiant)
   var localSid=_callObj&&_callObj.participants&&_callObj.participants().local?_callObj.participants().local.session_id:null;
-  var iAmSpeaking=sid&&(sid===localSid||sid==='demo-local');
-  // Icône micro dans la tuile vidéo (bas-droite de la tuile locale)
-  var tileMic=g(sid==='demo-local'?'_vdmic-demo-local':'_vdmic-local');
-  if(tileMic){if(iAmSpeaking&&!_localMuted){tileMic.classList.add('mic-speaking');}else{tileMic.classList.remove('mic-speaking');}}
-  // Bouton micro dans la barre de contrôles du visio plein écran
-  var micBtn=g('_vMic');
-  if(micBtn){if(iAmSpeaking&&!_localMuted){micBtn.classList.add('mic-speaking');}else{micBtn.classList.remove('mic-speaking');}}
-  // Bulle flottante (quand le PiP est masqué)
-  var rb=g('_vPipRestoreBtn');
-  if(rb){if(iAmSpeaking&&!_localMuted){rb.classList.add('mic-speaking');}else{rb.classList.remove('mic-speaking');}}
+  var iAmSpeaking=sid&&(sid===localSid||sid==='demo-local')&&!_localMuted;
+  function _applyMicSpeaking(on){
+    var tileMic=g('_vdmic-local')||g('_vdmic-demo-local');
+    if(tileMic){on?tileMic.classList.add('mic-speaking'):tileMic.classList.remove('mic-speaking');}
+    var micBtn=g('_vMic');
+    if(micBtn){on?micBtn.classList.add('mic-speaking'):micBtn.classList.remove('mic-speaking');}
+    var rb=g('_vPipRestoreBtn');
+    if(rb){on?rb.classList.add('mic-speaking'):rb.classList.remove('mic-speaking');}
+  }
+  if(iAmSpeaking){
+    if(!_vSpeakDebounce)_vSpeakDebounce=setTimeout(function(){_applyMicSpeaking(true);},600);
+  }else{
+    clearTimeout(_vSpeakDebounce);_vSpeakDebounce=null;
+    _applyMicSpeaking(false);
+  }
   if(_boardActive)_vApplyLayout(); // switch PiP to new speaker
 }
 
@@ -15377,6 +15379,7 @@ function _vToggleMic(){
   if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
   // Couper le micro = stopper l'animation "qui parle"
   if(_localMuted){
+    clearTimeout(_vSpeakDebounce);_vSpeakDebounce=null;
     var _mb2=g('_vMic');if(_mb2)_mb2.classList.remove('mic-speaking');
     var _rb2=g('_vPipRestoreBtn');if(_rb2)_rb2.classList.remove('mic-speaking');
     var _tm2=g('_vdmic-local')||g('_vdmic-demo-local');if(_tm2)_tm2.classList.remove('mic-speaking');
@@ -15753,9 +15756,6 @@ function _vToggleComment(){
   if(panel){panel.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';panel.style.transform=_vCommentOpen?'translateX(0)':'translateX(calc(100% + 20px))';}
   var btn=g('_vCommentBtn');
   if(btn){btn.style.background=_vCommentOpen?'rgba(255,107,43,.55)':'rgba(255,255,255,.12)';btn.style.boxShadow=_vCommentOpen?'0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)':'';}
-  // Languette de rappel : visible uniquement quand le panneau est fermé
-  var tab=g('_vCommentTab');
-  if(tab){tab.style.opacity=_vCommentOpen?'0':'1';tab.style.pointerEvents=_vCommentOpen?'none':'auto';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
 }
 // ── Keyboard awareness pour la barre de saisie commentaires ──
@@ -15821,7 +15821,6 @@ function _vInitCommentSwipe(){
       panel.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(calc(100% + 20px))';
       var btn=g('_vCommentBtn');if(btn){btn.style.background='rgba(255,255,255,.12)';btn.style.boxShadow='';}
-      var tab=g('_vCommentTab');if(tab){tab.style.opacity='1';tab.style.pointerEvents='auto';}
     }else{
       panel.style.transition='transform 0.3s cubic-bezier(.32,1,.6,1)';
       panel.style.transform='translateX(0)';
@@ -16295,11 +16294,10 @@ function _vOpenBoard(){
   bo.style.cssText='position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:scale(.98);transition:opacity 180ms ease-out,transform 220ms cubic-bezier(.22,.61,.36,1);';
   bo.innerHTML=_buildBoardInner();
   bdV.appendChild(bo);
-  // Sortir _vComment et _vCommentTab de _vMain (overflow:hidden → stacking context)
-  // pour les rendre frères de _vBoardOuter → z-index:10 bat z-index:4
-  var _vcEl=g('_vComment'),_vtEl=g('_vCommentTab');
+  // Sortir _vComment de _vMain (overflow:hidden → stacking context)
+  // pour le rendre frère de _vBoardOuter → z-index:10 bat z-index:4
+  var _vcEl=g('_vComment');
   if(_vcEl)bdV.appendChild(_vcEl);
-  if(_vtEl)bdV.appendChild(_vtEl);
   requestAnimationFrame(function(){bo.style.opacity='1';bo.style.transform='scale(1)';_boardInitCanvas();});
   var btn=g('_vBoardBtn');
   if(btn){btn.style.background='rgba(255,107,43,.55)';btn.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
@@ -16340,11 +16338,10 @@ function _vCloseBoard(){
   if(_brdC&&_brdPages.length>0&&!_brdRestorePending){try{_boardSavePage();}catch(e){}}
   _brdRestorePending=false;_brdRestoreEpoch=0;
   var bo=g('_vBoardOuter');if(bo)bo.remove();
-  // Remettre _vComment et _vCommentTab dans _vMain
+  // Remettre _vComment dans _vMain
   var _vmEl=g('_vMain');
-  var _vcEl=g('_vComment'),_vtEl=g('_vCommentTab');
+  var _vcEl=g('_vComment');
   if(_vcEl&&_vmEl)_vmEl.appendChild(_vcEl);
-  if(_vtEl&&_vmEl)_vmEl.appendChild(_vtEl);
   var pip=g('_vPip');var grid=g('_vGrid');
   var rb=g('_vPipRestoreBtn');if(rb)rb.remove();
   if(pip&&grid){
