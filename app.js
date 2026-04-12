@@ -15724,7 +15724,7 @@ var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; /
 var _brdObjects=[];       // objets de la page courante (ordre dessin)
 var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
 // _brdObjIdSeq removed — IDs are now generated with timestamp+random (collision-safe)
-var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null};
+var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
 var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
@@ -17293,6 +17293,41 @@ function _brdShowObjSelOverlay(){
     +'border:2px dashed #FF6B2B;border-radius:6px;';
   page.appendChild(el);
   _brdObjSel.el=el;
+  // Resize handles (8 positions)
+  if(!_brdRoomId||_brdCanEdit){
+    var _hDefs=[
+      {id:'nw',s:'left:-6px;top:-6px;cursor:nwse-resize;'},
+      {id:'n', s:'left:calc(50% - 6px);top:-6px;cursor:ns-resize;'},
+      {id:'ne',s:'right:-6px;top:-6px;cursor:nesw-resize;'},
+      {id:'e', s:'right:-6px;top:calc(50% - 6px);cursor:ew-resize;'},
+      {id:'se',s:'right:-6px;bottom:-6px;cursor:nwse-resize;'},
+      {id:'s', s:'left:calc(50% - 6px);bottom:-6px;cursor:ns-resize;'},
+      {id:'sw',s:'left:-6px;bottom:-6px;cursor:nesw-resize;'},
+      {id:'w', s:'left:-6px;top:calc(50% - 6px);cursor:ew-resize;'},
+    ];
+    _hDefs.forEach(function(h){
+      var hel=document.createElement('div');
+      hel.style.cssText='position:absolute;width:12px;height:12px;background:#FF6B2B;'
+        +'border:2px solid #fff;border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,.5);'
+        +'pointer-events:auto;touch-action:none;'+h.s;
+      hel.addEventListener('pointerdown',function(e){
+        e.stopPropagation();e.preventDefault();
+        _brdStartResize(h.id,e);
+      });
+      hel.addEventListener('pointermove',function(e){_brdDoResize(e);});
+      hel.addEventListener('pointerup',function(e){_brdCommitResize();});
+      hel.addEventListener('pointercancel',function(e){
+        // Rollback: restore init objects
+        if(_brdObjSel.resizing&&_brdObjSel.resizeInitObjs){
+          _brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));
+          _brdRenderAll();
+        }
+        _brdObjSel.resizing=false;_brdObjSel.resizeInitObjs=null;
+        _brdShowObjSelOverlay();
+      });
+      el.appendChild(hel);
+    });
+  }
   // Toolbar
   var bar=document.createElement('div');
   bar.id='_brdObjSelBar';
@@ -17304,18 +17339,8 @@ function _brdShowObjSelOverlay(){
       +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(col||ic)+'" stroke-width="2" stroke-linecap="round" width="18" height="18">'+svg+'</svg></button>';
   }
   var canEdit=!_brdRoomId||_brdCanEdit;
-  // Bouton texte simple pour +/-
-  function tbtn(fn,label,title,col){
-    return '<button onclick="'+fn+'" title="'+title+'" style="background:none;border:none;cursor:pointer;'
-      +'display:flex;align-items:center;justify-content:center;width:36px;height:36px;'
-      +'border-radius:8px;font-size:18px;font-weight:700;color:'+(col||'rgba(255,255,255,.85)')+';'
-      +'-webkit-tap-highlight-color:transparent;touch-action:manipulation;">'+label+'</button>';
-  }
   bar.innerHTML=
-    (canEdit?tbtn('_brdObjSelScale(1.25)','＋','Agrandir','#60a5fa'):'')
-   +(canEdit?tbtn('_brdObjSelScale(0.8)','－','Réduire','#60a5fa'):'')
-   +'<div style="width:1px;height:22px;background:rgba(255,255,255,.1);margin:0 2px;flex-shrink:0;"></div>'
-   +(canEdit?ibtn('_brdObjSelDuplicate()','<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>','Dupliquer'):'')
+    (canEdit?ibtn('_brdObjSelDuplicate()','<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>','Dupliquer'):'')
    +(canEdit?ibtn('_brdObjSelDelete()','<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>','Supprimer','#f87171'):'')
    +ibtn('_brdCleanObjSel()','<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>','Désélectionner');
   bar.style.cssText='position:fixed;z-index:10200;background:rgba(20,24,38,.96);border-radius:12px;'
@@ -17359,6 +17384,7 @@ function _brdCleanObjSel(){
   _brdObjSel.active=false;_brdObjSel.ids=[];
   _brdObjSel.dragging=false;_brdObjSel.bgSnap=null;
   _brdObjSel.dragSX=0;_brdObjSel.dragSY=0;_brdObjSel.dragDx=0;_brdObjSel.dragDy=0;
+  _brdObjSel.resizing=false;_brdObjSel.resizeHandle='';_brdObjSel.resizeInitObjs=null;_brdObjSel.resizeScale=1;
 }
 
 function _brdObjSelScale(factor){
@@ -17386,6 +17412,90 @@ function _brdObjSelScale(factor){
   _brdRenderAll();_boardSavePage();_boardSaveHist();
   _brdShowObjSelOverlay();
   if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objscale',ids:_brdObjSel.ids.slice(),factor:factor,cx:cx,cy:cy});
+  haptic(1);
+}
+
+function _brdScaleObjAround(o,factor,cx,cy){
+  o=JSON.parse(JSON.stringify(o));
+  if(o.type==='stroke'||o.type==='erase'){
+    o.pts=o.pts.map(function(p){return{x:cx+(p.x-cx)*factor,y:cy+(p.y-cy)*factor};});
+    if(o.size)o.size=Math.max(1,Math.min(200,o.size*factor));
+  }else if(o.type==='shape'){
+    o.x1=cx+(o.x1-cx)*factor;o.y1=cy+(o.y1-cy)*factor;
+    o.x2=cx+(o.x2-cx)*factor;o.y2=cy+(o.y2-cy)*factor;
+    if(o.size)o.size=Math.max(1,Math.min(200,o.size*factor));
+  }else if(o.type==='text'){
+    o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
+    o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*factor)));
+  }
+  return o;
+}
+
+function _brdStartResize(handle,e){
+  if(!_brdObjSel.active)return;
+  e.preventDefault();e.stopPropagation();
+  e.target.setPointerCapture(e.pointerId);
+  var bb=_brdUnionBbox(_brdObjSel.ids,false);if(!bb)return;
+  var ax,ay;
+  switch(handle){
+    case 'nw':ax=bb.x+bb.w;ay=bb.y+bb.h;break;
+    case 'n': ax=bb.x+bb.w/2;ay=bb.y+bb.h;break;
+    case 'ne':ax=bb.x;ay=bb.y+bb.h;break;
+    case 'e': ax=bb.x;ay=bb.y+bb.h/2;break;
+    case 'se':ax=bb.x;ay=bb.y;break;
+    case 's': ax=bb.x+bb.w/2;ay=bb.y;break;
+    case 'sw':ax=bb.x+bb.w;ay=bb.y;break;
+    case 'w': ax=bb.x+bb.w;ay=bb.y+bb.h/2;break;
+    default:  ax=bb.x+bb.w/2;ay=bb.y+bb.h/2;
+  }
+  var p=_boardGetPos(e);
+  var initDist;
+  if(handle==='n'||handle==='s')initDist=Math.abs(p.y-ay);
+  else if(handle==='e'||handle==='w')initDist=Math.abs(p.x-ax);
+  else initDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
+  if(initDist<1)initDist=1;
+  _brdObjSel.resizing=true;
+  _brdObjSel.resizeHandle=handle;
+  _brdObjSel.resizeAnchorX=ax;
+  _brdObjSel.resizeAnchorY=ay;
+  _brdObjSel.resizeInitDist=initDist;
+  _brdObjSel.resizeScale=1;
+  _brdObjSel.resizeInitObjs=JSON.parse(JSON.stringify(_brdObjects));
+}
+
+function _brdDoResize(e){
+  if(!_brdObjSel.resizing)return;
+  e.preventDefault();
+  var p=_boardGetPos(e);
+  var ax=_brdObjSel.resizeAnchorX,ay=_brdObjSel.resizeAnchorY;
+  var handle=_brdObjSel.resizeHandle;
+  var curDist;
+  if(handle==='n'||handle==='s')curDist=Math.abs(p.y-ay);
+  else if(handle==='e'||handle==='w')curDist=Math.abs(p.x-ax);
+  else curDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
+  var factor=curDist/_brdObjSel.resizeInitDist;
+  factor=Math.max(0.05,Math.min(20,factor));
+  _brdObjSel.resizeScale=factor;
+  _brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));
+  _brdObjSel.ids.forEach(function(id){
+    var idx=_brdObjects.findIndex(function(o){return o.id===id;});
+    if(idx===-1)return;
+    _brdObjects[idx]=_brdScaleObjAround(_brdObjects[idx],factor,ax,ay);
+  });
+  _brdRenderAll();
+  _brdUpdateObjSelOverlayPos();
+}
+
+function _brdCommitResize(){
+  if(!_brdObjSel.resizing)return;
+  _brdObjSel.resizing=false;
+  var factor=_brdObjSel.resizeScale||1;
+  var ax=_brdObjSel.resizeAnchorX,ay=_brdObjSel.resizeAnchorY;
+  _boardSaveHist();
+  _boardSavePage();
+  _boardSaveHist();
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objscale',ids:_brdObjSel.ids.slice(),factor:factor,cx:ax,cy:ay});
+  _brdShowObjSelOverlay();
   haptic(1);
 }
 

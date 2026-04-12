@@ -14639,7 +14639,6 @@ function _buildVisioHTML(){
     +'</button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +(_isOwner?'<button id="_vRecBtn" onclick="_vToggleRecord()" style="'+cs+'background:rgba(229,62,62,.18);border-color:rgba(229,62,62,.35);" title="Enregistrer"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="8" fill="none" stroke="#fc8181" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#fc8181"/></svg></button>':'')
     +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
     +'<div style="position:relative;display:inline-flex;flex-shrink:0">'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants">'
@@ -15725,7 +15724,7 @@ var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; /
 var _brdObjects=[];       // objets de la page courante (ordre dessin)
 var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
 // _brdObjIdSeq removed — IDs are now generated with timestamp+random (collision-safe)
-var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null};
+var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
 var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
@@ -15764,40 +15763,44 @@ function _buildBoardInner(){
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>'
     +'</div>'  // close nav content row
     +'</div>'  // close outer blue wrapper
-    // ── Floating glass pill : ← retour | minuteur | exporter ──
-    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;z-index:150;display:flex;align-items:center;gap:2px;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;overflow:hidden;padding:4px 6px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);">'
-    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'" title="Retour">'
+    // ── Floating glass pill : scrollable pour accommoder tous les boutons ──
+    +'<div id="_brdFloatBar" style="position:fixed;top:calc(max(env(safe-area-inset-top,20px),20px) + 54px);left:12px;max-width:calc(100vw - 24px);z-index:150;background:rgba(12,16,38,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:50px;border:0.5px solid rgba(255,255,255,.14);box-shadow:0 4px 22px rgba(0,0,0,.38);overflow:hidden;">'
+    +'<div style="display:flex;align-items:center;gap:2px;padding:4px 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-ms-overflow-style:none;">'
+    +'<button onclick="_vCloseBoard()" style="'+glassBtn+'flex-shrink:0;" title="Retour">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg></button>'
     +(_isOwner
-      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
-      +'<button onclick="_vTimerOpen()" style="'+glassBtn+'" title="Minuteur">'
+      ?'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+      +'<button onclick="_vTimerOpen()" style="'+glassBtn+'flex-shrink:0;" title="Minuteur">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 15 16"/><line x1="9" y1="2" x2="15" y2="2"/><line x1="12" y1="2" x2="12" y2="5"/></svg></button>'
       :''
     )
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_vToggleComment()" style="'+glassBtn+'" title="Commentaires">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button onclick="_vToggleComment()" style="'+glassBtn+'flex-shrink:0;" title="Commentaires">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardExport()" style="'+glassBtn+'" title="Screenshot PNG">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    // Télécharger image PNG du tableau
+    +'<button onclick="_boardExport()" style="'+glassBtn+'flex-shrink:0;" title="Télécharger en image PNG">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button>'
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardExportCP()" style="'+glassBtn+'" title="Exporter le tableau (.cpboard)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>'
-    +'<button onclick="_boardImportCP()" style="'+glassBtn+'" title="Importer un tableau (.cpboard)">'
-    +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>'
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'" title="Fond vierge / quadrillé">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    // Sauvegarder / restaurer le tableau (format .cpboard — à réimporter dans CoursPool)
+    +'<button onclick="_boardExportCP()" style="'+glassBtn+'flex-shrink:0;" title="Sauvegarder le tableau (à réimporter dans CoursPool)">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v13a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>'
+    +'<button onclick="_boardImportCP()" style="'+glassBtn+'flex-shrink:0;" title="Restaurer un tableau sauvegardé">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" width="17" height="17"><path d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button id="_brdBgBtn" onclick="_boardToggleBg()" style="'+glassBtn+'flex-shrink:0;" title="Fond vierge / quadrillé">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" width="17" height="17"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>'
     +(_isOwner
-      ?'<div style="'+glassSep+'margin:0 2px;"></div>'
-      +'<button id="_brdSyncBtn" onclick="_boardForceSyncAll()" style="'+glassBtn+'" title="Synchroniser le tableau pour tous les élèves">'
+      ?'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+      +'<button id="_brdSyncBtn" onclick="_boardForceSyncAll()" style="'+glassBtn+'flex-shrink:0;" title="Synchroniser le tableau pour tous les élèves">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>'
       :''
     )
-    +'<div style="'+glassSep+'margin:0 2px;"></div>'
-    +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'" title="Effacer la page (double-tap)">'
+    +'<div style="'+glassSep+'margin:0 2px;flex-shrink:0;"></div>'
+    +'<button onclick="_boardClearCurrentPage()" style="'+glassBtn+'flex-shrink:0;" title="Effacer la page (double-tap)">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" width="17" height="17"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>'
-    +'</div>'  // close floating bar
+    +'</div>'  // close scrollable inner row
+    +'</div>'  // close floating bar wrapper
     // Badge lecture seule (élève sans permission)
     +'<div id="_brdLockBadge" style="display:none;position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:200;background:rgba(20,20,35,.88);border-radius:20px;padding:5px 12px;display:none;align-items:center;gap:5px;pointer-events:none;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
@@ -16822,7 +16825,7 @@ function _boardDown(e){
     if(_hitId)_brdDblTapT=_now2;_brdDblTapId=_hitId;
     // Tap sur l'intérieur de la sélection courante → démarrer drag
     if(_brdObjSel.active&&_brdObjSel.ids.length){
-      var _bb=_brdUnionBbox(_brdObjSel.ids);
+      var _bb=_brdUnionBbox(_brdObjSel.ids,true);
       var _PAD=12;
       if(_bb&&p.x>=_bb.x-_PAD&&p.x<=_bb.x+_bb.w+_PAD&&p.y>=_bb.y-_PAD&&p.y<=_bb.y+_bb.h+_PAD){
         // Lancer le drag sur les objets sélectionnés
@@ -16834,8 +16837,8 @@ function _boardDown(e){
       }
     }
     if(_hitId){
-      // Sélectionner l'objet et préparer drag immédiat
-      _brdActivateObjSel([_hitId]);
+      // Sélectionner l'objet + tous les erases qui le chevauchent (sinon ils restent en place quand on bouge)
+      _brdActivateObjSel([_hitId].concat(_brdRelatedErases([_hitId])));
       _brdObjSel.dragging=true;_brdObjSel.dragSX=p.x;_brdObjSel.dragSY=p.y;
       _brdObjSel.dragDx=0;_brdObjSel.dragDy=0;
       _brdDraw=true;return;
@@ -16973,7 +16976,7 @@ function _boardMove(e){
       }
       // Déplacer l'overlay CSS
       if(_brdObjSel.el){
-        var bb=_brdUnionBbox(_brdObjSel.ids);var PAD=10;
+        var bb=_brdUnionBbox(_brdObjSel.ids,true);var PAD=10;
         if(bb){_brdObjSel.el.style.left=(bb.x-PAD+dx)+'px';_brdObjSel.el.style.top=(bb.y-PAD+dy)+'px';}
       }
       _brdUpdateObjSelBarPos();
@@ -17155,22 +17158,38 @@ function _brdHitTest(px,py){
   return null;
 }
 
+// Retourne les IDs des objets erase qui chevauchent la bbox de la sélection donnée
+// Utilisé pour que le clic simple sur un trait inclue aussi ses masques d'effacement.
+function _brdRelatedErases(ids){
+  var bb=_brdUnionBbox(ids,false);if(!bb)return[];
+  var result=[];
+  for(var i=0;i<_brdObjects.length;i++){
+    var o=_brdObjects[i];
+    if(o.type!=='erase'||ids.indexOf(o.id)!==-1)continue;
+    var eb=_brdObjBbox(o);
+    if(eb.x<bb.x+bb.w&&eb.x+eb.w>bb.x&&eb.y<bb.y+bb.h&&eb.y+eb.h>bb.y)result.push(o.id);
+  }
+  return result;
+}
+
 function _brdRectHitObjs(rx,ry,rw,rh){
   var ids=[];
   for(var i=0;i<_brdObjects.length;i++){
     var obj=_brdObjects[i];
-    if(obj.type==='erase')continue;
+    // Include erase objects in rect selection so they move with the strokes they mask.
+    // (Still excluded from single-click hit test in _brdHitTest.)
     var bb=_brdObjBbox(obj);
     if(bb.x<rx+rw&&bb.x+bb.w>rx&&bb.y<ry+rh&&bb.y+bb.h>ry)ids.push(obj.id);
   }
   return ids;
 }
 
-function _brdUnionBbox(ids){
+function _brdUnionBbox(ids,skipErase){
   var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   for(var i=0;i<ids.length;i++){
     var obj=_brdObjects.find(function(o){return o.id===ids[i];});
     if(!obj)continue;
+    if(skipErase&&obj.type==='erase')continue; // exclude erases from visual overlay bbox
     var bb=_brdObjBbox(obj);
     if(bb.x<minX)minX=bb.x;if(bb.y<minY)minY=bb.y;
     if(bb.x+bb.w>maxX)maxX=bb.x+bb.w;if(bb.y+bb.h>maxY)maxY=bb.y+bb.h;
@@ -17263,7 +17282,7 @@ function _brdActivateObjSel(ids){
 
 function _brdShowObjSelOverlay(){
   _brdCleanObjSelDOM();
-  var bb=_brdUnionBbox(_brdObjSel.ids);if(!bb)return;
+  var bb=_brdUnionBbox(_brdObjSel.ids,true);if(!bb)return;
   var page=g('_brdPage');if(!page)return;
   var PAD=10;
   var el=document.createElement('div');
@@ -17274,6 +17293,41 @@ function _brdShowObjSelOverlay(){
     +'border:2px dashed #FF6B2B;border-radius:6px;';
   page.appendChild(el);
   _brdObjSel.el=el;
+  // Resize handles (8 positions)
+  if(!_brdRoomId||_brdCanEdit){
+    var _hDefs=[
+      {id:'nw',s:'left:-6px;top:-6px;cursor:nwse-resize;'},
+      {id:'n', s:'left:calc(50% - 6px);top:-6px;cursor:ns-resize;'},
+      {id:'ne',s:'right:-6px;top:-6px;cursor:nesw-resize;'},
+      {id:'e', s:'right:-6px;top:calc(50% - 6px);cursor:ew-resize;'},
+      {id:'se',s:'right:-6px;bottom:-6px;cursor:nwse-resize;'},
+      {id:'s', s:'left:calc(50% - 6px);bottom:-6px;cursor:ns-resize;'},
+      {id:'sw',s:'left:-6px;bottom:-6px;cursor:nesw-resize;'},
+      {id:'w', s:'left:-6px;top:calc(50% - 6px);cursor:ew-resize;'},
+    ];
+    _hDefs.forEach(function(h){
+      var hel=document.createElement('div');
+      hel.style.cssText='position:absolute;width:12px;height:12px;background:#FF6B2B;'
+        +'border:2px solid #fff;border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,.5);'
+        +'pointer-events:auto;touch-action:none;'+h.s;
+      hel.addEventListener('pointerdown',function(e){
+        e.stopPropagation();e.preventDefault();
+        _brdStartResize(h.id,e);
+      });
+      hel.addEventListener('pointermove',function(e){_brdDoResize(e);});
+      hel.addEventListener('pointerup',function(e){_brdCommitResize();});
+      hel.addEventListener('pointercancel',function(e){
+        // Rollback: restore init objects
+        if(_brdObjSel.resizing&&_brdObjSel.resizeInitObjs){
+          _brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));
+          _brdRenderAll();
+        }
+        _brdObjSel.resizing=false;_brdObjSel.resizeInitObjs=null;
+        _brdShowObjSelOverlay();
+      });
+      el.appendChild(hel);
+    });
+  }
   // Toolbar
   var bar=document.createElement('div');
   bar.id='_brdObjSelBar';
@@ -17299,7 +17353,7 @@ function _brdShowObjSelOverlay(){
 
 function _brdUpdateObjSelOverlayPos(){
   if(!_brdObjSel.el)return;
-  var bb=_brdUnionBbox(_brdObjSel.ids);if(!bb)return;
+  var bb=_brdUnionBbox(_brdObjSel.ids,true);if(!bb)return;
   var PAD=10;
   _brdObjSel.el.style.left=(bb.x-PAD)+'px';
   _brdObjSel.el.style.top=(bb.y-PAD)+'px';
@@ -17330,6 +17384,119 @@ function _brdCleanObjSel(){
   _brdObjSel.active=false;_brdObjSel.ids=[];
   _brdObjSel.dragging=false;_brdObjSel.bgSnap=null;
   _brdObjSel.dragSX=0;_brdObjSel.dragSY=0;_brdObjSel.dragDx=0;_brdObjSel.dragDy=0;
+  _brdObjSel.resizing=false;_brdObjSel.resizeHandle='';_brdObjSel.resizeInitObjs=null;_brdObjSel.resizeScale=1;
+}
+
+function _brdObjSelScale(factor){
+  if(!_brdObjSel.active||!_brdObjSel.ids.length)return;
+  var bb=_brdUnionBbox(_brdObjSel.ids,false);if(!bb)return;
+  _boardSaveHist();
+  var cx=bb.x+bb.w/2,cy=bb.y+bb.h/2;
+  _brdObjSel.ids.forEach(function(id){
+    var idx=_brdObjects.findIndex(function(o){return o.id===id;});
+    if(idx===-1)return;
+    var o=JSON.parse(JSON.stringify(_brdObjects[idx]));
+    if(o.type==='stroke'||o.type==='erase'){
+      o.pts=o.pts.map(function(p){return{x:cx+(p.x-cx)*factor,y:cy+(p.y-cy)*factor};});
+      if(o.size)o.size=Math.max(1,Math.min(200,o.size*factor));
+    }else if(o.type==='shape'){
+      o.x1=cx+(o.x1-cx)*factor;o.y1=cy+(o.y1-cy)*factor;
+      o.x2=cx+(o.x2-cx)*factor;o.y2=cy+(o.y2-cy)*factor;
+      if(o.size)o.size=Math.max(1,Math.min(200,o.size*factor));
+    }else if(o.type==='text'){
+      o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
+      o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*factor)));
+    }
+    _brdObjects[idx]=o;
+  });
+  _brdRenderAll();_boardSavePage();_boardSaveHist();
+  _brdShowObjSelOverlay();
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objscale',ids:_brdObjSel.ids.slice(),factor:factor,cx:cx,cy:cy});
+  haptic(1);
+}
+
+function _brdScaleObjAround(o,factor,cx,cy){
+  o=JSON.parse(JSON.stringify(o));
+  if(o.type==='stroke'||o.type==='erase'){
+    o.pts=o.pts.map(function(p){return{x:cx+(p.x-cx)*factor,y:cy+(p.y-cy)*factor};});
+    if(o.size)o.size=Math.max(1,Math.min(200,o.size*factor));
+  }else if(o.type==='shape'){
+    o.x1=cx+(o.x1-cx)*factor;o.y1=cy+(o.y1-cy)*factor;
+    o.x2=cx+(o.x2-cx)*factor;o.y2=cy+(o.y2-cy)*factor;
+    if(o.size)o.size=Math.max(1,Math.min(200,o.size*factor));
+  }else if(o.type==='text'){
+    o.x=cx+(o.x-cx)*factor;o.y=cy+(o.y-cy)*factor;
+    o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*factor)));
+  }
+  return o;
+}
+
+function _brdStartResize(handle,e){
+  if(!_brdObjSel.active)return;
+  e.preventDefault();e.stopPropagation();
+  e.target.setPointerCapture(e.pointerId);
+  var bb=_brdUnionBbox(_brdObjSel.ids,false);if(!bb)return;
+  var ax,ay;
+  switch(handle){
+    case 'nw':ax=bb.x+bb.w;ay=bb.y+bb.h;break;
+    case 'n': ax=bb.x+bb.w/2;ay=bb.y+bb.h;break;
+    case 'ne':ax=bb.x;ay=bb.y+bb.h;break;
+    case 'e': ax=bb.x;ay=bb.y+bb.h/2;break;
+    case 'se':ax=bb.x;ay=bb.y;break;
+    case 's': ax=bb.x+bb.w/2;ay=bb.y;break;
+    case 'sw':ax=bb.x+bb.w;ay=bb.y;break;
+    case 'w': ax=bb.x+bb.w;ay=bb.y+bb.h/2;break;
+    default:  ax=bb.x+bb.w/2;ay=bb.y+bb.h/2;
+  }
+  var p=_boardGetPos(e);
+  var initDist;
+  if(handle==='n'||handle==='s')initDist=Math.abs(p.y-ay);
+  else if(handle==='e'||handle==='w')initDist=Math.abs(p.x-ax);
+  else initDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
+  if(initDist<1)initDist=1;
+  _brdObjSel.resizing=true;
+  _brdObjSel.resizeHandle=handle;
+  _brdObjSel.resizeAnchorX=ax;
+  _brdObjSel.resizeAnchorY=ay;
+  _brdObjSel.resizeInitDist=initDist;
+  _brdObjSel.resizeScale=1;
+  _brdObjSel.resizeInitObjs=JSON.parse(JSON.stringify(_brdObjects));
+}
+
+function _brdDoResize(e){
+  if(!_brdObjSel.resizing)return;
+  e.preventDefault();
+  var p=_boardGetPos(e);
+  var ax=_brdObjSel.resizeAnchorX,ay=_brdObjSel.resizeAnchorY;
+  var handle=_brdObjSel.resizeHandle;
+  var curDist;
+  if(handle==='n'||handle==='s')curDist=Math.abs(p.y-ay);
+  else if(handle==='e'||handle==='w')curDist=Math.abs(p.x-ax);
+  else curDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
+  var factor=curDist/_brdObjSel.resizeInitDist;
+  factor=Math.max(0.05,Math.min(20,factor));
+  _brdObjSel.resizeScale=factor;
+  _brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));
+  _brdObjSel.ids.forEach(function(id){
+    var idx=_brdObjects.findIndex(function(o){return o.id===id;});
+    if(idx===-1)return;
+    _brdObjects[idx]=_brdScaleObjAround(_brdObjects[idx],factor,ax,ay);
+  });
+  _brdRenderAll();
+  _brdUpdateObjSelOverlayPos();
+}
+
+function _brdCommitResize(){
+  if(!_brdObjSel.resizing)return;
+  _brdObjSel.resizing=false;
+  var factor=_brdObjSel.resizeScale||1;
+  var ax=_brdObjSel.resizeAnchorX,ay=_brdObjSel.resizeAnchorY;
+  _boardSaveHist();
+  _boardSavePage();
+  _boardSaveHist();
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objscale',ids:_brdObjSel.ids.slice(),factor:factor,cx:ax,cy:ay});
+  _brdShowObjSelOverlay();
+  haptic(1);
 }
 
 function _brdObjSelDelete(){
@@ -17961,36 +18128,48 @@ function _pipCycleSize(){
 }
 
 function closeVisioModal(){
-  // Fermer immédiatement l'overlay — rien ne doit bloquer cette étape
-  var bd=g('bdVisio');if(bd)bd.remove();
-  var pip=g('_vPip');if(pip)pip.remove();
-  restoreNav();
-  haptic(4);
-  // Nettoyage asynchrone (erreurs silencieuses)
-  // _visioCurrentUrl vidé en PREMIER pour bloquer tout reconnect automatique
-  try{_isDemoMode=false;_intentionalLeave=true;_visioCurrentUrl='';}catch(e){}
-  try{if(_boardActive){_vCloseBoard();}}catch(e){}
-  try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
-  try{_pipX=null;_pipY=null;}catch(e){}
+  // ── 1. Stopper tous les tracks AVANT de retirer le DOM ──────────
+  // (bd.remove() détache les <video>/<audio> du document — getElementById les trouve encore ici)
   try{_vStopPreJoin();}catch(e){}
-  try{var lv=g('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}}catch(e){}
-  try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
-  try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
-  try{if(_audioCtx){_audioCtx.close();_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}}catch(e){}
-  try{if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}_demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;}catch(e){}
+  try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
   try{if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}}catch(e){}
   try{if(_demoAudioCtx){_demoAudioCtx.close();_demoAudioCtx=null;}}catch(e){}
-  try{if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){
+  try{if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}_demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;}catch(e){}
+  // Arrêter le stream de la vidéo locale (encore dans le DOM à ce stade)
+  try{var lv=document.getElementById('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}}catch(e){}
+  // Balayer tous les <video>/<audio> du modal avant de le supprimer
+  try{var bd0=document.getElementById('bdVisio');if(bd0){bd0.querySelectorAll('video,audio').forEach(function(el){if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}});}}catch(e){}
+  try{if(_audioCtx){_audioCtx.close();_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}}catch(e){}
+
+  // ── 2. Quitter Daily et détruire le call object ──────────────────
+  try{_isDemoMode=false;_intentionalLeave=true;_visioCurrentUrl='';}catch(e){}
+  try{if(_callObj){var co=_callObj;_callObj=null;
+    // destroy() synchrone en PREMIER : libère les tracks getUserMedia gérés par Daily
     try{co.destroy();}catch(e){}
-    // Forcer l'arrêt de tous les tracks WebRTC résiduels laissés par Daily
-    try{document.querySelectorAll('video,audio').forEach(function(el){
-      if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
-    });}catch(e){}
-  });}}catch(e){}
+    // leave() asynchrone ensuite pour signaler le départ au serveur Daily
+    co.leave().catch(function(){}).finally(function(){
+      // Filet de sécurité : tuer tout track WebRTC résiduel restant
+      try{navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&
+        document.querySelectorAll('video,audio').forEach(function(el){
+          if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
+        });}catch(e){}
+    });
+  }}catch(e){}
+
+  // ── 3. Retirer le DOM ────────────────────────────────────────────
+  var bd=document.getElementById('bdVisio');if(bd)bd.remove();
+  var pip=document.getElementById('_vPip');if(pip)pip.remove();
+  restoreNav();haptic(4);
+
+  // ── 4. Nettoyage état ────────────────────────────────────────────
+  try{if(_boardActive){_vCloseBoard();}}catch(e){}
+  try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
+  try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
+  try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
+  try{_pipX=null;_pipY=null;}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;_lastBitrateQuality=null;
   window._vPreJoinCallback=null;
-  try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
 }
 
 // Quitter proprement si la page se ferme pendant une visio (évite de laisser des participant-minutes tourner)
@@ -18324,6 +18503,25 @@ function _brdApplyRemoteOp(op){
     if(!_brdObjects.find(function(o){return o.id===op.obj.id;})){
       _brdObjects.push(op.obj);_brdRenderObj(op.obj,_brdX);_boardSavePage();
     }
+  }else if(op.type==='objscale'&&op.ids&&op.factor&&op.cx!=null){
+    op.ids.forEach(function(id){
+      var idx=_brdObjects.findIndex(function(o){return o.id===id;});
+      if(idx===-1)return;
+      var o=JSON.parse(JSON.stringify(_brdObjects[idx]));
+      var f=op.factor,cx=op.cx,cy=op.cy;
+      if(o.type==='stroke'||o.type==='erase'){
+        o.pts=o.pts.map(function(p){return{x:cx+(p.x-cx)*f,y:cy+(p.y-cy)*f};});
+        if(o.size)o.size=Math.max(1,Math.min(200,o.size*f));
+      }else if(o.type==='shape'){
+        o.x1=cx+(o.x1-cx)*f;o.y1=cy+(o.y1-cy)*f;o.x2=cx+(o.x2-cx)*f;o.y2=cy+(o.y2-cy)*f;
+        if(o.size)o.size=Math.max(1,Math.min(200,o.size*f));
+      }else if(o.type==='text'){
+        o.x=cx+(o.x-cx)*f;o.y=cy+(o.y-cy)*f;
+        o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*f)));
+      }
+      _brdObjects[idx]=o;
+    });
+    _brdRenderAll();_boardSavePage();
   }
   // Ne pas pousser dans _brdHist ici — les ops distants ne doivent pas polluer le undo local
 }
