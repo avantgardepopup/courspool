@@ -1422,7 +1422,10 @@ app.post('/visio/room', requireAuth, async (req, res) => {
     // Générer le token meeting
     const { data: prof } = await supabase.from('profiles').select('prenom,nom').eq('id', userId).single();
     const userName = prof ? ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() : (req.user.email || 'Participant');
-    const tokenExp = Math.floor(Date.now()/1000) + 7200; // token valide 2h
+    // Token valide jusqu'à fin du cours + 1h (ou 4h pour quick room)
+    const tokenExp = cours_id && cours?.date_iso
+      ? Math.floor(new Date(cours.date_iso).getTime()/1000) + (cours.duree||60)*60 + 3600
+      : Math.floor(Date.now()/1000) + 14400;
     const tokenResp = await fetch('https://api.daily.co/v1/meeting-tokens', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -1461,7 +1464,17 @@ app.post('/visio/token', requireAuth, async (req, res) => {
     } else {
       isOwner = true; // quick room partagée : co-host pour tous
     }
-    const tokenExp = Math.floor(Date.now()/1000) + 7200;
+    // Pour un cours, récupérer date_iso + duree pour calculer fin réelle
+    let tokenExp;
+    if (room_name.startsWith('cours-')) {
+      const coursId = room_name.replace('cours-', '');
+      const { data: coursInfo } = await supabase.from('cours').select('date_iso,duree').eq('id', coursId).maybeSingle();
+      tokenExp = coursInfo?.date_iso
+        ? Math.floor(new Date(coursInfo.date_iso).getTime()/1000) + (coursInfo.duree||60)*60 + 3600
+        : Math.floor(Date.now()/1000) + 14400;
+    } else {
+      tokenExp = Math.floor(Date.now()/1000) + 14400; // quick room : 4h
+    }
     const resp = await fetch('https://api.daily.co/v1/meeting-tokens', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
