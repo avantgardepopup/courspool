@@ -15150,6 +15150,14 @@ function _vUpdatePeople(){
   var _svgX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   var _svgHand='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>';
   var html='';
+  // ── Bannière whisper actif ────────────────────────────────────
+  if(_isOwner&&_vWhisperTarget){
+    html+='<div style="padding:10px 14px;background:rgba(124,58,237,.18);border-bottom:1px solid rgba(124,58,237,.3);display:flex;align-items:center;gap:8px">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'
+      +'<span style="flex:1;font-size:12px;font-weight:600;color:#c4b5fd">Chuchotement privé avec <b>'+escH(_vWhisperTarget.name||'')+'</b></span>'
+      +'<button onclick="_vEndWhisper()" style="background:rgba(255,255,255,.1);border:none;color:#a78bfa;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;">Terminer</button>'
+      +'</div>';
+  }
   // ── Section mains levées (prof seulement) ────────────────────
   if(_isOwner&&raisedKeys.length>0){
     html+='<div style="padding:10px 14px 8px;border-bottom:1px solid rgba(255,107,43,.18);background:rgba(255,107,43,.06)">'
@@ -15197,11 +15205,15 @@ function _vUpdatePeople(){
       +(hasHand?'<span style="font-size:9.5px;font-weight:700;color:#FF6B2B;background:rgba(255,107,43,.12);border-radius:5px;padding:1px 6px;letter-spacing:.01em">✋ Main levée</span>':'')
       +'</div></div>'
       // Boutons actions
-      +(!p.local?'<div style="display:flex;gap:3px;flex-shrink:0">'
-        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="'+_icBtn+'background:rgba(34,192,105,.12);" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
-        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="'+_icBtn+'background:rgba(252,129,129,.1);" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
-        +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="'+_icBtn+'background:'+(_wActive?'rgba(124,58,237,.4)':'rgba(124,58,237,.12)')+';'+(hasHand?'box-shadow:0 0 0 1.5px rgba(124,58,237,.6);':'')+'" title="'+(_wActive?'Fin du whisper':'Whisper privé')+'"><svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/>'+(_wActive?'<line x1="1" y1="1" x2="23" y2="23"/>':'')+'</svg></button>':'')
-        +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="'+_icBtn+'background:rgba(255,107,43,.1);" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
+      +(!p.local?'<div style="display:flex;gap:3px;flex-shrink:0;align-items:center">'
+        // Donner la parole — vert, libellé si main levée
+        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:'+(hasHand?'rgba(34,192,105,.85)':'rgba(34,192,105,.1)')+';border:none;color:'+(hasHand?'#fff':'#22C069')+';border-radius:20px;padding:4px '+(hasHand?'10px':'6px')+';font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>'+(hasHand?'Parole':'')+'</button>':'')
+        // Couper micro — rouge, icône crayon rayé
+        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(252,129,129,.1);border:none;color:#fc8181;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Couper le micro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        // Chuchoter — oreille icon, violet, libellé si actif
+        +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="background:'+(_wActive?'rgba(124,58,237,.5)':'rgba(124,58,237,.1)')+';border:none;color:#a78bfa;border-radius:20px;padding:4px '+(  _wActive?'10px':'6px')+';font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="'+(_wActive?'Arrêter le chuchotement':'Chuchoter — parler uniquement à cet élève')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'+(_wActive?'Fin':'Chuchoter')+'</button>':'')
+        // Message privé — bulle orange
+        +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(255,107,43,.1);border:none;color:#FF6B2B;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
         +'</div>':'')
       +'</div>';
   }).join('');
@@ -15731,7 +15743,7 @@ var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; /
 var _brdObjects=[];       // objets de la page courante (ordre dessin)
 var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
 // _brdObjIdSeq removed — IDs are now generated with timestamp+random (collision-safe)
-var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null,rotating:false,rotateStartAngle:0,rotateCX:0,rotateCY:0,rotateCurAngle:0,rotateInitObjs:null};
+var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,rotEl:null,rzEl:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null,rotating:false,rotateStartAngle:0,rotateCX:0,rotateCY:0,rotateCurAngle:0,rotateInitObjs:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
 var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
@@ -15929,7 +15941,7 @@ function _boardRenderSubbar(){
       h+='<button onclick="_boardSetEraserSz('+s.sz+')" style="background:'+(a?'rgba(255,255,255,.18)':'transparent')+';border:none;cursor:pointer;width:42px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
         +'<div style="width:28px;height:'+s.h+'px;background:'+(a?'#fff':'rgba(255,255,255,.4)')+';border-radius:2px;"></div></button>';
     });
-  }else{
+  }else if(_brdTool==='pen'||_brdTool==='marker'){
     [{sz:2,h:2},{sz:5,h:5},{sz:11,h:9}].forEach(function(s){
       var a=_brdSz===s.sz;
       h+='<button onclick="_boardSetSize('+s.sz+')" style="background:'+(a?'rgba(255,255,255,.18)':'transparent')+';border:none;cursor:pointer;width:42px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
@@ -16428,6 +16440,7 @@ function _boardApplyTransform(){
   // Hide sub-toolbar + text editor while panning/zooming; restore after gesture ends
   var sub=g('_brdSub');if(sub)sub.style.opacity='0';
   var txtInp=g('_brdActiveInp');if(txtInp)txtInp.style.opacity='0';
+  var txtWrap=g('_brdTxtWrap');if(txtWrap)txtWrap.style.opacity='0';
   var txtBar=g('_brdTxtBar');if(txtBar)txtBar.style.opacity='0';
   if(_brdPanHideTimer)clearTimeout(_brdPanHideTimer);
   _brdPanHideTimer=setTimeout(function(){
@@ -16435,11 +16448,12 @@ function _boardApplyTransform(){
     var bar=g('_brdTxtBar');if(bar)bar.style.opacity='';
     // Reposition textarea to match canvas after pan/zoom
     var inp=g('_brdActiveInp');
-    if(inp&&_brdC&&_brdTextAnchor){
+    var wrapEl=g('_brdTxtWrap');
+    if((inp||wrapEl)&&_brdC&&_brdTextAnchor){
       var r=_brdC.getBoundingClientRect();
-      inp.style.left=(r.left+_brdTextAnchor.cx*_brdZoom)+'px';
-      inp.style.top=(r.top+_brdTextAnchor.cy*_brdZoom)+'px';
-      inp.style.opacity='';
+      var nx=(r.left+_brdTextAnchor.cx*_brdZoom)+'px',ny=(r.top+_brdTextAnchor.cy*_brdZoom)+'px';
+      if(wrapEl){wrapEl.style.left=nx;wrapEl.style.top=ny;wrapEl.style.opacity='';}
+      if(inp)inp.style.opacity='';
       if(bar){
         var ib=inp.getBoundingClientRect();
         var bw=bar.offsetWidth||220;
@@ -16660,7 +16674,7 @@ function _brdUpdateActiveText(){
   inp.style.fontStyle=_brdTextItalic?'italic':'normal';
   inp.style.fontSize=fszScreen+'px';
   inp.style.textAlign=_brdTextAlign;
-  inp.style.color='transparent';inp.style.caretColor=_brdColor;
+  inp.style.color='transparent';inp.style.webkitTextFillColor='transparent';inp.style.caretColor=_brdColor;
   inp.dispatchEvent(new Event('input')); // re-triggers live canvas preview
 }
 function _brdBuildTxtBarHTML(){
@@ -17373,13 +17387,13 @@ function _brdShowObjSelOverlay(){
     +'border:2px dashed #FF6B2B;border-radius:6px;';
   page.appendChild(el);
   _brdObjSel.el=el;
-  // Rotate handle (top-center) + Resize handle (bottom-right)
+  // Rotate handle (top-center, fixed on body) + Resize handle (bottom-right, fixed on body)
+  // Must be on body (not inside _brdPage) to avoid overflow:hidden clipping from _brdScroll
   if(!_brdRoomId||_brdCanEdit){
-    // Rotate handle
     var rh=document.createElement('div');
-    rh.style.cssText='position:absolute;top:-30px;left:calc(50% - 11px);width:22px;height:22px;'
+    rh.style.cssText='position:fixed;width:22px;height:22px;z-index:10200;'
       +'background:#FF6B2B;border-radius:50%;cursor:grab;display:flex;align-items:center;justify-content:center;'
-      +'box-shadow:0 2px 8px rgba(0,0,0,.4);touch-action:none;pointer-events:auto;';
+      +'box-shadow:0 2px 8px rgba(0,0,0,.4);touch-action:none;';
     rh.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 11-2.8-7.2L23 10"/></svg>';
     rh.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();_brdStartRotate(e);});
     rh.addEventListener('pointermove',function(e){_brdDoRotate(e);});
@@ -17388,11 +17402,11 @@ function _brdShowObjSelOverlay(){
       if(_brdObjSel.rotating&&_brdObjSel.rotateInitObjs){_brdObjects=JSON.parse(JSON.stringify(_brdObjSel.rotateInitObjs));_brdRenderAll();}
       _brdObjSel.rotating=false;_brdObjSel.rotateInitObjs=null;_brdShowObjSelOverlay();
     });
-    el.appendChild(rh);
-    // Resize handle (bottom-right)
+    document.body.appendChild(rh);
+    _brdObjSel.rotEl=rh;
     var rzh=document.createElement('div');
-    rzh.style.cssText='position:absolute;bottom:-10px;right:-10px;width:20px;height:20px;'
-      +'background:#FF6B2B;border-radius:50%;cursor:nwse-resize;touch-action:none;pointer-events:auto;'
+    rzh.style.cssText='position:fixed;width:20px;height:20px;z-index:10200;'
+      +'background:#FF6B2B;border-radius:50%;cursor:nwse-resize;touch-action:none;'
       +'box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;';
     rzh.innerHTML='<svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="8" height="8"><line x1="1" y1="11" x2="11" y2="1"/><line x1="6" y1="11" x2="11" y2="6"/></svg>';
     rzh.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();_brdStartResize('se',e);});
@@ -17402,7 +17416,9 @@ function _brdShowObjSelOverlay(){
       if(_brdObjSel.resizing&&_brdObjSel.resizeInitObjs){_brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));_brdRenderAll();}
       _brdObjSel.resizing=false;_brdObjSel.resizeInitObjs=null;_brdShowObjSelOverlay();
     });
-    el.appendChild(rzh);
+    document.body.appendChild(rzh);
+    _brdObjSel.rzEl=rzh;
+    _brdUpdateObjSelHandlePos();
   }
   // Toolbar
   var bar=document.createElement('div');
@@ -17436,6 +17452,7 @@ function _brdUpdateObjSelOverlayPos(){
   _brdObjSel.el.style.width=(bb.w+PAD*2)+'px';
   _brdObjSel.el.style.height=(bb.h+PAD*2)+'px';
   _brdUpdateObjSelBarPos();
+  _brdUpdateObjSelHandlePos();
 }
 
 function _brdUpdateObjSelBarPos(){
@@ -17452,7 +17469,18 @@ function _brdUpdateObjSelBarPos(){
 function _brdCleanObjSelDOM(){
   var el=document.getElementById('_brdObjSelEl');if(el&&el.parentNode)el.parentNode.removeChild(el);
   var bar=document.getElementById('_brdObjSelBar');if(bar&&bar.parentNode)bar.parentNode.removeChild(bar);
-  _brdObjSel.el=null;_brdObjSel.bar=null;
+  if(_brdObjSel.rotEl&&_brdObjSel.rotEl.parentNode)_brdObjSel.rotEl.parentNode.removeChild(_brdObjSel.rotEl);
+  if(_brdObjSel.rzEl&&_brdObjSel.rzEl.parentNode)_brdObjSel.rzEl.parentNode.removeChild(_brdObjSel.rzEl);
+  _brdObjSel.el=null;_brdObjSel.bar=null;_brdObjSel.rotEl=null;_brdObjSel.rzEl=null;
+}
+
+function _brdUpdateObjSelHandlePos(){
+  var el=_brdObjSel.el;if(!el)return;
+  var er=el.getBoundingClientRect();
+  var rh=_brdObjSel.rotEl;
+  if(rh){rh.style.left=(er.left+er.width/2-11)+'px';rh.style.top=(er.top-41)+'px';}
+  var rzh=_brdObjSel.rzEl;
+  if(rzh){rzh.style.left=(er.right-10)+'px';rzh.style.top=(er.bottom-10)+'px';}
 }
 
 function _brdCleanObjSel(){
@@ -18012,9 +18040,7 @@ function _boardImportCP(){
 function _boardInsertText(cx,cy){
   if(!_brdC)return;
   // Remove any existing editor without waiting for its blur
-  var old=document.getElementById('_brdActiveInp');if(old&&old.parentNode)old.parentNode.removeChild(old);
-  var oldBar=document.getElementById('_brdTxtBar');if(oldBar&&oldBar.parentNode)oldBar.parentNode.removeChild(oldBar);
-  var oldMath=document.getElementById('_brdMathPanel');if(oldMath&&oldMath.parentNode)oldMath.parentNode.removeChild(oldMath);
+  ['_brdActiveInp','_brdTxtBar','_brdMathPanel','_brdTxtWrap'].forEach(function(id){var e=document.getElementById(id);if(e&&e.parentNode)e.parentNode.removeChild(e);});
   _brdActiveTxtBarEl=null;
   _brdTextAnchor={cx:cx,cy:cy}; // for repositioning after pan/zoom
   // Snapshot canvas so we can do live preview as user types (canvas GPU copy)
@@ -18024,7 +18050,15 @@ function _boardInsertText(cx,cy){
   function getFontStr(){
     return (_brdTextItalic?'italic ':'normal ')+(_brdTextBold?'700':'400')+' '+_brdTextSize+'px "Plus Jakarta Sans",sans-serif';
   }
-  function getTextX(){return _brdTextAlign==='center'?cx+70:_brdTextAlign==='right'?cx+140:cx;}
+  var wrap=null; // will hold wrapper div
+  function getBoxWpx(){return wrap?wrap.offsetWidth:240;}
+  function getBoxWcanvas(){return getBoxWpx()/_brdZoom;}
+  function getTextX(){
+    var pad=8/_brdZoom;
+    if(_brdTextAlign==='center')return cx+getBoxWcanvas()/2;
+    if(_brdTextAlign==='right')return cx+getBoxWcanvas()-pad;
+    return cx+pad; // left
+  }
   // Live-draw text on canvas as user types
   function drawPreview(txt){
     _brdRestoreSnap(snapshot);
@@ -18036,18 +18070,49 @@ function _boardInsertText(cx,cy){
     txt.split('\n').forEach(function(line,i){_brdX.fillText(line,tx,cy+_brdTextSize+i*lineH);});
     _brdX.restore();
   }
-  // Textarea: transparent so canvas shows through, font scaled to match canvas zoom
   var fszScreen=Math.round(_brdTextSize*_brdZoom);
+  var initBoxW=Math.min(280,Math.max(140,Math.round((_brdC?_brdC.getBoundingClientRect().width:400)*0.5)));
+  // Wrapper div (visible box + handles)
+  wrap=document.createElement('div');
+  wrap.id='_brdTxtWrap';
+  wrap.style.cssText='position:fixed;left:'+sx+'px;top:'+sy+'px;z-index:10100;'
+    +'width:'+initBoxW+'px;min-width:80px;box-sizing:border-box;';
+  // Textarea fills wrapper — transparent text so canvas preview shows through
   var inp=document.createElement('textarea');
   inp.id='_brdActiveInp';
-  inp.style.cssText='position:fixed;left:'+sx+'px;top:'+sy+'px;z-index:10100;'
-    +'background:transparent;border:1.5px dashed rgba(255,107,43,.55);border-radius:6px;'
+  inp.style.cssText='width:100%;background:transparent;'
+    +'border:1.5px dashed rgba(255,107,43,.55);border-radius:6px;box-sizing:border-box;'
     +'font-family:"Plus Jakarta Sans",sans-serif;font-size:'+fszScreen+'px;'
     +'font-weight:'+(_brdTextBold?'700':'400')+';font-style:'+(_brdTextItalic?'italic':'normal')+';'
-    +'text-align:'+_brdTextAlign+';color:transparent;caret-color:'+_brdColor+';'
-    +'padding:4px 8px;min-width:120px;min-height:'+(fszScreen+14)+'px;max-width:280px;'
-    +'outline:none;resize:none;overflow:hidden;line-height:1.45;-webkit-text-size-adjust:none;';
-  document.body.appendChild(inp);
+    +'text-align:'+_brdTextAlign+';color:transparent;-webkit-text-fill-color:transparent;caret-color:'+_brdColor+';'
+    +'padding:4px 8px;min-height:'+(fszScreen+14)+'px;'
+    +'outline:none;resize:none;overflow:hidden;line-height:1.45;-webkit-text-size-adjust:none;display:block;';
+  wrap.appendChild(inp);
+  // Right-side handle — adjust box width
+  var rsH=document.createElement('div');
+  rsH.style.cssText='position:absolute;right:-9px;top:50%;transform:translateY(-50%);'
+    +'width:14px;height:28px;background:#FF6B2B;border-radius:4px;cursor:ew-resize;'
+    +'touch-action:none;display:flex;align-items:center;justify-content:center;'
+    +'box-shadow:0 2px 6px rgba(0,0,0,.4);z-index:1;';
+  rsH.innerHTML='<svg viewBox="0 0 6 16" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" width="5" height="12"><line x1="2" y1="1" x2="2" y2="15"/><line x1="5" y1="1" x2="5" y2="15"/></svg>';
+  wrap.appendChild(rsH);
+  // Bottom-right handle — scale font size
+  var brH=document.createElement('div');
+  brH.style.cssText='position:absolute;right:-8px;bottom:-8px;'
+    +'width:16px;height:16px;background:#FF6B2B;border-radius:50%;cursor:nwse-resize;'
+    +'touch-action:none;box-shadow:0 2px 6px rgba(0,0,0,.4);z-index:1;';
+  wrap.appendChild(brH);
+  document.body.appendChild(wrap);
+  // ── Right-side handle: resize width ──
+  var rsDown=false,rsStartX=0,rsStartW=0;
+  rsH.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();rsH.setPointerCapture(e.pointerId);rsDown=true;rsStartX=e.clientX;rsStartW=wrap.offsetWidth;});
+  rsH.addEventListener('pointermove',function(e){if(!rsDown)return;e.preventDefault();wrap.style.width=Math.max(80,rsStartW+(e.clientX-rsStartX))+'px';inp.dispatchEvent(new Event('input'));});
+  rsH.addEventListener('pointerup',function(){rsDown=false;});
+  // ── Bottom-right handle: scale font size ──
+  var brDown=false,brStartY=0,brStartFsz=0;
+  brH.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();brH.setPointerCapture(e.pointerId);brDown=true;brStartY=e.clientY;brStartFsz=_brdTextSize;});
+  brH.addEventListener('pointermove',function(e){if(!brDown)return;e.preventDefault();var newSz=Math.max(8,Math.min(80,Math.round(brStartFsz*(1+(e.clientY-brStartY)/120))));if(newSz!==_brdTextSize){_brdTextSize=newSz;var fs=Math.round(_brdTextSize*_brdZoom);inp.style.fontSize=fs+'px';inp.style.minHeight=(fs+14)+'px';inp.dispatchEvent(new Event('input'));_brdRenderActiveTxtBar();}});
+  brH.addEventListener('pointerup',function(){brDown=false;});
   // Formatting bar
   var bar=document.createElement('div');
   bar.id='_brdTxtBar';
@@ -18057,7 +18122,7 @@ function _boardInsertText(cx,cy){
   _brdActiveTxtBarEl=bar;
   document.body.appendChild(bar);
   function updateBarPos(){
-    var ib=inp.getBoundingClientRect();
+    var ib=wrap.getBoundingClientRect();
     var bw=bar.offsetWidth||220;
     var bleft=Math.min(Math.max(ib.left,8),window.innerWidth-bw-8);
     var vvBottom=window.visualViewport?(window.visualViewport.offsetTop+window.visualViewport.height):window.innerHeight;
@@ -18076,9 +18141,9 @@ function _boardInsertText(cx,cy){
   function _reanchorInp(){
     if(!_brdC||!_brdTextAnchor)return;
     var r2=_brdC.getBoundingClientRect();
-    inp.style.left=(r2.left+_brdTextAnchor.cx*_brdZoom)+'px';
-    inp.style.top=(r2.top+_brdTextAnchor.cy*_brdZoom)+'px';
-    inp.style.opacity='';
+    wrap.style.left=(r2.left+_brdTextAnchor.cx*_brdZoom)+'px';
+    wrap.style.top=(r2.top+_brdTextAnchor.cy*_brdZoom)+'px';
+    wrap.style.opacity='';
   }
   function _applyKbPan(kbH){
     if(kbH===_kbLastH)return;
@@ -18118,6 +18183,8 @@ function _boardInsertText(cx,cy){
   var committed=false;
   var commit=function(){
     if(committed)return;committed=true;
+    // Capture final values BEFORE removing DOM
+    var finalTx=getTextX();var finalFsz=_brdTextSize;var finalLineH=finalFsz*1.45;
     _brdActiveTxtBarEl=null;_brdTextAnchor=null;
     if(window.visualViewport)window.visualViewport.removeEventListener('resize',vvResizeFn);
     window.removeEventListener('keyboardWillShow',kbShowFn);
@@ -18125,19 +18192,19 @@ function _boardInsertText(cx,cy){
     if(bar.parentNode)bar.parentNode.removeChild(bar);
     var mp=document.getElementById('_brdMathPanel');if(mp&&mp.parentNode)mp.parentNode.removeChild(mp);
     var txt=inp.value.trim();
+    var wr=document.getElementById('_brdTxtWrap');if(wr&&wr.parentNode)wr.parentNode.removeChild(wr);
     if(inp.parentNode)inp.parentNode.removeChild(inp);
     // Restore snapshot then draw final committed text
-    if(!_brdX||!_brdC)return; // tableau fermé pendant la saisie — éviter TypeError sur _brdX.save()
+    if(!_brdX||!_brdC)return;
     _brdRestoreSnap(snapshot);
     if(!txt)return;
     _brdX.save();
     _brdX.font=getFontStr();_brdX.fillStyle=_brdColor;
     _brdX.globalCompositeOperation='source-over';_brdX.globalAlpha=1;_brdX.textAlign=_brdTextAlign;
-    var lineH=_brdTextSize*1.45;var tx=getTextX();
-    txt.split('\n').forEach(function(line,i){_brdX.fillText(line,tx,cy+_brdTextSize+i*lineH);});
+    txt.split('\n').forEach(function(line,i){_brdX.fillText(line,finalTx,cy+finalFsz+i*finalLineH);});
     _brdX.restore();
     var _txtId=_brdObjId();
-    _brdObjects.push({id:_txtId,type:'text',content:txt,x:tx,y:cy+_brdTextSize,
+    _brdObjects.push({id:_txtId,type:'text',content:txt,x:finalTx,y:cy+finalFsz,
       textSize:_brdTextSize,bold:_brdTextBold,italic:_brdTextItalic,align:_brdTextAlign,color:_brdColor});
     _boardSaveHist();
     // Émettre l'op texte
