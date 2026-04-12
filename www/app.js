@@ -14038,6 +14038,7 @@ function snapNavPill(nav){
 
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
+var _vSidToUid={}; // Daily.co session_id → CoursPool userId (populated via app-message)
 var _pendingVisioToken=null; // token pré-fetché par /visio/room, consommé par _joinDailyRoom
 
 // ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
@@ -14740,7 +14741,9 @@ function _vOnJoined(){
   if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
   _joinRetries=0;
   _vRenderGrid();
-  if(_isOwner)_vUpdateHands(); // show prof controls panel (open floor button)
+  if(_isOwner)_vUpdateHands();
+  // Announce our CoursPool userId to host so they can identify us for kick
+  try{if(_callObj&&user&&user.id)_callObj.sendAppMessage({type:'uid',userId:user.id},'*');}catch(e){}
   try{
     var local=_callObj.participants().local;
     var audioTrack=local&&local.tracks&&local.tracks.audio&&local.tracks.audio.persistentTrack;
@@ -14931,6 +14934,29 @@ function _vOnMsg(evt){
       _vWhisperMuted=null;
     }
     var _wn=document.getElementById('_vWhisperNotif');if(_wn&&_wn.parentNode)_wn.parentNode.removeChild(_wn);
+  }else if(m.type==='uid'){
+    // Store Daily session_id → CoursPool userId mapping (for kick)
+    if(from&&m.userId)_vSidToUid[from]=m.userId;
+    // Re-announce our own userId to the new participant
+    try{if(_callObj&&user&&user.id)_callObj.sendAppMessage({type:'uid',userId:user.id},from);}catch(e){}
+  }else if(m.type==='kick'){
+    // We are being kicked by the prof
+    if(_isOwner)return; // prof can't kick themselves
+    _intentionalLeave=true;
+    var _perm=!!m.permanent;
+    // Block rejoining if permanent
+    if(_perm&&typeof _socket!=='undefined'&&_socket&&_brdRoomId){
+      _socket.emit('board_self_kick',{roomId:_brdRoomId,permanent:true});
+    }
+    // Show kicked overlay then close
+    var _ko=document.createElement('div');
+    _ko.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+    _ko.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" width="52" height="52"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+      +'<div style="color:#fff;font-size:18px;font-weight:700;">Vous avez été expulsé</div>'
+      +'<div style="color:rgba(255,255,255,.55);font-size:13px;text-align:center;padding:0 32px;">'+(_perm?'Le professeur vous a bloqué définitivement de cette session.':'Le professeur vous a retiré de la session.')+'</div>';
+    document.body.appendChild(_ko);
+    haptic(3);
+    setTimeout(function(){closeVisioModal();var k=document.getElementById?document.body.querySelector('[style*="z-index:999999"]'):null;if(_ko&&_ko.parentNode)_ko.parentNode.removeChild(_ko);},2500);
   }
 }
 
@@ -15214,6 +15240,8 @@ function _vUpdatePeople(){
         +(_isOwner?'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\'')+'" style="background:'+(_wActive?'rgba(124,58,237,.5)':'rgba(124,58,237,.1)')+';border:none;color:#a78bfa;border-radius:20px;padding:4px '+(  _wActive?'10px':'6px')+';font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap;-webkit-tap-highlight-color:transparent;" title="'+(_wActive?'Arrêter le chuchotement':'Chuchoter — parler uniquement à cet élève')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'+(_wActive?'Fin':'Chuchoter')+'</button>':'')
         // Message privé — bulle orange
         +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(255,107,43,.1);border:none;color:#FF6B2B;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
+        // Expulser — icône sortie rouge, prof seulement
+        +(_isOwner?'<button onclick="_vKickParticipant(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(239,68,68,.1);border:none;color:#f87171;border-radius:8px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;" title="Expulser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>':'')
         +'</div>':'')
       +'</div>';
   }).join('');
@@ -15402,6 +15430,44 @@ function _vMuteP(sid){
   delete _raisedHands[sid];_vUpdateHands();haptic(1);
 }
 function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeople();var t=g('_vthand-'+sid);if(t)t.style.display='none';}
+
+function _vKickParticipant(sid,name){
+  var existing=document.getElementById('_vKickPopup');if(existing&&existing.parentNode)existing.parentNode.removeChild(existing);
+  var popup=document.createElement('div');
+  popup.id='_vKickPopup';
+  popup.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999998;display:flex;align-items:center;justify-content:center;padding:20px;';
+  popup.innerHTML='<div style="background:#1a1d2e;border-radius:20px;padding:24px;max-width:320px;width:100%;box-shadow:0 12px 48px rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.08);">'
+    +'<div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px">Expulser '+escH(name)+' ?</div>'
+    +'<div style="font-size:12.5px;color:rgba(255,255,255,.5);margin-bottom:20px;line-height:1.6">Choisissez le type d\'expulsion.</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;">'
+    +'<button id="_vKickTempBtn" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fcd34d;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
+    +'⏱ Temporaire<br><span style="font-size:11px;font-weight:400;opacity:.65">L\'élève quitte maintenant, peut revenir</span></button>'
+    +'<button id="_vKickPermBtn" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">'
+    +'🚫 Définitif<br><span style="font-size:11px;font-weight:400;opacity:.65">L\'élève est bloqué de cette session</span></button>'
+    +'<button id="_vKickCancelBtn" style="background:transparent;border:none;color:rgba(255,255,255,.4);font-size:13px;font-family:inherit;cursor:pointer;padding:10px;margin-top:2px;-webkit-tap-highlight-color:transparent">Annuler</button>'
+    +'</div></div>';
+  document.body.appendChild(popup);
+  function closePopup(){var p=document.getElementById('_vKickPopup');if(p&&p.parentNode)p.parentNode.removeChild(p);}
+  document.getElementById('_vKickCancelBtn').addEventListener('click',closePopup);
+  document.getElementById('_vKickTempBtn').addEventListener('click',function(){closePopup();_vDoKick(sid,name,false);});
+  document.getElementById('_vKickPermBtn').addEventListener('click',function(){closePopup();_vDoKick(sid,name,true);});
+  popup.addEventListener('click',function(e){if(e.target===popup)closePopup();});
+}
+
+function _vDoKick(sid,name,permanent){
+  if(!_callObj)return;
+  try{_callObj.sendAppMessage({type:'kick',permanent:permanent},sid);}catch(e){
+    // Fallback: broadcast (Daily.co will deliver only to the target if sid given)
+    try{_callObj.sendAppMessage({type:'kick',permanent:permanent,targetSid:sid},'*');}catch(e2){}
+  }
+  // Socket permanent block
+  if(permanent&&typeof _socket!=='undefined'&&_socket&&_brdRoomId){
+    var targetUserId=_vSidToUid[sid];
+    if(targetUserId)_socket.emit('board_kick',{roomId:_brdRoomId,targetUserId:targetUserId,permanent:true});
+  }
+  toast((permanent?'🚫 ':'⏱ ')+escH(name)+' a été expulsé'+(permanent?' définitivement':''),'',2500);
+  haptic(2);
+}
 
 // ── DM privé ──────────────────────────────────────────────────────────────���───
 var _vDmTarget=null;

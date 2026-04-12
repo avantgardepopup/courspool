@@ -74,6 +74,7 @@ io.use(async (socket, next) => {
 // ── Tableau blanc collaboratif — rooms en mémoire ────────────
 // { ops:[], snapshot:null, editors:Set<userId>, ownerId, participants:Map<userId,name>, lastActivity:ts }
 const boardRooms = new Map();
+const kickedParticipants = new Map(); // roomId → Set<userId> — expulsions définitives
 // socketId → Set<roomId> — pour nettoyage sur disconnect
 const socketBoardRooms = new Map();
 // Purge des rooms inactives depuis plus de 2h (abandon sans disconnect propre)
@@ -124,8 +125,36 @@ io.on('connection', (socket) => {
   });
 
   // ── Board: élève ou retardataire rejoint ─────────────────────
+  socket.on('board_kick', ({roomId, targetUserId, permanent}) => {
+    if (!roomId || !targetUserId) return;
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return; // seul le propriétaire peut expulser
+    if (permanent) {
+      if (!kickedParticipants.has(roomId)) kickedParticipants.set(roomId, new Set());
+      kickedParticipants.get(roomId).add(targetUserId);
+    }
+    if (room.participants) room.participants.delete(targetUserId);
+    // Notifier les participants restants
+    io.to('board_' + roomId).emit('board_participant_left', {userId: targetUserId});
+  });
+
+  socket.on('board_self_kick', ({roomId, permanent}) => {
+    // Appelé par l'élève expulsé pour quitter proprement la room socket
+    if (!roomId) return;
+    socket.leave('board_' + roomId);
+    const sRooms = socketBoardRooms.get(socket.id);
+    if (sRooms) sRooms.delete(roomId);
+    const room = boardRooms.get(roomId);
+    if (room && room.participants) room.participants.delete(socket.userId);
+  });
+
   socket.on('board_join', async ({roomId, userName}) => {
     if (!roomId) return;
+    // Vérification expulsion définitive
+    if (kickedParticipants.has(roomId) && kickedParticipants.get(roomId).has(socket.userId)) {
+      socket.emit('board_kicked_permanent', {roomId});
+      return;
+    }
     // Vérification d'inscription pour les rooms de cours (cours-{id})
     if (roomId.startsWith('cours-')) {
       const coursId = roomId.replace('cours-', '');

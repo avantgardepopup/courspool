@@ -333,6 +333,9 @@ function initSocket() {
   _socket.on('board_goto_page', function(d) {
     if (typeof _brdOnRemoteGotoPage === 'function') _brdOnRemoteGotoPage(d);
   });
+  _socket.on('board_force_sync', function(d) {
+    if (typeof _brdOnForceSyncReceived === 'function') _brdOnForceSyncReceived(d);
+  });
   // Demande de snapshot immédiat (log ops trop long)
   _socket.on('board_force_snapshot', function(data) {
     if (!data || !data.roomId) return;
@@ -344,5 +347,18 @@ function initSocket() {
     if (_socket && _socket.connected) {
       _socket.emit('board_snapshot', {roomId: _brdRoomId, snapshot: snap});
     }
+  });
+  // Expulsion définitive — l'élève est bloqué et ne peut plus rejoindre
+  _socket.on('board_kicked_permanent', function() {
+    if (typeof closeVisioModal === 'function') closeVisioModal();
+    setTimeout(function() {
+      var ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;';
+      ov.innerHTML = '<div style="font-size:48px">🚫</div>'
+        + '<div style="color:#fff;font-size:20px;font-weight:700;text-align:center">Accès refusé</div>'
+        + '<div style="color:rgba(255,255,255,.7);font-size:15px;text-align:center;max-width:280px">Vous avez été expulsé définitivement de cette session par le professeur.</div>'
+        + '<button onclick="this.parentNode.remove()" style="margin-top:8px;padding:12px 28px;border-radius:24px;border:none;background:#FF6B2B;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">Fermer</button>';
+      document.body.appendChild(ov);
+    }, 400);
   });
 }
