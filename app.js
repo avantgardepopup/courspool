@@ -14024,6 +14024,7 @@ function snapNavPill(nav){
 
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
+var _DAILY_KEY='b5d53bb4b025ebe61e648772aa3f95a3b7c8314cd4ad70a7420566e5fc5586c7';
 
 // ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
 function _vOpenQuickSheet(){
@@ -14052,15 +14053,22 @@ function _vOpenQuickSheet(){
     createBtn.disabled=true;createBtn.querySelector('span').textContent='Création…';
     var slug='cp-'+Math.random().toString(36).slice(2,9);
     try{
+      // 1. Créer la room sur Daily.co
+      var dr=await fetch('https://api.daily.co/v1/rooms',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+_DAILY_KEY},
+        body:JSON.stringify({name:slug,properties:{exp:Math.floor(Date.now()/1000)+7200,enable_chat:true}})
+      });
+      var dd=await dr.json();
+      if(!dd.url)throw new Error('daily room error: '+(dd.error||JSON.stringify(dd)));
+      var roomUrl=dd.url;
+      // 2. Obtenir le token JWT pour cet utilisateur
       var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:slug})});
       var td=await tr.json();
       if(!td.token)throw new Error('no token');
-      var pay=JSON.parse(atob(td.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-      var dom=pay.d||pay.iss||null;
-      var roomUrl=dom?('https://'+dom+'.daily.co/'+slug):null;
-      if(!roomUrl)throw new Error('no domain');
       ovl.remove();_vShowShareLink(roomUrl,function(){openVisioModal(roomUrl);});
     }catch(e){
+      console.error('[Visio create]',e);
       toast('Erreur création salle','Vérifiez votre connexion');
       createBtn.disabled=false;createBtn.querySelector('span').textContent='Créer une nouvelle salle';
     }
