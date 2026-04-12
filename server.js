@@ -86,10 +86,15 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000);
 
+// Allowed op types for board_op payload validation
+const BOARD_OP_TYPES = new Set(['stroke','erase','shape','text','clear','objmove','objdelete','objinsert','snapshot','bg']);
+const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{0,50}\)|[a-z]{1,20})$/;
+
 // ── Chaque client rejoint sa propre room ─────────────────────
 io.on('connection', (socket) => {
   socket.join(socket.userId);
   socketBoardRooms.set(socket.id, new Set());
+  let ptLastMs = 0; // per-connection throttle for board_pt (~33 pts/s max)
 
   // ── Board: prof initialise la room ──────────────────────────
   socket.on('board_init', ({roomId, userName}) => {
@@ -176,6 +181,9 @@ io.on('connection', (socket) => {
   socket.on('board_pt', ({roomId, pt}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;
+    const now = Date.now();
+    if (now - ptLastMs < 30) return; // rate-limit ~33 pts/s per connection
+    ptLastMs = now;
     socket.to('board_' + roomId).emit('board_pt', {userId: socket.userId, pt});
   });
 
@@ -190,6 +198,12 @@ io.on('connection', (socket) => {
   socket.on('board_op', ({roomId, op}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;
+    // Payload validation
+    if (!op || typeof op.type !== 'string' || !BOARD_OP_TYPES.has(op.type)) return;
+    if (op.color !== undefined && (typeof op.color !== 'string' || op.color.length > 50 || !COLOR_RE.test(op.color))) return;
+    if (op.size !== undefined && (typeof op.size !== 'number' || op.size < 0.5 || op.size > 200)) return;
+    if (op.content !== undefined && (typeof op.content !== 'string' || op.content.length > 10000)) return;
+    if (op.data !== undefined && (typeof op.data !== 'string' || op.data.length > 2_000_000)) return;
     op.userId = socket.userId;
     room.ops.push(op);
     room.lastActivity = Date.now();

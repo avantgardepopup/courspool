@@ -14319,6 +14319,7 @@ var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_board
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
 var _joinTimeout=null,_joinRetries=0;
+var _handAutoLowerTimer=null;
 var _vPipFeaturedSid=null;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
@@ -14736,6 +14737,8 @@ function _vOnJoined(){
     var local=_callObj.participants().local;
     var audioTrack=local&&local.tracks&&local.tracks.audio&&local.tracks.audio.persistentTrack;
     if(audioTrack){
+      // Close any existing AudioContext before creating a new one (prevents accumulation on reconnect)
+      if(_audioCtx){try{_audioCtx.close();}catch(e){}_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}
       _audioCtx=new AudioContext();
       _audioSrc=_audioCtx.createMediaStreamSource(new MediaStream([audioTrack]));
       _audioAnalyser=_audioCtx.createAnalyser();
@@ -15057,11 +15060,11 @@ function _vUpdatePeople(){
   }
   // ── Liste participants ───────────────────────────────────────
   html+=Object.keys(parts).map(function(k){
-    var p=parts[k];var sid=p.local?'local':p.session_id;
+    var p=parts[k];var sid=p.local?(p.session_id||'local'):p.session_id;
     var name=p.user_name||(p.local?'Vous':'Participant');
     var micOn=p.tracks&&p.tracks.audio&&p.tracks.audio.state==='playable';
     var camOn=p.tracks&&p.tracks.video&&p.tracks.video.state==='playable';
-    var hasHand=!!_raisedHands[sid];
+    var hasHand=!!_raisedHands[sid]||(p.local&&_handRaised);
     return'<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)">'
       +'<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(148deg,#FF7D42,#FF4500);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(255,69,0,.22)">'+escH(name).charAt(0).toUpperCase()+'</div>'
       +'<div style="flex:1;min-width:0">'
@@ -15230,11 +15233,14 @@ function _vToggleHand(){
   var myName='Vous';var mySid='local';
   if(_callObj){var parts=_callObj.participants();var local=parts.local||{};myName=local.user_name||'Élève';mySid=local.session_id||'local';}
   var b=g('_vHand');
+  if(_handAutoLowerTimer){clearTimeout(_handAutoLowerTimer);_handAutoLowerTimer=null;}
   if(_handRaised){
     if(_callObj)_callObj.sendAppMessage({type:'raise_hand',name:myName},'*');
     _raisedHands[mySid]={name:myName,sid:mySid,ts:Date.now()};
     if(b){b.style.background='rgba(255,107,43,.55)';b.style.boxShadow='0 0 0 2px #FF6B2B,0 4px 18px rgba(255,107,43,.35)';}
     toast('Main levée','');
+    // Auto-lower after 5 minutes
+    _handAutoLowerTimer=setTimeout(function(){if(_handRaised){_handRaised=false;_vToggleHand();}},5*60*1000);
   }else{
     if(_callObj)_callObj.sendAppMessage({type:'lower_hand'},'*');
     delete _raisedHands[mySid];
@@ -15458,7 +15464,7 @@ var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; /
 // ── Object model ──────────────────────────────────────────────────────────────
 var _brdObjects=[];       // objets de la page courante (ordre dessin)
 var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
-var _brdObjIdSeq=0;       // compteur ID
+// _brdObjIdSeq removed — IDs are now generated with timestamp+random (collision-safe)
 var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
@@ -16132,7 +16138,15 @@ function _boardUndo(){
   _brdHistIdx--;
   var st=_brdHist[_brdHistIdx];_brdPageIdx=st.idx;
   if(st.objects)_brdObjects=JSON.parse(JSON.stringify(st.objects));
-  _boardRestorePage(st.data,function(){_boardUpdatePageLabel();});
+  _boardRestorePage(st.data,function(){
+    _boardUpdatePageLabel();
+    // Broadcast snapshot after undo so remote users converge to same state
+    if(_brdRoomId&&_brdCanEdit&&_brdC){
+      _boardSavePage();
+      var snap=_brdPages[_brdPageIdx];
+      if(snap)_brdEmitOp({type:'snapshot',data:snap});
+    }
+  });
   haptic(1);
 }
 function _boardRedo(){
@@ -16212,7 +16226,7 @@ function _boardRenamePage(idx){
   });
 }
 function _boardGoPage(idx){
-  if(idx===_brdPageIdx||!_brdX)return;
+  if(idx===_brdPageIdx||!_brdX||_brdRestorePending)return;
   if(_brdSel.active)_brdCommitSel();
   _brdCleanObjSel();
   var _sr=document.getElementById('_brdSnapRing');
@@ -16769,7 +16783,7 @@ function _boardDrawShape(x1,y1,x2,y2){
 // ══════════════════════════════════════════════════════════════════════════════
 // ── Object Model ─────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-function _brdObjId(){return 'o'+(++_brdObjIdSeq)+'_'+(Date.now()%1e9);}
+function _brdObjId(){return 'o'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9);}
 
 function _brdObjBbox(obj){
   if(obj.type==='stroke'||obj.type==='erase'){
@@ -17634,7 +17648,7 @@ function _brdOnSyncRequest(data){
   tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
   if(_brdBgC)tX.drawImage(_brdBgC,0,0);
   tX.drawImage(_brdC,0,0);
-  var snap=tmp.toDataURL('image/jpeg',0.6);
+  var snap=tmp.toDataURL('image/jpeg',0.82);
   // Envoyer TOUTES les pages pour que l'élève puisse librement naviguer
   // _brdPages contient des data URLs pour les pages déjà visitées par le prof, null pour les autres
   var allPages=_brdPages.map(function(p,i){
