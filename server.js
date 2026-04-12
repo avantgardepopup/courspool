@@ -1362,6 +1362,78 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+// VISIO — créer ou récupérer une room Daily.co + retourner le token en une seule requête
+// - cours_id fourni : room cours-{id}, vérifie que l'user est inscrit ou prof
+// - cours_id absent  : quick room cp-{random}, pas de restriction
+app.post('/visio/room', requireAuth, async (req, res) => {
+  const key = process.env.DAILY_API_KEY;
+  if (!key) return res.status(503).json({ error: 'Visio non configurée' });
+  const { cours_id } = req.body;
+  const userId = req.user.id;
+  const isProf = req.user.role === 'professeur';
+  try {
+    let roomName, roomUrl;
+    if (cours_id) {
+      // Vérifier accès : prof du cours ou élève inscrit
+      const { data: cours } = await supabase.from('cours').select('id,professeur_id,titre').eq('id', cours_id).single();
+      if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
+      const isProfOfCours = cours.professeur_id === userId;
+      if (!isProfOfCours) {
+        const { data: resa } = await supabase.from('reservations').select('id').eq('cours_id', cours_id).eq('user_id', userId).maybeSingle();
+        if (!resa) return res.status(403).json({ error: 'Non inscrit à ce cours' });
+      }
+      roomName = 'cours-' + cours_id;
+      // Get or create — gère la race condition si deux personnes cliquent en même temps
+      const getResp = await fetch(`https://api.daily.co/v1/rooms/${roomName}`, {
+        headers: { 'Authorization': `Bearer ${key}` }
+      });
+      if (getResp.ok) {
+        roomUrl = (await getResp.json()).url;
+      } else {
+        const createResp = await fetch('https://api.daily.co/v1/rooms', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: roomName, properties: { idle_timeout: 1800, enable_chat: true, enable_screenshare: true, max_participants: 20 } })
+        });
+        const created = await createResp.json();
+        // Race condition : si quelqu'un d'autre a créé entre le GET et le POST
+        if (!createResp.ok && created.error === 'room already exists') {
+          const retry = await fetch(`https://api.daily.co/v1/rooms/${roomName}`, { headers: { 'Authorization': `Bearer ${key}` } });
+          roomUrl = (await retry.json()).url;
+        } else if (!createResp.ok) {
+          console.error('[Daily] create room failed', created);
+          return res.status(500).json({ error: 'Erreur création room' });
+        } else {
+          roomUrl = created.url;
+        }
+      }
+    } else {
+      // Quick room : pas de restriction, nom aléatoire
+      roomName = 'cp-' + Math.random().toString(36).slice(2, 9);
+      const createResp = await fetch('https://api.daily.co/v1/rooms', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: roomName, properties: { exp: Math.floor(Date.now()/1000) + 7200, idle_timeout: 300, enable_chat: true, enable_screenshare: true, max_participants: 20 } })
+      });
+      const created = await createResp.json();
+      if (!createResp.ok) { console.error('[Daily] quick room failed', created); return res.status(500).json({ error: 'Erreur création room' }); }
+      roomUrl = created.url;
+    }
+    // Générer le token meeting
+    const { data: prof } = await supabase.from('profiles').select('prenom,nom').eq('id', userId).single();
+    const userName = prof ? ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() : (req.user.email || 'Participant');
+    const isProfOfRoom = isProf;
+    const tokenResp = await fetch('https://api.daily.co/v1/meeting-tokens', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: { room_name: roomName, user_name: userName, is_owner: isProfOfRoom, start_audio_off: !isProfOfRoom, start_video_off: false } })
+    });
+    if (!tokenResp.ok) { console.error('[Daily token]', await tokenResp.text()); return res.status(500).json({ error: 'Erreur token' }); }
+    const tokenData = await tokenResp.json();
+    res.json({ url: roomUrl, room_name: roomName, token: tokenData.token, user_name: userName, is_owner: isProfOfRoom });
+  } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
 // VISIO — générer un meeting token Daily.co
 app.post('/visio/token', requireAuth, async (req, res) => {
   const key = process.env.DAILY_API_KEY;

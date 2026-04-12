@@ -7563,7 +7563,7 @@ async function loadMessages(){
             if(_isProf2||(_isEnrolled2&&_vInWin)){
               var _vIsAppli2=!_mc.visio_url||_mc.visio_url.indexOf('.daily.co/')>=0;
               var _vFn2=_vIsAppli2
-                ?'openCourseVisio(\''+escH(_mc.id)+'\',\''+escH(_mc.dt_iso||'')+'\','+(_mc.duree||60)+')'
+                ?'openCourseVisio(\''+escH(_mc.id)+'\')'
                 :'openVisioModal(\''+escH(_mc.visio_url)+'\')';
               var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();'+_vFn2+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
               txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
@@ -12504,7 +12504,7 @@ function buildMesCard(c,isPast,isProf,kind){
     var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'}):'';
     var _vIsAppli=!c.visio_url||c.visio_url.indexOf('.daily.co/')>=0;
     var _vJoinFn=_vIsAppli
-      ?'openCourseVisio(\''+escH(c.id)+'\',\''+escH(c.dt_iso||'')+'\','+(c.duree||60)+')'
+      ?'openCourseVisio(\''+escH(c.id)+'\')'
       :'openVisioModal(\''+escH(c.visio_url)+'\')';
     if(isProf){
       if(_vIsAppli){
@@ -14038,30 +14038,18 @@ function snapNavPill(nav){
 
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
-var _DAILY_KEY='b5d53bb4b025ebe61e648772aa3f95a3b7c8314cd4ad70a7420566e5fc5586c7';
+var _pendingVisioToken=null; // token pré-fetché par /visio/room, consommé par _joinDailyRoom
 
 // ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
-async function openCourseVisio(courseId,dtIso,duree){
-  var roomName='cours-'+courseId;
-  var roomUrl=null;
+async function openCourseVisio(courseId){
   try{
-    // Tenter de récupérer la room existante
-    var gr=await fetch('https://api.daily.co/v1/rooms/'+roomName,{headers:{'Authorization':'Bearer '+_DAILY_KEY}});
-    if(gr.ok){
-      var gd=await gr.json();roomUrl=gd.url||null;
-    } else if(gr.status===404){
-      // Créer la room : expire à la fin du cours + 15 min de marge, idle_timeout 5 min pour la reconnexion crash
-      // idle_timeout 30 min : room supprimée 30 min après que le dernier participant soit parti.
-      // Pas d'exp : le prof peut rester autant qu'il veut. L'UI gère la fenêtre élève via _vInWin.
-      var props={idle_timeout:1800,enable_chat:true};
-      var cr=await fetch('https://api.daily.co/v1/rooms',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_DAILY_KEY},body:JSON.stringify({name:roomName,properties:props})});
-      var cd=await cr.json();roomUrl=cd.url||null;
-    } else {
-      throw new Error('Daily.co '+gr.status);
-    }
-  }catch(e){console.error('[openCourseVisio]',e);}
-  if(!roomUrl){toast('Connexion visio impossible','Vérifiez votre connexion');return;}
-  openVisioModal(roomUrl);
+    var r=await fetch(API+'/visio/room',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:courseId})});
+    var d=await r.json();
+    if(r.status===403){toast('Accès refusé','Vous n\'êtes pas inscrit à ce cours');return;}
+    if(!d.url){toast('Connexion visio impossible','Vérifiez votre connexion');return;}
+    _pendingVisioToken={token:d.token,is_owner:d.is_owner,user_name:d.user_name};
+    openVisioModal(d.url);
+  }catch(e){console.error('[openCourseVisio]',e);toast('Connexion visio impossible','Vérifiez votre connexion');}
 }
 
 function _vOpenQuickSheet(){
@@ -14088,22 +14076,14 @@ function _vOpenQuickSheet(){
   var createBtn=g('_vqCreate');
   if(createBtn)createBtn.onclick=async function(){
     createBtn.disabled=true;createBtn.querySelector('span').textContent='Création…';
-    var slug='cp-'+Math.random().toString(36).slice(2,9);
     try{
-      // 1. Créer la room sur Daily.co
-      var dr=await fetch('https://api.daily.co/v1/rooms',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+_DAILY_KEY},
-        body:JSON.stringify({name:slug,properties:{exp:Math.floor(Date.now()/1000)+7200,idle_timeout:300,enable_chat:true}})
+      var r=await fetch(API+'/visio/room',{method:'POST',headers:apiH(),body:JSON.stringify({})});
+      var d=await r.json();
+      if(!d.url)throw new Error(d.error||'no url');
+      ovl.remove();_vShowShareLink(d.url,function(){
+        _pendingVisioToken={token:d.token,is_owner:d.is_owner,user_name:d.user_name};
+        openVisioModal(d.url);
       });
-      var dd=await dr.json();
-      if(!dd.url)throw new Error('daily room error: '+(dd.error||JSON.stringify(dd)));
-      var roomUrl=dd.url;
-      // 2. Obtenir le token JWT pour cet utilisateur
-      var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:slug})});
-      var td=await tr.json();
-      if(!td.token)throw new Error('no token');
-      ovl.remove();_vShowShareLink(roomUrl,function(){openVisioModal(roomUrl);});
     }catch(e){
       console.error('[Visio create]',e);
       toast('Erreur création salle','Vérifiez votre connexion');
@@ -14695,8 +14675,12 @@ async function _joinDailyRoom(url,roomName){
     return;
   }
   try{
-    var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
-    var td=await tr.json();
+    var td;
+    if(_pendingVisioToken){td=_pendingVisioToken;_pendingVisioToken=null;}
+    else{
+      var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
+      td=await tr.json();
+    }
     if(!td.token){toast('Erreur token visio','');return;}
     if(typeof DailyIframe==='undefined'){toast('SDK visio non chargé','');return;}
     if(_callObj){try{await _callObj.leave();}catch(e){}try{_callObj.destroy();}catch(e){}_callObj=null;}
