@@ -16822,7 +16822,7 @@ function _boardDown(e){
     if(_hitId)_brdDblTapT=_now2;_brdDblTapId=_hitId;
     // Tap sur l'intérieur de la sélection courante → démarrer drag
     if(_brdObjSel.active&&_brdObjSel.ids.length){
-      var _bb=_brdUnionBbox(_brdObjSel.ids);
+      var _bb=_brdUnionBbox(_brdObjSel.ids,true);
       var _PAD=12;
       if(_bb&&p.x>=_bb.x-_PAD&&p.x<=_bb.x+_bb.w+_PAD&&p.y>=_bb.y-_PAD&&p.y<=_bb.y+_bb.h+_PAD){
         // Lancer le drag sur les objets sélectionnés
@@ -16973,7 +16973,7 @@ function _boardMove(e){
       }
       // Déplacer l'overlay CSS
       if(_brdObjSel.el){
-        var bb=_brdUnionBbox(_brdObjSel.ids);var PAD=10;
+        var bb=_brdUnionBbox(_brdObjSel.ids,true);var PAD=10;
         if(bb){_brdObjSel.el.style.left=(bb.x-PAD+dx)+'px';_brdObjSel.el.style.top=(bb.y-PAD+dy)+'px';}
       }
       _brdUpdateObjSelBarPos();
@@ -17159,18 +17159,20 @@ function _brdRectHitObjs(rx,ry,rw,rh){
   var ids=[];
   for(var i=0;i<_brdObjects.length;i++){
     var obj=_brdObjects[i];
-    if(obj.type==='erase')continue;
+    // Include erase objects in rect selection so they move with the strokes they mask.
+    // (Still excluded from single-click hit test in _brdHitTest.)
     var bb=_brdObjBbox(obj);
     if(bb.x<rx+rw&&bb.x+bb.w>rx&&bb.y<ry+rh&&bb.y+bb.h>ry)ids.push(obj.id);
   }
   return ids;
 }
 
-function _brdUnionBbox(ids){
+function _brdUnionBbox(ids,skipErase){
   var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
   for(var i=0;i<ids.length;i++){
     var obj=_brdObjects.find(function(o){return o.id===ids[i];});
     if(!obj)continue;
+    if(skipErase&&obj.type==='erase')continue; // exclude erases from visual overlay bbox
     var bb=_brdObjBbox(obj);
     if(bb.x<minX)minX=bb.x;if(bb.y<minY)minY=bb.y;
     if(bb.x+bb.w>maxX)maxX=bb.x+bb.w;if(bb.y+bb.h>maxY)maxY=bb.y+bb.h;
@@ -17263,7 +17265,7 @@ function _brdActivateObjSel(ids){
 
 function _brdShowObjSelOverlay(){
   _brdCleanObjSelDOM();
-  var bb=_brdUnionBbox(_brdObjSel.ids);if(!bb)return;
+  var bb=_brdUnionBbox(_brdObjSel.ids,true);if(!bb)return;
   var page=g('_brdPage');if(!page)return;
   var PAD=10;
   var el=document.createElement('div');
@@ -17299,7 +17301,7 @@ function _brdShowObjSelOverlay(){
 
 function _brdUpdateObjSelOverlayPos(){
   if(!_brdObjSel.el)return;
-  var bb=_brdUnionBbox(_brdObjSel.ids);if(!bb)return;
+  var bb=_brdUnionBbox(_brdObjSel.ids,true);if(!bb)return;
   var PAD=10;
   _brdObjSel.el.style.left=(bb.x-PAD)+'px';
   _brdObjSel.el.style.top=(bb.y-PAD)+'px';
