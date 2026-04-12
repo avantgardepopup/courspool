@@ -14875,6 +14875,8 @@ function _vOnMsg(evt){
     _vUpdateHands();_vUpdatePeople();
     if(_isOwner){
       haptic([10,40,80]);
+      // Son de notification main levée (bip discret via Web Audio API)
+      try{var _ac=new(window.AudioContext||window.webkitAudioContext)();var _o=_ac.createOscillator();var _g=_ac.createGain();_o.connect(_g);_g.connect(_ac.destination);_o.frequency.value=880;_g.gain.setValueAtTime(0,_ac.currentTime);_g.gain.linearRampToValueAtTime(0.18,_ac.currentTime+0.01);_g.gain.linearRampToValueAtTime(0,_ac.currentTime+0.22);_o.start(_ac.currentTime);_o.stop(_ac.currentTime+0.22);}catch(e){}
       // Ouvrir le panneau participants si pas déjà ouvert + pulse sur le bouton
       var _pb=g('_vPeopleBtn');
       if(_pb){_pb.style.transform='scale(1.18)';setTimeout(function(){var b=g('_vPeopleBtn');if(b)b.style.transform='';},280);}
@@ -15193,6 +15195,12 @@ function _vUpdatePeople(){
   var _svgX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   var _svgHand='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>';
   var html='';
+  // ── Bannière statut élève (non-propriétaire) ────────────────
+  if(!_isOwner){
+    var _myStatus=_floorGranted?'🎤 Vous avez la parole':_handRaised?'✋ Main levée — en attente':_openFloor?'🎙️ Parole libre activée':'🔇 Micro coupé — levez la main pour parler';
+    var _myStatusColor=_floorGranted?'rgba(34,192,105,.18)':_handRaised?'rgba(255,107,43,.12)':_openFloor?'rgba(34,192,105,.10)':'rgba(255,255,255,.06)';
+    html+='<div style="padding:10px 14px;background:'+_myStatusColor+';border-bottom:1px solid rgba(255,255,255,.07);font-size:12px;font-weight:600;color:rgba(255,255,255,.85);">'+_myStatus+'</div>';
+  }
   // ── Bannière whisper actif ────────────────────────────────────
   if(_isOwner&&_vWhisperTarget){
     html+='<div style="padding:10px 14px;background:rgba(124,58,237,.18);border-bottom:1px solid rgba(124,58,237,.3);display:flex;align-items:center;gap:8px">'
@@ -16787,10 +16795,15 @@ function _boardInsertImage(dataUrl){
     var cx=(window.innerWidth/2-pr.left)/_brdZoom;
     var cy=(window.innerHeight/2-pr.top)/_brdZoom;
     var iw=Math.min(w,600)/_brdZoom,ih=iw*(h/w);
-    var op={type:'image',x:cx-iw/2,y:cy-ih/2,w:iw,h:ih,data:compressed,id:'img_'+Date.now()};
+    var imgId='img_'+Date.now();
+    // Stocker le base64 dans le store permanent (pas dans l'objet → pas dans l'historique)
+    if(!_brdImgStore)_brdImgStore={};
+    _brdImgStore[imgId]=compressed;
+    var op={type:'image',x:cx-iw/2,y:cy-ih/2,w:iw,h:ih,id:imgId};
     _brdObjects.push(op);
     _boardSaveHist();_brdRedraw();
-    if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objinsert',obj:op});
+    // Pour le partage temps réel : inclure data UNIQUEMENT dans l'émission socket
+    if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objinsert',obj:Object.assign({},op,{data:compressed})});
     toast('Image insérée','');haptic(2);
   };
   img.src=dataUrl;
@@ -17490,9 +17503,11 @@ function _brdRenderObj(obj,ctx){
     ctx.fillStyle=obj.color;ctx.textAlign=obj.align||'left';
     var lh=obj.textSize*1.45;
     obj.content.split('\n').forEach(function(ln,i){ctx.fillText(ln,obj.x,obj.y+i*lh);});
-  }else if(obj.type==='image'&&obj.data){
+  }else if(obj.type==='image'){
+    // Chercher les données dans le store permanent ou dans l'objet (reçu via socket)
+    var imgData=((_brdImgStore&&_brdImgStore[obj.id])||obj.data);
+    if(!imgData){ctx.restore();return;}
     ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
-    // Cache d'images décodées pour éviter de recréer un HTMLImageElement à chaque redraw
     if(!_brdImgCache)_brdImgCache={};
     var cached=_brdImgCache[obj.id];
     if(cached&&cached.complete){
@@ -17501,13 +17516,14 @@ function _brdRenderObj(obj,ctx){
       var im=new Image();
       _brdImgCache[obj.id]=im;
       im.onload=function(){if(_brdX)_brdRenderAll();};
-      im.src=obj.data;
+      im.src=imgData;
     }
   }
   ctx.restore();
 }
 
-var _brdImgCache=null; // {id → HTMLImageElement} — cache pour éviter reparse base64
+var _brdImgCache=null;    // {id → HTMLImageElement} — cache HTMLImageElement décodé
+var _brdImgStore=null;   // {id → base64 string} — store permanent, jamais sérialisé dans l'historique
 
 function _brdRenderAll(){
   if(!_brdX||!_brdC)return;
@@ -18840,11 +18856,23 @@ function _brdApplyRemoteOp(op){
     });
     _brdRenderAll();_boardSavePage();
   }else if(op.type==='objdelete'&&op.ids){
+    op.ids.forEach(function(id){
+      if(_brdImgCache)delete _brdImgCache[id];
+      if(_brdImgStore)delete _brdImgStore[id];
+    });
     _brdObjects=_brdObjects.filter(function(o){return op.ids.indexOf(o.id)===-1;});
     _brdRenderAll();_boardSavePage();
   }else if(op.type==='objinsert'&&op.obj){
     if(!_brdObjects.find(function(o){return o.id===op.obj.id;})){
-      _brdObjects.push(op.obj);_brdRenderObj(op.obj,_brdX);_boardSavePage();
+      // Si l'objet est une image avec data, stocker dans le store et épurer l'objet
+      if(op.obj.type==='image'&&op.obj.data){
+        if(!_brdImgStore)_brdImgStore={};
+        _brdImgStore[op.obj.id]=op.obj.data;
+        var imgObj=Object.assign({},op.obj);delete imgObj.data;
+        _brdObjects.push(imgObj);_brdRenderObj(imgObj,_brdX);_boardSavePage();
+      }else{
+        _brdObjects.push(op.obj);_brdRenderObj(op.obj,_brdX);_boardSavePage();
+      }
     }
   }else if(op.type==='objscale'&&op.ids&&op.factor&&op.cx!=null){
     op.ids.forEach(function(id){
