@@ -1503,6 +1503,12 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 /* ── NAV — CONVERSATION MODE (hidden, back button is in header) ── */
 .bnav.conv-mode { display: none !important; }
 
+/* Bouton Profil : desktop seulement */
+.bni-acc-desktop { display: none !important; }
+@media(min-width:769px){
+  .bni-acc-desktop { display: flex !important; }
+}
+
 /* ── NAV — MSG MODE desktop (≥769px) : pill réduite en bouton retour natif ── */
 @media(min-width:769px){
   .bnav.msg-mode {
