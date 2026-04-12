@@ -359,7 +359,7 @@ io.on('connection', (socket) => {
   });
 
   // ── Board: snapshot ciblé vers un retardataire précis ────────
-  socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType}) => {
+  socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType, pageFormat}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
     if (snapshot && snapshot.length > 1_200_000) return;
@@ -371,6 +371,7 @@ io.on('connection', (socket) => {
       }
     }
     room.snapshot = snapshot;
+    room.pageFormat = pageFormat || 'landscape';
     room.ops = [];
     io.to(targetSocketId).emit('board_sync', {
       snapshot,
@@ -378,7 +379,8 @@ io.on('connection', (socket) => {
       pageIdx: pageIdx ?? 0,
       pageNames: pageNames || [],
       pageCount: pageCount || 1,
-      bgType: bgType || 'plain',
+      bgType: bgType || 'blank',
+      pageFormat: pageFormat || 'landscape',
       ops: [],
       editors: [...room.editors],
       participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
@@ -448,7 +450,7 @@ io.on('connection', (socket) => {
   });
 
   // ── Board: synchronisation forcée vers tous les élèves ──────
-  socket.on('board_force_sync', ({roomId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType}) => {
+  socket.on('board_force_sync', ({roomId, snapshot, allPages, pageIdx, pageNames, pageCount, bgType, pageFormat}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
     if (snapshot && snapshot.length > 1_200_000) return;
@@ -457,11 +459,13 @@ io.on('connection', (socket) => {
       for (const p of allPages) { if (p && p.length > 1_200_000) return; }
     }
     room.snapshot = snapshot;
+    room.pageFormat = pageFormat || 'landscape';
     room.ops = [];
     socket.to('board_' + roomId).emit('board_force_sync', {
       snapshot, allPages: allPages || null,
       pageIdx: pageIdx ?? 0, pageNames: pageNames || [],
-      pageCount: pageCount || 1, bgType: bgType || 'plain', ops: []
+      pageCount: pageCount || 1, bgType: bgType || 'blank',
+      pageFormat: pageFormat || 'landscape', ops: []
     });
   });
 
