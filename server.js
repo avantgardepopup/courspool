@@ -406,14 +406,17 @@ io.on('connection', (socket) => {
         room.editors.delete(socket.userId);
         socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
         if (room.ownerId === socket.userId) {
-          // Propriétaire crashé → supprimer uniquement si plus aucun élève présent
-          // Si des élèves sont encore là, le TTL 3h d'inactivité prend le relais
+          // Propriétaire crashé → délai de grâce selon l'activité de la room
+          // - Room jamais active (prof seul, rien dessiné) : 5 min
+          // - Room avec de l'activité (cours en cours) : 30 min pour permettre reconnexion
+          const hadActivity = room.ops.length > 0 || room.snapshot;
+          const grace = hadActivity ? 30 * 60 * 1000 : 5 * 60 * 1000;
           room._ownerReconnectTimeout = setTimeout(() => {
             if (boardRooms.get(roomId) !== room) return; // déjà supprimée
             if (room.participants.size > 0) return;      // des élèves encore présents → on garde
             boardRooms.delete(roomId);
             kickedParticipants.delete(roomId);
-          }, 3 * 60 * 1000);
+          }, grace);
         } else if (room.participants.size === 0 && room.ownerId !== socket.userId) {
           // Plus personne ET le propriétaire n'est pas connecté → libérer immédiatement
           const ownerConnected = [...(io.sockets.sockets.values())].some(s => s.userId === room.ownerId);
