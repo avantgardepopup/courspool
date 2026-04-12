@@ -13667,13 +13667,14 @@ function _stepOptClick(el){
     handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
     nav.insertBefore(handle,nav.firstChild);
 
-    // ── Bouton retour messagerie (caché par défaut) ──
+    // ── Bouton retour natif (caché par défaut, cercle flèche) ──
     var msgBack=document.createElement('button');
     msgBack.id='bnavMsgBack';
-    msgBack.style.cssText='display:none;align-items:center;gap:8px;padding:8px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;color:var(--or);-webkit-tap-highlight-color:transparent;white-space:nowrap;border-radius:40px;transition:background .18s;';
-    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>Messagerie';
-    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.08)';};
-    msgBack.onmouseout=function(){msgBack.style.background='';};
+    msgBack.title='Retour';
+    msgBack.style.cssText='display:none;align-items:center;justify-content:center;width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,107,43,.12);color:var(--or);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .18s,transform .12s;';
+    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>';
+    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.2)';msgBack.style.transform='scale(1.08)';};
+    msgBack.onmouseout=function(){msgBack.style.background='rgba(255,107,43,.12)';msgBack.style.transform='';};
     msgBack.onclick=function(){navTo('exp');};
     nav.appendChild(msgBack);
 
@@ -14300,6 +14301,7 @@ function _vShowPreJoin(onJoin){
   }
 
   // ── UI desktop/web : preview caméra complète ──
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;';
   bd.innerHTML=''
     +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
     +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
