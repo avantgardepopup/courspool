@@ -37,7 +37,10 @@ const bcrypt = require('bcrypt');
 const app = express();
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = ['https://courspool.vercel.app', 'capacitor://localhost'];
-const io = new Server(server, { cors: { origin: ALLOWED_ORIGINS } });
+const io = new Server(server, {
+  cors: { origin: ALLOWED_ORIGINS },
+  perMessageDeflate: true   // compression WebSocket ~60% bande passante en moins
+});
 app.set('io', io);
 
 // ── Auth middleware Socket.io ─────────────────────────────────
@@ -390,12 +393,18 @@ io.on('connection', (socket) => {
         room.participants.delete(socket.userId);
         room.editors.delete(socket.userId);
         socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
-        // Si le propriétaire crashe, attendre 3 min avant de supprimer la room
-        // pour lui laisser le temps de se reconnecter
         if (room.ownerId === socket.userId) {
+          // Propriétaire crashé → attendre 3 min (reconnexion possible)
           room._ownerReconnectTimeout = setTimeout(() => {
-            if (boardRooms.get(roomId) === room) boardRooms.delete(roomId);
+            if (boardRooms.get(roomId) === room) {
+              boardRooms.delete(roomId);
+              kickedParticipants.delete(roomId);
+            }
           }, 3 * 60 * 1000);
+        } else if (room.participants.size === 0) {
+          // Plus personne dans la room → libérer immédiatement
+          boardRooms.delete(roomId);
+          kickedParticipants.delete(roomId);
         }
       }
       socketBoardRooms.delete(socket.id);
