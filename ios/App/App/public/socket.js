@@ -74,6 +74,14 @@ function initSocket() {
 
   _socket.on('reconnect', function(attempt) {
     console.log('[Socket] 🔄 reconnecté après', attempt, 'tentative(s)');
+    // Re-rejoindre la board room si le tableau était ouvert au moment de la déconnexion
+    if (typeof _brdRoomId !== 'undefined' && _brdRoomId &&
+        typeof _boardActive !== 'undefined' && _boardActive) {
+      var uName = (typeof user !== 'undefined' && user && (user.prenom || user.email)) || '?';
+      var ev = (typeof _isOwner !== 'undefined' && _isOwner) ? 'board_init' : 'board_join';
+      _socket.emit(ev, {roomId: _brdRoomId, userName: uName});
+      console.log('[Socket] 🔄 board room re-join après reconnexion:', _brdRoomId);
+    }
   });
 
   // ── follow_update : nb_eleves en temps réel ──────────────────────────────
@@ -273,6 +281,68 @@ function initSocket() {
       if (noteEl) noteEl.textContent = '★\u00a0' + nm;
       var pgAcc = document.getElementById('pgAcc');
       if (pgAcc && pgAcc.classList.contains('on') && typeof buildAccLists === 'function') buildAccLists();
+    }
+  });
+
+  // ── Tableau blanc collaboratif ───────────────────────────────────────────
+  _socket.on('board_sync', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_op', function(data) {
+    if (typeof _brdApplyRemoteOp === 'function' && data.op) _brdApplyRemoteOp(data.op);
+  });
+  _socket.on('board_stroke_start', function(d) {
+    if (typeof _brdOnRemoteStrokeStart === 'function') _brdOnRemoteStrokeStart(d);
+  });
+  _socket.on('board_pt', function(d) {
+    if (typeof _brdOnRemotePt === 'function') _brdOnRemotePt(d);
+  });
+  _socket.on('board_stroke_end', function(d) {
+    if (typeof _brdOnRemoteStrokeEnd === 'function') _brdOnRemoteStrokeEnd(d);
+  });
+  _socket.on('board_perm', function(data) {
+    if (typeof _brdOnPerm === 'function') _brdOnPerm(data);
+  });
+  _socket.on('board_participant_joined', function(data) {
+    if (typeof _brdOnParticipantJoined === 'function') _brdOnParticipantJoined(data);
+  });
+  _socket.on('board_participant_left', function(data) {
+    if (typeof _brdOnParticipantLeft === 'function') _brdOnParticipantLeft(data);
+  });
+  _socket.on('board_sync_request', function(data) {
+    if (typeof _brdOnSyncRequest === 'function') _brdOnSyncRequest(data);
+  });
+  _socket.on('board_snapshot', function(data) {
+    if (typeof _brdOnSync === 'function') _brdOnSync(data);
+  });
+  _socket.on('board_page_add', function(data) {
+    if (typeof _brdOnRemotePageAdd === 'function') _brdOnRemotePageAdd(data);
+  });
+  _socket.on('board_page_delete', function(data) {
+    if (typeof _brdOnRemotePageDelete === 'function') _brdOnRemotePageDelete(data);
+  });
+  _socket.on('board_page_rename', function(data) {
+    if (typeof _brdOnRemotePageRename === 'function') _brdOnRemotePageRename(data);
+  });
+  _socket.on('board_laser', function(d) {
+    if (typeof _brdOnRemoteLaser === 'function') _brdOnRemoteLaser(d);
+  });
+  _socket.on('board_laser_end', function(d) {
+    if (typeof _brdOnRemoteLaserEnd === 'function') _brdOnRemoteLaserEnd(d);
+  });
+  _socket.on('board_goto_page', function(d) {
+    if (typeof _brdOnRemoteGotoPage === 'function') _brdOnRemoteGotoPage(d);
+  });
+  // Demande de snapshot immédiat (log ops trop long)
+  _socket.on('board_force_snapshot', function(data) {
+    if (!data || !data.roomId) return;
+    if (typeof _brdRoomId === 'undefined' || _brdRoomId !== data.roomId) return;
+    if (typeof _isOwner === 'undefined' || !_isOwner) return;
+    if (typeof _brdC === 'undefined' || !_brdC) return;
+    // Envoyer un snapshot global (remplace le log d'ops)
+    var snap = _brdC.toDataURL('image/jpeg', 0.82);
+    if (_socket && _socket.connected) {
+      _socket.emit('board_snapshot', {roomId: _brdRoomId, snapshot: snap});
     }
   });
 }

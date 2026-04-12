@@ -333,4 +333,16 @@ function initSocket() {
   _socket.on('board_goto_page', function(d) {
     if (typeof _brdOnRemoteGotoPage === 'function') _brdOnRemoteGotoPage(d);
   });
+  // Demande de snapshot immédiat (log ops trop long)
+  _socket.on('board_force_snapshot', function(data) {
+    if (!data || !data.roomId) return;
+    if (typeof _brdRoomId === 'undefined' || _brdRoomId !== data.roomId) return;
+    if (typeof _isOwner === 'undefined' || !_isOwner) return;
+    if (typeof _brdC === 'undefined' || !_brdC) return;
+    // Envoyer un snapshot global (remplace le log d'ops)
+    var snap = _brdC.toDataURL('image/jpeg', 0.82);
+    if (_socket && _socket.connected) {
+      _socket.emit('board_snapshot', {roomId: _brdRoomId, snapshot: snap});
+    }
+  });
 }

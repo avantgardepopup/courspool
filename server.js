@@ -99,8 +99,18 @@ io.on('connection', (socket) => {
         ops: [], snapshot: null,
         editors: new Set([socket.userId]),
         ownerId: socket.userId,
-        participants: new Map([[socket.userId, userName || '?']])
+        participants: new Map([[socket.userId, userName || '?']]),
+        lastActivity: Date.now()
       });
+    } else {
+      // Reconnexion du propriétaire — annuler la suppression différée si elle était planifiée
+      const room = boardRooms.get(roomId);
+      if (room._ownerReconnectTimeout) {
+        clearTimeout(room._ownerReconnectTimeout);
+        room._ownerReconnectTimeout = null;
+      }
+      room.participants.set(socket.userId, userName || '?');
+      room.editors.add(socket.userId);
     }
     socket.join('board_' + roomId);
     const sRooms = socketBoardRooms.get(socket.id);
@@ -108,8 +118,20 @@ io.on('connection', (socket) => {
   });
 
   // ── Board: élève ou retardataire rejoint ─────────────────────
-  socket.on('board_join', ({roomId, userName}) => {
+  socket.on('board_join', async ({roomId, userName}) => {
     if (!roomId) return;
+    // Vérification d'inscription pour les rooms de cours (cours-{id})
+    if (roomId.startsWith('cours-')) {
+      const coursId = roomId.replace('cours-', '');
+      const { data: cours } = await supabase.from('cours').select('professeur_id').eq('id', coursId).maybeSingle();
+      if (!cours) return; // cours inexistant
+      const isProf = cours.professeur_id === socket.userId;
+      if (!isProf) {
+        const { data: resa } = await supabase.from('reservations').select('id')
+          .eq('cours_id', coursId).eq('user_id', socket.userId).maybeSingle();
+        if (!resa) return; // non inscrit — refus silencieux
+      }
+    }
     socket.join('board_' + roomId);
     const sRooms = socketBoardRooms.get(socket.id);
     if (sRooms) sRooms.add(roomId);
@@ -172,12 +194,19 @@ io.on('connection', (socket) => {
     room.ops.push(op);
     room.lastActivity = Date.now();
     socket.to('board_' + roomId).emit('board_op', op);
+    // Si trop d'ops accumulés, demander un snapshot au propriétaire pour purger le log
+    if (room.ops.length >= 500) {
+      const ownerSocketId = [...(io.sockets.sockets.values() || [])].find(s => s.userId === room.ownerId)?.id;
+      if (ownerSocketId) io.to(ownerSocketId).emit('board_force_snapshot', {roomId});
+    }
   });
 
   // ── Board: snapshot canvas (stockage serveur) ────────────────
   socket.on('board_snapshot', ({roomId, snapshot}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;
+    // Limiter la taille (≈ 1.5 MB base64)
+    if (snapshot && snapshot.length > 2_000_000) return;
     room.snapshot = snapshot;
     room.ops = []; // snapshot remplace le log d'ops
   });
@@ -186,6 +215,7 @@ io.on('connection', (socket) => {
   socket.on('board_snapshot_for', ({roomId, targetSocketId, snapshot}) => {
     const room = boardRooms.get(roomId);
     if (!room || room.ownerId !== socket.userId) return;
+    if (snapshot && snapshot.length > 2_000_000) return;
     room.snapshot = snapshot; // mettre à jour le snapshot stocké aussi
     room.ops = [];
     io.to(targetSocketId).emit('board_sync', {
@@ -194,6 +224,45 @@ io.on('connection', (socket) => {
       editors: [...room.editors],
       participants: [...room.participants.entries()].map(([id, name]) => ({id, name}))
     });
+  });
+
+  // ── Board: laser pointer (temps réel, pas stocké) ────────────
+  socket.on('board_laser', ({roomId, pt, pageIdx}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.participants.has(socket.userId)) return;
+    socket.to('board_' + roomId).emit('board_laser', {userId: socket.userId, pt, pageIdx});
+  });
+
+  socket.on('board_laser_end', ({roomId}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || !room.participants.has(socket.userId)) return;
+    socket.to('board_' + roomId).emit('board_laser_end', {userId: socket.userId});
+  });
+
+  // ── Board: navigation de page (prof → élèves) ────────────────
+  socket.on('board_goto_page', ({roomId, pageIdx}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    socket.to('board_' + roomId).emit('board_goto_page', {pageIdx});
+  });
+
+  // ── Board: gestion des pages ─────────────────────────────────
+  socket.on('board_page_add', ({roomId, pageIdx, name}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    socket.to('board_' + roomId).emit('board_page_add', {pageIdx, name});
+  });
+
+  socket.on('board_page_delete', ({roomId, pageIdx}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    socket.to('board_' + roomId).emit('board_page_delete', {pageIdx});
+  });
+
+  socket.on('board_page_rename', ({roomId, pageIdx, name}) => {
+    const room = boardRooms.get(roomId);
+    if (!room || room.ownerId !== socket.userId) return;
+    socket.to('board_' + roomId).emit('board_page_rename', {pageIdx, name});
   });
 
   // ── Board: accorder le droit de dessiner ─────────────────────
@@ -212,7 +281,7 @@ io.on('connection', (socket) => {
     io.to('board_' + roomId).emit('board_perm', {userId, canEdit: false});
   });
 
-  // ── Board: quitter ───────────────────────────────────────────
+  // ── Board: quitter (volontaire) ──────────────────────────────
   socket.on('board_leave', ({roomId}) => {
     socket.leave('board_' + roomId);
     const room = boardRooms.get(roomId);
@@ -220,12 +289,16 @@ io.on('connection', (socket) => {
     room.participants.delete(socket.userId);
     room.editors.delete(socket.userId);
     socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
-    if (room.ownerId === socket.userId) boardRooms.delete(roomId);
+    // Quitter volontairement = suppression immédiate de la room si owner
+    if (room.ownerId === socket.userId) {
+      if (room._ownerReconnectTimeout) clearTimeout(room._ownerReconnectTimeout);
+      boardRooms.delete(roomId);
+    }
     const sRooms = socketBoardRooms.get(socket.id);
     if (sRooms) sRooms.delete(roomId);
   });
 
-  // ── Nettoyage sur déconnexion ─────────────────────────────────
+  // ── Nettoyage sur déconnexion (crash / réseau coupé) ─────────
   socket.on('disconnect', () => {
     const sRooms = socketBoardRooms.get(socket.id);
     if (sRooms) {
@@ -235,8 +308,13 @@ io.on('connection', (socket) => {
         room.participants.delete(socket.userId);
         room.editors.delete(socket.userId);
         socket.to('board_' + roomId).emit('board_participant_left', {userId: socket.userId});
-        // Supprimer la room si le propriétaire part
-        if (room.ownerId === socket.userId) boardRooms.delete(roomId);
+        // Si le propriétaire crashe, attendre 3 min avant de supprimer la room
+        // pour lui laisser le temps de se reconnecter
+        if (room.ownerId === socket.userId) {
+          room._ownerReconnectTimeout = setTimeout(() => {
+            if (boardRooms.get(roomId) === room) boardRooms.delete(roomId);
+          }, 3 * 60 * 1000);
+        }
       }
       socketBoardRooms.delete(socket.id);
     }

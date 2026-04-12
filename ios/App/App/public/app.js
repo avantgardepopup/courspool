@@ -1201,7 +1201,8 @@ async function loadData(page,silent){
         description:c.description||'',
         prive:c.prive||false,
         code:c.code_acces||'',
-        niveau:c.niveau||''
+        niveau:c.niveau||'',
+        duree:c.duree||60
       };
     });
     if(page===1){C=mapped;}else{C=C.concat(mapped);}
@@ -2278,8 +2279,7 @@ function navTo(tab,_skipHistory){
   } else if(tab==='msg'){
     if(pgMsg)pgMsg.classList.add('on');
     restoreNav();
-    // iPad : cacher la nav + montrer bouton retour
-    if(window.innerWidth>=768){var _bnavMsg=g('bnav');if(_bnavMsg)_bnavMsg.classList.add('ipad-msg');var _bbb=g('bnavIpadBack');if(_bbb){_bbb.dataset.action='msg';_bbb.classList.add('visible');}}
+    if(window.innerWidth>=769){var _bnMsg=g('bnav');if(_bnMsg)_bnMsg.classList.add('msg-mode');}
     var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
     var br3=g('btnRefresh');if(br3)br3.style.display='none';
     clearTimeout(_convRetryTimer);_convRetryTimer=null;_convRetries=0;_convLoading=false;
@@ -2322,7 +2322,7 @@ function restoreNav(){
     nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
   }
   // Nettoyer les classes iPad messaging
-  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');}
+  if(nav){nav.classList.remove('ipad-back');nav.classList.remove('conv-mode');nav.classList.remove('ipad-msg');nav.classList.remove('msg-mode');}
   var _bbR=g('bnavIpadBack');if(_bbR){_bbR.classList.remove('visible');delete _bbR.dataset.action;}
 
   // Restaurer le bouton Explorer
@@ -3863,9 +3863,13 @@ function doFilter(){
   // Récupérer la valeur depuis l'un ou l'autre des champs de recherche
   var mobInp=document.getElementById('mobSearchInput');
   var srchInp=document.getElementById('srch');
+  var pillInp=document.getElementById('pillSearchInput');
   var val='';
   if(mobInp&&mobInp.value){
     val=mobInp.value;
+    if(srchInp)srchInp.value=val;
+  } else if(pillInp&&pillInp.value){
+    val=pillInp.value;
     if(srchInp)srchInp.value=val;
   } else if(srchInp){
     val=srchInp.value;
@@ -3873,14 +3877,16 @@ function doFilter(){
   }
   val=val.trim();
 
-  // ── DEBUG VISIO : taper "##visio" (démo UI) ou "##visio URL" (vraie salle) ──
+  // ── VISIO : taper "##visio" → sheet rapide, "##visio URL" → rejoindre directement ──
   if(val.startsWith('##visio')){
     var _vRaw=val.slice(7).trim();
     var _srch=g('srch');if(_srch)_srch.value='';
     var _mob=g('mobSearchInput');if(_mob)_mob.value='';
+    var _pill=g('pillSearchInput');if(_pill)_pill.value='';
+    if(typeof closeInlineSearch==='function')closeInlineSearch();
     if(typeof collapseSearch==='function')collapseSearch();
     if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
-    else{_vOpenDemo();}
+    else{_vOpenQuickSheet();}
     return;
   }
   checkCodeInSearch(val);
@@ -7449,11 +7455,8 @@ function openMsg(profNm,destId,avatar){
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.add('conv-open');
   var bnav=g('bnav');
-  var _isIpad=window.innerWidth>=768&&document.documentElement.classList.contains('cap-ios');
-  if(_isIpad){
-    if(bnav)bnav.classList.add('ipad-back');
-    var _bb=g('bnavIpadBack');if(_bb)_bb.classList.add('visible');
-  }else{
+  // Mobile uniquement : cacher la nav quand une conv est ouverte
+  if(window.innerWidth<768){
     if(bnav)bnav.classList.add('conv-mode');
   }
   var _cp=g('msgConvPane');if(_cp)_cp.classList.remove('empty-state');
@@ -7495,10 +7498,8 @@ function closeMsgConv(){
   if(convPane){convPane.style.display='none';convPane.style.bottom='';}
   var pgMsg=g('pgMsg');
   if(pgMsg)pgMsg.classList.remove('conv-open');
-  // Restaurer la nav (iPad: retirer ipad-back + cacher bouton rond ; mobile: retirer conv-mode)
   var bnav=g('bnav');
-  if(bnav){bnav.classList.remove('conv-mode');bnav.classList.remove('ipad-back');}
-  var _bb=g('bnavIpadBack');if(_bb)_bb.classList.remove('visible');
+  if(bnav){bnav.classList.remove('conv-mode');}
   // Restore normal nav state for messages page (bniMsg highlighted)
   restoreNav();
   var bMsg=g('bniMsg');if(bMsg)bMsg.classList.add('on');
@@ -7552,14 +7553,19 @@ async function loadMessages(){
             txt=txt.replace(/class="chat-cours-card-header" style="background:[^"]*"/,'class="chat-cours-card-header" style="background:'+(_mm.bgDark||_mm.bg)+'"');
           }
           // Bouton visio si applicable (inscrit dans la fenêtre ou prof)
-          if(_mc&&_mc.mode==='visio'&&_mc.visio_url){
+          if(_mc&&_mc.mode==='visio'){
             var _vNow=Date.now();
             var _vStart=_mc.dt_iso?new Date(_mc.dt_iso).getTime():0;
-            var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+            var _vDureeMs2=(_mc.duree||120)*60*1000;
+            var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+_vDureeMs2);
             var _isProf2=user&&_mc.pr===user.id;
             var _isEnrolled2=!!res[_mc.id];
             if(_isProf2||(_isEnrolled2&&_vInWin)){
-              var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();openVisioModal(\''+escH(_mc.visio_url)+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
+              var _vIsAppli2=!_mc.visio_url||_mc.visio_url.indexOf('.daily.co/')>=0;
+              var _vFn2=_vIsAppli2
+                ?'openCourseVisio(\''+escH(_mc.id)+'\')'
+                :'openVisioModal(\''+escH(_mc.visio_url)+'\')';
+              var _vBtn='<button class="btn-visio" style="margin-top:8px;width:100%;justify-content:center;box-sizing:border-box" onclick="event.stopPropagation();'+_vFn2+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre en visio</button>';
               txt=txt.replace('</div></div>','</div>'+_vBtn+'</div>');
             }
           }
@@ -12215,7 +12221,7 @@ function calSelectDay(ymd){
   _calSelDay=ymd;
   // Update header title
   var titleEl=document.querySelector('.mes-cal-title');
-  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_CAL_DAYS[d.getDay()]+' '+d.getDate()+' '+_CAL_MONTHS[d.getMonth()];}
+  if(titleEl){var d=new Date(ymd+'T00:00:00');titleEl.textContent=_calDay(d)+' '+d.getDate()+' '+_calMonth(d);}
   // Update chips
   document.querySelectorAll('.cal-chip').forEach(function(c){
     var on=c.dataset.ymd===ymd;
@@ -12492,16 +12498,25 @@ function buildMesCard(c,isPast,isProf,kind){
   if(c.mode==='visio'){
     var _vNow=Date.now();
     var _vStart=c.dt_iso?new Date(c.dt_iso).getTime():0;
-    var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+2*60*60*1000);
+    var _vDureeMs=(c.duree||120)*60*1000;
+    var _vInWin=!_vStart||(_vNow>=_vStart-15*60*1000&&_vNow<=_vStart+_vDureeMs);
     var _vNotYet=_vStart&&_vNow<_vStart-15*60*1000;
     var _vHeure=_vStart?new Date(_vStart).toLocaleTimeString(_dateLocale(),{hour:'2-digit',minute:'2-digit'}):'';
+    var _vIsAppli=!c.visio_url||c.visio_url.indexOf('.daily.co/')>=0;
+    var _vJoinFn=_vIsAppli
+      ?'openCourseVisio(\''+escH(c.id)+'\')'
+      :'openVisioModal(\''+escH(c.visio_url)+'\')';
     if(isProf){
-      if(!c.visio_url){visio='<button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="margin-top:10px;width:100%;padding:10px;background:rgba(0,113,227,.08);color:#0055B3;border:1.5px dashed rgba(0,113,227,.3);border-radius:12px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">+ '+t('visio_add_title')+'</button>';}
-      else{visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')">'+t('exp_join')+'</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">'+t('btn_modifier')+'</button></div>';}
+      if(_vIsAppli){
+        // Visio intégrée : le prof rejoint directement, la room est créée à la volée
+        visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation();'+_vJoinFn+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'+t('exp_join')+'</button>';
+      } else {
+        // Lien externe : Rejoindre + Modifier
+        visio='<div style="margin-top:10px;display:flex;gap:8px"><button class="btn-visio" style="flex:1;justify-content:center" onclick="event.stopPropagation();'+_vJoinFn+'">'+t('exp_join')+'</button><button class="mes-visio-add" data-cid="'+escH(c.id)+'" style="padding:9px 14px;background:var(--bg);color:var(--mid);border:1.5px solid var(--bdr);border-radius:50px;font-family:inherit;font-weight:600;font-size:12px;cursor:pointer">'+t('btn_modifier')+'</button></div>';
+      }
     } else if(!!res[c.id]){
-      // Toujours afficher le bouton Rejoindre pour les élèves inscrits en visio
-      var _vOnclick=_vInWin&&c.visio_url
-        ?'event.stopPropagation();openVisioModal(\''+escH(c.visio_url)+'\')'
+      var _vOnclick=_vInWin
+        ?'event.stopPropagation();'+_vJoinFn
         :'event.stopPropagation();toast(t(\'visio_not_yet\'),t(\'visio_not_yet_sub\').replace(\'{heure}\',\''+escH(_vHeure)+'\'))';
       visio='<button class="btn-visio" style="margin-top:10px;width:100%;justify-content:center" onclick="'+_vOnclick+'">'+t('mes_rejoindre_visio')+'</button>';
     }
@@ -13636,92 +13651,89 @@ function _stepOptClick(el){
   haptic(8);
 }
 
-// ── Drag & drop bnav sur desktop ──
+// ── Drag & drop bnav sur desktop — via languette uniquement ──
 (function(){
-  var nav = null;
-  var dragging = false;
-  var ox = 0, oy = 0; // offset souris par rapport au coin du nav
+  var nav=null,handle=null,dragging=false,ox=0,oy=0;
+
+  function _navResetPos(){
+    nav.style.left='50%';nav.style.top='';nav.style.right='auto';
+    nav.style.bottom='';nav.style.transform='translateX(-50%)';
+  }
 
   function initNavDrag(){
-    nav = document.getElementById('bnav');
-    if(!nav) return;
+    nav=document.getElementById('bnav');
+    if(!nav||window.innerWidth<769)return;
 
-    nav.addEventListener('mousedown', function(e){
-      // Ignorer si clic sur un bouton
-      if(e.target.closest('button,a,[onclick]') && e.target !== nav) return;
-      if(window.innerWidth < 769) return; // mobile : pas de drag
-      dragging = true;
-      var rect = nav.getBoundingClientRect();
-      ox = e.clientX - rect.left;
-      oy = e.clientY - rect.top;
-      nav.style.transition = 'none';
-      nav.style.cursor = 'grabbing';
+    // ── Languette de drag ──
+    handle=document.createElement('div');
+    handle.id='bnavDragHandle';
+    handle.title='Déplacer · Double-clic pour recentrer';
+    handle.style.cssText='display:flex;align-items:center;justify-content:center;'
+      +'width:20px;padding:0 4px;cursor:grab;flex-shrink:0;opacity:.3;'
+      +'transition:opacity .2s;-webkit-user-select:none;user-select:none;';
+    handle.innerHTML='<svg viewBox="0 0 8 14" fill="currentColor" width="8" height="14">'
+      +'<circle cx="2" cy="2" r="1.4"/><circle cx="6" cy="2" r="1.4"/>'
+      +'<circle cx="2" cy="7" r="1.4"/><circle cx="6" cy="7" r="1.4"/>'
+      +'<circle cx="2" cy="12" r="1.4"/><circle cx="6" cy="12" r="1.4"/>'
+      +'</svg>';
+    handle.addEventListener('mouseover',function(){handle.style.opacity='.65';});
+    handle.addEventListener('mouseout',function(){if(!dragging)handle.style.opacity='.3';});
+    handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
+    nav.insertBefore(handle,nav.firstChild);
+
+    // ── Bouton retour natif (caché par défaut, cercle flèche) ──
+    var msgBack=document.createElement('button');
+    msgBack.id='bnavMsgBack';
+    msgBack.title='Retour';
+    msgBack.style.cssText='display:none;align-items:center;justify-content:center;width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,107,43,.12);color:var(--or);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .18s,transform .12s;';
+    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>';
+    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.2)';msgBack.style.transform='scale(1.08)';};
+    msgBack.onmouseout=function(){msgBack.style.background='rgba(255,107,43,.12)';msgBack.style.transform='';};
+    msgBack.onclick=function(){navTo('exp');};
+    nav.appendChild(msgBack);
+
+    // ── Drag ──
+    handle.addEventListener('mousedown',function(e){
+      if(window.innerWidth<769)return;
+      dragging=true;
+      var rect=nav.getBoundingClientRect();
+      ox=e.clientX-rect.left;oy=e.clientY-rect.top;
+      nav.classList.add('bnav-dragging');
+      handle.style.cursor='grabbing';handle.style.opacity='1';
       e.preventDefault();
     });
-
-    document.addEventListener('mousemove', function(e){
-      if(!dragging || !nav) return;
-      var x = e.clientX - ox;
-      var y = e.clientY - oy;
-      // Garder dans la fenêtre
-      var rect = nav.getBoundingClientRect();
-      x = Math.max(0, Math.min(window.innerWidth - rect.width, x));
-      y = Math.max(0, Math.min(window.innerHeight - rect.height, y));
-      nav.style.left = x + 'px';
-      nav.style.top = y + 'px';
-      nav.style.bottom = 'auto';
-      nav.style.transform = 'none';
+    document.addEventListener('mousemove',function(e){
+      if(!dragging||!nav)return;
+      var x=e.clientX-ox,y=e.clientY-oy;
+      var rect=nav.getBoundingClientRect();
+      x=Math.max(8,Math.min(window.innerWidth-rect.width-8,x));
+      y=Math.max(8,Math.min(window.innerHeight-rect.height-8,y));
+      nav.style.left=x+'px';nav.style.top=y+'px';
+      nav.style.bottom='auto';nav.style.transform='none';
+    });
+    document.addEventListener('mouseup',function(){
+      if(!dragging||!nav)return;
+      dragging=false;
+      handle.style.cursor='grab';handle.style.opacity='.3';
+      nav.classList.remove('bnav-dragging');
     });
 
-    document.addEventListener('mouseup', function(){
-      if(!dragging || !nav) return;
-      dragging = false;
-      nav.style.cursor = '';
-      nav.style.transition = '';
-      // Sauvegarder position
-      try{
-        localStorage.setItem('cp_nav_pos', JSON.stringify({
-          left: nav.style.left,
-          top: nav.style.top,
-          bottom: nav.style.bottom,
-          transform: nav.style.transform
-        }));
-      }catch(e){}
-    });
+    // Toujours centré au chargement
+    _navResetPos();
 
-    // Restaurer position sauvegardée
-    try{
-      var saved = localStorage.getItem('cp_nav_pos');
-      if(saved && window.innerWidth >= 769){
-        var pos = JSON.parse(saved);
-        if(pos.left) nav.style.left = pos.left;
-        if(pos.top) nav.style.top = pos.top;
-        if(pos.bottom !== undefined) nav.style.bottom = pos.bottom;
-        if(pos.transform !== undefined) nav.style.transform = pos.transform;
-      }
-    }catch(e){}
-
-    // Curseur grab sur desktop
-    if(window.innerWidth >= 769){
-      nav.style.cursor = 'grab';
-    }
-    // Réinitialiser la position si on passe en mode mobile (rotation)
     window.addEventListener('resize',function(){
       if(window.innerWidth<769){
-        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
-        nav.style.cursor='';
+        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';
+        if(handle)handle.style.display='none';
       }else{
-        nav.style.cursor='grab';
+        if(handle)handle.style.display='flex';
+        _navResetPos();
       }
     });
   }
 
-  // Attendre que le DOM soit prêt
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initNavDrag);
-  } else {
-    setTimeout(initNavDrag, 500);
-  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initNavDrag);}
+  else{setTimeout(initNavDrag,500);}
 })();
 
 // ── Swipe gauche/droite pour navigation entre onglets ──────────────────────
@@ -14026,6 +14038,108 @@ function snapNavPill(nav){
 
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
+var _pendingVisioToken=null; // token pré-fetché par /visio/room, consommé par _joinDailyRoom
+
+// ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
+async function openCourseVisio(courseId){
+  try{
+    var r=await fetch(API+'/visio/room',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:courseId})});
+    var d=await r.json();
+    if(r.status===403){
+      var msg=d.code==='TOO_EARLY'?'Le cours n\'a pas encore commencé'
+        :d.code==='ENDED'?'Ce cours est terminé'
+        :'Vous n\'êtes pas inscrit à ce cours';
+      toast(msg,'');return;
+    }
+    if(!d.url){toast('Connexion visio impossible','Vérifiez votre connexion');return;}
+    _pendingVisioToken={token:d.token,is_owner:d.is_owner,user_name:d.user_name};
+    openVisioModal(d.url);
+  }catch(e){console.error('[openCourseVisio]',e);toast('Connexion visio impossible','Vérifiez votre connexion');}
+}
+
+function _vOpenQuickSheet(){
+  var existing=g('_vqSheet');if(existing)existing.remove();
+  var ovl=document.createElement('div');
+  ovl.id='_vqSheet';
+  ovl.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;-webkit-tap-highlight-color:transparent;';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px max(28px,env(safe-area-inset-bottom,28px));';
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="font-size:18px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px">Visio rapide</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Créez une salle ou rejoignez avec un lien</div>'
+    +'<button id="_vqCreate" style="width:100%;background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:14px;padding:15px 18px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:10px;box-shadow:0 4px 18px rgba(255,69,0,.28);-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span>Créer une nouvelle salle</span></button>'
+    +'<div style="background:var(--bg);border-radius:14px;padding:14px 16px;margin-bottom:10px;">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px">Rejoindre avec un lien</div>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<input id="_vqUrl" type="url" placeholder="https://…" autocomplete="off" inputmode="url" style="flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;background:var(--wh);color:var(--ink);min-width:0;">'
+    +'<button id="_vqJoin" style="background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;">Rejoindre</button>'
+    +'</div></div>'
+    +'<button id="_vqDemo" style="width:100%;background:none;border:1.5px solid var(--bdr);border-radius:14px;padding:12px;font-family:inherit;font-weight:600;font-size:14px;color:var(--mid);cursor:pointer;">Mode démo (sans connexion)</button>';
+  ovl.appendChild(sheet);document.body.appendChild(ovl);
+  var createBtn=g('_vqCreate');
+  if(createBtn)createBtn.onclick=async function(){
+    createBtn.disabled=true;createBtn.querySelector('span').textContent='Création…';
+    try{
+      var r=await fetch(API+'/visio/room',{method:'POST',headers:apiH(),body:JSON.stringify({})});
+      var d=await r.json();
+      if(!d.url)throw new Error(d.error||'no url');
+      ovl.remove();_vShowShareLink(d.url,function(){
+        _pendingVisioToken={token:d.token,is_owner:d.is_owner,user_name:d.user_name};
+        openVisioModal(d.url);
+      });
+    }catch(e){
+      console.error('[Visio create]',e);
+      toast('Erreur création salle','Vérifiez votre connexion');
+      createBtn.disabled=false;createBtn.querySelector('span').textContent='Créer une nouvelle salle';
+    }
+  };
+  var joinBtn=g('_vqJoin'),urlInp=g('_vqUrl');
+  if(joinBtn)joinBtn.onclick=function(){
+    var u=(urlInp?urlInp.value.trim():'');
+    if(!u||!u.startsWith('http')){toast('Lien invalide','Entrez un lien https://');return;}
+    ovl.remove();openVisioModal(u);
+  };
+  if(urlInp)urlInp.addEventListener('keydown',function(e){if(e.key==='Enter'&&joinBtn)joinBtn.click();});
+  var demoBtn=g('_vqDemo');if(demoBtn)demoBtn.onclick=function(){ovl.remove();_vOpenDemo();};
+}
+
+function _vShowShareLink(url,onJoin){
+  var existing=g('_vqShare');if(existing)existing.remove();
+  var ovl=document.createElement('div');
+  ovl.id='_vqShare';
+  ovl.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px max(28px,env(safe-area-inset-bottom,28px));';
+  var short=url.replace('https://','');
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+    +'<div style="width:40px;height:40px;border-radius:50%;background:#E8F9EE;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg></div>'
+    +'<div><div style="font-size:16px;font-weight:800;letter-spacing:-.02em;">Salle créée !</div>'
+    +'<div style="font-size:12px;color:var(--lite)">Partagez le lien pour inviter</div></div></div>'
+    +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+    +'<div style="font-size:13px;font-weight:600;color:var(--mid);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+short+'</div>'
+    +'<button id="_vqCopy" style="background:var(--or);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;">Copier</button></div>'
+    +'<button id="_vqShareNative" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:12px;font-family:inherit;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager le lien</button>'
+    +'<button id="_vqEnter" style="width:100%;background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 18px rgba(255,69,0,.28);">Rejoindre maintenant</button>';
+  ovl.appendChild(sheet);document.body.appendChild(ovl);
+  var copyBtn=g('_vqCopy');
+  if(copyBtn)copyBtn.onclick=function(){
+    try{navigator.clipboard.writeText(url);}catch(e){var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+    copyBtn.textContent='Copié ✓';copyBtn.style.background='#22C069';
+    setTimeout(function(){copyBtn.textContent='Copier';copyBtn.style.background='var(--or)';},2000);
+  };
+  var shareBtn=g('_vqShareNative');
+  if(shareBtn)shareBtn.onclick=function(){
+    if(navigator.share){navigator.share({title:'Rejoins ma salle CoursPool',text:'Rejoins-moi en visio !',url:url}).catch(function(){});}
+    else{if(copyBtn)copyBtn.click();}
+  };
+  var enterBtn=g('_vqEnter');
+  if(enterBtn)enterBtn.onclick=function(){ovl.remove();onJoin();};
+}
 
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
@@ -14054,22 +14168,29 @@ function _vOpenDemo(){
     var grid=g('_vGrid');if(!grid)return;
     grid.appendChild(_vBuildDemoTile({sid:'demo-local',name:'Vous',color:'linear-gradient(148deg,#FF7D42,#FF4500)',net:'good',local:true}));
     _vApplyLayout();
-    // Réutiliser le stream du pré-join (évite de re-demander la permission)
+    // Réutiliser le stream audio du pré-join
     var pjs=_preJoinStream;_preJoinStream=null;
     if(pjs&&pjs.active){
-      // Attacher la vidéo au tile local
       var vt=pjs.getVideoTracks();
       if(vt.length){
         var lv=g('_vLocalVid');
         if(lv){lv.srcObject=new MediaStream(vt);lv.style.display='block';lv.play().catch(function(){});
           var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
       }
-      // Analyser l'audio
       var at=pjs.getAudioTracks();
       if(at.length){_startDemoAudio(new MediaStream(at));}
-      else{_ensureDemoAudio(_startDemoAudio);}
+      else{if(window._pjMicWanted!==false)_ensureDemoAudio(_startDemoAudio);}
     }else{
-      _ensureDemoAudio(_startDemoAudio);
+      if(window._pjMicWanted!==false)_ensureDemoAudio(_startDemoAudio);
+    }
+    // iOS : si l'utilisateur a activé la caméra dans le pré-join, l'ouvrir maintenant
+    if(window._pjCamWanted&&!g('_vLocalVid').srcObject){
+      navigator.mediaDevices&&navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        .then(function(vs){
+          var lv=g('_vLocalVid');
+          if(lv){lv.srcObject=vs;lv.style.display='block';lv.play().catch(function(){});
+            var lav=g('_vav-demo-local');if(lav)lav.style.display='none';}
+        }).catch(function(){});
     }
     haptic(1);
   });
@@ -14084,15 +14205,19 @@ function _ensureDemoAudio(callback){
 function _startDemoAudio(stream){
   _demoAudioStream=stream;
   if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}
-  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}}
-  _demoAudioCtx=new AudioContext();
-  var src=_demoAudioCtx.createMediaStreamSource(stream);
-  _demoAnalyser=_demoAudioCtx.createAnalyser();
-  _demoAnalyser.fftSize=256;
-  src.connect(_demoAnalyser);
-  _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
-  _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
-  _demoAudioLoop();
+  if(_demoAudioCtx){try{_demoAudioCtx.close();}catch(e){}_demoAudioCtx=null;}
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    _demoAudioCtx=new AC();
+    if(_demoAudioCtx.state==='suspended'){_demoAudioCtx.resume().catch(function(){});}
+    var src=_demoAudioCtx.createMediaStreamSource(stream);
+    _demoAnalyser=_demoAudioCtx.createAnalyser();
+    _demoAnalyser.fftSize=256;
+    src.connect(_demoAnalyser);
+    _demoBuf=new Uint8Array(_demoAnalyser.frequencyBinCount);
+    _demoLocalSpeaking=false;_demoSilenceSince=Date.now();_demoPipThrottle=0;
+    _demoAudioLoop();
+  }catch(e){_demoAudioCtx=null;_demoAnalyser=null;}
 }
 
 function _demoAudioLoop(){
@@ -14204,6 +14329,7 @@ function _vBuildDemoTile(f){
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
+var _joinTimeout=null,_joinRetries=0;
 var _vPipFeaturedSid=null;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
@@ -14225,16 +14351,77 @@ function _vStopPreJoin(){
 function _vShowPreJoin(onJoin){
   _vStopPreJoin();
   var existing=g('bdVisio');if(existing)existing.remove();
-  var bd=document.createElement('div');
-  bd.id='bdVisio';
-  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;';
   var name=user&&user.prenom?user.prenom:'Vous';
   var ini=name.charAt(0).toUpperCase();
   var col=(user&&user.col)||'linear-gradient(148deg,#FF7D42,#FF4500)';
+  window._vPreJoinCallback=onJoin;
+  window._pjMicWanted=false;
+  window._pjCamWanted=false;
+
+  var isIosNative=_isIOS&&window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform();
+
+  var bd=document.createElement('div');
+  bd.id='bdVisio';
+
+  if(isIosNative){
+    // ── UI iOS : toggles seulement, sans preview caméra ──
+    // Mise en page flex colonne avec header safe-area correct
+    bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;';
+    var svgMic='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    var svgCam='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+    var togOff='width:48px;height:28px;border-radius:14px;background:rgba(255,255,255,.2);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent;';
+    var knobL='position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s,right .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);';
+    bd.innerHTML=''
+      // Header : bouton Annuler aligné à droite
+      +'<div style="display:flex;justify-content:flex-end;padding:14px 16px 0;">'
+      +'<button onclick="_vCancelPreJoin()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:8px 18px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;-webkit-tap-highlight-color:transparent;">✕ Annuler</button>'
+      +'</div>'
+      // Contenu centré
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;">'
+      +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:28px;letter-spacing:-.02em;">Prêt à rejoindre ?</div>'
+      // Avatar
+      +'<div style="width:80px;height:80px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4);margin-bottom:8px;">'+ini+'</div>'
+      +'<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.55);margin-bottom:32px;">'+name+'</div>'
+      // Toggles
+      +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">'
+      // Micro — OFF par défaut
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+      +'<div id="_pjMicIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgMic+'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:700;color:#fff;">Microphone</div>'
+      +'<div id="_pjMicSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivé</div>'
+      +'</div>'
+      +'<button id="_pjMicToggle" onclick="_pjToggleMic()" style="'+togOff+'">'
+      +'<div id="_pjMicKnob" style="'+knobL+'"></div>'
+      +'</button>'
+      +'</div>'
+      // Caméra — OFF par défaut
+      +'<div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border-radius:16px;padding:16px 18px;">'
+      +'<div id="_pjCamIconWrap" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);">'+svgCam+'</div>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:14px;font-weight:700;color:#fff;">Caméra</div>'
+      +'<div id="_pjCamSt" style="font-size:12px;color:rgba(255,255,255,.35);margin-top:2px;">Désactivée</div>'
+      +'</div>'
+      +'<button id="_pjCamToggle" onclick="_pjToggleCam()" style="'+togOff+'">'
+      +'<div id="_pjCamKnob" style="'+knobL+'"></div>'
+      +'</button>'
+      +'</div>'
+      +'</div>'
+      // Rejoindre
+      +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:16px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>'
+      +'</div>'; // fin contenu centré
+    document.body.appendChild(bd);
+    var nav=g('bnav');if(nav)nav.style.display='none';
+    haptic(1);
+    return;
+  }
+
+  // ── UI desktop/web : preview caméra complète ──
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;';
   bd.innerHTML=''
     +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
     +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
-    // Preview caméra
     +'<div style="position:relative;width:min(320px,90vw);height:min(200px,56vw);border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#1e1e30,#12121f);margin-bottom:22px;box-shadow:0 8px 32px rgba(0,0,0,.5);">'
     +'<div id="_pjAv" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">'
     +'<div style="width:64px;height:64px;border-radius:50%;background:'+col+';display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);">'+ini+'</div>'
@@ -14242,7 +14429,6 @@ function _vShowPreJoin(onJoin){
     +'</div>'
     +'<video id="_pjVideo" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>'
     +'</div>'
-    // Statuts mic / cam
     +'<div style="width:min(320px,90vw);display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'
     +'<div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border-radius:14px;padding:12px 16px;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
@@ -14258,15 +14444,11 @@ function _vShowPreJoin(onJoin){
     +'<div id="_pjCamSt" style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);">En attente…</div>'
     +'</div>'
     +'</div>'
-    // Bouton rejoindre
     +'<button id="_pjJoin" onclick="_vConfirmPreJoin()" style="width:min(320px,90vw);padding:15px;background:linear-gradient(135deg,#FF7D42,#FF4500);border:none;border-radius:50px;color:#fff;font-family:inherit;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,43,.45);display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .15s;">'
     +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Rejoindre</button>';
   document.body.appendChild(bd);
   var nav=g('bnav');if(nav)nav.style.display='none';
   haptic(1);
-  // Stocker le callback pour _vConfirmPreJoin
-  window._vPreJoinCallback=onJoin;
-  // Demander mic + cam
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
     _pjSetSt('mic',false);_pjSetSt('cam',false);return;
   }
@@ -14276,15 +14458,12 @@ function _vShowPreJoin(onJoin){
       var vid=g('_pjVideo');
       if(vid){
         var av=g('_pjAv');if(av)av.style.display='none';
-        vid.srcObject=stream;
-        vid.style.display='block';
-        vid.play().catch(function(){});
+        vid.srcObject=stream;vid.style.display='block';vid.play().catch(function(){});
       }
       _pjSetSt('mic',true);_pjSetSt('cam',true);
       _pjStartMicMeter(stream);
     })
     .catch(function(){
-      // Essayer micro seul
       navigator.mediaDevices.getUserMedia({audio:true,video:false})
         .then(function(stream){
           _preJoinStream=stream;
@@ -14294,6 +14473,43 @@ function _vShowPreJoin(onJoin){
         .catch(function(){_pjSetSt('mic',false);_pjSetSt('cam',false);});
     });
 }
+// Toggle mic (iOS pré-join)
+function _pjToggleMic(){
+  window._pjMicWanted=!window._pjMicWanted;
+  if(window._pjMicWanted){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){_pjUpdateToggle('mic',false,'Non dispo');window._pjMicWanted=false;return;}
+    navigator.mediaDevices.getUserMedia({audio:true,video:false})
+      .then(function(stream){_preJoinStream=stream;_pjUpdateToggle('mic',true,'Autorisé');})
+      .catch(function(){_pjUpdateToggle('mic',false,'Refusé');window._pjMicWanted=false;});
+  }else{
+    if(_preJoinStream){_preJoinStream.getTracks().forEach(function(t){t.stop();});_preJoinStream=null;}
+    _pjUpdateToggle('mic',false,'Désactivé');
+  }
+  haptic(1);
+}
+// Toggle cam (iOS pré-join — juste une préférence, pas de stream)
+function _pjToggleCam(){
+  window._pjCamWanted=!window._pjCamWanted;
+  _pjUpdateToggle('cam',window._pjCamWanted,window._pjCamWanted?'Activée':'Désactivée');
+  haptic(1);
+}
+// Mettre à jour visuellement un toggle iOS pré-join
+function _pjUpdateToggle(dev,on,label){
+  var st=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
+  var btn=g(dev==='mic'?'_pjMicToggle':'_pjCamToggle');
+  var knob=g(dev==='mic'?'_pjMicKnob':'_pjCamKnob');
+  var wrap=g(dev==='mic'?'_pjMicIconWrap':'_pjCamIconWrap');
+  if(st){st.textContent=label;st.style.color=on?'rgba(255,255,255,.65)':'rgba(255,255,255,.35)';}
+  if(btn){btn.style.background=on?'#22C069':'rgba(255,255,255,.2)';}
+  if(knob){
+    if(on){knob.style.left='auto';knob.style.right='3px';}
+    else{knob.style.right='auto';knob.style.left='3px';}
+  }
+  if(wrap){
+    wrap.style.background=on?'rgba(34,192,105,.18)':'rgba(255,255,255,.08)';
+    wrap.style.color=on?'#22C069':'rgba(255,255,255,.4)';
+  }
+}
 function _pjSetSt(dev,ok){
   var el=g(dev==='mic'?'_pjMicSt':'_pjCamSt');
   if(!el)return;
@@ -14302,7 +14518,9 @@ function _pjSetSt(dev,ok){
 }
 function _pjStartMicMeter(stream){
   try{
-    _preJoinAudioCtx=new AudioContext();
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    _preJoinAudioCtx=new AC();
+    if(_preJoinAudioCtx.state==='suspended'){_preJoinAudioCtx.resume().catch(function(){});}
     var src=_preJoinAudioCtx.createMediaStreamSource(stream);
     _preJoinAnalyser=_preJoinAudioCtx.createAnalyser();
     _preJoinAnalyser.fftSize=256;
@@ -14340,6 +14558,8 @@ function openVisioModal(url){
     _isDemoMode=false;
     _isOwner=!!(user&&user.role==='professeur');
     _intentionalLeave=false;
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    _joinRetries=0;
     var existing=g('bdVisio');if(existing)existing.remove();
     var bd=document.createElement('div');
     bd.id='bdVisio';
@@ -14399,7 +14619,7 @@ function _buildVisioHTML(){
     +(_isOwner?'<button onclick="_vToggleCommentAllow()" id="_vComAllowBtn" style="font-size:11px;font-weight:700;font-family:inherit;border:none;border-radius:20px;padding:4px 10px;cursor:pointer;background:rgba(255,107,43,.85);color:#fff;transition:background .2s">Autorisés</button>':'')
     +'</div>'
     +'<div id="_vCommentList" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;"></div>'
-    +'<div style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
+    +'<div id="_vCommentBar" style="padding:10px 12px calc(env(safe-area-inset-bottom,0px)+10px);border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;flex-shrink:0">'
     +'<input id="_vCommentInput" type="text" placeholder="Écrire un commentaire…" maxlength="200" style="flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_vSendComment()">'
     +'<button onclick="_vSendComment()" style="width:36px;height:36px;border-radius:50%;background:#FF6B2B;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="16" height="16"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'
     +'</div></div>'
@@ -14419,7 +14639,7 @@ function _buildVisioHTML(){
     +'<button id="_vHand" onclick="_vToggleHand()" style="'+cs+'" title="Lever la main"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg></button>'
     +'<button id="_vBoardBtn" onclick="_vOpenBoard()" style="'+cs+'" title="Tableau blanc"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="3" y="4" width="18" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 9h4M7 13h6"/></svg></button>'
     +'<button id="_vShare" onclick="_vToggleShare()" style="'+cs+'" title="Partager écran"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>'
-    +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></button>'
+    +'<button id="_vCommentBtn" onclick="_vToggleComment()" style="'+cs+'" title="Commentaires"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M20 2H4a2 2 0 00-2 2v13a2 2 0 002 2h11l5 3V4a2 2 0 00-2-2z"/></svg></button>'
     +'<button id="_vPeopleBtn" onclick="_vTogglePeople()" style="'+cs+'" title="Participants"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></button>'
     +'<button onclick="closeVisioModal()" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(148deg,#e53e3e,#c53030);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 18px rgba(229,62,62,.4);transition:all .22s cubic-bezier(.34,1.56,.64,1)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="22" height="22"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
     +'</div>';
@@ -14460,8 +14680,12 @@ async function _joinDailyRoom(url,roomName){
     return;
   }
   try{
-    var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
-    var td=await tr.json();
+    var td;
+    if(_pendingVisioToken){td=_pendingVisioToken;_pendingVisioToken=null;}
+    else{
+      var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:roomName})});
+      td=await tr.json();
+    }
     if(!td.token){toast('Erreur token visio','');return;}
     if(typeof DailyIframe==='undefined'){toast('SDK visio non chargé','');return;}
     if(_callObj){try{await _callObj.leave();}catch(e){}try{_callObj.destroy();}catch(e){}_callObj=null;}
@@ -14478,18 +14702,38 @@ async function _joinDailyRoom(url,roomName){
       .on('network-quality-change',_vOnNetQuality)
       .on('error',function(e){
         console.error('[Daily]',e);
-        if(!_intentionalLeave){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+        if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        if(!_intentionalLeave&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       })
       .on('left-meeting',function(){
-        if(!_intentionalLeave&&_visioCurrentUrl){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+        if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        if(!_intentionalLeave&&_visioCurrentUrl&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       });
     _isOwner=td.is_owner||_isOwner;
+    // Timeout de sécurité : si joined-meeting ne fire pas dans 15s, la room n'existe pas
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    _joinTimeout=setTimeout(function(){
+      _joinTimeout=null;
+      console.warn('[Visio] joined-meeting timeout — room introuvable');
+      if(_callObj){try{_callObj.destroy();}catch(e){}_callObj=null;}
+      var grid=g('_vGrid');
+      if(grid)grid.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.75);font-size:14px;text-align:center;padding:24px;height:100%;line-height:1.5;">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" width="40" height="40"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        +'<span>Impossible de rejoindre la salle.<br>Le lien est peut-être invalide ou expiré.</span>'
+        +'<button onclick="closeVisioModal()" style="background:#FF6B2B;border:none;color:#fff;padding:8px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;">Fermer</button>'
+        +'</div>';
+    },15000);
     await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
     if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
-  }catch(e){console.error('[Visio join]',e);toast('Impossible de rejoindre','');}
+  }catch(e){
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    console.error('[Visio join]',e);toast('Impossible de rejoindre','');
+  }
 }
 
 function _vOnJoined(){
+  if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+  _joinRetries=0;
   _vRenderGrid();
   if(_isOwner)_vUpdateHands(); // show prof controls panel (open floor button)
   try{
@@ -15036,8 +15280,48 @@ function _vToggleComment(){
   if(tab){tab.style.opacity=_vCommentOpen?'0':'1';tab.style.pointerEvents=_vCommentOpen?'none':'auto';}
   if(_vCommentOpen){var inp=g('_vCommentInput');if(inp)setTimeout(function(){inp.focus();},100);}
 }
+// ── Keyboard awareness pour la barre de saisie commentaires ──
+function _vSetupCommentKeyboard(){
+  var panel=g('_vComment');if(!panel)return;
+  var _ckbH=0;
+  function _ckbApply(animate){
+    // Remonter le panneau entier au-dessus du clavier
+    panel.style.transition=animate?'bottom .25s ease':'none';
+    panel.style.bottom=(_ckbH>0?_ckbH+'px':'0');
+  }
+  // Capacitor Keyboard plugin — hauteur exacte, s'anime avec le clavier
+  var _ckbShow=function(e){_ckbH=(e&&e.keyboardHeight)||0;_ckbApply(true);};
+  var _ckbHide=function(){_ckbH=0;_ckbApply(true);};
+  // Fallback visualViewport (web / Safari)
+  var _ckbVP=function(){
+    if(!window.visualViewport)return;
+    var kh=Math.max(0,window.innerHeight-window.visualViewport.height-window.visualViewport.offsetTop);
+    if(Math.abs(kh-_ckbH)>10){_ckbH=kh;_ckbApply(false);}
+  };
+  var inp=g('_vCommentInput');
+  if(inp){
+    inp.addEventListener('focus',function(){
+      window.addEventListener('keyboardWillShow',_ckbShow);
+      window.addEventListener('keyboardWillHide',_ckbHide);
+      if(window.visualViewport){
+        window.visualViewport.addEventListener('resize',_ckbVP,{passive:true});
+        window.visualViewport.addEventListener('scroll',_ckbVP,{passive:true});
+      }
+    },{passive:true});
+    inp.addEventListener('blur',function(){
+      window.removeEventListener('keyboardWillShow',_ckbShow);
+      window.removeEventListener('keyboardWillHide',_ckbHide);
+      if(window.visualViewport){
+        window.visualViewport.removeEventListener('resize',_ckbVP);
+        window.visualViewport.removeEventListener('scroll',_ckbVP);
+      }
+      _ckbH=0;_ckbApply(true);
+    },{passive:true});
+  }
+}
 function _vInitCommentSwipe(){
   var panel=g('_vComment');if(!panel)return;
+  _vSetupCommentKeyboard();
   var _csx=0,_csy=0,_ctracking=false,_cvert=false;
   panel.addEventListener('touchstart',function(e){
     _csx=e.touches[0].clientX;_csy=e.touches[0].clientY;_ctracking=true;_cvert=false;
@@ -15369,15 +15653,20 @@ function _boardRenderSubbar(){
 function _vOpenBoard(){
   if(window.innerWidth<768){
     var _bPop=document.createElement('div');
+    _bPop.id='_vBoardPop';
     _bPop.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
     _bPop.innerHTML='<div style="background:#1a1a2e;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6);">'
-      +'<div style="font-size:36px;margin-bottom:14px">🖥️</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background:rgba(255,107,43,.15);margin:0 auto 16px;">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+      +'</div>'
       +'<div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:10px">Tableau collaboratif</div>'
       +'<div style="font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:22px">Le tableau collaboratif est disponible sur iPad et ordinateur uniquement. Sur téléphone, profite du cours en visio !</div>'
-      +'<button onclick="this.closest(\'div[style*=\"inset:0\"]\').remove()" style="width:100%;padding:12px;background:#FF6B2B;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">OK, compris</button>'
+      +'<button id="_vBoardPopOk" style="width:100%;padding:12px;background:#FF6B2B;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;">OK, compris</button>'
       +'</div>';
     _bPop.onclick=function(e){if(e.target===_bPop)_bPop.remove();};
     document.body.appendChild(_bPop);
+    var _bOk=g('_vBoardPopOk');
+    if(_bOk)_bOk.onclick=function(){var p=g('_vBoardPop');if(p)p.remove();};
     return;
   }
   if(_boardActive)return;
@@ -17288,6 +17577,13 @@ function closeVisioModal(){
   window._vPreJoinCallback=null;
   try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
 }
+
+// Quitter proprement si la page se ferme pendant une visio (évite de laisser des participant-minutes tourner)
+window.addEventListener('beforeunload',function(){
+  if(_callObj&&!_intentionalLeave){
+    try{_intentionalLeave=true;_visioCurrentUrl='';_callObj.leave();}catch(e){}
+  }
+});
 
 // ── Tableau blanc collaboratif — fonctions socket ─────────────────────────
 
