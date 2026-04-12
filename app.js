@@ -14844,6 +14844,13 @@ function _vOnActiveSpeaker(evt){
   _activeSpeakerSid=sid||null;
   document.querySelectorAll('[id^="_vt-"]').forEach(function(el){el.style.boxShadow='';});
   if(sid){var t=g('_vt-'+sid);if(t)t.style.boxShadow='inset 0 0 0 3px #FF6B2B,0 0 24px rgba(255,107,43,.35)';}
+  // Indique visuellement si C'EST MOI qui parle (mic + bulle flottante)
+  var localSid=_callObj&&_callObj.participants&&_callObj.participants().local?_callObj.participants().local.session_id:null;
+  var iAmSpeaking=sid&&(sid===localSid||sid==='demo-local');
+  var micBtn=g('_vMic');
+  if(micBtn){if(iAmSpeaking&&!_localMuted){micBtn.classList.add('mic-speaking');}else{micBtn.classList.remove('mic-speaking');}}
+  var rb=g('_vPipRestoreBtn');
+  if(rb){if(iAmSpeaking&&!_localMuted){rb.classList.add('mic-speaking');}else{rb.classList.remove('mic-speaking');}}
   if(_boardActive)_vApplyLayout(); // switch PiP to new speaker
 }
 
@@ -14951,7 +14958,8 @@ function _vOnMsg(evt){
   }else if(m.type==='mute_req'){
     if(_callObj&&m.to===_callObj.participants().local.session_id){
       _callObj.setLocalAudio(false);_localMuted=true;_floorGranted=false;
-      var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);
+      var b=g('_vMic');if(b){b.innerHTML=_vMicSvg(true);b.classList.remove('mic-speaking');}
+      var _rb3=g('_vPipRestoreBtn');if(_rb3)_rb3.classList.remove('mic-speaking');
       toast('Votre micro a été coupé','');
     }
   }else if(m.type==='open_floor'){
@@ -15361,6 +15369,8 @@ function _vToggleMic(){
   }
   if(_callObj)_callObj.setLocalAudio(!_localMuted);
   if(!_localMuted){var banner=g('_vMutedBanner');if(banner)banner.style.display='none';}
+  // Couper le micro = stopper l'animation "qui parle"
+  if(_localMuted){var _mb2=g('_vMic');if(_mb2)_mb2.classList.remove('mic-speaking');var _rb2=g('_vPipRestoreBtn');if(_rb2)_rb2.classList.remove('mic-speaking');}
   haptic(1);
 }
 function _vToggleCam(){
