@@ -16369,7 +16369,21 @@ function _boardRestorePage(dataUrl,cb){
     _brdRestorePending=false;
     _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
     _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-    _brdX.drawImage(img,0,0,_brdC.width,_brdC.height); // scale to new dims après resize
+    // Vieux snapshots JPEG (fond noir car JPEG ne gère pas la transparence) :
+    // extraction des traits via seuil near-black sur un canvas offscreen.
+    // Les nouveaux snapshots sont en PNG (transparent) → branche else directe.
+    if(dataUrl&&dataUrl.indexOf('data:image/jpeg')===0){
+      var _oc=document.createElement('canvas');_oc.width=img.width;_oc.height=img.height;
+      var _octx=_oc.getContext('2d');_octx.drawImage(img,0,0);
+      var _id=_octx.getImageData(0,0,_oc.width,_oc.height),_d=_id.data;
+      for(var _ii=0;_ii<_d.length;_ii+=4){
+        if(_d[_ii]<20&&_d[_ii+1]<20&&_d[_ii+2]<20)_d[_ii+3]=0; // near-black = fond → transparent
+      }
+      _octx.putImageData(_id,0,0);
+      _brdX.drawImage(_oc,0,0,_brdC.width,_brdC.height);
+    }else{
+      _brdX.drawImage(img,0,0,_brdC.width,_brdC.height);
+    }
     _brdX.restore();
     if(cb)cb();
   };
@@ -16757,16 +16771,14 @@ function _boardGoPage(idx){
 }
 function _boardSavePage(){
   if(!_brdC||!_brdX)return;
-  // Composite fond blanc + grille + traits avant de sauvegarder en JPEG.
-  // JPEG ne supporte pas la transparence (transparent → noir) — sans cette composition
-  // le canvas devient tout noir à chaque redimensionnement ou navigation de page.
+  // PNG (pas JPEG) pour préserver la transparence du fond.
+  // JPEG convertit la transparence en noir → pages noires en cascade si un vieux snapshot
+  // noir est restauré puis re-sauvegardé. PNG garde les zones sans traits transparentes,
+  // ce qui laisse transparaître le canvas de fond (blanc+grille) placé en dessous dans le DOM.
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
-  var tctx=tmp.getContext('2d');
-  tctx.fillStyle='#ffffff';tctx.fillRect(0,0,tmp.width,tmp.height);
-  if(_brdBgC)tctx.drawImage(_brdBgC,0,0); // grille
-  tctx.drawImage(_brdC,0,0); // traits
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72);
+  tmp.getContext('2d').drawImage(_brdC,0,0);
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
 }
 function _boardAddPage(){
   if(_brdSel.active)_brdCommitSel();
@@ -18994,10 +19006,17 @@ function _brdOnSync(data){
   var _snapToApply=data.snapshot||(data.allPages&&data.allPages[_targetPageIdx])||null;
   if(_snapToApply){
     var img=new Image();
+    var _snapSrc=_snapToApply;
     img.onload=function(){
       _brdX.save();_brdX.setTransform(1,0,0,1,0,0);
       _brdX.clearRect(0,0,_brdC.width,_brdC.height);
-      _brdX.drawImage(img,0,0);
+      if(_snapSrc&&_snapSrc.indexOf('data:image/jpeg')===0){
+        var _soc=document.createElement('canvas');_soc.width=img.width;_soc.height=img.height;
+        var _soct=_soc.getContext('2d');_soct.drawImage(img,0,0);
+        var _sid=_soct.getImageData(0,0,_soc.width,_soc.height),_sd=_sid.data;
+        for(var _si=0;_si<_sd.length;_si+=4){if(_sd[_si]<20&&_sd[_si+1]<20&&_sd[_si+2]<20)_sd[_si+3]=0;}
+        _soct.putImageData(_sid,0,0);_brdX.drawImage(_soc,0,0,_brdC.width,_brdC.height);
+      }else{_brdX.drawImage(img,0,0,_brdC.width,_brdC.height);}
       _brdX.restore();
       if(data.ops)data.ops.forEach(function(op){_brdApplyRemoteOp(op);});
     };
