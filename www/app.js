@@ -3862,9 +3862,13 @@ function doFilter(){
   // Récupérer la valeur depuis l'un ou l'autre des champs de recherche
   var mobInp=document.getElementById('mobSearchInput');
   var srchInp=document.getElementById('srch');
+  var pillInp=document.getElementById('pillSearchInput');
   var val='';
   if(mobInp&&mobInp.value){
     val=mobInp.value;
+    if(srchInp)srchInp.value=val;
+  } else if(pillInp&&pillInp.value){
+    val=pillInp.value;
     if(srchInp)srchInp.value=val;
   } else if(srchInp){
     val=srchInp.value;
