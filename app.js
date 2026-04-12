@@ -17963,36 +17963,45 @@ function _pipCycleSize(){
 }
 
 function closeVisioModal(){
-  // Fermer immédiatement l'overlay — rien ne doit bloquer cette étape
-  var bd=g('bdVisio');if(bd)bd.remove();
-  var pip=g('_vPip');if(pip)pip.remove();
-  restoreNav();
-  haptic(4);
-  // Nettoyage asynchrone (erreurs silencieuses)
-  // _visioCurrentUrl vidé en PREMIER pour bloquer tout reconnect automatique
-  try{_isDemoMode=false;_intentionalLeave=true;_visioCurrentUrl='';}catch(e){}
-  try{if(_boardActive){_vCloseBoard();}}catch(e){}
-  try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
-  try{_pipX=null;_pipY=null;}catch(e){}
+  // ── 1. Stopper tous les tracks AVANT de retirer le DOM ──────────
+  // (bd.remove() détache les <video>/<audio> du document — getElementById les trouve encore ici)
   try{_vStopPreJoin();}catch(e){}
-  try{var lv=g('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}}catch(e){}
-  try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
-  try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
-  try{if(_audioCtx){_audioCtx.close();_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}}catch(e){}
-  try{if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}_demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;}catch(e){}
+  try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
   try{if(_demoAudioStream){_demoAudioStream.getTracks().forEach(function(t){t.stop();});_demoAudioStream=null;}}catch(e){}
   try{if(_demoAudioCtx){_demoAudioCtx.close();_demoAudioCtx=null;}}catch(e){}
-  try{if(_callObj){var co=_callObj;_callObj=null;co.leave().catch(function(){}).finally(function(){
-    try{co.destroy();}catch(e){}
-    // Forcer l'arrêt de tous les tracks WebRTC résiduels laissés par Daily
-    try{document.querySelectorAll('video,audio').forEach(function(el){
-      if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
-    });}catch(e){}
-  });}}catch(e){}
+  try{if(_demoRAFId){cancelAnimationFrame(_demoRAFId);_demoRAFId=null;}_demoAnalyser=null;_demoBuf=null;_demoLocalSpeaking=false;}catch(e){}
+  // Arrêter le stream de la vidéo locale (encore dans le DOM à ce stade)
+  try{var lv=document.getElementById('_vLocalVid');if(lv&&lv.srcObject){lv.srcObject.getTracks().forEach(function(t){t.stop();});lv.srcObject=null;}}catch(e){}
+  // Balayer tous les <video>/<audio> du modal avant de le supprimer
+  try{var bd0=document.getElementById('bdVisio');if(bd0){bd0.querySelectorAll('video,audio').forEach(function(el){if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}});}}catch(e){}
+  try{if(_audioCtx){_audioCtx.close();_audioCtx=null;_audioAnalyser=null;_audioSrc=null;}}catch(e){}
+
+  // ── 2. Quitter Daily et détruire le call object ──────────────────
+  try{_isDemoMode=false;_intentionalLeave=true;_visioCurrentUrl='';}catch(e){}
+  try{if(_callObj){var co=_callObj;_callObj=null;
+    co.leave().catch(function(){}).finally(function(){
+      try{co.destroy();}catch(e){}
+      // Filet de sécurité : tuer tout track WebRTC résiduel de Daily (hors-DOM à ce stade)
+      try{document.querySelectorAll('video,audio').forEach(function(el){
+        if(el.srcObject){el.srcObject.getTracks().forEach(function(t){t.stop();});el.srcObject=null;}
+      });}catch(e){}
+    });
+  }}catch(e){}
+
+  // ── 3. Retirer le DOM ────────────────────────────────────────────
+  var bd=document.getElementById('bdVisio');if(bd)bd.remove();
+  var pip=document.getElementById('_vPip');if(pip)pip.remove();
+  restoreNav();haptic(4);
+
+  // ── 4. Nettoyage état ────────────────────────────────────────────
+  try{if(_boardActive){_vCloseBoard();}}catch(e){}
+  try{_brdPages=[];_brdPageIdx=0;_brdHist=[];_brdHistIdx=-1;_brdPageHists=[];_brdC=null;_brdX=null;}catch(e){}
+  try{if(_callTimer){clearInterval(_callTimer);_callTimer=null;}}catch(e){}
+  try{if(_mutedSpeakTimer){clearInterval(_mutedSpeakTimer);_mutedSpeakTimer=null;}}catch(e){}
+  try{_pipX=null;_pipY=null;}catch(e){}
   _raisedHands={};_handRaised=false;_sharing=false;_boardActive=false;_openFloor=false;_floorGranted=false;
   _pinnedSid=null;_activeSpeakerSid=null;_peopleOpen=false;_reactOpen=false;_netQuality={};_vCommentOpen=false;_vComments=[];_vCommentAllowed=true;_isRecording=false;_lastBitrateQuality=null;
   window._vPreJoinCallback=null;
-  try{if(window._vDemoShareStream){window._vDemoShareStream.getTracks().forEach(function(t){t.stop();});window._vDemoShareStream=null;}}catch(e){}
 }
 
 // Quitter proprement si la page se ferme pendant une visio (évite de laisser des participant-minutes tourner)
