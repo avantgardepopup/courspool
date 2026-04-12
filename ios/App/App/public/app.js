@@ -15724,7 +15724,7 @@ var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; /
 var _brdObjects=[];       // objets de la page courante (ordre dessin)
 var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
 // _brdObjIdSeq removed — IDs are now generated with timestamp+random (collision-safe)
-var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null};
+var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null,rotating:false,rotateStartAngle:0,rotateCX:0,rotateCY:0,rotateCurAngle:0,rotateInitObjs:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
 var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
@@ -17293,40 +17293,36 @@ function _brdShowObjSelOverlay(){
     +'border:2px dashed #FF6B2B;border-radius:6px;';
   page.appendChild(el);
   _brdObjSel.el=el;
-  // Resize handles (8 positions)
+  // Rotate handle (top-center) + Resize handle (bottom-right)
   if(!_brdRoomId||_brdCanEdit){
-    var _hDefs=[
-      {id:'nw',s:'left:-6px;top:-6px;cursor:nwse-resize;'},
-      {id:'n', s:'left:calc(50% - 6px);top:-6px;cursor:ns-resize;'},
-      {id:'ne',s:'right:-6px;top:-6px;cursor:nesw-resize;'},
-      {id:'e', s:'right:-6px;top:calc(50% - 6px);cursor:ew-resize;'},
-      {id:'se',s:'right:-6px;bottom:-6px;cursor:nwse-resize;'},
-      {id:'s', s:'left:calc(50% - 6px);bottom:-6px;cursor:ns-resize;'},
-      {id:'sw',s:'left:-6px;bottom:-6px;cursor:nesw-resize;'},
-      {id:'w', s:'left:-6px;top:calc(50% - 6px);cursor:ew-resize;'},
-    ];
-    _hDefs.forEach(function(h){
-      var hel=document.createElement('div');
-      hel.style.cssText='position:absolute;width:12px;height:12px;background:#FF6B2B;'
-        +'border:2px solid #fff;border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,.5);'
-        +'pointer-events:auto;touch-action:none;'+h.s;
-      hel.addEventListener('pointerdown',function(e){
-        e.stopPropagation();e.preventDefault();
-        _brdStartResize(h.id,e);
-      });
-      hel.addEventListener('pointermove',function(e){_brdDoResize(e);});
-      hel.addEventListener('pointerup',function(e){_brdCommitResize();});
-      hel.addEventListener('pointercancel',function(e){
-        // Rollback: restore init objects
-        if(_brdObjSel.resizing&&_brdObjSel.resizeInitObjs){
-          _brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));
-          _brdRenderAll();
-        }
-        _brdObjSel.resizing=false;_brdObjSel.resizeInitObjs=null;
-        _brdShowObjSelOverlay();
-      });
-      el.appendChild(hel);
+    // Rotate handle
+    var rh=document.createElement('div');
+    rh.style.cssText='position:absolute;top:-30px;left:calc(50% - 11px);width:22px;height:22px;'
+      +'background:#FF6B2B;border-radius:50%;cursor:grab;display:flex;align-items:center;justify-content:center;'
+      +'box-shadow:0 2px 8px rgba(0,0,0,.4);touch-action:none;pointer-events:auto;';
+    rh.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M23 4v6h-6"/><path d="M20.5 15a9 9 0 11-2.8-7.2L23 10"/></svg>';
+    rh.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();_brdStartRotate(e);});
+    rh.addEventListener('pointermove',function(e){_brdDoRotate(e);});
+    rh.addEventListener('pointerup',function(){_brdCommitRotate();});
+    rh.addEventListener('pointercancel',function(){
+      if(_brdObjSel.rotating&&_brdObjSel.rotateInitObjs){_brdObjects=JSON.parse(JSON.stringify(_brdObjSel.rotateInitObjs));_brdRenderAll();}
+      _brdObjSel.rotating=false;_brdObjSel.rotateInitObjs=null;_brdShowObjSelOverlay();
     });
+    el.appendChild(rh);
+    // Resize handle (bottom-right)
+    var rzh=document.createElement('div');
+    rzh.style.cssText='position:absolute;bottom:-10px;right:-10px;width:20px;height:20px;'
+      +'background:#FF6B2B;border-radius:50%;cursor:nwse-resize;touch-action:none;pointer-events:auto;'
+      +'box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;';
+    rzh.innerHTML='<svg viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" width="8" height="8"><line x1="1" y1="11" x2="11" y2="1"/><line x1="6" y1="11" x2="11" y2="6"/></svg>';
+    rzh.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();_brdStartResize('se',e);});
+    rzh.addEventListener('pointermove',function(e){_brdDoResize(e);});
+    rzh.addEventListener('pointerup',function(){_brdCommitResize();});
+    rzh.addEventListener('pointercancel',function(){
+      if(_brdObjSel.resizing&&_brdObjSel.resizeInitObjs){_brdObjects=JSON.parse(JSON.stringify(_brdObjSel.resizeInitObjs));_brdRenderAll();}
+      _brdObjSel.resizing=false;_brdObjSel.resizeInitObjs=null;_brdShowObjSelOverlay();
+    });
+    el.appendChild(rzh);
   }
   // Toolbar
   var bar=document.createElement('div');
@@ -17385,6 +17381,7 @@ function _brdCleanObjSel(){
   _brdObjSel.dragging=false;_brdObjSel.bgSnap=null;
   _brdObjSel.dragSX=0;_brdObjSel.dragSY=0;_brdObjSel.dragDx=0;_brdObjSel.dragDy=0;
   _brdObjSel.resizing=false;_brdObjSel.resizeHandle='';_brdObjSel.resizeInitObjs=null;_brdObjSel.resizeScale=1;
+  _brdObjSel.rotating=false;_brdObjSel.rotateInitObjs=null;_brdObjSel.rotateCurAngle=0;
 }
 
 function _brdObjSelScale(factor){
@@ -17436,23 +17433,10 @@ function _brdStartResize(handle,e){
   e.preventDefault();e.stopPropagation();
   e.target.setPointerCapture(e.pointerId);
   var bb=_brdUnionBbox(_brdObjSel.ids,false);if(!bb)return;
-  var ax,ay;
-  switch(handle){
-    case 'nw':ax=bb.x+bb.w;ay=bb.y+bb.h;break;
-    case 'n': ax=bb.x+bb.w/2;ay=bb.y+bb.h;break;
-    case 'ne':ax=bb.x;ay=bb.y+bb.h;break;
-    case 'e': ax=bb.x;ay=bb.y+bb.h/2;break;
-    case 'se':ax=bb.x;ay=bb.y;break;
-    case 's': ax=bb.x+bb.w/2;ay=bb.y;break;
-    case 'sw':ax=bb.x+bb.w;ay=bb.y;break;
-    case 'w': ax=bb.x+bb.w;ay=bb.y+bb.h/2;break;
-    default:  ax=bb.x+bb.w/2;ay=bb.y+bb.h/2;
-  }
+  // Anchor = top-left (opposite of bottom-right handle)
+  var ax=bb.x,ay=bb.y;
   var p=_boardGetPos(e);
-  var initDist;
-  if(handle==='n'||handle==='s')initDist=Math.abs(p.y-ay);
-  else if(handle==='e'||handle==='w')initDist=Math.abs(p.x-ax);
-  else initDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
+  var initDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
   if(initDist<1)initDist=1;
   _brdObjSel.resizing=true;
   _brdObjSel.resizeHandle=handle;
@@ -17468,11 +17452,7 @@ function _brdDoResize(e){
   e.preventDefault();
   var p=_boardGetPos(e);
   var ax=_brdObjSel.resizeAnchorX,ay=_brdObjSel.resizeAnchorY;
-  var handle=_brdObjSel.resizeHandle;
-  var curDist;
-  if(handle==='n'||handle==='s')curDist=Math.abs(p.y-ay);
-  else if(handle==='e'||handle==='w')curDist=Math.abs(p.x-ax);
-  else curDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
+  var curDist=Math.sqrt((p.x-ax)*(p.x-ax)+(p.y-ay)*(p.y-ay));
   var factor=curDist/_brdObjSel.resizeInitDist;
   factor=Math.max(0.05,Math.min(20,factor));
   _brdObjSel.resizeScale=factor;
@@ -17495,6 +17475,68 @@ function _brdCommitResize(){
   _boardSavePage();
   _boardSaveHist();
   if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objscale',ids:_brdObjSel.ids.slice(),factor:factor,cx:ax,cy:ay});
+  _brdShowObjSelOverlay();
+  haptic(1);
+}
+
+function _brdRotateObjAround(o,angleDeg,cx,cy){
+  o=JSON.parse(JSON.stringify(o));
+  var rad=angleDeg*Math.PI/180;
+  var cos=Math.cos(rad),sin=Math.sin(rad);
+  function rotPt(p){return{x:cx+cos*(p.x-cx)-sin*(p.y-cy),y:cy+sin*(p.x-cx)+cos*(p.y-cy)};}
+  if(o.type==='stroke'||o.type==='erase'){
+    o.pts=o.pts.map(rotPt);
+  }else if(o.type==='shape'){
+    var r1=rotPt({x:o.x1,y:o.y1}),r2=rotPt({x:o.x2,y:o.y2});
+    o.x1=r1.x;o.y1=r1.y;o.x2=r2.x;o.y2=r2.y;
+  }else if(o.type==='text'){
+    var rp=rotPt({x:o.x,y:o.y});o.x=rp.x;o.y=rp.y;
+  }
+  return o;
+}
+
+function _brdStartRotate(e){
+  if(!_brdObjSel.active)return;
+  e.preventDefault();e.stopPropagation();
+  e.target.setPointerCapture(e.pointerId);
+  var bb=_brdUnionBbox(_brdObjSel.ids,false);if(!bb)return;
+  var cx=bb.x+bb.w/2,cy=bb.y+bb.h/2;
+  var p=_boardGetPos(e);
+  _brdObjSel.rotating=true;
+  _brdObjSel.rotateCX=cx;
+  _brdObjSel.rotateCY=cy;
+  _brdObjSel.rotateStartAngle=Math.atan2(p.y-cy,p.x-cx);
+  _brdObjSel.rotateCurAngle=0;
+  _brdObjSel.rotateInitObjs=JSON.parse(JSON.stringify(_brdObjects));
+}
+
+function _brdDoRotate(e){
+  if(!_brdObjSel.rotating)return;
+  e.preventDefault();
+  var p=_boardGetPos(e);
+  var cx=_brdObjSel.rotateCX,cy=_brdObjSel.rotateCY;
+  var curAngle=Math.atan2(p.y-cy,p.x-cx);
+  var deltaDeg=(curAngle-_brdObjSel.rotateStartAngle)*180/Math.PI;
+  _brdObjSel.rotateCurAngle=deltaDeg;
+  _brdObjects=JSON.parse(JSON.stringify(_brdObjSel.rotateInitObjs));
+  _brdObjSel.ids.forEach(function(id){
+    var idx=_brdObjects.findIndex(function(o){return o.id===id;});
+    if(idx===-1)return;
+    _brdObjects[idx]=_brdRotateObjAround(_brdObjects[idx],deltaDeg,cx,cy);
+  });
+  _brdRenderAll();
+  _brdUpdateObjSelOverlayPos();
+}
+
+function _brdCommitRotate(){
+  if(!_brdObjSel.rotating)return;
+  _brdObjSel.rotating=false;
+  var angleDeg=_brdObjSel.rotateCurAngle;
+  var cx=_brdObjSel.rotateCX,cy=_brdObjSel.rotateCY;
+  _boardSaveHist();
+  _boardSavePage();
+  _boardSaveHist();
+  if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objrotate',ids:_brdObjSel.ids.slice(),angleDeg:angleDeg,cx:cx,cy:cy});
   _brdShowObjSelOverlay();
   haptic(1);
 }
@@ -18520,6 +18562,13 @@ function _brdApplyRemoteOp(op){
         o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*f)));
       }
       _brdObjects[idx]=o;
+    });
+    _brdRenderAll();_boardSavePage();
+  }else if(op.type==='objrotate'&&op.ids&&op.angleDeg!=null&&op.cx!=null){
+    op.ids.forEach(function(id){
+      var idx=_brdObjects.findIndex(function(o){return o.id===id;});
+      if(idx===-1)return;
+      _brdObjects[idx]=_brdRotateObjAround(_brdObjects[idx],op.angleDeg,op.cx,op.cy);
     });
     _brdRenderAll();_boardSavePage();
   }
