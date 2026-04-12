@@ -3417,9 +3417,15 @@ function applyFilter(){
     var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
     // Recherche dans le nom du prof + toutes les données du cours
+    // Recherche phrase exacte OU alias matière OU tokens dans la description
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q)||
-      (qAlias&&(title.includes(qAlias)||subj.includes(qAlias)||prof.includes(qAlias)))||
+      (qAlias&&(title.includes(qAlias)||subj.includes(qAlias)||prof.includes(qAlias)||desc.includes(qAlias)))||
       (fmAlias&&FM[fmAlias]&&FM[fmAlias](c.t||'')));
+    // Recherche multi-tokens dans la description : chaque mot significatif doit être présent
+    if(!matchSearch&&q.length>=6&&desc){
+      var _qtoks=q.split(/\s+/).filter(function(t){return t.length>=4;});
+      if(_qtoks.length>=2&&_qtoks.every(function(t){return desc.includes(t)||title.includes(t);}))matchSearch=true;
+    }
     // Si la recherche ne matche pas un cours, chercher aussi les profs par nom
     if(!matchSearch&&q.length>1){
       var profFull=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');

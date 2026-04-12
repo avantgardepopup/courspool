@@ -297,7 +297,102 @@ var ALIASES = {
 
   /* ── Arts martiaux & disciplines corporelles ── */
   "qi gong": "Qi Gong", "qigong": "Qi Gong",
-  "tai chi": "Tai Chi", "taichi": "Tai Chi"
+  "tai chi": "Tai Chi", "taichi": "Tai Chi",
+
+  /* ── Concepts maths → Mathématiques ── */
+  "derivation": "Mathématiques", "derivee": "Mathématiques", "derive": "Mathématiques",
+  "integration": "Mathématiques", "integrale": "Mathématiques", "primitive": "Mathématiques",
+  "limite": "Mathématiques", "suite": "Mathématiques", "convergence": "Mathématiques",
+  "equation": "Mathématiques", "inequation": "Mathématiques",
+  "trigonometrie": "Mathématiques", "sinus": "Mathématiques", "cosinus": "Mathématiques",
+  "logarithme": "Mathématiques", "exponentielle": "Mathématiques",
+  "algebre": "Mathématiques", "geometrie": "Mathématiques",
+  "vecteur": "Mathématiques", "matrice": "Mathématiques", "determinant": "Mathématiques",
+  "polynome": "Mathématiques", "fonction": "Mathématiques",
+  "combinatoire": "Mathématiques", "denombrement": "Mathématiques",
+  "complexe": "Mathématiques", "nombre complexe": "Mathématiques",
+  "arithmetique": "Mathématiques", "pgcd": "Mathématiques",
+  "topologie": "Mathématiques", "analyse": "Mathématiques",
+  "calcul": "Mathématiques", "calcul differentiel": "Mathématiques",
+
+  /* ── Concepts physique → Physique ── */
+  "relativite": "Physique", "relativite restreinte": "Physique",
+  "relativite generale": "Physique", "einstein": "Physique",
+  "quantique": "Physique", "mecanique quantique": "Physique",
+  "quanta": "Physique", "photon": "Physique",
+  "gravitation": "Physique", "gravite": "Physique",
+  "thermodynamique": "Physique", "entropie": "Physique",
+  "ondes": "Physique", "frequence": "Physique", "resonance": "Physique",
+  "electricite": "Physique", "magnetisme": "Physique",
+  "circuit": "Physique", "condensateur": "Physique", "bobine": "Physique",
+  "force": "Physique", "energie": "Physique", "travail": "Physique",
+  "cinematique": "Physique", "dynamique": "Physique",
+  "optique geometrique": "Physique", "refraction": "Physique", "diffraction": "Physique",
+  "radioactivite": "Physique", "nucleaire": "Physique",
+  "newton": "Physique", "kepler": "Physique",
+
+  /* ── Concepts chimie → Chimie ── */
+  "molecule": "Chimie", "atome": "Chimie", "electron": "Chimie",
+  "reaction chimique": "Chimie", "oxydation": "Chimie", "reduction": "Chimie",
+  "acide": "Chimie", "base": "Chimie", "ph": "Chimie",
+  "liaison covalente": "Chimie", "tableau periodique": "Chimie",
+  "mole": "Chimie", "concentration": "Chimie", "solution": "Chimie",
+  "titration": "Chimie", "dosage": "Chimie",
+  "polymere": "Chimie", "synthese": "Chimie",
+
+  /* ── Concepts biologie / SVT ── */
+  "adn": "SVT", "arn": "SVT", "gene": "SVT", "genome": "SVT",
+  "chromosome": "SVT", "cellule": "SVT", "mitose": "SVT", "meiose": "SVT",
+  "evolution": "SVT", "darwin": "SVT", "selection naturelle": "SVT",
+  "ecosysteme": "SVT", "biodiversite": "SVT",
+  "photosynthese": "SVT", "respiration cellulaire": "SVT",
+  "neurone": "SVT", "synapse": "SVT", "systeme nerveux": "SVT",
+  "hormone": "SVT", "enzyme": "SVT",
+  "bacterie": "SVT", "virus": "SVT", "immunite": "SVT",
+
+  /* ── Concepts philosophie → Philosophie ── */
+  "socrate": "Philosophie", "platon": "Philosophie", "aristote": "Philosophie",
+  "descartes": "Philosophie", "kant": "Philosophie", "hegel": "Philosophie",
+  "nietzsche": "Philosophie", "sartre": "Philosophie", "camus": "Philosophie",
+  "rousseau": "Philosophie", "voltaire": "Philosophie", "montaigne": "Philosophie",
+  "spinoza": "Philosophie", "leibniz": "Philosophie", "locke": "Philosophie",
+  "epicure": "Philosophie", "stoicisme": "Philosophie", "epicurisme": "Philosophie",
+  "metaphysique": "Philosophie", "ontologie": "Philosophie",
+  "ethique": "Philosophie", "morale": "Philosophie",
+  "epistemologie": "Philosophie", "logique": "Philosophie",
+  "conscience": "Philosophie", "liberte": "Philosophie",
+  "existence": "Philosophie", "existentialisme": "Philosophie",
+  "dialectique": "Philosophie", "rationalisme": "Philosophie",
+  "empirisme": "Philosophie", "phenomenologie": "Philosophie",
+  "maieutique": "Philosophie", "allegorie": "Philosophie",
+
+  /* ── Concepts histoire ── */
+  "revolution francaise": "Histoire", "napoleon": "Histoire",
+  "premiere guerre": "Histoire", "deuxieme guerre": "Histoire",
+  "ww1": "Histoire", "ww2": "Histoire", "guerre mondiale": "Histoire",
+  "holocauste": "Histoire", "shoah": "Histoire",
+  "antiquite": "Histoire", "moyen age": "Histoire", "renaissance": "Histoire",
+  "louis xiv": "Histoire", "absolutisme": "Histoire",
+  "colonisation": "Histoire", "decolonisation": "Histoire",
+  "guerre froide": "Histoire", "urss": "Histoire",
+  "mai 68": "Histoire", "resistance": "Histoire",
+
+  /* ── Concepts littérature / français ── */
+  "dissertation": "Français", "commentaire": "Français",
+  "analyse litteraire": "Français", "explication de texte": "Français",
+  "roman": "Français", "poesie": "Français", "theatre": "Français",
+  "baudelaire": "Français", "racine": "Français", "moliere": "Français",
+  "victor hugo": "Français", "balzac": "Français", "zola": "Français",
+  "flaubert": "Français", "proust": "Français",
+  "stylistique": "Français", "rhetorique": "Français",
+  "narration": "Français", "figures de style": "Français",
+
+  /* ── Économie / SES ── */
+  "pib": "Économie", "croissance": "Économie", "inflation": "Économie",
+  "chomage": "Économie", "keynes": "Économie", "smith": "Économie",
+  "offre demande": "Économie", "marche": "Économie",
+  "mondialisation": "SES", "inegalites": "SES", "stratification": "SES",
+  "bourdieu": "SES", "durkheim": "SES", "weber": "SES"
 };
 
 function normalizeText(str) {
@@ -360,6 +455,36 @@ function resolveAlias(input) {
       if (ALIASES.hasOwnProperty(key)) {
         var dist = levenshtein(normalized, normalizeText(key));
         if (dist <= 2) return ALIASES[key];
+      }
+    }
+  }
+
+  // Résolution par tokens — "cours sur socrate" → essaie chaque mot
+  // Ignore les mots vides (stopwords) et les mots < 4 chars
+  var STOPWORDS = {'le':1,'la':1,'les':1,'un':1,'une':1,'des':1,'de':1,'du':1,'et':1,'en':1,'au':1,'aux':1,'sur':1,'par':1,'pour':1,'avec':1,'dans':1,'qui':1,'que':1,'cours':1,'classe':1,'apprendre':1,'apprends':1,'apprendre':1,'enseigner':1,'tutoriel':1,'tuto':1,'initiation':1};
+  var tokens = normalized.split(/\s+/);
+  // Essaie d'abord les bigrammes (2 mots consécutifs) puis les mots seuls
+  for (var ti = 0; ti < tokens.length - 1; ti++) {
+    var bigram = tokens[ti] + ' ' + tokens[ti + 1];
+    if (bigram.length >= 4 && ALIASES[bigram]) return ALIASES[bigram];
+    for (key in ALIASES) {
+      if (ALIASES.hasOwnProperty(key) && normalizeText(key) === bigram) return ALIASES[key];
+    }
+  }
+  for (var ti = 0; ti < tokens.length; ti++) {
+    var tok = tokens[ti];
+    if (tok.length < 4 || STOPWORDS[tok]) continue;
+    // Exact match sur ce token
+    for (key in ALIASES) {
+      if (ALIASES.hasOwnProperty(key) && normalizeText(key) === tok) return ALIASES[key];
+    }
+    // Levenshtein ≤ 1 sur ce token (min 5 chars pour éviter faux positifs)
+    if (tok.length >= 5) {
+      for (key in ALIASES) {
+        if (ALIASES.hasOwnProperty(key)) {
+          var normKey = normalizeText(key);
+          if (normKey.length >= 4 && levenshtein(tok, normKey) <= 1) return ALIASES[key];
+        }
       }
     }
   }

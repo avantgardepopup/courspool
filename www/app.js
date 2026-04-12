@@ -3417,9 +3417,15 @@ function applyFilter(){
     var desc=(c.description||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     var matchFilter=(FM[actF]||FM.tous)(c.t||'');
     // Recherche dans le nom du prof + toutes les données du cours
+    // Recherche phrase exacte OU alias matière OU tokens dans la description
     var matchSearch=!q||(title.includes(q)||subj.includes(q)||loc.includes(q)||prof.includes(q)||desc.includes(q)||
-      (qAlias&&(title.includes(qAlias)||subj.includes(qAlias)||prof.includes(qAlias)))||
+      (qAlias&&(title.includes(qAlias)||subj.includes(qAlias)||prof.includes(qAlias)||desc.includes(qAlias)))||
       (fmAlias&&FM[fmAlias]&&FM[fmAlias](c.t||'')));
+    // Recherche multi-tokens dans la description : chaque mot significatif doit être présent
+    if(!matchSearch&&q.length>=6&&desc){
+      var _qtoks=q.split(/\s+/).filter(function(t){return t.length>=4;});
+      if(_qtoks.length>=2&&_qtoks.every(function(t){return desc.includes(t)||title.includes(t);}))matchSearch=true;
+    }
     // Si la recherche ne matche pas un cours, chercher aussi les profs par nom
     if(!matchSearch&&q.length>1){
       var profFull=(c.prof_nm||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -15976,6 +15982,9 @@ function _boardRenderSubbar(){
   h+=tb('_bTSh',"_boardToolTap('shape')",_brdTool==='shape',
     '<svg viewBox="0 0 24 24" fill="none" stroke="'+(_brdTool==='shape'?'#FF6B2B':ic)+'" stroke-width="1.8" stroke-linecap="round" width="19" height="19"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="7" r="4"/><path d="M12 22l4.5-8h-9z"/></svg>'
     ,'Formes','shape');
+  // Bouton image — ouvre le sélecteur de fichier
+  h+='<button onclick="_boardInsertImageBtn()" title="Insérer une image (max 5 Mo)" style="background:transparent;border:none;cursor:pointer;width:38px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .1s;" onmouseover="this.style.background=\'rgba(255,255,255,.1)\'" onmouseout="this.style.background=\'transparent\'">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+ic+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>';
   h+=sep;
   // ── Context-sensitive: sizes or shape picker ──
   if(_brdTool==='shape'){
@@ -16746,6 +16755,47 @@ function _boardSetEraserSz(sz){
 function _boardSetShape(t){_brdShType=t;_boardRenderSubbar();}
 function _boardToggleShFill(){_brdShFill=!_brdShFill;_boardRenderSubbar();}
 
+// ── Insertion d'image — canvas only, zéro stockage serveur ──────────────────
+function _boardInsertImageBtn(){
+  if(_brdRoomId&&!_brdCanEdit){toast('Lecture seule','',1200);return;}
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';
+  inp.onchange=function(){
+    var file=inp.files&&inp.files[0];
+    if(!file)return;
+    if(file.size>5*1024*1024){toast('Image trop lourde','Max 5 Mo — compressez-la d\'abord.',3000);return;}
+    var reader=new FileReader();
+    reader.onload=function(ev){_boardInsertImage(ev.target.result);};
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+function _boardInsertImage(dataUrl){
+  var img=new Image();
+  img.onload=function(){
+    // Comprimer via canvas offscreen : max 1200px, JPEG 72%
+    var maxW=1200,maxH=900;
+    var w=img.naturalWidth,h=img.naturalHeight;
+    if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+    if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+    var oc=document.createElement('canvas');oc.width=w;oc.height=h;
+    oc.getContext('2d').drawImage(img,0,0,w,h);
+    var compressed=oc.toDataURL('image/jpeg',0.72);
+    if(compressed.length>1.5*1024*1024){toast('Image trop grande après compression','Essayez une image plus petite.',3000);return;}
+    // Centrer sur la page visible
+    var page=g('_brdPage');var pr=page?page.getBoundingClientRect():{left:0,top:0,width:800,height:600};
+    var cx=(window.innerWidth/2-pr.left)/_brdZoom;
+    var cy=(window.innerHeight/2-pr.top)/_brdZoom;
+    var iw=Math.min(w,600)/_brdZoom,ih=iw*(h/w);
+    var op={type:'image',x:cx-iw/2,y:cy-ih/2,w:iw,h:ih,data:compressed,id:'img_'+Date.now()};
+    _brdObjects.push(op);
+    _boardSaveHist();_brdRedraw();
+    if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objinsert',obj:op});
+    toast('Image insérée','');haptic(2);
+  };
+  img.src=dataUrl;
+}
+
 // Text formatting helpers
 function _brdSetTextSz(sz){_brdTextSize=sz;_boardRenderSubbar();_brdRenderActiveTxtBar();_brdUpdateActiveText();}
 function _brdToggleBold(){_brdTextBold=!_brdTextBold;_boardRenderSubbar();_brdRenderActiveTxtBar();_brdUpdateActiveText();}
@@ -17309,6 +17359,7 @@ function _brdObjBbox(obj){
     }
     return{x:obj.x-8,y:obj.y-obj.textSize-4,w:200,h:obj.textSize*2};
   }
+  if(obj.type==='image'){return{x:obj.x,y:obj.y,w:obj.w,h:obj.h};}
   return{x:0,y:0,w:0,h:0};
 }
 
@@ -17380,7 +17431,8 @@ function _brdObjTranslated(obj,dx,dy){
   if(o.type==='stroke'||o.type==='erase'){
     o.pts=o.pts.map(function(p){return{x:p.x+dx,y:p.y+dy};});
   }else if(o.type==='shape'){o.x1+=dx;o.y1+=dy;o.x2+=dx;o.y2+=dy;
-  }else if(o.type==='text'){o.x+=dx;o.y+=dy;}
+  }else if(o.type==='text'){o.x+=dx;o.y+=dy;
+  }else if(o.type==='image'){o.x+=dx;o.y+=dy;}
   return o;
 }
 
@@ -17438,9 +17490,24 @@ function _brdRenderObj(obj,ctx){
     ctx.fillStyle=obj.color;ctx.textAlign=obj.align||'left';
     var lh=obj.textSize*1.45;
     obj.content.split('\n').forEach(function(ln,i){ctx.fillText(ln,obj.x,obj.y+i*lh);});
+  }else if(obj.type==='image'&&obj.data){
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+    // Cache d'images décodées pour éviter de recréer un HTMLImageElement à chaque redraw
+    if(!_brdImgCache)_brdImgCache={};
+    var cached=_brdImgCache[obj.id];
+    if(cached&&cached.complete){
+      ctx.drawImage(cached,obj.x,obj.y,obj.w,obj.h);
+    }else if(!cached){
+      var im=new Image();
+      _brdImgCache[obj.id]=im;
+      im.onload=function(){if(_brdX)_brdRenderAll();};
+      im.src=obj.data;
+    }
   }
   ctx.restore();
 }
+
+var _brdImgCache=null; // {id → HTMLImageElement} — cache pour éviter reparse base64
 
 function _brdRenderAll(){
   if(!_brdX||!_brdC)return;
@@ -18794,6 +18861,9 @@ function _brdApplyRemoteOp(op){
       }else if(o.type==='text'){
         o.x=cx+(o.x-cx)*f;o.y=cy+(o.y-cy)*f;
         o.textSize=Math.max(8,Math.min(120,Math.round(o.textSize*f)));
+      }else if(o.type==='image'){
+        o.x=cx+(o.x-cx)*f;o.y=cy+(o.y-cy)*f;
+        o.w=Math.max(20,o.w*f);o.h=Math.max(20,o.h*f);
       }
       _brdObjects[idx]=o;
     });
