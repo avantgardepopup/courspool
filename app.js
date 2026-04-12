@@ -16864,14 +16864,17 @@ function _boardInsertImageBtn(){
   if(_brdRoomId&&!_brdCanEdit){toast('Lecture seule','',1200);return;}
   var inp=document.createElement('input');
   inp.type='file';inp.accept='image/*';
+  inp.style.cssText='position:fixed;top:-999px;left:-999px;opacity:0;pointer-events:none;';
   inp.onchange=function(){
     var file=inp.files&&inp.files[0];
+    if(inp.parentNode)inp.parentNode.removeChild(inp);
     if(!file)return;
     if(file.size>5*1024*1024){toast('Image trop lourde','Max 5 Mo — compressez-la d\'abord.',3000);return;}
     var reader=new FileReader();
     reader.onload=function(ev){_boardInsertImage(ev.target.result);};
     reader.readAsDataURL(file);
   };
+  document.body.appendChild(inp); // requis sur iOS/WKWebView pour déclencher le sélecteur
   inp.click();
 }
 function _boardInsertImage(dataUrl){
