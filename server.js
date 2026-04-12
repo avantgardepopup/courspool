@@ -35,6 +35,7 @@ const bcrypt = require('bcrypt');
 
 
 const app = express();
+app.set('trust proxy', 1); // Railway est derrière un reverse proxy — req.ip = IP réelle du client
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = ['https://courspool.vercel.app', 'capacitor://localhost'];
 const io = new Server(server, {
@@ -82,7 +83,7 @@ const boardRooms = new Map();
 const kickedParticipants = new Map(); // roomId → Set<userId> — expulsions définitives
 // socketId → Set<roomId> — pour nettoyage sur disconnect
 const socketBoardRooms = new Map();
-// userId → socketId — lookup O(1) pour trouver le socket d'un propriétaire
+// userId → Set<socketId> — lookup O(1), gère les multi-onglets correctement
 const userSocketMap = new Map();
 // Purge des rooms inactives (check toutes les 2 min) :
 // - room vide depuis > 3 min  → purge (socket.io détecte disconnect en ~60s, 3 min = très safe)
@@ -97,10 +98,12 @@ setInterval(() => {
     if (isEmpty && idle > EMPTY_TTL) {
       boardRooms.delete(roomId);
       kickedParticipants.delete(roomId);
+      supabase.from('board_kicks').delete().eq('room_id', roomId).catch(() => {});
     } else if (!isEmpty && idle > ACTIVE_TTL) {
       io.to('board_' + roomId).emit('board_session_expired');
       boardRooms.delete(roomId);
       kickedParticipants.delete(roomId);
+      supabase.from('board_kicks').delete().eq('room_id', roomId).catch(() => {});
     }
   }
 }, 2 * 60 * 1000);
@@ -144,14 +147,21 @@ const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]{0,50}\)|[a-z]{1,20})$/;
 io.on('connection', (socket) => {
   socket.join(socket.userId);
   socketBoardRooms.set(socket.id, new Set());
-  userSocketMap.set(socket.userId, socket.id); // lookup O(1) pour trouver le prof
+  if (!userSocketMap.has(socket.userId)) userSocketMap.set(socket.userId, new Set());
+  userSocketMap.get(socket.userId).add(socket.id);
   let ptLastMs = 0;     // per-connection throttle for board_pt (~33 pts/s max)
   let opLastMs = 0;     // per-connection throttle for board_op (~20 ops/s max)
   let laserLastMs = 0;  // per-connection throttle for board_laser (~12/s max)
 
   // ── Board: prof initialise la room ──────────────────────────
-  socket.on('board_init', ({roomId, userName}) => {
-    if (!roomId) return;
+  socket.on('board_init', async ({roomId, userName}) => {
+    if (!roomId || typeof roomId !== 'string' || roomId.length > 120) return;
+    // Vérification : si c'est une room de cours, seul le prof peut l'initialiser
+    if (roomId.startsWith('cours-') && !boardRooms.has(roomId)) {
+      const coursId = roomId.replace('cours-', '');
+      const { data: cours } = await supabase.from('cours').select('professeur_id').eq('id', coursId).maybeSingle();
+      if (!cours || cours.professeur_id !== socket.userId) return;
+    }
     if (!boardRooms.has(roomId)) {
       boardRooms.set(roomId, {
         ops: [], snapshot: null,
@@ -179,13 +189,14 @@ io.on('connection', (socket) => {
   socket.on('board_kick', ({roomId, targetUserId, permanent}) => {
     if (!roomId || !targetUserId) return;
     const room = boardRooms.get(roomId);
-    if (!room || room.ownerId !== socket.userId) return; // seul le propriétaire peut expulser
+    if (!room || room.ownerId !== socket.userId) return;
     if (permanent) {
       if (!kickedParticipants.has(roomId)) kickedParticipants.set(roomId, new Set());
       kickedParticipants.get(roomId).add(targetUserId);
+      // Persister en base pour survivre aux redémarrages
+      supabase.from('board_kicks').upsert({ room_id: roomId, user_id: targetUserId }).catch(() => {});
     }
     if (room.participants) room.participants.delete(targetUserId);
-    // Notifier les participants restants
     io.to('board_' + roomId).emit('board_participant_left', {userId: targetUserId});
   });
 
@@ -201,10 +212,19 @@ io.on('connection', (socket) => {
 
   socket.on('board_join', async ({roomId, userName}) => {
     if (!roomId) return;
-    // Vérification expulsion définitive
+    // Vérification expulsion définitive (mémoire d'abord, puis Supabase si non en mémoire)
     if (kickedParticipants.has(roomId) && kickedParticipants.get(roomId).has(socket.userId)) {
-      socket.emit('board_kicked_permanent', {roomId});
-      return;
+      socket.emit('board_kicked_permanent', {roomId}); return;
+    }
+    if (!kickedParticipants.has(roomId)) {
+      // Charger les expulsions depuis Supabase (survive aux redémarrages)
+      const { data: kicks } = await supabase.from('board_kicks').select('user_id').eq('room_id', roomId).catch(() => ({ data: null }));
+      if (kicks && kicks.length) {
+        kickedParticipants.set(roomId, new Set(kicks.map(k => k.user_id)));
+        if (kickedParticipants.get(roomId).has(socket.userId)) {
+          socket.emit('board_kicked_permanent', {roomId}); return;
+        }
+      }
     }
     // Vérification d'inscription pour les rooms de cours (cours-{id})
     if (roomId.startsWith('cours-')) {
@@ -227,7 +247,7 @@ io.on('connection', (socket) => {
     room.hadParticipants = true; // flag persistant — même si tout le monde repart
     _touchRoom(room);
     // Demander un snapshot frais au propriétaire plutôt qu'envoyer le snapshot stocké
-    const ownerSocketId = userSocketMap.get(room.ownerId);
+    const ownerSocketId = userSocketMap.get(room.ownerId)?.values().next().value;
     if (ownerSocketId) {
       // Le propriétaire est connecté — lui demander un snapshot ciblé
       // Debounce : si une demande de sync a déjà été faite il y a < 3s, envoyer les ops directement
@@ -266,6 +286,10 @@ io.on('connection', (socket) => {
   socket.on('board_stroke_start', ({roomId, tool, color, size}) => {
     const room = boardRooms.get(roomId);
     if (!room || !room.editors.has(socket.userId)) return;
+    const VALID_TOOLS = new Set(['pen','marker','eraser','laser']);
+    if (!VALID_TOOLS.has(tool)) return;
+    if (color !== undefined && (typeof color !== 'string' || color.length > 50 || !COLOR_RE.test(color))) return;
+    if (size !== undefined && (typeof size !== 'number' || size < 0.5 || size > 200 || !isFinite(size))) return;
     socket.to('board_' + roomId).emit('board_stroke_start', {
       userId: socket.userId, tool, color, size
     });
@@ -316,7 +340,7 @@ io.on('connection', (socket) => {
     socket.to('board_' + roomId).emit('board_op', op);
     // Si trop d'ops accumulés, demander un snapshot au propriétaire pour purger le log
     if (room.ops.length >= 200) {
-      const ownerSocketId = userSocketMap.get(room.ownerId);
+      const ownerSocketId = userSocketMap.get(room.ownerId)?.values().next().value;
       if (ownerSocketId) io.to(ownerSocketId).emit('board_force_snapshot', {roomId});
     }
   });
@@ -423,6 +447,7 @@ io.on('connection', (socket) => {
     if (!room || room.ownerId !== socket.userId) return;
     if (snapshot && snapshot.length > 1_200_000) return;
     if (allPages && Array.isArray(allPages)) {
+      if (allPages.length > 20) return;
       for (const p of allPages) { if (p && p.length > 1_200_000) return; }
     }
     room.snapshot = snapshot;
@@ -453,7 +478,8 @@ io.on('connection', (socket) => {
 
   // ── Nettoyage sur déconnexion (crash / réseau coupé) ─────────
   socket.on('disconnect', () => {
-    if (userSocketMap.get(socket.userId) === socket.id) userSocketMap.delete(socket.userId);
+    const _userSocks = userSocketMap.get(socket.userId);
+    if (_userSocks) { _userSocks.delete(socket.id); if (_userSocks.size === 0) userSocketMap.delete(socket.userId); }
     const sRooms = socketBoardRooms.get(socket.id);
     if (sRooms) {
       for (const roomId of sRooms) {
@@ -477,7 +503,7 @@ io.on('connection', (socket) => {
           }, grace);
         } else if (room.participants.size === 0 && room.ownerId !== socket.userId) {
           // Plus personne ET le propriétaire n'est pas connecté → libérer immédiatement
-          const ownerConnected = userSocketMap.has(room.ownerId);
+          const ownerConnected = (userSocketMap.get(room.ownerId)?.size ?? 0) > 0;
           if (!ownerConnected) {
             boardRooms.delete(roomId);
             kickedParticipants.delete(roomId);
@@ -555,7 +581,7 @@ app.use(function(req, res, next) {
   const ip = req.ip || req.connection.remoteAddress;
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute
-  const maxRequests = 100;
+  const maxRequests = 200; // 200/min par IP — plus souple pour les classes sous NAT
   
   if (!rateLimitMap.has(ip)) {
     rateLimitMap.set(ip, { count: 1, start: now });
