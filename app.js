@@ -14299,6 +14299,7 @@ function _vBuildDemoTile(f){
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
+var _joinTimeout=null,_joinRetries=0;
 var _vPipFeaturedSid=null;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
@@ -14527,6 +14528,8 @@ function openVisioModal(url){
     _isDemoMode=false;
     _isOwner=!!(user&&user.role==='professeur');
     _intentionalLeave=false;
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    _joinRetries=0;
     var existing=g('bdVisio');if(existing)existing.remove();
     var bd=document.createElement('div');
     bd.id='bdVisio';
@@ -14665,18 +14668,38 @@ async function _joinDailyRoom(url,roomName){
       .on('network-quality-change',_vOnNetQuality)
       .on('error',function(e){
         console.error('[Daily]',e);
-        if(!_intentionalLeave){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+        if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        if(!_intentionalLeave&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       })
       .on('left-meeting',function(){
-        if(!_intentionalLeave&&_visioCurrentUrl){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+        if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        if(!_intentionalLeave&&_visioCurrentUrl&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       });
     _isOwner=td.is_owner||_isOwner;
+    // Timeout de sécurité : si joined-meeting ne fire pas dans 15s, la room n'existe pas
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    _joinTimeout=setTimeout(function(){
+      _joinTimeout=null;
+      console.warn('[Visio] joined-meeting timeout — room introuvable');
+      if(_callObj){try{_callObj.destroy();}catch(e){}_callObj=null;}
+      var grid=g('_vGrid');
+      if(grid)grid.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.75);font-size:14px;text-align:center;padding:24px;height:100%;line-height:1.5;">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" width="40" height="40"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        +'<span>Impossible de rejoindre la salle.<br>Le lien est peut-être invalide ou expiré.</span>'
+        +'<button onclick="closeVisioModal()" style="background:#FF6B2B;border:none;color:#fff;padding:8px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;">Fermer</button>'
+        +'</div>';
+    },15000);
     await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
     if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
-  }catch(e){console.error('[Visio join]',e);toast('Impossible de rejoindre','');}
+  }catch(e){
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    console.error('[Visio join]',e);toast('Impossible de rejoindre','');
+  }
 }
 
 function _vOnJoined(){
+  if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+  _joinRetries=0;
   _vRenderGrid();
   if(_isOwner)_vUpdateHands(); // show prof controls panel (open floor button)
   try{

@@ -3876,7 +3876,7 @@ function doFilter(){
   }
   val=val.trim();
 
-  // ── DEBUG VISIO : taper "##visio" (démo UI) ou "##visio URL" (vraie salle) ──
+  // ── VISIO : taper "##visio" → sheet rapide, "##visio URL" → rejoindre directement ──
   if(val.startsWith('##visio')){
     var _vRaw=val.slice(7).trim();
     var _srch=g('srch');if(_srch)_srch.value='';
@@ -3885,7 +3885,7 @@ function doFilter(){
     if(typeof closeInlineSearch==='function')closeInlineSearch();
     if(typeof collapseSearch==='function')collapseSearch();
     if(_vRaw&&_vRaw.startsWith('http')){openVisioModal(_vRaw);}
-    else{_vOpenDemo();}
+    else{_vOpenQuickSheet();}
     return;
   }
   checkCodeInSearch(val);
@@ -13667,13 +13667,14 @@ function _stepOptClick(el){
     handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
     nav.insertBefore(handle,nav.firstChild);
 
-    // ── Bouton retour messagerie (caché par défaut) ──
+    // ── Bouton retour natif (caché par défaut, cercle flèche) ──
     var msgBack=document.createElement('button');
     msgBack.id='bnavMsgBack';
-    msgBack.style.cssText='display:none;align-items:center;gap:8px;padding:8px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;color:var(--or);-webkit-tap-highlight-color:transparent;white-space:nowrap;border-radius:40px;transition:background .18s;';
-    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>Messagerie';
-    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.08)';};
-    msgBack.onmouseout=function(){msgBack.style.background='';};
+    msgBack.title='Retour';
+    msgBack.style.cssText='display:none;align-items:center;justify-content:center;width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,107,43,.12);color:var(--or);cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:background .18s,transform .12s;';
+    msgBack.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><polyline points="15 18 9 12 15 6"/></svg>';
+    msgBack.onmouseover=function(){msgBack.style.background='rgba(255,107,43,.2)';msgBack.style.transform='scale(1.08)';};
+    msgBack.onmouseout=function(){msgBack.style.background='rgba(255,107,43,.12)';msgBack.style.transform='';};
     msgBack.onclick=function(){navTo('exp');};
     nav.appendChild(msgBack);
 
@@ -14024,6 +14025,92 @@ function snapNavPill(nav){
 // ── VISIO DAILY.CO CUSTOM ────────────────────────────────────
 var _callObj=null,_raisedHands={},_isOwner=false,_callTimer=null,_callSec=0;
 
+// ── VISIO RAPIDE — sheet Créer/Rejoindre/Démo ────────────────
+function _vOpenQuickSheet(){
+  var existing=g('_vqSheet');if(existing)existing.remove();
+  var ovl=document.createElement('div');
+  ovl.id='_vqSheet';
+  ovl.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;-webkit-tap-highlight-color:transparent;';
+  ovl.onclick=function(e){if(e.target===ovl)ovl.remove();};
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px max(28px,env(safe-area-inset-bottom,28px));';
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="font-size:18px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px">Visio rapide</div>'
+    +'<div style="font-size:13px;color:var(--lite);margin-bottom:22px">Créez une salle ou rejoignez avec un lien</div>'
+    +'<button id="_vqCreate" style="width:100%;background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:14px;padding:15px 18px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:10px;box-shadow:0 4px 18px rgba(255,69,0,.28);-webkit-tap-highlight-color:transparent;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span>Créer une nouvelle salle</span></button>'
+    +'<div style="background:var(--bg);border-radius:14px;padding:14px 16px;margin-bottom:10px;">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:10px">Rejoindre avec un lien</div>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<input id="_vqUrl" type="url" placeholder="https://…" autocomplete="off" inputmode="url" style="flex:1;border:1.5px solid var(--bdr);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;background:var(--wh);color:var(--ink);min-width:0;">'
+    +'<button id="_vqJoin" style="background:var(--or);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;">Rejoindre</button>'
+    +'</div></div>'
+    +'<button id="_vqDemo" style="width:100%;background:none;border:1.5px solid var(--bdr);border-radius:14px;padding:12px;font-family:inherit;font-weight:600;font-size:14px;color:var(--mid);cursor:pointer;">Mode démo (sans connexion)</button>';
+  ovl.appendChild(sheet);document.body.appendChild(ovl);
+  var createBtn=g('_vqCreate');
+  if(createBtn)createBtn.onclick=async function(){
+    createBtn.disabled=true;createBtn.querySelector('span').textContent='Création…';
+    var slug='cp-'+Math.random().toString(36).slice(2,9);
+    try{
+      var tr=await fetch(API+'/visio/token',{method:'POST',headers:apiH(),body:JSON.stringify({room_name:slug})});
+      var td=await tr.json();
+      if(!td.token)throw new Error('no token');
+      var pay=JSON.parse(atob(td.token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      var dom=pay.d||pay.iss||null;
+      var roomUrl=dom?('https://'+dom+'.daily.co/'+slug):null;
+      if(!roomUrl)throw new Error('no domain');
+      ovl.remove();_vShowShareLink(roomUrl,function(){openVisioModal(roomUrl);});
+    }catch(e){
+      toast('Erreur création salle','Vérifiez votre connexion');
+      createBtn.disabled=false;createBtn.querySelector('span').textContent='Créer une nouvelle salle';
+    }
+  };
+  var joinBtn=g('_vqJoin'),urlInp=g('_vqUrl');
+  if(joinBtn)joinBtn.onclick=function(){
+    var u=(urlInp?urlInp.value.trim():'');
+    if(!u||!u.startsWith('http')){toast('Lien invalide','Entrez un lien https://');return;}
+    ovl.remove();openVisioModal(u);
+  };
+  if(urlInp)urlInp.addEventListener('keydown',function(e){if(e.key==='Enter'&&joinBtn)joinBtn.click();});
+  var demoBtn=g('_vqDemo');if(demoBtn)demoBtn.onclick=function(){ovl.remove();_vOpenDemo();};
+}
+
+function _vShowShareLink(url,onJoin){
+  var existing=g('_vqShare');if(existing)existing.remove();
+  var ovl=document.createElement('div');
+  ovl.id='_vqShare';
+  ovl.style.cssText='position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:var(--wh);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:20px 20px max(28px,env(safe-area-inset-bottom,28px));';
+  var short=url.replace('https://','');
+  sheet.innerHTML='<div style="width:36px;height:4px;background:var(--bdr);border-radius:4px;margin:0 auto 20px"></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+    +'<div style="width:40px;height:40px;border-radius:50%;background:#E8F9EE;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg></div>'
+    +'<div><div style="font-size:16px;font-weight:800;letter-spacing:-.02em;">Salle créée !</div>'
+    +'<div style="font-size:12px;color:var(--lite)">Partagez le lien pour inviter</div></div></div>'
+    +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+    +'<div style="font-size:13px;font-weight:600;color:var(--mid);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+short+'</div>'
+    +'<button id="_vqCopy" style="background:var(--or);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;">Copier</button></div>'
+    +'<button id="_vqShareNative" style="width:100%;background:var(--bg);border:1.5px solid var(--bdr);border-radius:14px;padding:12px;font-family:inherit;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Partager le lien</button>'
+    +'<button id="_vqEnter" style="width:100%;background:linear-gradient(148deg,#FF7D42,#FF4500);color:#fff;border:none;border-radius:14px;padding:15px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 18px rgba(255,69,0,.28);">Rejoindre maintenant</button>';
+  ovl.appendChild(sheet);document.body.appendChild(ovl);
+  var copyBtn=g('_vqCopy');
+  if(copyBtn)copyBtn.onclick=function(){
+    try{navigator.clipboard.writeText(url);}catch(e){var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}
+    copyBtn.textContent='Copié ✓';copyBtn.style.background='#22C069';
+    setTimeout(function(){copyBtn.textContent='Copier';copyBtn.style.background='var(--or)';},2000);
+  };
+  var shareBtn=g('_vqShareNative');
+  if(shareBtn)shareBtn.onclick=function(){
+    if(navigator.share){navigator.share({title:'Rejoins ma salle CoursPool',text:'Rejoins-moi en visio !',url:url}).catch(function(){});}
+    else{if(copyBtn)copyBtn.click();}
+  };
+  var enterBtn=g('_vqEnter');
+  if(enterBtn)enterBtn.onclick=function(){ovl.remove();onJoin();};
+}
+
 // ── MODE DÉMO (test UI sans connexion Daily.co) ───────────────
 function _vOpenDemo(){
   if(_isDemoMode)return;
@@ -14212,6 +14299,7 @@ function _vBuildDemoTile(f){
 var _localMuted=false,_localCamOff=false,_handRaised=false,_sharing=false,_boardActive=false,_visioCurrentUrl='';
 var _pinnedSid=null,_activeSpeakerSid=null,_peopleOpen=false,_reactOpen=false,_netQuality={};
 var _isRecording=false,_intentionalLeave=false,_isDemoMode=false,_openFloor=false,_floorGranted=false;
+var _joinTimeout=null,_joinRetries=0;
 var _vPipFeaturedSid=null;
 var _audioCtx=null,_audioAnalyser=null,_audioSrc=null,_mutedSpeakTimer=null;
 var _demoAudioCtx=null,_demoAudioStream=null,_demoSpeakTimer=null;
@@ -14300,6 +14388,7 @@ function _vShowPreJoin(onJoin){
   }
 
   // ── UI desktop/web : preview caméra complète ──
+  bd.style.cssText='position:fixed;inset:0;z-index:9999;background:#0d0d18;display:flex;flex-direction:column;align-items:center;justify-content:center;';
   bd.innerHTML=''
     +'<button onclick="_vCancelPreJoin()" style="position:absolute;top:calc(env(safe-area-inset-top,0px)+14px);right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:50px;padding:7px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">✕ Annuler</button>'
     +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:24px;letter-spacing:-.02em">Prêt à rejoindre ?</div>'
@@ -14439,6 +14528,8 @@ function openVisioModal(url){
     _isDemoMode=false;
     _isOwner=!!(user&&user.role==='professeur');
     _intentionalLeave=false;
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    _joinRetries=0;
     var existing=g('bdVisio');if(existing)existing.remove();
     var bd=document.createElement('div');
     bd.id='bdVisio';
@@ -14577,18 +14668,38 @@ async function _joinDailyRoom(url,roomName){
       .on('network-quality-change',_vOnNetQuality)
       .on('error',function(e){
         console.error('[Daily]',e);
-        if(!_intentionalLeave){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+        if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        if(!_intentionalLeave&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       })
       .on('left-meeting',function(){
-        if(!_intentionalLeave&&_visioCurrentUrl){setTimeout(function(){if(!_callObj&&_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
+        if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+        if(!_intentionalLeave&&_visioCurrentUrl&&_joinRetries<3){_joinRetries++;setTimeout(function(){if(_visioCurrentUrl)_joinDailyRoom(_visioCurrentUrl,_visioCurrentUrl.split('/').pop());},2000);}
       });
     _isOwner=td.is_owner||_isOwner;
+    // Timeout de sécurité : si joined-meeting ne fire pas dans 15s, la room n'existe pas
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    _joinTimeout=setTimeout(function(){
+      _joinTimeout=null;
+      console.warn('[Visio] joined-meeting timeout — room introuvable');
+      if(_callObj){try{_callObj.destroy();}catch(e){}_callObj=null;}
+      var grid=g('_vGrid');
+      if(grid)grid.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:rgba(255,255,255,.75);font-size:14px;text-align:center;padding:24px;height:100%;line-height:1.5;">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" width="40" height="40"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        +'<span>Impossible de rejoindre la salle.<br>Le lien est peut-être invalide ou expiré.</span>'
+        +'<button onclick="closeVisioModal()" style="background:#FF6B2B;border:none;color:#fff;padding:8px 20px;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px;">Fermer</button>'
+        +'</div>';
+    },15000);
     await _callObj.join({url:url,token:td.token,userName:td.user_name||undefined,startVideoOn:true,startAudioOn:_isOwner});
     if(!_isOwner){_localMuted=true;var b=g('_vMic');if(b)b.innerHTML=_vMicSvg(true);}
-  }catch(e){console.error('[Visio join]',e);toast('Impossible de rejoindre','');}
+  }catch(e){
+    if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+    console.error('[Visio join]',e);toast('Impossible de rejoindre','');
+  }
 }
 
 function _vOnJoined(){
+  if(_joinTimeout){clearTimeout(_joinTimeout);_joinTimeout=null;}
+  _joinRetries=0;
   _vRenderGrid();
   if(_isOwner)_vUpdateHands(); // show prof controls panel (open floor button)
   try{
