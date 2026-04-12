@@ -15719,6 +15719,13 @@ var _brdSnapTimer=null; // hold-to-snap line straightening
 var _brdEraserCursorEl=null; // cercle curseur gomme
 var _brdActiveTxtBarEl=null; // floating text formatting bar DOM element
 var _brdTextAnchor=null; // {cx,cy} canvas coords of active text input
+var _brdMathPanelTab=0;
+var _brdMathSymbols=[
+  {lbl:'∑∫',name:'Analyse',syms:['∑','∏','∫','∬','∂','∇','√','∛','±','∞','≠','≤','≥','⇒','⟺','→','↔','≡','∝','ℕ','ℤ','ℚ','ℝ','ℂ']},
+  {lbl:'αβ',name:'Grec',syms:['α','β','γ','δ','ε','ζ','η','θ','ι','κ','λ','μ','ν','ξ','π','ρ','σ','τ','υ','φ','χ','ψ','ω','Δ','Γ','Λ','Π','Σ','Φ','Ψ','Ω']},
+  {lbl:'∠',name:'Géométrie',syms:['°','⊥','∥','∦','∠','△','▷','□','○','≅','≈','∈','∉','⊂','⊃','∩','∪','∅','⟂','⌒']},
+  {lbl:'xⁿ',name:'Indices',syms:['⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹','⁻','ⁿ','₀','₁','₂','₃','₄','₅','₆','₇','₈','₉','½','⅓','¼','⅔','¾']},
+];
 var _brdSel={active:false,x:0,y:0,w:0,h:0,angle:0,offC:null,el:null,bar:null}; // legacy pixel-sel (conservé pour rétro-compat)
 // ── Object model ──────────────────────────────────────────────────────────────
 var _brdObjects=[];       // objets de la page courante (ordre dessin)
@@ -16674,10 +16681,83 @@ function _brdBuildTxtBarHTML(){
     h+='<button onmousedown="event.preventDefault();_brdSetAlign(\''+al+'\')" ontouchstart="event.preventDefault();_brdSetAlign(\''+al+'\')" style="background:'+(a?'rgba(255,255,255,.18)':'transparent')+';border:none;cursor:pointer;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;">'
       +'<svg viewBox="0 0 24 24" fill="none" stroke="'+(a?'#FF6B2B':ic)+'" stroke-width="2" stroke-linecap="round" width="15" height="15">'+alignSvgs[al]+'</svg></button>';
   });
+  h+=sep;
+  h+='<button onmousedown="event.preventDefault();_brdToggleMathPanel()" ontouchstart="event.preventDefault();_brdToggleMathPanel()" title="Symboles mathématiques" style="background:transparent;border:none;cursor:pointer;width:30px;height:28px;border-radius:7px;font-size:15px;font-weight:700;color:rgba(255,107,43,.85);-webkit-tap-highlight-color:transparent;" title="Symboles mathématiques">∑</button>';
   return h;
 }
 function _brdRenderActiveTxtBar(){
   if(_brdActiveTxtBarEl)_brdActiveTxtBarEl.innerHTML=_brdBuildTxtBarHTML();
+}
+
+function _brdInsertSymbol(sym){
+  var inp=document.getElementById('_brdActiveInp');if(!inp)return;
+  var start=inp.selectionStart||0,end=inp.selectionEnd||0;
+  inp.value=inp.value.substring(0,start)+sym+inp.value.substring(end);
+  inp.selectionStart=inp.selectionEnd=start+sym.length;
+  inp.dispatchEvent(new Event('input'));
+  inp.focus();
+}
+
+function _brdSetMathTab(idx){
+  _brdMathPanelTab=idx;
+  var panel=document.getElementById('_brdMathPanel');
+  if(panel)panel.querySelector('._brdMathInner').innerHTML=_brdBuildMathInnerHTML();
+}
+
+function _brdBuildMathInnerHTML(){
+  var h='<div style="display:flex;gap:3px;margin-bottom:7px;">';
+  _brdMathSymbols.forEach(function(cat,i){
+    var a=i===_brdMathPanelTab;
+    h+='<button onmousedown="event.preventDefault();_brdSetMathTab('+i+')" ontouchstart="event.preventDefault();_brdSetMathTab('+i+')"'
+      +' style="flex:1;background:'+(a?'rgba(255,107,43,.2)':'transparent')+';'
+      +'border:1px solid '+(a?'rgba(255,107,43,.7)':'rgba(255,255,255,.12)')+';'
+      +'border-radius:7px;color:'+(a?'#FF6B2B':'rgba(255,255,255,.45)')+';'
+      +'font-size:12px;font-weight:'+(a?'700':'400')+';padding:5px 2px;cursor:pointer;'
+      +'-webkit-tap-highlight-color:transparent;">'+cat.lbl+'</button>';
+  });
+  h+='</div><div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  _brdMathSymbols[_brdMathPanelTab].syms.forEach(function(sym){
+    h+='<button onmousedown="event.preventDefault();_brdInsertSymbol(\''+sym+'\')" ontouchstart="event.preventDefault();_brdInsertSymbol(\''+sym+'\')"'
+      +' style="width:36px;height:34px;background:rgba(255,255,255,.07);'
+      +'border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#fff;font-size:16px;'
+      +'cursor:pointer;display:flex;align-items:center;justify-content:center;'
+      +'-webkit-tap-highlight-color:transparent;touch-action:manipulation;">'+sym+'</button>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function _brdToggleMathPanel(){
+  var panel=document.getElementById('_brdMathPanel');
+  if(panel&&panel.parentNode){panel.parentNode.removeChild(panel);return;}
+  var bar=document.getElementById('_brdTxtBar');if(!bar)return;
+  panel=document.createElement('div');
+  panel.id='_brdMathPanel';
+  var maxW=Math.min(316,window.innerWidth-16);
+  panel.style.cssText='position:fixed;z-index:10102;background:#1a1d2e;border-radius:14px;'
+    +'padding:10px;box-shadow:0 4px 28px rgba(0,0,0,.6);width:'+maxW+'px;'
+    +'border:1px solid rgba(255,255,255,.08);';
+  var inner=document.createElement('div');
+  inner.className='_brdMathInner';
+  inner.innerHTML=_brdBuildMathInnerHTML();
+  panel.appendChild(inner);
+  document.body.appendChild(panel);
+  _brdPositionMathPanel(bar,panel);
+}
+
+function _brdPositionMathPanel(bar,panel){
+  if(!panel)panel=document.getElementById('_brdMathPanel');
+  if(!panel||!bar)return;
+  var br=bar.getBoundingClientRect();
+  var pw=panel.offsetWidth||316;
+  var left=Math.min(Math.max(br.left+(br.width-pw)/2,8),window.innerWidth-pw-8);
+  panel.style.left=left+'px';
+  requestAnimationFrame(function(){
+    var ph=panel.offsetHeight||160;
+    var top=br.top-ph-8;
+    if(top<8)top=br.bottom+8;
+    panel.style.top=top+'px';
+  });
 }
 
 function _boardGetPos(e){
@@ -17934,6 +18014,7 @@ function _boardInsertText(cx,cy){
   // Remove any existing editor without waiting for its blur
   var old=document.getElementById('_brdActiveInp');if(old&&old.parentNode)old.parentNode.removeChild(old);
   var oldBar=document.getElementById('_brdTxtBar');if(oldBar&&oldBar.parentNode)oldBar.parentNode.removeChild(oldBar);
+  var oldMath=document.getElementById('_brdMathPanel');if(oldMath&&oldMath.parentNode)oldMath.parentNode.removeChild(oldMath);
   _brdActiveTxtBarEl=null;
   _brdTextAnchor={cx:cx,cy:cy}; // for repositioning after pan/zoom
   // Snapshot canvas so we can do live preview as user types (canvas GPU copy)
@@ -17983,6 +18064,7 @@ function _boardInsertText(cx,cy){
     var barTop=ib.bottom+8;
     if(barTop+38>vvBottom-8)barTop=Math.max(8,vvBottom-48);
     bar.style.left=bleft+'px';bar.style.top=barTop+'px';
+    _brdPositionMathPanel(bar);
   }
   inp.addEventListener('input',function(){
     inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';
@@ -18041,6 +18123,7 @@ function _boardInsertText(cx,cy){
     window.removeEventListener('keyboardWillShow',kbShowFn);
     window.removeEventListener('keyboardWillHide',kbHideFn);
     if(bar.parentNode)bar.parentNode.removeChild(bar);
+    var mp=document.getElementById('_brdMathPanel');if(mp&&mp.parentNode)mp.parentNode.removeChild(mp);
     var txt=inp.value.trim();
     if(inp.parentNode)inp.parentNode.removeChild(inp);
     // Restore snapshot then draw final committed text
