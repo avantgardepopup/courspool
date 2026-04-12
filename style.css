@@ -221,10 +221,11 @@ html:not(.cap-ios) .cap-ios-only{display:none!important;}
 .ropt.on{background:linear-gradient(135deg,#FF7D42,#FF4500);color:#fff;box-shadow:0 4px 14px rgba(255,69,0,.28);}
 /* dark mode */
 html.dk .lscreen-logo-text{color:var(--ink);}
-html.dk .lfield input,html.dk .lfield select,html.dk .lfield textarea{background:var(--bg)!important;color:var(--ink)!important;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05)!important;}
+html.dk .lfield input,html.dk .lfield select,html.dk .lfield textarea{background:var(--bg)!important;color:var(--ink)!important;box-shadow:0 2px 8px rgba(0,0,0,.25),0 0 0 1.5px rgba(255,255,255,.18)!important;}
 html.dk .lrole-card,html.dk .lpour-card,html.dk .lniv-chip:not(.on),html.dk .pc-mode-item:not(.on),html.dk .ropt:not(.on),html.dk .so:not(.on),html.dk .fi2,html.dk .fi3,html.dk .crn-chip:not(.on),html.dk .filter-chip-btn,html.dk .contenu-card,html.dk .esp-input{box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 0.5px rgba(255,255,255,.05);}
 html.dk .lfield input::placeholder{color:var(--mid)!important;opacity:.6;}
 html.dk .lfield label{color:var(--mid);}
+html.dk #rPw{border-color:rgba(255,255,255,.2)!important;background:var(--bg)!important;}
 html.dk .lguest,html.dk .lreg-back-solo{background:var(--wh);border-color:var(--bdr);}
 html.dk .loauth-btn:not(.loauth-apple){background:var(--wh);border-color:var(--bdr);color:var(--ink);}
 html.dk .lrole-card,html.dk .lpour-card,html.dk .lniv-chip,html.dk .pc-mode-item{background:var(--wh);border-color:var(--bdr);}
@@ -678,21 +679,21 @@ html.dk .bni-badge { border-color: rgba(18,17,16,0.97); }
     transform: translateX(-50%);
     border-radius: 50px;
     border-top: none;
-    padding: 8px 12px;
+    padding: 10px 16px;
     background: rgba(255,255,255,0.93);
     -webkit-backdrop-filter: blur(40px) saturate(2);
     backdrop-filter: blur(40px) saturate(2);
     box-shadow: 0 8px 40px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.07);
     align-items: center;
     justify-content: flex-start;
-    gap: 4px;
+    gap: 6px;
   }
   .bni {
     flex: none;
     min-height: auto;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: 40px;
-    min-width: 60px;
+    min-width: 70px;
     gap: 3px;
     transition: background .2s, box-shadow .2s, color .15s;
   }
@@ -1502,14 +1503,14 @@ textarea.fi3::placeholder{color:#BBBBBB !important;opacity:1;}
 /* ── NAV — CONVERSATION MODE (hidden, back button is in header) ── */
 .bnav.conv-mode { display: none !important; }
 
-/* ── NAV — MSG MODE desktop (≥769px) : pill réduite, bouton retour à gauche ── */
+/* ── NAV — MSG MODE desktop (≥769px) : pill réduite en bouton retour natif ── */
 @media(min-width:769px){
   .bnav.msg-mode {
-    left: 24px !important;
+    left: 28px !important;
     transform: none !important;
-    padding: 6px 6px !important;
+    padding: 5px !important;
     gap: 0 !important;
-    transition: left .35s cubic-bezier(.34,1.2,.64,1), transform .35s cubic-bezier(.34,1.2,.64,1) !important;
+    min-width: unset !important;
   }
   .bnav.msg-mode .bni,
   .bnav.msg-mode #bnavDragHandle { display: none !important; }
@@ -2425,12 +2426,13 @@ html.dk .settings-chevron { color:var(--bdr); }
   .bnav {
     right: auto !important;
     width: auto !important;
-    padding: 8px 12px !important;
-    padding-bottom: 8px !important;
-    gap: 4px !important;
+    padding: 10px 16px !important;
+    padding-bottom: 10px !important;
+    gap: 6px !important;
     border-radius: 60px !important;
     box-shadow: 0 6px 28px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.10) !important;
     user-select: none;
+    transition: left .38s cubic-bezier(.34,1.2,.64,1), transform .38s cubic-bezier(.34,1.2,.64,1), padding .28s ease !important;
   }
   .bnav::after { display: none !important; }
   html.dk .bnav { box-shadow: 0 6px 28px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3) !important; }
@@ -3854,3 +3856,4 @@ html.dk .tp-code-input{color:#fff;}
 html.dk .tp-code-input::placeholder{color:#48484A;}
 html.dk .tp-code-input::placeholder{color:#48484A;}
 html.dk .tp-code-btn{background:#FF6B2B;box-shadow:-1px 0 0 rgba(255,255,255,.07);}
+tml.dk .tp-code-btn{background:#FF6B2B;box-shadow:-1px 0 0 rgba(255,255,255,.07);}
