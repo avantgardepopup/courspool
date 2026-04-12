@@ -13631,92 +13631,99 @@ function _stepOptClick(el){
   haptic(8);
 }
 
-// ── Drag & drop bnav sur desktop ──
+// ── Drag & drop bnav sur desktop — via languette uniquement ──
 (function(){
-  var nav = null;
-  var dragging = false;
-  var ox = 0, oy = 0; // offset souris par rapport au coin du nav
+  var nav=null,handle=null,dragging=false,ox=0,oy=0;
+
+  function _navSavePos(){
+    try{localStorage.setItem('cp_nav_pos',JSON.stringify({left:nav.style.left,top:nav.style.top}));}catch(e){}
+  }
+  function _navResetPos(){
+    nav.style.left='50%';nav.style.top='';nav.style.bottom='';nav.style.transform='translateX(-50%)';
+    try{localStorage.removeItem('cp_nav_pos');}catch(e){}
+  }
+  function _navRestorePos(){
+    try{
+      var s=localStorage.getItem('cp_nav_pos');
+      if(!s)return false;
+      var p=JSON.parse(s);
+      var lv=parseInt(p.left,10),tv=parseInt(p.top,10);
+      // Valider que la position est dans la fenêtre
+      if(isNaN(lv)||isNaN(tv))return false;
+      if(lv<0||lv>window.innerWidth-80||tv<0||tv>window.innerHeight-40)return false;
+      nav.style.left=p.left;nav.style.top=p.top;
+      nav.style.bottom='auto';nav.style.transform='none';
+      return true;
+    }catch(e){return false;}
+  }
 
   function initNavDrag(){
-    nav = document.getElementById('bnav');
-    if(!nav) return;
+    nav=document.getElementById('bnav');
+    if(!nav||window.innerWidth<769)return;
 
-    nav.addEventListener('mousedown', function(e){
-      // Ignorer si clic sur un bouton
-      if(e.target.closest('button,a,[onclick]') && e.target !== nav) return;
-      if(window.innerWidth < 769) return; // mobile : pas de drag
-      dragging = true;
-      var rect = nav.getBoundingClientRect();
-      ox = e.clientX - rect.left;
-      oy = e.clientY - rect.top;
-      nav.style.transition = 'none';
-      nav.style.cursor = 'grabbing';
+    // ── Languette de drag (insérée avant le premier item) ──
+    handle=document.createElement('div');
+    handle.id='bnavDragHandle';
+    handle.title='Déplacer · Double-clic pour recentrer';
+    handle.style.cssText='display:flex;align-items:center;justify-content:center;'
+      +'width:20px;padding:0 6px;cursor:grab;flex-shrink:0;opacity:.35;'
+      +'transition:opacity .2s;-webkit-user-select:none;user-select:none;';
+    handle.innerHTML='<svg viewBox="0 0 8 14" fill="currentColor" width="8" height="14">'
+      +'<circle cx="2" cy="2" r="1.4"/><circle cx="6" cy="2" r="1.4"/>'
+      +'<circle cx="2" cy="7" r="1.4"/><circle cx="6" cy="7" r="1.4"/>'
+      +'<circle cx="2" cy="12" r="1.4"/><circle cx="6" cy="12" r="1.4"/>'
+      +'</svg>';
+    handle.addEventListener('mouseover',function(){handle.style.opacity='.7';});
+    handle.addEventListener('mouseout',function(){if(!dragging)handle.style.opacity='.35';});
+    // Double-clic → recentrer
+    handle.addEventListener('dblclick',function(e){e.stopPropagation();_navResetPos();});
+    nav.insertBefore(handle,nav.firstChild);
+
+    // ── Drag depuis la languette uniquement ──
+    handle.addEventListener('mousedown',function(e){
+      if(window.innerWidth<769)return;
+      dragging=true;
+      var rect=nav.getBoundingClientRect();
+      ox=e.clientX-rect.left;oy=e.clientY-rect.top;
+      nav.style.transition='none';
+      handle.style.cursor='grabbing';handle.style.opacity='1';
       e.preventDefault();
     });
 
-    document.addEventListener('mousemove', function(e){
-      if(!dragging || !nav) return;
-      var x = e.clientX - ox;
-      var y = e.clientY - oy;
-      // Garder dans la fenêtre
-      var rect = nav.getBoundingClientRect();
-      x = Math.max(0, Math.min(window.innerWidth - rect.width, x));
-      y = Math.max(0, Math.min(window.innerHeight - rect.height, y));
-      nav.style.left = x + 'px';
-      nav.style.top = y + 'px';
-      nav.style.bottom = 'auto';
-      nav.style.transform = 'none';
+    document.addEventListener('mousemove',function(e){
+      if(!dragging||!nav)return;
+      var x=e.clientX-ox,y=e.clientY-oy;
+      var rect=nav.getBoundingClientRect();
+      x=Math.max(8,Math.min(window.innerWidth-rect.width-8,x));
+      y=Math.max(8,Math.min(window.innerHeight-rect.height-8,y));
+      nav.style.left=x+'px';nav.style.top=y+'px';
+      nav.style.bottom='auto';nav.style.transform='none';
     });
 
-    document.addEventListener('mouseup', function(){
-      if(!dragging || !nav) return;
-      dragging = false;
-      nav.style.cursor = '';
-      nav.style.transition = '';
-      // Sauvegarder position
-      try{
-        localStorage.setItem('cp_nav_pos', JSON.stringify({
-          left: nav.style.left,
-          top: nav.style.top,
-          bottom: nav.style.bottom,
-          transform: nav.style.transform
-        }));
-      }catch(e){}
+    document.addEventListener('mouseup',function(){
+      if(!dragging||!nav)return;
+      dragging=false;
+      handle.style.cursor='grab';handle.style.opacity='.35';
+      nav.style.transition='';
+      _navSavePos();
     });
 
-    // Restaurer position sauvegardée
-    try{
-      var saved = localStorage.getItem('cp_nav_pos');
-      if(saved && window.innerWidth >= 769){
-        var pos = JSON.parse(saved);
-        if(pos.left) nav.style.left = pos.left;
-        if(pos.top) nav.style.top = pos.top;
-        if(pos.bottom !== undefined) nav.style.bottom = pos.bottom;
-        if(pos.transform !== undefined) nav.style.transform = pos.transform;
-      }
-    }catch(e){}
+    // Restaurer position ou centrer
+    if(!_navRestorePos()){_navResetPos();}
 
-    // Curseur grab sur desktop
-    if(window.innerWidth >= 769){
-      nav.style.cursor = 'grab';
-    }
-    // Réinitialiser la position si on passe en mode mobile (rotation)
     window.addEventListener('resize',function(){
       if(window.innerWidth<769){
-        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';nav.style.right='';
-        nav.style.cursor='';
+        nav.style.left='';nav.style.top='';nav.style.bottom='';nav.style.transform='';
+        if(handle)handle.style.display='none';
       }else{
-        nav.style.cursor='grab';
+        if(handle)handle.style.display='flex';
+        if(!_navRestorePos()){_navResetPos();}
       }
     });
   }
 
-  // Attendre que le DOM soit prêt
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initNavDrag);
-  } else {
-    setTimeout(initNavDrag, 500);
-  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initNavDrag);}
+  else{setTimeout(initNavDrag,500);}
 })();
 
 // ── Swipe gauche/droite pour navigation entre onglets ──────────────────────
