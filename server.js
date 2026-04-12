@@ -1177,8 +1177,8 @@ app.post('/cours', requireAuth, async (req, res) => {
     const { data: profData } = await supabase.from('profiles').select('prenom,nom,photo_url').eq('id', professeur_id).single();
     const safeProfNom = profData ? ((profData.prenom||'') + ' ' + (profData.nom||'')).trim() : (prof_nom || '');
     const safeProfPhoto = profData?.photo_url || prof_photo || null;
-    // Créer une room Daily.co si mode visio (ignore le visio_url du client)
-    const safeVisioUrl = safeMode === 'visio' ? (await createDailyRoom() || visio_url || null) : null;
+    // Room créée à la demande au premier join (via /visio/room), pas à la création
+    const safeVisioUrl = safeMode === 'visio' && visio_url && /^https?:\/\//i.test(visio_url) ? visio_url : null;
     const { data, error } = await supabase.from('cours')
       .insert([{ titre, sujet, couleur_sujet, background, date_heure, date_iso: date_iso || null, lieu, prix_total, places_max, places_prises: 0, professeur_id, emoji, prof_nom: safeProfNom, prof_photo: safeProfPhoto, prof_initiales, prof_couleur, description, niveau: niveau || null, mode: safeMode, prive: !!prive, code_acces: prive ? (code_acces || null) : null, visio_url: safeVisioUrl }])
       .select();
@@ -1375,13 +1375,21 @@ app.post('/visio/room', requireAuth, async (req, res) => {
     let roomName, roomUrl, isOwnerOfRoom = false;
     if (cours_id) {
       // Vérifier accès : prof du cours ou élève inscrit
-      const { data: cours } = await supabase.from('cours').select('id,professeur_id,titre').eq('id', cours_id).single();
+      const { data: cours } = await supabase.from('cours').select('id,professeur_id,titre,date_iso,duree,places_max').eq('id', cours_id).single();
       if (!cours) return res.status(404).json({ error: 'Cours introuvable' });
       const isProfOfCours = cours.professeur_id === userId;
-      isOwnerOfRoom = isProfOfCours; // seul le prof de CE cours a les droits owner
+      isOwnerOfRoom = isProfOfCours;
       if (!isProfOfCours) {
         const { data: resa } = await supabase.from('reservations').select('id').eq('cours_id', cours_id).eq('user_id', userId).maybeSingle();
         if (!resa) return res.status(403).json({ error: 'Non inscrit à ce cours' });
+        // Vérifier la fenêtre temporelle pour les élèves (15min avant → fin du cours)
+        if (cours.date_iso) {
+          const now = Date.now();
+          const start = new Date(cours.date_iso).getTime();
+          const dureeMs = (cours.duree || 60) * 60 * 1000;
+          if (now < start - 15 * 60 * 1000) return res.status(403).json({ error: 'Le cours n\'a pas encore commencé', code: 'TOO_EARLY' });
+          if (now > start + dureeMs + 30 * 60 * 1000) return res.status(403).json({ error: 'Ce cours est terminé', code: 'ENDED' });
+        }
       }
       roomName = 'cours-' + cours_id;
       // Get or create — gère la race condition si deux personnes cliquent en même temps
@@ -1394,7 +1402,7 @@ app.post('/visio/room', requireAuth, async (req, res) => {
         const createResp = await fetch('https://api.daily.co/v1/rooms', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: roomName, properties: { idle_timeout: 1800, enable_chat: true, enable_screenshare: true, max_participants: 20 } })
+          body: JSON.stringify({ name: roomName, properties: { idle_timeout: 1800, enable_chat: true, enable_screenshare: true, max_participants: (cours.places_max || 19) + 1 } })
         });
         const created = await createResp.json();
         if (!createResp.ok) {
@@ -1453,7 +1461,17 @@ app.post('/visio/token', requireAuth, async (req, res) => {
   try {
     const { data: prof } = await supabase.from('profiles').select('prenom,nom').eq('id', req.user.id).single();
     const userName = prof ? ((prof.prenom||'') + ' ' + (prof.nom||'')).trim() : (req.user.email || 'Participant');
-    const isOwner = req.user.role === 'professeur';
+    // Pour un join via lien manuel (room cours-*) : is_owner ssi c'est le prof de ce cours
+    // Pour une quick room (cp-*) : is_owner = true (le participant qui rejoint via lien partagé est co-host)
+    let isOwner = false;
+    if (room_name.startsWith('cours-')) {
+      const coursId = room_name.replace('cours-', '');
+      const { data: c } = await supabase.from('cours').select('professeur_id').eq('id', coursId).maybeSingle();
+      isOwner = !!(c && c.professeur_id === req.user.id);
+    } else {
+      isOwner = true; // quick room partagée : tout le monde est co-host
+    }
+    const tokenExp = Math.floor(Date.now()/1000) + 7200;
     const resp = await fetch('https://api.daily.co/v1/meeting-tokens', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
@@ -1461,7 +1479,8 @@ app.post('/visio/token', requireAuth, async (req, res) => {
         room_name,
         user_name: userName,
         is_owner: isOwner,
-        start_audio_off: !isOwner,
+        exp: tokenExp,
+        start_audio_off: false,
         start_video_off: false
       }})
     });
@@ -3227,10 +3246,11 @@ setInterval(async () => {
           _visoNotifSent.add(key);
           await Promise.all(allIds.map(id => pushToUser(id, {
             title: '🎥 Cours dans 5 minutes !', body: `"${c.titre}" commence dans 5 minutes`,
-            tag: `visio-h5-${c.id}`, icon: '/icon-192.png', data: { url: c.visio_url || 'https://courspool.vercel.app' }
+            tag: `visio-h5-${c.id}`, icon: '/icon-192.png', data: { url: 'https://courspool.vercel.app' }
           })));
-          if (c.visio_url && studentIds.length > 0) {
-            const contenu = `🎥 Votre cours "${c.titre}" commence dans 5 minutes !\n\n👉 Rejoindre : ${c.visio_url}`;
+          // Message auto aux élèves — inviter à ouvrir l'app (la room est créée à la demande)
+          if (studentIds.length > 0) {
+            const contenu = `🎥 Votre cours "${c.titre}" commence dans 5 minutes ! Ouvrez CoursPool pour rejoindre.`;
             for (const studentId of studentIds) {
               const { data: msg } = await supabase.from('messages')
                 .insert({ expediteur_id: c.professeur_id, destinataire_id: studentId, contenu })
@@ -3250,7 +3270,7 @@ setInterval(async () => {
           _visoNotifSent.add(key);
           await Promise.all(allIds.map(id => pushToUser(id, {
             title: '🎥 Le cours a commencé !', body: `"${c.titre}" est en cours — Rejoignez maintenant !`,
-            tag: `visio-h0-${c.id}`, icon: '/icon-192.png', data: { url: c.visio_url || 'https://courspool.vercel.app' }
+            tag: `visio-h0-${c.id}`, icon: '/icon-192.png', data: { url: 'https://courspool.vercel.app' }
           })));
         }
       }

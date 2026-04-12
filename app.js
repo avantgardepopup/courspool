@@ -14045,7 +14045,12 @@ async function openCourseVisio(courseId){
   try{
     var r=await fetch(API+'/visio/room',{method:'POST',headers:apiH(),body:JSON.stringify({cours_id:courseId})});
     var d=await r.json();
-    if(r.status===403){toast('Accès refusé','Vous n\'êtes pas inscrit à ce cours');return;}
+    if(r.status===403){
+      var msg=d.code==='TOO_EARLY'?'Le cours n\'a pas encore commencé'
+        :d.code==='ENDED'?'Ce cours est terminé'
+        :'Vous n\'êtes pas inscrit à ce cours';
+      toast(msg,'');return;
+    }
     if(!d.url){toast('Connexion visio impossible','Vérifiez votre connexion');return;}
     _pendingVisioToken={token:d.token,is_owner:d.is_owner,user_name:d.user_name};
     openVisioModal(d.url);
