@@ -343,7 +343,7 @@ function initSocket() {
     if (typeof _isOwner === 'undefined' || !_isOwner) return;
     if (typeof _brdC === 'undefined' || !_brdC) return;
     // Envoyer un snapshot global (remplace le log d'ops)
-    var snap = _brdC.toDataURL('image/jpeg', 0.82);
+    var snap = _brdC.toDataURL('image/jpeg', 0.72);
     if (_socket && _socket.connected) {
       _socket.emit('board_snapshot', {roomId: _brdRoomId, snapshot: snap});
     }

@@ -1624,10 +1624,88 @@ app.get('/reservations/:user_id', requireAuth, async (req, res) => {
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// ── Suivi coût Daily.co (estimation participant-minutes) ─────────────────────
-const _dailyCostTracker = { joins: 0, estPartMin: 0, alerted: {} };
-// Reset mensuel — les seuils reprennent à zéro chaque mois
-setInterval(() => { Object.assign(_dailyCostTracker, { joins: 0, estPartMin: 0, alerted: {} }); }, 30 * 24 * 60 * 60 * 1000);
+// ── Suivi coût Daily.co ───────────────────────────────────────────────────────
+const DAILY_WEBHOOK  = process.env.DISCORD_WEBHOOK_DAILY || process.env.DISCORD_WEBHOOK_URL;
+const DAILY_FREE_MIN = 10_000;   // quota gratuit Daily.co : 10 000 participant-minutes/mois
+const DAILY_RATE     = 0.004;    // $/participant-minute après quota
+const _dc = { joins: 0, partMin: 0, sessions: 0, alerted: {}, since: Date.now() };
+
+async function _dailyAlert(msg) {
+  if (!DAILY_WEBHOOK) return;
+  try { await fetch(DAILY_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: msg }) }); } catch(e) {}
+}
+
+function _dcCheck() {
+  const billable  = Math.max(0, _dc.partMin - DAILY_FREE_MIN);
+  const cost      = billable * DAILY_RATE;
+  const freePct   = Math.min(100, Math.round(_dc.partMin / DAILY_FREE_MIN * 100));
+
+  // Seuils quota gratuit : 50% / 75% / 90% / 100%
+  for (const pct of [50, 75, 90, 100]) {
+    const k = `free${pct}`;
+    if (!_dc.alerted[k] && freePct >= pct) {
+      _dc.alerted[k] = true;
+      const bar = '█'.repeat(Math.round(pct/10)) + '░'.repeat(10 - Math.round(pct/10));
+      const over = pct >= 100;
+      _dailyAlert(
+        `${over ? '🚨' : '⚠️'} **Quota gratuit Daily.co — ${pct}%**\n` +
+        `> ${bar}\n` +
+        `> **${_dc.partMin.toLocaleString()} / ${DAILY_FREE_MIN.toLocaleString()}** participant-minutes\n` +
+        (over ? `> 🔴 **Facturation activée : $${DAILY_RATE}/participant-minute désormais**` : `> Quota restant : ${(DAILY_FREE_MIN - _dc.partMin).toLocaleString()} min`)
+      );
+    }
+  }
+  // Seuils coût facturable : $5 / $15 / $30 / $75 / $150 / $300
+  for (const thr of [5, 15, 30, 75, 150, 300]) {
+    const k = `$${thr}`;
+    if (!_dc.alerted[k] && cost >= thr) {
+      _dc.alerted[k] = true;
+      _dailyAlert(
+        `💸 **Coût Daily.co : $${thr} ce mois**\n` +
+        `> Coût estimé : **$${cost.toFixed(2)}**\n` +
+        `> ${_dc.partMin.toLocaleString()} participant-minutes · ${_dc.sessions} sessions · ${_dc.joins} participants`
+      );
+    }
+  }
+}
+
+// Résumé quotidien — 9h Paris (UTC+2 en été, UTC+1 en hiver — on envoie à 7h UTC)
+function _scheduleDailyDigest() {
+  const now  = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 7, 0, 0));
+  setTimeout(function tick() {
+    const billable = Math.max(0, _dc.partMin - DAILY_FREE_MIN);
+    const cost     = (billable * DAILY_RATE).toFixed(2);
+    const freePct  = Math.min(100, Math.round(_dc.partMin / DAILY_FREE_MIN * 100));
+    const bar      = '█'.repeat(Math.round(freePct/10)) + '░'.repeat(10 - Math.round(freePct/10));
+    const freeLeft = Math.max(0, DAILY_FREE_MIN - _dc.partMin).toLocaleString();
+    _dailyAlert(
+      `📹 **Résumé quotidien vidéo — ${new Date().toLocaleDateString('fr-FR', {day:'numeric',month:'long'})}**\n` +
+      `> ${bar} **${freePct}%** du quota gratuit\n` +
+      `> **Participant-minutes :** ${_dc.partMin.toLocaleString()} / ${DAILY_FREE_MIN.toLocaleString()}\n` +
+      `> **Minutes gratuites restantes :** ${freeLeft}\n` +
+      `> **Coût facturable ce mois :** $${cost}\n` +
+      `> **Sessions :** ${_dc.sessions} · **Participants :** ${_dc.joins}`
+    );
+    setTimeout(tick, 24 * 60 * 60 * 1000);
+  }, next.getTime() - Date.now());
+}
+_scheduleDailyDigest();
+
+// Reset + bilan mensuel
+setInterval(() => {
+  const billable = Math.max(0, _dc.partMin - DAILY_FREE_MIN);
+  const cost     = (billable * DAILY_RATE).toFixed(2);
+  const freePct  = Math.min(100, Math.round(_dc.partMin / DAILY_FREE_MIN * 100));
+  _dailyAlert(
+    `📊 **Bilan mensuel Daily.co**\n` +
+    `> **Quota utilisé :** ${freePct}% (${_dc.partMin.toLocaleString()} participant-minutes)\n` +
+    `> **Coût total estimé :** $${cost}\n` +
+    `> **Sessions :** ${_dc.sessions} · **Joins :** ${_dc.joins}\n` +
+    `> Compteurs remis à zéro pour le mois prochain ✅`
+  );
+  Object.assign(_dc, { joins: 0, partMin: 0, sessions: 0, alerted: {}, since: Date.now() });
+}, 30 * 24 * 60 * 60 * 1000);
 
 // VISIO — créer ou récupérer une room Daily.co + retourner le token en une seule requête
 // - cours_id fourni : room cours-{id}, vérifie que l'user est inscrit ou prof
@@ -1716,18 +1794,26 @@ app.post('/visio/room', requireAuth, async (req, res) => {
     });
     if (!tokenResp.ok) { console.error('[Daily token]', await tokenResp.text()); return res.status(500).json({ error: 'Erreur token' }); }
     const tokenData = await tokenResp.json();
-    // ── Compteur coût Daily — alerte Discord par seuils ──────────
-    _dailyCostTracker.joins++;
-    const estimatedDurMin = cours_id && cours?.duree ? cours.duree : 60;
-    _dailyCostTracker.estPartMin += estimatedDurMin;
-    const estCost = (_dailyCostTracker.estPartMin * 0.004).toFixed(2);
-    const THRESHOLDS = [10, 50, 100, 500]; // seuils en dollars
-    for (const thr of THRESHOLDS) {
-      if (!_dailyCostTracker.alerted[thr] && parseFloat(estCost) >= thr) {
-        _dailyCostTracker.alerted[thr] = true;
-        discordAlert(`💸 **Alerte coût Daily.co**\n> Coût vidéo estimé : **~$${estCost}** (${_dailyCostTracker.estPartMin} participant-minutes)\n> Seuil $${thr} atteint — vérifier le dashboard Daily.co`);
+    // ── Suivi participant-minutes ─────────────────────────────────
+    const _durMin = cours?.duree || 60;
+    const _nbPart = (cours?.places_max || 9) + 1; // prof + élèves max
+    _dc.joins++;
+    _dc.partMin += _durMin; // 1 participant-minute par rejoin (approximation conservative)
+    // Nouvelle session : comptée une fois quand le propriétaire ouvre la room
+    if (isOwnerOfRoom) {
+      _dc.sessions++;
+      // Notification en temps réel pour les grandes salles (≥8 participants)
+      if (_nbPart >= 8) {
+        const estCourse = (_nbPart * _durMin * DAILY_RATE).toFixed(2);
+        _dailyAlert(
+          `🎓 **Salle ouverte : ${cours?.titre || roomName}**\n` +
+          `> Capacité : **${_nbPart} participants** · Durée prévue : **${_durMin} min**\n` +
+          `> Coût estimé pour ce cours : **~$${estCourse}**\n` +
+          `> Total ce mois : ${_dc.partMin.toLocaleString()} participant-minutes`
+        );
       }
     }
+    _dcCheck();
     res.json({ url: roomUrl, room_name: roomName, token: tokenData.token, user_name: userName, is_owner: isOwnerOfRoom });
   } catch(e) { console.error(e); res.status(500).json({ error: 'Erreur serveur' }); }
 });

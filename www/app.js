@@ -14875,6 +14875,8 @@ function _vOnMsg(evt){
     _vUpdateHands();_vUpdatePeople();
     if(_isOwner){
       haptic([10,40,80]);
+      // Son de notification main levée (bip discret via Web Audio API)
+      try{var _ac=new(window.AudioContext||window.webkitAudioContext)();var _o=_ac.createOscillator();var _g=_ac.createGain();_o.connect(_g);_g.connect(_ac.destination);_o.frequency.value=880;_g.gain.setValueAtTime(0,_ac.currentTime);_g.gain.linearRampToValueAtTime(0.18,_ac.currentTime+0.01);_g.gain.linearRampToValueAtTime(0,_ac.currentTime+0.22);_o.start(_ac.currentTime);_o.stop(_ac.currentTime+0.22);}catch(e){}
       // Ouvrir le panneau participants si pas déjà ouvert + pulse sur le bouton
       var _pb=g('_vPeopleBtn');
       if(_pb){_pb.style.transform='scale(1.18)';setTimeout(function(){var b=g('_vPeopleBtn');if(b)b.style.transform='';},280);}
@@ -15193,6 +15195,12 @@ function _vUpdatePeople(){
   var _svgX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   var _svgHand='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M9 11V5a1.5 1.5 0 013 0v6"/><path d="M12 11V4a1.5 1.5 0 013 0v7"/><path d="M15 12V8a1.5 1.5 0 013 0v6a6 6 0 01-12 0v-4a1.5 1.5 0 013 0v3"/></svg>';
   var html='';
+  // ── Bannière statut élève (non-propriétaire) ────────────────
+  if(!_isOwner){
+    var _myStatus=_floorGranted?'🎤 Vous avez la parole':_handRaised?'✋ Main levée — en attente':_openFloor?'🎙️ Parole libre activée':'🔇 Micro coupé — levez la main pour parler';
+    var _myStatusColor=_floorGranted?'rgba(34,192,105,.18)':_handRaised?'rgba(255,107,43,.12)':_openFloor?'rgba(34,192,105,.10)':'rgba(255,255,255,.06)';
+    html+='<div style="padding:10px 14px;background:'+_myStatusColor+';border-bottom:1px solid rgba(255,255,255,.07);font-size:12px;font-weight:600;color:rgba(255,255,255,.85);">'+_myStatus+'</div>';
+  }
   // ── Bannière whisper actif ────────────────────────────────────
   if(_isOwner&&_vWhisperTarget){
     html+='<div style="padding:10px 14px;background:rgba(124,58,237,.18);border-bottom:1px solid rgba(124,58,237,.3);display:flex;align-items:center;gap:8px">'
@@ -15802,7 +15810,7 @@ var _brdC=null,_brdX=null;
 var _brdPages=[],_brdPageIdx=0;
 var _brdTool='pen',_brdColor='#1F2937',_brdSz=3,_brdEr=24,_brdShType='rect',_brdShFill=false;
 var _brdPinnedTool=null,_brdLPTimer=null,_brdLPFired=false;
-var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0;
+var _brdLaserEl=null,_brdLaserHideT={},_brdLastLaserEmit=0,_brdLastLaserPt={x:-9999,y:-9999};
 var _brdSpacePanning=false,_brdSpacePrevTool=null,_brdKeyUpHandler=null;
 var _brdClearConfirmT=0;
 var _brdBgType='grid'; // 'grid' | 'blank'
@@ -15834,7 +15842,7 @@ var _brdObjPages=[];      // objets par page (parallèle à _brdPages)
 var _brdObjSel={active:false,ids:[],dragging:false,dragSX:0,dragSY:0,dragDx:0,dragDy:0,bgSnap:null,el:null,bar:null,rotEl:null,rzEl:null,resizing:false,resizeHandle:'',resizeAnchorX:0,resizeAnchorY:0,resizeInitDist:1,resizeScale:1,resizeInitObjs:null,rotating:false,rotateStartAngle:0,rotateCX:0,rotateCY:0,rotateCurAngle:0,rotateInitObjs:null};
 var _brdDblTapT=0,_brdDblTapId=null; // double-tap texte
 var _brdRoomId=null,_brdCanEdit=false,_brdParticipants=[];
-var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdROToastT=0;
+var _brdRemoteStrokes={},_brdLastPtEmit=0,_brdLastPtPos={x:-9999,y:-9999},_brdROToastT=0;
 var _brdCursorColors=['#e11d48','#0ea5e9','#16a34a','#7c3aed','#ea580c','#0891b2','#d97706','#db2777'];
 var _vTimerTotal=120,_vTimerLeft=120,_vTimerRunning=false,_vTimerIv=null; // board timer
 var _pipSzIdx=1,_pipX=null,_pipY=null;
@@ -16417,7 +16425,7 @@ function _boardForceSyncAll(){
   tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
   if(_brdBgC)tX.drawImage(_brdBgC,0,0);
   tX.drawImage(_brdC,0,0);
-  var snap=tmp.toDataURL('image/jpeg',0.82);
+  var snap=tmp.toDataURL('image/jpeg',0.72);
   var allPages=_brdPages.map(function(p,i){return i===_brdPageIdx?snap:(p||null);});
   _socket.emit('board_force_sync',{
     roomId:_brdRoomId,snapshot:snap,allPages:allPages,
@@ -16565,9 +16573,13 @@ function _boardSaveHist(){
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   tmp.getContext('2d').drawImage(_brdC,0,0);
-  var d=tmp.toDataURL('image/png');
-  _brdHist.push({idx:_brdPageIdx,data:d,objects:JSON.parse(JSON.stringify(_brdObjects))});
-  if(_brdHist.length>15)_brdHist.shift();else _brdHistIdx++;
+  // JPEG 0.65 au lieu de PNG → 8x moins lourd en RAM (500KB → 60KB par entrée)
+  var d=tmp.toDataURL('image/jpeg',0.65);
+  // Épurer les objets image (base64 dans _brdImgStore, pas dans l'historique)
+  var objSnap=JSON.parse(JSON.stringify(_brdObjects));
+  objSnap.forEach(function(o){if(o.type==='image')delete o.data;});
+  _brdHist.push({idx:_brdPageIdx,data:d,objects:objSnap});
+  if(_brdHist.length>10)_brdHist.shift();else _brdHistIdx++; // 10 niveaux suffisent
 }
 function _boardUndo(){
   if(_brdHistIdx<=0||!_brdX)return;
@@ -16703,7 +16715,7 @@ function _boardSavePage(){
   var tmp=document.createElement('canvas');
   tmp.width=_brdC.width;tmp.height=_brdC.height;
   tmp.getContext('2d').drawImage(_brdC,0,0);
-  _brdPages[_brdPageIdx]=tmp.toDataURL('image/png');
+  _brdPages[_brdPageIdx]=tmp.toDataURL('image/jpeg',0.72); // JPEG au lieu de PNG
 }
 function _boardAddPage(){
   if(_brdSel.active)_brdCommitSel();
@@ -16781,16 +16793,22 @@ function _boardInsertImage(dataUrl){
     var oc=document.createElement('canvas');oc.width=w;oc.height=h;
     oc.getContext('2d').drawImage(img,0,0,w,h);
     var compressed=oc.toDataURL('image/jpeg',0.72);
-    if(compressed.length>1.5*1024*1024){toast('Image trop grande après compression','Essayez une image plus petite.',3000);return;}
+    if(compressed.length>350_000)compressed=oc.toDataURL('image/jpeg',0.50);
+    if(compressed.length>1_100_000){toast('Image trop grande après compression','Essayez une image plus petite.',3000);return;}
     // Centrer sur la page visible
     var page=g('_brdPage');var pr=page?page.getBoundingClientRect():{left:0,top:0,width:800,height:600};
     var cx=(window.innerWidth/2-pr.left)/_brdZoom;
     var cy=(window.innerHeight/2-pr.top)/_brdZoom;
     var iw=Math.min(w,600)/_brdZoom,ih=iw*(h/w);
-    var op={type:'image',x:cx-iw/2,y:cy-ih/2,w:iw,h:ih,data:compressed,id:'img_'+Date.now()};
+    var imgId='img_'+Date.now();
+    // Stocker le base64 dans le store permanent (pas dans l'objet → pas dans l'historique)
+    if(!_brdImgStore)_brdImgStore={};
+    _brdImgStore[imgId]=compressed;
+    var op={type:'image',x:cx-iw/2,y:cy-ih/2,w:iw,h:ih,id:imgId};
     _brdObjects.push(op);
     _boardSaveHist();_brdRedraw();
-    if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objinsert',obj:op});
+    // Pour le partage temps réel : inclure data UNIQUEMENT dans l'émission socket
+    if(_brdRoomId&&_brdCanEdit)_brdEmitOp({type:'objinsert',obj:Object.assign({},op,{data:compressed})});
     toast('Image insérée','');haptic(2);
   };
   img.src=dataUrl;
@@ -17110,7 +17128,12 @@ function _boardMove(e){
     var _lp=_boardGetPos(e);_brdMoveLaserDot(_lp.x,_lp.y);
     if(_brdRoomId&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
       var _lnow=Date.now();
-      if(_lnow-_brdLastLaserEmit>=50){_brdLastLaserEmit=_lnow;_socket.emit('board_laser',{roomId:_brdRoomId,pt:{x:_lp.x,y:_lp.y},pageIdx:_brdPageIdx});}
+      var _lrx=Math.round(_lp.x),_lry=Math.round(_lp.y);
+      var _ldx=_lrx-_brdLastLaserPt.x,_ldy=_lry-_brdLastLaserPt.y;
+      if(_lnow-_brdLastLaserEmit>=80&&(_ldx*_ldx+_ldy*_ldy)>=16){
+        _brdLastLaserEmit=_lnow;_brdLastLaserPt.x=_lrx;_brdLastLaserPt.y=_lry;
+        _socket.emit('board_laser',{roomId:_brdRoomId,pt:{x:_lrx,y:_lry},pageIdx:_brdPageIdx});
+      }
     }
   }
   if(!_brdDraw)return;
@@ -17126,12 +17149,14 @@ function _boardMove(e){
     return;
   }
   var p=_boardGetPos(e);
-  // Émettre le point en temps réel (~50ms throttle)
+  // Émettre le point en temps réel (80ms throttle + dead zone 4px)
   if(_brdRoomId&&_brdCanEdit&&(_brdTool==='pen'||_brdTool==='marker'||_brdTool==='eraser')){
     var _now=Date.now();
-    if(_now-_brdLastPtEmit>=50&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
-      _brdLastPtEmit=_now;
-      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:p.x,y:p.y},pageIdx:_brdPageIdx});
+    var _prx=Math.round(p.x),_pry=Math.round(p.y);
+    var _pdx=_prx-_brdLastPtPos.x,_pdy=_pry-_brdLastPtPos.y;
+    if(_now-_brdLastPtEmit>=80&&(_pdx*_pdx+_pdy*_pdy)>=16&&typeof _socket!=='undefined'&&_socket&&_socket.connected){
+      _brdLastPtEmit=_now;_brdLastPtPos.x=_prx;_brdLastPtPos.y=_pry;
+      _socket.emit('board_pt',{roomId:_brdRoomId,pt:{x:_prx,y:_pry},pageIdx:_brdPageIdx});
     }
   }
   if(_brdTool==='pen'||_brdTool==='marker'){
@@ -17490,9 +17515,11 @@ function _brdRenderObj(obj,ctx){
     ctx.fillStyle=obj.color;ctx.textAlign=obj.align||'left';
     var lh=obj.textSize*1.45;
     obj.content.split('\n').forEach(function(ln,i){ctx.fillText(ln,obj.x,obj.y+i*lh);});
-  }else if(obj.type==='image'&&obj.data){
+  }else if(obj.type==='image'){
+    // Chercher les données dans le store permanent ou dans l'objet (reçu via socket)
+    var imgData=((_brdImgStore&&_brdImgStore[obj.id])||obj.data);
+    if(!imgData){ctx.restore();return;}
     ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
-    // Cache d'images décodées pour éviter de recréer un HTMLImageElement à chaque redraw
     if(!_brdImgCache)_brdImgCache={};
     var cached=_brdImgCache[obj.id];
     if(cached&&cached.complete){
@@ -17501,13 +17528,14 @@ function _brdRenderObj(obj,ctx){
       var im=new Image();
       _brdImgCache[obj.id]=im;
       im.onload=function(){if(_brdX)_brdRenderAll();};
-      im.src=obj.data;
+      im.src=imgData;
     }
   }
   ctx.restore();
 }
 
-var _brdImgCache=null; // {id → HTMLImageElement} — cache pour éviter reparse base64
+var _brdImgCache=null;    // {id → HTMLImageElement} — cache HTMLImageElement décodé
+var _brdImgStore=null;   // {id → base64 string} — store permanent, jamais sérialisé dans l'historique
 
 function _brdRenderAll(){
   if(!_brdX||!_brdC)return;
@@ -18543,7 +18571,7 @@ function _brdOnSyncRequest(data){
   tX.fillStyle='#ffffff';tX.fillRect(0,0,tmp.width,tmp.height);
   if(_brdBgC)tX.drawImage(_brdBgC,0,0);
   tX.drawImage(_brdC,0,0);
-  var snap=tmp.toDataURL('image/jpeg',0.82);
+  var snap=tmp.toDataURL('image/jpeg',0.72);
   // Envoyer TOUTES les pages pour que l'élève puisse librement naviguer
   // _brdPages contient des data URLs pour les pages déjà visitées par le prof, null pour les autres
   var allPages=_brdPages.map(function(p,i){
@@ -18744,9 +18772,9 @@ function _brdCleanRemoteCursors(){
 // Décimer les points d'un trait (garde 1 point sur N)
 function _brdDecimate(pts,step){
   if(pts.length<=4)return pts;
-  var r=[pts[0]];
-  for(var i=step;i<pts.length-1;i+=step)r.push(pts[i]);
-  r.push(pts[pts.length-1]);
+  var r=[{x:Math.round(pts[0].x),y:Math.round(pts[0].y)}];
+  for(var i=step;i<pts.length-1;i+=step)r.push({x:Math.round(pts[i].x),y:Math.round(pts[i].y)});
+  r.push({x:Math.round(pts[pts.length-1].x),y:Math.round(pts[pts.length-1].y)});
   return r;
 }
 
@@ -18840,11 +18868,23 @@ function _brdApplyRemoteOp(op){
     });
     _brdRenderAll();_boardSavePage();
   }else if(op.type==='objdelete'&&op.ids){
+    op.ids.forEach(function(id){
+      if(_brdImgCache)delete _brdImgCache[id];
+      if(_brdImgStore)delete _brdImgStore[id];
+    });
     _brdObjects=_brdObjects.filter(function(o){return op.ids.indexOf(o.id)===-1;});
     _brdRenderAll();_boardSavePage();
   }else if(op.type==='objinsert'&&op.obj){
     if(!_brdObjects.find(function(o){return o.id===op.obj.id;})){
-      _brdObjects.push(op.obj);_brdRenderObj(op.obj,_brdX);_boardSavePage();
+      // Si l'objet est une image avec data, stocker dans le store et épurer l'objet
+      if(op.obj.type==='image'&&op.obj.data){
+        if(!_brdImgStore)_brdImgStore={};
+        _brdImgStore[op.obj.id]=op.obj.data;
+        var imgObj=Object.assign({},op.obj);delete imgObj.data;
+        _brdObjects.push(imgObj);_brdRenderObj(imgObj,_brdX);_boardSavePage();
+      }else{
+        _brdObjects.push(op.obj);_brdRenderObj(op.obj,_brdX);_boardSavePage();
+      }
     }
   }else if(op.type==='objscale'&&op.ids&&op.factor&&op.cx!=null){
     op.ids.forEach(function(id){
