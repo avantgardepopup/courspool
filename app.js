@@ -14895,6 +14895,26 @@ function _vOnMsg(evt){
     if(!_isOwner)toast(_vCommentAllowed?'Commentaires autorisés':'Commentaires bloqués par le prof','');
   }else if(m.type==='dm'){
     _vShowDMNotif(m.fromName||'Prof',m.text||'',from);
+  }else if(m.type==='whisper_start'){
+    if(_isOwner)return;
+    var _mySid=_callObj?(_callObj.participants().local||{}).session_id:'local';
+    if(_mySid===m.targetSid){
+      _vShowWhisperNotif(m.teacherName||'Prof');
+    }else{
+      _vWhisperMuted={teacherSid:m.teacherSid,targetSid:m.targetSid};
+      if(_callObj){
+        try{_callObj.updateParticipant(m.teacherSid,{setSubscribedTracks:{audio:false}});}catch(e){}
+        try{_callObj.updateParticipant(m.targetSid,{setSubscribedTracks:{audio:false}});}catch(e){}
+      }
+    }
+  }else if(m.type==='whisper_end'){
+    if(_isOwner)return;
+    if(_vWhisperMuted&&_callObj){
+      try{_callObj.updateParticipant(_vWhisperMuted.teacherSid,{setSubscribedTracks:{audio:true}});}catch(e){}
+      try{_callObj.updateParticipant(_vWhisperMuted.targetSid,{setSubscribedTracks:{audio:true}});}catch(e){}
+      _vWhisperMuted=null;
+    }
+    var _wn=document.getElementById('_vWhisperNotif');if(_wn&&_wn.parentNode)_wn.parentNode.removeChild(_wn);
   }
 }
 
@@ -15145,9 +15165,15 @@ function _vUpdatePeople(){
       +(camOn?'<span style="font-size:10px;color:#22C069;font-weight:600;display:flex;align-items:center;gap:2px"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2" stroke-linecap="round" width="9" height="9"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cam</span>':'')
       +(hasHand?'<span style="font-size:10px;color:#FF6B2B;font-weight:600;display:flex;align-items:center;gap:2px">'+_svgHand.replace('currentColor','#FF6B2B')+'Main levée</span>':'')
       +'</div></div>'
-      +(_isOwner&&!p.local?'<div style="display:flex;gap:4px;flex-shrink:0">'
-        +'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.18);border:1px solid rgba(34,192,105,.35);color:#22C069;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
-        +'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>'
+      +(!p.local?'<div style="display:flex;gap:4px;flex-shrink:0">'
+        +(_isOwner?'<button onclick="_vGiveFloor(\''+sid+'\')" style="background:rgba(34,192,105,.18);border:1px solid rgba(34,192,105,.35);color:#22C069;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Donner la parole"><svg viewBox="0 0 24 24" fill="none" stroke="#22C069" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        +(_isOwner?'<button onclick="_vMuteP(\''+sid+'\')" style="background:rgba(229,62,62,.18);border:1px solid rgba(229,62,62,.35);color:#fc8181;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Couper micro"><svg viewBox="0 0 24 24" fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><line x1="1" y1="1" x2="23" y2="23"/><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></button>':'')
+        +(_isOwner?(function(){var _wActive=_vWhisperTarget&&_vWhisperTarget.sid===sid;return'<button onclick="'+(_wActive?'_vEndWhisper()':'_vStartWhisper(\''+sid+'\',\''+escH(name)+'\')')
+          +'" style="background:'+(_wActive?'rgba(124,58,237,.55);border:1px solid rgba(139,92,246,.8)':'rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35)')
+          +';color:#a78bfa;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="'+(_wActive?'Fin du whisper':'Parler en privé (whisper)')+'">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" width="13" height="13"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/>'
+          +(_wActive?'<line x1="1" y1="1" x2="23" y2="23"/>':'')
+          +'</svg></button>';}()):'')
         +'<button onclick="_vOpenDM(\''+sid+'\',\''+escH(name)+'\')" style="background:rgba(255,107,43,.18);border:1px solid rgba(255,107,43,.35);color:#FF6B2B;border-radius:8px;padding:5px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Message privé"><svg viewBox="0 0 24 24" fill="none" stroke="#FF6B2B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>'
         +'</div>':'')
       +'</div>';
@@ -15340,6 +15366,8 @@ function _vIgnoreHand(sid){delete _raisedHands[sid];_vUpdateHands();_vUpdatePeop
 
 // ── DM privé ──────────────────────────────────────────────────────────────���───
 var _vDmTarget=null;
+var _vWhisperTarget=null; // {sid,name} côté prof
+var _vWhisperMuted=null;  // {teacherSid,targetSid} côté autres élèves
 function _vOpenDM(sid,name){
   var old=document.getElementById('_vDMPanel');if(old&&old.parentNode)old.parentNode.removeChild(old);
   _vDmTarget={sid:sid,name:name};
@@ -15418,6 +15446,54 @@ function _vShowDMNotif(fromName,text,fromSid){
     el.style.transform='translateX(-50%) translateY(-130%)';el.style.opacity='0';
     setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},320);
   },8000);
+}
+
+// ── Whisper (audio privé bidirectionnel prof ↔ élève) ────────────────────────
+function _vStartWhisper(sid,name){
+  if(!_callObj||!_isOwner)return;
+  if(_vWhisperTarget)_vEndWhisper(); // terminer le whisper précédent
+  var local=_callObj.participants().local||{};
+  var mySid=local.session_id||'local';var myName=local.user_name||'Prof';
+  _vWhisperTarget={sid:sid,name:name};
+  _callObj.sendAppMessage({type:'whisper_start',teacherSid:mySid,teacherName:myName,targetSid:sid,targetName:name},'*');
+  _vShowWhisperBadge(name);
+  _vUpdatePeople(); // rafraîchir le bouton whisper dans le panel
+  haptic(2);
+}
+function _vEndWhisper(){
+  if(!_callObj||!_isOwner)return;
+  _callObj.sendAppMessage({type:'whisper_end'},'*');
+  _vWhisperTarget=null;
+  var b=document.getElementById('_vWhisperBadge');if(b&&b.parentNode)b.parentNode.removeChild(b);
+  _vUpdatePeople();haptic(1);
+}
+function _vShowWhisperBadge(name){
+  var old=document.getElementById('_vWhisperBadge');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  if(!document.getElementById('_whisperBadgeKf')){
+    var s=document.createElement('style');s.id='_whisperBadgeKf';
+    s.textContent='@keyframes _whisperPulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.5)}60%{box-shadow:0 0 0 7px rgba(124,58,237,0)}}';
+    document.head.appendChild(s);
+  }
+  var el=document.createElement('div');el.id='_vWhisperBadge';
+  el.style.cssText='position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:15000;background:rgba(109,40,217,.92);border-radius:20px;padding:6px 10px 6px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 18px rgba(124,58,237,.45);animation:_whisperPulse 2s ease infinite;backdrop-filter:blur(8px);';
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#e9d5ff" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+    +'<span style="font-size:12px;font-weight:700;color:#e9d5ff">Privé · '+escH(name)+'</span>'
+    +'<button onclick="_vEndWhisper()" style="background:rgba(255,255,255,.18);border:none;color:#e9d5ff;border-radius:10px;padding:3px 9px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;">Fin</button>';
+  document.body.appendChild(el);
+}
+function _vShowWhisperNotif(fromName){
+  var old=document.getElementById('_vWhisperNotif');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  if(!document.getElementById('_whisperNotifKf')){
+    var s=document.createElement('style');s.id='_whisperNotifKf';
+    s.textContent='@keyframes _wNotifIn{from{transform:translateX(-50%) translateY(-130%)}to{transform:translateX(-50%) translateY(0)}}@keyframes _wPulse{0%,100%{box-shadow:0 4px 18px rgba(124,58,237,.4)}60%{box-shadow:0 4px 18px rgba(124,58,237,.0),0 0 0 8px rgba(124,58,237,0)}}';
+    document.head.appendChild(s);
+  }
+  var el=document.createElement('div');el.id='_vWhisperNotif';
+  el.style.cssText='position:fixed;top:max(env(safe-area-inset-top,20px),20px);left:50%;transform:translateX(-50%);z-index:15000;background:rgba(109,40,217,.92);border-radius:20px;padding:6px 14px 6px 10px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(8px);animation:_wNotifIn .3s cubic-bezier(.34,1.56,.64,1) both,_wPulse 2s .3s ease infinite;';
+  el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#e9d5ff" stroke-width="2.2" stroke-linecap="round" width="14" height="14"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>'
+    +'<span style="font-size:12px;font-weight:700;color:#e9d5ff">'+escH(fromName)+' vous parle en privé</span>';
+  document.body.appendChild(el);
+  haptic([10,50,100]);
 }
 
 function _vToggleOpenFloor(){
